@@ -12,7 +12,6 @@ from dev._paths import REPO_ROOT
 from .lane_verification_core import (
     assert_cadrumo_version_output,
     assert_installed_data,
-    record_proof,
     relative_manifest_path,
     require_executable,
     resolve_work_dir,
@@ -23,6 +22,7 @@ from .lane_verification_core import (
     venv_python_path,
     write_smoke_manifest,
 )
+from .proof_ledger import record_proof
 
 _DEV_COMMANDS: tuple[tuple[str, ...], ...] = (
     ("ruff", "--version"),

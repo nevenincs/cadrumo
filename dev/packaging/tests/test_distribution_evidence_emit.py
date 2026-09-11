@@ -7,7 +7,7 @@ values, and the produced record is validated by the tamper-evident
 :class:`~dev.packaging.evidence.DistributionEvidence` schema itself.
 
 The oracle fixtures attest the launchers of the real venv that
-:func:`~dev.packaging.tests._release_cohort_support.client_venv_template`
+:func:`~dev.packaging.release_cohort_support.client_venv_template`
 installs the cohort's own wheel into, never the ambient development
 interpreter. The emitter's binding guards compare an installed payload digest
 against the sealed cohort wheel, and an editable checkout install can never
@@ -56,7 +56,7 @@ from ..installed_tax_oracle import (
     TARGET_CASILLA,
     InstalledTaxEvidence,
 )
-from ._release_cohort_support import client_venv_template, release_cohort
+from ..release_cohort_support import client_venv_template, release_cohort
 
 # Serial and integration, matching the Homebrew and Scoop packaging suites: these
 # cases build a real wheel, install it into a real venv, and hard-link that venv

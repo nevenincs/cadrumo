@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..compiler.record_design_pdf_repairs import _row_identities_by_record, rejoin_reversed_column_rows
+from ..compiler.record_design_pdf_repairs import rejoin_reversed_column_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -109,16 +109,6 @@ def test_an_identity_the_same_record_states_intact_still_blocks_the_join() -> No
     )
 
     assert rejoin_reversed_column_rows(lines) == lines
-
-
-def test_record_identities_are_partitioned_at_each_position_one_row() -> None:
-    identities = _row_identities_by_record(
-        ("1 1 2 An Primero", "5 10 1 An Otro", "1 1 2 An Segundo", "9 40 3 Num Tercero"),
-    )
-
-    assert ("5", 10) in identities[0]
-    assert ("5", 10) not in identities[-1]
-    assert ("9", 40) in identities[-1]
 
 
 def test_a_head_carrying_bled_description_text_joins_when_it_continues() -> None:

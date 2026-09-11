@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.application.aggregation import (
+from cadrumo.application.aggregation.invoice_devengo import (
     invoice_devengo_in_period,
     proxy_attributed_invoice_ids,
     resolve_invoice_devengo,
@@ -36,7 +36,7 @@ from cadrumo.domain.invoices.errors import InvoiceValidationError
 from cadrumo.domain.invoices.models import InvoiceLine
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
-from cadrumo.domain.modelos.row_models import Modelo349ClaveOperacion, Modelo349OperadorRow
+from cadrumo.domain.modelos.row_models import Modelo349OperadorRow
 from cadrumo.tests.secure_sql import isolated_runtime_profile
 
 from ..maintenance_support import load_modelo_path
@@ -611,8 +611,8 @@ def test_intracommunity_services_now_carry_a_category_and_reach_m349(tmp_path: P
         for row in resolution.detail_rows
         if isinstance(row, Modelo349OperadorRow)
     }
-    assert rows[("FR", Modelo349ClaveOperacion.S)].importe == Decimal("4000.00")
-    assert rows[("IT", Modelo349ClaveOperacion.I)].importe == Decimal("3000.00")
+    assert rows[("FR", "S")].importe == Decimal("4000.00")
+    assert rows[("IT", "I")].importe == Decimal("3000.00")
     # Filed under the service claves, NOT under the goods claves E and A.
     assert ("FR", "E") not in rows
     assert ("IT", "A") not in rows

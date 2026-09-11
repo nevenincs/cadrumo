@@ -125,7 +125,7 @@ from cadrumo.domain.filing.protocols import ModeloInputs
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
 from .compiler.authority import compile_validated_authority
-from .compiler.loader import load_registry_tree
+from .compiler.loader import load_modelo_directory, load_registry_tree
 
 __all__ = [
     "COMMIT_ID",
@@ -426,7 +426,15 @@ def _refused(kind: RoundTripFindingKind, exc: RegistryError) -> RoundTripReport:
 
 
 def _load_modelo(registry_root: Path, modelo_id: str) -> ModeloDefinition:
-    return compile_validated_authority(registry_root, bundled_path()).modelo(modelo_id)
+    """Load the compared modelo; export proof validates an authority separately.
+
+    Typed content, merge-order and localization comparisons are modelo-local.
+    Requiring a full authority compilation before those checks coupled them to
+    every unrelated governed fact in the registry and could leave the entire
+    migration report unloaded.  Export scenarios retain their full validated
+    authority boundary in ``_export_bytes_finding``.
+    """
+    return load_modelo_directory(registry_root / "modelos" / modelo_id)
 
 
 def _edition_set_findings(reference: ModeloDefinition, live: ModeloDefinition) -> list[RoundTripFinding]:

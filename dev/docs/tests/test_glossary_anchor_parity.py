@@ -39,8 +39,8 @@ from dev._paths import REPO_ROOT
 
 from ..glossary_reference import render_glossary
 from ..pagefind_inject import _SUMMARY_MAX_CHARS, _summary_for
-from ..terminology._glossary_anchor import glossary_term_anchor
 from ..terminology.concept_card_projection import project_concept_cards
+from ..terminology.glossary_anchor import glossary_term_anchor
 from ..terminology.search_record import SearchRecordKind
 from ..terminology.unified_record import to_search_record
 

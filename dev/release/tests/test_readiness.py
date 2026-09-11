@@ -52,10 +52,10 @@ def _write_pyprojects(root: Path, version: str) -> None:
     )
 
 
-def _write_init(root: Path, version: str) -> None:
-    init_dir = root / "src" / "cadrumo"
-    init_dir.mkdir(parents=True, exist_ok=True)
-    (init_dir / "__init__.py").write_text(f'__version__ = "{version}"\n', encoding="utf-8")
+def _write_package_version(root: Path, version: str) -> None:
+    version_path = root / "src" / "cadrumo" / "core" / "package_version.py"
+    version_path.parent.mkdir(parents=True, exist_ok=True)
+    version_path.write_text(f'PACKAGE_VERSION = "{version}"\n', encoding="utf-8")
 
 
 def _write_manifest(root: Path, version: str) -> None:
@@ -66,7 +66,7 @@ def _make_repo_root(tmp_path: Path, *, version: str = "1.2.3") -> Path:
     root = tmp_path / "repo"
     root.mkdir()
     _write_pyprojects(root, version)
-    _write_init(root, version)
+    _write_package_version(root, version)
     _write_manifest(root, version)
     (root / "CHANGELOG.md").write_text(
         "# Changelog\n\n## [1.2.3] - 2026-07-04\n\n### Features\n- thing\n", encoding="utf-8"
@@ -361,8 +361,8 @@ def test_packaging_smoke_evidence_refuses_an_empty_lane(tmp_path: Path) -> None:
 
 def test_packaging_smoke_evidence_end_to_end_through_the_real_smoke_writer(tmp_path: Path) -> None:
     """A manifest produced by the real production writer passes the readiness reader."""
-    from dev.packaging._proof_ledger import record_proof, reset_proof_ledger
     from dev.packaging.lane_verification_core import write_smoke_manifest
+    from dev.packaging.proof_ledger import record_proof, reset_proof_ledger
 
     root = _make_repo_root(tmp_path)
     work_dir = root / "var" / "packaging-smoke" / "core-20260101T000000Z"

@@ -10,8 +10,8 @@ import zipfile
 from pathlib import Path
 from typing import Final
 
-from ..hashing import sha256_path
-from ..python_cohort import _artifact_command_projection, _projection_digest
+from .hashing import sha256_path
+from .python_cohort import _artifact_command_projection, _projection_digest
 
 
 def add_test_source_archive(directory: Path, artifacts: dict[str, str], digests: dict[str, str]) -> Path:

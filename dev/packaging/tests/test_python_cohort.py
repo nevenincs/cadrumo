@@ -11,6 +11,11 @@ from pathlib import Path
 
 import pytest
 
+from ..cohort_attestation import (
+    add_test_runtime_wheelhouse,
+    add_test_source_archive,
+    make_test_command_spec_attestation,
+)
 from ..hashing import sha256_path
 from ..python_cohort import (
     _artifact_command_projection,
@@ -21,11 +26,6 @@ from ..python_cohort import (
     _validate_command_spec_attestation,
     digest_install_target,
     load_python_cohort,
-)
-from ._cohort_attestation import (
-    add_test_runtime_wheelhouse,
-    add_test_source_archive,
-    make_test_command_spec_attestation,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

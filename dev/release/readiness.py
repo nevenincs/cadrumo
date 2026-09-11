@@ -67,7 +67,7 @@ from dev.packaging.python_cohort import load_python_cohort
 from dev.source_tree import content_digest, repository_files
 
 _UTF_8: Final = UTF_8
-_VERSION_RE: Final = re.compile(r"^__version__\s*=\s*[\"']([^\"']+)[\"']", re.MULTILINE)
+_VERSION_RE: Final = re.compile(r"^PACKAGE_VERSION\s*=\s*[\"']([^\"']+)[\"']", re.MULTILINE)
 _BLOCKER_LABEL: Final = "priority:P0-blocker"
 _GH_TIMEOUT_SECONDS: Final = 15
 _PROJECT_NAME_PATHS: Final = (
@@ -154,8 +154,8 @@ def check_project_names_are_canonical(repo_root: Path) -> ReadinessCheck:
     return ReadinessCheck("project-names-canonical", "blocking", True, f"canonical distributions: {names}")
 
 
-def _read_init_version(repo_root: Path) -> str:
-    text = (repo_root / "src" / "cadrumo" / "__init__.py").read_text(encoding=_UTF_8)
+def _read_package_version(repo_root: Path) -> str:
+    text = (repo_root / "src" / "cadrumo" / "core" / "package_version.py").read_text(encoding=_UTF_8)
     match = _VERSION_RE.search(text)
     if not match:
         return ""
@@ -200,7 +200,7 @@ def check_version_surfaces_agree(repo_root: Path) -> ReadinessCheck:
         (relative, _read_project_version(repo_root / relative)) for relative, _expected_name in _PROJECT_NAME_PATHS
     )
     pyproject_version = project_versions[0][1]
-    init_version = _read_init_version(repo_root)
+    package_version = _read_package_version(repo_root)
     manifest_version = _read_manifest_version(repo_root)
     root_project = tomllib.loads((repo_root / "pyproject.toml").read_text(encoding=_UTF_8))
     observed_pins = tuple(
@@ -211,10 +211,10 @@ def check_version_surfaces_agree(repo_root: Path) -> ReadinessCheck:
     expected_pins = tuple(
         f"{distribution}=={pyproject_version}" for distribution in PRODUCT_IDENTITY.companion_distributions
     )
-    versions = {version for _relative, version in project_versions} | {init_version, manifest_version}
+    versions = {version for _relative, version in project_versions} | {package_version, manifest_version}
     passed = len(versions) == 1 and bool(pyproject_version) and observed_pins == expected_pins
     surfaces = " ".join(f"{relative}={version!r}" for relative, version in project_versions)
-    detail = f"{surfaces} init={init_version!r} manifest={manifest_version!r} pins={observed_pins!r}"
+    detail = f"{surfaces} package_version={package_version!r} manifest={manifest_version!r} pins={observed_pins!r}"
     if passed:
         detail = f"all release authorities and mandatory exact companion dependencies agree on {pyproject_version!r}"
     return ReadinessCheck("version-surfaces-agree", "blocking", passed, detail)

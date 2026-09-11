@@ -25,7 +25,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ..compiler.edition_materialisation import materialise_edition
 from ..compiler.loader import load_modelo_directory
-from ..pipeline.cli import _stage_isolated_edition
+from ..pipeline.cli import stage_isolated_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -234,7 +234,7 @@ def test_a_migrated_successor_stages_as_the_complete_edition_it_stands_for(tmp_p
     source = _migrated_chain(tmp_path)
     live = load_modelo_directory(source).revisions["2025"]
 
-    staged_root = _stage_isolated_edition(
+    staged_root = stage_isolated_edition(
         source, tmp_path / "staged" / "999", revision="2025", **_locale_roots(tmp_path)
     ).modelo_root
 
@@ -257,7 +257,7 @@ def test_a_staged_successor_resolves_every_label_the_live_edition_resolves(tmp_p
     roots = _locale_roots(tmp_path)
     live = load_modelo_directory(source).revisions["2025"]
 
-    staged = _stage_isolated_edition(source, tmp_path / "staged" / "999", revision="2025", **roots)
+    staged = stage_isolated_edition(source, tmp_path / "staged" / "999", revision="2025", **roots)
 
     assert staged.locales_root == roots["staged_locales_root"]
     live_labels = _labels(live, roots["source_locales_root"])
@@ -277,7 +277,7 @@ def test_a_staged_successor_resolves_every_label_the_live_edition_resolves(tmp_p
 def test_an_edition_stating_every_row_resolves_labels_from_the_source_catalogue(tmp_path: Path) -> None:
     roots = _locale_roots(tmp_path)
 
-    staged = _stage_isolated_edition(_full_copy_modelo(tmp_path), tmp_path / "staged" / "999", revision="2025", **roots)
+    staged = stage_isolated_edition(_full_copy_modelo(tmp_path), tmp_path / "staged" / "999", revision="2025", **roots)
 
     assert staged.locales_root == roots["source_locales_root"]
     assert not roots["staged_locales_root"].exists()
@@ -287,7 +287,7 @@ def test_a_staged_successor_equals_what_the_entry_point_materialises(tmp_path: P
     source = _migrated_chain(tmp_path)
     edition = materialise_edition(source, "2025")
 
-    staged_root = _stage_isolated_edition(
+    staged_root = stage_isolated_edition(
         source, tmp_path / "staged" / "999", revision="2025", **_locale_roots(tmp_path)
     ).modelo_root
 
@@ -302,7 +302,7 @@ def test_a_staged_delta_whose_predecessor_was_removed_is_refused(tmp_path: Path)
     staged_root = tmp_path / "staged" / "999"
 
     with pytest.raises(RegistryLoadError, match="2024"):
-        _stage_isolated_edition(source, staged_root, revision="2025", **_locale_roots(tmp_path))
+        stage_isolated_edition(source, staged_root, revision="2025", **_locale_roots(tmp_path))
 
     assert not staged_root.exists()
 
@@ -323,7 +323,7 @@ def test_pruning_without_materialising_leaves_a_successor_naming_a_deleted_prede
 def test_an_edition_stating_every_row_stages_as_an_unchanged_copy(tmp_path: Path) -> None:
     source = _full_copy_modelo(tmp_path)
 
-    staged_root = _stage_isolated_edition(
+    staged_root = stage_isolated_edition(
         source, tmp_path / "staged" / "999", revision="2025", **_locale_roots(tmp_path)
     ).modelo_root
 

@@ -29,8 +29,8 @@ import pytest
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
-from cadrumo_harness.mcp._hitl import ConfirmationPolicy, confirmation_for_tool
-from cadrumo_harness.mcp._tools import build_tool_descriptors
+from cadrumo_harness.mcp.hitl import ConfirmationPolicy, confirmation_for_tool
+from cadrumo_harness.mcp.tools import build_tool_descriptors
 from dev.scripted_registration_channels import scripted_registration_descriptors
 
 from .._models import ProfileConfirmationScenario
@@ -159,7 +159,7 @@ def test_confirmation_command_resolves_and_mutating_commands_are_non_read_only_o
 
     Cross-checks ``_CONFIRMATION_COMMAND`` and ``_MUTATING_COMMANDS`` against the REAL MCP
     tool-descriptor classification and confirmation gate (the same authority the ``PreToolUse``
-    gate reads via ``cadrumo_harness.mcp._hitl.confirmation_for_tool``), so neither declared set is
+    gate reads via ``cadrumo_harness.mcp.hitl.confirmation_for_tool``), so neither declared set is
     an invented label. Under the declared-risk model the
     ``config profile`` family is ``LOCAL_STATE_MUTATING`` at whole-family granularity (it also
     owns ``create``/``edit``/``delete``), so ``config.profile.status`` is non-read-only like the

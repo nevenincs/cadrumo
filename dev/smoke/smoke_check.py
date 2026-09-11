@@ -85,12 +85,12 @@ def check_metadata() -> str:
 
 
 def check_import() -> None:
-    """The package imports and exposes its version."""
-    import cadrumo
+    """The package imports while version authority stays in its defining module."""
+    from cadrumo.core.package_version import PACKAGE_VERSION
 
-    if not getattr(cadrumo, "__version__", ""):
-        _fail("cadrumo.__version__ is missing or empty")
-    _ok(f"cadrumo imports, __version__ = {cadrumo.__version__}")
+    if not PACKAGE_VERSION:
+        _fail("cadrumo package version is missing or empty")
+    _ok(f"cadrumo imports, package version = {PACKAGE_VERSION}")
 
 
 def check_cli(version: str) -> None:
@@ -135,7 +135,7 @@ def check_mcp_script() -> None:
     if "--profile-secrets-file" not in result.stdout:
         _fail(f"{MCP_SCRIPT} --help does not offer --profile-secrets-file: {result.stdout.strip()[:200]}")
     imported = subprocess.run(
-        [sys.executable, "-c", "from cadrumo_harness.mcp._server import serve; assert callable(serve)"],
+        [sys.executable, "-c", "from cadrumo_harness.mcp.server import serve; assert callable(serve)"],
         capture_output=True,
         text=True,
         timeout=_TIMEOUT,

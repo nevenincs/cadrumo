@@ -24,7 +24,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.aggregation import RentaIncomeObservation
+from cadrumo.application.aggregation.renta_income_ledger import RentaIncomeObservation
 from cadrumo.core.aggregation import (
     BindingAggregation,
     BindingAggregationOp,

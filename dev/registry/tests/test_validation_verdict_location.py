@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo import __version__
 from cadrumo.core.config import override_settings
+from cadrumo.core.package_version import PACKAGE_VERSION as __version__
 from cadrumo.core.resources.bundled_data import bundled_path
 
 from ..compiler.identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest

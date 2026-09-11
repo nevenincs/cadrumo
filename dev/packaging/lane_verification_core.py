@@ -46,14 +46,13 @@ from dev.source_tree import repository_files, snapshot
 
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from ._distribution_names import normalise_distribution_name
-from ._proof_ledger import (
+from .command_execution import CommandResult, run_command
+from .evidence import PackagingSmokeManifest
+from .proof_ledger import (
     ProofContractError,
     record_proof,
     recorded_proofs,
-    reset_proof_ledger,
 )
-from .command_execution import CommandResult, run_command
-from .evidence import PackagingSmokeManifest
 from .python_cohort import digest_install_target
 
 __all__ = [
@@ -82,12 +81,9 @@ __all__ = [
     "isolated_product_env",
     "optional_extra_registry",
     "pyproject_surfaces",
-    "record_proof",
-    "recorded_proofs",
     "relative_manifest_path",
     "require_executable",
     "requirement_name",
-    "reset_proof_ledger",
     "resolve_work_dir",
     "run_checked",
     "tracked_source_data_paths",

@@ -44,12 +44,16 @@ import pytest
 
 from dev._paths import REPO_ROOT, UTF_8
 from dev.registry.compiler.identity import REGISTRY_IDENTITY_STAMP_FILENAME
-from dev.registry.compiler.verdict_cache import _BUNDLED_VERDICT_FILENAME
+from dev.registry.compiler.verdict_cache import shipped_verdict_location
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.serial]
 
 #: Where the cache is written, relative to the repository root.
 _REGISTRY_DATA_ROOT: Final = "src/cadrumo/_data/registry"
+
+#: The shipped verdict is a sibling of the bundled AEAT registry root; derive
+#: its archive member from the public registry location helper.
+_BUNDLED_VERDICT_MEMBER: Final = shipped_verdict_location(Path(_REGISTRY_DATA_ROOT) / "aeat").as_posix()
 
 #: A registry declaration beside the cache. It has to reach both archives:
 #: without it, "the cache is absent" would also be true of a build that shipped
@@ -58,7 +62,7 @@ _CONTROL_MEMBER: Final = f"{_REGISTRY_DATA_ROOT}/aeat/control-declaration.toml"
 
 #: The two files a validating load persists, as source-tree relative paths.
 _CACHE_MEMBERS: Final = (
-    f"{_REGISTRY_DATA_ROOT}/{_BUNDLED_VERDICT_FILENAME}",
+    _BUNDLED_VERDICT_MEMBER,
     f"{_REGISTRY_DATA_ROOT}/{REGISTRY_IDENTITY_STAMP_FILENAME}",
 )
 
@@ -196,7 +200,7 @@ def test_a_re_admitting_declaration_is_detected(tmp_path: Path) -> None:
     every ``exclude`` entry standing. A gate reading those entries instead of the
     archive would report the same clean result over this build.
     """
-    verdict = f"{_REGISTRY_DATA_ROOT}/{_BUNDLED_VERDICT_FILENAME}"
+    verdict = _BUNDLED_VERDICT_MEMBER
     re_admission = (
         "\n[tool.hatch.build.targets.sdist.force-include]\n"
         f'"{verdict}" = "{verdict}"\n'

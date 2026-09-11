@@ -40,12 +40,11 @@ from cadrumo.domain.calculations.registry.ids import (
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
 from ..terminology_handbook.enums import ConceptDomain
-from ._glossary_anchor import glossary_term_anchor
 from .casilla_anchor import casilla_reference_target
-from .casilla_projection import CasillaSearchRecord
 from .cli_projection import CliOptionRecord, CliSurfaceRecord
 from .concept_card_projection import ConceptCardRecord
-from .search_record import LegalSearchRecord, ResultDisplayClass, SearchRecordKind
+from .glossary_anchor import glossary_term_anchor
+from .search_record import CasillaSearchRecord, LegalSearchRecord, ResultDisplayClass, SearchRecordKind
 
 __all__ = [
     "RankingTier",
@@ -110,7 +109,7 @@ _DISPLAY_CLASS_BASE_WEIGHT: dict[ResultDisplayClass, float] = {
 }
 
 #: Legacy per-kind projection of the one class table, for the sweep-relevance
-#: reweight path (``_resolution._reweight``) that keys on record kind rather
+#: reweight path (``resolution._reweight``) that keys on record kind rather
 #: than the fully-derived display class. CONCEPT collapses to the general-fact
 #: ``DOC`` band (a per-hit reweight has no Handbook domain to split on), legal
 #: provisions carry their own ``LEGAL`` band beneath casilla, and a

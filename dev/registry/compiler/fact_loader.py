@@ -8,7 +8,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.toml import freeze_toml, read_toml
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact
@@ -66,7 +66,7 @@ def load_governed_facts(facts_dir: Path) -> tuple[GovernedFact, ...]:
         return ()
     facts: list[GovernedFact] = []
     source_by_fact_id: dict[str, Path] = {}
-    for path in scan_directory(resolved, pattern="*.toml"):
+    for path in scan_directory(resolved, pattern="*.toml", recursive=True, select=DirectoryEntryKind.FILES):
         fact = load_governed_fact_file(path)
         previous = source_by_fact_id.get(fact.fact_id)
         if previous is not None:

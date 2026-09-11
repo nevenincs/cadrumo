@@ -125,7 +125,7 @@ class NarrationFaithfulness(BaseModel):
 
     An operator-facing narration must not state a numeric value absent from
     the tool result it describes. This model deliberately mirrors
-    :class:`cadrumo_harness.mcp._faithfulness.FaithfulnessResult` field-for-field
+    :class:`cadrumo_harness.mcp.faithfulness.FaithfulnessResult` field-for-field
     (``faithful``, ``blocking``, ``flagged_values``, the derived ``blocks``
     property) rather than importing that class: ``dev.agent_eval`` is a CONSUMER of
     the shipped surfaces - the ``cadrumo`` CLI and the ``cadrumo_harness``
@@ -162,7 +162,7 @@ class NarrationFaithfulness(BaseModel):
 
 
 class ConfirmationTier(StrEnum):
-    """Mirror of ``cadrumo_harness.mcp._hitl.ConfirmationPolicy``'s value set.
+    """Mirror of ``cadrumo_harness.mcp.hitl.ConfirmationPolicy``'s value set.
 
     Declared locally rather than imported, for the identical consumer-boundary
     reason documented on :class:`NarrationFaithfulness`: ``dev.agent_eval``
@@ -190,7 +190,7 @@ class ConfirmationGateCheck(BaseModel):
 
     ``actual_tier`` is caller-injected (mirroring ``NarrationFaithfulness``): the
     caller invokes the real ``confirmation_for_tool`` from
-    ``cadrumo_harness.mcp._hitl`` against the step's real annotations and hands
+    ``cadrumo_harness.mcp.hitl`` against the step's real annotations and hands
     the resulting tier in as a :class:`ConfirmationTier`. This model performs no
     check itself.
 

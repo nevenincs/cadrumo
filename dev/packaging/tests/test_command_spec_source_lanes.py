@@ -37,11 +37,8 @@ from click.testing import CliRunner
 from typer.main import get_command
 import cadrumo
 from cadrumo.entrypoints import cli
-from cadrumo.entrypoints.cli.command_api import (
-    build_verb_input_schemas,
-    command_schema_refs,
-    command_schema_types,
-)
+from cadrumo.entrypoints.cli.command_schema import command_schema_refs, command_schema_types
+from cadrumo.entrypoints.cli.verb_input_schema import build_verb_input_schemas
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
 from cadrumo.entrypoints.cli.command_spec import SchemaState

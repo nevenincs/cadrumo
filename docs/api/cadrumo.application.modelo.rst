@@ -30,15 +30,15 @@ Submodules
    cadrumo.application.modelo._dt12_advisory
    cadrumo.application.modelo._dt12_antiquity_advisory
    cadrumo.application.modelo._edit_execution
-   cadrumo.application.modelo._export_amendment_evidence
+   cadrumo.application.modelo.export_amendment_evidence
    cadrumo.application.modelo._ledger_anchor_capture
    cadrumo.application.modelo._ledger_drift_gate
    cadrumo.application.modelo._ledger_evidence_gate
-   cadrumo.application.modelo._m145_communication
+   cadrumo.application.modelo.m145_communication
    cadrumo.application.modelo._m210_agrupacion_renta
    cadrumo.application.modelo._m210_convenio_lob_advisory
    cadrumo.application.modelo._m210_rate
-   cadrumo.application.modelo._m303_filing_evidence
+   cadrumo.application.modelo.m303_filing_evidence
    cadrumo.application.modelo._m303_m349_reconcile
    cadrumo.application.modelo._m349_ledger_guard
    cadrumo.application.modelo._m720_redeclaration_gate
@@ -132,6 +132,7 @@ Submodules
    cadrumo.application.modelo.verification_preconditions
    cadrumo.application.modelo.verify_selector
    cadrumo.application.modelo.work_addressing
+   cadrumo.application.modelo.work_selection
    cadrumo.application.modelo.work_create_policy
    cadrumo.application.modelo.work_lifecycle
    cadrumo.application.modelo.work_plazo

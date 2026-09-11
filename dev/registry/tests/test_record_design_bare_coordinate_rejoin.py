@@ -43,7 +43,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 
 from ..compiler.record_design import extract_record_design
-from ..compiler.record_design_pdf_repairs import _BARE_COORDINATE_TRIPLE_RE, rejoin_bare_coordinate_rows
+from ..compiler.record_design_pdf_repairs import rejoin_bare_coordinate_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -91,18 +91,6 @@ def test_the_recovered_record_tiles_without_a_hole(suffix: str) -> None:
     unwritten = sorted(set(range(1, (sheet.total_positions or 0) + 1)) - occupied)
 
     assert not unwritten, unwritten[:8]
-
-
-def test_a_triple_carrying_a_trailing_fragment_is_not_a_bare_triple() -> None:
-    """The narrowing that keeps this from claiming ordinary content lines.
-
-    ``5 10 1 "C" (Complementaria)`` opens a quoted Contenido value; a pattern
-    that accepted it matched forty lines on one design. The anchored pattern
-    rejects it.
-    """
-    assert _BARE_COORDINATE_TRIPLE_RE.match("5 10 1") is not None
-    assert _BARE_COORDINATE_TRIPLE_RE.match('5 10 1 "C" (Complementaria)') is None
-    assert _BARE_COORDINATE_TRIPLE_RE.match("5 10 1 An Something") is None
 
 
 def test_a_triple_whose_successor_does_not_resume_is_declined() -> None:

@@ -8,13 +8,13 @@ eval tests do not grow parallel orchestration logic.
 
 from __future__ import annotations
 
-from cadrumo.entrypoints.cli.command_api import command_schema_refs
+from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
 
 
 def valid_cli_commands() -> frozenset[str]:
     """Return command keys projected from the live CLI schema registry."""
-    return frozenset(ref.command for ref in command_schema_refs())
+    return frozenset(COMMAND_GRAPH.by_schema_identity())
 
 
 def create_m130_work_unit(*, filing_year: int, period: str, revision: str) -> str:

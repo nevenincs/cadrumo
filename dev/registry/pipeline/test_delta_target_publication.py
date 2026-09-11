@@ -42,8 +42,8 @@ from .cli import (
     _Invocation,
     _PreparedInvocation,
     _publish,
-    _stage_isolated_edition,
-    _supporting_modelos,
+    stage_isolated_edition,
+    supporting_modelos,
 )
 from .export_fragment_provenance import ExportFragmentTarget
 from .render_check import revision_render_inputs
@@ -129,7 +129,7 @@ def _prepared(work: Path, target_root: Path) -> _PreparedInvocation:
         bootstrap_transport=None,
     )
     candidate_root = work / "candidate" / "registry" / "aeat"
-    supporting = _supporting_modelos(_MODELO)
+    supporting = supporting_modelos(_MODELO)
     stage_generated_export_candidate(
         target_root,
         candidate_root,
@@ -156,7 +156,7 @@ def _prepared(work: Path, target_root: Path) -> _PreparedInvocation:
         candidate_root=candidate_root,
         target_root=target_root,
         target_export_root=modelo_root / "revisions" / _REVISION / "export",
-        published_modelo_root=_stage_isolated_edition(
+        published_modelo_root=stage_isolated_edition(
             modelo_root, work / "published-modelo" / _MODELO, revision=_REVISION
         ),
     )

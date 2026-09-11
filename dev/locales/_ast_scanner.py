@@ -1133,7 +1133,7 @@ def _collect_build_entry_keys(node: ast.Call, findings: set[str]) -> None:
     """Pick up portal-catalogue translation keys passed to ``build_entry``.
 
     :mod:`domain.portals._entries` modules construct each portal entry
-    through :func:`domain.portals._entries._common.build_entry`, passing the
+    through :func:`domain.portals._entries .common.build_entry`, passing the
     multilingual ``label`` and
     ``purpose`` keys (and an optional ``notes`` tuple of keys) as keyword
     arguments rather than through a ``tr(...)`` call. The regex scanner

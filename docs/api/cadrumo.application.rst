@@ -52,12 +52,12 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.application._bucket_deletion_contracts
+   cadrumo.application.bucket_deletion_contracts
    cadrumo.application._config_reset_repository
    cadrumo.application._foreign_asset_thresholds
    cadrumo.application._provisioning_contracts
    cadrumo.application._provisioning_runtime
-   cadrumo.application._state_projection_auth
+   cadrumo.application.state_projection_auth
    cadrumo.application._state_projection_readiness
    cadrumo.application.auth_credentials
    cadrumo.application.bucket_event_repository

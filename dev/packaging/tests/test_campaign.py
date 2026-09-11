@@ -12,11 +12,11 @@ import pytest
 from dev._paths import REPO_ROOT
 
 from ..campaign import (
-    _COHORT_DIR,
     _LANES,
     _PREFLIGHT_PASSES,
-    _PROFILES,
     _TEST_WORKERS_ENV,
+    COHORT_DIR,
+    PROFILES,
     PytestPass,
     _attempt_step,
     _run_step,
@@ -63,8 +63,8 @@ _EXPECTED_EXECUTION: dict[str, tuple[tuple[str, tuple[str, ...]], ...]] = {
 
 def test_profiles_reference_registered_forms_only() -> None:
     """Every profile entry is a qualified selector resolving to a registered form."""
-    assert _PROFILES, "no packaging profiles are declared; every profile trivially references known forms"
-    for profile, selectors in _PROFILES.items():
+    assert PROFILES, "no packaging profiles are declared; every profile trivially references known forms"
+    for profile, selectors in PROFILES.items():
         assert len(selectors) == len(set(selectors)), f"profile {profile} repeats a form"
         for selector in selectors:
             assert "/" in selector, f"profile {profile} entry {selector!r} is not a 'lane/form' selector"
@@ -73,7 +73,7 @@ def test_profiles_reference_registered_forms_only() -> None:
 
 def test_every_registered_form_is_selected_by_some_profile() -> None:
     """A form no profile runs is dead capacity, which is what the flat registry hid."""
-    selected = {selector for selectors in _PROFILES.values() for selector in selectors}
+    selected = {selector for selectors in PROFILES.values() for selector in selectors}
     registered = {f"{lane.name}/{form.name}" for lane in _LANES.values() for form in lane.forms}
     assert registered == selected, f"forms never run: {sorted(registered - selected)}"
 
@@ -90,13 +90,13 @@ def test_profiles_resolve_to_the_pinned_executed_set() -> None:
     profile — the thing a workflow actually invokes — could land carrying any
     executed set at all and every assertion here would still pass.
     """
-    assert set(_EXPECTED_EXECUTION) == set(_PROFILES), (
-        f"every profile must be pinned; unpinned: {sorted(set(_PROFILES) - set(_EXPECTED_EXECUTION))}, "
-        f"stale pins: {sorted(set(_EXPECTED_EXECUTION) - set(_PROFILES))}"
+    assert set(_EXPECTED_EXECUTION) == set(PROFILES), (
+        f"every profile must be pinned; unpinned: {sorted(set(PROFILES) - set(_EXPECTED_EXECUTION))}, "
+        f"stale pins: {sorted(set(_EXPECTED_EXECUTION) - set(PROFILES))}"
     )
     for profile, expected in _EXPECTED_EXECUTION.items():
         resolved: list[tuple[str, tuple[str, ...]]] = []
-        for selector in _PROFILES[profile]:
+        for selector in PROFILES[profile]:
             _lane, form = resolve_form(selector)
             resolved.append((form.module, form.extra_args))
         assert tuple(resolved) == expected, f"profile {profile} executed set drifted"
@@ -106,7 +106,7 @@ def test_only_the_developer_lane_skips_the_shared_cohort() -> None:
     """Every install-surface form consumes the one built cohort; dev builds its own env."""
     for lane in _LANES.values():
         for form in lane.forms:
-            takes_cohort = f"--cohort-dir {_COHORT_DIR}" in " ".join(form.command())
+            takes_cohort = f"--cohort-dir {COHORT_DIR}" in " ".join(form.command())
             expected = lane.name != "dev"
             assert takes_cohort is expected, f"{lane.name}/{form.name} cohort wiring is wrong"
 
@@ -118,12 +118,12 @@ def test_quick_profile_is_exactly_the_single_core_probe() -> None:
     budget; growing it must be a conscious decision against that budget, so
     the set is pinned to exactly one form of the core lane.
     """
-    assert _PROFILES["quick"] == ("core/uv-venv",)
+    assert PROFILES["quick"] == ("core/uv-venv",)
 
 
 def test_portable_profile_matches_the_host_portable_aggregate() -> None:
     """The portable profile carries the host-portable forms, no host-specific ones."""
-    assert set(_PROFILES["portable"]) == {
+    assert set(PROFILES["portable"]) == {
         "core/uv-venv",
         "core/plain-pip",
         "core/sdist",
@@ -132,12 +132,12 @@ def test_portable_profile_matches_the_host_portable_aggregate() -> None:
         "browser/host",
         "inference-boundary/wheel",
     }
-    assert "browser/host-with-deps" not in _PROFILES["portable"]
+    assert "browser/host-with-deps" not in PROFILES["portable"]
 
 
 def test_ci_profile_adds_the_dev_lane_and_swaps_the_browser_form() -> None:
     """The ci profile is no superset: it swaps the browser form rather than adding it."""
-    ci = set(_PROFILES["ci"])
+    ci = set(PROFILES["ci"])
     assert {
         "dev/frozen-lock",
         "core/uv-venv",

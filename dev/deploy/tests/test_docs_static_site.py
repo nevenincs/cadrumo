@@ -16,11 +16,11 @@ from typing import Final, override
 
 import pytest
 
+import dev.docs.i18n as _docs_i18n
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.tests.env_scope import scoped_env_var
 from dev.docs.build import pagefind_index_mode
-from dev.docs.i18n import DEFAULT_SITE_LANGUAGE, TARGET_LANGUAGES
 from dev.docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS
 from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV, should_check_sequences
 
@@ -31,16 +31,16 @@ from ..docs_static_site import (
     _REQUIRED_ARTIFACTS,
     CANONICAL_DOCS_BASE_URL,
     _dry_run,
-    _language_build_command,
-    _language_build_environment,
     _language_build_environments,
     _language_site_url,
-    _localized_languages,
     _refresh_download_latest,
-    _site_build_environment,
     _validate_language_entry,
     _validate_language_roots,
     _write_language_entry,
+    language_build_command,
+    language_build_environment,
+    localized_languages,
+    site_build_environment,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -139,25 +139,25 @@ def test_every_language_is_a_published_root_including_english() -> None:
     what put English at ``/`` and left readers of a Spanish-tax site landing in
     English, so the two concepts are now separate constants.
     """
-    languages = _localized_languages()
+    languages = localized_languages()
     assert set(languages) == {member.value for member in OutputLanguage}
     assert OutputLanguage.EN.value in languages
-    assert languages != TARGET_LANGUAGES, "deploy roots must not be re-derived from the catalogue set"
-    assert languages[0] == DEFAULT_SITE_LANGUAGE
+    assert languages != _docs_i18n.TARGET_LANGUAGES, "deploy roots must not be re-derived from the catalogue set"
+    assert languages[0] == _docs_i18n.DEFAULT_SITE_LANGUAGE
 
 
 def test_default_site_language_is_spanish() -> None:
     """A reader who has expressed no preference is sent to Spanish, not English."""
-    assert OutputLanguage.ES.value == DEFAULT_SITE_LANGUAGE
+    assert OutputLanguage.ES.value == _docs_i18n.DEFAULT_SITE_LANGUAGE
 
 
 def test_language_entry_routes_to_every_root_and_declares_the_spanish_floor(tmp_path: Path) -> None:
     """The apex entry reaches every built language and names the fallback."""
     _write_language_entry(tmp_path)
     body = (tmp_path / "index.html").read_text(encoding="utf-8")
-    for language in _localized_languages():
+    for language in localized_languages():
         assert f'"{language}"' in body
-    assert DEFAULT_SITE_LANGUAGE in body
+    assert _docs_i18n.DEFAULT_SITE_LANGUAGE in body
     _validate_language_entry(tmp_path)
 
 
@@ -182,7 +182,7 @@ def test_language_site_url_is_a_subroot_of_the_canonical_docs_url() -> None:
 def test_language_build_command_reuses_the_driver_language_and_out_dir_flags(tmp_path: Path) -> None:
     """The localized build command drives dev.docs.build with the user scope, language, and out-dir."""
     out_dir = tmp_path / "html" / "ca"
-    command = _language_build_command("ca", out_dir)
+    command = language_build_command("ca", out_dir)
     assert command[1:] == [
         "-m",
         "dev.docs.build",
@@ -198,7 +198,7 @@ def test_language_build_command_reuses_the_driver_language_and_out_dir_flags(tmp
 
 def test_language_build_environment_points_the_base_url_at_the_language_root() -> None:
     """Each localized build carries the full Pagefind contract and its own base URL."""
-    env = _language_build_environment("hu", check_sequences=True)
+    env = language_build_environment("hu", check_sequences=True)
     assert env["CADRUMO_DOCS_BASE_URL"] == f"{CANONICAL_DOCS_BASE_URL}/hu"
     assert env["CADRUMO_DOCS_PAGEFIND_MODE"] == "full"
     assert env["CADRUMO_DOCS_JOBS"] == "1"
@@ -218,10 +218,10 @@ def test_every_deploy_root_pins_the_full_record_injected_search_contract() -> No
     """
     hostile_base = {"CADRUMO_DOCS_PAGEFIND_MODE": "pages"}
 
-    assert pagefind_index_mode(_site_build_environment(base_environment={})) == "full"
-    assert pagefind_index_mode(_site_build_environment(base_environment=hostile_base)) == "full"
-    for language in _localized_languages():
-        assert pagefind_index_mode(_language_build_environment(language, check_sequences=False)) == "full"
+    assert pagefind_index_mode(site_build_environment(base_environment={})) == "full"
+    assert pagefind_index_mode(site_build_environment(base_environment=hostile_base)) == "full"
+    for language in localized_languages():
+        assert pagefind_index_mode(language_build_environment(language, check_sequences=False)) == "full"
 
 
 def test_exactly_one_site_root_runs_the_cli_sequence_goldens_check() -> None:
@@ -236,7 +236,7 @@ def test_exactly_one_site_root_runs_the_cli_sequence_goldens_check() -> None:
     environments = _language_build_environments()
     checking = [language for language, env in environments if SEQUENCE_CHECK_SKIP_ENV not in env]
 
-    assert len(environments) == len(_localized_languages())
+    assert len(environments) == len(localized_languages())
     assert len(checking) == 1
     for _language, env in environments:
         with scoped_env_var(SEQUENCE_CHECK_SKIP_ENV, env.get(SEQUENCE_CHECK_SKIP_ENV)):
@@ -254,7 +254,7 @@ def test_a_deploy_that_would_skip_the_goldens_check_everywhere_refuses() -> None
     with (
         _replacing(
             _docs_static_site,
-            "_language_build_environment",
+            "language_build_environment",
             lambda language, *, check_sequences: {SEQUENCE_CHECK_SKIP_ENV: "1"},
         ),
         pytest.raises(SystemExit) as refusal,
@@ -266,16 +266,16 @@ def test_a_deploy_that_would_skip_the_goldens_check_everywhere_refuses() -> None
 
 def test_validate_language_roots_accepts_a_complete_matrix(tmp_path: Path) -> None:
     """Validation passes when every localized root carries the complete required-artifact set."""
-    for language in _localized_languages():
+    for language in localized_languages():
         _materialise_language_root(tmp_path, language)
     _validate_language_roots(tmp_path)
 
 
 def test_validate_language_roots_refuses_a_missing_index(tmp_path: Path) -> None:
     """A localized root without its rendered index page fails validation."""
-    for language in _localized_languages():
+    for language in localized_languages():
         _materialise_language_root(tmp_path, language)
-    missing = _localized_languages()[0]
+    missing = localized_languages()[0]
     (tmp_path / missing / "index.html").unlink()
     with pytest.raises(SystemExit, match="required artifacts are missing"):
         _validate_language_roots(tmp_path)
@@ -289,9 +289,9 @@ def test_validate_language_roots_refuses_each_missing_required_artifact(tmp_path
     with no 404 page, no sitemap, and no Pagefind JS/CSS bundle at all -- only
     ``index.html`` and a substantive Pagefind index chunk were mandatory.
     """
-    for language in _localized_languages():
+    for language in localized_languages():
         _materialise_language_root(tmp_path, language)
-    target_language = _localized_languages()[0]
+    target_language = localized_languages()[0]
     (tmp_path / target_language / missing_artifact).unlink()
     with pytest.raises(SystemExit, match="required artifacts are missing"):
         _validate_language_roots(tmp_path)
@@ -325,9 +325,9 @@ def test_every_artifact_a_valid_root_carries_is_a_required_artifact(tmp_path: Pa
 
 def test_validate_language_roots_refuses_a_sitemap_rooted_at_the_wrong_url(tmp_path: Path) -> None:
     """A localized root's sitemap must be rooted at its OWN language sub-path, not English."""
-    for language in _localized_languages():
+    for language in localized_languages():
         _materialise_language_root(tmp_path, language)
-    target_language = _localized_languages()[0]
+    target_language = localized_languages()[0]
     (tmp_path / target_language / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
@@ -341,9 +341,9 @@ def test_validate_language_roots_refuses_a_sitemap_rooted_at_the_wrong_url(tmp_p
 
 def test_validate_language_roots_refuses_an_empty_pagefind_index(tmp_path: Path) -> None:
     """A localized root whose Pagefind index has no substantive data fails validation."""
-    for language in _localized_languages():
+    for language in localized_languages():
         _materialise_language_root(tmp_path, language)
-    empty = _localized_languages()[0]
+    empty = localized_languages()[0]
     for chunk in scan_directory(tmp_path / empty / "pagefind" / "index", pattern="*.pf_index", recursive=True):
         chunk.write_bytes(b"")
     with pytest.raises(SystemExit, match="no substantive generated index data"):
@@ -389,7 +389,7 @@ def test_dry_run_validates_a_complete_built_site_and_uploads_nothing(tmp_path: P
     tree, so the build is supplied here as a real prepared multi-root artefact
     and the validation half runs production code against real files on disk.
     """
-    for language in _localized_languages():
+    for language in localized_languages():
         _materialise_language_root(tmp_path, language)
     _materialise_apex_root(tmp_path)
 
@@ -403,10 +403,10 @@ def test_dry_run_refuses_a_root_that_would_publish_incomplete(tmp_path: Path) ->
     no dry run at all, so the refusal is asserted on the same defect the
     publish path refuses on.
     """
-    for language in _localized_languages():
+    for language in localized_languages():
         _materialise_language_root(tmp_path, language)
     _materialise_apex_root(tmp_path)
-    (tmp_path / _localized_languages()[0] / "404.html").unlink()
+    (tmp_path / localized_languages()[0] / "404.html").unlink()
 
     with pytest.raises(SystemExit, match="required artifacts are missing"):
         _dry_run(tmp_path, build=lambda _: tmp_path)
@@ -422,7 +422,7 @@ def test_dry_run_refuses_an_apex_missing_the_bundle_the_publish_checks_after_upl
     written to the live destination first and failed second. The same file is
     now required before a byte moves, and this deletes exactly it.
     """
-    for language in _localized_languages():
+    for language in localized_languages():
         _materialise_language_root(tmp_path, language)
     _materialise_apex_root(tmp_path)
     (tmp_path / "pagefind" / "pagefind-entry.json").unlink()
@@ -433,10 +433,10 @@ def test_dry_run_refuses_an_apex_missing_the_bundle_the_publish_checks_after_upl
 
 def test_dry_run_refuses_an_apex_entry_that_strands_a_root(tmp_path: Path) -> None:
     """The apex half of the publish's validation runs in the dry run too."""
-    for language in _localized_languages():
+    for language in localized_languages():
         _materialise_language_root(tmp_path, language)
     _materialise_apex_root(tmp_path)
-    stranded = _localized_languages()[-1]
+    stranded = localized_languages()[-1]
     entry = tmp_path / "index.html"
     entry.write_text(entry.read_text(encoding="utf-8").replace(f'"{stranded}"', '"zz"'), encoding="utf-8")
 

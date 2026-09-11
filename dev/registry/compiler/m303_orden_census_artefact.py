@@ -47,7 +47,7 @@ from cadrumo.domain.calculations.registry.m303_orden_constants import EXTRACTOR_
 from cadrumo.domain.calculations.registry.schema_base import RegistryModel
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
-from ._m303_orden_raw_models import M303AnnualOrdenSourceCensus
+from .m303_orden_raw_models import M303AnnualOrdenSourceCensus
 
 M303_ORDEN_CENSUS_ARTEFACT_FILENAME = "censuses.json"
 """The sole filename of the generated census artefact. Never spelled elsewhere."""

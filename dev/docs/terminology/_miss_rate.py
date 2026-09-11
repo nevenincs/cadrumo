@@ -24,7 +24,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from dev._paths import UTF_8
 
-from ._sweep import SweepResult
+from .term_relevance_mapping import SweepResult
 
 __all__ = [
     "TOP_RESULTS_BOUND",

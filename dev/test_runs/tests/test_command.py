@@ -36,6 +36,70 @@ def test_command_run_preserves_failure_status(tmp_path: Path) -> None:
     assert status == 7
 
 
+def test_locale_signal_persists_backlog_and_keeps_stdout_bounded(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    payload = {
+        "outcome": "backlog",
+        "headline": "Translate 1 locale cell for 1 unique key: es 1.",
+        "summary": {
+            "inventory": {"closed": True, "required_keys": 1},
+            "translation_backlog": {
+                "exact": True,
+                "unique_keys_to_translate": 1,
+                "cells_to_translate": 1,
+            },
+            "cells": {"required": 1, "ready": 0, "missing": 1},
+            "locales": [{"locale": "es", "to_translate": 1}],
+            "domains": [{"domain": "cli", "state": "translate", "to_translate": 1}],
+            "catalogue_only": {"keys": 0, "cells": 0},
+            "next_action": {"action": "create_missing_catalogue_leaves", "command": "just locales-scaffold"},
+        },
+        "details": {
+            "backlog": [{"domain": "cli", "key": "cli.save", "locale": "es", "state": "missing"}],
+            "findings": [{"kind": "translation_missing", "key": "cli.save", "locale": "es"}],
+        },
+    }
+    script = f"import json; print(json.dumps({payload!r}))"
+
+    status = run(
+        (sys.executable, "-c", script),
+        repository=tmp_path,
+        family="test-runs",
+        label="locales-status",
+        signal="locales-status",
+    )
+
+    assert status == 0
+    envelopes = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    assert [item["event"] for item in envelopes] == ["run_started", "run_finished"]
+    finished = envelopes[-1]
+    assert finished["translation_backlog"]["cells_to_translate"] == 1
+    assert "cli.save" not in json.dumps(finished)
+    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    assert (run_dir / "artifacts" / "locale-status.json").is_file()
+    assert "cli.save" in (run_dir / "artifacts" / "locale-backlog.jsonl").read_text(encoding="utf-8")
+    assert "translation_missing" in (run_dir / "artifacts" / "locale-findings.jsonl").read_text(encoding="utf-8")
+
+
+def test_locale_signal_fails_closed_when_child_payload_is_not_parseable(
+    tmp_path: Path,
+) -> None:
+    status = run(
+        (sys.executable, "-c", "print('not-json')"),
+        repository=tmp_path,
+        family="test-runs",
+        label="locales-status",
+        signal="locales-status",
+    )
+
+    assert status == 7
+    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+    assert metadata["exit_status"] == 7
+
+
 def test_command_run_confines_child_temp_and_cache_paths(tmp_path: Path) -> None:
     probe = (
         "import json, os, pathlib, tempfile; "

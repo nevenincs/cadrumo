@@ -31,7 +31,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     ExportRecordDefinition,
 )
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from cadrumo.domain.calculations.registry.withholding_bindings import _WithholdingSelector
+from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingSelector
 
 from ..maintenance_support import resolved_export_casillas, resolved_export_endpoints, resolved_export_fields
 
@@ -84,7 +84,7 @@ def _projection_field() -> ExportFieldDefinition:
 
 
 def _three_path_revision() -> ModeloRevision:
-    selector = _WithholdingSelector.model_validate(
+    selector = WithholdingSelector.model_validate(
         {
             "fact": "row_field",
             "record": "perceptor",

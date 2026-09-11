@@ -19,7 +19,9 @@ import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
 
-from .._curation import (
+from .._enrolment import EnrolmentCandidate, collect_enrolment_candidates
+from .._scaffold import ScaffoldAction, scaffold_handbook
+from ..curation import (
     CurationError,
     audit_handbook,
     relate_concepts,
@@ -28,8 +30,6 @@ from .._curation import (
     set_language_field,
     set_term,
 )
-from .._enrolment import EnrolmentCandidate, collect_enrolment_candidates
-from .._scaffold import ScaffoldAction, scaffold_handbook
 from ..enums import ConceptDomain, TermStatus
 from ..loader import load_terminology_handbook
 

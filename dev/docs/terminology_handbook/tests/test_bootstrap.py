@@ -15,10 +15,10 @@ from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from .._curation import audit_handbook
 from .._enrolment import collect_enrolment_candidates
 from .._scaffold import ScaffoldAction, build_scaffold_plan
 from .._serialize import serialise_concept
+from ..curation import audit_handbook
 from ..loader import load_bundled_terminology_handbook, terminology_concepts_dir
 from ..validators import default_handbook_validators
 

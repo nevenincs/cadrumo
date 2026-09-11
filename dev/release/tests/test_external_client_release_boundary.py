@@ -126,13 +126,13 @@ def test_base_cli_never_imports_the_harness() -> None:
     assert not crossings
 
 
-def test_the_harness_reaches_the_base_cli_through_its_command_api() -> None:
+def test_the_harness_reaches_the_base_surface_through_application_ports() -> None:
     """The harness depends inward, and through the boundary meant to carry it.
 
     Both halves matter. Importing nothing from the base package would mean the
-    harness had grown its own copy of the command surface; importing it through
-    some module other than the command API would mean the boundary had been
-    bypassed rather than used.
+    harness had grown its own copy of the command surface; importing the
+    application-owned command ports proves the process adapter uses the
+    declared inward boundary rather than duplicating those contracts.
     """
     production_imports = {
         target
@@ -143,7 +143,7 @@ def test_the_harness_reaches_the_base_cli_through_its_command_api() -> None:
     }
 
     assert production_imports, "the harness imports nothing from the base package"
-    assert "cadrumo.entrypoints.cli.command_api" in production_imports
+    assert "cadrumo.application.operator_surface.command_ports" in production_imports
 
 
 def test_the_harness_evaluation_lane_is_an_assurance_surface() -> None:

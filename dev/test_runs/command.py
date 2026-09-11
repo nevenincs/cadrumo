@@ -23,6 +23,7 @@ _IMPORT_BOUNDARIES_SIGNAL: Final[str] = "import-boundaries"
 _REGISTRY_HEALTH_SIGNAL: Final[str] = "registry-health"
 _PYTEST_SUMMARY_SIGNAL: Final[str] = "pytest-summary"
 _AUDIT_DEAD_WEIGHT_SIGNAL: Final[str] = "audit-dead-weight"
+_LOCALES_STATUS_SIGNAL: Final[str] = "locales-status"
 _DIAGNOSTIC_RE: Final[re.Pattern[str]] = re.compile(r"^\[([A-Z][A-Z0-9_]*)\]")
 _DIAGNOSTIC_DETAIL_RE: Final[re.Pattern[str]] = re.compile(
     r"^\[(?P<code>[A-Z][A-Z0-9_]*)\] (?P<path>.+):(?P<line>\d+): (?P<message>.*)$"
@@ -847,6 +848,162 @@ class _DeadWeightSignalProcessor:
         }
 
 
+class _LocalesStatusSignalProcessor:
+    """Reduce the complete locale audit payload to a stable advisory envelope."""
+
+    def __init__(self) -> None:
+        self.lines: list[str] = []
+        self._decoded: dict[str, object] | None = None
+        self._decode_error: str | None = None
+
+    def consume(self, line: str) -> None:
+        self.lines.append(line)
+
+    def _payload(self) -> dict[str, object] | None:
+        if self._decoded is not None or self._decode_error is not None:
+            return self._decoded
+        try:
+            decoded = json.loads("".join(self.lines))
+            if not isinstance(decoded, dict):
+                raise ValueError("locale status payload is not a JSON object")
+            if decoded.get("outcome") not in {"backlog", "complete"}:
+                raise ValueError("locale status payload has an unknown outcome")
+            if not isinstance(decoded.get("summary"), dict):
+                raise ValueError("locale status payload has no summary object")
+            if not isinstance(decoded.get("details"), dict):
+                raise ValueError("locale status payload has no details object")
+        except (json.JSONDecodeError, ValueError) as exc:
+            self._decode_error = str(exc)
+            return None
+        self._decoded = decoded
+        return decoded
+
+    def effective_exit_status(self, child_exit_status: int) -> int:
+        """Fail closed when a nominally successful child emitted no usable report."""
+        if child_exit_status == 0 and self._payload() is None:
+            return 7
+        return child_exit_status
+
+    def envelope(
+        self,
+        *,
+        label: str,
+        run_dir: Path,
+        log_path: Path,
+        exit_status: int,
+        started: datetime,
+        finished: datetime,
+    ) -> dict[str, object]:
+        decoded = self._payload()
+        if decoded is None:
+            summary = {
+                "inventory": {"closed": False, "processor_failures": 1},
+                "translation_backlog": {
+                    "exact": False,
+                    "unique_keys_to_translate": None,
+                    "cells_to_translate": None,
+                },
+            }
+            details = {"processor_error": self._decode_error or "unknown processor failure"}
+            outcome = "unavailable"
+            headline = "Locale status could not produce a complete verdict; inspect the run log."
+        else:
+            summary = decoded["summary"]
+            details = decoded["details"]
+            assert isinstance(summary, dict)
+            assert isinstance(details, dict)
+            outcome = str(decoded["outcome"])
+            headline = str(decoded.get("headline", "Locale status produced no headline."))
+        report_path = run_dir / "artifacts" / "locale-status.json"
+        backlog_path = run_dir / "artifacts" / "locale-backlog.jsonl"
+        findings_path = run_dir / "artifacts" / "locale-findings.jsonl"
+        report_path.write_text(
+            json.dumps(
+                {
+                    "details": details,
+                    "run_id": run_dir.name,
+                    "schema_version": 1,
+                    "summary": summary,
+                },
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding=_UTF_8,
+            newline="\n",
+        )
+        _write_json_lines(backlog_path, details.get("backlog", []))
+        _write_json_lines(findings_path, details.get("findings", []))
+        blocking = label == "check-locales"
+        if exit_status in {7, 127} or outcome == "unavailable":
+            classification = "tool_failure"
+            result = "unavailable"
+        elif outcome == "backlog":
+            classification = "blocking_findings" if blocking else "advisory_findings"
+            result = "failed" if blocking else "backlog"
+        else:
+            classification = "clean"
+            result = "passed" if blocking else "complete"
+        return {
+            "classification": classification,
+            "command": label,
+            "duration_seconds": round((finished - started).total_seconds(), 3),
+            "event": "run_finished",
+            "exit_status": exit_status,
+            "finished_at": finished.isoformat(),
+            "headline": headline,
+            "posture": "blocking" if blocking else "advisory",
+            "result": result,
+            "run_id": run_dir.name,
+            "run_outputs": {
+                "artifacts": str(run_dir / "artifacts"),
+                "backlog": str(backlog_path),
+                "findings": str(findings_path),
+                "log": str(log_path),
+                "metadata": str(run_dir / "run.json"),
+                "report": str(report_path),
+            },
+            "schema_version": 1,
+            "started_at": started.isoformat(),
+            **_compact_locale_summary(summary),
+        }
+
+
+def _write_json_lines(path: Path, rows: object) -> None:
+    """Persist a stable JSON-lines collection, refusing non-list payloads."""
+    if not isinstance(rows, list):
+        rows = []
+    path.write_text(
+        "".join(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n" for row in rows),
+        encoding=_UTF_8,
+        newline="\n",
+    )
+
+
+def _compact_locale_summary(summary: dict[str, object]) -> dict[str, object]:
+    """Keep every locale domain visible without repeating non-actionable zeros."""
+    projected = dict(summary)
+    raw_domains = summary.get("domains")
+    if not isinstance(raw_domains, list):
+        return projected
+    complete: list[str] = []
+    work: list[dict[str, object]] = []
+    always = {"domain", "state", "required_keys", "keys_to_translate", "to_translate"}
+    for raw_row in raw_domains:
+        if not isinstance(raw_row, dict):
+            continue
+        if raw_row.get("state") == "complete":
+            complete.append(str(raw_row.get("domain", "unassigned")))
+            continue
+        row = {str(key): value for key, value in raw_row.items() if key in always or (value is not None and value != 0)}
+        by_locale = row.get("to_translate_by_locale")
+        if isinstance(by_locale, dict) and not any(int(value) for value in by_locale.values()):
+            row.pop("to_translate_by_locale")
+        work.append(row)
+    projected["domains"] = {"work": work, "complete": sorted(complete)}
+    return projected
+
+
 def run(
     command: tuple[str, ...],
     *,
@@ -876,6 +1033,8 @@ def run(
         processor = _PytestSummaryProcessor(expected_lanes)
     elif signal == _AUDIT_DEAD_WEIGHT_SIGNAL:
         processor = _DeadWeightSignalProcessor()
+    elif signal == _LOCALES_STATUS_SIGNAL:
+        processor = _LocalesStatusSignalProcessor()
     else:
         processor = None
     start_envelope_text: str | None = None
@@ -946,6 +1105,8 @@ def run(
             transcript.write(line)
             transcript.flush()
         exit_status = process.wait()
+        if isinstance(processor, _LocalesStatusSignalProcessor):
+            exit_status = processor.effective_exit_status(exit_status)
         finished = datetime.now(tz=UTC)
         transcript.write(f"FINISH {finished.isoformat()} exit={exit_status}\n")
 
@@ -999,6 +1160,7 @@ def main() -> int:
         choices=(
             _AUDIT_DEAD_WEIGHT_SIGNAL,
             _IMPORT_BOUNDARIES_SIGNAL,
+            _LOCALES_STATUS_SIGNAL,
             _PYTEST_SUMMARY_SIGNAL,
             _REGISTRY_HEALTH_SIGNAL,
         ),

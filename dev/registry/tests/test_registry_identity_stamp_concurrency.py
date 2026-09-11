@@ -25,7 +25,6 @@ matter how the writer behaved.
 
 from __future__ import annotations
 
-import importlib
 import json
 import os
 import subprocess
@@ -36,8 +35,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
+from cadrumo.core.package_version import PACKAGE_VERSION as __version__
 
-__version__ = importlib.import_module("cadrumo").__version__
 from ..compiler.identity import (
     REGISTRY_IDENTITY_SCHEMA_VERSION,
     RegistryIdentityStamp,

@@ -189,7 +189,7 @@ _WALK_PROGRAM = textwrap.dedent(
     """
     import json
     from cadrumo.core.i18n.render import tr
-    from cadrumo.entrypoints.cli.command_api import ArgumentSpec, DefaultKind
+    from cadrumo.entrypoints.cli.command_spec import ArgumentSpec, DefaultKind
     from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
     commands = []

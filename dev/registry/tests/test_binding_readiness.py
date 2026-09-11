@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.modelo.binding_readiness import _annual_period_for_year
+from cadrumo.application.modelo.binding_readiness import annual_period_for_year
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.queries import RegistryQueryService
 
@@ -209,7 +209,7 @@ def test_year_only_binding_readiness_refuses_multiple_covering_revisions(
 ) -> None:
     """A year-only readiness query must not silently select one period-specific revision.
 
-    ``_annual_period_for_year`` is a read-only discovery helper whose contract
+    ``annual_period_for_year`` is a read-only discovery helper whose contract
     is "None means undetermined"; it CATCHES the selector's
     ``AmbiguousRevisionSelectionError`` rather than propagating it, so a
     mid-year AEAT design boundary degrades to unresolved bindings instead of
@@ -220,7 +220,7 @@ def test_year_only_binding_readiness_refuses_multiple_covering_revisions(
     registry_root = _write_year_ambiguous_registry(tmp_path)
     authority = compile_validated_authority(registry_root, tmp_path)
 
-    assert _annual_period_for_year(authority, modelo="999", filing_year=2025) is None
+    assert annual_period_for_year(authority, modelo="999", filing_year=2025) is None
     assert any(
         "binding-readiness: filing_year=2025 for modelo=999 is covered by revisions 2025-1t, 2025-2t" in record.message
         for record in caplog.records
@@ -246,8 +246,8 @@ def test_year_only_report_and_readiness_share_effective_revision_selection(tmp_p
 
     assert (early_report.revision, early_report.period) == ("2025-early", "1T")
     assert (late_report.revision, late_report.period) == ("2025-late", "2T")
-    assert _annual_period_for_year(authority, modelo="999", filing_year=2025, as_of=early_as_of) == early_report.period
-    assert _annual_period_for_year(authority, modelo="999", filing_year=2025, as_of=late_as_of) == late_report.period
+    assert annual_period_for_year(authority, modelo="999", filing_year=2025, as_of=early_as_of) == early_report.period
+    assert annual_period_for_year(authority, modelo="999", filing_year=2025, as_of=late_as_of) == late_report.period
     # These assertions are about which revision SELECTION lands on, so they ask
     # for the applicability rung the fixture declares. ``snapshot`` defaults to
     # ``FILING``, which this synthetic revision truthfully cannot satisfy -- and

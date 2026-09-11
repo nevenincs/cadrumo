@@ -11,7 +11,7 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 
-from ..analysis.monetary_scale import _SELF_SCALING_WIRE_TYPES, CENTS_SCALE, scale_findings, screen_authority
+from ..analysis.monetary_scale import CENTS_SCALE, SELF_SCALING_WIRE_TYPES, scale_findings, screen_authority
 from ..compiler.authority import compiled_bundled_authority
 from ..maintenance_support import resolved_export_endpoints
 
@@ -64,7 +64,7 @@ def test_a_self_scaling_wire_type_is_not_reported_as_unscaled(authority: Validat
     for endpoint in monetary:
         assert endpoint.field is not None, "monetary was already filtered to endpoints carrying a field"
         unscaled_wires.add(str(endpoint.field.data_type))
-    unscaled_wires -= _SELF_SCALING_WIRE_TYPES
+    unscaled_wires -= SELF_SCALING_WIRE_TYPES
     assert not unscaled_wires, f"this revision no longer exercises a self-scaling wire: {sorted(unscaled_wires)}"
 
     findings = scale_findings(revision, modelo_id="303")

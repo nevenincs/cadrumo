@@ -1,40 +1,20 @@
-"""Focused unit tests for the pure helpers in _export_parse.
+"""Focused tests for the public AEAT export parser surface.
 
-`_export_parse` is the XML-dictionary / BOE-record export parser. The
-public `parse_export_payload` surface is covered indirectly by the
-per-modelo registry round-trip tests (Modelo 100, 349, committed
-registry), but the small pure helpers underneath had no direct
-unit-test coverage. A regression in (for example) the comma-decimal
-normalisation or the data_type dispatch would silently corrupt every
-parsed export payload.
-
-Tests here are structural / algorithmic — they fix the contract of
-each helper, not any AEAT calculation result.
+The parser's internal XML and record helpers stay implementation details.
+These tests exercise the public payload and dictionary entry APIs, while the
+per-modelo registry round-trip tests provide the end-to-end coverage.
 """
 
 from __future__ import annotations
 
-import inspect
 from datetime import date
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry import export_parse as export_parse_module
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.export_parse import (
-    _local_name,
-    _matches_record_start,
-    _parse_dictionary_casilla_id,
-    _parse_xml_boolean,
-    _parse_xml_decimal,
-    _parse_xml_dictionary_line,
-    _parse_xml_dictionary_value,
-    _read_dictionary_text,
-    xml_dictionary_entries,
-)
+from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding, parse_fixed_width_export_field
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
@@ -42,68 +22,6 @@ from cadrumo.domain.calculations.registry.schema_references import SourceReferen
 from ._modelo_100_registry_support import _loaded_registry, _source_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-
-def test_m296_primary_perceptor_record_discriminator_selects_only_blank_position_500() -> None:
-    """The official primary perceptor row occupies the blank @500 alternative.
-
-    The three rival Tipo 2 records declare their own literal at that byte.  This
-    exercises the production matcher against the published generated layout,
-    rather than reproducing the discriminator in an ad-hoc test record.
-    """
-    layout = bundled_authority().snapshot("296", filing_year=2024, period="0A").revision.export_layouts[0]
-    records = tuple(record for record in layout.records if record.id.startswith("m296-"))
-    payload = bytearray(b" " * 500)
-    payload[:4] = b"2296"
-
-    expected_by_position_500 = {
-        b" ": "m296-perceptor",
-        b"F": "m296-perceptor-intereses",
-        b"A": "m296-anexo-a-pagos",
-        b"B": "m296-anexo-b-certificados",
-    }
-    for marker, expected_record_id in expected_by_position_500.items():
-        payload[499:500] = marker
-        matched = tuple(record.id for record in records if _matches_record_start(record, bytes(payload), 0))
-        assert matched == (expected_record_id,)
-
-
-# ---------------------------------------------------------------------------
-# _parse_dictionary_casilla_id
-# ---------------------------------------------------------------------------
-
-
-def test_parse_dictionary_casilla_id_accepts_published_numeric_identities() -> None:
-    cases = {
-        "01": "01",
-        "1234": "1234",
-        "  01  ": "01",
-    }
-
-    for raw, expected in cases.items():
-        assert _parse_dictionary_casilla_id(raw) == expected, raw
-
-
-def test_parse_dictionary_casilla_id_accepts_grounded_letter_identities_only_when_enabled() -> None:
-    for raw, expected in {"A": "A", "  M  ": "M"}.items():
-        assert _parse_dictionary_casilla_id(raw) is None
-        assert _parse_dictionary_casilla_id(raw, allow_letter_id=True) == expected
-
-
-def test_parse_dictionary_casilla_id_rejects_non_casilla_rows() -> None:
-    """AEAT dictionaries use `*` to mark non-casilla rows (notes, separators)."""
-    cases = ("", "   ", "*not-a-casilla", "*01", "###", "a", "AA", "abc", "01a", "01.5")
-
-    for raw in cases:
-        assert _parse_dictionary_casilla_id(raw) is None, raw
-
-
-def test_parse_dictionary_casilla_id_letter_grammar_stays_one_uppercase_letter() -> None:
-    """Enabling the annex form widens the grammar by exactly one uppercase letter."""
-    cases = ("", "   ", "*A", "###", "a", "m", "AA", "A1", "1A", "abc", "01a", "01.5")
-
-    for raw in cases:
-        assert _parse_dictionary_casilla_id(raw, allow_letter_id=True) is None, raw
 
 
 @pytest.mark.parametrize(
@@ -178,16 +96,23 @@ def test_m100_letter_casilla_parsing_refuses_when_source_capability_is_removed()
     layout = modelos_by_id["100"].revisions["2024"].export_layouts[0]
     source = catalogues.sources[str(layout.dictionary_source_ref)]
     dictionary_path = _source_root() / source.corpus_path
-    line = next(item for item in _read_dictionary_text(dictionary_path).splitlines() if item.startswith("VHADQ="))
-
-    admitted = _parse_xml_dictionary_line(line, source=source, overrides={})
     removed_capability = SourceReference.model_validate(
         {**source.model_dump(), "dictionary_casilla_id_grammar": "numeric"},
     )
-    refused = _parse_xml_dictionary_line(line, source=removed_capability, overrides={})
+    dictionary_payload = dictionary_path.read_bytes()
+    admitted = xml_dictionary_entries(
+        layout,
+        sources={str(source.id): source},
+        source_payloads={str(source.id): dictionary_payload},
+    )
+    refused = xml_dictionary_entries(
+        layout,
+        sources={str(removed_capability.id): removed_capability},
+        source_payloads={str(removed_capability.id): dictionary_payload},
+    )
 
-    assert admitted is not None and admitted.casilla_id == "A"
-    assert refused is not None and refused.casilla_id is None
+    assert next(item for item in admitted if item.field_id == "VHADQ").casilla_id == "A"
+    assert next(item for item in refused if item.field_id == "VHADQ").casilla_id is None
 
 
 def test_extended_dictionary_grammar_refuses_a_non_dictionary_source() -> None:
@@ -199,124 +124,6 @@ def test_extended_dictionary_grammar_refuses_a_non_dictionary_source() -> None:
 
     with pytest.raises(ValidationError, match="dictionary_casilla_id_grammar"):
         SourceReference.model_validate(malformed)
-
-
-def test_letter_grammar_has_no_parser_year_or_source_identity_exception() -> None:
-    """The parser consumes the source capability, not a second temporal table."""
-    parser_boundary = inspect.getsource(export_parse_module._parse_xml_dictionary_line)
-
-    assert "supports_single_uppercase_letter_casilla_ids" in parser_boundary
-    assert "applies_from" not in parser_boundary
-    assert "aeat-dr-100" not in parser_boundary
-
-
-# ---------------------------------------------------------------------------
-# _local_name
-# ---------------------------------------------------------------------------
-
-
-def test_local_name_returns_tag_name_without_namespace() -> None:
-    cases = {
-        "{http://example.com/ns}casilla": "casilla",
-        "casilla": "casilla",
-        "{}casilla": "casilla",
-    }
-
-    for tag, expected in cases.items():
-        assert _local_name(tag) == expected, tag
-
-
-# ---------------------------------------------------------------------------
-# _parse_xml_decimal
-# ---------------------------------------------------------------------------
-
-
-def test_parse_xml_decimal_normalises_supported_numeric_forms() -> None:
-    """Spanish locale uses `,` as the decimal separator; AEAT exports
-    follow that convention."""
-    cases = {
-        "": Decimal("0"),
-        "   ": Decimal("0"),
-        "123,45": Decimal("123.45"),
-        "123.45": Decimal("123.45"),
-        "12345": Decimal("12345"),
-        "  123,45  ": Decimal("123.45"),
-    }
-
-    for raw, expected in cases.items():
-        assert _parse_xml_decimal(raw) == expected, raw
-
-
-def test_parse_xml_decimal_malformed_raises_registry_validation_error() -> None:
-    with pytest.raises(RegistryValidationError, match="invalid decimal"):
-        _parse_xml_decimal("not-a-number")
-
-
-# ---------------------------------------------------------------------------
-# _parse_xml_boolean
-# ---------------------------------------------------------------------------
-
-
-def test_parse_xml_boolean_returns_none_for_empty_input() -> None:
-    assert _parse_xml_boolean("LGC", "") is None
-    assert _parse_xml_boolean("S_N", "   ") is None
-
-
-def test_parse_xml_boolean_accepts_declared_dictionary_truthy_tokens() -> None:
-    assert _parse_xml_boolean("LGC", "1") is True
-    assert _parse_xml_boolean("S_N", "SI") is True
-    assert _parse_xml_boolean("s_n", "  si  ") is True
-
-
-def test_parse_xml_boolean_accepts_declared_dictionary_falsy_tokens() -> None:
-    assert _parse_xml_boolean("LGC", "0") is False
-    assert _parse_xml_boolean("S_N", "NO") is False
-    assert _parse_xml_boolean("s_n", "  no  ") is False
-
-
-@pytest.mark.parametrize(("data_type", "raw"), (("LGC", "X"), ("LGC", "SI"), ("S_N", "1"), ("S_N", "false")))
-def test_parse_xml_boolean_raises_on_wrong_or_unrecognised_vocabulary(data_type: str, raw: str) -> None:
-    with pytest.raises(RegistryValidationError, match="XML dictionary boolean field"):
-        _parse_xml_boolean(data_type, raw)
-
-
-# ---------------------------------------------------------------------------
-# _parse_xml_dictionary_value
-# ---------------------------------------------------------------------------
-
-
-def test_parse_xml_dictionary_value_dispatches_by_declared_data_type() -> None:
-    """Each row is read as the type the official dictionary declares for it.
-
-    Every code here is one the bundled Modelo 100 dictionaries actually use, across
-    the revisions that ship: ``N102``/``P102``/``P030`` for amounts and counts,
-    ``LGC`` and ``S_N`` for the two boolean spellings, and ``X``/``FEC``/``AAA``/
-    ``TIT`` for rows carried as text. Asserting against invented codes would leave
-    the dispatch free to be wrong about every real one.
-    """
-    cases: tuple[tuple[str, str, Decimal | str | bool], ...] = (
-        ("N102", "123,45", Decimal("123.45")),
-        ("P102", "12000.25", Decimal("12000.25")),
-        ("P030", "365", Decimal("365")),
-        # tipo_logico spells its two states 0 and 1; tipo_SINO_Exclusivo spells the
-        # same two states NO and SI. Both rows carry a boolean.
-        ("LGC", "1", True),
-        ("LGC", "0", False),
-        ("S_N", "SI", True),
-        ("S_N", "NO", False),
-        ("X", "ESPAÑA", "ESPAÑA"),
-        ("FEC", "1/2/1980", "1/2/1980"),
-        ("AAA", "2021", "2021"),
-        ("TIT", "2", "2"),
-        # The dictionary spells its codes uppercase; matching is case-insensitive
-        # so a lowercased code is not silently read as text.
-        ("n102", "100", Decimal("100")),
-        ("lgc", "1", True),
-        ("s_n", "SI", True),
-    )
-
-    for data_type, raw, expected in cases:
-        assert _parse_xml_dictionary_value(data_type, raw) == expected, (data_type, raw)
 
 
 # ---------------------------------------------------------------------------

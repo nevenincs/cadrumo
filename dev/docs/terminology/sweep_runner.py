@@ -46,8 +46,8 @@ from dev._paths import REPO_ROOT
 from ..terminology_handbook.enums import TermStatus
 from ..terminology_handbook.loader import TerminologyHandbook, load_terminology_handbook
 from ._query_aliases import QueryAliasAuthority, load_query_alias_authority, validate_query_alias_authority
-from ._resolution import ChunkHit, GroundingSurface, TargetResolver, resolve_chunk_hits
 from ._wrangle import STRONG_SIGNAL_SCORE_FLOOR, WrangledResult, read_clusters, wrangle
+from .resolution import ChunkHit, GroundingSurface, TargetResolver, resolve_chunk_hits
 from .search_record import SearchRecordKind
 from .term_relevance_mapping import SweepResult, TermRelevanceMapping, TermTargetRef
 from .unified_record import SearchRecord

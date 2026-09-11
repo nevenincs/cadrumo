@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.tests._cohort_attestation import make_minimal_test_python_cohort
+from dev.packaging.cohort_attestation import make_minimal_test_python_cohort
 
 from ..readiness import check_generated_surface_versions
 

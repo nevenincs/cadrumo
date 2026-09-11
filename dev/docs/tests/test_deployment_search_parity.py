@@ -50,18 +50,18 @@ from pathlib import Path
 
 import pytest
 
+import dev.docs.i18n as _docs_i18n
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 from dev.deploy.docs_static_site import (
     CANONICAL_DOCS_BASE_URL,
-    DEFAULT_SOURCE_LANGUAGE,
     DeploymentTarget,
-    _language_build_command,
-    _language_build_environment,
-    _localized_languages,
-    _public_delivery_checks,
-    _site_build_environment,
+    language_build_command,
+    language_build_environment,
+    localized_languages,
+    public_delivery_checks,
+    site_build_environment,
 )
 
 from ..build import docs_build_language, resolve_record_injector
@@ -164,7 +164,7 @@ def _build_deployed_index(site: Path) -> InjectionStats | None:
     captured: list[InjectionStats] = []
     injector = resolve_record_injector(
         _REPO_ROOT,
-        _site_build_environment(base_environment={}),
+        site_build_environment(base_environment={}),
         on_complete=captured.append,
         sample_per_kind=_SAMPLE_PER_KIND,
     )
@@ -179,12 +179,12 @@ def test_deploy_environment_resolves_the_record_injector() -> None:
     production resolver rather than a re-derived copy of its mapping. Necessary
     but not sufficient, which is why the artefact test below is the real gate.
     """
-    assert resolve_record_injector(_REPO_ROOT, _site_build_environment(base_environment={})) is not None
-    for language in _localized_languages():
+    assert resolve_record_injector(_REPO_ROOT, site_build_environment(base_environment={})) is not None
+    for language in localized_languages():
         # The cli-sequence goldens gate is irrelevant to the injector decision
         # and its verdict cannot vary by root, so these probes take the
         # documented opt-out rather than paying for it once per language.
-        environment = _language_build_environment(language, check_sequences=False)
+        environment = language_build_environment(language, check_sequences=False)
         assert resolve_record_injector(_REPO_ROOT, environment) is not None, (
             f"localized root {language!r} would deploy without injected search records"
         )
@@ -253,10 +253,10 @@ def test_every_language_root_is_built_and_verified_after_publish() -> None:
     200 — the roots were built but unreachable live for two weeks, so an
     unverified root is the failure mode this pins.
     """
-    checks = dict(_public_delivery_checks(DeploymentTarget(bucket="cadrumo-docs-000000000000", distribution_id="E1")))
+    checks = dict(public_delivery_checks(DeploymentTarget(bucket="cadrumo-docs-000000000000", distribution_id="E1")))
 
     assert checks.get(f"{CANONICAL_DOCS_BASE_URL}/") == 200
-    for language in _localized_languages():
+    for language in localized_languages():
         url = f"{CANONICAL_DOCS_BASE_URL}/{language}/"
         assert checks.get(url) == 200, f"publish does not verify the {language!r} root is reachable ({url})"
 
@@ -300,7 +300,7 @@ def test_the_gate_reads_the_artefact_not_the_configuration(tmp_path: Path) -> No
 #: property, so asserting it twice only collides the shared per-language
 #: fixture; the two roots' distinct build commands are pinned separately below.
 _ROOT_LANGUAGES: tuple[str, ...] = tuple(
-    dict.fromkeys((OutputLanguage.EN.value, *_localized_languages())),
+    dict.fromkeys((OutputLanguage.EN.value, *localized_languages())),
 )
 
 #: Pages per root fixture. Small on purpose (see the module docstring's cost
@@ -312,8 +312,8 @@ _PAGES_PER_ROOT = 3
 def _root_build_environment(language: str) -> Mapping[str, str]:
     """Return the environment the deployment builds one root under.
 
-    The English root deploys under ``_site_build_environment``. A localized root
-    deploys under ``_language_build_environment`` plus the build language, which
+    The English root deploys under ``site_build_environment``. A localized root
+    deploys under ``language_build_environment`` plus the build language, which
     the publisher passes on the command line (``--language <lang>``) and the
     build driver writes into ``CADRUMO_DOCS_LANGUAGE`` before the index pass
     runs. Composing that one key here stands in for the driver's argv handling,
@@ -323,12 +323,12 @@ def _root_build_environment(language: str) -> Mapping[str, str]:
     the publisher actually does.
     """
     if language == OutputLanguage.EN.value:
-        return _site_build_environment(base_environment={})
+        return site_build_environment(base_environment={})
     # These probes assert search recall, not the cli-sequence goldens, whose
     # verdict cannot vary by root; they take the documented opt-out so a recall
     # probe does not re-run that gate once per language.
     return {
-        **_language_build_environment(language, check_sequences=False),
+        **language_build_environment(language, check_sequences=False),
         "CADRUMO_DOCS_LANGUAGE": language,
     }
 
@@ -614,7 +614,7 @@ def test_every_root_recalls_a_casilla_by_its_declared_localized_terms(
 #: so it is deliberately built WITHOUT ``--language`` -- asserting the flag for
 #: it would gate the opposite of the decided behaviour.
 _TRANSLATED_LANGUAGES: tuple[str, ...] = tuple(
-    language for language in _localized_languages() if language != DEFAULT_SOURCE_LANGUAGE
+    language for language in localized_languages() if language != _docs_i18n.DEFAULT_SOURCE_LANGUAGE
 )
 
 
@@ -629,7 +629,7 @@ def test_localized_root_command_and_env_agree_on_the_language(language: str) -> 
     deploy command, or stop resolving the key into a build language, and this
     fails rather than letting the composition quietly stand for nothing.
     """
-    command = _language_build_command(language, Path("out"))
+    command = language_build_command(language, Path("out"))
     assert "--language" in command, f"the {language!r} deploy command no longer passes --language: {command}"
     assert command[command.index("--language") + 1] == language
 
@@ -646,7 +646,7 @@ def test_the_source_language_root_is_built_without_a_language_flag() -> None:
     tree that only this root carries -- so the omission is load-bearing, not an
     oversight, and a future edit that "fixes" it by adding the flag fails here.
     """
-    command = _language_build_command(DEFAULT_SOURCE_LANGUAGE, Path("out"))
+    command = language_build_command(_docs_i18n.DEFAULT_SOURCE_LANGUAGE, Path("out"))
 
     assert "--language" not in command, f"the source-language root must not select a catalogue: {command}"
     assert "--scope" not in command, f"the source-language root must keep the full scope: {command}"

@@ -31,13 +31,13 @@ from dev._paths import REPO_ROOT
 from .lane_verification_core import (
     create_pip_venv,
     isolated_product_env,
-    record_proof,
     relative_manifest_path,
     resolve_work_dir,
     run_checked,
     venv_python_path,
     write_smoke_manifest,
 )
+from .proof_ledger import record_proof
 from .python_cohort import assert_installed_cohort, load_python_cohort
 
 _COHORT_PROBE = """

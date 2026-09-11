@@ -1,11 +1,9 @@
 """Shared genuine release-cohort and client-environment fixture builders.
 
-Underscore-prefixed so it is never collected as a test module. Lives under
-``dev/packaging/tests/`` because :mod:`dev.packaging.cohort_manifest` is this
-concept's owning module; ``dev/release/tests`` already imports production
-cohort/evidence code across that same package boundary
-(``dev/release/tests/test_distribution_readiness.py``), so a cross-package
-test-helper import here follows that established package-boundary precedent.
+This is a shared release-cohort test contract, so it lives under the public
+``dev.packaging`` tooling package rather than under a ``tests`` path. The
+release tests import production cohort/evidence code across that same package
+boundary, and this helper belongs to the same shared fixture surface.
 
 Consolidates four near-identical release-cohort builders (three in
 ``dev/packaging/tests`` -- test_evidence.py, test_distribution_evidence_emit.py,
@@ -46,8 +44,8 @@ from pathlib import Path
 
 from dev._paths import REPO_ROOT
 
-from .._acquire_common import venv_bin_dir
-from ..cohort_manifest import (
+from ._acquire_common import venv_bin_dir
+from .cohort_manifest import (
     REQUIRED_ARTIFACT_KINDS,
     BuildIdentity,
     LoadedReleaseCohort,

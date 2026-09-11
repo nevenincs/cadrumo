@@ -141,8 +141,8 @@ def test_hydrate_applicability_rule_round_trips_every_axis() -> None:
 
     from cadrumo.domain.calculations.registry.applicability_payer_facts import PayerFact
     from cadrumo.domain.contribuyente.entity_type import EntityType
+    from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
     from cadrumo.domain.deadlines.models import (
-        FiscalResidency,
         IrpfEstimationRegime,
         IrpfIncomeCategory,
         IVARegime,

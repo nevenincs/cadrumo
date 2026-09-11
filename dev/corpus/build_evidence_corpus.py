@@ -79,7 +79,7 @@ def _download(url: str) -> bytes:
     )
 
 
-def _licence_is_clean(short: str) -> bool:
+def licence_is_clean(short: str) -> bool:
     normalized = " ".join(short.strip().lower().split())
     return _CLEAN_LICENCE_PATTERN.fullmatch(normalized) is not None
 
@@ -127,7 +127,7 @@ def _search(query: str, mime_prefixes: tuple[str, ...], limit: int = 20) -> list
         url = _json_str(info.get("url"))
         if not url or not mime.startswith(mime_prefixes):
             continue
-        if not _licence_is_clean(short):
+        if not licence_is_clean(short):
             continue
         out.append(
             {

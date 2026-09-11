@@ -37,7 +37,7 @@ from cadrumo.domain.calculations.registry.m303_orden_constants import (
 from cadrumo.domain.calculations.registry.schema_base import PublishingAuthority, RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
-from ._m303_orden_raw_models import (
+from .m303_orden_raw_models import (
     M303AnnualOrdenRawActivity,
     M303AnnualOrdenRawAgriculturalIndex,
     M303AnnualOrdenRawAgriculturalIngresoACuenta,

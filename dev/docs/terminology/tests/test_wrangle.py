@@ -2,7 +2,7 @@
 
 The raw-hit corrections are required to be TESTED CODE, not ad-hoc
 filtering. :func:`~dev.docs.terminology._wrangle.wrangle` takes the resolver's
-:class:`~dev.docs.terminology._resolution.ResolutionResult` and applies the four
+:class:`~dev.docs.terminology.resolution.ResolutionResult` and applies the four
 documented corrections -- score-floor + TOC-noise filtering, casilla-revision
 dedupe, locale-quadruplet collapse, directory-cluster reading -- emitting the
 wrangled set the sweep consumes plus an extended drop / collapse / cluster
@@ -23,14 +23,6 @@ import pytest
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo import Modelo
 
-from .._resolution import (
-    ChunkHit,
-    DroppedHit,
-    DropReason,
-    GroundingSurface,
-    ResolutionResult,
-    ResolvedTarget,
-)
 from .._wrangle import (
     STRONG_SIGNAL_SCORE_FLOOR,
     CollapseReason,
@@ -38,6 +30,14 @@ from .._wrangle import (
     WrangledResult,
     read_clusters,
     wrangle,
+)
+from ..resolution import (
+    ChunkHit,
+    DroppedHit,
+    DropReason,
+    GroundingSurface,
+    ResolutionResult,
+    ResolvedTarget,
 )
 from ..search_record import SearchRecordKind
 from ..unified_record import (

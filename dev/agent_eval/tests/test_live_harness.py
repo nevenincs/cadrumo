@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo_harness.mcp._faithfulness import faithfulness_check
+from cadrumo_harness.mcp.faithfulness import faithfulness_check
 
 from .._live_harness import LiveCallTool, ScriptedPersonaDriver, run_live_session
 from .._live_scoring import LiveScenarioScore, score_live_trajectory

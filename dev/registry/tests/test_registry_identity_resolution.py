@@ -18,10 +18,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo import __version__
+from cadrumo.core.package_version import PACKAGE_VERSION as __version__
 from cadrumo.tests.attribute_scope import scoped_attribute
 
-from ..compiler import loader_cache as loader_cache
+from ..compiler import identity as identity_module
 from ..compiler.identity import (
     FingerprintTuples,
     RegistryIdentityOrigin,
@@ -30,7 +30,6 @@ from ..compiler.identity import (
     resolve_registry_identity,
     stamped_cache_key_tuples,
 )
-from ..compiler.loader_cache import _bundled_registry_root, _bundled_root_match
 from ..compiler.loader_fingerprints import clear_fingerprint_cache
 from ..maintenance_support import compute_installed_tree_digest, write_registry_identity_stamp
 
@@ -58,39 +57,24 @@ def _recording_collector(calls: list[Path]) -> Callable[[Path], FingerprintTuple
 
 @pytest.fixture
 def bundled_root_pointing_at() -> Iterator[Callable[[Path], None]]:
-    """Redirect ``bundled_path("registry", "aeat")`` at a caller-chosen real tree.
+    """Treat a caller-chosen real tree as bundled for the identity resolver.
 
-    The only way to exercise the bundled-root branch without editing the shipped
-    registry. Everything under test -- the stamp read, the version gate, the
-    predicate, the resolver -- stays real.
-
-    Rebinds the name inside ``loader_cache`` rather than on ``core.resources``,
-    because that module does ``from ...resources import bundled_path`` and so
-    holds its OWN reference: patching the source module leaves the predicate
-    calling the original. Both memoised roots are cleared on every repoint --
-    ``_bundled_root_match`` caches a normcased string pair derived from the same
-    root, and leaving it warm would answer for the previous tree.
+    The resolver's bundled-root check is a public identity seam. Patching that
+    seam keeps this test about stamp behaviour without reaching into the
+    loader's path and cache implementation.
     """
-    real_bundled_path = loader_cache.bundled_path
     target: dict[str, Path] = {}
 
-    def _redirected(*parts: str) -> Path:
-        if tuple(parts) == ("registry", "aeat") and "root" in target:
-            return target["root"]
-        return real_bundled_path(*parts)
-
-    def _clear() -> None:
-        _bundled_registry_root.cache_clear()
-        _bundled_root_match.cache_clear()
-        clear_fingerprint_cache()
+    def _is_bundled(root: Path) -> bool:
+        return target.get("root") == root.resolve()
 
     def _point_at(root: Path) -> None:
         target["root"] = root.resolve()
-        _clear()
+        clear_fingerprint_cache()
 
-    with scoped_attribute(loader_cache, "bundled_path", _redirected):
+    with scoped_attribute(identity_module, "is_bundled_registry_root", _is_bundled):
         yield _point_at
-    _clear()
+    clear_fingerprint_cache()
 
 
 def _tree(tmp_path: Path) -> Path:

@@ -47,7 +47,7 @@ from . import proof_cache
 
 _UTF_8: Final[str] = UTF_8
 _QUICK_PROOF_KIND: Final[str] = "quick-core-install"
-_COHORT_DIR: Final[str] = "var/packaging-smoke-cohort/python"
+COHORT_DIR: Final[str] = "var/packaging-smoke-cohort/python"
 # Lane concurrency is sized against the PHYSICAL MACHINE, not "a runner": the
 # fleet is six runners on two machines (three per box), so a CI leg must
 # assume two co-resident jobs. Workflows pass the per-leg value via the env
@@ -80,7 +80,7 @@ class Form:
         """Return the subprocess argv for this form."""
         argv = [sys.executable, "-m", self.module]
         if self.takes_cohort:
-            argv += ["--cohort-dir", _COHORT_DIR]
+            argv += ["--cohort-dir", COHORT_DIR]
         argv += list(self.extra_args)
         return argv
 
@@ -174,7 +174,7 @@ _LANES: Final[dict[str, Lane]] = {
 
 # Profiles select executable units, so they name qualified ``lane/form``
 # selectors. The lane, never the profile, owns the invariant.
-_PROFILES: Final[dict[str, tuple[str, ...]]] = {
+PROFILES: Final[dict[str, tuple[str, ...]]] = {
     "portable": (
         "core/uv-venv",
         "core/plain-pip",
@@ -535,7 +535,7 @@ def _test_worker_count(requested: int | None) -> int | None:
 def main(argv: list[str] | None = None) -> int:
     """Build the cohort once, run the profile's lanes concurrently, then the serial oracles."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--profile", choices=sorted(_PROFILES), required=True)
+    parser.add_argument("--profile", choices=sorted(PROFILES), required=True)
     parser.add_argument("--max-workers", type=int, default=None)
     parser.add_argument(
         "--test-workers",
@@ -554,7 +554,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     repo_root = REPO_ROOT
-    selectors = _PROFILES[args.profile]
+    selectors = PROFILES[args.profile]
     # Resolve every selector up front so an unknown lane or form refuses before
     # the cohort build, not after several minutes of wheel work.
     for selector in selectors:
@@ -613,7 +613,7 @@ def main(argv: list[str] | None = None) -> int:
     _run_step([sys.executable, "-m", "dev.packaging.source_preflight"], repo_root, "source-preflight")
 
     _run_step(
-        [sys.executable, "-m", "dev.packaging.python_cohort", "build", "--output", _COHORT_DIR],
+        [sys.executable, "-m", "dev.packaging.python_cohort", "build", "--output", COHORT_DIR],
         repo_root,
         "build-cohort",
     )

@@ -43,8 +43,8 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.record_design_schema import (
-    _AUXILIARY_ENVELOPE_HEADER_PERIOD_RE,
-    _auxiliary_header_constant,
+    AUXILIARY_ENVELOPE_HEADER_CONTENT,
+    validate_auxiliary_envelope_header_contents,
 )
 
 from ..compiler.record_design import extract_record_design
@@ -188,11 +188,11 @@ def test_the_unpinned_period_slot_still_refuses_what_it_always_refused(rejected:
     reserved-run filler -- because those are what a mis-aligned read would
     actually put here.
     """
-    assert not _AUXILIARY_ENVELOPE_HEADER_PERIOD_RE.fullmatch(_auxiliary_header_constant(rejected) or ""), (
-        f"the period slot now accepts {rejected!r}, which is not a period declaration. The cadence "
-        "unpin was meant to widen the contract from one literal to the period vocabulary, not to "
-        "stop discriminating"
-    )
+    contents = list(AUXILIARY_ENVELOPE_HEADER_CONTENT)
+    contents[1] = '"303"'
+    contents[4] = rejected
+    with pytest.raises(ValueError, match="period token or range"):
+        validate_auxiliary_envelope_header_contents(tuple(contents))
 
 
 @pytest.mark.parametrize(
@@ -207,6 +207,7 @@ def test_the_unpinned_period_slot_accepts_every_cadence_the_corpus_declares(acce
     Modelo 303's own combined month-and-quarter range, whose two separators are
     three literal dots and U+2026 in the same string.
     """
-    assert _AUXILIARY_ENVELOPE_HEADER_PERIOD_RE.fullmatch(_auxiliary_header_constant(accepted) or ""), (
-        f"the period slot refuses {accepted!r}, which AEAT declares in a bundled design"
-    )
+    contents = list(AUXILIARY_ENVELOPE_HEADER_CONTENT)
+    contents[1] = '"303"'
+    contents[4] = accepted
+    validate_auxiliary_envelope_header_contents(tuple(contents))

@@ -12,16 +12,15 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from cadrumo.application.operator_actions.catalogue import ActionCatalogue
+from cadrumo.application.operator_surface.errors import OperatorSurfaceContractError
 from cadrumo.application.operator_surface.manifest import (
-    ActionCatalogue,
-    ManifestActionProfile,
     OperatorSurfaceReconciliation,
     ResolvedCatalogueAction,
     ResolvedManifestActionProfile,
-    _index_reconciled_leaves,
-    _refuse,
     resolve_action_catalogue,
 )
+from cadrumo.application.operator_surface.models import ManifestActionProfile
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -137,7 +136,7 @@ def _resolve_manifest_action_profiles(
     reconciliation: OperatorSurfaceReconciliation,
 ) -> ManifestActionResolution:
     """Resolve the action profiles consumed only by the development evaluator."""
-    live_by_key = _index_reconciled_leaves(reconciliation)
+    live_by_key = {leaf.live_leaf.subject_leaf_key: leaf for leaf in reconciliation.leaves}
     catalogue_actions = resolve_action_catalogue(catalogue=catalogue, reconciliation=reconciliation)
     action_by_id = {action.action_id: action for action in catalogue_actions}
     diagnostics: list[str] = []
@@ -165,7 +164,8 @@ def _resolve_manifest_action_profiles(
                 resolved_action=action,
             )
         )
-    _refuse("manifest_action_profiles", diagnostics)
+    if diagnostics:
+        raise OperatorSurfaceContractError("manifest_action_profiles", reason="; ".join(diagnostics))
     return ManifestActionResolution(catalogue_actions=catalogue_actions, profiles=tuple(resolved))
 
 
@@ -173,7 +173,7 @@ def production_leaf_condition_scenario_matrix() -> LeafConditionScenarioMatrix:
     """Build the current matrix from live CLI surface and production declarations."""
     from cadrumo.application.modelo.preconditions import MODELO_PRECONDITION_PROFILES
     from cadrumo.application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
-    from cadrumo.entrypoints.cli import current_operator_surface_reconciliation
+    from cadrumo.entrypoints.cli.operator_surface_reconciliation import current_operator_surface_reconciliation
 
     resolution = _resolve_manifest_action_profiles(
         profiles=MODELO_PRECONDITION_PROFILES,

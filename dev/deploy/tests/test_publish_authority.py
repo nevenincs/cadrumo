@@ -28,9 +28,9 @@ from ...deploy import docs_static_site
 from ..docs_static_site import (
     _CI_MARKERS,
     _DEPLOY_ROLE_VARIABLE,
-    _language_build_command,
     _require_authorized_publish_environment,
-    _site_build_environment,
+    language_build_command,
+    site_build_environment,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -139,14 +139,14 @@ def test_the_build_path_carries_no_automation_conditional() -> None:
     """
     deploy_keys = ("CADRUMO_DOCS_BASE_URL", "CADRUMO_DOCS_JOBS", "CADRUMO_DOCS_PAGEFIND_MODE")
 
-    local_environment = {key: _site_build_environment(base_environment={})[key] for key in deploy_keys}
-    local_command = _language_build_command("es", Path("out"))
+    local_environment = {key: site_build_environment(base_environment={})[key] for key in deploy_keys}
+    local_command = language_build_command("es", Path("out"))
 
     automated_base = {"CI": "true", "GITHUB_ACTIONS": "true", _DEPLOY_ROLE_VARIABLE: _ROLE}
-    automated_environment = {key: _site_build_environment(base_environment=automated_base)[key] for key in deploy_keys}
+    automated_environment = {key: site_build_environment(base_environment=automated_base)[key] for key in deploy_keys}
 
     assert automated_environment == local_environment
-    assert _language_build_command("es", Path("out")) == local_command
+    assert language_build_command("es", Path("out")) == local_command
 
 
 def test_the_local_publish_path_is_unaffected_by_the_role() -> None:

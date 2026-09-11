@@ -31,7 +31,7 @@ from dev._paths import UTF_8
 from ..terminology_handbook.enums import TermStatus
 from ..terminology_handbook.errors import TerminologyLoadError
 from ..terminology_handbook.loader import TerminologyHandbook, load_terminology_handbook
-from ._sweep import enumerate_query_vocabulary
+from .sweep_runner import enumerate_query_vocabulary
 
 _UTF_8: Final[str] = UTF_8
 

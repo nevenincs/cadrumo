@@ -9,16 +9,12 @@ from hashlib import sha256
 from pathlib import Path
 
 import pytest
-
-from cadrumo.application.aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
 from cadrumo.application.calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
-from cadrumo.application.filing.export import (
-    _filing_producer_values,
-    _render_layout,
-    export_draft,
-    render_filing_envelope,
-)
+
+from cadrumo.application.aggregation.m303_arrivals import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
+from cadrumo.application.filing.export import _render_layout, export_draft, render_filing_envelope
 from cadrumo.application.filing.export_envelope import FilingEnvelopeRenderRequest
+from cadrumo.application.filing.export_producer import filing_producer_values
 from cadrumo.application.filing.producer_snapshot import (
     FilingElectionFacts,
     FilingProducerSnapshot,
@@ -665,7 +661,7 @@ def test_isolated_m303_did_wire_uses_only_the_snapshot_selected_account(
         layout,
         registry_snapshot=registry_snapshot,
         draft=_draft(),
-        headers=_filing_producer_values(snapshot),
+        headers=filing_producer_values(snapshot),
         producer_snapshot=snapshot,
         prior_domiciliation_election=PriorDomiciliationElection.KEEP,
         product_software_identity=_product_software_identity(),
@@ -704,7 +700,7 @@ def test_filing_envelope_facade_derives_ordered_bytes_from_the_canonical_resolve
         envelope_layout,
         registry_snapshot=registry_snapshot,
         draft=_draft(),
-        headers=_filing_producer_values(producer_snapshot),
+        headers=filing_producer_values(producer_snapshot),
         producer_snapshot=producer_snapshot,
         prior_domiciliation_election=PriorDomiciliationElection.KEEP,
         product_software_identity=_product_software_identity(),

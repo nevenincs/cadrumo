@@ -16,7 +16,7 @@ from dev.source_tree import content_digest, repository_files
 
 from .. import release_cohort as release_cohort_module
 from ..release_cohort import (
-    _REQUIRED_PYTHON_VERSION,
+    REQUIRED_PYTHON_VERSION,
     build_from_clean_source,
     build_release_cohort,
     deterministic_zip_tree,
@@ -164,7 +164,7 @@ def test_release_builder_identity_is_the_exact_checked_in_cpython_pin() -> None:
     pin = (REPO_ROOT / ".python-version").read_text(encoding="utf-8").strip()
 
     assert re.fullmatch(_EXACT_PYTHON, pin) is not None
-    assert pin == _REQUIRED_PYTHON_VERSION
+    assert pin == REQUIRED_PYTHON_VERSION
 
     identity = release_cohort_module._build_identity(REPO_ROOT)
 
@@ -174,7 +174,7 @@ def test_release_builder_identity_is_the_exact_checked_in_cpython_pin() -> None:
 
 @pytest.mark.parametrize(
     ("implementation", "version"),
-    [("PyPy", _REQUIRED_PYTHON_VERSION), ("CPython", "3.14.0")],
+    [("PyPy", REQUIRED_PYTHON_VERSION), ("CPython", "3.14.0")],
     ids=("alternative-implementation", "different-patch"),
 )
 def test_release_builder_refuses_a_non_exact_cpython_identity(

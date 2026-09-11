@@ -16,6 +16,11 @@ from cadrumo.core.directory_scan import iter_directory
 from dev._paths import REPO_ROOT
 
 from .._distribution_limits import PYPI_FILE_CAP_BYTES
+from ..cohort_attestation import (
+    add_test_runtime_wheelhouse,
+    add_test_source_archive,
+    make_test_command_spec_attestation,
+)
 from ..hashing import sha256_path
 from ..lane_verification_core import (
     _CORPUS_SOURCE_PREFIX,
@@ -30,19 +35,13 @@ from ..lane_verification_core import (
     build_source_data_paths,
     build_wheel,
     expected_wheel_data_paths,
-    recorded_proofs,
-    reset_proof_ledger,
     run_checked,
     tracked_source_data_paths,
 )
+from ..proof_ledger import recorded_proofs, reset_proof_ledger
 from ..python_cohort import load_python_cohort
 from ..smoke_core import _assert_complete_wheel_cohort
 from ..smoke_sdist_core import _assert_sdist_contains_expected_data
-from ._cohort_attestation import (
-    add_test_runtime_wheelhouse,
-    add_test_source_archive,
-    make_test_command_spec_attestation,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

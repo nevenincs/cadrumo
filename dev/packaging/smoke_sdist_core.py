@@ -17,7 +17,6 @@ from .lane_verification_core import (
     assert_installed_data,
     create_pip_venv,
     install_targets_with_pip,
-    record_proof,
     relative_manifest_path,
     require_executable,
     resolve_work_dir,
@@ -26,6 +25,7 @@ from .lane_verification_core import (
     venv_python_path,
     write_smoke_manifest,
 )
+from .proof_ledger import record_proof
 from .python_cohort import (
     assert_installed_cohort,
     install_targets,

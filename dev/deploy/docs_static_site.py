@@ -23,7 +23,7 @@ from defusedxml import ElementTree
 
 from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
-from dev.docs.i18n import DEFAULT_SITE_LANGUAGE, DEFAULT_SOURCE_LANGUAGE, SITE_ROOT_LANGUAGES
+from dev.docs import i18n as _docs_i18n
 from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 
 CANONICAL_DOCS_BASE_URL = "https://cadrumo.neve.md/docs"
@@ -121,7 +121,7 @@ def _required_executable(name: str) -> str:
     return executable
 
 
-def _site_build_environment(*, base_environment: Mapping[str, str] | None = None) -> dict[str, str]:
+def site_build_environment(*, base_environment: Mapping[str, str] | None = None) -> dict[str, str]:
     """Return the deployment-specific strict docs build environment.
 
     The Pagefind contract is pinned to ``full`` on every deploy root, English
@@ -219,7 +219,7 @@ def _build_site(repo_root: Path) -> Path:
         _run(
             [sys.executable, "-m", "dev.docs.build", "--strict", "docs/conf.py"],
             cwd=repo_root,
-            env=_site_build_environment(),
+            env=site_build_environment(),
             stream_output=True,
         )
     except SystemExit as exc:
@@ -315,7 +315,7 @@ def _require_search_index(site_root: Path, *, root_label: str) -> None:
         )
 
 
-def _localized_languages() -> tuple[str, ...]:
+def localized_languages() -> tuple[str, ...]:
     """Return the per-language deploy roots, English included.
 
     Derived from the shared :data:`SITE_ROOT_LANGUAGES` so the deploy matrix
@@ -323,7 +323,7 @@ def _localized_languages() -> tuple[str, ...]:
     readers here file Spanish tax, so no language holds the apex path and ``/``
     resolves to the reader's own instead (see :func:`_write_language_entry`).
     """
-    return SITE_ROOT_LANGUAGES
+    return _docs_i18n.SITE_ROOT_LANGUAGES
 
 
 def _language_site_url(language: str) -> str:
@@ -331,7 +331,7 @@ def _language_site_url(language: str) -> str:
     return f"{CANONICAL_DOCS_BASE_URL}/{language}"
 
 
-def _language_build_command(language: str, out_dir: Path) -> list[str]:
+def language_build_command(language: str, out_dir: Path) -> list[str]:
     """Return the build-driver command for one site root.
 
     Reuses the ``dev.docs.build`` driver's flags rather than duplicating build
@@ -342,14 +342,14 @@ def _language_build_command(language: str, out_dir: Path) -> list[str]:
     strict user-scope build of the operator surface.
     """
     command = [sys.executable, "-m", "dev.docs.build", "--strict"]
-    if language == DEFAULT_SOURCE_LANGUAGE:
+    if language == _docs_i18n.DEFAULT_SOURCE_LANGUAGE:
         command += ["--out-dir", str(out_dir)]
         return command
     command += ["--scope", "user", "--language", language, "--out-dir", str(out_dir)]
     return command
 
 
-def _language_build_environment(language: str, *, check_sequences: bool) -> dict[str, str]:
+def language_build_environment(language: str, *, check_sequences: bool) -> dict[str, str]:
     """Return the deploy build environment for one localized site root.
 
     The shared deployment environment (serial workers, full record-injected
@@ -365,7 +365,7 @@ def _language_build_environment(language: str, *, check_sequences: bool) -> dict
     the documented opt-out; which root is decided by
     :func:`_language_build_environments`, never here.
     """
-    environment = {**_site_build_environment(), "CADRUMO_DOCS_BASE_URL": _language_site_url(language)}
+    environment = {**site_build_environment(), "CADRUMO_DOCS_BASE_URL": _language_site_url(language)}
     if not check_sequences:
         environment[SEQUENCE_CHECK_SKIP_ENV] = "1"
     return environment
@@ -381,8 +381,8 @@ def _language_build_environments() -> tuple[tuple[str, dict[str, str]], ...]:
     dropping the gate from the whole deploy) cannot reach a published site.
     """
     environments = tuple(
-        (language, _language_build_environment(language, check_sequences=index == 0))
-        for index, language in enumerate(_localized_languages())
+        (language, language_build_environment(language, check_sequences=index == 0))
+        for index, language in enumerate(localized_languages())
     )
     checked = [language for language, environment in environments if SEQUENCE_CHECK_SKIP_ENV not in environment]
     if len(checked) != 1:
@@ -406,7 +406,7 @@ def _build_language_roots(repo_root: Path, html_root: Path) -> None:
         out_dir = html_root / language
         try:
             _run(
-                _language_build_command(language, out_dir),
+                language_build_command(language, out_dir),
                 cwd=repo_root,
                 env=environment,
                 stream_output=True,
@@ -436,7 +436,7 @@ def _write_language_entry(html_root: Path) -> Path:
     Returns:
         The path written, so the caller can assert on it.
     """
-    languages = ", ".join(f'"{language}"' for language in _localized_languages())
+    languages = ", ".join(f'"{language}"' for language in localized_languages())
     entry = html_root / "index.html"
     entry.write_text(
         "<!doctype html>\n"
@@ -449,7 +449,7 @@ def _write_language_entry(html_root: Path) -> Path:
         "<script>\n"
         "(function () {\n"
         f"  var roots = [{languages}];\n"
-        f'  var fallback = "{DEFAULT_SITE_LANGUAGE}";\n'
+        f'  var fallback = "{_docs_i18n.DEFAULT_SITE_LANGUAGE}";\n'
         "  var cookie = document.cookie.match(/(?:^|;\\s*)cadrumo_docs_lang=([a-zA-Z-]+)/);\n"
         "  var wanted = [];\n"
         "  if (cookie) { wanted.push(cookie[1]); }\n"
@@ -470,7 +470,7 @@ def _write_language_entry(html_root: Path) -> Path:
         "</script>\n"
         "</head>\n<body>\n"
         "<noscript>\n<ul>\n"
-        + "".join(f'<li><a href="{language}/">{language}</a></li>\n' for language in _localized_languages())
+        + "".join(f'<li><a href="{language}/">{language}</a></li>\n' for language in localized_languages())
         + "</ul>\n</noscript>\n</body>\n</html>\n",
         encoding=_UTF_8,
         newline="\n",
@@ -497,15 +497,15 @@ def _validate_language_entry(html_root: Path) -> None:
     if not entry.is_file():
         raise SystemExit(f"Language entry missing at {entry}; refusing to publish.")
     body = entry.read_text(encoding=_UTF_8)
-    unreachable = [language for language in _localized_languages() if f'"{language}"' not in body]
+    unreachable = [language for language in localized_languages() if f'"{language}"' not in body]
     if unreachable:
         raise SystemExit(
             f"Language entry does not route to {', '.join(unreachable)}; refusing to publish "
             "a root that cannot reach every built language.",
         )
-    if DEFAULT_SITE_LANGUAGE not in body:
+    if _docs_i18n.DEFAULT_SITE_LANGUAGE not in body:
         raise SystemExit(
-            f"Language entry declares no {DEFAULT_SITE_LANGUAGE!r} fallback; a reader with no "
+            f"Language entry declares no {_docs_i18n.DEFAULT_SITE_LANGUAGE!r} fallback; a reader with no "
             "stated preference would reach nothing.",
         )
 
@@ -518,7 +518,7 @@ def _validate_language_roots(html_root: Path) -> None:
     bundle -- are mandatory for every localized root too, not only its index
     page and a non-empty Pagefind index.
     """
-    for language in _localized_languages():
+    for language in localized_languages():
         root = html_root / language
         label = f"Localized site root {language!r}"
         _require_artifacts_present(root, root_label=label)
@@ -765,7 +765,7 @@ def _endpoint_response(url: str) -> tuple[int, dict[str, str]]:
         connection.close()
 
 
-def _public_delivery_checks(target: DeploymentTarget) -> tuple[tuple[str, int], ...]:
+def public_delivery_checks(target: DeploymentTarget) -> tuple[tuple[str, int], ...]:
     """Return the post-publish endpoint checks as ``(url, expected status)`` pairs.
 
     Named separately from the run so the deployment-parity gate can assert the
@@ -774,7 +774,7 @@ def _public_delivery_checks(target: DeploymentTarget) -> tuple[tuple[str, int], 
     """
     return (
         (f"{CANONICAL_DOCS_BASE_URL}/", 200),
-        *tuple((f"{_language_site_url(language)}/", 200) for language in _localized_languages()),
+        *tuple((f"{_language_site_url(language)}/", 200) for language in localized_languages()),
         (_LEGACY_DOCS_URL, 308),
         (f"{CANONICAL_DOCS_BASE_URL}/{_MISSING_DOCS_PATH}", 404),
         (f"https://{target.bucket}.s3.{STACK_REGION}.amazonaws.com/docs/index.html", 403),
@@ -861,7 +861,7 @@ def _verify_published_search_index(
         (f"{base_url}/", html_root, "docs root"),
         *tuple(
             (f"{base_url}/{language}/", html_root / language, f"localized root {language!r}")
-            for language in _localized_languages()
+            for language in localized_languages()
         ),
     )
     for root_url, built_root, label in roots:
@@ -875,7 +875,7 @@ def _verify_published_search_index(
 
 def _verify_public_delivery(target: DeploymentTarget) -> None:
     """Require the canonical, legacy, missing, and private-origin responses."""
-    checks = _public_delivery_checks(target)
+    checks = public_delivery_checks(target)
     legacy_headers: dict[str, str] | None = None
     for url, expected_status in checks:
         actual_status, headers = _endpoint_response(url)
@@ -1005,7 +1005,7 @@ def _dry_run(repo_root: Path, *, build: Callable[[Path], Path] = _build_site_roo
     _validate_built_site(html_root)
     print(
         f"Verified the built docs site at {html_root}: apex entry plus the "
-        f"{', '.join(_localized_languages())} roots. Uploaded nothing.",
+        f"{', '.join(localized_languages())} roots. Uploaded nothing.",
         flush=True,
     )
     return 0

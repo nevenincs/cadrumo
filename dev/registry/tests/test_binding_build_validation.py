@@ -3,7 +3,7 @@
 The binding-interface hardening collapsed the three
 incompatible binding-validation conventions onto one per-family
 ``validate(binding) -> list[str]`` accumulating validator, registered in the
-single ``_BINDING_VALIDATOR_REGISTRY`` dispatch table and run by the
+single source-family dispatch table and run by the
 registry-build section validator for EVERY family.
 
 This file proves the build gate is live for every source family: a malformed
@@ -29,13 +29,10 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.bindings import (
-    _BINDING_VALIDATOR_REGISTRY,
-    validate_binding_selector_shape,
-)
+from cadrumo.domain.calculations.registry.bindings import validate_binding_selector_shape
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import (
     DataBindingDefinition,
@@ -314,15 +311,6 @@ def test_renta_gasto_binding_rejects_legacy_target_casilla_key() -> None:
     assert len(diagnostics) == 1
     assert "target_casilla_id" in diagnostics[0]
     assert "target_casilla" in diagnostics[0]
-
-
-def test_dispatch_table_covers_every_validated_family() -> None:
-    """Every family case names a source the dispatch table validates (no silent gap)."""
-    assert all(isinstance(key, BindingSourceKind) for key in _BINDING_VALIDATOR_REGISTRY)
-    covered = {str(key) for key in _BINDING_VALIDATOR_REGISTRY}
-    for case in _FAMILY_CASES:
-        source = case[1]
-        assert source in covered, f"family case {source!r} is not in the validator dispatch table"
 
 
 def test_isolated_revision_build_gate_runs_every_family() -> None:

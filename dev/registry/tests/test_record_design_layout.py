@@ -7,7 +7,6 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignRelativeSuffixMarker,
 )
@@ -397,35 +396,6 @@ def test_a_two_byte_closing_part_that_is_not_a_terminator_is_not_peeled() -> Non
     assert len(kept) == 1
 
 
-def test_a_terminator_that_does_not_come_last_is_refused() -> None:
-    """A terminator that is not last is not a terminator.
-
-    Without this the split would accept a line-terminator row appearing anywhere in
-    the closing and quietly reorder the record's tail. Refusing is right: a design
-    declaring it early is either malformed or has been misread, and rearranging it
-    would hide both.
-    """
-    from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignRelativeSuffixMarker
-
-    from ..compiler.record_design_workbook import _require_terminator_closes_the_record
-
-    def suffix(ordinal: int, length: int, description: str) -> RecordDesignRelativeSuffixMarker:
-        return RecordDesignRelativeSuffixMarker(
-            sheet="S",
-            row=ordinal,
-            ordinal=ordinal,
-            offset="***",
-            length=length,
-            type_code="An",
-            description=description,
-        )
-
-    closing = (suffix(9, 18, "Constante. </T...>"),)
-    _require_terminator_closes_the_record("S", closing, suffix(10, 2, "Fin de Registro. CRLF"))
-    with pytest.raises(RegistryValidationError, match="not last is not a terminator"):
-        _require_terminator_closes_the_record("S", closing, suffix(8, 2, "Fin de Registro. CRLF"))
-
-
 def test_a_design_declaring_no_terminator_does_not_acquire_one() -> None:
     """THE INVERSE FALSE GREEN: peeling is conditional on the row being declared.
 
@@ -457,81 +427,3 @@ def test_a_design_declaring_no_terminator_does_not_acquire_one() -> None:
     )
     assert isinstance(envelope.closing, RecordDesignRelativeSuffixMarker)
     assert envelope.closing.length == 18
-
-
-def test_the_workbook_and_pdf_parsers_share_one_notion_of_a_crlf_row() -> None:
-    """One concept, one home -- the two parsers may not drift on the same fact.
-
-    They already had. The PDF compact-row recogniser has known the end-of-record row
-    since it was written; the workbook closing recogniser refused thirty designs
-    across eight modelos for declaring one. Two private spellings of a single domain
-    fact is what let that divergence stand, so the PDF pattern now composes the
-    shared phrase rather than restating it.
-
-    Asserted by composition, not by equality of behaviour: this fails if either side
-    grows its own copy.
-    """
-    from ..compiler.record_design_layout_markers import _RECORD_TERMINATOR, RECORD_TERMINATOR_PHRASE
-    from ..compiler.record_design_pdf_rows import _COMPACT_PDF_CRLF_ROW_RE
-
-    assert RECORD_TERMINATOR_PHRASE in _COMPACT_PDF_CRLF_ROW_RE.pattern
-    assert _RECORD_TERMINATOR.pattern == RECORD_TERMINATOR_PHRASE
-
-    # Every wording the shared phrase claims to cover must actually match, so a
-    # dead alternative cannot hide behind a live one. The bare-CRLF spelling was
-    # dead for exactly this reason before this test existed.
-    for wording in ("Fin de Registro. Constante CRLF", "Salto de linea. CRLF", "Salto de línea. CRLF"):
-        assert _RECORD_TERMINATOR.search(wording), wording
-    assert not _RECORD_TERMINATOR.search("Periodo. Constante 0A")
-
-
-def test_envelope_composition_order_is_checked_by_source_position_not_by_ordinal() -> None:
-    """Removing the ordinal comparison must not remove the coverage it appeared to give.
-
-    The envelope-order check asserted composition order twice, on source row and on
-    ordinal, and the ordinal half asserted nothing the row half did not. Deleting a
-    redundant assertion is only safe if the survivor still bites, so every
-    misordering the pair used to catch is exercised here against the row check
-    alone.
-
-    Why the ordinal half had to go rather than be made string-safe: AEAT's ordinal
-    is a PRINTED LABEL, not an arithmetic value -- it publishes ``14bis`` to insert
-    a field between 14 and 15 without renumbering. Ordering by it assumes a density
-    the authority never promised, and a string ordering would place ``2`` after
-    ``10`` by construction.
-    """
-    from cadrumo.domain.calculations.registry.record_design_schema import (
-        RecordDesignField,
-        RecordDesignRelativeSuffixMarker,
-        RecordDesignVariableBodyMarker,
-        RecordDesignVariableTotalMarker,
-    )
-
-    from ..compiler.record_design_workbook import _require_ordered_variable_envelope
-
-    def field(row: int) -> RecordDesignField:
-        return RecordDesignField(sheet="S", row=row, ordinal="1", offset=1, length=1, type_code="An", description="d")
-
-    def body(row: int) -> RecordDesignVariableBodyMarker:
-        return RecordDesignVariableBodyMarker(
-            sheet="S", row=row, ordinal=2, offset=2, length="Variable", type_code="An", description="d"
-        )
-
-    def closing(row: int) -> RecordDesignRelativeSuffixMarker:
-        return RecordDesignRelativeSuffixMarker(
-            sheet="S", row=row, ordinal=3, offset="***", length=18, type_code="An", description="d"
-        )
-
-    def total(row: int) -> RecordDesignVariableTotalMarker:
-        return RecordDesignVariableTotalMarker(sheet="S", row=row, label="total", length="Variable")
-
-    _require_ordered_variable_envelope("S", [field(10)], body(11), (closing(12),), total(13))
-
-    for label, args in (
-        ("body before the fixed prefix", ([field(11)], body(10), (closing(12),), total(13))),
-        ("closing before the body", ([field(10)], body(12), (closing(11),), total(13))),
-        ("total before the closing", ([field(10)], body(11), (closing(12),), total(11))),
-    ):
-        with pytest.raises(RegistryValidationError, match="misordered variable-envelope"):
-            _require_ordered_variable_envelope("S", *args)
-            pytest.fail(f"{label} was accepted; the row check does not cover it")

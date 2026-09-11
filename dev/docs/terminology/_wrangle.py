@@ -3,7 +3,7 @@
 Output wrangling is a typed transformation layer, not
 ad-hoc filtering: the raw-hit corrections are TESTED
 CODE with an audit trail, not inline ``if score > 0.5`` scattered through the
-compiler. This module takes the :class:`~dev.docs.terminology._resolution.ResolutionResult`
+compiler. This module takes the :class:`~dev.docs.terminology.resolution.ResolutionResult`
 the chunk-to-target resolver produces and applies the four documented
 corrections, emitting a :class:`WrangledResult` the sweep (the term-to-target
 relevance mapping) consumes.
@@ -29,7 +29,7 @@ The four corrections, in composition order:
    cluster boosted.
 
 Every correction that REMOVES or MERGES a hit records why: filter drops extend
-the resolver's :class:`~dev.docs.terminology._resolution.DroppedHit` trail, and
+the resolver's :class:`~dev.docs.terminology.resolution.DroppedHit` trail, and
 dedupe/collapse merges are recorded as :class:`CollapsedHit` rows naming the
 surviving record id. Nothing is silently discarded.
 """
@@ -41,7 +41,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ._resolution import DroppedHit, DropReason, ResolutionResult, ResolvedTarget
+from .resolution import DroppedHit, DropReason, ResolutionResult, ResolvedTarget
 from .search_record import SearchRecordKind
 from .unified_record import RankingTier
 
@@ -77,7 +77,7 @@ class CollapseReason(StrEnum):
     LOCALE_QUADRUPLET_DUPLICATE = "locale_quadruplet_duplicate"
 
 
-#: Extra :class:`~dev.docs.terminology._resolution.DropReason` members the
+#: Extra :class:`~dev.docs.terminology.resolution.DropReason` members the
 #: filtering correction stamps. They reuse the resolver's enum so the wrangled
 #: drop trail is one homogeneous report with the resolution-time drops.
 _FILTER_DROP_DETAIL_BELOW_FLOOR = "below strong-signal score floor"

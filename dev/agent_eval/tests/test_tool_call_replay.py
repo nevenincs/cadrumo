@@ -15,8 +15,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _resolver():
-    from cadrumo_harness.mcp._dispatch import command_key_for_tool, tool_request_argv
-    from cadrumo_harness.mcp._tools import build_tool_descriptors
+    from cadrumo_harness.mcp.dispatch import command_key_for_tool, tool_request_argv
+    from cadrumo_harness.mcp.tools import build_tool_descriptors
 
     keys = [d.command_key for d in build_tool_descriptors()]
 
@@ -42,7 +42,7 @@ def _a_tool_that_takes_no_arguments() -> str:
     letting the tool providing it change, and sorting makes the choice the same
     on every run - which a replay gate requires of its own inputs.
     """
-    from cadrumo_harness.mcp._tools import build_tool_descriptors
+    from cadrumo_harness.mcp.tools import build_tool_descriptors
 
     candidates = sorted(
         descriptor.name for descriptor in build_tool_descriptors() if not descriptor.input_schema.get("required")

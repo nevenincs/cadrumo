@@ -43,7 +43,7 @@ import pytest
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import parse_json_object, require_error_document, require_schema_envelope
 from cadrumo.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
-from cadrumo_harness.mcp._tools import build_tool_descriptors
+from cadrumo_harness.mcp.tools import build_tool_descriptors
 from dev.scripted_registration_channels import scripted_registration_descriptors
 
 from .._models import ContradictionScenario
@@ -74,7 +74,7 @@ _BLOCKING_STEP = "modelo.work.verify"
 # the signalled contradiction. Declared scenario data (mirrors
 # `UnderDeclarationScenario.expected_legal_refs`), cross-checked below against the live
 # MCP tool-descriptor mutability classification
-# (`cadrumo_harness.mcp._tools.build_tool_descriptors`, the same classification the
+# (`cadrumo_harness.mcp.tools.build_tool_descriptors`, the same classification the
 # PreToolUse confirmation gate reads) so the declared set is not a hand-wavy guess.
 _MUTATING_COMMANDS = (
     "modelo.work.create",
@@ -197,7 +197,7 @@ def test_mutating_commands_are_confirmed_non_read_only_on_the_live_manifest() ->
 
     Cross-checks ``_MUTATING_COMMANDS`` against the REAL MCP tool-descriptor mutability
     classification (the same classification the ``PreToolUse`` confirmation gate reads
-    via ``cadrumo_harness.mcp._hitl.confirmation_for_tool``), so the scenario's declared set
+    via ``cadrumo_harness.mcp.hitl.confirmation_for_tool``), so the scenario's declared set
     is not an invented label.
     """
     by_key = {descriptor.command_key: descriptor for descriptor in build_tool_descriptors()}
@@ -376,7 +376,7 @@ def test_every_lifecycle_stage_is_carried_by_the_mutating_roster() -> None:
     on the live manifest, so the roster cannot be satisfied by a stage that does
     not mutate anything.
     """
-    from cadrumo_harness.mcp._tools import build_tool_descriptors
+    from cadrumo_harness.mcp.tools import build_tool_descriptors
 
     from .._models import LIFECYCLE_STAGE_ORDER
 

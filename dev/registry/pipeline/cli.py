@@ -209,7 +209,7 @@ def _prepare(
         candidate_root,
         modelo=invocation.modelo,
         revision=invocation.revision,
-        supporting_modelos=_supporting_modelos(invocation.modelo),
+        supporting_modelos=supporting_modelos(invocation.modelo),
         bootstrap_target=bootstrap_target,
     )
     validation = GeneratedExportTreeValidationContext(
@@ -222,7 +222,7 @@ def _prepare(
         ),
         filing_year=invocation.filing_year,
         period=invocation.period,
-        supporting_modelos=_supporting_modelos(invocation.modelo),
+        supporting_modelos=supporting_modelos(invocation.modelo),
         continuity_metadata_modelo_root=stage_continuity_metadata(
             target_root / "modelos" / invocation.modelo,
             root,
@@ -240,7 +240,7 @@ def _prepare(
     )
 
 
-def _supporting_modelos(modelo: str) -> frozenset[str]:
+def supporting_modelos(modelo: str) -> frozenset[str]:
     """Return declared cross-modelo dependencies that isolated validation needs."""
     modelos_root = bundled_path("registry", "aeat", "modelos")
     source_modelo_root = modelos_root / modelo
@@ -258,7 +258,7 @@ def _stage_published_modelo(root: Path, *, modelo: str, revision: str) -> Path |
     revisions = tuple((source_modelo_root / "revisions").iterdir())
     if len(revisions) == 1:
         return None
-    staged = _stage_isolated_edition(
+    staged = stage_isolated_edition(
         source_modelo_root,
         root / "published-modelo" / modelo,
         revision=revision,
@@ -276,7 +276,7 @@ class _StagedEdition:
     locales_root: Path
 
 
-def _stage_isolated_edition(
+def stage_isolated_edition(
     source_modelo_root: Path,
     staged_root: Path,
     *,
@@ -805,5 +805,7 @@ __all__ = [
     "TargetCurrentnessState",
     "app",
     "publish_authority_candidate_workflow",
+    "stage_isolated_edition",
+    "supporting_modelos",
     "target_currentness",
 ]

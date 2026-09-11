@@ -34,7 +34,8 @@ from cadrumo.domain.calculations.registry.applicability import (
     resolve_applicability_rule_from_authority,
 )
 from cadrumo.domain.contribuyente.entity_type import EntityType
-from cadrumo.domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
+from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
+from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 
 from ..compiler.authority import compile_validated_authority
 from ..conformance.loader_directory_mode_support import (

@@ -10,7 +10,6 @@ from dev._paths import REPO_ROOT
 
 from .lane_verification_core import (
     install_wheel,
-    record_proof,
     relative_manifest_path,
     require_executable,
     requirement_name,
@@ -21,6 +20,7 @@ from .lane_verification_core import (
     wheel_metadata,
     write_smoke_manifest,
 )
+from .proof_ledger import record_proof
 from .python_cohort import (
     assert_installed_cohort,
     load_python_cohort,

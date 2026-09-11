@@ -150,8 +150,8 @@ def _verify_manual_structure(repo_root: Path, source: GeneratedArtifactSource) -
                 "a practical-manual source must live at 'corpus/manuals/<manual_id>/<year>[/<part>]/source.pdf'"
             )
         from cadrumo.core.config import Settings
+        from cadrumo.domain.manuals.ids import ManualId, ManualPart
         from cadrumo.domain.manuals.loader import load_manual
-        from cadrumo.domain.manuals.schema import ManualId, ManualPart
 
         manuals_dir = repo_root / "corpus" / "manuals"
         if not manuals_dir.is_dir():

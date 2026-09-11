@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from cadrumo.core.identity import ContinuidadId
+from cadrumo.core.identity.continuidad import ContinuidadId
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_continuity_locale_key,

@@ -33,7 +33,7 @@ from cadrumo.adapters.outbound.google import api as google_api
 from cadrumo.adapters.outbound.google import document_link_resolver
 from cadrumo.application.ledger import evidence_input
 from cadrumo.application.storage.calc_sheets import parity_harness
-from dev.docs.terminology_handbook import _curation
+from dev.docs.terminology_handbook import curation
 
 from .. import vulture_whitelist
 
@@ -52,7 +52,7 @@ _CITATIONS: dict[str, tuple[ModuleType, str | None, str]] = {
         "list",
     ),
     "_reduce_ex": (evidence_input, "EvidenceInput", "__reduce_ex__"),
-    "_set_language_field": (_curation, None, "set_language_field"),
+    "_set_language_field": (curation, None, "set_language_field"),
     "_sheets_discovery_build": (
         parity_harness,
         "_SheetsDiscoveryBuilder",

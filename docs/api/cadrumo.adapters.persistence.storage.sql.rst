@@ -14,7 +14,7 @@ Submodules
    :maxdepth: 4
 
    cadrumo.adapters.persistence.storage.sql._secure_object_integrity
-   cadrumo.adapters.persistence.storage.sql._secure_object_records
+   cadrumo.adapters.persistence.storage.sql.secure_object_records
    cadrumo.adapters.persistence.storage.sql._secure_object_row_codec
    cadrumo.adapters.persistence.storage.sql._secure_object_schema
    cadrumo.adapters.persistence.storage.sql._secure_object_writes

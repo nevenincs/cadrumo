@@ -18,7 +18,7 @@ from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
-from cadrumo.domain.calculations.registry.schema import CasillaDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
@@ -27,6 +27,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 )
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ..analysis.export_ref_symmetry import screen_authority, unsatisfied_export_refs
 from ..compiler.authority import compiled_bundled_authority

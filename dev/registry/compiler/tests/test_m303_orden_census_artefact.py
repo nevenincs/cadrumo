@@ -35,7 +35,6 @@ from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_reg
 
 from ...maintenance_support import check_m303_annual_orden_census_artefact
 from .. import m303_orden_manifest
-from .._m303_orden_raw_models import M303AnnualOrdenSourceCensus
 from ..m303_orden_census_artefact import (
     M303_ORDEN_CENSUS_ARTEFACT_FILENAME,
     load_m303_annual_orden_censuses,
@@ -46,6 +45,7 @@ from ..m303_orden_manifest import (
     generate_manifest_with_censuses,
     load_m303_annual_orden_authority,
 )
+from ..m303_orden_raw_models import M303AnnualOrdenSourceCensus
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 

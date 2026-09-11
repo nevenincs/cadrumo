@@ -5,11 +5,10 @@ from datetime import date
 from decimal import Decimal
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.casilla_id import validated_casilla_id
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.formula_runtime import _evaluate_expression
+from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expression
 from cadrumo.domain.calculations.registry.schema import (
-    CasillaId,
     DataBindingDefinition,
     ModeloDefinition,
     RegistryCatalogues,
@@ -36,7 +35,7 @@ def _evaluate(
     operand_refs: list[str] = []
     operand_casilla_refs: list[CasillaId] = []
     operand_values: list[Decimal] = []
-    return _evaluate_expression(
+    return evaluate_expression(
         expression,
         values=dict(values or {}),
         binding_values={},

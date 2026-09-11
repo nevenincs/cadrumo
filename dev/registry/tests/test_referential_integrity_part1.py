@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from datetime import date
+from decimal import Decimal
 
 import pytest
 
@@ -12,6 +13,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.binding_selector_utils import BindingFixedExportSelector
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.reference_checks import check_all_id_references
 from cadrumo.domain.calculations.registry.schema import (
     DataBindingDefinition,
     FormulaDefinition,
@@ -38,11 +40,9 @@ from ..compiler.validator import RegistryValidator
 from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
-    Decimal,
     build_minimal_snapshot,
     build_snapshot_with_missing_legal,
     build_snapshot_with_missing_source,
-    check_all_id_references,
     minimal_casilla,
     minimal_catalogues,
     minimal_legal_ref,

@@ -617,7 +617,7 @@ class IdentityStateProtocol(Protocol):
     """The per-session identity-read state the gate mutates, caller-injected.
 
     Structurally satisfied by
-    ``cadrumo_harness.mcp._identity_gate.SessionIdentityState``; declared here so
+    ``cadrumo_harness.mcp.identity_gate.SessionIdentityState``; declared here so
     this package never imports ``cadrumo_harness.mcp`` (the consumer boundary the
     runner's docstring documents), mirroring :class:`FaithfulnessCheckFn`.
     """

@@ -13,7 +13,8 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
 from ..maintenance_support import ExternalOracleInventory, UnattributedOraclePayload
-from ..parity.external_grounding import ExternalGroundingModel, ExternalOracleCorpus
+from ..parity.external_grounding import ExternalGroundingModel
+from ..parity.external_oracle_corpus import ExternalOracleCorpus
 
 _GroundingDetail = Annotated[str, ElidedProse(512)]
 

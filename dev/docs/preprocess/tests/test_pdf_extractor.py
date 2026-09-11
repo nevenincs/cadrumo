@@ -20,13 +20,13 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from .._parts import TEXT_BUDGET_BYTES, split_units_by_budget, stamp_part_anchors
 from .._pdf import (
     PDF_EXTRACTOR_ID,
     _attribution_for,
     build_outputs,
     extract_pdf,
 )
+from ..parts import TEXT_BUDGET_BYTES, split_units_by_budget, stamp_part_anchors
 from ..schema import (
     ExtractionStatus,
     PreprocessOutput,

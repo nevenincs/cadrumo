@@ -38,8 +38,9 @@ from dev._paths import REPO_ROOT
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ...terminology_handbook.loader import load_terminology_handbook
-from .._sweep import SweepResult, enumerate_query_vocabulary
 from ..search_record import SearchRecordKind
+from ..sweep_runner import enumerate_query_vocabulary
+from ..term_relevance_mapping import SweepResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

@@ -17,7 +17,7 @@ from .._miss_rate import (
     load_committed_relevance,
     load_held_out_query_set,
 )
-from .._sweep import enumerate_query_vocabulary
+from ..sweep_runner import enumerate_query_vocabulary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
