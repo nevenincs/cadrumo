@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-generator-signal-coverage-research]]'
 modified: '2026-09-11'
 body_schema: body-v2
-body_hash: 'sha256:d730fadb960124dd14d63ffaaa8dbf8f4cd2f939ab1c5d72280e44e471fd7780'
+body_hash: 'sha256:6b3f433b24d1c65dad7007a82e81bbc9b502039372c3c4d45cd98a548251138c'
 ---
 
 # `registry-generator` plan
@@ -104,7 +104,7 @@ Removes the unconditional literals and the predicate fold that make the official
 - [x] `W02.P05.S19` - STALE and would be a regression: the predicate answers ELIGIBILITY - is this field numeric and therefore owed a reviewed render rule - where folding the signed and unsigned tokens is correct, and the fold exists because PDF designs spell the word out. Unfolding it would make signed fields ineligible for review. The sign is read from the type column at the derivation site and no longer passes through here, which is why calling this predicate the defect was retracted; `dev/registry/pipeline/render_profile_eligibility.py`.
 - [x] `W02.P05.S20` - Raise when the sign cannot be established from an authority rather than writing a constant; `dev/registry/pipeline/_export_tree.py`.
 - [x] `W02.P05.S21` - Narrow the generator parameter type so an undetermined sign is not expressible at the call site; `dev/registry/pipeline/_export_tree.py`.
-- [ ] `W02.P05.S71` - BLOCKED by the publication gap: it changes emitted output, and publish refuses a tree whose records differ from the shipped manifest, which is the difference being landed. It also needs the shipped declaration schema to carry the official source column it would validate against, which the schema does not have; `src/cadrumo/domain/calculations/registry/`.
+- [x] `W02.P05.S71` - Add the runtime validator at the registry boundary that the primary control depends on. Landed in 22b420f7a2: ExportFieldDefinition.design_type ('N' / 'Num'), recorded by the generator from each sign-bearing field's official row, and refused at load when the declared sign contradicts it. D5's hold rested on the schema change and republication cost; a declared-only key costs no migration and reviewed republication works, so 25 trees were republished with 11,053 fields gaining design_type and nothing else changing. Hand-authored layouts and spelled-out PDF types declare none, so the check never invents a type; `src/cadrumo/domain/calculations/registry/`.; `src/cadrumo/domain/calculations/registry/`.
 - [x] `W02.P05.S22` - Prove the refusal with a planted undetermined sign in an isolated temporary tree; `dev/registry/tests/`.
 
 ### Phase `W02.P06` - ledger the refusals
