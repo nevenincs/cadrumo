@@ -42,6 +42,8 @@ _MIGRATED_LEGAL_PARAMETER_FACT_IDS = frozenset(
         "rd-439-2007-art-109:selector-m036-actividades-base-neta-de-subvenciones",
         "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras",
         "modelo-131:selector-m036-volumen-ingresos-agrario",
+        "rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario",
+        "rd-439-2007-art-109:conceptos-ingreso-excluidos-base-agraria",
         "liva-art-161:recargo-rate-general",
         "liva-art-161:recargo-rate-reducido",
         "liva-art-161:recargo-rate-super-reducido",

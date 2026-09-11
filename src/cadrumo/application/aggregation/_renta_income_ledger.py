@@ -640,7 +640,10 @@ def aggregate_renta_m131_agrario_income_ledger(
         target_casilla_id=_TARGET_CASILLA_M131_AGRARIO,
         admits=lambda transaction: (
             transaction.tipo_actividad in agrarian_codes
-            and counts_toward_volumen_de_ingresos(transaction.concepto_ingreso)
+            and counts_toward_volumen_de_ingresos(
+                transaction.concepto_ingreso,
+                effective_date=period.end_date,
+            )
         ),
     )
 

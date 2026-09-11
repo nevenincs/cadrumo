@@ -17,6 +17,7 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     resolve_governed_fact,
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from dev.registry.compiler.fact_providers import compile_registered_fact_providers
 from dev.registry.compiler.fact_validation import migrated_legal_parameter_fact_failures
@@ -79,9 +80,7 @@ def test_gate_detects_a_missing_fact_and_non_filing_date_axis() -> None:
     catalogue = _catalogue()
     missing = GovernedFactCatalogue(
         facts={
-            fact_id: fact
-            for fact_id, fact in catalogue.facts.items()
-            if fact_id != "liva-art-161:recargo-rate-general"
+            fact_id: fact for fact_id, fact in catalogue.facts.items() if fact_id != "liva-art-161:recargo-rate-general"
         }
     )
     fact = catalogue.facts["liva-art-161:recargo-rate-general"]
@@ -142,6 +141,12 @@ def test_real_resolution_tracks_known_legal_change_boundaries() -> None:
     exclusion = "lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur"
     assert _resolve_scalar(exclusion, date(2024, 12, 31)).payload.value == Decimal("250000")
     assert _resolve_scalar(exclusion, date(2025, 1, 1)).payload.value == Decimal("150000")
+    assert _resolve_entities(
+        "rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario", date(2018, 12, 23)
+    ).payload.entities == frozenset({"subvencion_capital", "indemnizacion"})
+    assert _resolve_entities(
+        "rd-439-2007-art-109:conceptos-ingreso-excluidos-base-agraria", date(2007, 4, 1)
+    ).payload.entities == frozenset({"subvencion_corriente", "subvencion_capital", "indemnizacion"})
 
 
 def test_real_resolution_refuses_before_the_source_grounded_windows() -> None:
@@ -151,3 +156,7 @@ def test_real_resolution_refuses_before_the_source_grounded_windows() -> None:
         _resolve_entities("rirpf-art-95:selector-m036-actividades-profesionales", date(2026, 3, 25))
     with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
         _resolve_entities("modelo-131:selector-m036-volumen-ingresos-agrario", date(2026, 3, 31))
+    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
+        _resolve_entities("rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario", date(2018, 12, 22))
+    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
+        _resolve_entities("rd-439-2007-art-109:conceptos-ingreso-excluidos-base-agraria", date(2007, 3, 31))
