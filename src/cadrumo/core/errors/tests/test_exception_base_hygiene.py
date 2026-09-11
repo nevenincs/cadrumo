@@ -38,7 +38,7 @@ from types import ModuleType
 import pytest
 
 from .... import __path__ as _cadrumo_package_path
-from ....tests import production_python_files, repo_relative
+from ....tests.inventory import production_python_files, repo_relative
 from .optional_extras import describe_optional_extras
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

@@ -197,7 +197,7 @@ def test_dropped_superseded_pointer_surfaces_at_load(tmp_path: Path) -> None:
     from pydantic import ValidationError
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.sql import SecureObjectRow
+    from ....adapters.persistence.storage.sql.orm import SecureObjectRow
     from ..justificante import (
         JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
         justificante_capture_snapshot_object_key,

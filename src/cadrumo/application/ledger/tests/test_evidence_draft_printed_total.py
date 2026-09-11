@@ -28,7 +28,7 @@ from typing import Any
 import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.config import Settings
 from ....core.confirmation_gate import FindingResolutionAction
 from ....domain.invoices.enums import InvoiceClass

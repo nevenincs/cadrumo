@@ -36,7 +36,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.config import Settings
 from ....domain.invoices.decomposition import decompose_invoice
 from ....domain.iva.classification import InvoiceKind

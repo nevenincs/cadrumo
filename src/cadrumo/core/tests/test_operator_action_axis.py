@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ...tests import modules_declaring_class
+from ...tests.inventory import modules_declaring_class
 from .. import operator_action_enums as owner
 from ..operator_action_enums import OperatorActionAxis
 

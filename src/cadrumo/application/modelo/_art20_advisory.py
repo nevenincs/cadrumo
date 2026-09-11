@@ -77,7 +77,10 @@ def _art20_reduccion_advisory_finding(
     reduccion_value = casilla_values.get(reduccion_id, Decimal(0))
 
     resolved_ceiling = context.resolved_decimal(_ART20_RNT_CEILING_FACT_ID)
-    if Decimal(0) < rnt_value < resolved_ceiling.payload.value and reduccion_value == Decimal(0):
+    ceiling = resolved_ceiling.payload.value
+    if not isinstance(ceiling, Decimal):
+        raise ModeloError("Art. 20 RNT ceiling fact must resolve to a Decimal")
+    if Decimal(0) < rnt_value < ceiling and reduccion_value == Decimal(0):
         return ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.ADVISORY,
             severity=ModeloVerificationFindingSeverity.WARNING,

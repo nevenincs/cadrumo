@@ -36,7 +36,7 @@ from pathlib import Path
 
 import pytest
 
-from ...tests import FIXTURES_DIR
+from ...tests.inventory import FIXTURES_DIR
 from ..tabular import (
     _HEADER_SEARCH_LIMIT,
     CANDIDATE_DELIMITERS,

@@ -31,7 +31,7 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from ....adapters.persistence.storage.sql import SecureObjectRow
+from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef

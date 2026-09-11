@@ -87,7 +87,7 @@ def test_its_siblings_do_require_confidence_so_the_absence_is_a_choice() -> None
     no suggestion has ever had a confidence, and the ruling it encodes would be
     invisible.
     """
-    from ....llm.suggestions import LLMClassificationSuggestion, LLMSaturatedSuggestion
+    from ....adapters.outbound.llm.suggestions import LLMClassificationSuggestion, LLMSaturatedSuggestion
 
     assert "confidence" in LLMClassificationSuggestion.model_fields
     assert "confidence" in LLMSaturatedSuggestion.model_fields
@@ -170,8 +170,8 @@ def test_a_transaction_bound_reject_still_takes_the_original_path(
     rejections that shared this branch before it, and every draft assertion
     above would still pass.
     """
+    from ....adapters.outbound.llm.suggestions import LLMClassificationSuggestion
     from ....domain.transactions.enums import BusinessClassification
-    from ....llm.suggestions import LLMClassificationSuggestion
 
     suggestion = LLMClassificationSuggestion(
         transaction_id="a" * 64,

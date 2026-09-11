@@ -25,7 +25,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.config import Settings
 from ....core.time.clock import frozen_clock
 from ..evidence import derive_purchase_invoice_evidence_id

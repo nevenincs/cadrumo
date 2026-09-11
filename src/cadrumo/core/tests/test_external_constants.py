@@ -26,7 +26,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...tests import ast_for_path, discover_test_control_modules, package_ast_items, repo_path, repo_relative
 from ...tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
     AEAT_LEGACY_APEX_CANARY,
@@ -35,6 +34,7 @@ from ...tests.aeat_literal_fixtures import (
     PORTAL_LITERAL_SCAN_TOKENS,
     REMOTE_GUARD_LITERAL_SCAN_TOKENS,
 )
+from ...tests.inventory import ast_for_path, discover_test_control_modules, package_ast_items, repo_path, repo_relative
 from ..config import Settings
 from ..errors.hierarchy import CoreValidationError
 from ..external_constants import (

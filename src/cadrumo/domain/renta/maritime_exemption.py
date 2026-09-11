@@ -375,7 +375,10 @@ def calculate_rebeca_exemption(
         date_axis=DateAxis.DEVENGO_DATE,
         effective_date=devengo_date,
     )
-    exempt_amount = gross_navigation_income * resolved_fraction.payload.value
+    fraction = resolved_fraction.payload.value
+    if not isinstance(fraction, Decimal):
+        raise RentaValidationError("REBECA exemption fraction must resolve to a Decimal")
+    exempt_amount = gross_navigation_income * fraction
 
     return CasillaObservation(
         casilla_id=RENTA_EXENTA_CASILLA,

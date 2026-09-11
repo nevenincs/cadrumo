@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from pydantic_core import PydanticSerializationError
 
 from ....adapters.persistence.storage.attachment import AttachmentStore
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.config import Settings
 from ..evidence_input import EvidenceInput, resolve_purchase_invoice_evidence_input
 from ._evidence_input_test_support import _added_record, pdf_file

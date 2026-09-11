@@ -144,7 +144,7 @@ def _parse_bulk_classify_data_row(
     if malformed_cells:
         return (
             None,
-            frozenset(),
+            frozenset[str](),
             BulkClassifyFailure(
                 row_index=idx,
                 transaction_id=transaction_id,
@@ -166,7 +166,7 @@ def _parse_bulk_classify_data_row(
     except (ValidationError, ValueError, KeyError) as exc:
         return (
             None,
-            frozenset(),
+            frozenset[str](),
             BulkClassifyFailure(
                 row_index=idx,
                 transaction_id=transaction_id,
@@ -179,7 +179,7 @@ def _parse_bulk_classify_data_row(
         # (SKIPPED_BY_RULE, FAILED_VALIDATION, ...) reds rather than applying.
         return (
             None,
-            frozenset(),
+            frozenset[str](),
             BulkClassifyFailure(
                 row_index=idx,
                 transaction_id=parsed.transaction_id,

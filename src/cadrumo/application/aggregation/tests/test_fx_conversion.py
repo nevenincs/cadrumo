@@ -42,7 +42,7 @@ from ....adapters.inbound.financial.providers.base import ParsedLedgerRow
 from ....adapters.outbound.fx.ecb_provider import EcbReferenceRateProvider
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....domain.currency.service import CurrencyNormalizationService
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

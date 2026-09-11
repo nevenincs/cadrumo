@@ -35,10 +35,10 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.outbound.llm.consent import EvidenceConsentToken
+from ....adapters.outbound.llm.errors import LLMConsentError
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.config import Settings
-from ....llm.consent import EvidenceConsentToken
-from ....llm.errors import LLMConsentError
 from ..invoice_draft_extraction import extract_invoice_draft_from_evidence
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile

@@ -46,7 +46,16 @@ def _dictionary_entries() -> tuple[XmlDictionaryEntry, ...]:
     modelo = next(item for item in modelos if item.id == "100")
     revision = modelo.revisions["2024"]
     layout = next(item for item in revision.export_layouts if item.format == "xml_dictionary")
-    return tuple(xml_dictionary_entries(layout, source_root=bundled_path(), sources=catalogues.sources))
+    return tuple(
+        xml_dictionary_entries(
+            layout,
+            sources=catalogues.sources,
+            source_payloads={
+                str(source.id): (bundled_path() / source.corpus_path).read_bytes()
+                for source in catalogues.sources.values()
+            },
+        )
+    )
 
 
 def _branch_entries() -> dict[str, XmlDictionaryEntry]:

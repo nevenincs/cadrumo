@@ -24,14 +24,14 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.outbound.llm.errors import LLMProviderError
+from ....adapters.outbound.llm.invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
 from ....core.config import load_settings
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.optional_extras import LLM_EXTRA, MissingOptionalExtraError
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from ....llm.errors import LLMProviderError
-from ....llm.invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
 from ....tests.attribute_scope import scoped_attribute
 
 # The MODULE object, not names from it: the tests below scope an attribute

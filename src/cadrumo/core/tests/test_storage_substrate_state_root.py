@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from ...tests import REPO_ROOT
 from ...tests.env_scope import isolated_aeat_env, settings_without_env_file
+from ...tests.inventory import REPO_ROOT
 from ..config import Settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

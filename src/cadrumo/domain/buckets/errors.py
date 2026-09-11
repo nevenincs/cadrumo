@@ -7,16 +7,12 @@ cover operator-facing bucket browse, export, import, rename, and delete flows.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 
-if TYPE_CHECKING:
-    from ...application.operator_actions.models import PreconditionVerdict
-
-    _BucketDeletePreconditionErrorMixin = TerminalPreconditionErrorMixin[PreconditionVerdict]
-else:
-    _BucketDeletePreconditionErrorMixin = TerminalPreconditionErrorMixin
+# The application owns the concrete ``PreconditionVerdict`` record.  Core's
+# mixin deliberately carries that value opaquely so this domain taxonomy does
+# not need a type-only dependency on the application boundary.
+_BucketDeletePreconditionErrorMixin = TerminalPreconditionErrorMixin[object]
 
 
 class BucketsError(CadrumoError):

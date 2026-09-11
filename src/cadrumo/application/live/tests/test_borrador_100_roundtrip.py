@@ -198,7 +198,7 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.sql import SecureObjectRow
+    from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 
     bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:

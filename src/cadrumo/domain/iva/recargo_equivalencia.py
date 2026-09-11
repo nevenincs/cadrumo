@@ -28,6 +28,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.facts.resolution import FactSelector, MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.facts.schema import MappingFactPayload
 from ..calculations.registry.schema_base import DateAxis
 from .errors import IvaCatalogueError, IvaValidationError
 
@@ -94,6 +95,8 @@ def load_recargo_rate_table() -> tuple[RecargoRateRecord, ...]:
         raise IvaCatalogueError("installed authority has no IVA recargo facts")
     records: list[RecargoRateRecord] = []
     for variant in fact.variants:
+        if not isinstance(variant.payload, MappingFactPayload):
+            raise IvaCatalogueError("IVA recargo fact contains a non-mapping variant")
         selectors = {selector.name: selector.value for selector in variant.selectors}
         payload = {str(entry.key): entry.value for entry in variant.payload.entries}
         records.append(

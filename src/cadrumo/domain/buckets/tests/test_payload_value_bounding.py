@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from ....tests import production_ast_items, repo_relative
+from ....tests.inventory import production_ast_items, repo_relative
 from ..event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -19,7 +19,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....domain.buckets.event import BucketEventType
 from ....domain.transactions.enums import SplitRole, TransactionLifecycleState
 from ..actions_split_merge import merge_transactions

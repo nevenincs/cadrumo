@@ -6,13 +6,13 @@ from decimal import Decimal
 
 import pytest
 
+from ....adapters.outbound.llm.suggestions import OperatorIvaDerivationResult
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification
 from ....domain.transactions.errors import TransactionValidationError
-from ....llm.suggestions import OperatorIvaDerivationResult
 from ..llm_classification import derive_operator_iva_substrate
 from ._llm_saturation_support import (
     _BUCKET,

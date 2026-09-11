@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....core.config import Settings
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord

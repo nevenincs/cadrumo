@@ -52,8 +52,8 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select
 
-from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....adapters.persistence.storage.sql.engine import get_engine
+from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority

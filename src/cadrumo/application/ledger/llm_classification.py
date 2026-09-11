@@ -46,6 +46,19 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import uuid4
 
+from ...adapters.outbound.llm.models import MultimodalImageInput
+from ...adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
+from ...adapters.outbound.llm.suggestions import (
+    LLMClassificationSuggestion,
+    LLMSaturatedSuggestion,
+    LLMSplitApplyResult,
+    LLMSplitChildSuggestion,
+    LLMSplitSuggestion,
+    LLMSuggestionRejectionResult,
+    OperatorIvaDerivationResult,
+)
+from ...adapters.outbound.llm.text_classifier import LocalTextLLMClassifier
+from ...adapters.outbound.llm.vision_classifier import LocalVisionLLMClassifier
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
@@ -76,19 +89,6 @@ from ...domain.transactions.llm import (
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.service import set_classification
-from ...llm.models import MultimodalImageInput
-from ...llm.providers.local import rasterise_pdf_pages_to_base64_png
-from ...llm.suggestions import (
-    LLMClassificationSuggestion,
-    LLMSaturatedSuggestion,
-    LLMSplitApplyResult,
-    LLMSplitChildSuggestion,
-    LLMSplitSuggestion,
-    LLMSuggestionRejectionResult,
-    OperatorIvaDerivationResult,
-)
-from ...llm.text_classifier import LocalTextLLMClassifier
-from ...llm.vision_classifier import LocalVisionLLMClassifier
 from .actions_common import (
     build_ledger_bucket_event,
     build_manual_ledger_result,
@@ -333,8 +333,8 @@ def _run_on_host_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
     """
     import httpx
 
+    from ...adapters.outbound.llm.errors import LLMProviderError
     from ...domain.transactions.llm import LLMClassifierError
-    from ...llm.errors import LLMProviderError
 
     try:
         return run()
@@ -369,8 +369,8 @@ def _record_injected_classifier_run[T](run: Callable[[], T], *, provider: str) -
     """
     import time
 
+    from ...adapters.outbound.llm.errors import LLMCacheError
     from ...adapters.outbound.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
-    from ...llm.errors import LLMCacheError
 
     started_at = now()
     clock_start = time.monotonic()

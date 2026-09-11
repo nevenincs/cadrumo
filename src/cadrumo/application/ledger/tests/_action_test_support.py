@@ -21,7 +21,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.errors import StorageValidationError
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....application.ledger.actions_export import export_ledger_transactions
 from ....application.ledger.actions_import import import_ledger_source, import_ledger_transactions
 from ....application.ledger.actions_lifecycle import (

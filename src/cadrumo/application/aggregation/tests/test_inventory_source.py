@@ -19,8 +19,8 @@ from sqlalchemy import select
 
 from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ....adapters.persistence.storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
-from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....adapters.persistence.storage.sql.engine import get_engine
+from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority

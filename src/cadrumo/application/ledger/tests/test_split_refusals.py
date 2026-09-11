@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....domain.transactions.errors import TransactionValidationError
 from ..actions_lifecycle import archive_manual_transaction
 from ..actions_split_merge import split_transaction

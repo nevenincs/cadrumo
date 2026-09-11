@@ -33,7 +33,7 @@ from pathlib import Path
 
 import pytest
 
-from ....tests import production_ast_items
+from ....tests.inventory import production_ast_items
 from ..error_codes import get_registered_error_code
 from ..hierarchy import CadrumoError
 from ..registry.declared_codes import ALL_DECLARED_ERROR_CODES

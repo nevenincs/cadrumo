@@ -77,6 +77,10 @@ from typing import TYPE_CHECKING, NoReturn
 
 from ...adapters.inbound.einvoice.parsers import parse_einvoice_document
 from ...adapters.inbound.einvoice.xml import EInvoiceXmlParseError
+from ...adapters.outbound.llm.errors import LLMConsentError, LLMPdfRasterisationError, LLMProviderError
+from ...adapters.outbound.llm.models import MultimodalImageInput
+from ...adapters.outbound.llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
+from ...adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
@@ -91,10 +95,6 @@ from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.optional_extras import MissingOptionalExtraError
 from ...domain.attachments.models import normalize_media_type
 from ...domain.iva.supply_nature import SupplyNature
-from ...llm.errors import LLMConsentError, LLMPdfRasterisationError, LLMProviderError
-from ...llm.models import MultimodalImageInput
-from ...llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
-from ...llm.providers.local import rasterise_pdf_pages_to_base64_png
 from ..provisioning import probe_ollama_vision
 from ..user_profile.capabilities import resolve_active_capability
 from .document_transcription import DocumentTranscription
@@ -121,8 +121,8 @@ from .invoice_draft_records import (
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 if TYPE_CHECKING:
-    from ...llm.consent import EvidenceConsentToken
-    from ...llm.models import LLMProvider
+    from ...adapters.outbound.llm.consent import EvidenceConsentToken
+    from ...adapters.outbound.llm.models import LLMProvider
 
 __all__ = ["extract_invoice_draft_from_evidence"]
 
@@ -441,7 +441,7 @@ def _proposed_supply_nature(
     they were.
     """
     try:
-        from ...llm.supply_nature_proposal import SupplyNatureProposer
+        from ...adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposer
 
         return SupplyNatureProposer(settings=settings).propose(transcription.text.splitlines()).nature
     except Exception:
@@ -524,7 +524,7 @@ def _read_transcription_semantically(
     # written at module scope.
     import httpx
 
-    from ...llm.evidence_draft_text import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
+    from ...adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
     from .grounded_reading import ground_draft_against_transcription
     from .invoice_extraction_authority import (
         default_invoice_extraction_period,
@@ -787,7 +787,10 @@ def _extract_invoice_fields_via_vision(
         )
 
     try:
-        from ...llm.evidence_draft_vision import LocalVisionDocumentTranscriber, transcribe_document_images
+        from ...adapters.outbound.llm.evidence_draft_vision import (
+            LocalVisionDocumentTranscriber,
+            transcribe_document_images,
+        )
 
         if evidence.document_shape in PDF_CONTAINER_SHAPES:
             images = tuple(
