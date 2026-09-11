@@ -19,19 +19,19 @@ from datetime import date
 from pathlib import Path
 
 import pytest
-
-from .....core.resources.bundled_data import bundled_path
-from ..artifact_catalogue import ArtifactRole, registry_source_identity
 from dev.registry.compiler.corpus_catalogue import (
     compile_record_design_manifest_catalogue,
     verify_catalogue_identity_bindings,
     verify_source_catalogue,
     verify_source_file,
 )
+
+from .....core.resources.bundled_data import bundled_path
+from ..artifact_catalogue import ArtifactRole, registry_source_identity
 from ..corpus_provenance import NormativeCorpusProvenance, classify_normative_corpus_provenance
 from ..errors import RegistryValidationError
 from ..schema_references import SourceReference
-from ._registry_schema_support import _committed_registry_tree
+from dev.registry.conformance.tests._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -157,10 +157,7 @@ def test_changed_provenance_shaped_normative_source_still_fails_hash_validation(
         }
     )
     verify_source_file(tmp_path, source)
-    assert (
-        classify_normative_corpus_provenance(tmp_path, corpus_path)
-        is NormativeCorpusProvenance.BOE_ATTESTED
-    )
+    assert classify_normative_corpus_provenance(tmp_path, corpus_path) is NormativeCorpusProvenance.BOE_ATTESTED
     target.write_bytes(b"<!-- Official BOE consolidated source excerpt -->\n<p>changed!</p>\n")
 
     with pytest.raises(RegistryValidationError, match="sha256 mismatch"):

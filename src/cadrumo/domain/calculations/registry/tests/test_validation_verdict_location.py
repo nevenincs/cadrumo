@@ -13,10 +13,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
-from ..... import __version__
-from .....core.config import override_settings
-from .....core.resources.bundled_data import bundled_path
 from dev.registry.compiler.verdict_cache import (
     VERDICT_OUTCOME_GREEN,
     RegistryValidationVerdict,
@@ -30,6 +26,10 @@ from dev.registry.compiler.verdict_cache import (
     verdict_cache_path,
     write_verdict,
 )
+
+from ..... import __version__
+from .....core.config import override_settings
+from .....core.resources.bundled_data import bundled_path
 from ..identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

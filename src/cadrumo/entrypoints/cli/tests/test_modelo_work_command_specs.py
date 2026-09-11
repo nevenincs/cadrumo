@@ -89,7 +89,7 @@ def test_modelo_work_specs_match_public_handler_signatures_and_resolve_targets()
         handler = _resolve(spec.handler.target.module, spec.handler.target.qualname)
         assert callable(handler)
         expected = (spec.invocation.context_parameter, *(parameter.name for parameter in spec.parameters))
-        assert tuple(inspect.signature(cast(Callable[..., object], handler)).parameters) == expected
+        assert tuple(inspect.signature(handler).parameters) == expected
         assert spec.result_schema.state is SchemaState.TARGET
         assert spec.result_schema.target is not None
         assert _resolve(spec.result_schema.target.module, spec.result_schema.target.qualname) is not None

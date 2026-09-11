@@ -12,15 +12,15 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
-from .....core.config import override_settings
-from .....tests import assert_path_matches_grammar
 from dev.registry.compiler.verdict_cache import (
     VERDICT_OUTCOME_GREEN,
     RegistryValidationVerdict,
     verdict_cache_path,
     write_verdict,
 )
+
+from .....core.config import override_settings
+from .....tests import assert_path_matches_grammar
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
