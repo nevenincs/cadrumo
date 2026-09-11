@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-11'
 body_schema: body-v2
-body_hash: 'sha256:51b544324bbf112678d8a38bf1d3673859a67826557f828341e973a73465b9a6'
+body_hash: 'sha256:23beac21c9580cdd9c020c53355ea37bea2b1199d8b68cbca34e8b6c49db743c'
 ---
 
 <!-- RETIRED: S65 -->
@@ -219,7 +219,7 @@ Remove retired parsers, caches, wrappers, direct readers, duplicate TOML paths, 
 
 Turn retirement-ledger closure, forbidden imports, unowned directories, direct reads, and provenance-free results into blocking gates.
 
-- [ ] `W04.P18.S35` - Block imports of retired declarations and loader symbols; `dev/quality`.
+- [x] `W04.P18.S35` - Block imports of retired declarations and loader symbols; `dev/quality`.
 - [ ] `W04.P18.S36` - Block direct governed-directory reads and unregistered loaders; `dev/quality`.
 - [ ] `W04.P18.S37` - Block provenance-free results and unresolved migration entries; `dev/registry/analysis`.
 
