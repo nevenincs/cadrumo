@@ -6,7 +6,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:2732df3f80267a22e2abb328ef2430501869fa5a69666287abe28f367bc1c151'
+body_hash: 'sha256:97b4be7b7a51c04c1aa810212f8b5ab640564d65f0262b76fdf9753c6414d247'
 related:
   - '[[2026-09-09-facts-registry-W01-P01-S01]]'
   - '[[2026-09-09-facts-registry-W01-P01-S02]]'
@@ -106,6 +106,7 @@ related:
   - '[[2026-09-10-facts-registry-s76-article-101-provision-path-review-audit]]'
   - '[[2026-09-11-facts-registry-adapted-family-normalization-reference]]'
   - '[[2026-09-11-facts-registry-external-constants-retirement-reference]]'
+  - '[[2026-09-11-facts-registry-iva-rate-evidence-window-research]]'
   - '[[2026-09-11-facts-registry-objective-estimation-publication-boundary-reference]]'
   - '[[2026-09-11-facts-registry-reference]]'
   - '[[2026-09-11-facts-registry-s30-iva-recargo-normalization-audit]]'
@@ -263,3 +264,4 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-09-facts-registry-dev-tooling-research` - `facts-registry` research: `Registry development tooling blast radius`
 - `2026-09-09-facts-registry-discovery-blast-radius-research` - `facts-registry` research: `Tax fact discovery and blast radius`
 - `2026-09-09-facts-registry-schema-persistence-research` - `facts-registry` research: `Governed fact schema and persistence`
+- `2026-09-11-facts-registry-iva-rate-evidence-window-research` - `facts-registry` research: `iva-rate-evidence-window`
