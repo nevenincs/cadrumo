@@ -466,13 +466,13 @@ def test_auth_session_cache_remote_namespaces_are_registered() -> None:
         ),
         "llm_cache": (
             LLM_CACHE_NAMESPACE,
-            "cadrumo.outbound.llm.cache",
+            "cadrumo.adapters.outbound.llm.cache",
             SensitivityClass.DIAGNOSTIC,
             "{logical_root}|{provider}|{model}|{prompt_hash}|{args_hash}",
         ),
         "llm_usage": (
             LLM_USAGE_NAMESPACE,
-            "cadrumo.outbound.llm.usage",
+            "cadrumo.adapters.outbound.llm.usage",
             SensitivityClass.DIAGNOSTIC,
             "{logical_root}|{created_at_iso}|{request_id}|{uuid4_hex}",
         ),

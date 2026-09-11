@@ -44,7 +44,14 @@ def _skippable_casilla_ids(modelo: str, year: int, period: str) -> set[str]:
     skippable: set[str] = set()
     for layout in snapshot.revision.export_layouts:
         if str(layout.format).endswith("xml_dictionary"):
-            entries = xml_dictionary_entries(layout, source_root=bundled_path(), sources=snapshot.sources)
+            entries = xml_dictionary_entries(
+                layout,
+                sources=snapshot.sources,
+                source_payloads={
+                    str(source.id): (bundled_path() / source.corpus_path).read_bytes()
+                    for source in snapshot.sources.values()
+                },
+            )
             skippable.update(
                 entry.casilla_id
                 for entry in entries

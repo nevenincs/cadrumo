@@ -32,8 +32,7 @@ from ..runtime_repository import (
     secure_object_repository_for_cold_bootstrap_state,
 )
 from ..secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
-from ..sql import SecureObjectRepository
-from ..sql.secure_objects import SecureObjectWrite
+from ..sql.secure_objects import SecureObjectRepository, SecureObjectWrite
 from .registered_bucket import publish_registration_capsule
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

@@ -81,8 +81,8 @@ async def test_aeat_authenticator_full_live_flow() -> None:
 
     from typing import Any, cast
 
-    from ...browser import Profile
     from ...browser.factory import create_browser_session
+    from ...browser.profile import Profile
 
     profile = Profile(name="live-auth-gate")
 

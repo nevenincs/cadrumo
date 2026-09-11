@@ -37,11 +37,11 @@ from ....domain.filing.schema import ModeloDraft, compute_modelo_draft_id
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ..storage.secure_object_namespaces import FILING_DRAFTS_NAMESPACE
-from ..storage.sql import SecureObjectWrite
+from ..storage.sql.secure_objects import SecureObjectWrite
 from ._filing_runtime import resolve_filing_repository_bucket_id
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ..storage.sql import SecureObjectRepository
+    from ..storage.sql.secure_objects import SecureObjectRepository
 
 
 class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):

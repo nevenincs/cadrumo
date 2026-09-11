@@ -400,7 +400,7 @@ def test_finalise_reconciliation_issues_exactly_one_atomic_persistence_call() ->
     import inspect
     from importlib import import_module
 
-    reconcile_module = import_module("cadrumo.application.modelo.reconciliation")
+    reconcile_module = import_module(".....application.modelo.reconciliation", __package__)
 
     source = inspect.getsource(reconcile_module._finalise_reconciliation)
     tree = ast.parse(textwrap.dedent(source))

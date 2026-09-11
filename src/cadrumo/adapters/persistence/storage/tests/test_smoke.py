@@ -55,8 +55,8 @@ def test_runtime_master_key_and_namespace_boundaries_are_public() -> None:
     module rather than through a re-export.
     """
     expected_by_module = {
-        "master_key": {
-            "MasterKeyProvider",
+        "master_key.master_key": {"MasterKeyProvider"},
+        "master_key.active_session": {
             "activate_session",
             "get_active_master_key",
             "has_active_bucket_session",
@@ -76,7 +76,7 @@ def test_runtime_master_key_and_namespace_boundaries_are_public() -> None:
 
     unresolved: list[str] = []
     for module_name, names in expected_by_module.items():
-        module = import_module(f"cadrumo.adapters.persistence.storage.{module_name}")
+        module = import_module(f"..{module_name}", __package__)
         unresolved += [f"{module_name}.{n}" for n in sorted(names) if not hasattr(module, n)]
 
     assert not unresolved, f"declared but unresolvable boundaries: {sorted(unresolved)}"

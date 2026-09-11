@@ -52,7 +52,7 @@ from .secure_object_namespaces import (
 from .secure_object_namespaces import (
     ATTACHMENT_MANIFEST_NAMESPACE as ATTACHMENT_MANIFEST_STORAGE_NAMESPACE,
 )
-from .sql import SecureObjectRepository
+from .sql.secure_objects import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
 

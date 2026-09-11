@@ -46,8 +46,8 @@ from .....tests.secure_sql import (
     mutate_encrypted_secure_object_json,
     read_db_at_rest_bytes,
 )
-from ....persistence.storage.sql import SecureObjectRow
 from ....persistence.storage.sql.engine import get_engine
+from ....persistence.storage.sql.orm import SecureObjectRow
 from ....persistence.storage.sql.session import session_scope
 from ...storage.crypto.encrypted_columns import HashedLookup
 from ...storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE

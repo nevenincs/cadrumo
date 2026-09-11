@@ -15,7 +15,7 @@ from ....core.time.utc import validate_utc_aware
 from ..storage.errors import RepositoryError
 from ..storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..storage.secure_object_namespaces import OPERATION_SECURE_REFERENCE_NAMESPACE, SecureObjectNamespaceDefinition
-from ..storage.sql import SecureObjectRepository
+from ..storage.sql.secure_objects import SecureObjectRepository
 
 _SECURE_REFERENCE_SCHEMA_VERSION = 1
 _CONTENT_DIGEST_OBJECT_KEY_GRAMMAR = "{content_digest}"

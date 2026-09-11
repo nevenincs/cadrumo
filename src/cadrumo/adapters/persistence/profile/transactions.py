@@ -98,12 +98,14 @@ from ..storage.secure_object_namespaces import (
     PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE,
     TRANSACTION_CATALOGUE_NAMESPACE,
 )
-from ..storage.sql import SecureObjectMigrationTarget, TransactionDateIndexRow
+from ..storage.sql.orm import TransactionDateIndexRow
+from ..storage.sql.secure_objects import SecureObjectMigrationTarget
 from .bienes_inversion import BienesInversionIvaRegisterRepository
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage.secure_object_namespaces import SecureObjectNamespaceDefinition
-    from ..storage.sql import SecureObjectDeletion, SecureObjectRepository, SecureObjectWrite
+    from ..storage.sql._secure_object_records import SecureObjectDeletion
+    from ..storage.sql.secure_objects import SecureObjectRepository, SecureObjectWrite
 
 _log = get_logger(__name__)
 
@@ -1131,7 +1133,8 @@ class TransactionCatalogueRepository:
         fresh-serialization side of the diff is skipped for a cache hit.
         """
         from ..storage.crypto.encrypted_columns import secure_object_key_digest
-        from ..storage.sql import SecureObjectDeletion, SecureObjectWrite
+        from ..storage.sql._secure_object_records import SecureObjectDeletion
+        from ..storage.sql.secure_objects import SecureObjectWrite
 
         current_ids = self._load_index_ids()
         incoming_ids = set(catalogue.transactions)

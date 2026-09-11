@@ -58,7 +58,7 @@ from ....persistence.storage.secure_object_namespaces import (
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
     AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
 )
-from ....persistence.storage.sql import SecureObjectRepository
+from ....persistence.storage.sql.secure_objects import SecureObjectRepository
 from .errors import ExpedienteNotFoundError, SedeValidationError
 from .schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, IvaCompensationWalletObservation
 

@@ -149,7 +149,7 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from .....persistence.storage.sql import SecureObjectRow
+    from .....persistence.storage.sql.orm import SecureObjectRow
     from .....persistence.storage.sql.session import session_scope
     from ..observation_store import _OBSERVATION_NAMESPACE
 

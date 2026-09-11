@@ -33,8 +33,8 @@ from ......domain.calculations.registry.relations import (
 from ......domain.calculations.registry.schema_input_kind import InputKind
 from ......tests import FIXTURES_DIR
 from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from ...browser import Profile
 from ...browser.factory import opened_browser_page, shared_playwright_runtime
+from ...browser.profile import Profile
 from ..declarations import (
     Declaracion,
     SedeParseError,

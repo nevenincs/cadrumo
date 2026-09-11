@@ -16,7 +16,7 @@ from .....tests.secure_sql import (
     mutate_encrypted_secure_object_json,
     read_db_at_rest_bytes,
 )
-from ...storage.sql import SecureObjectRow
+from ...storage.sql.orm import SecureObjectRow
 from ..ledger_classification_rules import LedgerClassificationRuleRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

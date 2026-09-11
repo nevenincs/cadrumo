@@ -16,7 +16,7 @@ from ....core.config import Settings, StorageRouteKind, classify_storage_route, 
 from .errors import StorageValidationError
 from .namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .runtime import StorageRuntimeReadinessCode, inspect_bucket_storage_runtime, runtime_not_ready_error
-from .sql import SecureObjectRepository
+from .sql.secure_objects import SecureObjectRepository
 
 if TYPE_CHECKING:
     from pathlib import Path

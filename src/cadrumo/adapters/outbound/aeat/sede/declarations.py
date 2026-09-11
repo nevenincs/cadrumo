@@ -42,8 +42,8 @@ from .....domain.calculations.registry.remote_state_guard import RemoteStateGuar
 from .....domain.calculations.registry.schema import RegistrySnapshot
 from .._html import parse_html
 from .._playwright import BrowserContext, Locator, Page, Playwright, PlaywrightError
-from ..browser import Profile
 from ..browser.factory import opened_browser_page, shared_playwright_runtime
+from ..browser.profile import Profile
 from ._adapter_utils import assert_read_landing
 from ._auth_state import storage_state_for_session
 from ._browser_constants import (

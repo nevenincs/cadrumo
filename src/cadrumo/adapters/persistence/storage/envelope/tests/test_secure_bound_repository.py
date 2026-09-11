@@ -26,8 +26,7 @@ from ......core.config import override_settings
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import EnvelopeVersionError, SecureObjectUnreadableError, StorageValidationError
 from ...runtime_readiness import StorageRuntimeReadinessCode
-from ...sql import SecureObjectRepository
-from ...sql.secure_objects import SecureObjectRecord, SecureObjectUnreadable
+from ...sql.secure_objects import SecureObjectRecord, SecureObjectRepository, SecureObjectUnreadable
 from ...sql.session import session_scope
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from ..contract import Envelope

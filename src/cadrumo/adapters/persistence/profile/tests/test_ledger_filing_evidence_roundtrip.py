@@ -22,7 +22,7 @@ from .....domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow, Ledger
 from .....domain.modelos.work_unit import derive_work_unit_id
 from .....tests import general_m303_filing_evidence
 from .....tests.secure_objects_fixture import secure_objects
-from ...storage.sql import SecureObjectRepository
+from ...storage.sql.secure_objects import SecureObjectRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

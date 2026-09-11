@@ -111,7 +111,7 @@ def test_blob_mutation_after_store_surfaces_on_reverify(tmp_path: Path) -> None:
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....persistence.storage.sql import SecureObjectRow
+    from ....persistence.storage.sql.orm import SecureObjectRow
 
     payload = b"%PDF-1.4 anti-tautology blob mutation proof payload"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:

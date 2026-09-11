@@ -34,7 +34,7 @@ from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.time.clock import now
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....persistence.storage.secure_object_namespaces import AEAT_BROWSER_SESSION_NAMESPACE
-from ....persistence.storage.sql import SecureObjectRepository
+from ....persistence.storage.sql.secure_objects import SecureObjectRepository
 
 _SESSION_VERSION = AEAT_BROWSER_SESSION_NAMESPACE.schema_version
 type JsonObject = Mapping[str, JsonValue]

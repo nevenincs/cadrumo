@@ -15,7 +15,7 @@ from .....tests.secure_sql import (
     mutate_encrypted_secure_object_json,
     read_db_at_rest_bytes,
 )
-from ...storage.sql import SecureObjectRow
+from ...storage.sql.orm import SecureObjectRow
 from ..modelos_edit_receipts import ModeloEditReceiptRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

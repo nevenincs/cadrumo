@@ -33,7 +33,7 @@ from ....core.time.clock import now
 from ..storage.namespace_registry import secure_object_logical_path
 from ..storage.runtime_repository import secure_object_repository_for_active_bucket, secure_object_repository_for_bucket
 from ..storage.secure_object_namespaces import SecureObjectNamespaceDefinition
-from ..storage.sql import SecureObjectRepository, SecureObjectWrite
+from ..storage.sql.secure_objects import SecureObjectRepository, SecureObjectWrite
 from ._revision_guarded_singleton_mutation import mutate_revision_guarded_singleton
 
 

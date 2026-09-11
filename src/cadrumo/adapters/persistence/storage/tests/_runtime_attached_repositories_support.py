@@ -108,7 +108,6 @@ from .....domain.transactions.enums import TransactionDirection
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .....domain.usage_ratios.model import UsageRatioProfile
-from .....llm.models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
 from .....tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
     AUTH_DIAGNOSTIC_PATH_FIXTURE,
@@ -126,6 +125,7 @@ from ....outbound.google import session_store as google_session_store
 from ....outbound.google.records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
 from ....outbound.llm.cache import LLMCache
 from ....outbound.llm.consent_ledger import EvidenceConsentLedger
+from ....outbound.llm.models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
 from ....outbound.llm.run_telemetry import LLMRunTelemetryRecorder
 from ....outbound.llm.usage import UsageRecorder
 from ...profile.inventory import InventoryLedgerRepository

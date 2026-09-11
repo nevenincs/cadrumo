@@ -19,16 +19,9 @@ from sqlalchemy.engine import Engine
 from ......tests.aeat_literal_fixtures import PDF_MODELO_130_2024_PATH_FIXTURE, aeat_url, sede_pdf_url
 from ...errors import RepositoryError
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
-from .. import (
-    CorpusArtifactRecord,
-    CorpusArtifactRepository,
-    ModeloCatalogueRecord,
-    ModeloRepository,
-    PortalAuthMethod,
-    PortalRecord,
-    PortalRepository,
-    session_scope,
-)
+from ..records import CorpusArtifactRecord, ModeloCatalogueRecord, PortalAuthMethod, PortalRecord
+from ..repository import CorpusArtifactRepository, ModeloRepository, PortalRepository
+from ..session import session_scope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
