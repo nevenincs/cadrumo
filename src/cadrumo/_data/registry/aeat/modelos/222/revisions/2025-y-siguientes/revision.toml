@@ -1,17 +1,18 @@
 [revisions."2025-y-siguientes"]
-authority_grade = "applicability"
+authority_grade = "calculation"
 # Modelo 222 pago fraccionado del Impuesto sobre Sociedades en régimen de
 # consolidación fiscal. The model is approved by Orden HFP/227/2017 art 2
 # (BOE-A-2017-2778) — the same orden that approves Modelo 202 — and its binding
 # trimestral plazo persists from art 5.2 of that orden (primeros veinte días
-# naturales de los meses de abril, octubre y diciembre). This is a
-# scheduling/applicability-grade revision: it grounds the approval and the
-# filing plazo against the bundled BOE corpus and carries declaration-header
-# casillas only. A Modelo 222 diseño de registro IS now bundled (`aeat-dr-222-2025`,
-# corpus/aeat_official/disenos_registro/modelo_222/files/01-222-ejercicio-2025-y-siguientes.xlsx)
-# and declared as a source above, but the money-closure casillas remain
-# deferred: nobody has yet mapped its box numbers against this revision's
-# schema, so no casilla number is fabricated from it. The corpus also carries
+# naturales de los meses de abril, octubre y diciembre). It began as a
+# scheduling/applicability-grade revision grounding the approval and the
+# filing plazo against the bundled BOE corpus. Its 63 liquidacion casillas come
+# from the bundled diseño de registro (`aeat-dr-222-2025`), and the computed ones
+# carry the formulas the AEAT instructions for 2025 and later print
+# (`aeat-modelo-222-instructions`), which is what backs the calculation grade.
+# The grade stops short of filing: filing needs every relationship family
+# resolved, and the group-level inputs a filing would draw from Modelo 220 have
+# no binding (that source is deferred). The corpus also carries
 # a second Modelo 222 design (02-222-ejercicios-2023-y-2024.xlsx, not declared
 # here) whose attributed years fall entirely outside this revision's own
 # span (`year_from = 2025`) — it belongs to a different revision or acquisition
@@ -45,6 +46,7 @@ legal_refs = [
 ]
 source_refs = [
     "aeat-modelo-202-instructions",
+    "aeat-modelo-222-instructions",
     "boe-modelo-202-base-order",
     "aeat-dr-222-2025",
 ]
@@ -77,8 +79,17 @@ build_diseno_coverage_report keys a derived casilla on (segmento, number) and th
 is single-segment, authoring them as bare numbers would collapse six declared figures into \
 three AND the coverage report would still read 63 of 63 covered, so the defect would be \
 invisible to the instrument meant to catch it. NOT CLAIMED -- all 3 locales are complete, \
-but the strings were not audited for accuracy."""
-reviewed_at = 2026-08-21
+but the strings were not audited for accuracy. CALCULATION-GRADE REVIEW (2026-09-11): the \
+63 liquidacion casillas are now declared from aeat-dr-222-2025, and the 15 computed boxes \
+(03, 10, 13, 16, 18, 19, 22, 25, 26, 32, 34, 38, 39, 63, 66) carry formulas transcribed \
+from the AEAT instructions for 2025 and later (aeat-modelo-222-instructions, the page's \
+2025-y-siguientes section only), each citing the printed formula text it reproduces. \
+Where the diseno's label for [18] (subtracting [49] and [50], omitting [58]) disagrees \
+with the instructions (adding [49] and [50], subtracting [58]), the instructions govern. \
+The rate boxes 17, 21, 24, 62 and 65 (19/20 or 5/7 of the tipo de gravamen by cifra de \
+negocios) stay filer input, as does the minimum [33]. NOT CLAIMED -- filing: the \
+relationship families are unresolved and Modelo 220 group data has no binding."""
+reviewed_at = 2026-09-11
 
 [revisions."2025-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
 reason = """

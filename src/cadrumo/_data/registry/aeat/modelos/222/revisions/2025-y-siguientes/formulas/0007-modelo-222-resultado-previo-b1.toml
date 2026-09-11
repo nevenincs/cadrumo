@@ -1,0 +1,15 @@
+[[revisions.2025-y-siguientes.formulas]]
+id = "modelo-222-resultado-previo-b1"
+target_casilla_id = "18"
+# The diseno de registro labels this box "([16] x [17]) - [49] - [50] - [51] + [52] - [53]"; the instructions
+# for the same period add [49] and [50] and also subtract [58]. The instructions carry the computation and
+# state that [49] works with either sign, which the diseno's signed N typing for [49] and [50] agrees with,
+# so the instructions' formula is authored.
+expression = { op = "subtract", args = [{ op = "add", args = [{ op = "subtract", args = [{ op = "subtract", args = [{ op = "add", args = [{ op = "add", args = [{ op = "percent", args = [{ casilla_id = "16" }, { casilla_id = "17" }] }, { casilla_id = "49" }] }, { casilla_id = "50" }] }, { casilla_id = "51" }] }, { casilla_id = "58" }] }, { casilla_id = "52" }] }, { casilla_id = "53" }] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "orden-hfp-227-2017:art-2"]
+source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
+
+[[revisions.2025-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-222-instructions"
+required_text = ["clave [18]", "] será = clave [16] x clave [17] /100 + clave [49] + clave [50] - clave [51] – clave [58] + clave [52] – clave [53]"]
