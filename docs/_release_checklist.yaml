@@ -1,11 +1,11 @@
-# Machine-validated release-readiness checklist for Cadrumo.
+# Machine-validated release readiness checklist for Cadrumo.
 #
 # Read and validated by `dev/release/readiness.py` (schema:
 # `ReleaseChecklist` in that module) at bump time and again by the
 # publication authority's Gate 2. This file is data, not automation: nothing
 # here triggers an outward action. The `soak` and `hotfix` sections below are
 # followed by an operator per RELEASING.md and echoed by the
-# `just release-rollback` recipe; neither is computed or enforced by a
+# `just release-rollback-plan` recipe; neither is computed or enforced by a
 # workflow.
 #
 # See RELEASING.md for the full per-release sequence and rollback procedure.
@@ -58,7 +58,7 @@ rollback:
   mechanism: "revert the release commit + tag on main, publish a corrected patch release; PyPI yank marks the bad version so pip/uv skip it by default"
 
 audit_state_gate:
-  description: "Deterministic pre-release invariants checked by `dev/release/readiness.py`, run by hand through `just release-readiness` before the release pull request is merged; no workflow runs it."
+  description: "Deterministic pre-release invariants checked by `dev/release/readiness.py`, run by hand through `just release-check` before the release pull request is merged; no workflow runs it."
   checks:
     - "pyproject.toml, src/cadrumo/__init__.py, and .release-please-manifest.json report one identical version"
     - "CHANGELOG.md is non-empty and carries no unresolved release-please merge markers"
