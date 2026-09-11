@@ -1,0 +1,32 @@
+[fact]
+fact_id = "modelo-100-xml-export-declarations-mapping"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-100-xml-export-declarations-mapping:2025"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+source_refs = ["aeat-modelo-100-2025", "aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-100-2025"
+required_text = ["Modelo 100"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "modelo", value = "100" },
+  { key = "revision", value = "2025" },
+  { key = "xml.comunidad.block_prefix", value = "/DatosEconomicos/Resultados/DeduccionAutonomicaRes/" },
+  { key = "xml.comunidad.shared_total_casilla", value = "0564" },
+  { key = "xml.sign.negative_field", value = "TCNN112" },
+  { key = "xml.sign.non_negative_field", value = "TCPP112" },
+  { key = "xml.converter.ECIVIL", value = "modelo100_ecivil_export_code" },
+  { key = "xml.converter.ZCCAD", value = "modelo100_ccaa_codigo" },
+  { key = "xml.layout.source", value = "selected_modelo_revision" },
+  { key = "xml.binding.source", value = "selected_modelo_revision" },
+  { key = "xml.applicability.source", value = "selected_modelo_revision" },
+  { key = "xml.legal_reference.source", value = "selected_registry_revision" },
+]

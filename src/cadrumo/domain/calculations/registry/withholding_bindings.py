@@ -21,7 +21,6 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.percentage import PERCENTAGE_MIN, Percentage
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
-    BindingExportDataType,
     optional_uppercase_alpha_code,
 )
 from .binding_selector_utils import (
@@ -30,10 +29,12 @@ from .binding_selector_utils import (
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .schema import DataBindingDefinition, ModeloRevision
+from .schema_exports import ExportFieldDataType
 
 __all__ = [
     "WithholdingClaveBreakdown",
     "WithholdingObservation",
+    "WithholdingSelector",
     "aggregate_withholding_by_clave",
     "resolve_withholding_binding_values",
     "validate_withholding_binding_selector_shape",
@@ -514,7 +515,7 @@ class WithholdingObservation(BaseModel):
         return value
 
 
-class _WithholdingSelector(BaseModel):
+class WithholdingSelector(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     # Promoted from ``str`` to a typed Literal so the snapshot-build
@@ -526,7 +527,7 @@ class _WithholdingSelector(BaseModel):
     row_field: _WithholdingRowField | None = None
     grouping: WithholdingGrouping | None = None
     record: str | None = Field(default=None, min_length=1, max_length=64)
-    data_type: BindingExportDataType | None = None
+    data_type: ExportFieldDataType | None = None
     """Scalar type of the value this row field contributes to the export.
 
     The same fact ``BindingRowExportSelector.data_type`` carries; declared here
@@ -536,9 +537,9 @@ class _WithholdingSelector(BaseModel):
     """
 
 
-def _withholding_selector(binding: DataBindingDefinition) -> _WithholdingSelector:
+def _withholding_selector(binding: DataBindingDefinition) -> WithholdingSelector:
     try:
-        return _WithholdingSelector.model_validate(_selector_as_dict(binding))
+        return WithholdingSelector.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed withholding selector") from exc
 
@@ -546,11 +547,11 @@ def _withholding_selector(binding: DataBindingDefinition) -> _WithholdingSelecto
 def validate_withholding_binding_selector_shape(binding: DataBindingDefinition) -> list[str]:
     """Validate withholding selector shape and fact/op invariants for snapshot build."""
     try:
-        _WithholdingSelector.model_validate(_selector_as_dict(binding))
+        WithholdingSelector.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         return [
             f"binding {binding.id!r} (source={binding.source!r}) selector violates "
-            f"{_WithholdingSelector.__name__}: {exc}",
+            f"{WithholdingSelector.__name__}: {exc}",
         ]
     try:
         _validated_withholding_selector(binding)
@@ -559,7 +560,7 @@ def validate_withholding_binding_selector_shape(binding: DataBindingDefinition) 
     return []
 
 
-def _validated_withholding_selector(binding: DataBindingDefinition) -> _WithholdingSelector:
+def _validated_withholding_selector(binding: DataBindingDefinition) -> WithholdingSelector:
     selector = _withholding_selector(binding)
     if selector.fact not in _WITHHOLDING_FACTS:
         raise RegistryValidationError(f"binding {binding.id!r} declares unsupported withholding fact {selector.fact!r}")
@@ -585,7 +586,7 @@ def _validated_withholding_selector(binding: DataBindingDefinition) -> _Withhold
 
 def _filter_withholding_observations(
     observations: Iterable[WithholdingObservation],
-    selector: _WithholdingSelector,
+    selector: WithholdingSelector,
 ) -> Iterable[WithholdingObservation]:
     clave_filter = set(selector.claves)
     for observation in observations:
@@ -757,6 +758,3 @@ def aggregate_withholding_by_clave(
         )
         for clave, group in sorted(by_clave.items())
     )
-
-
-WithholdingSelector = _WithholdingSelector

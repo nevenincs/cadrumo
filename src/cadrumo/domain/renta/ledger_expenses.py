@@ -5,7 +5,7 @@
 :class:`RentaDeductibilityContext`; eligible
 :class:`RentaDeductibilityResult` values become
 :class:`RentaDeductibleExpenseObservation` records routed through
-:data:`RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` to registry
+:data:`FIRST_SLICE_EXPENSE_CASILLAS` to registry
 :data:`CasillaId` bindings for :class:`~cadrumo.core.Modelo.M100`.
 """
 
@@ -43,13 +43,6 @@ from ._first_slice_routing import FIRST_SLICE_EXPENSE_CASILLAS
 from .errors import RentaValidationError
 
 EUR_CURRENCY: Literal["EUR"] = "EUR"
-
-# Re-export the canonical first-slice routing table. The single source
-# of truth lives in ``_first_slice_routing.py`` so the validator path
-# (this module) and any future snapshot-time integrity gate consult
-# the same Mapping without risk of divergence.
-RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS: Mapping[SpendingCategory, CasillaId] = FIRST_SLICE_EXPENSE_CASILLAS
-
 
 class RentaExpenseDirection(StrEnum):
     """Closed direction values for first-slice Renta expense facts."""
@@ -311,7 +304,7 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
     def _validate_period_and_invoice_state(self) -> RentaDeductibleExpenseObservation:
         if self.category_family is not family_for(self.category):
             raise RentaValidationError("category_family must match category")
-        if self.target_casilla_id != RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS.get(self.category):
+        if self.target_casilla_id != FIRST_SLICE_EXPENSE_CASILLAS.get(self.category):
             raise RentaValidationError("target_casilla_id must match the first-slice category mapping")
         if not Period.from_year_and_code(self.tax_year, "0A").contains(self.filing_date):
             raise RentaValidationError("filing_date must fall inside the observation tax year")
@@ -611,7 +604,7 @@ def build_renta_deductible_expense_observation(
         raise RentaValidationError(f"ineligible deductibility result cannot become an observation: {result.reason}")
     if fact.category is not result.category:
         raise RentaValidationError("fact and result categories must match")
-    target_casilla_id = RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS.get(fact.category)
+    target_casilla_id = FIRST_SLICE_EXPENSE_CASILLAS.get(fact.category)
     if target_casilla_id is None:
         raise RentaValidationError(f"category {fact.category.value!r} is outside the first Renta expense slice")
     if not Period.from_year_and_code(tax_year, "0A").contains(fact.filing_date):
@@ -772,7 +765,6 @@ def _require_decimal(value: object, field_name: str) -> None:
 
 
 __all__ = [
-    "RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS",
     "RentaDeductibilityContext",
     "RentaDeductibilityResult",
     "RentaDeductibilityStatus",

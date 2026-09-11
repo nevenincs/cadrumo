@@ -1,74 +1,35 @@
-"""Axis-A component-expectation table: which components an IVA category has.
+"""Typed IVA component models and the registry projection boundary.
 
-The engine previously carried no declared answer to "which components does an
-operation in this IVA category even *have*?", so every decomposition site
-re-derived it inline. This module is that declared answer: one row per
-:class:`~domain.iva.IvaCategory` stating whether a taxable base, an IVA cuota,
-a recargo de equivalencia, and an IRPF retención are required, optional, zero
-by law, or undeterminable from the category alone — each row carrying its
-binding ``legal_refs``.
-
-The table is the *component* axis only. It deliberately says nothing about
-which modelo family a row feeds or under which regime it is filed: that is the
-per-family (Axis-B) scope axis owned by the ledger binding families, and
-collapsing the two would re-couple regulatory-distinct bindings.
-
-**The table is not a third inline category set.** The cuota-less predicate is
-*derived* from the ``cuota``/``cuota_settlement`` columns and asserted equal to
-the canonical :data:`~domain.iva.CUOTA_LESS_M303_IVA_CATEGORIES` frozenset by
-:mod:`domain.iva.tests.test_component_expectations`, so the two cannot drift.
-Read the frozenset through :func:`cuota_less_m303_categories_from_table` when
-you want to see that derivation explicitly.
-
-Cuota-less is **not** substrate-less: an entrega intracomunitaria exenta or an
-exportación carries a real taxable base that feeds base-only casillas, and an
-IVA-exempt professional service still bears an IRPF retención. Both are
-declared here as ``base = REQUIRED`` with a zero cuota, which is precisely the
-distinction a bare cash amount cannot make.
-
-Grounding honesty
------------------
-Every row declares, per component, how well its expectation is grounded
-(:class:`IvaGroundingConfidence`). Rows whose expectation was verified against
-live BOE text but whose provision is **not yet in the bundled legal catalogue**
-are marked :attr:`IvaGroundingConfidence.LIVE_SOURCE_ONLY` and name that
-provision in :attr:`IvaCategoryComponents.pending_legal_refs` rather than in
-:attr:`IvaCategoryComponents.legal_refs`. The gate in the test module asserts
-that every ``legal_refs`` id resolves in the bundled catalogue and every
-``pending_legal_refs`` id does *not*, so bundling a pending provision turns the
-gate red until the author promotes the row — the marker retires itself instead
-of rotting.
-
-See Also:
-    :mod:`domain.iva.schema`
-        Owns :class:`~domain.iva.IvaCategory` and the canonical
-        :data:`~domain.iva.CUOTA_LESS_M303_IVA_CATEGORIES` /
-        :data:`~domain.iva.EVIDENCE_EXEMPT_IVA_CATEGORIES` frozensets this
-        table is cross-checked against.
-    :mod:`domain.iva.recargo_equivalencia`
-        Registry-backed LIVA art. 161 recargo rates; this table declares
-        *whether* a recargo may exist, that module declares *how much*.
+Concrete category/component rows are canonical registry data.  This module
+retains only the enum and validation models, generic component calculations,
+and the explicit boundary that accepts a registry-projected catalogue.
 """
 
 from __future__ import annotations
 
+import json
+from collections.abc import Mapping
+from datetime import date
 from enum import StrEnum
+from functools import lru_cache
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Any
 
 from pydantic import Field, model_validator
 
+from ..calculations.registry.authority import bundled_authority
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.schema_base import DateAxis
 from .classification import InvoiceKind
 from .errors import IvaValidationError
 from .schema import (
-    CUOTA_LESS_M303_IVA_CATEGORIES,
     IvaCategory,
     IvaStrictFrozen,
     _RegistryLegalRef,  # pyright: ignore[reportPrivateUsage] -- intra-package reuse of this package's own constrained legal-ref alias
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from ..calculations.registry.authority import ValidatedRegistryAuthority
 
 
 class IvaComponentPresence(StrEnum):
@@ -410,24 +371,103 @@ class IvaCategoryComponents(IvaStrictFrozen):
             )
 
 
-from ._component_rows import COMPONENT_ROWS  # noqa: E402
-
-IVA_CATEGORY_COMPONENTS: Final[Mapping[tuple[IvaCategory, InvoiceKind], IvaCategoryComponents]] = MappingProxyType(
-    dict(COMPONENT_ROWS),
-)
-"""Axis-A component-expectation table, one row per (category, kind) PAIR.
-
-Keyed on the pair because the retención role inverts with direction and
-several categories are one-directional by law; category alone cannot express
-either. Completeness is enforced by
-:mod:`domain.iva.tests.test_component_expectations`, which requires every
-category AND every pair to be declared, so neither a new category nor a new
-invoice kind can ship undeclared.
-"""
+ComponentCatalogue = Mapping[tuple[IvaCategory, InvoiceKind], IvaCategoryComponents]
 
 
-def category_components(category: IvaCategory, kind: InvoiceKind) -> IvaCategoryComponents:
-    """Return the Axis-A component expectations for ``category`` on ``kind``.
+def _project_component_catalogue(
+    *,
+    effective_date: date,
+    authority: ValidatedRegistryAuthority,
+) -> ComponentCatalogue:
+    """Project the selected registry mapping fact into typed component rows."""
+    resolved = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="iva-category-component-catalogue",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise IvaValidationError("IVA component catalogue must resolve as a mapping fact")
+
+    entries: dict[str, str] = {}
+    for entry in resolved.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            raise IvaValidationError("IVA component mapping entries must be string-to-string")
+        if entry.key in entries:
+            raise IvaValidationError(f"duplicate IVA component mapping key {entry.key!r}")
+        entries[entry.key] = entry.value
+
+    order_text = entries.get("catalogue_order")
+    if order_text is None or not order_text.strip():
+        raise IvaValidationError("IVA component mapping is missing 'catalogue_order'")
+    ordered_keys = tuple(token.strip() for token in order_text.split(",") if token.strip())
+    if len(set(ordered_keys)) != len(ordered_keys):
+        raise IvaValidationError("IVA component catalogue order contains duplicate rows")
+
+    # Keep the conversion helper as the narrow mechanical boundary. The helper
+    # is imported lazily because it imports this module for the row model.
+    from ._component_rows import component_row_from_registry
+
+    projected: dict[tuple[IvaCategory, InvoiceKind], IvaCategoryComponents] = {}
+    for row_key in ordered_keys:
+        category_text, separator, kind_text = row_key.partition("|")
+        if not separator or not category_text or not kind_text:
+            raise IvaValidationError(f"invalid IVA component catalogue row key {row_key!r}")
+        try:
+            category = IvaCategory(category_text)
+            kind = InvoiceKind(kind_text)
+        except ValueError as exc:
+            raise IvaValidationError(f"unknown IVA component catalogue row key {row_key!r}") from exc
+        raw_row = entries.get(f"row.{row_key}")
+        if raw_row is None:
+            raise IvaValidationError(f"IVA component mapping is missing row {row_key!r}")
+        try:
+            decoded: Any = json.loads(raw_row)
+        except json.JSONDecodeError as exc:
+            raise IvaValidationError(f"IVA component row {row_key!r} is not valid JSON") from exc
+        if not isinstance(decoded, Mapping):
+            raise IvaValidationError(f"IVA component row {row_key!r} must decode as an object")
+        row = component_row_from_registry(decoded)
+        if row.category is not category or row.kind is not kind:
+            raise IvaValidationError(
+                f"IVA component row {row_key!r} disagrees with its catalogue key",
+            )
+        projected[(category, kind)] = row
+    return MappingProxyType(projected)
+
+
+@lru_cache(maxsize=16)
+def _bundled_component_catalogue(effective_date: date) -> ComponentCatalogue:
+    """Cache the immutable bundled projection by its legal effective date."""
+    return _project_component_catalogue(effective_date=effective_date, authority=bundled_authority())
+
+
+def registry_component_catalogue(
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> ComponentCatalogue:
+    """Return the Axis-A catalogue projected by the validated registry authority.
+
+    Production callers may omit both arguments and receive the current bundled
+    filing-period projection. Tests and review tooling can pass an explicit
+    effective date or an isolated validated authority to inspect another
+    governed projection without introducing a second source of row data.
+    """
+    selected_date = date.today() if effective_date is None else effective_date
+    if authority is None:
+        return _bundled_component_catalogue(selected_date)
+    return _project_component_catalogue(effective_date=selected_date, authority=authority)
+
+
+def category_components(
+    category: IvaCategory,
+    kind: InvoiceKind,
+    *,
+    component_catalogue: ComponentCatalogue | None = None,
+) -> IvaCategoryComponents:
+    """Return a registry-projected Axis-A row for ``category`` on ``kind``.
 
     ``kind`` is required, deliberately. A category-only accessor over a
     pair-keyed table would have to pick one of the two rows for any category
@@ -446,12 +486,13 @@ def category_components(category: IvaCategory, kind: InvoiceKind) -> IvaCategory
         combination is not an operation — not a lookup failure.
 
     Raises:
-        IvaValidationError: If the table has no row for the pair. The
-            completeness gate makes this unreachable for shipped enum members;
-            it fires only while a newly added member is still undeclared.
+        IvaValidationError: If no registry catalogue was supplied or it has
+            no row for the pair.
     """
+    if component_catalogue is None:
+        component_catalogue = registry_component_catalogue()
     try:
-        return IVA_CATEGORY_COMPONENTS[(category, kind)]
+        return component_catalogue[(category, kind)]
     except KeyError as exc:  # pragma: no cover - guarded by the completeness gate
         raise IvaValidationError(
             f"no Axis-A component expectations declared for IVA category "
@@ -459,17 +500,14 @@ def category_components(category: IvaCategory, kind: InvoiceKind) -> IvaCategory
         ) from exc
 
 
-def cuota_less_m303_categories_from_table() -> frozenset[IvaCategory]:
-    """Derive the cuota-less category set from the component table.
+def cuota_less_m303_categories_from_table(
+    component_catalogue: ComponentCatalogue | None = None,
+) -> frozenset[IvaCategory]:
+    """Derive the cuota-less category set from a registry component catalogue.
 
     A category bears no Modelo 303 general cuota when either its cuota is zero
     by law or its cuota is settled through a special regime rather than the
     general 303 bindings.
-
-    This is the derivation that keeps the table and
-    :data:`~domain.iva.CUOTA_LESS_M303_IVA_CATEGORIES` from drifting: the two
-    are asserted equal by the test module, so the table is a second *view* of
-    one fact rather than a second declaration of it.
 
     A category is cuota-less when NO arising kind of it produces a general-303
     cuota. The quantifier is load-bearing: ``DOMESTIC_REVERSE_CHARGE`` carries
@@ -482,8 +520,10 @@ def cuota_less_m303_categories_from_table() -> frozenset[IvaCategory]:
     Returns:
         The categories that legitimately match no Modelo 303 cuota binding.
     """
+    if component_catalogue is None:
+        component_catalogue = registry_component_catalogue()
     arising: dict[IvaCategory, list[IvaCategoryComponents]] = {}
-    for (category, _kind), row in IVA_CATEGORY_COMPONENTS.items():
+    for (category, _kind), row in component_catalogue.items():
         if row.applicability is IvaKindApplicability.ARISES:
             arising.setdefault(category, []).append(row)
     return frozenset(
@@ -496,7 +536,12 @@ def cuota_less_m303_categories_from_table() -> frozenset[IvaCategory]:
     )
 
 
-def category_bears_taxable_base(category: IvaCategory, kind: InvoiceKind) -> bool:
+def category_bears_taxable_base(
+    category: IvaCategory,
+    kind: InvoiceKind,
+    *,
+    component_catalogue: ComponentCatalogue | None = None,
+) -> bool:
     """Return ``True`` when a declared taxable base is legally required.
 
     Cuota-less is not substrate-less: an entrega intracomunitaria exenta and an
@@ -515,10 +560,22 @@ def category_bears_taxable_base(category: IvaCategory, kind: InvoiceKind) -> boo
     Returns:
         ``True`` when the pair requires a taxable base.
     """
-    return category_components(category, kind).base is IvaComponentPresence.REQUIRED
+    return (
+        category_components(
+            category,
+            kind,
+            component_catalogue=component_catalogue,
+        ).base
+        is IvaComponentPresence.REQUIRED
+    )
 
 
-def category_cuota_is_zero_by_law(category: IvaCategory, kind: InvoiceKind) -> bool:
+def category_cuota_is_zero_by_law(
+    category: IvaCategory,
+    kind: InvoiceKind,
+    *,
+    component_catalogue: ComponentCatalogue | None = None,
+) -> bool:
     """Return ``True`` when the pair's IVA cuota is structurally zero.
 
     Consumed by the retención-inference precondition: a declared-exempt invoice
@@ -537,21 +594,18 @@ def category_cuota_is_zero_by_law(category: IvaCategory, kind: InvoiceKind) -> b
     Returns:
         ``True`` when the cuota is zero by law for this pair.
     """
-    return category_components(category, kind).cuota is IvaComponentPresence.ZERO_BY_LAW
-
-
-# Import-time coherence check. The table and the canonical frozenset describe
-# one fact; a divergence here is a defect that must never reach a caller, and
-# the test module reports it with a readable diff.
-if cuota_less_m303_categories_from_table() != CUOTA_LESS_M303_IVA_CATEGORIES:  # pragma: no cover
-    raise IvaValidationError(
-        "Axis-A component table diverges from CUOTA_LESS_M303_IVA_CATEGORIES; "
-        "the cuota-less set has two disagreeing declarations",
+    return (
+        category_components(
+            category,
+            kind,
+            component_catalogue=component_catalogue,
+        ).cuota
+        is IvaComponentPresence.ZERO_BY_LAW
     )
 
 
 __all__ = [
-    "IVA_CATEGORY_COMPONENTS",
+    "ComponentCatalogue",
     "IvaCategoryComponents",
     "IvaComponentPresence",
     "IvaCuotaSettlement",
@@ -563,4 +617,5 @@ __all__ = [
     "category_components",
     "category_cuota_is_zero_by_law",
     "cuota_less_m303_categories_from_table",
+    "registry_component_catalogue",
 ]

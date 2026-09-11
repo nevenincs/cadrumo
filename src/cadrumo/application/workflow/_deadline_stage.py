@@ -34,7 +34,8 @@ from ...domain.deadlines.models import ModeloDeadline, Schedule, TaxpayerProfile
 from ..operator_actions.preconditions import no_action_precondition_verdict
 from .errors import WorkflowAbortSignalError
 from .protocols import DeadlineEngineProtocol
-from .run_models import WorkflowAbortReason, WorkflowPurpose, WorkflowStage, WorkflowStep
+from .abort import WorkflowAbortReason
+from .run_models import WorkflowPurpose, WorkflowStage, WorkflowStep
 
 
 def resolve_deadline_stage_obligation(

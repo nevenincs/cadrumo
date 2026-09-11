@@ -26,7 +26,7 @@ from ...adapters.inbound.financial.providers.base import ParsedLedgerRow
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.models import TransactionCatalogue, derive_import_fingerprint, derive_transaction_id
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ..ledger.actions_import import _evaluate_import_rows
+from ..ledger.actions_import import evaluate_import_rows
 from ..transactions.import_diagnostics import import_ledger_with_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -76,7 +76,7 @@ def _preview(rows: tuple[RawTransaction, ...], catalogue: TransactionCatalogue) 
 
 def _persist(rows: tuple[RawTransaction, ...], catalogue: TransactionCatalogue) -> tuple[int, int]:
     """Run the persisting path; return ``(imported, skipped)``."""
-    plan = _evaluate_import_rows(
+    plan = evaluate_import_rows(
         bucket_id=_BUCKET,
         catalogue=catalogue,
         parsed_rows=tuple(_parsed(raw) for raw in rows),
@@ -86,7 +86,7 @@ def _persist(rows: tuple[RawTransaction, ...], catalogue: TransactionCatalogue) 
 
 def _stored(rows: tuple[RawTransaction, ...]) -> TransactionCatalogue:
     """Persist ``rows`` through the real import path, returning the catalogue."""
-    plan = _evaluate_import_rows(
+    plan = evaluate_import_rows(
         bucket_id=_BUCKET,
         catalogue=TransactionCatalogue(),
         parsed_rows=tuple(_parsed(raw) for raw in rows),

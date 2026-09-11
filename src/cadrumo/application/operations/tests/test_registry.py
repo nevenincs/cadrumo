@@ -69,9 +69,8 @@ from ..registry import (
     OperationRegistry,
     OperationSchemaBindingV1,
     OperationSchemaIdentityV1,
-    _strict_model_json_schema,
-    _validate_credential_free_schema,
 )
+from ..registry_schema_validation import strict_model_json_schema, validate_credential_free_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -880,26 +879,26 @@ class _DigestNamedSiblingConceptPayload(CredentialFreeOperationRequest):
 
 
 def test_credential_free_schema_admits_hex64_shaped_digest_named_field() -> None:
-    schema = _strict_model_json_schema(_DigestNamedContentDigestPayload)
-    _validate_credential_free_schema(schema)
+    schema = strict_model_json_schema(_DigestNamedContentDigestPayload)
+    validate_credential_free_schema(schema)
 
 
 def test_credential_free_schema_refuses_plain_string_digest_named_field() -> None:
-    schema = _strict_model_json_schema(_DigestNamedPlainStringPayload)
+    schema = strict_model_json_schema(_DigestNamedPlainStringPayload)
     with pytest.raises(ValueError, match="forbidden security meaning"):
-        _validate_credential_free_schema(schema)
+        validate_credential_free_schema(schema)
 
 
 def test_credential_free_schema_refuses_hex64_shaped_field_named_for_another_forbidden_token() -> None:
-    schema = _strict_model_json_schema(_KeyNamedContentDigestPayload)
+    schema = strict_model_json_schema(_KeyNamedContentDigestPayload)
     with pytest.raises(ValueError, match="forbidden security meaning"):
-        _validate_credential_free_schema(schema)
+        validate_credential_free_schema(schema)
 
 
 def test_credential_free_schema_admits_hex64_shaped_sibling_concept_named_digest() -> None:
     """Pins the accepted residual risk rather than leaving it undiscovered."""
-    schema = _strict_model_json_schema(_DigestNamedSiblingConceptPayload)
-    _validate_credential_free_schema(schema)
+    schema = strict_model_json_schema(_DigestNamedSiblingConceptPayload)
+    validate_credential_free_schema(schema)
 
 
 def test_credential_free_schema_refuses_digest_field_with_unconstrained_any_of_branch() -> None:
@@ -916,7 +915,7 @@ def test_credential_free_schema_refuses_digest_field_with_unconstrained_any_of_b
     }
 
     with pytest.raises(ValueError, match="forbidden security meaning"):
-        _validate_credential_free_schema(schema)
+        validate_credential_free_schema(schema)
 
 
 def test_credential_free_schema_refs_use_root_defs_not_nested_shadow_defs() -> None:
@@ -942,7 +941,7 @@ def test_credential_free_schema_refs_use_root_defs_not_nested_shadow_defs() -> N
     }
 
     with pytest.raises(ValueError, match="forbidden security meaning"):
-        _validate_credential_free_schema(schema)
+        validate_credential_free_schema(schema)
 
 
 def test_public_schema_identity_refuses_computed_fields_absent_from_validation_schema() -> None:

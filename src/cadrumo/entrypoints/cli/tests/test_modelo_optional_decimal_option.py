@@ -20,7 +20,7 @@ import pytest
 import typer
 
 from .._modelo_cli_support import optional_decimal_option
-from ._strict_cli_fixture_support import english_locale_fixture
+from ._english_locale_fixture import english_locale_fixture
 
 __all__ = ["english_locale_fixture"]
 

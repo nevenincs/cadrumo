@@ -12,8 +12,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .....core.external_constants import PDF_EXTENSION, XLSX_EXTENSION
 from .....core.logging import get_logger
-from ._constants import CSV_EXTENSIONS, OFX_EXTENSIONS, PDF_EXTENSION, XLSX_EXTENSION
+from ._constants import CSV_EXTENSIONS, OFX_EXTENSIONS
 from ._mapped_tabular import MappedTabularProvider
 from .base import FinancialProvider
 from .csv import CsvProvider

@@ -41,24 +41,25 @@ from ...domain.calculations.registry.query_reports import (
 )
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from . import _modelo_discovery_rendering as discovery_rendering
-from ._common import emit_envelope
 from ._date_parsing import _parse_iso_date
 from ._modelo_behavior_support import bare_period_error, resolve_year_period
-from ._modelo_cli_support import bad_parameter_from_error, parse_binding_override
-from ._modelo_payloads import (
+from ._modelo_bindings_payloads import (
     BindingPreviewRowPayload,
-    FormulaPayload,
-    FormulasResult,
     ModeloBindingsListResult,
     ModeloBindingsPreviewResult,
+)
+from ._modelo_cli_support import bad_parameter_from_error, parse_binding_override
+from ._modelo_payloads import (
+    FormulaPayload,
+    FormulasResult,
     ModeloCasillaResult,
     ModeloCasillasResult,
-    ModeloDescribeResult,
-    ModeloListResult,
     ModeloRequiresResult,
-    ModeloSupportMatrixResult,
 )
 from ._modelo_rendering import binding_encoded_option_lines, binding_encoded_option_payloads
+from ._modelo_support_matrix_payloads import ModeloSupportMatrixResult
+from .common import emit_envelope
+from .modelo_aux_payloads import ModeloDescribeResult, ModeloListResult
 
 
 @dataclass(frozen=True, slots=True)

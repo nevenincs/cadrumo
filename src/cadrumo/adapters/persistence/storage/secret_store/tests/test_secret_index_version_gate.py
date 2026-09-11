@@ -35,7 +35,8 @@ import pytest
 from ......core.classification.policies import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ...errors import EnvelopeVersionError, StorageValidationError
-from ..store import SECRET_INDEX_SCHEMA_VERSION, SecretRecord, SecretStore
+from ...storage_path_definitions import SECRET_INDEX_SCHEMA_VERSION
+from ..store import SecretRecord, SecretStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

@@ -12,7 +12,8 @@ from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path
 from ..errors import ManifestError
 from ..fetch import load_manifest
-from ..schema import FetchedManualPart, ManualId, ManualPart
+from ..ids import ManualId, ManualPart
+from ..schema import FetchedManualPart
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -42,7 +42,8 @@ from ...core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
 from ...core.output_rendering import OutputFormat
 from ...core.type_guards import is_object_dict
 from ...domain.iva.classification import InvoiceKind
-from ._common import (
+from ._ledger_evidence_batch_payloads import EvidenceBatchResult
+from .common import (
     bad,
     current_workflow_state,
     emit_envelope,
@@ -52,7 +53,6 @@ from ._common import (
     resolve_notice_action,
     transaction_catalogue_repo,
 )
-from ._ledger_evidence_batch_payloads import EvidenceBatchResult
 from .config.status_rendering import precondition_action_lines
 
 if TYPE_CHECKING:

@@ -114,7 +114,6 @@ from ...application.modelo.work_lifecycle import get_work_unit
 from ...application.workflow.persistence import workflow_state_repository
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n.render import tr
-from ._common import emit_envelope, filing_taxpayer_or_refuse
 from ._modelo_behavior_support import resolve_exportable_revision_for_cli
 from ._modelo_cli_support import (
     resolve_default_actor,
@@ -134,6 +133,7 @@ from ._modelo_review_package_rendering import (
     review_package_verify_result,
     review_package_verify_signature_result,
 )
+from .common import emit_envelope, filing_taxpayer_or_refuse
 
 
 def review_package_build(

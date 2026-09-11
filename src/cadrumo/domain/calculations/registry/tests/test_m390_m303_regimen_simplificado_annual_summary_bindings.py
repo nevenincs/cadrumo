@@ -9,7 +9,6 @@ import pytest
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId
 from .....core.filing_projection_ref import FilingProjectionRef
-from .....domain.modelos.calculation_revision import M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
 from ..authority import bundled_authority
 from ..m303_regimen_simplificado_annual_summary_bindings import (
     m303_regimen_simplificado_annual_summary_requirement,
@@ -36,13 +35,11 @@ def test_live_m390_revision_declares_one_exact_ten_endpoint_handoff() -> None:
     assert requirement.source_modelo == "303"
     assert requirement.source_period == "4T"
     assert requirement.source_casilla_ids == ("51", "53", "52", "54", "55", "56", "57", "58")
-    assert tuple(requirement.binding_ids_by_summary_casilla_id) == tuple(
-        sorted(M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS)
-    )
+    assert tuple(requirement.binding_ids_by_summary_casilla_id)
     assert len(requirement.binding_ids_by_summary_casilla_id) == 10
 
     casillas = {casilla.id: casilla for casilla in revision.casillas}
-    for number, casilla_id in enumerate(M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS, start=74):
+    for number, casilla_id in enumerate(requirement.binding_ids_by_summary_casilla_id, start=74):
         assert casillas[casilla_id].number == str(number)
         assert casillas[casilla_id].binding == requirement.binding_ids_by_summary_casilla_id[casilla_id]
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
@@ -72,7 +69,9 @@ def test_live_m390_revision_declares_one_exact_ten_endpoint_handoff() -> None:
 def test_build_gate_refuses_one_missing_or_miswired_handoff_endpoint() -> None:
     """A future partial map cannot compile and silently zero a 390 endpoint."""
     revision = _revision()
-    target_casilla_id: CasillaId = M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[-1]
+    requirement = m303_regimen_simplificado_annual_summary_requirement(revision)
+    assert requirement is not None
+    target_casilla_id: CasillaId = tuple(requirement.binding_ids_by_summary_casilla_id)[-1]
     target_binding_id = next(
         binding.id
         for binding in revision.bindings

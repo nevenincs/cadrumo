@@ -5,7 +5,8 @@ import json
 import pytest
 
 from ._isolated_profile_storage_fixtures import live_fx_isolated_backend
-from ._ledger_corpus_support import _CORPUS, _FILES, _import_corpus, _invoke, _list_rows
+from ._ledger_corpus_support import _CORPUS, _FILES, _import_corpus, _invoke
+from .ledger_cli import list_ledger_rows_via_cli as _list_rows
 
 __all__ = ["live_fx_isolated_backend"]
 

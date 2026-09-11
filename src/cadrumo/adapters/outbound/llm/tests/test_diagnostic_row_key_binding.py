@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 
 from .....core.config_support import LLMProvider
+from ....persistence.storage.secure_object_namespaces import LLM_RUN_TELEMETRY_NAMESPACE, LLM_USAGE_NAMESPACE
 from ..errors import LLMCacheError
 from ..models import UsageRecord
 from ..run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
@@ -96,12 +97,10 @@ def _substitute(namespace: str, *, victim_marker: str, donor_marker: str) -> Non
 
 def test_a_substituted_usage_row_is_refused_on_read(tmp_path: Path) -> None:
     """The read refuses instead of reporting the foreign record."""
-    from ..usage import _USAGE_NAMESPACE
-
     recorder = UsageRecorder(root_dir=tmp_path / "usage")
     recorder.record(_usage("recent-request", _RECENT))
     recorder.record(_usage("old-request", _OLD))
-    _substitute(_USAGE_NAMESPACE, victim_marker="recent-request", donor_marker="old-request")
+    _substitute(LLM_USAGE_NAMESPACE.namespace, victim_marker="recent-request", donor_marker="old-request")
 
     with pytest.raises(LLMCacheError):
         recorder.load_records()
@@ -114,12 +113,10 @@ def test_a_substituted_usage_row_is_refused_on_prune(tmp_path: Path) -> None:
     key it reconstructed from the foreign payload, reports a removal count that
     looks plausible, and leaves the actual row in place forever.
     """
-    from ..usage import _USAGE_NAMESPACE
-
     recorder = UsageRecorder(root_dir=tmp_path / "usage")
     recorder.record(_usage("recent-request", _RECENT))
     recorder.record(_usage("old-request", _OLD))
-    _substitute(_USAGE_NAMESPACE, victim_marker="recent-request", donor_marker="old-request")
+    _substitute(LLM_USAGE_NAMESPACE.namespace, victim_marker="recent-request", donor_marker="old-request")
 
     with pytest.raises(LLMCacheError):
         recorder.prune(retention_days=0, max_records=0)
@@ -127,12 +124,10 @@ def test_a_substituted_usage_row_is_refused_on_prune(tmp_path: Path) -> None:
 
 def test_a_substituted_run_telemetry_row_is_refused(tmp_path: Path) -> None:
     """The run-telemetry recorder carries the same binding on both paths."""
-    from ..run_telemetry import _RUN_TELEMETRY_NAMESPACE
-
     recorder = LLMRunTelemetryRecorder(root_dir=tmp_path / "run-telemetry")
     recorder.record(_run("recent-run", _RECENT))
     recorder.record(_run("old-run", _OLD))
-    _substitute(_RUN_TELEMETRY_NAMESPACE, victim_marker="recent-run", donor_marker="old-run")
+    _substitute(LLM_RUN_TELEMETRY_NAMESPACE.namespace, victim_marker="recent-run", donor_marker="old-run")
 
     with pytest.raises(LLMCacheError):
         recorder.load_records()
@@ -156,17 +151,16 @@ def test_the_substitution_lands_a_valid_foreign_payload(tmp_path: Path) -> None:
     )
     from ....persistence.storage.sql.orm import SecureObjectRow
     from ....persistence.storage.sql.session import session_scope
-    from ..usage import _USAGE_NAMESPACE
 
     recorder = UsageRecorder(root_dir=tmp_path / "usage")
     recorder.record(_usage("recent-request", _RECENT))
     recorder.record(_usage("old-request", _OLD))
-    _substitute(_USAGE_NAMESPACE, victim_marker="recent-request", donor_marker="old-request")
+    _substitute(LLM_USAGE_NAMESPACE.namespace, victim_marker="recent-request", donor_marker="old-request")
 
     with session_scope(_ENGINE_HOLDER[0]) as session:
         request_ids = []
         for row in session.execute(
-            select(SecureObjectRow).where(SecureObjectRow.namespace == _USAGE_NAMESPACE),
+            select(SecureObjectRow).where(SecureObjectRow.namespace == LLM_USAGE_NAMESPACE.namespace),
         ).scalars():
             aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
             plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=aad)

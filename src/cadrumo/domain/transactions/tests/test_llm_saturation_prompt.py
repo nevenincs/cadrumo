@@ -27,9 +27,9 @@ from pydantic import ValidationError
 
 from ...iva.schema import IvaCategory
 from ..enums import BusinessClassification, TransactionDirection
+from ..errors import LLMClassifierError
 from ..llm import (
     LLMClassificationResponse,
-    LLMClassifierError,
     default_iva_category_choices,
     default_prompt_spec,
     parse_response,

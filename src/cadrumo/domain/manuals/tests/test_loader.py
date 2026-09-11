@@ -13,8 +13,9 @@ from ....core.config import Settings
 from ....tests.aeat_literal_fixtures import manual_practicos_url
 from ....tests.fixtures.settings import EnvFileFreeSettings
 from ..errors import ManualNotFoundError, ManualParseError
+from ..ids import ManualId, ManualPart
 from ..loader import find_rules, load_catalogue, load_manual, load_section, resolve_part_root
-from ..schema import ManualCasillaReference, ManualCatalogue, ManualId, ManualPart
+from ..schema import ManualCasillaReference, ManualCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -62,7 +62,7 @@ from ._app_live_notifications_payloads import (
     NotificationsViewResult,
     SancionReadingPayload,
 )
-from ._common import active_bucket_id_or_refuse, emit_envelope, notice_lines
+from .common import active_bucket_id_or_refuse, emit_envelope, notice_lines
 
 if TYPE_CHECKING:
     from ...domain.notifications.sancion import SancionLiquidacion

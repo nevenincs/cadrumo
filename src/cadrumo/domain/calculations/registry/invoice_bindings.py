@@ -25,7 +25,6 @@ from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     M347_OPERATION_CLAVES,
     M349_OPERATION_CLAVES,
-    BindingExportDataType,
     intracommunity_clave_validator,
     invariant_diagnostics,
     operation_clave_validator,
@@ -39,6 +38,7 @@ from .ids import BindingId
 from .m347_threshold import m347_clave_c_declarable_party_ids, m347_declarable_party_ids
 from .schema import DataBindingDefinition, ModeloRevision
 from .schema_base import coerce_enum_member
+from .schema_exports import ExportFieldDataType
 
 
 class RectificationScope(StrEnum):
@@ -186,7 +186,7 @@ class _InvoiceSelector(BaseModel):
     row_field: _InvoiceRowField | None = None
     grouping: InvoiceGrouping | None = None
     record: str | None = Field(default=None, min_length=1, max_length=64)
-    data_type: BindingExportDataType | None = None
+    data_type: ExportFieldDataType | None = None
     """Scalar type of the value this row field contributes to the export.
 
     The same fact ``BindingRowExportSelector.data_type`` carries; declared here

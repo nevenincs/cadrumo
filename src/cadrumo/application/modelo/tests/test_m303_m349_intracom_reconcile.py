@@ -20,9 +20,9 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from ...tests.profile_backend_fixtures import _isolated_backend
+from ...tests.profile_backend_fixtures import isolated_backend
 
-__all__ = ["_isolated_backend"]
+__all__ = ["isolated_backend"]
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository

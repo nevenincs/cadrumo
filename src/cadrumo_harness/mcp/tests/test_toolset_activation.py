@@ -18,9 +18,9 @@ import anyio
 import pytest
 
 from .._meta_tools import manage_toolsets
-from .._tools import build_tool_descriptors
-from .._toolsets import MAX_ACTIVE_TOOLSETS, Toolset, build_toolsets
-from ._session import connected_server_and_client_session as connect
+from ..tools import build_tool_descriptors
+from ..toolsets import MAX_ACTIVE_TOOLSETS, Toolset, build_toolsets
+from .session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -85,7 +85,7 @@ def test_unknown_name_and_action_refuse_instructively() -> None:
 
 
 def test_activating_a_toolset_widens_the_advertised_surface() -> None:
-    from .._server import build_server
+    from ..server import build_server
 
     descriptors = build_tool_descriptors()
     server = cast("Any", build_server(descriptors, persona=None))

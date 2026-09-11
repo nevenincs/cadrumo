@@ -33,8 +33,8 @@ from ...core.casilla_id import CasillaId
 from ...core.decimal.coercion import coerce_decimal
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.filing_year import FilingYear
-from ...core.identity import SnapshotId, WorkUnitId
 from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import SnapshotId, WorkUnitId
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG

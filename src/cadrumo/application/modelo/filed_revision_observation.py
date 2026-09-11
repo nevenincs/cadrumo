@@ -50,7 +50,6 @@ See Also:
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Final
 
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.modelo import Modelo
@@ -63,20 +62,13 @@ from ..calculations.iva_compensation_history import (
     persist_observation_envelope_and_iva_history,
 )
 from ..calculations.observations_repository import (
+    APP_FILING_SOURCE_KIND,
     CalculationObservationRepository,
-    ObservationSourceKind,
     PriorDomiciliationElectionProjection,
     ResultDispositionProjection,
     observation_key,
 )
 from .action_errors import ModeloLocalObservationError
-
-APP_FILING_SOURCE_KIND: Final = ObservationSourceKind.APP_FILING
-"""Non-official ``source_kind`` stamped on locally-filed observations.
-
-Deliberately not official AEAT evidence: a locally-filed value must never
-satisfy the cross-period clean-state filing gate.
-"""
 
 
 def _history_repository_in_observation_context(
@@ -278,7 +270,6 @@ def persist_filed_revision_observation(
 
 
 __all__ = [
-    "APP_FILING_SOURCE_KIND",
     "persist_filed_revision_observation",
     "require_filing_result_disposition",
 ]

@@ -11,8 +11,8 @@ from datetime import date
 from pathlib import Path
 from typing import override
 
-from ....core.resources._repository import ResourceCacheRepository
 from ....core.resources.errors import ResourceNotFoundError
+from ....core.resources.repository import ResourceCacheRepository
 
 
 class IvaCatalogueRepository(ResourceCacheRepository[object, int]):

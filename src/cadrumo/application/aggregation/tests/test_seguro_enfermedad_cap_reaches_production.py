@@ -32,11 +32,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ..renta_ledger import (
-    _SEGURO_DISCAPACIDAD_VARIANT,
-    _SEGURO_GENERAL_VARIANT,
-    aggregate_renta_ledger_expenses,
-)
+from ..renta_ledger import aggregate_renta_ledger_expenses
 from ._secure_objects_fixtures import SECURE_OBJECTS_BUCKET_ID
 from .renta_income_aggregation_support import _period
 
@@ -187,4 +183,4 @@ def test_the_wired_variant_ids_are_the_ones_the_shipped_rule_declares() -> None:
     rule = profiles[SpendingCategory.SEGUROS_SALUD_AUTONOMO].proportionality
     declared = {variant.id for variant in rule.statutory_cap_variants}
 
-    assert declared == {_SEGURO_GENERAL_VARIANT, _SEGURO_DISCAPACIDAD_VARIANT}
+    assert declared == {"general", "discapacidad"}

@@ -2,7 +2,7 @@
 
 This module owns the one ordering-critical sequence every Workspace read must
 follow: capture WORK exactly once, derive the REGISTRY coordinate only from
-that captured :class:`~.work_addressing.ModeloWorkResolution`, then evaluate
+that captured :class:`~.work_selection.ModeloWorkResolution`, then evaluate
 the requested and stored revision axes independently against the SAME
 REGISTRY capture through the sole pure assertion,
 :func:`~.work_addressing.assert_work_target_revision`. Neither axis may ever
@@ -39,23 +39,22 @@ from ...domain.calculations.registry.modelo_localization import (
 from ...domain.calculations.registry.schema import (
     DataBindingDefinition,
     FormulaDefinition,
-    ParameterDefinition,
     SchemaFamilyDispositionDeclaration,
 )
-from ...domain.calculations.registry.schema_formula import FormulaExpression
+from ...domain.calculations.registry.schema_formula import FormulaExpression, ParameterDefinition
 from ...domain.calculations.registry.schema_surfaces import RelationDefinition
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ._work_selection import (
-    ModeloWorkResolution,
-    ModeloWorkSelectionMode,
-    ModeloWorkSelectorRequest,
-)
 from .work_addressing import (
     ModeloExactWorkUnitTarget,
     ModeloVisibleFilingTarget,
     diverging_work_target_revision_axes,
+)
+from .work_selection import (
+    ModeloWorkResolution,
+    ModeloWorkSelectionMode,
+    ModeloWorkSelectorRequest,
 )
 from .workspace_models import (
     ModeloWorkspaceBaselineV1,

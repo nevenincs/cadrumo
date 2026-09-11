@@ -24,10 +24,9 @@ See Also:
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
-from types import MappingProxyType
 from xml.etree import ElementTree
 
 from defusedxml import ElementTree as DefusedElementTree
@@ -38,15 +37,18 @@ from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.modelo import Modelo
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.export_parse import (
     SINO_DICTIONARY_TYPE,
     XML_DICTIONARY_BOOLEAN_TYPES,
     XmlDictionaryEntry,
     xml_dictionary_entries,
 )
+from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.calculations.registry.schema_references import SourceReference
-from ...domain.contribuyente.renta_codes import modelo100_ccaa_codigo, modelo100_ecivil_export_code
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloDraft
 from .runtime import RegistrySchemaAccessor
@@ -144,8 +146,13 @@ def render_xml_dictionary_layout(
     )
     _append_declaration_aux(root, layout)
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
+    modelo_100_declarations = _registry_modelo_100_xml_declarations() if draft.modelo == Modelo.M100 else None
     unfiled_paths: frozenset[str] = (
-        _modelo_100_unfiled_comunidad_paths(entries, casilla_values)
+        _modelo_100_unfiled_comunidad_paths(
+            entries,
+            casilla_values,
+            declarations=modelo_100_declarations,
+        )
         if draft.modelo == Modelo.M100
         else frozenset[str]()
     )
@@ -158,6 +165,7 @@ def render_xml_dictionary_layout(
             casilla_values=casilla_values,
             headers=headers,
             dictionary_values=dictionary_values or {},
+            declarations=modelo_100_declarations,
         )
         if rendered is None or rendered == "":
             continue
@@ -359,8 +367,8 @@ def _xml_dictionary_element_order(
     AEAT declares the declaration body as ``xs:sequence``, so sibling order is
     part of the schema rather than a presentation choice. The dictionary's row
     order is NOT that order -- it lists ``CalculoImpuestoRes`` first under
-    ``Resultados`` where the schema puts it twenty-fifth, and ``SEXO_D`` before
-    ``ECIVIL`` under ``Declarante`` where the schema puts it after ``DPFNAC_D``.
+    ``Resultados`` where the schema puts it later, and some sibling fields before
+    others under ``Declarante`` where the schema places them later.
     Appending each element as its dictionary row is reached therefore emits a
     document AEAT's own schema rejects, so the writer reads the order from the
     schema instead.
@@ -447,28 +455,21 @@ def _record_xsd_child_order(
             )
 
 
-# The rows whose rendered text is a domain token that AEAT files under a code of
-# its own: a comunidad reaches the export as ``andalucia`` where the schema
-# enumerates ``01``-``20``, and a marital status as the profile's own value where
-# the schema accepts Estado Civil ``1``-``4``.
-#
-# Applied AFTER :func:`_format_xml_dictionary_value` and never instead of it.
-# That function owns how a value is written; this owns which official code the
-# written value stands for. Collapsing the two would put a second formatting
-# authority beside it, which is the thing this module keeps refusing to grow.
-#
-# A table rather than a branch per field. One special case reads as a special
-# case, but the second starts a list and the third becomes a rule nobody finds by
-# reading the function -- so the next such row is an entry here, not another
-# ``elif``. Each converter is its own domain's authority for its code set,
-# grounded in the same bundled XSD that constrains the attribute, so the mapping
-# is declared once and consumed here rather than restated.
-_MODELO_100_EXPORT_CODE_CONVERTERS: Mapping[str, Callable[[str], str]] = MappingProxyType(
-    {
-        "ECIVIL": modelo100_ecivil_export_code,
-        "ZCCAD": modelo100_ccaa_codigo,
-    },
-)
+def _registry_modelo_100_xml_declarations() -> Mapping[str, str]:
+    """Resolve the selected XML export declarations without a Python copy."""
+    authority = bundled_authority()
+    model_report = RegistryQueryService(authority).describe_modelo("100")
+    resolved = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="modelo-100-xml-export-declarations-mapping",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date.today(),
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise FilingExportValidationError("selected Modelo 100 XML declarations must be a mapping fact")
+    del model_report
+    return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
 
 
 def _xml_dictionary_rendered_value(
@@ -478,6 +479,7 @@ def _xml_dictionary_rendered_value(
     casilla_values: dict[CasillaId, object],
     headers: Mapping[FilingProducerKey, object],
     dictionary_values: Mapping[str, object],
+    declarations: Mapping[str, str] | None,
 ) -> str | None:
     raw = casilla_values.get(entry.casilla_id) if entry.casilla_id is not None else None
     if raw is None:
@@ -485,10 +487,15 @@ def _xml_dictionary_rendered_value(
     if raw is None:
         return None
     if draft.modelo == Modelo.M100:
-        raw = _modelo_100_sign_branch_value(entry, raw)
+        if declarations is None:
+            raise FilingExportValidationError("Modelo 100 XML declarations were not resolved")
+        raw = _modelo_100_sign_branch_value(entry, raw, declarations=declarations)
     rendered = _format_xml_dictionary_value(entry.data_type, raw)
-    converter = _MODELO_100_EXPORT_CODE_CONVERTERS.get(entry.field_id) if draft.modelo == Modelo.M100 else None
-    if converter is not None:
+    converter_name = declarations.get(f"xml.converter.{entry.field_id}") if declarations is not None else None
+    if converter_name is not None:
+        converter = globals().get(converter_name)
+        if not callable(converter):
+            raise FilingExportValidationError(f"registry-selected XML converter {converter_name!r} is not available")
         try:
             return converter(rendered)
         except ValueError as exc:
@@ -496,26 +503,14 @@ def _xml_dictionary_rendered_value(
     return rendered
 
 
-# AEAT declares the fifteen autonomic-deduction blocks as an ``xs:choice``, so a
-# declaration carries the filer's own comunidad and no other -- writing more than
-# one is not merely wrong but a document the schema rejects. Each block also
-# declares its deduction total against casilla 0564, so rendering every declared
-# path for that casilla writes one comunidad's total into all fifteen.
-#
-# Which comunidad is the filer's is read from the draft rather than threaded in:
-# every block owns between twelve and sixty casillas of its own, disjoint from
-# 0564, so the block carrying any populated casilla is the one being filed. That
-# is how a return is completed -- the filer fills their own anexo B -- rather than
-# a proxy for it, and it needs no input the renderer does not already hold.
-_MODELO_100_COMUNIDAD_BLOCK_PREFIX = "/DatosEconomicos/Resultados/DeduccionAutonomicaRes/"
-_MODELO_100_SHARED_COMUNIDAD_TOTAL_CASILLA = "0564"
-
-
-def _modelo_100_comunidad_block(path: str) -> str | None:
+def _modelo_100_comunidad_block(path: str, *, declarations: Mapping[str, str]) -> str | None:
     """Return the comunidad block ``path`` sits in, or ``None`` when it is elsewhere."""
-    if not path.startswith(_MODELO_100_COMUNIDAD_BLOCK_PREFIX):
+    block_prefix = declarations.get("xml.comunidad.block_prefix")
+    if block_prefix is None:
+        raise FilingExportValidationError("registry-selected comunidad block prefix is missing")
+    if not path.startswith(block_prefix):
         return None
-    return path[len(_MODELO_100_COMUNIDAD_BLOCK_PREFIX) :].split("/", 1)[0]
+    return path[len(block_prefix) :].split("/", 1)[0]
 
 
 def _modelo_100_casilla_is_populated(value: object) -> bool:
@@ -536,6 +531,8 @@ def _modelo_100_casilla_is_populated(value: object) -> bool:
 def _modelo_100_unfiled_comunidad_paths(
     entries: tuple[XmlDictionaryEntry, ...],
     casilla_values: Mapping[CasillaId, object],
+    *,
+    declarations: Mapping[str, str],
 ) -> frozenset[str]:
     """Return the autonomic-deduction paths this draft must not write.
 
@@ -552,25 +549,30 @@ def _modelo_100_unfiled_comunidad_paths(
             to more than one comunidad. The schema admits only one, so there is
             no correct rendering and picking one would launder the conflict.
     """
-    own_casillas_by_block = _modelo_100_comunidad_casillas(entries)
+    own_casillas_by_block = _modelo_100_comunidad_casillas(entries, declarations=declarations)
     filed = _modelo_100_filed_comunidades(own_casillas_by_block, casilla_values)
     resident = _modelo_100_resident_comunidad(filed)
-    unfiled = _modelo_100_unfiled_block_paths(entries, resident)
+    unfiled = _modelo_100_unfiled_block_paths(entries, resident, declarations=declarations)
     if resident is None:
-        unfiled.update(_modelo_100_shared_total_paths(entries))
+        unfiled.update(_modelo_100_shared_total_paths(entries, declarations=declarations))
     return frozenset(unfiled)
 
 
 def _modelo_100_comunidad_casillas(
     entries: tuple[XmlDictionaryEntry, ...],
+    *,
+    declarations: Mapping[str, str],
 ) -> dict[str, set[CasillaId]]:
     """Collect each comunidad block's own casillas, excluding the shared total."""
     own_casillas_by_block: dict[str, set[CasillaId]] = {}
     for entry in entries:
-        block = _modelo_100_comunidad_block(entry.path)
+        block = _modelo_100_comunidad_block(entry.path, declarations=declarations)
         if block is None or entry.casilla_id is None:
             continue
-        if entry.casilla_id != _MODELO_100_SHARED_COMUNIDAD_TOTAL_CASILLA:
+        shared_total = declarations.get("xml.comunidad.shared_total_casilla")
+        if shared_total is None:
+            raise FilingExportValidationError("registry-selected comunidad total casilla is missing")
+        if str(entry.casilla_id) != shared_total:
             own_casillas_by_block.setdefault(block, set()).add(entry.casilla_id)
     return own_casillas_by_block
 
@@ -600,44 +602,36 @@ def _modelo_100_resident_comunidad(filed: list[str]) -> str | None:
 def _modelo_100_unfiled_block_paths(
     entries: tuple[XmlDictionaryEntry, ...],
     resident: str | None,
+    *,
+    declarations: Mapping[str, str],
 ) -> set[str]:
     """Return all dictionary paths belonging to non-resident comunidad blocks."""
     return {
         entry.path
         for entry in entries
-        if (block := _modelo_100_comunidad_block(entry.path)) is not None and block != resident
+        if (block := _modelo_100_comunidad_block(entry.path, declarations=declarations)) is not None
+        and block != resident
     }
 
 
-def _modelo_100_shared_total_paths(entries: tuple[XmlDictionaryEntry, ...]) -> frozenset[str]:
+def _modelo_100_shared_total_paths(
+    entries: tuple[XmlDictionaryEntry, ...],
+    *,
+    declarations: Mapping[str, str],
+) -> frozenset[str]:
     """Return shared total paths when no comunidad block is filed."""
-    return frozenset(entry.path for entry in entries if entry.casilla_id == _MODELO_100_SHARED_COMUNIDAD_TOTAL_CASILLA)
+    shared_total = declarations.get("xml.comunidad.shared_total_casilla")
+    if shared_total is None:
+        raise FilingExportValidationError("registry-selected comunidad total casilla is missing")
+    return frozenset(entry.path for entry in entries if str(entry.casilla_id) == shared_total)
 
 
-# Casilla 0695 is declared against two sibling fields that are opposite branches
-# of one quantity, not two copies of it:
-#
-#   TCPP112  "Resto a ingresar ... diferencia positiva o igual a cero"
-#   TCNN112  "Resto ... cuya devolucion se solicita: diferencia negativa o igual a cero"
-#
-# Writing the casilla's value into both declares an amount to pay AND an amount to
-# refund. Only the branch matching the value's sign carries it.
-#
-# Both fields are minOccurs=1 inside a minOccurs=0 parent, so the branch that does
-# not apply is written as zero rather than omitted -- omitting it would render a
-# CompensacionConyugesRes block the schema rejects. At zero the two rules coincide
-# and both branches carry zero, so no tie-break is needed.
-#
-# Keyed on the field id rather than on the P102/N102 type codes: those do not
-# encode a sign domain. Thirty-five P102 rows in the 2024 dictionary carry labels
-# reading "negativa" (the perdida-patrimonial rows among them), and the reader
-# parses both prefixes identically, so the codes agree with the branches here by
-# coincidence rather than by rule.
-_MODELO_100_NEGATIVE_SIGN_BRANCH_FIELDS: frozenset[str] = frozenset({"TCNN112"})
-_MODELO_100_NON_NEGATIVE_SIGN_BRANCH_FIELDS: frozenset[str] = frozenset({"TCPP112"})
-
-
-def _modelo_100_sign_branch_value(entry: XmlDictionaryEntry, raw: object) -> object:
+def _modelo_100_sign_branch_value(
+    entry: XmlDictionaryEntry,
+    raw: object,
+    *,
+    declarations: Mapping[str, str],
+) -> object:
     """Return ``raw`` for the sign branch it belongs to, and zero for the other.
 
     Args:
@@ -656,8 +650,12 @@ def _modelo_100_sign_branch_value(entry: XmlDictionaryEntry, raw: object) -> obj
         answers ``None`` and the comparison below raises ``TypeError`` on the
         export path.
     """
-    negative_branch = entry.field_id in _MODELO_100_NEGATIVE_SIGN_BRANCH_FIELDS
-    if not negative_branch and entry.field_id not in _MODELO_100_NON_NEGATIVE_SIGN_BRANCH_FIELDS:
+    negative_field = declarations.get("xml.sign.negative_field")
+    non_negative_field = declarations.get("xml.sign.non_negative_field")
+    if negative_field is None or non_negative_field is None:
+        raise FilingExportValidationError("registry-selected XML sign declarations are incomplete")
+    negative_branch = entry.field_id == negative_field
+    if not negative_branch and entry.field_id != non_negative_field:
         return raw
     amount = coerce_decimal(raw, default=Decimal("0"))
     return raw if (amount < 0) is negative_branch else Decimal("0")

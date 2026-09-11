@@ -11,8 +11,8 @@ from .._command_runtime import (
     _parameter,
     build_command_app,
     build_command_subtree,
-    resolve_deferred_target,
 )
+from .._command_target import resolve_deferred_target
 from ..command_spec import (
     ArgumentSpec,
     CommandNodeKind,

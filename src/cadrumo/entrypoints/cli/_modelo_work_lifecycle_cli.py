@@ -45,12 +45,6 @@ from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.contribuyente.tax_residence import parse_tax_region
 from ...domain.modelos.work_unit import WorkUnit
-from ._common import (
-    activate_subcommand_output_language,
-    active_profile_label,
-    emit_envelope,
-    resolve_lifecycle_continuation_notice,
-)
 from ._modelo_behavior_support import (
     require_active_profile,
     resolve_work_unit_for_cli,
@@ -64,6 +58,12 @@ from ._modelo_cli_support import (
 )
 from ._modelo_payloads import WorkCreateResult, WorkDiscardResult, WorkListResult, WorkRenameResult, WorkStatusResult
 from ._modelo_rendering import advisory_notice, work_unit_lines, work_unit_list_lines, work_unit_payload
+from .common import (
+    activate_subcommand_output_language,
+    active_profile_label,
+    emit_envelope,
+    resolve_lifecycle_continuation_notice,
+)
 
 
 def _validate_filing_year(year: int) -> None:

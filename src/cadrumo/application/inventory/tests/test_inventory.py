@@ -36,7 +36,7 @@ from ....domain.contribuyente.inventory.records import (
 )
 
 if TYPE_CHECKING:
-    from ....domain.contribuyente.inventory import _closing_authority_records as _closing_types
+    from ....domain.contribuyente.inventory import closing_authority_records as _closing_types
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..errors import InventoryActividadConflictError, InventoryActividadNotFoundError, InventoryServiceInputError
@@ -104,7 +104,7 @@ def _acquisition(value: str) -> InventoryAcquisitionCost:
 def _authority_record(
     *, reason: str = "Reviewed movement-derived closing."
 ) -> _closing_types.InventoryClosingAuthorityRecord:
-    from ....domain.contribuyente.inventory._closing_authority_records import (
+    from ....domain.contribuyente.inventory.closing_authority_records import (
         InventoryClosingAuthorityDecision,
         InventoryClosingAuthorityRecord,
         PriorAuthoritativeClosingLink,
@@ -154,7 +154,7 @@ def _authority_record(
 
 
 def _physical_authority_record() -> _closing_types.InventoryClosingAuthorityRecord:
-    from ....domain.contribuyente.inventory._closing_authority_records import InventoryClosingAuthorityRecord
+    from ....domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
 
     base = _authority_record()
     observation = PhysicalClosingObservation(
@@ -457,7 +457,7 @@ class TestClosingAuthorityRecord:
         assert stored.ledgers[0].closing_authority_record == record
 
     def test_record_refuses_divergent_replay_without_overwrite(self, secure_engine: TestRuntimeProfile) -> None:
-        from ....domain.contribuyente.inventory._closing_authority_records import InventoryClosingAuthorityRecord
+        from ....domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
 
         svc = _make_svc(secure_engine)
         svc.create(

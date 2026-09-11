@@ -35,17 +35,17 @@ Grounded authority:
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
-from .....core.casilla_id import validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....domain.calculations.registry.ids import BindingId
 from ._verification_chain_support import (
     _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
     _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
     _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
     _M303_STATE_ATTRIBUTION_RATIO_CASILLA,
-    BindingId,
-    CasillaId,
-    Decimal,
     _assert_m303_printed_resultado_regimen_general_arithmetic,
     _calculate_m303_engine_values_from_inputs,
 )

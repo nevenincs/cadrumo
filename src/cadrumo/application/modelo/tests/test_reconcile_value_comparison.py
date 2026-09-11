@@ -21,9 +21,9 @@ import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ...tests.profile_backend_fixtures import _isolated_backend
+from ...tests.profile_backend_fixtures import isolated_backend
 
-__all__ = ["_isolated_backend"]
+__all__ = ["isolated_backend"]
 
 from ....adapters.inbound.justificante.parser import parse_justificante
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -44,7 +44,7 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.inventory import FIXTURES_DIR
 from ...workflow.persistence import workflow_state_repository
 from ..reconciliation import (
-    _reconcile_parsed_justificante,
+    reconcile_parsed_justificante,
 )
 from ..reconciliation_records import (
     ModeloReconciliationDiffKind,
@@ -161,7 +161,7 @@ def _receipt_for_m131(*, total_ingresar: Decimal):
 
 
 def _reconcile(work_unit: WorkUnit, justificante: Justificante):
-    return _reconcile_parsed_justificante(
+    return reconcile_parsed_justificante(
         work_unit=work_unit,
         source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
         source_ref="test://m131",

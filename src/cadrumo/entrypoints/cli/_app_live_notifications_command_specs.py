@@ -13,7 +13,6 @@ from ._app_live_command_spec_support import (
     _METADATA_POLICY,
     _PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
     NO_RESULT_SCHEMA,
-    _key,
 )
 from .command_spec import (
     ArgumentSpec,
@@ -26,6 +25,9 @@ from .command_spec import (
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
+)
+from .command_spec import (
+    translation_key as _key,
 )
 
 _NOTIFICATION_CERTIFICADO_ID_ARGUMENT: Final[ArgumentSpec] = ArgumentSpec(

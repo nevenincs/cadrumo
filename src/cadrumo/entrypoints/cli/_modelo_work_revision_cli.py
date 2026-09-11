@@ -26,13 +26,10 @@ from ...application.modelo.selectors import ModeloCalculationRevisionSelector
 from ...core.external_constants import OutputLanguage
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
-from ._common import activate_subcommand_output_language, emit_envelope
 from ._modelo_behavior_support import require_active_profile, resolve_revision_for_cli, resolve_work_unit_for_cli
 from ._modelo_cli_support import bad_parameter_from_error, selector_bad_parameter
 from ._modelo_payloads import (
     CalculationRevisionSummaryPayload,
-    WorkObservationsResult,
-    WorkRevisionResult,
     WorkRevisionsResult,
 )
 from ._modelo_rendering import (
@@ -41,6 +38,8 @@ from ._modelo_rendering import (
     calculation_revision_payload,
     short_id,
 )
+from ._modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
+from .common import activate_subcommand_output_language, emit_envelope
 
 
 @dataclass(frozen=True)

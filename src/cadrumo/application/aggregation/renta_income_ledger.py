@@ -1,18 +1,18 @@
-"""Repository-backed Renta actividad-income aggregation.
+"""Repository-backed Renta activity-income aggregation.
 
-This is the ledger projection behind the
-``ledger_renta_income_aggregation`` source for Modelo 130 and Modelo 100. The
-quarterly entry point :func:`aggregate_renta_income_ledger_from_repositories`
+This module owns the generic ledger projection and period/window mechanics.
+The selected filing's model, target casilla, activity selectors, and binding
+applicability are supplied by the registry boundary by callers; no filing
+declaration is embedded here.
+
+The quarterly entry point :func:`aggregate_renta_income_ledger_from_repositories`
 loads a :class:`~domain.transactions.TransactionCatalogue` via
 :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository` from the
 active bucket and delegates to :func:`aggregate_renta_income_ledger` for
 period-scoped aggregation.
 
-Modelo 130 casilla 01 (Ingresos íntegros) accumulates professional-service
-revenue from the start of the fiscal year through the end of the declared
-quarter. Unlike the expense pipeline, which processes annual periods, the
-income pipeline accepts a **quarterly** period token and applies a cumulative
-year-to-date window.
+The annual counterpart uses the same generic projection over its requested
+window. A separate caller supplies its target and model identity.
 
 Cumulative window rule (RD 439/2007 art. 110.2):
   For period Qn in year Y the window is [Jan 1, Y] through [last day of Qn, Y].
@@ -22,13 +22,6 @@ Only ACTIVE, EUR-denominated, INCOMING transactions whose
 ``business_classification`` is BUSINESS or MIXED are eligible. Transactions
 whose ``value_date`` (or ``booked_date`` if absent) falls outside the
 cumulative window are excluded with a traceable issue record.
-
-Modelo 100 uses the annual counterpart
-:func:`aggregate_renta_m100_income_ledger`, which keeps the same activity-income
-eligibility rules but targets the annual IRPF income leaf. The source-mesh
-resolver in :mod:`~.modelo_bindings` chooses the correct path for the
-requested modelo and returns the binding values as a
-:class:`~.source_mesh.CalculationSourceResolution`.
 """
 
 from __future__ import annotations
@@ -37,17 +30,16 @@ from collections.abc import Callable, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Final, NamedTuple, Self
+from typing import NamedTuple, Self
 
 from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
-from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.aggregation import LedgerIncomeGrounding
+from ...core.casilla_id import CasillaId
 from ...core.i18n.translatable import Translatable as t
-from ...core.identity import TransactionId
-from ...core.modelo import Modelo
+from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodKind
 from ...core.prose_elision import IssueDetail
@@ -55,10 +47,8 @@ from ...core.tipos_actividad import TipoActividad
 from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ...domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
 from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
 from ...domain.transactions.volumen_ingresos import counts_toward_volumen_de_ingresos
 from . import _renta_income_evidence, _shared_issue_reasons
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
@@ -68,17 +58,7 @@ from .currency_predicates import effective_eur_amount, effective_eur_taxable_bas
 from .errors import AggregationPeriodError, AggregationValidationError
 from .source_mesh import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
 
-# The only casilla income aggregation feeds for M130 actividad económica direct estimation.
-_TARGET_CASILLA_INGRESOS: CasillaId = validated_casilla_id("01", surface="_TARGET_CASILLA_INGRESOS")
-
-_DERIVED_WITHHOLDING_MARKERS: frozenset[LedgerWithholdingDerivation] = frozenset(
-    {
-        LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE,
-        LedgerWithholdingDerivation.INFERRED_FROM_DECLARED_CUOTA,
-        LedgerWithholdingDerivation.INFERRED_FROM_CATEGORY_ZERO_CUOTA,
-    },
-)
-"""The markers that assert a real derived figure, so a zero beside one is a defect."""
+# TODO(fact-relocation): resolve Renta ledger model, target casilla, category selectors, and bindings from selected registry revision
 
 
 class RentaIncomeLedgerAggregationIssueReason(StrEnum):
@@ -101,9 +81,8 @@ class RentaIncomeLedgerAggregationIssueReason(StrEnum):
     PERSONAL_TRANSACTION = _shared_issue_reasons.PERSONAL_TRANSACTION
     OUTSIDE_PERIOD = _shared_issue_reasons.OUTSIDE_PERIOD
     UNSUPPORTED_PERIOD = "unsupported_period"
-    # Nómina / trabajo entries declare irpf_category="trabajo" — they
-    # belong to IRPF rendimientos del trabajo, not actividad económica,
-    # and must not feed M130 casillas.
+    # Nómina / trabajo entries belong to a separate income category and must
+    # not feed an activity-income target.
     TRABAJO_INCOME = "trabajo_income"
 
 
@@ -154,8 +133,8 @@ class RentaIncomeObservation(BaseModel):
     ``source_jurisdiction`` propagates the per-transaction ISO 3166-1
     alpha-2 source-jurisdiction provenance from the originating ledger
     row.  LIRPF Art. 8 establishes the universal-base presumption for
-    Spanish residents, so M130 / M100 aggregate ALL source jurisdictions
-    into the same base — the field is preserved for audit and for
+    Spanish residents, so the selected income targets aggregate ALL source
+    jurisdictions into the same base — the field is preserved for audit and for
     downstream IRNR / Beckham engines that read foreign-source rows.
     """
 
@@ -169,7 +148,6 @@ class RentaIncomeObservation(BaseModel):
     filing_date: date
     source_jurisdiction: str | None = None
     grounding: LedgerIncomeGrounding
-    withheld_derivation: LedgerWithholdingDerivation = LedgerWithholdingDerivation.NOT_APPLICABLE
     sales_invoice_refusal: _renta_income_evidence.SalesInvoiceEvidenceRefusal | None = None
 
     @model_validator(mode="after")
@@ -188,41 +166,6 @@ class RentaIncomeObservation(BaseModel):
             raise ValueError(
                 f"grounding {self.grounding.value!r} contradicts taxable_base_amount="
                 f"{self.taxable_base_amount!r}; expected {expected.value!r}",
-            )
-        return self
-
-    @model_validator(mode="after")
-    def _withheld_derivation_matches_the_figure(self) -> Self:
-        """Refuse a marker that contradicts the figure beside it.
-
-        The marker exists so a zero can be read: a refused inference and a
-        genuine nothing-withheld are both ``Decimal("0")`` and mean opposite
-        things. Two pairings would destroy that and are refused here rather
-        than trusted at each consumer -- an inference marker sitting on no
-        figure, and a refusal carrying the very figure it refused.
-
-        The remaining members are deliberately permissive about the amount.
-        :attr:`LedgerWithholdingDerivation.NOT_APPLICABLE` is the field
-        default, so it is also what an observation built without reference to
-        this axis carries; refusing a figure beside it would make the default
-        unusable rather than make anything safer. The guarantee that matters
-        lives on the production path, where
-        :func:`_classify_income_transaction` always states a marker it derived
-        together with the amount -- pinned by
-        ``test_the_builder_never_emits_an_unmarked_withholding``.
-        """
-        if self.withheld_derivation in _DERIVED_WITHHOLDING_MARKERS and self.withheld_amount <= Decimal("0"):
-            raise ValueError(
-                f"withheld_derivation {self.withheld_derivation.value!r} claims a derived figure "
-                f"but withheld_amount is {self.withheld_amount}",
-            )
-        if (
-            self.withheld_derivation is LedgerWithholdingDerivation.REFUSED_ABOVE_SUPPORTED_RATE
-            and self.withheld_amount != Decimal("0")
-        ):
-            raise ValueError(
-                "a refused withholding inference must not carry the figure it refused; "
-                f"withheld_amount is {self.withheld_amount}",
             )
         return self
 
@@ -280,15 +223,15 @@ class UnadmittedActivityIncome(BaseModel):
 class RentaIncomeLedgerAggregation(
     LedgerAggregationResultBase[RentaIncomeObservation, RentaIncomeLedgerAggregationIssue],
 ):
-    """Cumulative income observations for one M130 quarter window.
+    """Cumulative income observations for one selected quarter window.
 
     ``out_of_window_summary`` is populated by repository-backed date partitions.
     Full-catalogue aggregation keeps row-level issues because every transaction
     is already loaded for classification.
 
     ``unadmitted_activity_income`` is populated only by a projection that
-    NARROWS rows by activity -- today the Modelo 131 agrarian volumen. ``None``
-    on the Modelo 130 and Modelo 100 paths states that no narrowing ran, which is
+    NARROWS rows by activity when requested. ``None`` on an un-narrowed path states
+    that no narrowing ran, which is
     not the same claim as a narrowing that excluded nothing, and the two must
     stay distinguishable: the second is a fact about this taxpayer's ledger, the
     first is a fact about which projection was asked for.
@@ -323,10 +266,14 @@ def aggregate_renta_income_ledger_from_repositories(
     *,
     bucket_id: str,
     period: Period,
+    modelo: str,
+    target_casilla_id: CasillaId,
+    activity_category_matcher: Callable[[Transaction], bool],
+    employment_category_matcher: Callable[[Transaction], bool],
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
 ) -> RentaIncomeLedgerAggregation:
-    """Load the transaction catalogue and aggregate cumulative M130 income.
+    """Load the transaction catalogue and aggregate a cumulative income window.
 
     Returns a :class:`RentaIncomeLedgerAggregation`.
     """
@@ -342,7 +289,16 @@ def aggregate_renta_income_ledger_from_repositories(
     # reported uniformly as ``OUTSIDE_PERIOD``.
     window = cumulative_year_to_date_window(period)
     partition = repository.partition_by_date_range(window.start, window.end)
-    result = aggregate_renta_income_ledger(partition.in_window, invoices, bucket_id=bucket_id, period=period)
+    result = aggregate_renta_income_ledger(
+        partition.in_window,
+        invoices,
+        bucket_id=bucket_id,
+        period=period,
+        modelo=modelo,
+        target_casilla_id=target_casilla_id,
+        activity_category_matcher=activity_category_matcher,
+        employment_category_matcher=employment_category_matcher,
+    )
     out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
         partition.out_of_window,
     )
@@ -357,8 +313,12 @@ def aggregate_renta_income_ledger(
     *,
     bucket_id: str,
     period: Period,
+    modelo: str,
+    target_casilla_id: CasillaId,
+    activity_category_matcher: Callable[[Transaction], bool],
+    employment_category_matcher: Callable[[Transaction], bool],
 ) -> RentaIncomeLedgerAggregation:
-    """Aggregate INCOMING professional-income transactions into M130 casilla 01.
+    """Aggregate incoming professional-income transactions into a selected target.
 
     Args:
         transactions: The :class:`TransactionCatalogue` of ledger transactions to aggregate.
@@ -395,6 +355,9 @@ def aggregate_renta_income_ledger(
             bucket_id=bucket_id,
             cumulative_start=window.start,
             cumulative_end=window.end,
+            target_casilla_id=target_casilla_id,
+            activity_category_matcher=activity_category_matcher,
+            employment_category_matcher=employment_category_matcher,
         )
         if outcome is None:
             continue
@@ -403,9 +366,13 @@ def aggregate_renta_income_ledger(
         else:
             observations.append(outcome)
 
-    casilla_aggregation = _income_casilla_aggregation(window.period, observations)
+    casilla_aggregation = _income_casilla_aggregation(
+        window.period,
+        observations,
+        modelo=modelo,
+    )
     return RentaIncomeLedgerAggregation(
-        modelo=Modelo.M130.value,
+        modelo=modelo,
         period=window.period,
         observations=tuple(observations),
         issues=tuple(issues),
@@ -413,24 +380,18 @@ def aggregate_renta_income_ledger(
     )
 
 
-# Modelo 100 estimación-directa "Ingresos de explotación" leaf. The annual IRPF
-# return aggregates the same actividad-económica income the M130 quarterly path
-# sums, but over the full ejercicio and into the M100 income leaf rather than the
-# M130 cumulative casilla.
-_TARGET_CASILLA_M100_INGRESOS: CasillaId = validated_casilla_id(
-    "0171",
-    surface="_TARGET_CASILLA_M100_INGRESOS",
-)
-
-
 def aggregate_renta_m100_income_ledger_from_repositories(
     *,
     bucket_id: str,
     period: Period,
+    modelo: str,
+    target_casilla_id: CasillaId,
+    activity_category_matcher: Callable[[Transaction], bool],
+    employment_category_matcher: Callable[[Transaction], bool],
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
 ) -> RentaIncomeLedgerAggregation:
-    """Load the catalogue and aggregate the annual Modelo 100 actividad income.
+    """Load the catalogue and aggregate an annual activity-income window.
 
     Returns:
         The :class:`RentaIncomeLedgerAggregation` for the requested annual period.
@@ -448,9 +409,27 @@ def aggregate_renta_m100_income_ledger_from_repositories(
     # the unfiltered load so the aggregation's own period validation still
     # raises the same error.
     if period.kind is not PeriodKind.ANNUAL:
-        return aggregate_renta_m100_income_ledger(repository.load(), invoices, bucket_id=bucket_id, period=period)
+        return aggregate_renta_m100_income_ledger(
+            repository.load(),
+            invoices,
+            bucket_id=bucket_id,
+            period=period,
+            modelo=modelo,
+            target_casilla_id=target_casilla_id,
+            activity_category_matcher=activity_category_matcher,
+            employment_category_matcher=employment_category_matcher,
+        )
     partition = repository.partition_by_date_range(period.start_date, period.end_date)
-    result = aggregate_renta_m100_income_ledger(partition.in_window, invoices, bucket_id=bucket_id, period=period)
+    result = aggregate_renta_m100_income_ledger(
+        partition.in_window,
+        invoices,
+        bucket_id=bucket_id,
+        period=period,
+        modelo=modelo,
+        target_casilla_id=target_casilla_id,
+        activity_category_matcher=activity_category_matcher,
+        employment_category_matcher=employment_category_matcher,
+    )
     out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
         partition.out_of_window,
     )
@@ -465,14 +444,18 @@ def aggregate_renta_m100_income_ledger(
     *,
     bucket_id: str,
     period: Period,
+    modelo: str,
+    target_casilla_id: CasillaId,
+    activity_category_matcher: Callable[[Transaction], bool],
+    employment_category_matcher: Callable[[Transaction], bool],
 ) -> RentaIncomeLedgerAggregation:
-    """Aggregate annual actividad-económica income from a :class:`TransactionCatalogue` into Modelo 100 casilla 0171.
+    """Aggregate annual activity-income from a :class:`TransactionCatalogue` into a selected target.
 
     The annual counterpart of :func:`aggregate_renta_income_ledger`: it applies the
-    same actividad-económica eligibility (excluding nómina/trabajo and personal
-    flows) over the FULL ejercicio (Jan 1 to Dec 31 of ``period.filing_year``) and targets
-    the M100 "Ingresos de explotación" leaf (0171) instead of the M130 cumulative
-    casilla. ``period`` must be the annual period. The :class:`InvoiceCatalogue`
+    same activity-income eligibility (excluding nómina/trabajo and personal
+    flows) over the FULL ejercicio (Jan 1 to Dec 31 of ``period.filing_year``) and
+    targets the caller-selected annual casilla. ``period`` must be the annual
+    period. The :class:`InvoiceCatalogue`
     passed as ``invoices`` is consulted when classifying each transaction; an
     empty catalogue is used when it is omitted.
 
@@ -488,22 +471,27 @@ def aggregate_renta_m100_income_ledger(
     window_end = date(period.filing_year, 12, 31)
     resolved_invoices = invoices if invoices is not None else InvoiceCatalogue()
 
-    # The classifier targets the M130 casilla 01; every eligible observation is
-    # re-targeted to the M100 income leaf 0171.
+    # The classifier is retargeted to the selected annual destination.
     projected = _project_income_onto_casilla(
         transactions,
         invoices=resolved_invoices,
         bucket_id=bucket_id,
         window_start=window_start,
         window_end=window_end,
-        target_casilla_id=_TARGET_CASILLA_M100_INGRESOS,
+        target_casilla_id=target_casilla_id,
+        activity_category_matcher=activity_category_matcher,
+        employment_category_matcher=employment_category_matcher,
     )
     observations = list(projected.observations)
     issues = list(projected.issues)
 
-    casilla_aggregation = _m100_income_casilla_aggregation(period, observations)
+    casilla_aggregation = _m100_income_casilla_aggregation(
+        period,
+        observations,
+        modelo=modelo,
+    )
     return RentaIncomeLedgerAggregation(
-        modelo=Modelo.M100.value,
+        modelo=modelo,
         period=period,
         observations=tuple(observations),
         issues=tuple(issues),
@@ -514,53 +502,30 @@ def aggregate_renta_m100_income_ledger(
 def _m100_income_casilla_aggregation(
     period: Period,
     observations: Sequence[RentaIncomeObservation],
+    *,
+    modelo: str,
 ) -> CasillaAggregation:
     return fold_casilla_observations(
         observations,
-        modelo=Modelo.M100.value,
+        modelo=modelo,
         period=period,
         amount_fn=_computable_income_amount,
     )
-
-
-_TARGET_CASILLA_M131_AGRARIO: CasillaId = validated_casilla_id(
-    "05",
-    surface="_TARGET_CASILLA_M131_AGRARIO",
-)
-
-_M131_AGRARIO_ACTIVITY_SELECTOR: Final[str] = "modelo-131:selector-m036-volumen-ingresos-agrario"
-
-
-def _m131_agrarian_activity_codes(*, effective_date: date) -> frozenset[TipoActividad]:
-    """Return the Modelo 036 codes whose income feeds Modelo 131 casilla 05.
-
-    Delegates to the one reader for governed ``m036-tipo-actividad-code-set``
-    facts rather than splitting the string here. Several unrelated selectors share
-    that payload -- the four art. 95 partitions, the broad art. 110 set, and this
-    Modelo 131-specific set -- and a second parser is a second place the token
-    validation can drift.
-
-    The set is NOT the art. 95 agrícola/ganadera one: that carries no forestal code,
-    so borrowing it would drop a forestal filer's entire quarterly volume.
-
-    Args:
-        effective_date: Filing-period coordinate for the form-specific fact.
-
-    Raises:
-        TransactionValidationError: If the selector fact is absent, unsupported at
-            the period, or malformed.
-    """
-    return tipo_actividad_code_set(_M131_AGRARIO_ACTIVITY_SELECTOR, effective_date=effective_date)
 
 
 def aggregate_renta_m131_agrario_income_ledger_from_repositories(
     *,
     bucket_id: str,
     period: Period,
+    modelo: str,
+    target_casilla_id: CasillaId,
+    agrarian_activity_codes: frozenset[TipoActividad],
+    activity_category_matcher: Callable[[Transaction], bool],
+    employment_category_matcher: Callable[[Transaction], bool],
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
 ) -> RentaIncomeLedgerAggregation:
-    """Load the catalogue and aggregate the Modelo 131 agrarian quarterly volume.
+    """Load the catalogue and aggregate a selected activity-narrowed quarter.
 
     Returns:
         The :class:`RentaIncomeLedgerAggregation` for the requested quarter.
@@ -577,6 +542,11 @@ def aggregate_renta_m131_agrario_income_ledger_from_repositories(
         invoices,
         bucket_id=bucket_id,
         period=period,
+        modelo=modelo,
+        target_casilla_id=target_casilla_id,
+        agrarian_activity_codes=agrarian_activity_codes,
+        activity_category_matcher=activity_category_matcher,
+        employment_category_matcher=employment_category_matcher,
     )
 
 
@@ -586,30 +556,31 @@ def aggregate_renta_m131_agrario_income_ledger(
     *,
     bucket_id: str,
     period: Period,
+    modelo: str,
+    target_casilla_id: CasillaId,
+    agrarian_activity_codes: frozenset[TipoActividad],
+    activity_category_matcher: Callable[[Transaction], bool],
+    employment_category_matcher: Callable[[Transaction], bool],
 ) -> RentaIncomeLedgerAggregation:
-    """Aggregate the agrarian volumen de ingresos into Modelo 131 casilla 05.
+    """Aggregate an activity-narrowed quarterly income volume into a target.
 
-    Two filters separate this from the Modelo 130 path, and both are legal rather
-    than incidental:
+    Two filters separate this narrowed projection from an un-narrowed path, and
+    both are supplied by the selected registry scope:
 
     * **Activity.** Only rows whose declared :class:`~core.TipoActividad` are in
-      the registry's Modelo 131 casilla-05 selector contribute. A row with no declared activity
+      the supplied activity-code set contribute. A row with no declared activity
       contributes NOTHING here — the opposite of the concept default below, and
       deliberately so. Silence about activity cannot mean "agrarian": routing an
-      undeclared row into casilla 05 would put a non-agrarian filer's income into an
-      agrarian box, and the same row is already claimed by the estimación-objetiva
-      side of the form. Under-filling a box the operator can still complete by hand
+      undeclared row into an activity-narrowed box would misroute a non-matching
+      filer's income, and the same row may be claimed by another projection.
+      Under-filling a box the operator can still complete by hand
       is recoverable; mis-routing income between two boxes of one return is not.
     * **Concept.** Rows whose :class:`~core.ConceptoIngreso` art. 110.1.c) excludes —
       subvenciones de capital and indemnizaciones — are dropped. An undeclared
       concept IS included, because an unmarked receipt is far more likely to be
       ordinary income than an exceptional one.
 
-    The window is the quarter itself rather than the cumulative year-to-date the
-    Modelo 130 path uses: art. 110.1.c) fixes the payment on *el volumen de ingresos
-    del trimestre*, and the AEAT Modelo 131 instrucciones for casilla 05 repeat it —
-    *el volumen de ingresos del trimestre por el que se realiza el pago fraccionado*.
-    Modelo 131 carries no cross-quarter cumulative on this leg.
+    The window is the quarter itself rather than a cumulative year-to-date window.
 
     Args:
         transactions: The :class:`TransactionCatalogue` to project.
@@ -617,9 +588,12 @@ def aggregate_renta_m131_agrario_income_ledger(
             empty catalogue when omitted.
         bucket_id: The active profile bucket.
         period: The quarter being filed.
+        modelo: Selected model identifier supplied by the registry boundary.
+        target_casilla_id: Selected output target supplied by the registry boundary.
+        agrarian_activity_codes: Selected activity-code set supplied by the registry.
 
     Returns:
-        The :class:`RentaIncomeLedgerAggregation` for casilla 05.
+        The :class:`RentaIncomeLedgerAggregation` for the selected target.
 
     Raises:
         AggregationPeriodError: If ``period`` is not a quarter.
@@ -630,17 +604,17 @@ def aggregate_renta_m131_agrario_income_ledger(
             context={"period": str(period)},
         )
     resolved_invoices = invoices if invoices is not None else InvoiceCatalogue()
-    agrarian_codes = _m131_agrarian_activity_codes(effective_date=period.end_date)
-
     projected = _project_income_onto_casilla(
         transactions,
         invoices=resolved_invoices,
         bucket_id=bucket_id,
         window_start=period.start_date,
         window_end=period.end_date,
-        target_casilla_id=_TARGET_CASILLA_M131_AGRARIO,
+        target_casilla_id=target_casilla_id,
+        activity_category_matcher=activity_category_matcher,
+        employment_category_matcher=employment_category_matcher,
         admits=lambda transaction: (
-            transaction.tipo_actividad in agrarian_codes
+            transaction.tipo_actividad in agrarian_activity_codes
             and counts_toward_volumen_de_ingresos(
                 transaction.concepto_ingreso,
                 effective_date=period.end_date,
@@ -649,20 +623,20 @@ def aggregate_renta_m131_agrario_income_ledger(
     )
 
     return RentaIncomeLedgerAggregation(
-        modelo=Modelo.M131.value,
+        modelo=modelo,
         period=period,
         observations=projected.observations,
         issues=projected.issues,
         casilla_aggregation=fold_casilla_observations(
             projected.observations,
-            modelo=Modelo.M131.value,
+            modelo=modelo,
             period=period,
             amount_fn=_computable_income_amount,
         ),
         unadmitted_activity_income=_unadmitted_activity_income(
             transactions,
             projected.unadmitted,
-            target_casilla_id=_TARGET_CASILLA_M131_AGRARIO,
+            target_casilla_id=target_casilla_id,
         ),
     )
 
@@ -715,7 +689,7 @@ class _ProjectedIncome(NamedTuple):
     classifier, same window -- and were excluded solely by the row filter, which
     is what makes them the honest denominator for "this period carries income the
     target casilla did not admit". Empty whenever ``admits`` is ``None``, so the
-    Modelo 100 and Modelo 130 paths carry nothing extra.
+    Un-narrowed paths carry nothing extra.
     """
 
     observations: tuple[RentaIncomeObservation, ...]
@@ -731,13 +705,15 @@ def _project_income_onto_casilla(
     window_start: date,
     window_end: date,
     target_casilla_id: CasillaId,
+    activity_category_matcher: Callable[[Transaction], bool],
+    employment_category_matcher: Callable[[Transaction], bool],
     admits: Callable[[Transaction], bool] | None = None,
 ) -> _ProjectedIncome:
     """Classify a catalogue once and re-target every eligible observation.
 
-    The Modelo 100 and Modelo 131 aggregations differ from the Modelo 130 one in
-    three ways and no more: the window, the casilla, and whether rows are narrowed
-    before classification. Everything else -- the lifecycle skip, the classifier
+    Projection variants differ in three ways and no more: the window, the
+    casilla, and whether rows are narrowed before classification. Everything else
+    -- the lifecycle skip, the classifier
     call, the issue/observation split -- was written out identically in each, so a
     change to the eligibility contract had to be made in every copy or silently
     hold in only some.
@@ -750,8 +726,8 @@ def _project_income_onto_casilla(
         window_end: Last day the classifier treats as in-window.
         target_casilla_id: The casilla every eligible observation is re-targeted to.
         admits: Optional row filter deciding which rows reach the casilla.
-            ``None`` admits every active row, which is what the M100 and M130
-            paths want. A rejected row is still CLASSIFIED, so its income can be
+            ``None`` admits every active row, which is what an un-narrowed path
+            wants. A rejected row is still CLASSIFIED, so its income can be
             counted, but it contributes to ``unadmitted`` rather than to
             ``observations``.
 
@@ -772,6 +748,9 @@ def _project_income_onto_casilla(
             bucket_id=bucket_id,
             cumulative_start=window_start,
             cumulative_end=window_end,
+            target_casilla_id=target_casilla_id,
+            activity_category_matcher=activity_category_matcher,
+            employment_category_matcher=employment_category_matcher,
         )
         if outcome is None:
             continue
@@ -797,23 +776,32 @@ def _classify_income_transaction(
     bucket_id: str,
     cumulative_start: date,
     cumulative_end: date,
+    target_casilla_id: CasillaId,
+    activity_category_matcher: Callable[[Transaction], bool],
+    employment_category_matcher: Callable[[Transaction], bool],
 ) -> RentaIncomeObservation | RentaIncomeLedgerAggregationIssue | None:
-    """Filter one ledger transaction against the M130 income pipeline.
+    """Filter one ledger transaction against the selected income pipeline.
 
     Returns a :class:`RentaIncomeObservation` for an eligible receipt, a
     :class:`RentaIncomeLedgerAggregationIssue` for an INCOMING row that fails a
     gate, or ``None`` for an OUTGOING row this income pipeline does not own —
-    deductible OUTGOING expenses are aggregated into casilla 02 by the
+    deductible OUTGOING expenses are aggregated by the
     companion ``ledger_renta_gastos_pago_fraccionado_aggregation`` pipeline
     (:mod:`~.renta_gasto_ledger`), so the income pass skips them silently
     rather than emitting a misleading "expense dropped" advisory.
     """
     if _income_transaction_is_out_of_scope(transaction):
         return None
-    gate_issue = _income_gate_issue(transaction)
+    gate_issue = _income_gate_issue(
+        transaction,
+        employment_category_matcher=employment_category_matcher,
+    )
     if gate_issue is not None:
         return gate_issue
-    proportion_or_issue = _income_business_proportion_or_issue(transaction)
+    proportion_or_issue = _income_business_proportion_or_issue(
+        transaction,
+        activity_category_matcher=activity_category_matcher,
+    )
     if isinstance(proportion_or_issue, RentaIncomeLedgerAggregationIssue):
         return proportion_or_issue
     proportion = proportion_or_issue
@@ -839,6 +827,7 @@ def _classify_income_transaction(
         proportion=proportion,
         gross_amount=gross_amount,
         filing_date=filing_date,
+        target_casilla_id=target_casilla_id,
     )
 
 
@@ -854,7 +843,11 @@ def _income_transaction_is_out_of_scope(transaction: Transaction) -> bool:
     )
 
 
-def _income_gate_issue(transaction: Transaction) -> RentaIncomeLedgerAggregationIssue | None:
+def _income_gate_issue(
+    transaction: Transaction,
+    *,
+    employment_category_matcher: Callable[[Transaction], bool],
+) -> RentaIncomeLedgerAggregationIssue | None:
     """Return the first currency or IRPF-category issue for an income row."""
     transaction_id = transaction.transaction_id
     if is_non_eur_without_conversion(transaction):
@@ -865,14 +858,14 @@ def _income_gate_issue(transaction: Transaction) -> RentaIncomeLedgerAggregation
         )
 
     # Nómina entries (irpf_category="trabajo") belong to rendimientos del
-    # trabajo and must not feed M130 actividad-económica casillas.
-    if has_employment_irpf_category(transaction.irpf_category, direction=transaction.direction):
+    # trabajo and must not feed an activity-income target.
+    if employment_category_matcher(transaction):
         return RentaIncomeLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=RentaIncomeLedgerAggregationIssueReason.TRABAJO_INCOME,
             detail=(
                 f"irpf_category {transaction.irpf_category!r} belongs to rendimientos del trabajo, "
-                "not actividad económica; excluded from M130"
+                "not actividad económica; excluded from activity income"
             ),
         )
     return None
@@ -880,9 +873,14 @@ def _income_gate_issue(transaction: Transaction) -> RentaIncomeLedgerAggregation
 
 def _income_business_proportion_or_issue(
     transaction: Transaction,
+    *,
+    activity_category_matcher: Callable[[Transaction], bool],
 ) -> Decimal | RentaIncomeLedgerAggregationIssue:
     """Return the business share or the precise classification issue."""
-    proportion = _income_business_proportion(transaction)
+    proportion = _income_business_proportion(
+        transaction,
+        activity_category_matcher=activity_category_matcher,
+    )
     if proportion is not None:
         return proportion
     reason = (
@@ -922,6 +920,7 @@ def _income_observation(
     proportion: Decimal,
     gross_amount: Decimal,
     filing_date: date,
+    target_casilla_id: CasillaId,
 ) -> RentaIncomeObservation:
     """Enrich an eligible income row with invoice evidence and withholding."""
     transaction_id = transaction.transaction_id
@@ -956,11 +955,10 @@ def _income_observation(
 
     return RentaIncomeObservation(
         transaction_id=transaction_id,
-        target_casilla_id=_TARGET_CASILLA_INGRESOS,
+        target_casilla_id=target_casilla_id,
         gross_amount=gross_amount,
         taxable_base_amount=taxable_base_amount,
         withheld_amount=withheld.amount,
-        withheld_derivation=withheld.derivation,
         sales_invoice_refusal=evidence_refusal,
         filing_date=filing_date,
         source_jurisdiction=transaction.source_jurisdiction,
@@ -1044,7 +1042,11 @@ def fitted_diagnostic_id_list(identifiers: Sequence[str], *, budget: int) -> str
     return fallback if len(fallback) <= budget else ""
 
 
-def _income_business_proportion(transaction: Transaction) -> Decimal | None:
+def _income_business_proportion(
+    transaction: Transaction,
+    *,
+    activity_category_matcher: Callable[[Transaction], bool],
+) -> Decimal | None:
     """Return the share of one income row that is activity income, or ``None``.
 
     The single proportion decision for the row: every money figure the
@@ -1075,8 +1077,8 @@ def _income_business_proportion(transaction: Transaction) -> Decimal | None:
     ``income_withheld_amount`` derives a retención for activity rows only,
     every row that carries one is a row this returns ``1`` for.
     """
-    if has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction):
-        # The explicit IRPF category is the authoritative M130 eligibility gate.
+    if activity_category_matcher(transaction):
+        # The selected activity-category matcher is the authoritative eligibility gate.
         return Decimal("1")
     return business_proportion(transaction.business_classification, transaction.business_pct)
 
@@ -1099,10 +1101,12 @@ def _computable_income_amount(observation: RentaIncomeObservation) -> Decimal:
 def _income_casilla_aggregation(
     period: Period,
     observations: Sequence[RentaIncomeObservation],
+    *,
+    modelo: str,
 ) -> CasillaAggregation:
     return fold_casilla_observations(
         observations,
-        modelo=Modelo.M130.value,
+        modelo=modelo,
         period=period,
         amount_fn=_computable_income_amount,
     )

@@ -12,7 +12,7 @@ from .secure_sql import isolated_sessionless_storage_root
 
 
 @pytest.fixture
-def _clean_install(tmp_path: Path) -> Iterator[None]:
+def clean_install(tmp_path: Path) -> Iterator[None]:
     with scoped_env_var(OUTPUT_LANGUAGE_ENV_VAR, None), isolated_sessionless_storage_root(tmp_path=tmp_path):
         clear_output_language_cache()
         try:
@@ -21,4 +21,4 @@ def _clean_install(tmp_path: Path) -> Iterator[None]:
             clear_output_language_cache()
 
 
-__all__ = ["_clean_install"]
+__all__ = ["clean_install"]

@@ -83,3 +83,18 @@ source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-
 # oracle is the only applicable bundled oracle for this revision, so it is the
 # sole external-grounding declaration here.
 externally_grounded_casilla_ids = ["iva.prorrata-porcentaje"]
+
+# V-03 cross-model operand declaration. The counterpart operation binding is
+# authored by the Modelo 349 revision; the application consumer remains an
+# explicit registry-authority TODO until the cross-model verification contract
+# is wired.
+[[revisions."2025".verification_expectations]]
+id = "modelo-303-2025-m349-reconciliation"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = ["10", "59"]
+tolerance = "1.00"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["ley-37-1992:art-25", "ley-37-1992:art-15", "orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-303-2025", "aeat-dr-349-2020-current"]

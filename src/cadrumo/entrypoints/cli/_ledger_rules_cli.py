@@ -11,9 +11,9 @@ import typer
 from ...application.ledger.models import ApplyRulesResult
 from ...core.i18n.render import tr
 from ...domain.transactions.enums import BusinessClassification
-from ._common import active_bucket_id_or_refuse as _rule_bucket_id
-from ._common import bad, emit_envelope
 from ._ledger_support import validate_category_id
+from .common import active_bucket_id_or_refuse as _rule_bucket_id
+from .common import bad, emit_envelope
 
 
 def _short_display_id(value: str) -> str:
@@ -66,7 +66,7 @@ def rule_add(
         f"classification\t{rule.classification.value}",
         f"priority\t{rule.priority}",
     ]
-    from ._ledger_payloads import RuleAddResult
+    from ._ledger_rule_payloads import RuleAddResult
 
     emit_envelope(
         ctx,
@@ -111,7 +111,7 @@ def _rule_apply_dry_run_lines(would_match: list[dict[str, object]]) -> list[str]
 
 
 def _emit_rule_apply_dry_run(ctx: typer.Context, *, bucket_id: str, reaffirm: bool) -> None:
-    from ._ledger_payloads import RuleApplyResult
+    from ._ledger_rule_payloads import RuleApplyResult
 
     would_match = _rule_apply_dry_run_matches(bucket_id=bucket_id, reaffirm=reaffirm)
     emit_envelope(
@@ -151,7 +151,7 @@ def _rule_apply_lines(result: ApplyRulesResult) -> list[str]:
 
 
 def _emit_rule_apply_result(ctx: typer.Context, result: ApplyRulesResult) -> None:
-    from ._ledger_payloads import RuleApplyResult
+    from ._ledger_rule_payloads import RuleApplyResult
 
     emit_envelope(
         ctx,
@@ -214,7 +214,7 @@ def rule_list(ctx: typer.Context) -> None:
         lines.append(
             f"{rule.priority}\t{rule.classification.value}\t{rule.description_pattern}\t{_short_display_id(rule.rule_id)}",
         )
-    from ._ledger_payloads import RuleListResult
+    from ._ledger_rule_payloads import RuleListResult
 
     emit_envelope(
         ctx,

@@ -17,7 +17,6 @@ from typing import TYPE_CHECKING, cast, get_args
 import typer
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
-from ...application.modelo._work_selection import ModeloWorkUnitCandidate
 from ...application.modelo.action_errors import WorkUnitNotFoundError
 from ...application.modelo.calculate_input import (
     WorkCalculateInputBundle,
@@ -36,6 +35,7 @@ from ...application.modelo.work_addressing import (
 )
 from ...application.modelo.work_create_policy import modelo_work_create_refusal_locale_key
 from ...application.modelo.work_lifecycle import get_work_unit
+from ...application.modelo.work_selection import ModeloWorkUnitCandidate
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.error_codes import resolve_error_message
@@ -60,12 +60,12 @@ from ...domain.modelos.row_models import (
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
-from ._common import active_bucket_id_or_refuse, active_profile_label
 from ._modelo_rendering import short_id
+from .common import active_bucket_id_or_refuse, active_profile_label
 from .errors import CliRefusedBoundaryError
 
 if TYPE_CHECKING:
-    from ...domain.modelos.calculation_revision import FilingInstanceEvidence
+    from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 
 _log = get_logger(__name__)
 

@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
-from .....core.casilla_id import validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....domain.calculations.registry.ids import BindingId
 from ._parser_boundary_m130_support import _M130_CORPUS_IDS, _M130_CORPUS_PARAMS
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M130,
-    BindingId,
-    CasillaId,
-    Decimal,
     _calculate_engine_values_from_inputs,
     _decimal_inputs_from_extracted_values,
     _parse_extracted_declaracion_values,

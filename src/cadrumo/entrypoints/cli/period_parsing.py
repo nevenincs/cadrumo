@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 import typer
 
 from ...core.i18n.render import tr
-from ._common import bad
+from .common import bad
 
 if TYPE_CHECKING:
     from ...core.period import Period

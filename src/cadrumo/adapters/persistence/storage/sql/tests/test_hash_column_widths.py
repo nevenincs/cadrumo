@@ -5,7 +5,8 @@ from __future__ import annotations
 import pytest
 from sqlalchemy import String, create_engine, inspect
 
-from ..secure_objects import SecureObjectRow, ensure_quarantine_table
+from .._secure_object_schema import ensure_quarantine_table
+from ..orm import SecureObjectRow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

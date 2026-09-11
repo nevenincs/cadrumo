@@ -13,7 +13,7 @@ import subprocess
 
 import pytest
 
-from .._server import emit_missing_sdk_refusal
+from ..server import emit_missing_sdk_refusal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

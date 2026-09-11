@@ -26,7 +26,8 @@ from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryPr
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
-from ...domain.transactions.models import Transaction, TransactionCatalogue, TransactionLifecycleLineageEntry
+from ...domain.transactions.lineage_models import TransactionLifecycleLineageEntry
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from .actions_common import (
     blocking_modelo_references,

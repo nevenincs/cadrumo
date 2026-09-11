@@ -54,11 +54,8 @@ from typing import Any
 import pytest
 
 from .. import classification
-from ..classification import (
-    EUMemberState,
-    IvaInvoiceClassificationCriteria,
-    PartyFact,
-)
+from ..classification import IvaInvoiceClassificationCriteria, PartyFact
+from ..schema import EUMemberState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

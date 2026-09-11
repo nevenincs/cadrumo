@@ -9,8 +9,10 @@ from pathlib import Path
 
 import pytest
 
-from ....application.calculations.observations_repository import CalculationObservationRepository
-from ....application.modelo.filed_revision_observation import APP_FILING_SOURCE_KIND
+from ....application.calculations.observations_repository import (
+    APP_FILING_SOURCE_KIND,
+    CalculationObservationRepository,
+)
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations

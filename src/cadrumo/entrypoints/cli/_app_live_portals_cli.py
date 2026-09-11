@@ -17,7 +17,7 @@ from ...core.modelo import Modelo
 from ...domain.portals.categories import PortalCategory
 from ...domain.portals.errors import PortalRegistryError
 from ...domain.portals.metadata import PortalMetadata
-from ._common import emit_envelope
+from .common import emit_envelope
 
 
 class _PortalRow(TypedDict):
@@ -35,7 +35,7 @@ class _PortalRow(TypedDict):
 def _project_portal_refusal(error: PortalRegistryError) -> PortalRegistryError:
     """Attach the application-owned no-action projection to one domain refusal."""
     from ...application.operator_actions.preconditions import no_action_precondition_verdict
-    from ._common import attach_cli_policy_verdict
+    from .common import attach_cli_policy_verdict
 
     failure = error.portal_failure
     if failure is None:

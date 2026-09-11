@@ -37,8 +37,8 @@ from ...core.operations import (
     OperationTerminalCondition,
 )
 from ...tests.secure_sql import isolated_runtime_profile
-from ..cli._modelo_spreadsheet_cli import _google_operation_error, execute_google_sheets_export
 from ..cli.errors import CliRefusedBoundaryError
+from ..cli.modelo_spreadsheet_cli import execute_google_sheets_export, google_operation_error
 from ..operation_composition import compose_operation_dependencies
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -60,7 +60,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
     ),
 )
 def test_cli_projects_registered_export_refusals_without_an_owner_allowlist(code: str, message_key: str) -> None:
-    projected = _google_operation_error(code, diagnostic_ref=None)
+    projected = google_operation_error(code, diagnostic_ref=None)
     assert isinstance(projected, CliRefusedBoundaryError)
     assert projected.translated_message == message_key
 
@@ -220,7 +220,7 @@ def test_cli_command_submits_supervised_export_and_resolves_public_result(tmp_pa
     from ...application.export import google_operation
     from ...application.operations import supervisor as supervisor_module
     from .. import operation_composition
-    from ..cli import _modelo_spreadsheet_cli as cli_module
+    from ..cli import modelo_spreadsheet_cli as cli_module
 
     entered = Event()
     release = Event()

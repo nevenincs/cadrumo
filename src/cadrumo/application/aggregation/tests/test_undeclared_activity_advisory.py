@@ -34,15 +34,15 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
 from .._undeclared_activity_advisory import undeclared_activity_income_advisory_observations
 from ..renta_income_ledger import (
     RentaIncomeLedgerAggregation,
-    _m131_agrarian_activity_codes,
     aggregate_renta_income_ledger,
     aggregate_renta_m131_agrario_income_ledger,
 )
 from ..source_mesh import CalculationSourceDiagnostic
-from .renta_income_aggregation_support import _raw_transaction
+from .renta_income_aggregation_support import raw_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -67,7 +67,7 @@ def _income_row(
 ) -> Transaction:
     return Transaction.model_validate(
         {
-            "raw": _raw_transaction(
+            "raw": raw_transaction(
                 provider_id,
                 booked_date=_IN_WINDOW,
                 value_date=_IN_WINDOW,
@@ -117,7 +117,10 @@ def _non_agrarian_code() -> TipoActividad:
     widens or narrows the agrarian set cannot leave this test asserting against a
     code that has quietly changed sides.
     """
-    agrarian = _m131_agrarian_activity_codes(effective_date=_Q1.end_date)
+    agrarian = tipo_actividad_code_set(
+        "modelo-131:selector-m036-volumen-ingresos-agrario",
+        effective_date=_Q1.end_date,
+    )
     return next(code for code in TipoActividad if code not in agrarian)
 
 

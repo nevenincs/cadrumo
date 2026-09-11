@@ -28,12 +28,12 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from ....core.external_constants import UTF_8_ENCODING
-from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, DEFAULT_WRITE_PROVENANCE
+from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, DEFAULT_WRITE_PROVENANCE, SecureObjectWrite
 from ....core.time.clock import now
 from ..storage.namespace_registry import secure_object_logical_path
 from ..storage.runtime_repository import secure_object_repository_for_active_bucket, secure_object_repository_for_bucket
 from ..storage.secure_object_namespaces import SecureObjectNamespaceDefinition
-from ..storage.sql.secure_objects import SecureObjectRepository, SecureObjectWrite
+from ..storage.sql.secure_objects import SecureObjectRepository
 from ._revision_guarded_singleton_mutation import mutate_revision_guarded_singleton
 
 

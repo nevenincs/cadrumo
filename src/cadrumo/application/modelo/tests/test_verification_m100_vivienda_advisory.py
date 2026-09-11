@@ -24,8 +24,8 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ..verification_actions import evaluate_verification_predicates
-from ._verification_substance_support import _workflow_profile
+from ..verification_predicates import evaluate_verification_predicates
+from .verification_substance_support import workflow_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -70,7 +70,7 @@ def test_vivienda_advisory_fires_when_claimed_without_any_eligibility_signal() -
         predicate = _vivienda_advisory_predicate(year)
         casilla_values: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("678.00")}
 
-        findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+        findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
 
         assert len(findings) == 1, year
         assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY, year
@@ -87,7 +87,7 @@ def test_vivienda_advisory_fires_when_acquisition_date_is_post_2012() -> None:
         casilla_values: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("678.00")}
         text_values: dict[CasillaId, str] = {_FECHA_ADQUISICION: "15/06/2015"}
 
-        findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile(), text_values)
+        findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile(), text_values)
 
         assert len(findings) == 1, year
         assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY, year
@@ -101,7 +101,7 @@ def test_vivienda_advisory_fires_when_acquisition_date_on_cutoff() -> None:
         casilla_values: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("678.00")}
         text_values: dict[CasillaId, str] = {_FECHA_ADQUISICION: "2013-01-01"}
 
-        findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile(), text_values)
+        findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile(), text_values)
         assert len(findings) == 1, year
 
 
@@ -113,7 +113,7 @@ def test_vivienda_advisory_silent_for_grounded_pre_2013_acquisition() -> None:
 
         for pre_2013 in ("10/03/2010", "2010-03-10", "31/12/2012"):
             text_values: dict[CasillaId, str] = {_FECHA_ADQUISICION: pre_2013}
-            findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile(), text_values)
+            findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile(), text_values)
             assert findings == [], f"{year}: pre-2013 acquisition {pre_2013!r} must not fire the advisory"
 
 
@@ -124,7 +124,7 @@ def test_vivienda_advisory_silent_for_construction_transitional_case() -> None:
         casilla_values: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("678.00")}
         text_values: dict[CasillaId, str] = {_FECHA_CONSTRUCCION: "20/07/2013"}
 
-        findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile(), text_values)
+        findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile(), text_values)
         assert findings == [], year
 
 
@@ -136,5 +136,5 @@ def test_vivienda_advisory_silent_when_no_deduccion_claimed() -> None:
         explicit_zero: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("0")}
         absent: dict[CasillaId, Decimal] = {}
 
-        assert evaluate_verification_predicates((predicate,), explicit_zero, _workflow_profile()) == [], year
-        assert evaluate_verification_predicates((predicate,), absent, _workflow_profile()) == [], year
+        assert evaluate_verification_predicates((predicate,), explicit_zero, workflow_profile()) == [], year
+        assert evaluate_verification_predicates((predicate,), absent, workflow_profile()) == [], year

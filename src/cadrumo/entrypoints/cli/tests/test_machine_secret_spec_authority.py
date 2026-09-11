@@ -6,9 +6,8 @@ from dataclasses import asdict, replace
 
 import pytest
 
-from .._command_runtime import resolve_deferred_target
-from .._command_schema import command_registration_metadata
-from .._verb_input_schema import build_verb_input_schemas
+from .._command_target import resolve_deferred_target
+from ..command_schema import command_registration_metadata
 from ..command_spec import (
     DeferredTarget,
     MachineSecretChannelKind,
@@ -18,6 +17,7 @@ from ..command_spec import (
 )
 from ..command_specs import COMMAND_GRAPH
 from ..config.secure_input import MachineSecretPayload
+from ..verb_input_schema import build_verb_input_schemas
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

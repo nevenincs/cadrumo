@@ -60,7 +60,6 @@ from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from ._row_source_identity_replay import revision_row_source_fingerprints_for_review
-from ._work_selection import ModeloWorkSelectorRequest, ModeloWorkSelectorState, select_modelo_work_resolution
 from .action_errors import CalculationRevisionNotFoundError, StoredCalculationDriftError, WorkUnitNotFoundError
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .work_review import (
@@ -74,6 +73,7 @@ from .work_review import (
     ModeloWorkReview,
     ModeloWorkReviewCasilla,
 )
+from .work_selection import ModeloWorkSelectorRequest, ModeloWorkSelectorState, select_modelo_work_resolution
 
 
 @dataclass(frozen=True, slots=True)

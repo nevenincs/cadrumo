@@ -20,11 +20,11 @@ from typing import Any, cast
 import anyio
 import pytest
 
-from .._dispatch import tool_name_for_command
 from .._meta_tools import gate_refusal
 from .._persona_scope import AgentPersona
-from .._tools import build_tool_descriptors
-from ._session import connected_server_and_client_session as connect
+from ..dispatch import tool_name_for_command
+from ..tools import build_tool_descriptors
+from .session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -86,7 +86,7 @@ def _sole_text(result: Any) -> str:
     [(_SCOPE_PERSONA, _SCOPE_KEY), (_HANDOFF_PERSONA, _HANDOFF_KEY)],
 )
 def test_direct_refusal_is_composed_once_by_the_shared_gate(persona: AgentPersona, command_key: str) -> None:
-    from .._server import build_server
+    from ..server import build_server
 
     descriptors = build_tool_descriptors()
     if not _SDK_PRESENT:
@@ -117,7 +117,7 @@ def test_direct_refusal_is_composed_once_by_the_shared_gate(persona: AgentPerson
     [(_SCOPE_PERSONA, _SCOPE_KEY), (_HANDOFF_PERSONA, _HANDOFF_KEY)],
 )
 def test_direct_and_execute_paths_share_one_refusal(persona: AgentPersona, command_key: str) -> None:
-    from .._server import build_server
+    from ..server import build_server
 
     descriptors = build_tool_descriptors()
     if not _SDK_PRESENT:

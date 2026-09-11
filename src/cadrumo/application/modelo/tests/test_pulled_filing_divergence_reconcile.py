@@ -56,6 +56,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 from ....core.casilla_id import CasillaId
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
@@ -82,7 +83,6 @@ from .._reconcile_casilla import (
     CasillaDivergenceKind,
     detect_casilla_divergences,
 )
-from .._reconcile_population import _CARRY_SOURCE_KINDS as _PRODUCTION_CARRY_SOURCE_KINDS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -131,7 +131,7 @@ _EMPTY_BUCKET_AMOUNT = Decimal("0")
 #: would keep passing after production widened or narrowed the set, so the test
 #: would silently stop selecting the subject the production rule selects — and it
 #: would agree with itself while disagreeing with the code under test.
-_CARRY_SOURCE_KINDS = _PRODUCTION_CARRY_SOURCE_KINDS
+_CARRY_SOURCE_KINDS = OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 
 
 @pytest.fixture

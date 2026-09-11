@@ -31,11 +31,11 @@ from ....core.storage_taxonomy_locations import storage_path
 from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry.schema_references import RegistrySnapshotRef
+from ...submission.models import ModeloDraftStatus
 from ..schema import (
     ModeloApprovalBasis,
     ModeloCasillaProvenance,
     ModeloDraft,
-    ModeloDraftStatus,
     ModeloValue,
     ModeloValueKind,
     compute_modelo_draft_id,

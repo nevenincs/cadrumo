@@ -142,7 +142,6 @@ from ..filing.producer_snapshot import (
 )
 from ..filing.runtime import RegistrySchemaAccessor, build_runtime_schema_provider, filing_profile_from_taxpayer
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
-from ._export_amendment_evidence import resolve_persisted_amendment_export_evidence
 from ._ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
 from ._prior_domiciliation import resolve_prior_domiciliation_election
 from ._profile_export_binding import (
@@ -163,6 +162,7 @@ from .action_errors import (
     WorkUnitNotFoundError,
 )
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
+from .export_amendment_evidence import resolve_persisted_amendment_export_evidence
 from .iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies,
@@ -180,7 +180,7 @@ from .revision_persistence import (
 from .revision_persistence import (
     require_filing_instance_evidence_for_work_unit,
 )
-from .verification_actions import cross_period_expected_member_sets_from_profile, require_cross_period_clean_state
+from .verification_cross_period import cross_period_expected_member_sets_from_profile, require_cross_period_clean_state
 
 _LOCAL_EXPORT_EVIDENCE_STATUS = "local_export_not_official_aeat_filing_evidence"
 _LOCAL_EXPORT_OFFICIAL_EVIDENCE_MESSAGE = (

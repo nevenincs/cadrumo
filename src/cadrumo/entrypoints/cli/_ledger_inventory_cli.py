@@ -23,13 +23,13 @@ from ...domain.contribuyente.inventory.records import (
     InventoryLedgerError,
     MovementKind,
 )
-from ._common import (
-    active_bucket_id_or_refuse as _inventory_bucket_id,
-)
-from ._common import emit_envelope
 from ._date_parsing import _parse_iso_date
 from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
-from ._ledger_payloads import (
+from .common import (
+    active_bucket_id_or_refuse as _inventory_bucket_id,
+)
+from .common import emit_envelope
+from .ledger_business_payloads import (
     InventoryClosingAuthorityRecordResult,
     InventoryCreateResult,
     InventoryListResult,
@@ -234,7 +234,7 @@ def inventory_closing_authority_record(
     file: Path,
 ) -> None:
     """Record one complete typed authority document from its canonical file input."""
-    from ...domain.contribuyente.inventory._closing_authority_records import InventoryClosingAuthorityRecord
+    from ...domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
 
     try:
         record = InventoryClosingAuthorityRecord.model_validate_json(file.read_text(encoding=UTF_8_ENCODING))

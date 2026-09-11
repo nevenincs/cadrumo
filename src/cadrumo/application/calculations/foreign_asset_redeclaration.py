@@ -35,9 +35,10 @@ from ...core.foreign_asset_obligation import (
     foreign_asset_obligation_group,
 )
 from ...core.modelo import Modelo
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_binding_source_casilla_ids
-from ...domain.calculations.registry.detail_record_bindings import foreign_asset_binding_row_field
+from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.verification_report import (
@@ -47,28 +48,7 @@ from ...domain.modelos.verification_report import (
 )
 from .._foreign_asset_thresholds import foreign_asset_declaration_thresholds
 
-_M720_VALUATION_CASILLA_GROUPS: Mapping[CasillaId, ForeignAssetObligationGroup] = {
-    "cuentas.valoracion": ForeignAssetObligationGroup.CUENTAS,
-    "valores.valoracion": ForeignAssetObligationGroup.VALORES_DERECHOS_SEGUROS,
-    "inmuebles.valoracion": ForeignAssetObligationGroup.INMUEBLES,
-}
-_M720_GROUP_VALUATION_CASILLAS: Mapping[ForeignAssetObligationGroup, CasillaId] = {
-    group: casilla_id for casilla_id, group in _M720_VALUATION_CASILLA_GROUPS.items()
-}
-_M720_ASSET_CLASS_BY_CODE: Mapping[str, ForeignAssetClass] = {
-    code: asset_class for asset_class, code in MODELO_720_FOREIGN_ASSET_CLASS_CODES.items()
-}
-#: ``row_field`` selectors of the two foreign-asset row bindings the evidence
-#: projection joins. Named rather than inlined so the join is greppable; the
-#: binding IDs themselves are never hardcoded — they are discovered from the
-#: revision by these row fields.
-_ASSET_CLASS_ROW_FIELD = "asset_class_code"
-_VALUATION_ROW_FIELD = "valuation_amount"
-
-_M721_CUSTODIAN_NAME_CASILLA: CasillaId = "custodio.nombre-razon-social"
-_M721_CUSTODIAN_COUNTRY_CASILLA: CasillaId = "custodio.codigo-pais"
-_M721_CRYPTO_ASSET_CASILLA: CasillaId = "moneda.clave-token"
-_M721_BALANCE_CASILLA: CasillaId = "moneda.saldo-31-diciembre"
+# TODO(fact-relocation): resolve foreign-asset casillas, row bindings, and export declarations from selected registry revision
 
 
 @dataclass(frozen=True, slots=True)
@@ -86,6 +66,121 @@ class _Modelo721PositionState:
     custodian_name: str = ""
     custodian_country: str = ""
     token: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class _Modelo721RegistryFields:
+    """Selected revision fields used by the generic Modelo 721 row reducer."""
+
+    custodian_name: CasillaId | None
+    custodian_country: CasillaId | None
+    token: CasillaId | None
+    balance: CasillaId | None
+
+
+def _registry_valuation_casillas(
+    modelo_revision: ModeloRevision,
+) -> dict[ForeignAssetObligationGroup, CasillaId]:
+    """Discover valuation casillas and their obligation groups from a revision."""
+    result: dict[ForeignAssetObligationGroup, CasillaId] = {}
+    for casilla in modelo_revision.casillas:
+        parts = tuple(str(casilla.id).split("."))
+        if len(parts) < 2 or parts[-1].casefold() != "valoracion":
+            continue
+        namespace = parts[-2].replace("-", "_").casefold()
+        for group in ForeignAssetObligationGroup:
+            if namespace == group.value or namespace in group.value.split("_"):
+                result[group] = casilla.id
+                break
+    return result
+
+
+def _registry_modelo_721_fields(observation: RegistryModeloObservation) -> _Modelo721RegistryFields:
+    """Resolve the selected Modelo 721 identity/value fields from registry metadata."""
+    query_service = RegistryQueryService(bundled_authority())
+    report = query_service.casillas(
+        observation.modelo,
+        period=observation.period,
+    )
+    custodian_fields = tuple(
+        row.casilla_id
+        for row in report.rows
+        if len(row.section) >= 2 and row.section[:2] == ("custodio", "identificacion")
+    )
+    token_fields = tuple(
+        row.casilla_id
+        for row in report.rows
+        if len(row.section) >= 2 and row.section[:2] == ("moneda", "identificacion")
+    )
+    balance_fields = tuple(
+        row.casilla_id
+        for row in report.rows
+        if (len(row.section) >= 2 and row.section[:2] == ("moneda", "valoracion") and row.required)
+    )
+    return _Modelo721RegistryFields(
+        custodian_name=custodian_fields[0] if len(custodian_fields) > 0 else None,
+        custodian_country=custodian_fields[1] if len(custodian_fields) > 1 else None,
+        token=token_fields[0] if token_fields else None,
+        balance=balance_fields[0] if balance_fields else None,
+    )
+
+
+def _foreign_asset_binding_ids(
+    revision: CalculationRevision,
+    modelo_revision: ModeloRevision,
+) -> tuple[str | None, str | None]:
+    """Discover class and valuation row bindings without local binding IDs."""
+    foreign_asset_bindings = tuple(
+        binding for binding in modelo_revision.bindings if binding.source is BindingSourceKind.FOREIGN_ASSET
+    )
+    valuation_binding = next(
+        (binding.id for binding in foreign_asset_bindings if getattr(binding.selector, "data_type", None) == "money"),
+        None,
+    )
+    class_binding = next(
+        (
+            binding.id
+            for binding in foreign_asset_bindings
+            if binding.id != valuation_binding
+            and any(
+                _modelo_720_asset_class(value) is not None
+                for value in revision.row_binding_values.get(binding.id, {}).values()
+            )
+        ),
+        None,
+    )
+    return class_binding, valuation_binding
+
+
+def _modelo_720_asset_class(raw_code: object) -> ForeignAssetClass | None:
+    """Hydrate a registry row code through the canonical closed asset-class map."""
+    if not isinstance(raw_code, str):
+        return None
+    normalized = raw_code.strip().upper()
+    return next(
+        (
+            asset_class
+            for asset_class, code in MODELO_720_FOREIGN_ASSET_CLASS_CODES.items()
+            if str(code).upper() == normalized
+        ),
+        None,
+    )
+
+
+def _obligation_group_for_valuation_casilla(casilla_id: CasillaId) -> ForeignAssetObligationGroup | None:
+    """Infer the typed obligation group from a registry valuation casilla identity."""
+    parts = tuple(str(casilla_id).split("."))
+    if len(parts) < 2 or parts[-1].casefold() != "valoracion":
+        return None
+    namespace = parts[-2].replace("-", "_").casefold()
+    return next(
+        (
+            group
+            for group in ForeignAssetObligationGroup
+            if namespace == group.value or namespace in group.value.split("_")
+        ),
+        None,
+    )
 
 
 def modelo_720_redeclaration_advisory_findings(
@@ -129,9 +224,18 @@ def modelo_721_redeclaration_advisory_findings(
     """
     return _redeclaration_advisory_findings(
         modelo=Modelo.M721.value,
-        prior_positions=_modelo_721_positions(prior_observation),
-        current_positions=_modelo_721_positions(current_observation),
-        declared_positions=_modelo_721_positions(current_declaration_observation or current_observation),
+        prior_positions=_modelo_721_positions(
+            prior_observation,
+            registry_fields=_registry_modelo_721_fields(current_observation),
+        ),
+        current_positions=_modelo_721_positions(
+            current_observation,
+            registry_fields=_registry_modelo_721_fields(current_observation),
+        ),
+        declared_positions=_modelo_721_positions(
+            current_declaration_observation or current_observation,
+            registry_fields=_registry_modelo_721_fields(current_observation),
+        ),
         filing_year=current_observation.filing_year,
     )
 
@@ -182,7 +286,7 @@ def _redeclaration_advisory_findings(
 def _modelo_720_positions(observation: RegistryModeloObservation) -> Mapping[tuple[str, ...], _RedeclarationPosition]:
     totals: dict[ForeignAssetObligationGroup, Decimal] = {}
     for item in observation.observations:
-        group = _M720_VALUATION_CASILLA_GROUPS.get(item.casilla_id)
+        group = _obligation_group_for_valuation_casilla(item.casilla_id)
         if group is None:
             continue
         if not isinstance(item.value, Decimal):
@@ -199,13 +303,22 @@ def _modelo_720_positions(observation: RegistryModeloObservation) -> Mapping[tup
     }
 
 
-def _modelo_721_positions(observation: RegistryModeloObservation) -> Mapping[tuple[str, ...], _RedeclarationPosition]:
+def _modelo_721_positions(
+    observation: RegistryModeloObservation,
+    *,
+    registry_fields: _Modelo721RegistryFields,
+) -> Mapping[tuple[str, ...], _RedeclarationPosition]:
     state = _Modelo721PositionState()
     for item in observation.observations:
-        if item.casilla_id == _M721_BALANCE_CASILLA:
+        if item.casilla_id == registry_fields.balance:
             _accumulate_modelo_721_balance(state, item.value)
             continue
-        _update_modelo_721_position_identity(state, item.casilla_id, item.value)
+        _update_modelo_721_position_identity(
+            state,
+            item.casilla_id,
+            item.value,
+            registry_fields=registry_fields,
+        )
     return state.positions
 
 
@@ -232,12 +345,14 @@ def _update_modelo_721_position_identity(
     state: _Modelo721PositionState,
     casilla_id: CasillaId,
     value: Decimal | str,
+    *,
+    registry_fields: _Modelo721RegistryFields,
 ) -> None:
-    if casilla_id == _M721_CUSTODIAN_NAME_CASILLA:
+    if casilla_id == registry_fields.custodian_name:
         state.custodian_name = _modelo_721_identifier_text(value)
-    elif casilla_id == _M721_CUSTODIAN_COUNTRY_CASILLA:
+    elif casilla_id == registry_fields.custodian_country:
         state.custodian_country = _modelo_721_identifier_text(value)
-    elif casilla_id == _M721_CRYPTO_ASSET_CASILLA:
+    elif casilla_id == registry_fields.token:
         state.token = _modelo_721_identifier_text(value)
 
 
@@ -290,9 +405,10 @@ def modelo_720_declared_observation(
             The independent valuation counterpart this declaration is tested
             against.
     """
+    valuation_casillas = _registry_valuation_casillas(modelo_revision)
     refs_by_casilla = {casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas}
     observations: list[CasillaObservation] = []
-    for casilla_id in _M720_VALUATION_CASILLA_GROUPS:
+    for casilla_id in valuation_casillas.values():
         raw = revision.input_values_by_casilla_id.get(casilla_id)
         refs = refs_by_casilla.get(casilla_id)
         if raw is None or refs is None:
@@ -349,8 +465,7 @@ def modelo_720_evidence_observation(
         filing_year: Devengo year the observation is stamped with.
         period: Registry period token the observation is stamped with.
     """
-    class_binding = _foreign_asset_row_binding_id(modelo_revision, row_field=_ASSET_CLASS_ROW_FIELD)
-    valuation_binding = _foreign_asset_row_binding_id(modelo_revision, row_field=_VALUATION_ROW_FIELD)
+    class_binding, valuation_binding = _foreign_asset_binding_ids(revision, modelo_revision)
     totals = _modelo_720_evidence_totals(
         revision,
         class_binding=class_binding,
@@ -390,7 +505,7 @@ def _modelo_720_evidence_row(
     raw_code: str,
     raw_valuation: object,
 ) -> tuple[ForeignAssetClass, Decimal] | None:
-    asset_class = _M720_ASSET_CLASS_BY_CODE.get(raw_code.strip().upper())
+    asset_class = _modelo_720_asset_class(raw_code)
     if asset_class is None or raw_valuation is None:
         return None
     value = _decimal_or_none(raw_valuation)
@@ -404,6 +519,7 @@ def _modelo_720_evidence_observations(
     *,
     modelo_revision: ModeloRevision,
 ) -> tuple[CasillaObservation, ...]:
+    valuation_casillas = _registry_valuation_casillas(modelo_revision)
     refs_by_casilla = {casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas}
     observations: list[CasillaObservation] = []
     for group, total in totals.items():
@@ -411,6 +527,7 @@ def _modelo_720_evidence_observations(
             group,
             total,
             refs_by_casilla=refs_by_casilla,
+            valuation_casillas=valuation_casillas,
         )
         if observation is not None:
             observations.append(observation)
@@ -422,8 +539,9 @@ def _modelo_720_evidence_observation(
     total: Decimal,
     *,
     refs_by_casilla: Mapping[CasillaId, tuple[tuple[str, ...], tuple[str, ...]]],
+    valuation_casillas: Mapping[ForeignAssetObligationGroup, CasillaId],
 ) -> CasillaObservation | None:
-    casilla_id = _M720_GROUP_VALUATION_CASILLAS.get(group)
+    casilla_id = valuation_casillas.get(group)
     refs = refs_by_casilla.get(casilla_id) if casilla_id is not None else None
     if casilla_id is None or refs is None:
         return None
@@ -463,6 +581,7 @@ def modelo_720_prior_baseline_observation(
         filing_year: Devengo year the observation is stamped with.
         period: Registry period token the observation is stamped with.
     """
+    valuation_casillas = _registry_valuation_casillas(modelo_revision)
     refs_by_casilla = {casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas}
     observations: list[CasillaObservation] = []
     for binding in modelo_revision.bindings:
@@ -482,7 +601,7 @@ def modelo_720_prior_baseline_observation(
         if len(source_casilla_ids) != 1:
             continue
         (source_casilla_id,) = source_casilla_ids
-        if source_casilla_id not in _M720_VALUATION_CASILLA_GROUPS:
+        if source_casilla_id not in valuation_casillas.values():
             continue
         refs = refs_by_casilla.get(source_casilla_id)
         if refs is None:
@@ -501,13 +620,6 @@ def modelo_720_prior_baseline_observation(
         period=period,
         observations=tuple(observations),
     )
-
-
-def _foreign_asset_row_binding_id(revision: ModeloRevision, *, row_field: str) -> str | None:
-    for binding in revision.bindings:
-        if foreign_asset_binding_row_field(binding) == row_field:
-            return binding.id
-    return None
 
 
 def _decimal_or_none(raw: object) -> Decimal | None:

@@ -1,13 +1,13 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
-from .....core.casilla_id import validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....domain.calculations.registry.ids import BindingId
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M131,
-    BindingId,
-    CasillaId,
-    Decimal,
     _assert_engine_closure_matches_extracted_decimal,
     _calculate_engine_values_from_inputs,
     _decimal_inputs_from_extracted_values,

@@ -58,7 +58,7 @@ from pydantic import BaseModel, model_validator
 from ...core.aggregation import BindingSourceKind, RetencionScheme
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.translatable import Translatable as t
-from ...core.identity import InvoiceId
+from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.iva.components import IvaRetencionRole, category_components
 from .errors import AggregationValidationError

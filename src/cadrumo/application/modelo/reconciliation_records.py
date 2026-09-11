@@ -28,11 +28,12 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
+from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.utc import validate_utc_aware
-from ...domain.buckets.event import BucketEvent, BucketEventId
+from ...domain.buckets.event import BucketEvent
 from ...domain.calculations.registry.ids import (
     LegalRefId,
     SourceRefId,
@@ -189,7 +190,7 @@ class ModeloReconciliationRecord(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_event_id: BucketEventId
+    bucket_event_id: Hex64Str
     bucket_id: BucketId
     work_unit_id: WorkUnitId
     registry_snapshot_ref: RegistrySnapshotRef
@@ -241,7 +242,7 @@ class ModeloReconciliationHistoryEntry(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    event_id: BucketEventId
+    event_id: Hex64Str
     bucket_id: BucketId
     work_unit_id: WorkUnitId
     source_kind: ModeloReconciliationEvidenceKind

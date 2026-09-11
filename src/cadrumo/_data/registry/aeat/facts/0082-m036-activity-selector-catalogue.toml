@@ -1,0 +1,30 @@
+[fact]
+fact_id = "m036-activity-selector-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "m036-activity-selector-catalogue:2026-03-26"
+date_axis = "filing_period"
+valid_from = 2026-03-26
+legal_refs = ["rd-439-2007:art-95", "rd-439-2007:art-109", "rd-439-2007:art-110"]
+source_refs = ["aeat-m036-activity-code-table-2026-03-26", "boe-rirpf-art-95-2023-01-26", "boe-rirpf-art-109-2007-04-01", "boe-rirpf-art-110-2018-12-23"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "selector_ids", value = "rirpf-art-95:selector-m036-actividades-profesionales,rirpf-art-95:selector-m036-actividades-agricolas-ganaderas,rirpf-art-95:selector-m036-actividades-forestales,rirpf-art-95:selector-m036-actividades-ganaderas-engorde-porcino-avicultura,rd-439-2007-art-109:selector-m036-actividades-base-neta-de-subvenciones,rd-439-2007-art-109:selector-m036-actividades-exencion-pago-fraccionado,rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras,modelo-131:selector-m036-volumen-ingresos-agrario" },
+  { key = "selector.rirpf-art-95:selector-m036-actividades-profesionales.entity_set_fact_id", value = "rirpf-art-95:selector-m036-actividades-profesionales" },
+  { key = "selector.rirpf-art-95:selector-m036-actividades-profesionales.activity_kind", value = "profesional" },
+  { key = "selector.rirpf-art-95:selector-m036-actividades-agricolas-ganaderas.entity_set_fact_id", value = "rirpf-art-95:selector-m036-actividades-agricolas-ganaderas" },
+  { key = "selector.rirpf-art-95:selector-m036-actividades-agricolas-ganaderas.activity_kind", value = "sectorial" },
+  { key = "selector.rirpf-art-95:selector-m036-actividades-forestales.entity_set_fact_id", value = "rirpf-art-95:selector-m036-actividades-forestales" },
+  { key = "selector.rirpf-art-95:selector-m036-actividades-forestales.activity_kind", value = "sectorial" },
+  { key = "selector.rirpf-art-95:selector-m036-actividades-ganaderas-engorde-porcino-avicultura.entity_set_fact_id", value = "rirpf-art-95:selector-m036-actividades-ganaderas-engorde-porcino-avicultura" },
+  { key = "selector.rirpf-art-95:selector-m036-actividades-ganaderas-engorde-porcino-avicultura.activity_kind", value = "sectorial" },
+  { key = "selector.rd-439-2007-art-109:selector-m036-actividades-base-neta-de-subvenciones.entity_set_fact_id", value = "rd-439-2007-art-109:selector-m036-actividades-base-neta-de-subvenciones" },
+  { key = "selector.rd-439-2007-art-109:selector-m036-actividades-exencion-pago-fraccionado.entity_set_fact_id", value = "rd-439-2007-art-109:selector-m036-actividades-exencion-pago-fraccionado" },
+  { key = "selector.rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras.entity_set_fact_id", value = "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras" },
+  { key = "selector.modelo-131:selector-m036-volumen-ingresos-agrario.entity_set_fact_id", value = "modelo-131:selector-m036-volumen-ingresos-agrario" },
+]

@@ -1,0 +1,38 @@
+[fact]
+fact_id = "m347-m349-counterpart-operation-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "m347-m349-counterpart-operation-catalogue:2020-01-01"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+legal_refs = [
+    "orden-eha-3012-2008:art-1",
+    "orden-hac-1431-2025:art-1",
+    "orden-eha-769-2010:art-1",
+    "orden-hac-174-2020:art-1",
+    "ley-58-2003:art-93",
+    "rd-1624-1992:art-81",
+]
+source_refs = [
+    "aeat-dr-347-2025",
+    "aeat-modelo-347-procedure",
+    "aeat-dr-349-2020-current",
+    "aeat-modelo-349-instructions",
+    "aeat-modelo-349-procedure",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+    { key = "modelo.347.operation_kinds", value = "entregas_y_prestaciones,adquisiciones_y_recepciones,operaciones_seguros,arrendamientos_locales,subvenciones_y_ayudas" },
+    { key = "modelo.349.operation_kinds", value = "entrega_intracomunitaria_bienes,adquisicion_intracomunitaria_bienes,prestacion_servicios_intracom,adquisicion_servicios_intracom,triangular" },
+    { key = "modelo.347.detail_record", value = "declarado" },
+    { key = "modelo.349.detail_record", value = "operador" },
+    { key = "modelo.347.binding_source", value = "m347_third_party_operation" },
+    { key = "modelo.349.binding_source", value = "collectible_invoice" },
+    { key = "modelo.349.readiness.groi_country", value = "ES" },
+    { key = "modelo.349.readiness.nif_iva_for_non_groi_country", value = "true" },
+]

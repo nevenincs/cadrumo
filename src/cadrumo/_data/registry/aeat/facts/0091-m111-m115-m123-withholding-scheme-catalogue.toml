@@ -1,0 +1,30 @@
+[fact]
+fact_id = "m111-m115-m123-withholding-scheme-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "m111-m115-m123-withholding-scheme-catalogue:2019-01-01"
+date_axis = "filing_period"
+valid_from = 2019-01-01
+legal_refs = [
+    "ley-35-2006:art-101",
+    "rd-439-2007:art-95",
+]
+source_refs = [
+    "aeat-modelo-111-instructions",
+    "aeat-modelo-115-obligaciones-retenedor",
+    "aeat-modelo-123-procedure",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+    { key = "modelo.111.schemes", value = "rendimientos_trabajo,rendimientos_trabajo_administrador,actividades_economicas,actividades_profesionales,premios" },
+    { key = "modelo.115.schemes", value = "arrendamiento_urbano" },
+    { key = "modelo.123.schemes", value = "intereses,dividendos,otros_capital_mobiliario" },
+    { key = "modelo.180.schemes", value = "arrendamiento_urbano" },
+    { key = "modelo.190.schemes", value = "rendimientos_trabajo,rendimientos_trabajo_administrador,actividades_economicas,actividades_profesionales,premios" },
+    { key = "modelo.193.schemes", value = "intereses,dividendos,otros_capital_mobiliario" },
+]

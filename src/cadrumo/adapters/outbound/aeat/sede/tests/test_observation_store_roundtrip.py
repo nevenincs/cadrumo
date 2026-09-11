@@ -30,7 +30,8 @@ from ......core.config import Settings
 from ......core.period import Period
 from ......domain.calculations.registry.authority import bundled_authority
 from ......tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from .._iva_compensation_wallet_parsing import WALLET_URL
+from .....persistence.storage.secure_object_namespaces import AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE
+from ..iva_compensation_wallet_parsing import WALLET_URL
 from ..observation_store import FiledDeclaracionObservationStore
 from ..schema import (
     FiledDeclaracionArtefact,
@@ -151,7 +152,6 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
 
     from .....persistence.storage.sql.orm import SecureObjectRow
     from .....persistence.storage.sql.session import session_scope
-    from ..observation_store import _OBSERVATION_NAMESPACE
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
@@ -172,13 +172,13 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
 
         with session_scope(profile.repository._engine) as session:
             all_rows = session.execute(select(SecureObjectRow)).scalars().all()
-            obs_rows = [r for r in all_rows if r.namespace == _OBSERVATION_NAMESPACE]
+            obs_rows = [r for r in all_rows if r.namespace == AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.namespace]
             assert len(obs_rows) == 1, (
                 f"expected one observation row, found {len(obs_rows)} "
                 f"(namespaces: {sorted({r.namespace for r in all_rows})})"
             )
         stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == _OBSERVATION_NAMESPACE,
+            SecureObjectRow.namespace == AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.namespace,
         )
 
         def mutate(envelope):

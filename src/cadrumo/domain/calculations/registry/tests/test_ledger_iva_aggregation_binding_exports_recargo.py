@@ -10,11 +10,10 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from cadrumo.domain.iva.flow import IvaFlowDirection
-from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
-
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....iva.flow import IvaFlowDirection
+from ....iva.schema import IvaCategory, IvaRateKind
 from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import resolve_available_bound_inputs_by_casilla_id

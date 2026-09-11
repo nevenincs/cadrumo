@@ -15,7 +15,6 @@ from ._app_live_command_spec_support import (
     _OPTIONAL_YEAR_TO_OPTION,
     _PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
     NO_RESULT_SCHEMA,
-    _key,
 )
 from .command_spec import (
     ArgumentSpec,
@@ -28,6 +27,9 @@ from .command_spec import (
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
+)
+from .command_spec import (
+    translation_key as _key,
 )
 
 LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (

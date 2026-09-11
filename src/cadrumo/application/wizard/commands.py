@@ -152,7 +152,7 @@ _CCAA_CHOICE_VALUES: list[str] = _ccaa_choice_values()
 
 def _fiscal_residency_choice_values() -> list[str]:
     """Return the FiscalResidency choice tokens accepted by ``--fiscal-residency``."""
-    from ...domain.deadlines.models import FiscalResidency
+    from ...domain.contribuyente.renta_codes import FiscalResidency
 
     return [member.value for member in FiscalResidency]
 
@@ -236,7 +236,7 @@ def _setup_choice_values(question_id: str) -> list[str]:
     raise RuntimeError(f"SETUP_FLOW is missing the {question_id} question")
 
 
-_IVA_REGIME_CHOICE_VALUES: list[str] = _setup_choice_values("iva-regime")
+IVA_REGIME_CHOICE_VALUES: list[str] = _setup_choice_values("iva-regime")
 _M303_REGIME_COMPOSITION_CHOICE_VALUES: list[str] = _setup_choice_values("iva-m303-regime-composition")
 _M303_TAX_TERRITORY_CHOICE_VALUES: list[str] = _setup_choice_values("tax-residence-jurisdiction-scope")
 
@@ -251,7 +251,7 @@ def _help_key(flow: WizardFlow, question: WizardQuestion) -> str:
     return f"wizard.{flow.id}.flags.{question.id}.help"
 
 
-_SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
+SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "tax-id": typer.Option("--tax-id", help=tr("wizard.setup.flags.tax-id.help")),
     "name": typer.Option("--name", help=tr("wizard.setup.flags.name.help")),
     "surnames": typer.Option("--surnames", help=tr("wizard.setup.flags.surnames.help")),
@@ -349,8 +349,8 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     ),
     "iva-regime": typer.Option(
         "--iva-regime",
-        click_type=_choice(_IVA_REGIME_CHOICE_VALUES, case_sensitive=False),
-        metavar=_choice_metavar(_IVA_REGIME_CHOICE_VALUES),
+        click_type=_choice(IVA_REGIME_CHOICE_VALUES, case_sensitive=False),
+        metavar=_choice_metavar(IVA_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.iva-regime.help"),
     ),
     "iva-m303-regime-composition": typer.Option(
@@ -619,10 +619,10 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
 _SETUP_CATALOGUE_IDS: frozenset[str] = frozenset(
     question.id for section in SETUP_FLOW.sections for question in section.questions
 )
-_missing_option_infos = _SETUP_CATALOGUE_IDS - frozenset(_SETUP_OPTION_INFOS)
+_missing_option_infos = _SETUP_CATALOGUE_IDS - frozenset(SETUP_OPTION_INFOS)
 if _missing_option_infos:  # pragma: no cover - option-coverage invariant
     raise ValueError(
-        f"_SETUP_OPTION_INFOS is missing entries for catalogue question ids: "
+        f"SETUP_OPTION_INFOS is missing entries for catalogue question ids: "
         f"{sorted(_missing_option_infos)!r}. "
         "Add a typer.Option entry for each missing id.",
     )
@@ -932,7 +932,7 @@ def _python_parameter(
     """
     _flag_name(question)
     try:
-        option = _SETUP_OPTION_INFOS[question.id]
+        option = SETUP_OPTION_INFOS[question.id]
     except KeyError as exc:
         raise KeyError(_help_key(flow, question)) from exc
     if section_title is not None:

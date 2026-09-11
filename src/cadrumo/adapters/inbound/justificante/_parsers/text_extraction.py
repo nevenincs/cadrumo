@@ -25,7 +25,7 @@ from ...pdf.redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
 from ...pdf.source_provenance import sha256_file
 
 _TEXT_CACHE_MAXSIZE = 256
-_TEXT_CACHE: OrderedDict[tuple[str, str, int, int], str] = OrderedDict()
+TEXT_CACHE: OrderedDict[tuple[str, str, int, int], str] = OrderedDict()
 
 
 def extract_text(pdf_path: Path, backend: JustificanteParserBackend) -> str:
@@ -58,16 +58,16 @@ def extract_text(pdf_path: Path, backend: JustificanteParserBackend) -> str:
         ) from exc
     backend_value = backend.value if hasattr(backend, "value") else str(backend)
     cache_key = (source_digest, backend_value, stat.st_size, stat.st_mtime_ns)
-    cached = _TEXT_CACHE.get(cache_key)
+    cached = TEXT_CACHE.get(cache_key)
     if cached is not None:
-        _TEXT_CACHE.move_to_end(cache_key)
+        TEXT_CACHE.move_to_end(cache_key)
         return cached
 
     text = _extract_text_uncached(resolved, backend_value)
-    _TEXT_CACHE[cache_key] = text
-    _TEXT_CACHE.move_to_end(cache_key)
-    if len(_TEXT_CACHE) > _TEXT_CACHE_MAXSIZE:
-        _TEXT_CACHE.popitem(last=False)
+    TEXT_CACHE[cache_key] = text
+    TEXT_CACHE.move_to_end(cache_key)
+    if len(TEXT_CACHE) > _TEXT_CACHE_MAXSIZE:
+        TEXT_CACHE.popitem(last=False)
     return text
 
 

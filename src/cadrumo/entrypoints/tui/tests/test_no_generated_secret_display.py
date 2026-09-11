@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import ast
 import importlib
+from importlib.util import resolve_name
 from pathlib import Path
 
 import pytest
@@ -38,8 +39,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 #: that either paints a minted secret or drives a terminal write out from under
 #: the compositor. Both are the failure this gate exists to catch.
 _MINTING_CALLABLES: tuple[tuple[str, str], ...] = (
-    ("cadrumo.application.user_profile.custody_ports", "create_profile_recovery_enrollment_material"),
-    ("cadrumo.application.user_profile.recovery_custody", "mint_profile_creation_recovery"),
+    ("....application.user_profile.custody_ports", "create_profile_recovery_enrollment_material"),
+    ("....application.user_profile.recovery_custody", "mint_profile_creation_recovery"),
     # The primitive beneath both, and a SECOND reachable path: a prohibition
     # naming only application-layer callables could be walked around by
     # importing this directly. The list this replaces did exactly that.
@@ -50,7 +51,7 @@ _MINTING_CALLABLES: tuple[tuple[str, str], ...] = (
     # prohibition below -- the anchor doing precisely the job it was written
     # for. The prohibition itself scans for the symbol NAME, so it is
     # unaffected by where the definition lives.
-    ("cadrumo.adapters.persistence.storage.recovery_key", "generate_recovery_key"),
+    ("....adapters.persistence.storage.recovery_key", "generate_recovery_key"),
 )
 
 #: The collecting counterparts. They are NOT prohibited — they take a mnemonic
@@ -58,8 +59,8 @@ _MINTING_CALLABLES: tuple[tuple[str, str], ...] = (
 #: gate cannot quietly become "no custody symbol is reachable", which would pass
 #: vacuously if the whole custody facade were renamed away.
 _COLLECTING_CALLABLES: tuple[tuple[str, str], ...] = (
-    ("cadrumo.application.user_profile.custody_ports", "prove_profile_recovery_artifact"),
-    ("cadrumo.application.user_profile.recovery_custody", "restore_profile_from_recovery_artifact"),
+    ("....application.user_profile.custody_ports", "prove_profile_recovery_artifact"),
+    ("....application.user_profile.recovery_custody", "restore_profile_from_recovery_artifact"),
 )
 
 _TUI_PACKAGE = Path(__file__).resolve().parents[3] / "entrypoints" / "tui"
@@ -103,8 +104,9 @@ class TestTheMintingPathIsUnreachableFromTheTui:
         than silently emptying the prohibition below.
         """
         for module_name, symbol in (*_MINTING_CALLABLES, *_COLLECTING_CALLABLES):
-            module = importlib.import_module(module_name)
-            assert callable(getattr(module, symbol)), f"{module_name}.{symbol}"
+            module = importlib.import_module(module_name, package=__package__)
+            resolved_name = resolve_name(module_name, __package__)
+            assert callable(getattr(module, symbol)), f"{resolved_name}.{symbol}"
 
     def test_no_tui_module_imports_or_calls_a_minting_callable(self) -> None:
         modules = _tui_modules()

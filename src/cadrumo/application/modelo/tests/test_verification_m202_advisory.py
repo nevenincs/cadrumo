@@ -10,8 +10,8 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ..verification_actions import evaluate_verification_predicates
-from ._verification_substance_support import _workflow_profile
+from ..verification_predicates import evaluate_verification_predicates
+from .verification_substance_support import workflow_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -50,7 +50,7 @@ def test_m202_advisory_fires_when_resultado_positive_but_base_zero() -> None:
             _CASILLA_13: Decimal("0"),
         }
 
-        findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+        findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
 
         assert len(findings) == 1, revision_id
         assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY, revision_id
@@ -67,7 +67,7 @@ def test_m202_advisory_silent_when_base_imponible_previa_present() -> None:
             _CASILLA_13: Decimal("140000.00"),
         }
 
-        findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+        findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
         assert findings == [], revision_id
 
 
@@ -80,9 +80,9 @@ def test_m202_advisory_silent_when_no_resultado_contable() -> None:
         negative: dict[CasillaId, Decimal] = {_CASILLA_04: Decimal("-5000.00"), _CASILLA_13: Decimal("0")}
         absent: dict[CasillaId, Decimal] = {}
 
-        assert evaluate_verification_predicates((predicate,), explicit_zero, _workflow_profile()) == [], revision_id
-        assert evaluate_verification_predicates((predicate,), negative, _workflow_profile()) == [], revision_id
-        assert evaluate_verification_predicates((predicate,), absent, _workflow_profile()) == [], revision_id
+        assert evaluate_verification_predicates((predicate,), explicit_zero, workflow_profile()) == [], revision_id
+        assert evaluate_verification_predicates((predicate,), negative, workflow_profile()) == [], revision_id
+        assert evaluate_verification_predicates((predicate,), absent, workflow_profile()) == [], revision_id
 
 
 # 2025-only B2 casos especificos tipo-3/tipo-4 tramo guards (deferred-items
@@ -124,7 +124,7 @@ def test_m202_2025_b2_tramo_advisory_fires_when_base_positive_but_importe_zero()
         predicate = _m202_2025_predicate(predicate_id)
         casilla_values: dict[CasillaId, Decimal] = {antecedent: Decimal("50000.00"), consequent: Decimal("0")}
 
-        findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+        findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
 
         assert len(findings) == 1, predicate_id
         assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY, predicate_id
@@ -138,7 +138,7 @@ def test_m202_2025_b2_tramo_advisory_holds_when_importe_present() -> None:
         predicate = _m202_2025_predicate(predicate_id)
         casilla_values: dict[CasillaId, Decimal] = {antecedent: Decimal("50000.00"), consequent: Decimal("15000.00")}
 
-        findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+        findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
         assert findings == [], predicate_id
 
 
@@ -150,5 +150,5 @@ def test_m202_2025_b2_tramo_advisory_holds_trivially_when_base_not_used() -> Non
         explicit_zero: dict[CasillaId, Decimal] = {antecedent: Decimal("0"), consequent: Decimal("0")}
         absent: dict[CasillaId, Decimal] = {}
 
-        assert evaluate_verification_predicates((predicate,), explicit_zero, _workflow_profile()) == [], predicate_id
-        assert evaluate_verification_predicates((predicate,), absent, _workflow_profile()) == [], predicate_id
+        assert evaluate_verification_predicates((predicate,), explicit_zero, workflow_profile()) == [], predicate_id
+        assert evaluate_verification_predicates((predicate,), absent, workflow_profile()) == [], predicate_id

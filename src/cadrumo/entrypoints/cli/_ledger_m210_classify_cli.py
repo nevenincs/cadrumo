@@ -20,8 +20,8 @@ from ...core.i18n.render import tr
 from ...core.irnr import M210PayerMode
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.m210_income_classification import M210IncomeClassification
-from ._common import bad
 from ._ledger_support import ledger_transaction_validation_no_recovery, ledger_validation_bad, parse_decimal_option
+from .common import bad
 
 
 @dataclass(frozen=True, slots=True)

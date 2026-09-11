@@ -18,8 +18,8 @@ from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, OutputSchema
 from ...domain.transactions.enums import BusinessClassification, is_classified
-from ._common import bad, emit_envelope
 from ._ledger_support import TransactionRepo
+from .common import bad, emit_envelope
 
 if TYPE_CHECKING:
     from ...application.ledger.models import BulkClassifyResult

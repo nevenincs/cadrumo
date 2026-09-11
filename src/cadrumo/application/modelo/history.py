@@ -75,14 +75,14 @@ from ...domain.modelos.protocols import (
 from ...domain.modelos.verification_report import VerificationReport
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
-from ._work_selection import (
+from .action_errors import WorkUnitNotFoundError
+from .work_selection import (
     ModeloWorkResolution,
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,
     resolve_modelo_work_bucket,
     select_modelo_work_resolution,
 )
-from .action_errors import WorkUnitNotFoundError
 
 
 class WorkUnitHistory(BaseModel):

@@ -25,7 +25,6 @@ from .....core.logging import get_logger
 from .....core.operator_progress import OperatorProgress
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from .....domain.calculations.registry.schema_base import EvidenceTier
-from ....persistence.storage.secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from ..operator_progress import emit_operator_progress
 from .errors import AuthConfigurationError
 
@@ -35,7 +34,6 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS: Final[float] = 5.0
-DIAGNOSTIC_NAMESPACE: Final[str] = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace
 
 
 def mint_diagnostic_id(captured_at: datetime) -> str:
@@ -259,7 +257,6 @@ def render_progress_banner(
 
 __all__ = [
     "DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS",
-    "DIAGNOSTIC_NAMESPACE",
     "ClaveMovilApprovalTimeoutError",
     "ClaveMovilConfigurationError",
     "ClaveMovilFailureMode",

@@ -25,10 +25,10 @@ CONFIG_CHECK_COMMAND_SPECS = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(),
         policy=ENCRYPTED_READ,
-        handler=LazyBinding.available(DeferredTarget("._check_cli", "config_check", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".check_cli", "config_check", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._check_payloads", "ConfigCheckResult", __package__),
+            target=DeferredTarget(".check_payloads", "ConfigCheckResult", __package__),
             identity="config.check",
         ),
     ),

@@ -17,7 +17,7 @@ See Also:
         Integrity check applied before decrypting an existing row.
     :func:`~adapters.persistence.storage.sql._secure_object_schema.build_revision_ancestor_ids`
         Revision-lineage helper used to persist ancestor chains.
-    :class:`~adapters.persistence.storage.sql._secure_object_records.SecureObjectRecord`
+    :class:`~adapters.persistence.storage.sql.secure_object_records.SecureObjectRecord`
         Plaintext record returned after classification, schema, lineage, and
         AEAD checks pass.
     :func:`~adapters.persistence.storage.crypto.secure_object_payload_aad`
@@ -47,8 +47,8 @@ from ..schema_lineage import (
 )
 from ..secure_object_namespaces import SecureObjectNamespaceDefinition
 from . import orm as _orm
-from ._secure_object_records import SecureObjectBatchLoadItem, SecureObjectRecord, SecureObjectUnreadable
 from .secure_object_crypto import verify_revision_self_consistency
+from .secure_object_records import SecureObjectBatchLoadItem, SecureObjectRecord, SecureObjectUnreadable
 
 _log = get_logger(__name__)
 
@@ -394,7 +394,7 @@ def secure_object_list_item_from_raw_row(
     Fault-isolated: every failure mode (unknown classification, classification
     mismatch, unreadable schema version, revision-lineage inconsistency,
     decrypt failure, upgrade failure) returns a
-    :class:`~._secure_object_records.SecureObjectUnreadable` carrying the
+    :class:`~.secure_object_records.SecureObjectUnreadable` carrying the
     reason instead of raising, so a caller iterating many rows can attribute a
     failure to its own row and keep inspecting the rest.
 

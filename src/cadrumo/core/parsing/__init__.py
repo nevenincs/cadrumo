@@ -1,10 +1,9 @@
-"""Temporary protected forwards for the shared parsing primitives.
+"""Shared parsing primitives.
 
-Cross-package consumers import from :mod:`codes`, :mod:`dates`, or
-:mod:`utils` directly. The two date names below remain here only for the
-protected aggregation consumers that still depend on this package path.
+Consumers import from the focused :mod:`codes`, :mod:`dates`, or :mod:`utils`
+modules directly; this package initializer intentionally performs no imports.
 """
 
 from __future__ import annotations
 
-from .dates import IsoDateString, require_iso8601_date
+__all__: tuple[str, ...] = ()

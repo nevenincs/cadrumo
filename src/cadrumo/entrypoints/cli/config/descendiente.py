@@ -44,8 +44,8 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.meses_trabajo import serialise_meses_trabajo
-from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
-from .._common import emit_envelope
+from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
+from ..common import emit_envelope
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._profile_support import require_active_profile_pointer as _active_profile_pointer
 

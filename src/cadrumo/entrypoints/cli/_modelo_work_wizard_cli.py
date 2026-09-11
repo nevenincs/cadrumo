@@ -68,7 +68,6 @@ from ...core.flows import FlowMode
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from ._common import activate_subcommand_output_language, attach_cli_policy_verdict, emit_envelope
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_cli_support import (
     bad_parameter_from_error,
@@ -82,6 +81,7 @@ from ._modelo_rendering import (
     source_diagnostic_notice_text,
 )
 from ._modelo_work_wizard_payloads import WizardPromptedCasillaPayload, WorkWizardResult
+from .common import activate_subcommand_output_language, attach_cli_policy_verdict, emit_envelope
 from .errors import CliOutboundPayloadBoundaryError, CliRefusedBoundaryError
 
 if TYPE_CHECKING:

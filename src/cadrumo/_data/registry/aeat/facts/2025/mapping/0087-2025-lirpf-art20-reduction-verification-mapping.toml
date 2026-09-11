@@ -1,0 +1,30 @@
+[fact]
+fact_id = "lirpf-art-20-reduction-verification-mapping"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "lirpf-art-20-reduction-verification-mapping:2025"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+legal_refs = ["ley-35-2006:art-20"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-lirpf-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = ["rendimientos del trabajo", "reducción"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "modelo", value = "100" },
+  { key = "revision", value = "2025" },
+  { key = "operand.rnt.role", value = "irpf_rendimiento_trabajo_rendimiento_neto" },
+  { key = "operand.reduction.role", value = "irpf_rendimiento_trabajo_reduccion_gastos_generales" },
+  { key = "ceiling.fact_id", value = "lirpf-art-20-trabajo-reduccion-rnt-ceiling" },
+  { key = "predicate", value = "positive_rnt_below_ceiling_and_zero_reduction" },
+  { key = "applicability.source", value = "selected_modelo_100_revision" },
+  { key = "source_kind", value = "verification_advisory" },
+  { key = "advisory.message_key", value = "application.modelo.findings.art20_reduccion_possible" },
+]

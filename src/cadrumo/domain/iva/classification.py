@@ -1,4 +1,4 @@
-"""Closed-table IVA classification (issuer / customer / kind / direction).
+"""Generic IVA classification mechanics (issuer / customer / kind / direction).
 
 Layered on top of the :mod:`cadrumo.domain.iva` substrate (the
 :class:`cadrumo.domain.iva.IvaCategory` enum, :class:`cadrumo.domain.iva.IvaRateRecord`
@@ -7,13 +7,10 @@ classification axes needed to tag a transaction deterministically based on
 the parties' tax residency, the customer's IVA status, the transaction kind,
 and the invoice direction.
 
-The resolver implementation is a closed first-match-wins decision table over
-the rules ``R01`` through ``R99``. Each rule is a plain
-:class:`typing.NamedTuple` carrying a stable identifier, a description and a
-predicate; the table itself is a module-level constant. There is no dynamic
-dispatch, no string expression evaluation, no caller-supplied callback —
-every classification outcome is reproducible by replaying the same
-:class:`IvaInvoiceClassificationCriteria`.
+The legal decision table is registry-owned. This module supplies only the
+typed criteria/result records and the first-match evaluator that consumes a
+registry-projected sequence of rule definitions. No legal rows, labels,
+priorities, or fallback treatment are authored here.
 
 Examples:
     >>> from datetime import date
@@ -37,17 +34,17 @@ Examples:
     ...     kind=TransactionKind.GOODS,
     ...     direction=InvoiceKind.ISSUED,
     ... )
-    >>> classify_iva(criteria).category
+    >>> classify_iva(criteria, rules=registry_rules).category
     <IvaCategory.INTRA_COMMUNITY_SUPPLY: 'intra_community_supply'>
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Final, NamedTuple
+from typing import NamedTuple
 
 from pydantic import Field, model_validator
 
@@ -253,22 +250,6 @@ class TransactionKind(StrEnum):
 # -- Criteria and classification records ----------------------------------
 
 
-#: Domestic kinds whose rate tier is a payload concern, not a classification axis.
-#:
-#: Rules ``R01`` through ``R03`` route the three dedicated reverse-charge kinds
-#: to ``DOMESTIC_REVERSE_CHARGE`` before ``R05`` runs, and immovable property
-#: likewise, so the tier never selects their category and demanding it would ask
-#: for a fact no branch they can reach turns on.
-_DOMESTIC_RATE_TIER_EXEMPT_KINDS: Final[frozenset[TransactionKind]] = frozenset(
-    {
-        TransactionKind.CONSTRUCTION_REVERSE_CHARGE,
-        TransactionKind.WASTE_REVERSE_CHARGE,
-        TransactionKind.ELECTRONICS_REVERSE_CHARGE,
-        TransactionKind.IMMOVABLE_PROPERTY,
-    },
-)
-
-
 def domestic_rate_tier_is_required(
     *,
     issuer_residency: IvaTerritorialScope,
@@ -276,57 +257,24 @@ def domestic_rate_tier_is_required(
     kind: TransactionKind,
     customer_tax_status: CustomerTaxStatus | None = None,
     art_69_dos_service: IvaArt69DosService | None = None,
+    exempt_kinds: frozenset[TransactionKind] = frozenset(),
+    outside_territories: frozenset[IvaTerritorialScope] = frozenset(),
 ) -> bool:
-    """Whether this operation reaches a rate-tier branch and so needs a tier.
+    """Return whether the supplied axes require a rate tier.
 
-    The single home of a condition two layers must agree on. The criteria model
-    RAISES when it holds and no tier was supplied, and a producer assembling
-    those criteria must be able to ask the same question BEFORE it builds them --
-    otherwise the raise surfaces as an unclassifiable probe, and a caller that
-    treats an unclassifiable probe as "this branch might need everything" then
-    reports the wrong missing input entirely.
-
-    That is not hypothetical: an ES-to-ES domestic operation with no readable
-    tier was reported as missing the counterparty's IVA identification state, a
-    fact the domestic branch provably does not consume, while the tier that
-    actually blocked it was never named. Restating the condition in the producer
-    would have fixed that instance and left the two free to drift; asking the
-    same predicate cannot.
-
-    Args:
-        issuer_residency: Where the issuing party is established.
-        customer_residency: Where the party billed is established.
-        kind: The nature of the supply.
-        customer_tax_status: The recipient's condition, where it is settled.
-            ``None`` means it is still open, and an open status demands the tier
-            rather than excusing it.
-        art_69_dos_service: The lettered art. 69.Dos item, where one was stated.
-            A stated item on a third-country recipient lifts the supply out of
-            the TAI, so no Spanish rate applies and no tier is wanted.
-
-    Returns:
-        ``True`` when a tier must be supplied for the operation to classify.
+    Any registry-declared exceptions and outside territories are supplied by
+    the caller, keeping this reusable predicate free of a second legal table.
     """
-    if kind in _DOMESTIC_RATE_TIER_EXEMPT_KINDS:
+    if kind in exempt_kinds:
         return False
     if issuer_residency is IvaTerritorialScope.ES_MAINLAND and customer_residency is IvaTerritorialScope.ES_MAINLAND:
         return True
-    if art_69_dos_exception_applies(
-        customer_residency=customer_residency,
-        art_69_dos_service=art_69_dos_service,
-    ):
-        return False
-    # Art. 69.Uno.2.º keeps a B2C service in the TAI when the supplier is
-    # established here, so it is taxed at a Spanish rate exactly as a domestic
-    # supply is -- and picking WHICH domestic category needs the tier just the
-    # same. ``None`` demands it too: the status is still open, the operation may
-    # yet land on this branch, and failing toward asking is the rule everywhere
-    # else on this axis.
     return (
         issuer_residency is IvaTerritorialScope.ES_MAINLAND
-        and customer_residency in OUTSIDE_THE_COMUNIDAD
+        and customer_residency in outside_territories
         and kind is TransactionKind.SERVICES_GENERAL
         and (customer_tax_status is None or customer_tax_status is CustomerTaxStatus.B2C_CONSUMER)
+        and art_69_dos_service is None
     )
 
 
@@ -406,48 +354,7 @@ class IvaInvoiceClassificationCriteria(IvaStrictFrozen):
 
     @model_validator(mode="after")
     def _validate_member_state_consistency(self) -> IvaInvoiceClassificationCriteria:
-        """Enforce the rate-tier invariant.
-
-        **An EU establishment no longer demands an identification state**, and
-        the removal is the substance of the split rather than a relaxation. That
-        check read "this party is established in another Member State, so name
-        the State it is registered in", which is only sound while the two facts
-        are one — it is exactly the inference that made a German prefix
-        establish a German place. Which branches genuinely need the
-        identification is now declared by the branches themselves
-        (:attr:`_IvaClassificationRule.consumes`), so the demand is made where
-        the law makes it and nowhere else. The field stays optional here because
-        an unestablished identification is a normal reading outcome, and the
-        producer refuses ahead of the table when a consuming branch needs one.
-
-        One check remains, raising :exc:`IvaValidationError` on violation:
-
-        * ES-to-ES domestic transactions (both residencies ``ES_MAINLAND``)
-          that would fall through to the ``R05`` ``DOMESTIC_*`` rule require
-          an explicit :attr:`rate_tier`. The classifier never silently
-          defaults to ``GENERAL``; the caller must supply the tier that
-          applied at invoice time. Dedicated reverse-charge
-          :class:`TransactionKind` values (``CONSTRUCTION``, ``WASTE``,
-          ``ELECTRONICS``) are exempted because rules ``R01`` through ``R03``
-          route them to :attr:`cadrumo.domain.iva.IvaCategory.DOMESTIC_REVERSE_CHARGE`
-          before ``R05`` runs, so their rate tier is a payload concern not a
-          classification axis.
-        """
-        if (
-            domestic_rate_tier_is_required(
-                issuer_residency=self.issuer_residency,
-                customer_residency=self.customer_residency,
-                kind=self.kind,
-                customer_tax_status=self.customer_tax_status,
-                art_69_dos_service=self.art_69_dos_service,
-            )
-            and self.rate_tier is None
-        ):
-            raise IvaValidationError(
-                "rate_tier is required for operations taxed at a Spanish rate: ES-to-ES domestic, "
-                "and a B2C service outside the Comunidad, which LIVA art. 69.Uno.2.º keeps in the TAI. "
-                "Supply GENERAL / REDUCED / SUPER_REDUCED / ZERO / EXEMPT explicitly",
-            )
+        """Keep criteria validation independent from registry-owned facts."""
         return self
 
 
@@ -466,7 +373,7 @@ class IvaClassificationResult(IvaStrictFrozen):
         requires_reverse_charge: ``True`` when the rule triggers
             *inversión del sujeto pasivo*.
         matched_rule_id: Stable rule identifier (e.g.
-            ``R10_intra_community_supply``).
+            supplied by the selected registry revision.
         notes: Free-form explanatory note.
         consumes_party_facts: Which :class:`PartyFact` values the matched branch
             actually turns on. This is how a producer assembling the criteria
@@ -501,7 +408,7 @@ class IvaClassificationResult(IvaStrictFrozen):
     category: IvaCategory = Field(description="Resolved IVA category.")
     rate: IvaRateRecord | None = Field(default=None, description="Applicable :class:`IvaRateRecord`, when relevant.")
     requires_reverse_charge: bool = Field(default=False, description="True ⇒ inversión del sujeto pasivo.")
-    matched_rule_id: str = Field(description="Stable rule id (e.g. ``R10_intra_community_supply``).")
+    matched_rule_id: str = Field(description="Stable rule id supplied by registry authority.")
     notes: str = Field(default="", description="Free-form explanatory note.")
     consumes_party_facts: frozenset[PartyFact] = Field(
         default=frozenset(PartyFact),
@@ -541,483 +448,132 @@ class IvaClassificationResult(IvaStrictFrozen):
         return self
 
 
-# -- Predicate-driven decision table --------------------------------------
+def domestic_categories_by_rate_kind(
+    mapping: Mapping[IvaRateKind, IvaCategory] | None = None,
+) -> Mapping[IvaRateKind, IvaCategory]:
+    """Expose a registry-projected rate/category mapping as a read-only view."""
+    if mapping is None:
+        raise IvaValidationError("IVA rate/category mapping must be supplied by registry authority")
+    return MappingProxyType(dict(mapping))
 
 
-def art_69_dos_exception_applies(
-    *,
-    customer_residency: IvaTerritorialScope,
-    art_69_dos_service: IvaArt69DosService | None,
-) -> bool:
-    """Whether art. 69.Dos lifts a B2C service out of the TAI.
-
-    The single home of the exception's own two conditions, so the classification
-    rows and the rate-tier demand cannot answer it differently.
-
-    The recipient test is ``THIRD_COUNTRY`` and nothing else, and that is the
-    statute's own arithmetic rather than a simplification: art. 69.Dos excepts a
-    recipient established "fuera de la Comunidad", then limits itself in the same
-    sentence -- "salvo en el caso de que dicho destinatario esté establecido o
-    tenga su domicilio o residencia habitual en las Islas Canarias, Ceuta o
-    Melilla". Those territories are outside the Comunidad and expressly outside
-    the exception, so what remains is a third country.
-
-    An absent item does not satisfy it. Nobody having stated which lettered
-    service applies is not evidence that none does, and reading it that way would
-    lift a supply out of Spanish IVA on a fact nobody supplied.
-
-    Args:
-        customer_residency: Where the recipient is established.
-        art_69_dos_service: The lettered item the operator stated, or ``None``.
-
-    Returns:
-        ``True`` when the supply is not realizada en el TAI under art. 69.Dos.
-    """
-    return art_69_dos_service is not None and customer_residency is IvaTerritorialScope.THIRD_COUNTRY
+def rate_kind_for_domestic_category(
+    category: IvaCategory,
+    mapping: Mapping[IvaRateKind, IvaCategory] | None = None,
+) -> IvaRateKind | None:
+    """Resolve a domestic category through a caller-supplied registry mapping."""
+    if mapping is None:
+        raise IvaValidationError("IVA rate/category mapping must be supplied by registry authority")
+    return next((tier for tier, mapped_category in mapping.items() if mapped_category is category), None)
 
 
-from ._classification_rules import (  # noqa: E402
-    OUTSIDE_THE_COMUNIDAD,
-    SPANISH_SCOPES,
-    r01_construction_rc,
-    r02_waste_rc,
-    r03_electronics_rc,
-    r04_immovable_b2c_exempt,
-    r05_domestic_at_rate,
-    r10_ic_supply_goods,
-    r11_ic_acquisition_goods,
-    r12_services_b2b_eu_outbound,
-    r13_services_b2b_eu_inbound,
-    r15_distance_sales_b2c_outbound,
-    r16_external_scheme_services,
-    r17_oss_union_goods_distance_sale,
-    r18_oss_union_goods_interface_facilitated,
-    r19_oss_union_services,
-    r20_export_goods,
-    r21_import_goods,
-    r22_services_outbound_b2b,
-    r23_ioss_distance_sale_low_value,
-    r24_services_outbound_b2c,
-    r25_services_outbound_b2c_art_69_dos,
-    r30_canarias_ceuta_melilla,
-)
-
-_RATE_TIER_TO_CATEGORY: dict[IvaRateKind, IvaCategory] = {
-    IvaRateKind.GENERAL: IvaCategory.DOMESTIC_GENERAL,
-    IvaRateKind.REDUCED: IvaCategory.DOMESTIC_REDUCED,
-    IvaRateKind.SUPER_REDUCED: IvaCategory.DOMESTIC_SUPER_REDUCED,
-    IvaRateKind.ZERO: IvaCategory.DOMESTIC_ZERO,
-    IvaRateKind.EXEMPT: IvaCategory.DOMESTIC_EXEMPT,
-}
-
-
-_CATEGORY_TO_RATE_TIER: dict[IvaCategory, IvaRateKind] = {
-    category: tier for tier, category in _RATE_TIER_TO_CATEGORY.items()
-}
-
-
-def domestic_categories_by_rate_kind() -> Mapping[IvaRateKind, IvaCategory]:
-    """Return the closed rate-kind to domestic-category mapping.
-
-    The single authority for "which DOMESTIC_* category does this rate tier
-    denote". Exposed as a read-only view so a cross-package consumer reaches it
-    through the package facade rather than re-declaring the table; three
-    independent copies of this mapping existed before it was promoted, none
-    sharing an identifier with another, so no symbol search would have found
-    them.
-
-    Callers needing the reverse direction want
-    :func:`rate_kind_for_domestic_category`. Callers needing "which rate kinds
-    exist" should iterate :class:`IvaRateKind` itself — using this mapping's
-    key set for that is the conflation that let one copy drift a member short.
-    """
-    return MappingProxyType(_RATE_TIER_TO_CATEGORY)
-
-
-def rate_kind_for_domestic_category(category: IvaCategory) -> IvaRateKind | None:
-    """Return the rate tier a domestic category denotes, or ``None`` if it is not one.
-
-    ``None`` is the honest answer for every non-domestic category —
-    intra-community, export, import, reverse-charge and recargo operations
-    carry no rate tier derivable from the category alone.
-    """
-    return _CATEGORY_TO_RATE_TIER.get(category)
-
-
-class _IvaClassificationRule(NamedTuple):
-    """Module-private decision-table row.
-
-    Attributes:
-        rule_id: Stable string identifier (e.g. ``R10_intra_community_supply``).
-        description: Human-readable summary surfaced as
-            :attr:`IvaClassificationResult.notes`.
-        predicate: Predicate over a :class:`IvaInvoiceClassificationCriteria`.
-        category: Concrete :class:`cadrumo.domain.iva.IvaCategory` to assign on a
-            match, or ``None`` when the resolver derives the category from
-            other inputs (used by ``R05`` against
-            :attr:`IvaInvoiceClassificationCriteria.rate_tier`).
-        consumes: The :class:`PartyFact` values this branch turns on, declared
-            per row so a producer can demand exactly them and nothing more.
-            **The declaration is a claim about the predicate, and the predicate
-            is what must honour it** — the two disagreed once, with all four
-            intra-community rows declaring the identification while no predicate
-            in the table read either identification field, so the declaration
-            read as evidence of a migration that had not happened.
-
-            Every row consumes :attr:`PartyFact.TERRITORIAL_ESTABLISHMENT`,
-            because every predicate reads at least one residency. Only the
-            intra-community rows add
-            :attr:`PartyFact.IVA_IDENTIFICATION_STATE`, and they read it: the
-            goods pair because arts. 25 and 13 make the counterparty's
-            registration in another Member State the operative condition, the
-            services pair because their categories select a Modelo 349 clave
-            against that counterparty's NIF-IVA. Everywhere else the identifying
-            State cannot change the outcome and is not declared.
-    """
+class IvaClassificationRule(NamedTuple):
+    """One registry-projected classification row consumed by the evaluator."""
 
     rule_id: str
-    description: str
     predicate: Callable[[IvaInvoiceClassificationCriteria], bool]
-    category: IvaCategory | None  # None ⇒ rule resolves to a derived category
-    consumes: frozenset[PartyFact]
-
-
-_ESTABLISHMENT_ONLY: Final[frozenset[PartyFact]] = frozenset({PartyFact.TERRITORIAL_ESTABLISHMENT})
-"""What a branch consumes when the identification State cannot change its outcome."""
-
-_ESTABLISHMENT_AND_IDENTIFICATION: Final[frozenset[PartyFact]] = frozenset(PartyFact)
-"""What an intra-community branch consumes: the place AND the identifying State."""
-
-
-_CLASSIFICATION_RULES: tuple[_IvaClassificationRule, ...] = (
-    _IvaClassificationRule(
-        "R01_construction_reverse_charge",
-        "ES-to-ES construction RC",
-        r01_construction_rc,
-        IvaCategory.DOMESTIC_REVERSE_CHARGE,
-        consumes=_ESTABLISHMENT_ONLY,
-    ),
-    _IvaClassificationRule(
-        "R02_waste_reverse_charge",
-        "ES-to-ES waste RC",
-        r02_waste_rc,
-        IvaCategory.DOMESTIC_REVERSE_CHARGE,
-        consumes=_ESTABLISHMENT_ONLY,
-    ),
-    _IvaClassificationRule(
-        "R03_electronics_reverse_charge",
-        "ES-to-ES B2B electronics RC",
-        r03_electronics_rc,
-        IvaCategory.DOMESTIC_REVERSE_CHARGE,
-        consumes=_ESTABLISHMENT_ONLY,
-    ),
-    _IvaClassificationRule(
-        "R04_immovable_property_exempt",
-        "ES-to-ES immovable B2C exempt",
-        r04_immovable_b2c_exempt,
-        IvaCategory.DOMESTIC_EXEMPT,
-        consumes=_ESTABLISHMENT_ONLY,
-    ),
-    _IvaClassificationRule(
-        "R05_domestic_at_rate_tier",
-        "ES-to-ES default by rate_tier",
-        r05_domestic_at_rate,
-        None,
-        consumes=_ESTABLISHMENT_ONLY,
-    ),
-    _IvaClassificationRule(
-        "R10_intra_community_supply",
-        "ES to EU_MEMBER B2B goods supply",
-        r10_ic_supply_goods,
-        IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        consumes=_ESTABLISHMENT_AND_IDENTIFICATION,
-    ),
-    _IvaClassificationRule(
-        "R11_intra_community_acquisition",
-        "EU_MEMBER to ES B2B goods acquisition",
-        r11_ic_acquisition_goods,
-        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-        consumes=_ESTABLISHMENT_AND_IDENTIFICATION,
-    ),
-    _IvaClassificationRule(
-        "R12_services_b2b_eu_outbound",
-        "ES to EU_MEMBER B2B services",
-        r12_services_b2b_eu_outbound,
-        IvaCategory.DOMESTIC_NOT_SUBJECT,
-        consumes=_ESTABLISHMENT_AND_IDENTIFICATION,
-    ),
-    # A service received resolves to the SERVICES category, not the goods one,
-    # because the two surfaces need different things from it. Modelo 303
-    # combines the legs — official boxes 10/11 and 36/37 are titled
-    # "adquisiciones intracomunitarias de bienes y servicios" — so both
-    # categories select the same bindings and either would settle correctly
-    # there. Modelo 349 keeps them apart: `_intracommunity_clave` files the
-    # goods category under clave "A" (adquisiciones intracomunitarias sujetas)
-    # and this one under clave "I" (adquisiciones intracomunitarias de
-    # servicios), so resolving a service to the goods category would declare it
-    # as an adquisición de bienes against VIES.
-    #
-    # The services category may only be emitted here because the M303 bindings
-    # select it; before they did, this rule resolving to it would have routed
-    # the cuota to no casilla at all.
-    _IvaClassificationRule(
-        "R13_services_b2b_eu_inbound",
-        "EU_MEMBER to ES B2B services",
-        r13_services_b2b_eu_inbound,
-        IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
-        consumes=_ESTABLISHMENT_AND_IDENTIFICATION,
-    ),
-    _IvaClassificationRule(
-        "R15_distance_sales_b2c",
-        "ES to EU_MEMBER B2C distance sales",
-        r15_distance_sales_b2c_outbound,
-        IvaCategory.DOMESTIC_NOT_SUBJECT,
-        consumes=_ESTABLISHMENT_ONLY,
-    ),
-    _IvaClassificationRule(
-        "R16_external_scheme_services",
-        "3rd-country to EU_MEMBER B2C services routed through Esquema Exterior",
-        r16_external_scheme_services,
-        IvaCategory.OPERACION_NO_SUJETA,
-        consumes=_ESTABLISHMENT_ONLY,
-    ),
-    _IvaClassificationRule(
-        "R17_oss_union_goods_distance_sale",
-        "ES to EU_MEMBER B2C OSS-Union goods distance sale",
-        r17_oss_union_goods_distance_sale,
-        IvaCategory.DOMESTIC_NOT_SUBJECT,
-        consumes=_ESTABLISHMENT_ONLY,
-    ),
-    _IvaClassificationRule(
-        "R18_oss_union_goods_interface_facilitated",
-        "ES to EU_MEMBER B2C OSS-Union interface-facilitated supply",
-        r18_oss_union_goods_interface_facilitated,
-        IvaCategory.DOMESTIC_NOT_SUBJECT,
-        consumes=_ESTABLISHMENT_ONLY,
-    ),
-    _IvaClassificationRule(
-        "R19_oss_union_services",
-        "ES to EU_MEMBER B2C OSS-Union services",
-        r19_oss_union_services,
-        IvaCategory.DOMESTIC_NOT_SUBJECT,
-        consumes=_ESTABLISHMENT_ONLY,
-    ),
-    _IvaClassificationRule(
-        "R20_export_goods",
-        "ES goods export outside the Comunidad",
-        r20_export_goods,
-        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
-        consumes=_ESTABLISHMENT_ONLY,
-    ),
-    _IvaClassificationRule(
-        "R21_import_goods",
-        "3rd-country to ES goods import",
-        r21_import_goods,
-        IvaCategory.IMPORT_THIRD_COUNTRY,
-        consumes=_ESTABLISHMENT_ONLY,
-    ),
-    _IvaClassificationRule(
-        "R22_services_outbound_b2b",
-        "ES B2B services localised outside the TAI",
-        r22_services_outbound_b2b,
-        IvaCategory.OPERACION_NO_SUJETA,
-        consumes=_ESTABLISHMENT_ONLY,
-    ),
-    _IvaClassificationRule(
-        "R25_services_outbound_b2c_art_69_dos",
-        "ES B2C services art. 69.Dos lifts out of the TAI",
-        r25_services_outbound_b2c_art_69_dos,
-        IvaCategory.OPERACION_NO_SUJETA,
-        consumes=_ESTABLISHMENT_ONLY,
-    ),
-    _IvaClassificationRule(
-        "R24_services_outbound_b2c_at_rate_tier",
-        "ES B2C services the TAI keeps, by rate_tier",
-        r24_services_outbound_b2c,
-        None,
-        consumes=_ESTABLISHMENT_ONLY,
-    ),
-    _IvaClassificationRule(
-        "R23_ioss_distance_sale_low_value",
-        "Low-value imported-goods distance sale routed through IOSS",
-        r23_ioss_distance_sale_low_value,
-        IvaCategory.OPERACION_NO_SUJETA,
-        consumes=_ESTABLISHMENT_ONLY,
-    ),
-    _IvaClassificationRule(
-        "R30_canarias_ceuta_melilla",
-        "Issuer outside TAI",
-        r30_canarias_ceuta_melilla,
-        IvaCategory.DOMESTIC_NOT_SUBJECT,
-        consumes=_ESTABLISHMENT_ONLY,
-    ),
-)
-
-
-_R99_FALLTHROUGH_ID = "R99_fallthrough"
+    category: IvaCategory | None = None
+    description: str = ""
+    consumes: frozenset[PartyFact] = frozenset()
+    requires_reverse_charge: bool = False
 
 
 # -- Public resolver ------------------------------------------------------
 
 
-def classifiable_categories(*, consuming: PartyFact | None = None) -> frozenset[IvaCategory]:
-    """Return categories declared by the decision table, optionally narrowed by fact."""
+def _registry_iva_classification_catalogue(effective_date: date) -> ResolvedMappingFact:
+    """Resolve the dated IVA catalogue consumed by the generic evaluator."""
+    from ...domain.calculations.registry.authority import bundled_authority
+    from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+    from ...domain.calculations.registry.schema_base import DateAxis
+
+    authority = bundled_authority()
+    resolved = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="iva-invoice-classification-catalogue",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise IvaValidationError("IVA classification catalogue must resolve as a mapping fact")
+    return resolved
+
+
+def classifiable_categories(
+    rules: Iterable[IvaClassificationRule],
+    *,
+    consuming: PartyFact | None = None,
+) -> frozenset[IvaCategory]:
+    """Return categories projected by the supplied registry rows."""
     return frozenset(
         rule.category
-        for rule in _CLASSIFICATION_RULES
+        for rule in rules
         if rule.category is not None and (consuming is None or consuming in rule.consumes)
     )
 
 
-def classify_iva(criteria: IvaInvoiceClassificationCriteria) -> IvaClassificationResult:
-    """Apply the closed decision table; first match wins.
+def classify_iva(
+    criteria: IvaInvoiceClassificationCriteria,
+    *,
+    rules: Iterable[IvaClassificationRule] | None = None,
+    rate_categories: Mapping[IvaRateKind, IvaCategory] | None = None,
+    rate_territories: frozenset[IvaTerritorialScope] | None = None,
+) -> IvaClassificationResult:
+    """Evaluate registry-projected rows in their supplied order.
 
-    Iterates the module-level rule table in declaration order, returning the
-    first :class:`IvaClassificationResult` whose predicate accepts ``criteria``.
-    Falls through to the ``R99`` sentinel
-    (:attr:`cadrumo.domain.iva.IvaCategory.UNKNOWN`) only when no rule matches —
-    a state that requires human review per the
-    :class:`cadrumo.domain.iva.IvaCategory.UNKNOWN` contract.
-
-    Args:
-        criteria: The :class:`IvaInvoiceClassificationCriteria` carrying every
-            classification axis.
-
-    Returns:
-        A :class:`IvaClassificationResult` with the resolved category, rate,
-        reverse-charge flag, matched rule identifier, the registry grounding
-        of its placement, and any explanatory note.
-
-    Raises:
-        cadrumo.domain.iva.errors.IvaCatalogueError: When the place-of-supply
-            table grounds no row for the matched rule in the filing year of
-            :attr:`IvaInvoiceClassificationCriteria.transaction_date`. The
-            refusal is deliberate. A placement is filing-affecting, and the
-            three states this result must keep apart — a provision resolved, a
-            provision deliberately silent on the supply's nature, and a
-            resolution that could not be performed — collapse to two the moment
-            a failed lookup is allowed to arrive as ``place_of_supply=None``,
-            because that is the same value a hand-built result carries. Raising
-            keeps the failure loud at the boundary that caused it rather than
-            handing a caller a classification whose governing article nobody
-            established.
+    This function intentionally has no module-owned table or fallthrough row.
+    Callers must project the selected registry revision into ``rules`` and,
+    when a matched row derives a category from a rate tier, provide the
+    registry-owned ``rate_categories`` and ``rate_territories`` mappings.
     """
-    for rule in _CLASSIFICATION_RULES:
+    _registry_iva_classification_catalogue(criteria.transaction_date)
+    if rules is None:
+        raise IvaValidationError("IVA classification rows must be supplied by registry authority")
+    projected_rules = tuple(rules)
+    for rule in projected_rules:
         if not rule.predicate(criteria):
             continue
         category = rule.category
         if category is None:
-            # A rate-tier row: the ES-to-ES default, and the B2C service art.
-            # 69.Uno.2.º keeps in the TAI. Both are taxed here, so both pick
-            # their DOMESTIC_* from the tier.
-            tier = criteria.rate_tier if criteria.rate_tier is not None else IvaRateKind.GENERAL
-            if criteria.rate_tier is None:
-                _logger.debug(
-                    "classify_iva: R05 rate_tier is None; defaulting to GENERAL (issuer=%s customer=%s kind=%s)",
-                    criteria.issuer_residency.value,
-                    criteria.customer_residency.value,
-                    criteria.kind.value,
-                )
-            category = _RATE_TIER_TO_CATEGORY.get(tier, IvaCategory.DOMESTIC_GENERAL)
-            if category is IvaCategory.DOMESTIC_GENERAL and tier not in _RATE_TIER_TO_CATEGORY:
-                _logger.debug(
-                    "classify_iva: R05 tier=%s not in mapping; fell back to DOMESTIC_GENERAL",
-                    tier.value if hasattr(tier, "value") else tier,
-                )
-        rate = _resolve_rate_for_category(criteria, category)
-        requires_rc = category in {
-            IvaCategory.DOMESTIC_REVERSE_CHARGE,
-            IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-        }
-        _logger.debug(
-            "classify_iva: matched rule=%s category=%s",
-            rule.rule_id,
-            category.value,
+            if criteria.rate_tier is None or rate_categories is None:
+                raise IvaValidationError("matched IVA row requires a registry rate/category mapping")
+            try:
+                category = rate_categories[criteria.rate_tier]
+            except KeyError as exc:
+                raise IvaValidationError("registry rate/category mapping has no matched rate tier") from exc
+        rate = _resolve_rate_for_category(
+            criteria,
+            category,
+            rate_categories=rate_categories,
+            rate_territories=rate_territories,
         )
         return IvaClassificationResult(
             category=category,
             rate=rate,
-            requires_reverse_charge=requires_rc,
+            requires_reverse_charge=rule.requires_reverse_charge,
             matched_rule_id=rule.rule_id,
             notes=rule.description,
             consumes_party_facts=rule.consumes,
-            # Keyed by the rule, never by the category: arts. 68, 69 and 70
-            # fork on goods versus services, and several rules share one
-            # category while resting on different provisions, so a category
-            # cannot say which article placed this operation.
             place_of_supply=place_of_supply_rule(rule.rule_id, on=criteria.transaction_date),
         )
-
-    _logger.debug(
-        "classify_iva: no rule matched issuer=%s customer=%s kind=%s direction=%s; returning UNKNOWN",
-        criteria.issuer_residency.value,
-        criteria.customer_residency.value,
-        criteria.kind.value,
-        criteria.direction.value,
-    )
-    return IvaClassificationResult(
-        category=IvaCategory.UNKNOWN,
-        rate=None,
-        requires_reverse_charge=False,
-        matched_rule_id=_R99_FALLTHROUGH_ID,
-        notes="No classification rule matched the supplied criteria.",
-        # An operation no rule placed declares BOTH facts consumed, and this is
-        # the same guard the lazy-requirement probe applies to its own axes: an
-        # unplaced operation agrees with itself about everything, so reading its
-        # silence as "this fact could not have mattered" would certify
-        # indifference from the fact that nothing was decided. Demanding both is
-        # the only honest reading of a branch that does not exist.
-        consumes_party_facts=frozenset(PartyFact),
-        # The sentinel carries its row like every other rule. That row is
-        # legal-basis-exempt and cites nothing, which is the table SAYING the
-        # fallthrough codifies no treatment -- a different fact from the field
-        # being absent, and one a consumer can read.
-        place_of_supply=place_of_supply_rule(_R99_FALLTHROUGH_ID, on=criteria.transaction_date),
-    )
+    raise IvaValidationError("no registry IVA classification row matched the supplied criteria")
 
 
 def _resolve_rate_for_category(
     criteria: IvaInvoiceClassificationCriteria,
     category: IvaCategory,
+    *,
+    rate_categories: Mapping[IvaRateKind, IvaCategory] | None,
+    rate_territories: frozenset[IvaTerritorialScope] | None,
 ) -> IvaRateRecord | None:
-    """Resolve the :class:`cadrumo.domain.iva.IvaRateRecord` applicable to ``category``.
-
-    Returns ``None`` for categories whose rate is not directly derivable from
-    the substrate (intracomunitarias, exports, imports, exempt, not-subject,
-    reverse-charge — the cuota is self-assessed, declared zero, or computed
-    from a downstream invoice line). For ``DOMESTIC_*`` categories the rate
-    is looked up against the issuer's residency on the transaction date.
-
-    **The schedule is selected by where the issuer is ESTABLISHED, never by
-    which State identifies it** — this branch consumes
-    :attr:`PartyFact.TERRITORIAL_ESTABLISHMENT` and nothing else. The rate a
-    supply bears is fixed by the territory that taxes it, so an issuer
-    established in the peninsula charges Spanish rates whichever Member State
-    registered it. Reading the identification field here would have been the
-    conflation reappearing at the money: after the split a Spanish-established
-    party may legitimately carry a German identification, and the previous
-    ``issuer_member_state or ES`` would then have priced a domestic Spanish
-    supply off the German schedule.
-
-    Args:
-        criteria: The classification criteria; used for the issuer's
-            establishment and the transaction date.
-        category: The category whose rate to resolve.
-
-    Returns:
-        The matched :class:`cadrumo.domain.iva.IvaRateRecord`, or ``None`` when the
-        category does not carry a directly-derivable rate, when the issuer is not
-        established in Spain, or when
-        :func:`cadrumo.domain.iva.lookup_rate` cannot find one.
-    """
-    tier = _CATEGORY_TO_RATE_TIER.get(category)
+    """Resolve a rate through caller-supplied registry mappings."""
+    if rate_categories is None or rate_territories is None:
+        return None
+    tier = next((candidate for candidate, mapped in rate_categories.items() if mapped is category), None)
     if tier is None:
         return None
-    if criteria.issuer_residency not in SPANISH_SCOPES:
-        # Every tiered category above is a DOMESTIC_* one, which only an issuer
-        # inside Spain can reach. Returning nothing rather than defaulting to the
-        # Spanish schedule keeps an unreachable combination unpriced instead of
-        # priced wrongly.
+    if criteria.issuer_residency not in rate_territories:
         return None
     member_state = EUMemberState.ES
     try:
@@ -1036,9 +592,13 @@ __all__ = [
     "CustomerTaxStatus",
     "InvoiceKind",
     "IvaClassificationResult",
+    "IvaClassificationRule",
     "IvaInvoiceClassificationCriteria",
     "IvaTerritorialScope",
     "PartyFact",
     "TransactionKind",
+    "classifiable_categories",
     "classify_iva",
+    "domestic_categories_by_rate_kind",
+    "rate_kind_for_domestic_category",
 ]

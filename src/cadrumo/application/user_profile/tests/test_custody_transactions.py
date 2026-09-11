@@ -202,10 +202,8 @@ def _persist_real_current_session_acceleration(root: Path) -> Path:
 def _publish_once_in_sibling(path_text: str, payload: bytes, result_queue: Any) -> None:
     """Run the real publish primitive in one spawned interpreter."""
     from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
-    from ....adapters.persistence.storage.custody.filesystem import (
-        ensure_profile_custody_local_directory,
-        write_profile_custody_local_record,
-    )
+    from ....adapters.persistence.storage.custody.filesystem import write_profile_custody_local_record
+    from ....adapters.persistence.storage.custody.filesystem_primitives import ensure_profile_custody_local_directory
 
     path = Path(path_text)
     try:

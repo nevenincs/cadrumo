@@ -55,9 +55,9 @@ from ...calculations.cross_period_models import (
     CrossPeriodDependencyRequirement,
 )
 from ...calculations.observations_repository import CalculationObservationRepository
-from .._verification_cross_period import _cross_period_clean_state_findings
 from ..external_import_actions import import_external_filing_evidence
 from ..verification_actions import verify_modelo_revision
+from ..verification_cross_period import cross_period_clean_state_findings
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -67,7 +67,7 @@ _CLOCK = datetime(2026, 6, 5, 11, 0, 0, tzinfo=UTC)
 _M303_SOURCE_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M303_SOURCE_CASILLA_01")
 
 
-def _workflow_profile() -> TaxpayerProfile:
+def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
@@ -80,7 +80,7 @@ def _store_ready_profile_record(*, activity_start_date: str | None = None) -> No
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
-                UserProfileFact(path="identity.tax_id", value=str(_workflow_profile().tax_id)),
+                UserProfileFact(path="identity.tax_id", value=str(workflow_profile().tax_id)),
                 UserProfileFact(path="identity.name", value="Test"),
                 UserProfileFact(path="identity.surnames", value="Operator"),
                 UserProfileFact(path="activities.description", value="design"),
@@ -395,7 +395,7 @@ def test_cross_period_clean_state_blockers_remain_factual_without_recovery_prose
         unexpected_member_nifs=(),
     )
 
-    (finding,) = _cross_period_clean_state_findings(_clean_state_repair_verdict(evidence))
+    (finding,) = cross_period_clean_state_findings(_clean_state_repair_verdict(evidence))
 
     assert finding.severity.value == "blocking"
     assert "missing_expected_group_member_roster" in str(finding.message_facts["blocker_codes"]).split("|")
@@ -422,7 +422,7 @@ def test_verify_modelo_390_persists_cross_period_clean_state_blockers_when_prior
         report = verify_modelo_revision(
             revision_id,
             actor="test-operator",
-            workflow_profile=_workflow_profile(),
+            workflow_profile=workflow_profile(),
             work_unit_repository=work_units,
             calculation_repository=calculations,
             filing_repository=filings,
@@ -476,7 +476,7 @@ def test_verify_modelo_390_refuses_csv_register_prior_filing_without_justificant
         report = verify_modelo_revision(
             revision_id,
             actor="test-operator",
-            workflow_profile=_workflow_profile(),
+            workflow_profile=workflow_profile(),
             work_unit_repository=work_units,
             calculation_repository=calculations,
             filing_repository=filings,
@@ -519,7 +519,7 @@ def test_verify_fails_closed_when_profile_records_no_activity_start_date(tmp_pat
             work_unit_repository=work_units,
             calculation_repository=calculations,
         )
-        no_activity_profile = _workflow_profile()
+        no_activity_profile = workflow_profile()
         assert no_activity_profile.activity_start_date is None
 
         report = verify_modelo_revision(

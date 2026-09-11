@@ -1,0 +1,32 @@
+[fact]
+fact_id = "modelo-303-carry-disposition-verification-mapping"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-303-carry-disposition-verification-mapping:2025"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-303-instructions", "aeat-dr-303-2025"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-303-instructions"
+required_text = ["Tipo de declaración"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "modelo", value = "303" },
+  { key = "revision", value = "2025" },
+  { key = "disposition.header_key", value = "declaration_type" },
+  { key = "disposition.admissible", value = "compensacion,devolucion,cuenta_corriente_ingreso,ingreso,negativa,cuenta_corriente_devolucion,domiciliacion,devolucion_transferencia_extranjero" },
+  { key = "sign.negative", value = "compensacion,devolucion,cuenta_corriente_devolucion,devolucion_transferencia_extranjero" },
+  { key = "sign.positive", value = "cuenta_corriente_ingreso,ingreso,domiciliacion" },
+  { key = "sign.zero", value = "negativa" },
+  { key = "predicate", value = "selected_disposition_must_match_declared_result_sign" },
+  { key = "applicability.source", value = "selected_modelo_303_revision" },
+  { key = "source_kind", value = "filing_observation_header" },
+  { key = "validation.error_namespace", value = "application.calculations.m303_carry" },
+]

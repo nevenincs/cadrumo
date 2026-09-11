@@ -20,10 +20,10 @@ from cadrumo.core.telemetry.tier import TelemetryTier
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 
 from .._annotations import annotation_coverage_gaps
-from .._dispatch import command_key_for_tool, tool_name_for_command
-from .._tools import build_tool_descriptors
-from .._toolsets import Toolset, build_toolsets
 from ..command_surface import command_surface
+from ..dispatch import command_key_for_tool, tool_name_for_command
+from ..tools import build_tool_descriptors
+from ..toolsets import Toolset, build_toolsets
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

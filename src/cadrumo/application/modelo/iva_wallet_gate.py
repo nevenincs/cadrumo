@@ -58,6 +58,12 @@ from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
+from ...domain.iva_compensation.filed_derivation import (
+    M303_COMPENSATION_AVAILABLE_CASILLA as M303_DISPONIBLE_CASILLA,
+)
+from ...domain.iva_compensation.filed_derivation import (
+    M303_COMPENSATION_PENDING_PRIOR_CASILLA as M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+)
 from ...domain.iva_compensation.reconciliation import (
     IvaCompensationDecisionReason,
     IvaCompensationReconciliationDecision,
@@ -66,10 +72,6 @@ from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.binding_prefill import LocalIvaCompensationRecurrence
-from ..calculations.iva_compensation_casillas import (
-    M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
-    M303_DISPONIBLE_CASILLA,
-)
 from ..calculations.m303_carry_ingress import M303CarryIngressError, validate_normalized_m303_carry_observation_envelope
 from ..calculations.observations_repository import (
     CalculationObservationRepository,

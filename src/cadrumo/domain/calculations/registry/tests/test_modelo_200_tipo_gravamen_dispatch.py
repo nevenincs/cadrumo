@@ -35,9 +35,8 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-
+from .....core.authority_grade import RegistryAuthorityGrade
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError

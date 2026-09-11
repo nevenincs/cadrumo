@@ -38,7 +38,8 @@ from .....domain.attachments.enums import AttachmentKind, AttachmentSource
 from .....domain.attachments.errors import AttachmentValidationError
 from .....domain.attachments.models import Attachment
 from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from ..attachment import _ATTACHMENT_MANIFEST_NAMESPACE, AttachmentStore
+from ..attachment import AttachmentStore
+from ..secure_object_namespaces import ATTACHMENT_MANIFEST_NAMESPACE
 from ..sql.engine import get_engine
 from ..sql.orm import SecureObjectRow
 
@@ -77,7 +78,7 @@ def _attachment(*, sha256: str, bytes_size: int, bucket_id: str) -> Attachment:
 def _manifest_row_statement(attachment_id: str):
     """Select one manifest row while the caller owns the content mutation."""
     return select(SecureObjectRow).where(
-        SecureObjectRow.namespace == _ATTACHMENT_MANIFEST_NAMESPACE,
+        SecureObjectRow.namespace == ATTACHMENT_MANIFEST_NAMESPACE.namespace,
         SecureObjectRow.object_key == attachment_id,
     )
 

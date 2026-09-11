@@ -21,13 +21,11 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.percentage import PERCENTAGE_MIN, Percentage
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
-    BindingExportDataType,
-)
-from .binding_selector_utils import (
     selector_as_dict as _selector_as_dict,
 )
 from .errors import RegistryValidationError
 from .schema import DataBindingDefinition
+from .schema_exports import ExportFieldDataType
 
 __all__ = [
     "Withholding296Observation",
@@ -139,7 +137,7 @@ class _Withholding296Selector(BaseModel):
     row_field: _Withholding296RowField | None = None
     grouping: Literal["per_perceptor"] | None = None
     record: str | None = Field(default=None, min_length=1, max_length=64)
-    data_type: BindingExportDataType | None = None
+    data_type: ExportFieldDataType | None = None
 
 
 def _withholding296_selector(binding: DataBindingDefinition) -> _Withholding296Selector:

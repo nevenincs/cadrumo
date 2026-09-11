@@ -39,14 +39,13 @@ from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ...domain.modelos.work_unit import WorkUnit
-from ._common import resolve_notice_action
+from .common import resolve_notice_action
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.sede.observation_store import (
-        FiledDeclaracionObservation,
         FiledDeclaracionObservationStore,
     )
-    from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact
+    from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
     from ...domain.calculations.registry.applicability_routes import TaxRoute
     from ...domain.user_profile.values import UserProfileRecord
 

@@ -7,10 +7,13 @@ from typing import NamedTuple
 
 import pytest
 
-from ...tests.profile_backend_fixtures import _isolated_backend
+from ...tests.profile_backend_fixtures import isolated_backend
 
-__all__ = ["_isolated_backend"]
+__all__ = ["isolated_backend"]
 
+from ....adapters.persistence.storage.secure_object_namespaces import (
+    LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
+)
 from ....core.directory_scan import scan_directory
 from ....core.modelo import Modelo
 from ...modelo.reconciliation import ReconciliationEvidenceInvalidError
@@ -18,7 +21,7 @@ from ...modelo.reconciliation_records import (
     ModeloReconciliationVerdict,
     list_modelo_reconciliations,
 )
-from ..justificante import JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE, reconcile_capture
+from ..justificante import reconcile_capture
 from ._justificante_reconcile_support import (
     MODELO_130_FIXTURE,
     _active_bucket_id,
@@ -44,7 +47,9 @@ def test_reconcile_from_persisted_capture_matches() -> None:
     assert report.verdict is ModeloReconciliationVerdict.MATCHES
     assert report.diffs == ()
     assert report.work_unit_id == work_unit_id
-    assert report.source_path == f"secure-object://{JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE}/{snapshot.snapshot_id}"
+    assert report.source_path == (
+        f"secure-object://{LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE.namespace}/{snapshot.snapshot_id}"
+    )
     history = list_modelo_reconciliations(bucket_id=_active_bucket_id(), work_unit_id=work_unit_id)
     assert len(history) == 1
     assert history[0].source_path == report.source_path
@@ -71,7 +76,9 @@ def test_reconcile_from_persisted_capture_writes_nothing_to_disk(tmp_path: Path)
     report = reconcile_capture(work_unit_id=work_unit_id, snapshot=snapshot)
 
     assert report.verdict is ModeloReconciliationVerdict.MATCHES
-    assert report.source_path == f"secure-object://{JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE}/{snapshot.snapshot_id}"
+    assert report.source_path == (
+        f"secure-object://{LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE.namespace}/{snapshot.snapshot_id}"
+    )
 
     scan = _scan_for_plaintext(tmp_path, pdf_bytes)
 
@@ -248,6 +255,6 @@ def test_reconcile_from_malformed_capture_raises_without_leaking_temp_path() -> 
     with pytest.raises(ReconciliationEvidenceInvalidError) as exc_info:
         reconcile_capture(work_unit_id=work_unit_id, snapshot=snapshot)
     message = str(exc_info.value)
-    assert f"secure-object://{JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE}/{snapshot.snapshot_id}" in message
+    assert f"secure-object://{LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE.namespace}/{snapshot.snapshot_id}" in message
     assert "Temp" not in message
     assert ".pdf" not in message

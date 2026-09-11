@@ -1,0 +1,23 @@
+[[revisions."2025".formulas]]
+id = "renta-maritime-exempt-income-0525"
+target_casilla_id = "0525"
+expression = { op = "if_then_else", args = [
+    { binding = "renta-maritime-path-rebeca" },
+    { op = "multiply", args = [
+        { binding = "renta-maritime-gross-navigation-income" },
+        { parameter = "rebeca-maritime-exemption-fraction" },
+    ] },
+    { op = "min", args = [
+        { op = "multiply", args = [
+            { op = "divide", args = [
+                { binding = "renta-maritime-annual-salary" },
+                { literal = "365" },
+            ] },
+            { binding = "renta-maritime-qualifying-days" },
+        ] },
+        { parameter = "lirpf-art-7p-exemption-cap" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-7", "ley-19-1994:art-75"]
+source_refs = ["boe-lirpf-statutory-facts", "boe-ley-19-1994-art-75-statutory-facts"]

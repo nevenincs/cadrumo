@@ -68,7 +68,8 @@ from ....core.period import Period
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
-from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
+from ....domain.contribuyente.renta_codes import FiscalResidency
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.verification_report import VerificationReport
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord

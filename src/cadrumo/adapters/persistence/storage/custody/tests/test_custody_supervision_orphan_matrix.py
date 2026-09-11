@@ -48,10 +48,10 @@ from pathlib import Path
 
 from cadrumo.adapters.persistence.storage.custody.records import parse_profile_custody_envelope
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import (
-    _SupervisedKdfWorker,
     profile_kdf_lease,
     profile_password_wrap_aad,
 )
+from cadrumo.adapters.persistence.storage.custody._kdf_worker_supervision import _SupervisedKdfWorker
 
 root = Path(sys.argv[1])
 envelope = parse_profile_custody_envelope(Path(sys.argv[2]).read_bytes())

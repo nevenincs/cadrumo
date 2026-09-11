@@ -16,9 +16,8 @@ from ....core.tipos_actividad import TipoActividad
 from ...iva.prorrata import InputClassification
 from ...iva.schema import IvaCategory, IvaExemptionArticle
 from ..enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ..lineage_models import ClassificationHistoryEntry, DecisionProvenance
 from ..models import (
-    ClassificationHistoryEntry,
-    DecisionProvenance,
     OutOfWindowTransactionIndexEntry,
     OutOfWindowTransactionSummary,
     Transaction,

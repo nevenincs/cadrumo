@@ -75,6 +75,7 @@ from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory
 from ....domain.filing.errors import FilingExportError
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.modelos.calculation_revision import CalculationRevision
+from ....domain.modelos.errors import ModeloExportError
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -87,7 +88,7 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ...aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..action_errors import ModeloAggregationBindingError
-from ..export import ModeloExportCommand, ModeloExportError, export_modelo_revision
+from ..export import ModeloExportCommand, export_modelo_revision
 from ..external_import_actions import import_external_filing_evidence
 from ..filed_revision_observation import persist_filed_revision_observation
 from ..verification_actions import verify_modelo_revision
@@ -526,7 +527,7 @@ def _seed_taxpayer_profile() -> None:
     seed_test_profile_record(record)
 
 
-def _autonoma_workflow_profile() -> TaxpayerProfile:
+def _autonomaworkflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAX_ID,
         entity_type=EntityType.NATURAL_PERSON,
@@ -669,7 +670,7 @@ def test_verify_accepts_autonoma_m100_with_official_m130_observations(
     report = verify_modelo_revision(
         annual.calculation_revision_id,
         actor="autonoma-cli-rerun",
-        workflow_profile=_autonoma_workflow_profile(),
+        workflow_profile=_autonomaworkflow_profile(),
         settings=ready_clave_settings(_TAX_ID),
         work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
         calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
@@ -711,7 +712,7 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
     report = verify_modelo_revision(
         annual.calculation_revision_id,
         actor="autonoma-cli-rerun",
-        workflow_profile=_autonoma_workflow_profile(),
+        workflow_profile=_autonomaworkflow_profile(),
         settings=ready_clave_settings(_TAX_ID),
         work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
         calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
@@ -737,7 +738,7 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
                 output_path=output,
                 actor="autonoma-cli-rerun",
             ),
-            workflow_profile=_autonoma_workflow_profile(),
+            workflow_profile=_autonomaworkflow_profile(),
             work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
             calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
             filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects),

@@ -72,7 +72,7 @@ from .secure_object_namespaces import (
     USER_PROFILE_VALUE_NAMESPACE,
     SecureObjectNamespaceDefinition,
 )
-from .sql.secure_objects import SecureObjectRecord
+from .sql.secure_object_records import SecureObjectRecord
 
 _TYPED_CATEGORY_NAMESPACES: frozenset[str] = frozenset(
     {

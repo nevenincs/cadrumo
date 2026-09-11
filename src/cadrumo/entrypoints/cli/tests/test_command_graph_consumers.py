@@ -9,10 +9,10 @@ import sys
 import pytest
 
 from ....core.config import override_settings
-from .._command_schema import command_registration_metadata, command_schema_refs
-from .._verb_input_schema import build_verb_input_schemas, cli_path_for_command_key, is_exposable_command
+from ..command_schema import command_registration_metadata, command_schema_refs
 from ..command_spec import OptionSpec
 from ..command_specs import COMMAND_GRAPH
+from ..verb_input_schema import build_verb_input_schemas, cli_path_for_command_key, is_exposable_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -51,8 +51,8 @@ handler_modules = {
     if spec.handler is not None and spec.handler.target is not None
 }
 already_loaded = set(sys.modules)
-from cadrumo.entrypoints.cli._command_schema import command_schema_refs
-from cadrumo.entrypoints.cli._verb_input_schema import build_verb_input_schemas
+from cadrumo.entrypoints.cli.command_schema import command_schema_refs
+from cadrumo.entrypoints.cli.verb_input_schema import build_verb_input_schemas
 refs = command_schema_refs()
 schemas = build_verb_input_schemas(tuple(sorted(ref.command for ref in refs)))
 loaded_handlers = sorted(handler_modules.intersection(set(sys.modules) - already_loaded))

@@ -7,7 +7,7 @@ predicates and mirrors the same predicate shape as a non-blocking
 calculate path. The verification predicate remains the single source of truth
 for any total-to-official-box mapping, so calculate diagnostics and verify
 findings cannot drift: the fire condition is not restated here but taken from
-:func:`~cadrumo.application.modelo._verification_predicates.evaluate_advisory_predicate_fires`,
+:func:`~cadrumo.application.modelo.verification_predicates.evaluate_advisory_predicate_fires`,
 the same evaluator the verify gate runs. That call is what makes the sentence
 above structurally true rather than a claim -- this collector once carried its
 own copy of the antecedent/consequent test, which agreed with the verification
@@ -73,7 +73,7 @@ def collect_official_box_unpopulated_diagnostics(
         VerificationPredicateOperator,
         parse_verification_predicate_expression,
     )
-    from ._verification_predicates import evaluate_advisory_predicate_fires
+    from .verification_predicates import evaluate_advisory_predicate_fires
 
     diagnostics: list[CalculationSourceDiagnostic] = []
     for predicate in revision.verification_predicates:

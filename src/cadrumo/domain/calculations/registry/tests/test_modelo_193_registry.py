@@ -7,13 +7,12 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.aggregation import BindingAggregationOp, BindingSourceKind
-from cadrumo.core.casilla_id import CasillaId
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.deadlines.errors import DeadlineValidationError
-from cadrumo.domain.deadlines.festivos import shift_deadline
-
+from .....core.aggregation import BindingAggregationOp, BindingSourceKind
+from .....core.casilla_id import CasillaId
+from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
+from ....deadlines.errors import DeadlineValidationError
+from ....deadlines.festivos import shift_deadline
 from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot

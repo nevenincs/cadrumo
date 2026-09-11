@@ -93,11 +93,11 @@ from .errors import ProfileCustodyRecordError
 from .filesystem import (
     compare_and_clear_profile_custody_local_record,
     compare_and_replace_profile_custody_local_record,
-    ensure_profile_custody_local_directory,
     profile_custody_local_lock,
     profile_custody_root_lock,
     read_optional_profile_custody_local_record,
 )
+from .filesystem_primitives import ensure_profile_custody_local_directory
 from .zeroise import zeroise as _zeroise
 
 _log = get_logger(__name__)

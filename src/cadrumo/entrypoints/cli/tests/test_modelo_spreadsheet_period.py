@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from ....core.period import Period
-from .._modelo_spreadsheet_cli import filing_period_or_refusal, load_snapshot
 from ..errors import CliRefusedBoundaryError
+from ..modelo_spreadsheet_cli import filing_period_or_refusal, load_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

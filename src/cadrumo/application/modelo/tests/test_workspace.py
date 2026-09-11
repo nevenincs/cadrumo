@@ -22,6 +22,7 @@ from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
+from ..work_addressing import ModeloVisibleFilingTarget
 from ..work_lifecycle import create_work_unit
 from ..workspace import (
     STATIC_INSPECTION_WORK_REVIEW_FACET,
@@ -47,7 +48,6 @@ from ..workspace import (
     static_inspection_schema_records,
 )
 from ..workspace_models import (
-    ModeloVisibleFilingTarget,
     ModeloWorkspaceBoundedFacetV1,
     ModeloWorkspaceCapabilityDisposition,
     ModeloWorkspaceCapabilityName,

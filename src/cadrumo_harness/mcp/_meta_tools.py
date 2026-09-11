@@ -1,6 +1,6 @@
 """The ``contract`` + ``search`` + ``execute`` meta-tools for the verb surface.
 
-The curated domain toolsets (``_toolsets``) cover the common path; the rest of
+The curated domain toolsets (``toolsets``) cover the common path; the rest of
 the operator-callable verb tree is reached through meta-tools, the Cloudflare
 precedent for a large API surface: ``contract`` emits the whole capability
 manifest the operator rules mandate reading first, ``search`` maps a natural
@@ -33,11 +33,11 @@ from pydantic import BaseModel, ConfigDict, Field
 from cadrumo.application.command_search.index import CommandDoc, CommandIndex, build_command_index
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
 
-from ._hitl import ConfirmationPolicy, confirmation_for_policy
 from ._persona_scope import AgentPersona, handoff_denial_message, is_handoff_denied, is_tool_in_persona_scope
-from ._tools import McpToolDescriptor
-from ._toolsets import MAX_ACTIVE_TOOLSETS, Toolset, _family_domain_map, build_toolsets, toolset_for_command
 from .capability_manifest import OperatorSurfaceManifest, build_operator_surface_manifest
+from .hitl import ConfirmationPolicy, confirmation_for_policy
+from .tools import McpToolDescriptor
+from .toolsets import MAX_ACTIVE_TOOLSETS, Toolset, _family_domain_map, build_toolsets, toolset_for_command
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -272,7 +272,7 @@ def describe_command(
     Resolves everything from the live descriptor set and the real classifiers -
     the annotation hints and CommandSpec-owned execution policy from the
     descriptor, the confirmation tier from the same policy, the owning toolset from
-    :func:`~cadrumo_harness.mcp._toolsets.toolset_for_command`, and the reachable
+    :func:`~cadrumo_harness.mcp.toolsets.toolset_for_command`, and the reachable
     personas from the same scope + handoff-deny gates the call path enforces. A
     key that names no exposed descriptor returns ``None``.
 
@@ -398,7 +398,7 @@ def manage_toolsets(
     """Apply a ``toolsets`` action, mutating ``active`` in place.
 
     ``list`` reports the groups and current state without change. ``activate``
-    adds a toolset (refused past :data:`~cadrumo_harness.mcp._toolsets.MAX_ACTIVE_TOOLSETS`
+    adds a toolset (refused past :data:`~cadrumo_harness.mcp.toolsets.MAX_ACTIVE_TOOLSETS`
     or on an unknown name); ``deactivate`` removes one. Activation widens the
     advertised surface within the active persona's scope (the server applies the
     scope filter when it rebuilds the tool list), so this function owns only the

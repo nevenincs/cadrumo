@@ -35,8 +35,9 @@ import pytest
 from ....domain.calculations.registry.fixed_width_codec import ExportJustification, ExportPadding, pad_fixed_width_text
 from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
-from ..export import _RecordRenderRow, _render_record
-from ._export_support import _approved_registry_draft, _typed_producer_snapshot
+from .._record_field_renderer import render_record
+from ..record_types import RecordRenderRow
+from .export_support import _approved_registry_draft, _typed_producer_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -86,14 +87,14 @@ def _record(fields: tuple[ExportFieldDefinition, ...]) -> ExportRecordDefinition
 
 
 def _render(fields: tuple[ExportFieldDefinition, ...]) -> str:
-    return _render_record(
+    return render_record(
         _record(fields),
         draft=_approved_registry_draft(),
         producer_values={},
         producer_snapshot=_typed_producer_snapshot(),
         casilla_values={},
         binding_values={},
-        row=_RecordRenderRow(row_index=None, active_binding_ids=frozenset()),
+        row=RecordRenderRow(row_index=None, active_binding_ids=frozenset()),
         render_context=None,
         projection_values={},
     )

@@ -25,9 +25,9 @@ from ......core.profile_session import ProfileSessionRefusalReason
 from ......tests.os_keychain_hook import require_os_credential_store
 from ...custody.filesystem import (
     compare_and_replace_profile_custody_local_record,
-    ensure_profile_custody_local_directory,
     profile_custody_root_lock,
 )
+from ...custody.filesystem_primitives import ensure_profile_custody_local_directory
 from ...errors import DecryptionError, EncryptionError, KeyringUnavailableError, StorageValidationError
 from ..acceleration_receipt import (
     PROFILE_SESSION_KEYCHAIN_SERVICE,

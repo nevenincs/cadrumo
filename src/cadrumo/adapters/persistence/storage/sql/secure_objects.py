@@ -40,16 +40,6 @@ from ._secure_object_integrity import (
 from ._secure_object_integrity import (
     quarantine_unreadable_rows as _quarantine_unreadable_rows,
 )
-from ._secure_object_records import (
-    SecureObjectBatchLoadItem,
-    SecureObjectDecryptabilityRow,
-    SecureObjectListItem,
-    SecureObjectMetadata,
-    SecureObjectNamespaceIntegrity,
-    SecureObjectRawRow,
-    SecureObjectRecord,
-    SecureObjectUnreadable,  # deliberate re-export: consumers import it from this module
-)
 from ._secure_object_row_codec import (
     secure_object_list_item_from_raw_row,
     secure_object_record_from_row,
@@ -62,6 +52,16 @@ from ._secure_object_schema import (
 from ._secure_object_writes import OBJECT_KEY_SELECT_CHUNK, RowcountResult, SecureObjectWriteOperations
 from .engine import get_engine
 from .orm import SecureObjectRow
+from .secure_object_records import (
+    SecureObjectBatchLoadItem,
+    SecureObjectDecryptabilityRow,
+    SecureObjectListItem,
+    SecureObjectMetadata,
+    SecureObjectNamespaceIntegrity,
+    SecureObjectRawRow,
+    SecureObjectRecord,
+    SecureObjectUnreadable,  # deliberate re-export: consumers import it from this module
+)
 from .session import session_scope
 
 __all__ = ["SecureObjectUnreadable"]
@@ -965,7 +965,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         :class:`~adapters.persistence.storage.sql.SecureObjectRecord` (the
         row decrypts cleanly and matches the consumer's classification and
         schema-version contract) or a
-        :class:`~adapters.persistence.storage.sql._secure_object_records.SecureObjectUnreadable` (the
+         :class:`~adapters.persistence.storage.sql.secure_object_records.SecureObjectUnreadable` (the
         on-wire ciphertext exists but cannot be decrypted under the current
         master key, or its metadata fails the consumer's contract).
 
@@ -979,11 +979,11 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                 :class:`~adapters.persistence.storage.SensitivityClass`
                 all rows in this namespace must carry; rows with a differing
                 classification are yielded as
-                :class:`~adapters.persistence.storage.sql._secure_object_records.SecureObjectUnreadable`.
+                 :class:`~adapters.persistence.storage.sql.secure_object_records.SecureObjectUnreadable`.
             max_supported_version: The consumer's current ``schema_version``
                 ceiling. Rows above it, or below it without a complete
                 registered upgrade chain, are yielded
-                as :class:`~adapters.persistence.storage.sql._secure_object_records.SecureObjectUnreadable`.
+                 as :class:`~adapters.persistence.storage.sql.secure_object_records.SecureObjectUnreadable`.
             batch_size: SQLAlchemy ``yield_per`` chunk size for the raw row
                 scan. The default keeps memory bounded for large namespaces
                 while preserving deterministic ``(object_key ASC)`` order.
@@ -991,7 +991,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         Yields:
             One ``SecureObjectListItem`` per stored row — either a
             :class:`~adapters.persistence.storage.sql.SecureObjectRecord` or
-            a :class:`~adapters.persistence.storage.sql._secure_object_records.SecureObjectUnreadable`.
+             a :class:`~adapters.persistence.storage.sql.secure_object_records.SecureObjectUnreadable`.
 
         Raises:
             StorageValidationError: When ``batch_size`` is less than 1.

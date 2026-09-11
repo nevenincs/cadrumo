@@ -28,16 +28,17 @@ from ...domain.calculations.registry.temporal import select_revision
 from ...domain.filing_evidence import FilingEvidenceReference
 from ...domain.iva.regimen_simplificado_rows import ActividadAgricolaSimplificado
 from ...domain.modelos.calculation_revision import (
-    M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
     CalculationRevision,
     CalculationRevisionState,
-    M303RegimenSimplificadoAnnualSummaryHandoff,
 )
 from ...domain.modelos.calculation_revision_m303_evidence import (
     M303RegimenSimplificadoActivityCalculationResult,
     M303RegimenSimplificadoCalculationResult,
 )
-from ...domain.modelos.calculation_revision_m303_handoff import M303FilingInstanceEvidence
+from ...domain.modelos.calculation_revision_m303_handoff import (
+    M303FilingInstanceEvidence,
+    M303RegimenSimplificadoAnnualSummaryHandoff,
+)
 from ...domain.modelos.filing_record import ModeloRecordStatus
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -107,8 +108,9 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
         source_revision = self._filed_current_source_revision(source)
         result, evidence_references = self._validated_source_evidence(source, source_revision)
         source_values = self._source_values(source_revision.casilla_values, requirement.source_casilla_ids)
-        values = self._summary_values(result.activities, source_values)
-        self._require_arithmetic_coherence(values)
+        summary_casilla_ids = tuple(requirement.binding_ids_by_summary_casilla_id)
+        values = self._summary_values(result.activities, source_values, summary_casilla_ids)
+        self._require_arithmetic_coherence(values, summary_casilla_ids)
         self._require_registry_target_map(requirement.binding_ids_by_summary_casilla_id, values)
         handoff = M303RegimenSimplificadoAnnualSummaryHandoff.assembled(
             source_bucket_id=source.bucket_id,
@@ -403,40 +405,37 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
         self,
         activities: tuple[M303RegimenSimplificadoActivityCalculationResult, ...],
         source_values: Mapping[CasillaId, Decimal],
+        summary_casilla_ids: tuple[CasillaId, ...],
     ) -> Mapping[CasillaId, Decimal]:
         non_agricultural_result = sum((item.cuota_resultante for item in activities), start=ZERO)
         return {
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[0]: non_agricultural_result,
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[1]: ZERO,
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[2]: source_values["51"],
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[3]: source_values["53"],
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[4]: source_values["52"],
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[5]: source_values["54"],
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[6]: source_values["55"],
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[7]: source_values["56"],
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[8]: source_values["57"],
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[9]: source_values["58"],
+            summary_casilla_ids[0]: non_agricultural_result,
+            summary_casilla_ids[1]: ZERO,
+            summary_casilla_ids[2]: source_values["51"],
+            summary_casilla_ids[3]: source_values["53"],
+            summary_casilla_ids[4]: source_values["52"],
+            summary_casilla_ids[5]: source_values["54"],
+            summary_casilla_ids[6]: source_values["55"],
+            summary_casilla_ids[7]: source_values["56"],
+            summary_casilla_ids[8]: source_values["57"],
+            summary_casilla_ids[9]: source_values["58"],
         }
 
-    def _require_arithmetic_coherence(self, values: Mapping[CasillaId, Decimal]) -> None:
-        if values[M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[5]] != sum(
-            (values[casilla_id] for casilla_id in M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[:5]),
+    def _require_arithmetic_coherence(
+        self, values: Mapping[CasillaId, Decimal], summary_casilla_ids: tuple[CasillaId, ...]
+    ) -> None:
+        if values[summary_casilla_ids[5]] != sum(
+            (values[casilla_id] for casilla_id in summary_casilla_ids[:5]),
             start=ZERO,
         ):
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
                 "M303 annual-summary source casilla 54 disagrees with the declared 74-78 total",
             )
-        if values[M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[8]] != (
-            values[M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[6]]
-            + values[M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[7]]
-        ):
+        if values[summary_casilla_ids[8]] != (values[summary_casilla_ids[6]] + values[summary_casilla_ids[7]]):
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
                 "M303 annual-summary source casilla 57 disagrees with the declared 80-81 total",
             )
-        if values[M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[9]] != (
-            values[M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[5]]
-            - values[M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[8]]
-        ):
+        if values[summary_casilla_ids[9]] != (values[summary_casilla_ids[5]] - values[summary_casilla_ids[8]]):
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
                 "M303 annual-summary source casilla 58 disagrees with the declared 79-82 result",
             )
@@ -446,11 +445,7 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
         binding_ids_by_summary_casilla_id: Mapping[CasillaId, str],
         values: Mapping[CasillaId, Decimal],
     ) -> None:
-        if set(binding_ids_by_summary_casilla_id) != set(M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS):
-            raise M303RegimenSimplificadoAnnualSummaryHandoffError(
-                "M303 annual-summary registry requirement must target exactly Modelo 390 boxes 74-83",
-            )
-        if set(values) != set(M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS):
+        if set(values) != set(binding_ids_by_summary_casilla_id):
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
                 "M303 annual-summary assembler did not produce the exact Modelo 390 74-83 value set",
             )

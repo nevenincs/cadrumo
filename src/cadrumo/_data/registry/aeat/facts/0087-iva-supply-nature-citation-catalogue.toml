@@ -1,0 +1,70 @@
+[fact]
+fact_id = "iva-supply-nature-citation-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "iva-supply-nature-citation-catalogue:1993-01-01"
+date_axis = "filing_period"
+valid_from = 1993-01-01
+legal_refs = ["ley-37-1992:art-15", "ley-37-1992:art-21", "ley-37-1992:art-25", "ley-37-1992:art-68", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-163"]
+source_refs = ["cadrumo-iva-supply-nature-audit"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "qualifier_order", value = "01,02,03,04,05" },
+  { key = "qualifier.01", value = "37/1992" },
+  { key = "qualifier.02", value = "liva" },
+  { key = "qualifier.03", value = "ley del iva" },
+  { key = "qualifier.04", value = "ley iva" },
+  { key = "qualifier.05", value = "impuesto sobre el valor añadido" },
+  { key = "citation_order", value = "01,02,03,04,05,06,07,08,09,10" },
+  { key = "citation.01.article", value = "21" },
+  { key = "citation.01.heading", value = "Exenciones en las exportaciones de bienes." },
+  { key = "citation.01.corpus_ref", value = "corpus/normatives/html/ley-37-1992-art-21.html" },
+  { key = "citation.01.establishes", value = "goods" },
+  { key = "citation.02.article", value = "25" },
+  { key = "citation.02.heading", value = "Exenciones en las entregas de bienes destinados a otro Estado miembro." },
+  { key = "citation.02.corpus_ref", value = "corpus/normatives/html/ley-37-1992-art-25.html" },
+  { key = "citation.02.establishes", value = "goods" },
+  { key = "citation.03.article", value = "15" },
+  { key = "citation.03.heading", value = "Concepto de adquisición intracomunitaria de bienes." },
+  { key = "citation.03.corpus_ref", value = "corpus/normatives/html/ley-37-1992-art-15.html" },
+  { key = "citation.03.establishes", value = "goods" },
+  { key = "citation.04.article", value = "163 quinvicies" },
+  { key = "citation.04.heading", value = "Ámbito de aplicación." },
+  { key = "citation.04.corpus_ref", value = "corpus/normatives/html/ley-37-1992-art-163-quinvicies.html" },
+  { key = "citation.04.establishes", value = "goods" },
+  { key = "citation.05.article", value = "163 octiesdecies" },
+  { key = "citation.05.heading", value = "Ámbito de aplicación." },
+  { key = "citation.05.corpus_ref", value = "corpus/normatives/html/ley-37-1992-art-163-octiesdecies.html" },
+  { key = "citation.05.establishes", value = "services" },
+  { key = "citation.06.article", value = "68" },
+  { key = "citation.06.heading", value = "Lugar de realización de las entregas de bienes." },
+  { key = "citation.06.corpus_ref", value = "corpus/normatives/html/ley-37-1992.html#a68" },
+  { key = "citation.06.establishes", value = "goods" },
+  { key = "citation.07.article", value = "69" },
+  { key = "citation.07.heading", value = "Lugar de realización de las prestaciones de servicios. Reglas generales." },
+  { key = "citation.07.corpus_ref", value = "corpus/normatives/html/ley-37-1992.html#a69" },
+  { key = "citation.07.establishes", value = "services" },
+  { key = "citation.08.article", value = "70" },
+  { key = "citation.08.heading", value = "Lugar de realización de las prestaciones de servicios. Reglas especiales." },
+  { key = "citation.08.corpus_ref", value = "corpus/normatives/html/ley-37-1992.html#a70" },
+  { key = "citation.08.establishes", value = "services" },
+  { key = "citation.09.article", value = "84" },
+  { key = "citation.09.heading", value = "Sujetos pasivos." },
+  { key = "citation.09.corpus_ref", value = "corpus/normatives/html/ley-37-1992-art-84.html" },
+  { key = "citation.09.establishes", value = "none" },
+  { key = "citation.10.article", value = "163 unvicies" },
+  { key = "citation.10.heading", value = "Ámbito de aplicación." },
+  { key = "citation.10.corpus_ref", value = "corpus/normatives/html/ley-37-1992-art-163-unvicies.html" },
+  { key = "citation.10.establishes", value = "none" },
+  { key = "category.intra_community_supply", value = "ley-37-1992:art-25" },
+  { key = "category.export_third_country_zero_rated", value = "ley-37-1992:art-21" },
+  { key = "category.intra_community_acquisition_reverse_charge", value = "ley-37-1992:art-15" },
+  { key = "category.intra_community_service_supply", value = "ley-37-1992:art-69,ley-37-1992:art-70" },
+  { key = "category.intra_community_service_acquisition_reverse_charge", value = "ley-37-1992:art-69,ley-37-1992:art-70" },
+  { key = "category.domestic_reverse_charge", value = "ley-37-1992:art-84" },
+]

@@ -16,7 +16,8 @@ from .. import session_store as session_store
 from ..authenticator import AeatAuthenticator
 from ..authenticator_persistence import PersistedSessionMetadata
 from ..certificate import extract_nif_from_subject
-from ._authenticator_support import SECRET_PASSPHRASE, _build_bundle
+from ._auth_fixtures import SECRET_PASSPHRASE
+from ._authenticator_support import _build_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

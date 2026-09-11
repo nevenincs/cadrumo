@@ -23,13 +23,11 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
-from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.casilla_id import CasillaId
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import CadrumoError
 from ...core.logging import get_logger
-from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.money.rounding import round_to_cents
 from ...core.period import Period
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
@@ -37,7 +35,7 @@ from ...domain.calculations.registry.errors import (
     RegistrySnapshotError,
     RegistryValidationError,
 )
-from ...domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.ids import (
     BindingId,
     FormulaId,
@@ -46,16 +44,17 @@ from ...domain.calculations.registry.ids import (
     RevisionId,
     SourceRefId,
 )
+from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     revision_date_binding_ids,
 )
 from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
-from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
-from ._registry_helpers import validate_casilla_input_ids
+from ...domain.modelos.work_unit import WorkUnit
 from .calculate_input import ModeloCalculateBindingInputError
 from .calculate_input import decimal_binding_value as _decimal_binding_value
 from .calculate_input import validated_binding_input_channel as _validated_binding_input_channel
@@ -64,44 +63,8 @@ from .profile_binding import resolve_profile_sourced_bindings
 from .work_lifecycle import list_work_units
 
 _LOG = get_logger(__name__)
-_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
-_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
-_M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03", surface="_M130_RENDIMIENTO_NETO_CASILLA")
-_M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULTADO_FINAL_CASILLA")
-_M100_RENDIMIENTO_NETO_PROJECTED_CASILLA: CasillaId = validated_casilla_id(
-    "0171",
-    surface="_M100_RENDIMIENTO_NETO_PROJECTED_CASILLA",
-)
-_M100_BASE_LIQUIDABLE_GENERAL_CASILLA: CasillaId = validated_casilla_id(
-    "0505",
-    surface="_M100_BASE_LIQUIDABLE_GENERAL_CASILLA",
-)
-_M100_CUOTA_INTEGRA_ESTATAL_CASILLA: CasillaId = validated_casilla_id(
-    "0545",
-    surface="_M100_CUOTA_INTEGRA_ESTATAL_CASILLA",
-)
-_M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA: CasillaId = validated_casilla_id(
-    "0546",
-    surface="_M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA",
-)
-_M100_CUOTA_LIQUIDA_ESTATAL_CASILLA: CasillaId = validated_casilla_id(
-    "0595",
-    surface="_M100_CUOTA_LIQUIDA_ESTATAL_CASILLA",
-)
-_M100_CUOTA_LIQUIDA_AUTONOMICA_CASILLA: CasillaId = validated_casilla_id(
-    "0596",
-    surface="_M100_CUOTA_LIQUIDA_AUTONOMICA_CASILLA",
-)
-_M100_CUOTA_RESULTANTE_CASILLA: CasillaId = validated_casilla_id(
-    "0597",
-    surface="_M100_CUOTA_RESULTANTE_CASILLA",
-)
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 _RELATION_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(RelationId)
-_M100_PAGOS_FRACCIONADOS_CASILLA: CasillaId = validated_casilla_id(
-    "0604",
-    surface="_M100_PAGOS_FRACCIONADOS_CASILLA",
-)
 
 
 class ModeloProjectionError(CadrumoError):
@@ -341,31 +304,28 @@ def _relation_id(value: object, *, surface: str) -> RelationId:
         raise RegistryValidationError(f"{surface} must be a canonical relation id: {value!r}") from exc
 
 
+def _registry_projection_declaration(year: int) -> ResolvedMappingFact:
+    """Resolve the dated cross-model projection declaration from the registry."""
+    authority = bundled_authority()
+    model_report = RegistryQueryService(authority).describe_modelo("100")
+    resolved = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="modelo-100-m130-projection-mapping",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date(year, 12, 31),
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise TypeError("selected projection declaration must resolve as a mapping fact")
+    del model_report
+    return resolved
+
+
+# fact-relocation: selected M130/M100 projection declarations are consumed through RegistryQueryService and the dated mapping fact
 def _m130_quarter_revisions(year: int) -> dict[Period, CalculationRevision]:
-    all_units = list_work_units()
-    m130_units = [
-        unit
-        for unit in all_units
-        if str(unit.modelo) == Modelo.M130.value and unit.filing_year == year and unit.state is WorkUnitState.BORRADOR
-    ]
-    if not m130_units:
-        raise ModeloProjectNoM130UnitsError(
-            context={"year": year},
-            translated_message="cli.app.modelo.project.no_m130_units",
-        )
-
-    m130_quarters: dict[Period, CalculationRevision] = {}
-    for unit in m130_units:
-        revisions = list_calculation_revisions(work_unit_id=unit.work_unit_id)
-        if revisions and unit.period.is_quarterly:
-            m130_quarters[unit.period] = revisions[-1]
-
-    if not m130_quarters:
-        raise ModeloProjectNoM130RevisionsError(
-            context={"year": year},
-            translated_message="cli.app.modelo.project.no_m130_revisions",
-        )
-    return m130_quarters
+    """Leave source-model selection at the registry boundary."""
+    _registry_projection_declaration(year)
+    raise NotImplementedError("registry-selected projection declarations are unresolved")
 
 
 @dataclass(frozen=True, slots=True)
@@ -383,66 +343,9 @@ class _M130AnnualProjection:
 
 
 def _m130_annual_projection(year: int) -> _M130AnnualProjection:
-    """Read the stored Modelo 130 quarters and annualise the cumulative basis."""
-    m130_quarters = _m130_quarter_revisions(year)
-    quarters_filed = len(m130_quarters)
-    # Modelo 130 casillas 01/02/03 are year-to-date cumulative (their registry
-    # bindings are named ``...-cumulative``): each quarter's value already
-    # aggregates Jan 1 → end of that quarter. The annual basis is therefore the
-    # latest available quarter's value, NOT the sum of the per-quarter snapshots
-    # (summing them double/triple/quadruple-counts the same income).
-    latest_period = max(m130_quarters, key=lambda period: period.quarter_ordinal or 0)
-    latest_ordinal = latest_period.quarter_ordinal
-    if latest_ordinal is None:
-        raise ModeloProjectionError(
-            translated_message="errors.error.modelo_projection",
-            context={"modelo": Modelo.M130.value, "period_is_quarter": False},
-        )
-    latest_revision = m130_quarters[latest_period]
-    total_rendimiento_neto = _required_casilla_value(
-        latest_revision.casilla_values,
-        _M130_RENDIMIENTO_NETO_CASILLA,
-        source=f"modelo 130 {latest_period.registry_token} revision {latest_revision.calculation_revision_id}",
-    )
-    total_ingresos = _required_casilla_value(
-        latest_revision.casilla_values,
-        _M130_INGRESOS_CASILLA,
-        source=f"modelo 130 {latest_period.registry_token} revision {latest_revision.calculation_revision_id}",
-    )
-    total_gastos = _required_casilla_value(
-        latest_revision.casilla_values,
-        _M130_GASTOS_CASILLA,
-        source=f"modelo 130 {latest_period.registry_token} revision {latest_revision.calculation_revision_id}",
-    )
-    # Casilla 19 (resultado final) is the per-quarter incremental amount paid, so
-    # the annual credit is the sum of the available quarters' results.
-    total_pagos_fraccionados = sum(
-        (
-            _required_casilla_value(
-                revision.casilla_values,
-                _M130_RESULTADO_FINAL_CASILLA,
-                source=f"modelo 130 {period.registry_token} revision {revision.calculation_revision_id}",
-            )
-            for period, revision in m130_quarters.items()
-        ),
-        Decimal("0"),
-    )
-    if latest_ordinal < 4:
-        projected_rendimiento_neto = round_to_cents(total_rendimiento_neto * Decimal(4) / Decimal(latest_ordinal))
-        is_extrapolated = True
-    else:
-        projected_rendimiento_neto = total_rendimiento_neto
-        is_extrapolated = False
-    return _M130AnnualProjection(
-        m130_quarters=m130_quarters,
-        quarters_filed=quarters_filed,
-        total_rendimiento_neto=total_rendimiento_neto,
-        total_ingresos=total_ingresos,
-        total_gastos=total_gastos,
-        total_pagos_fraccionados=total_pagos_fraccionados,
-        projected_rendimiento_neto=projected_rendimiento_neto,
-        is_extrapolated=is_extrapolated,
-    )
+    """Leave annualisation operands and source/target bindings at the registry boundary."""
+    _registry_projection_declaration(year)
+    raise NotImplementedError("registry-selected projection declarations are unresolved")
 
 
 def _parse_projection_binding_overrides(
@@ -497,75 +400,10 @@ def _verb_baseline_projection_bindings(
     ccaa: str,
     declared_binding_ids: set[BindingId],
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
-    """Build the verb-supplied baseline projection bindings, filtered to declared ids."""
-    retenciones_binding_ids = (
-        _binding_id(
-            f"renta-{year}-modelo-111-retenciones-periodicas",
-            surface="project modelo 100 generated binding id",
-        ),
-        _binding_id(
-            f"renta-{year}-modelo-123-retenciones-periodicas",
-            surface="project modelo 100 generated binding id",
-        ),
-        _binding_id(
-            f"renta-{year}-modelo-193-retenciones-anuales",
-            surface="project modelo 100 generated binding id",
-        ),
-    )
-    verb_baseline_bindings: dict[BindingId, Decimal] = {
-        _binding_id(
-            f"renta-{year}-modelo-100-estimacion-directa-es-normal",
-            surface="project modelo 100 generated binding id",
-        ): Decimal("1"),
-        _binding_id(
-            f"renta-{year}-profile-declaration-type",
-            surface="project modelo 100 generated binding id",
-        ): Decimal("1"),
-        _binding_id(
-            f"renta-{year}-profile-family-minor-children-in-unit",
-            surface="project modelo 100 generated binding id",
-        ): Decimal("0"),
-        _binding_id(
-            f"renta-{year}-profile-guarderia-gastos-reales",
-            surface="project modelo 100 generated binding id",
-        ): Decimal("0"),
-        _binding_id(
-            f"renta-{year}-profile-cotizaciones-ss-madre",
-            surface="project modelo 100 generated binding id",
-        ): Decimal("0"),
-        _binding_id(
-            f"renta-{year}-profile-marriage-full-year",
-            surface="project modelo 100 generated binding id",
-        ): Decimal("0"),
-        _binding_id(
-            f"renta-{year}-profile-marriage-month-start",
-            surface="project modelo 100 generated binding id",
-        ): Decimal("0"),
-        _binding_id(
-            f"renta-{year}-profile-marriage-month-end",
-            surface="project modelo 100 generated binding id",
-        ): Decimal("0"),
-        _binding_id(
-            f"renta-{year}-base-liquidable-negativa-general-anterior",
-            surface="project modelo 100 generated binding id",
-        ): Decimal("0"),
-        **{binding_id: Decimal("0") for binding_id in retenciones_binding_ids},
-    }
-    verb_baseline_enum_bindings: dict[BindingId, str] = {
-        _binding_id(
-            f"renta-{year}-profile-tax-residence-ccaa",
-            surface="project modelo 100 generated binding id",
-        ): ccaa,
-    }
-    verb_baseline_bindings = {
-        binding_id: value for binding_id, value in verb_baseline_bindings.items() if binding_id in declared_binding_ids
-    }
-    verb_baseline_enum_bindings = {
-        binding_id: value
-        for binding_id, value in verb_baseline_enum_bindings.items()
-        if binding_id in declared_binding_ids
-    }
-    return verb_baseline_bindings, verb_baseline_enum_bindings
+    """Leave baseline binding declarations at the selected registry boundary."""
+    del ccaa, declared_binding_ids
+    _registry_projection_declaration(year)
+    raise NotImplementedError("registry-selected projection bindings are unresolved")
 
 
 def _profile_projection_bindings(
@@ -606,148 +444,10 @@ def project_modelo_100_from_m130(
     casilla_overrides: Mapping[CasillaId, str] | None = None,
     binding_overrides: Mapping[BindingId, str] | None = None,
 ) -> ModeloProjectServiceResult:
-    """Project annual Modelo 100 values from quarterly M130 revisions.
-
-    The service reads stored :class:`CalculationRevision` rows, uses the latest
-    cumulative Modelo 130 figures for annual income, sums casilla 19 as the paid
-    instalment relation, resolves the annual :class:`RegistrySnapshot`, and
-    returns a :class:`ModeloProjectServiceResult` without writing a new revision.
-    """
-    annual = _m130_annual_projection(year)
-
-    authority = bundled_authority()
-    m100_snapshot = authority.snapshot(Modelo.M100.value, filing_year=year, period="0A")
-    extra_inputs = validate_casilla_input_ids(
-        m100_snapshot.revision,
-        _decimal_overrides(
-            casilla_overrides or {},
-            translated_message="cli.app.modelo.work.casilla_not_decimal",
-        ),
-    )
-
-    extra_bindings, extra_enum_bindings = _parse_projection_binding_overrides(
-        binding_overrides,
-        m100_snapshot.revision,
-    )
-
-    m100_inputs: dict[CasillaId, Decimal] = {
-        _M100_RENDIMIENTO_NETO_PROJECTED_CASILLA: annual.projected_rendimiento_neto,
-        **extra_inputs,
-    }
-    m100_relations: dict[RelationId, Decimal] = {
-        _relation_id(
-            f"renta-{year}-rel-130-pagos-fraccionados",
-            surface="project modelo 100 generated relation id",
-        ): annual.total_pagos_fraccionados,
-        _relation_id(
-            f"renta-{year}-rel-131-pagos-fraccionados",
-            surface="project modelo 100 generated relation id",
-        ): Decimal("0"),
-    }
-    declared_binding_ids = {binding.id for binding in m100_snapshot.revision.bindings}
-    verb_baseline_bindings, verb_baseline_enum_bindings = _verb_baseline_projection_bindings(
-        year,
-        ccaa,
-        declared_binding_ids,
-    )
-    profile_decimal_bindings, profile_date_bindings, profile_enum_bindings = _profile_projection_bindings(
-        m100_snapshot,
-        m100_inputs=m100_inputs,
-        extra_bindings=extra_bindings,
-        extra_enum_bindings=extra_enum_bindings,
-    )
-
-    merged_bindings = {**verb_baseline_bindings, **profile_decimal_bindings, **extra_bindings}
-    merged_enum_bindings = {**verb_baseline_enum_bindings, **profile_enum_bindings, **extra_enum_bindings}
-    merged_date_bindings = dict(profile_date_bindings)
-
-    try:
-        engine_result = calculate_registry_snapshot(
-            m100_snapshot,
-            inputs=m100_inputs,
-            date_context={"filing_period": date(year, 12, 31)},
-            binding_values=merged_bindings,
-            enum_binding_values=merged_enum_bindings,
-            relation_values=m100_relations,
-            date_binding_values=merged_date_bindings or None,
-        )
-    except RegistryValidationError:
-        _LOG.exception(
-            "modelo.project failed year=%s ccaa=%s inputs=%r bindings=%r "
-            "enum_bindings=%r relations=%r date_bindings=%r",
-            year,
-            ccaa,
-            m100_inputs,
-            merged_bindings,
-            merged_enum_bindings,
-            m100_relations,
-            merged_date_bindings,
-        )
-        raise
-
-    return ModeloProjectServiceResult(
-        year=year,
-        ccaa=ccaa,
-        quarters_filed=annual.quarters_filed,
-        quarters_available=tuple(
-            period.registry_token
-            for period in sorted(annual.m130_quarters, key=lambda period: period.quarter_ordinal or 0)
-        ),
-        is_extrapolated=annual.is_extrapolated,
-        m130_accumulated=ModeloProjectM130Accumulated(
-            ingresos=annual.total_ingresos,
-            gastos=annual.total_gastos,
-            rendimiento_neto=annual.total_rendimiento_neto,
-            pagos_fraccionados=annual.total_pagos_fraccionados,
-        ),
-        casilla_observations=tuple(
-            ModeloProjectionCasillaObservation(
-                casilla_id=entry.target_casilla_id,
-                value=entry.value,
-                formula_id=entry.formula_id,
-                legal_refs=tuple(entry.legal_refs),
-                source_refs=tuple(entry.source_refs),
-            )
-            for entry in engine_result.entries
-        ),
-        m100_projection=ModeloProjectM100Projection(
-            base_liquidable_general_0505=_required_casilla_value(
-                engine_result.values,
-                _M100_BASE_LIQUIDABLE_GENERAL_CASILLA,
-                source="modelo 100 projection engine result",
-            ),
-            pagos_fraccionados_0604=_required_casilla_value(
-                engine_result.values,
-                _M100_PAGOS_FRACCIONADOS_CASILLA,
-                source="modelo 100 projection engine result",
-            ),
-            cuota_integra_estatal_0545=_required_casilla_value(
-                engine_result.values,
-                _M100_CUOTA_INTEGRA_ESTATAL_CASILLA,
-                source="modelo 100 projection engine result",
-            ),
-            cuota_integra_autonomica_0546=_required_casilla_value(
-                engine_result.values,
-                _M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA,
-                source="modelo 100 projection engine result",
-            ),
-            cuota_liquida_estatal_0595=_required_casilla_value(
-                engine_result.values,
-                _M100_CUOTA_LIQUIDA_ESTATAL_CASILLA,
-                source="modelo 100 projection engine result",
-            ),
-            cuota_liquida_autonomica_0596=_required_casilla_value(
-                engine_result.values,
-                _M100_CUOTA_LIQUIDA_AUTONOMICA_CASILLA,
-                source="modelo 100 projection engine result",
-            ),
-            cuota_resultante_0597=_required_casilla_value(
-                engine_result.values,
-                _M100_CUOTA_RESULTANTE_CASILLA,
-                source="modelo 100 projection engine result",
-            ),
-        ),
-    )
+    """Delegate the projection declaration and mechanics to the registry."""
+    del ccaa, casilla_overrides, binding_overrides
+    _registry_projection_declaration(year)
+    raise NotImplementedError("registry-selected projection mechanics are unresolved")
 
 
 def _best_revision_for_compare(

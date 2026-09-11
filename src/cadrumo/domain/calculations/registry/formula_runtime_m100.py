@@ -365,8 +365,8 @@ def _m100_eo_agraria_read_indice(casilla_id: CasillaId, ctx: _EvalContext) -> De
     adquiridos a terceros», casilla 1543) with field type ``X`` (text) while
     the other seven use ``P012`` (decimal) — an AEAT dictionary quirk, not a
     semantic difference in the índice itself. A text-typed casilla's value
-    only ever reaches :attr:`_EvalContext.text_values`, never
-    :attr:`_EvalContext.values` (the numeric map defaults it to zero and never
+    only ever reaches :attr:`EvalContext.text_values`, never
+    :attr:`EvalContext.values` (the numeric map defaults it to zero and never
     receives the operator's real figure), so reading it through
     :func:`~domain.calculations.registry.formula_runtime_ops.numeric_casilla_value`
     alone would silently and permanently treat índice 4 as never declared.

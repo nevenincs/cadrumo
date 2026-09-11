@@ -9,8 +9,8 @@ from typing import cast
 
 import pytest
 
-from .._tools import build_tool_descriptors
 from ..command_surface import command_surface
+from ..tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -126,7 +126,7 @@ def _resolve_login_target_or_refuse(raw: str):
     from ...application.user_profile.login_session import resolve_login_target
     from ...application.workflow.errors import ProfileLabelAmbiguousError
     from ...domain.user_profile.errors import ProfileNotFoundError
-    from ._common import attach_cli_policy_verdict
+    from .common import attach_cli_policy_verdict
     from .errors import CliRefusedBoundaryError
 
     try:

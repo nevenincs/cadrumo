@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 def _pointer_repair_payload(*, status: object = "none", source: object = "none") -> dict[str, object]:
     from .....application.profile_preconditions import inspect_active_profile_precondition
-    from ..._common import resolve_cli_precondition_action
+    from ...common import resolve_cli_precondition_action
 
     verdict = inspect_active_profile_precondition(
         active_profile_present=False,

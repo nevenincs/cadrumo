@@ -92,7 +92,7 @@ def _leaf() -> CommandSpec:
             ),
         ),
         policy=_STATE_FREE,
-        handler=LazyBinding.available(DeferredTarget("..config._profile_list_cli", "profile_list", __package__)),
+        handler=LazyBinding.available(DeferredTarget("..config.profile_list_cli", "profile_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("..config_payloads", "ProfileListPayload", __package__),

@@ -23,10 +23,12 @@ from ....domain.calculations.registry.schema_references import RegistrySnapshotR
 from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
-    CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
     CalculationRevisionState,
     derive_calculation_revision_id,
+)
+from ....domain.modelos.calculation_revision_amendment import (
+    CalculationRevisionAmendmentIdentity,
+    CalculationRevisionAmendmentKind,
 )
 from ....domain.modelos.filing_record import (
     ExternalEvidence,

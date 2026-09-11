@@ -43,8 +43,9 @@ from .....core.classification.policies import SensitivityClass
 from .....core.config import override_settings
 from .....core.hashing import canonical_json_bytes
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ....persistence.storage.secure_object_namespaces import LLM_RUN_TELEMETRY_NAMESPACE
 from ..errors import LLMCacheError
-from ..run_telemetry import _RUN_TELEMETRY_NAMESPACE, _RUN_TELEMETRY_VERSION, LLMRunRecord, LLMRunTelemetryRecorder
+from ..run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -163,10 +164,10 @@ def test_load_records_raises_on_a_payload_missing_its_object_key_uuid(tmp_path: 
         "record": corrupted.model_dump(mode="json"),
     }
     secure_object_repository_for_active_bucket().save(
-        namespace=_RUN_TELEMETRY_NAMESPACE,
+        namespace=LLM_RUN_TELEMETRY_NAMESPACE.namespace,
         object_key="|".join((root_dir.resolve().as_posix(), corrupted.started_at.isoformat(), "corrupted", "no-uuid")),
         classification=SensitivityClass.DIAGNOSTIC,
-        schema_version=_RUN_TELEMETRY_VERSION,
+        schema_version=LLM_RUN_TELEMETRY_NAMESPACE.schema_version,
         written_at=corrupted.started_at,
         payload=canonical_json_bytes(malformed_payload),
     )

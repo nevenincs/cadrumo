@@ -121,7 +121,7 @@ def test_work_unit_load_failure_degrades_to_notice_not_refusal() -> None:
     # the whole surface — refusing left a behind-but-fresh taxpayer (the
     # regularizar-atrasos persona) unable to answer "what have I missed".
     from ....core.json_contract import NoticeSeverity
-    from .._overview import local_modelo_work_units
+    from .._overview_evidence import local_modelo_work_units
 
     _persist_invalid_work_unit_catalogue_payload(_BUCKET_ID)
 

@@ -1,7 +1,7 @@
 """Real-runtime create tests for Modelo 145 local communication records.
 
 See Also:
-    :mod:`~application.modelo._m145_communication_records`
+    :mod:`~application.modelo.m145_communication_records`
         Backend service implementing create, list, read, and object-key flows.
     :class:`~application.modelo.M145CommunicationCreateCommand`
         Strict command DTO accepted by the create service.

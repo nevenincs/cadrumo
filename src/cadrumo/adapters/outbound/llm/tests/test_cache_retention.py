@@ -27,7 +27,8 @@ from .....core.classification.policies import SensitivityClass
 from .....core.config_support import LLMProvider
 from .....core.redaction.rules import default_rules_for_class, redact_structured
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ..cache import _CACHE_NAMESPACE, _CACHE_VERSION, LLMCache
+from ....persistence.storage.secure_object_namespaces import LLM_CACHE_NAMESPACE
+from ..cache import LLMCache
 from ..models import CachedEntry, LLMRequest, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -73,10 +74,10 @@ def _write_at(cache: LLMCache, request: LLMRequest, request_id: str, created_at:
     assert isinstance(redacted, dict)
     payload = cache._payload_for_entry({str(k): v for k, v in redacted.items()})
     secure_object_repository_for_active_bucket().save(
-        namespace=_CACHE_NAMESPACE,
+        namespace=LLM_CACHE_NAMESPACE.namespace,
         object_key=cache._object_key_for(key),
         classification=SensitivityClass.DIAGNOSTIC,
-        schema_version=_CACHE_VERSION,
+        schema_version=LLM_CACHE_NAMESPACE.schema_version,
         written_at=created_at,
         payload=payload,
     )

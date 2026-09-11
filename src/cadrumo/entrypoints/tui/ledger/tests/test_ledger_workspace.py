@@ -23,7 +23,7 @@ from .....application.ledger.workspace import (
 from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.external_constants import OutputLanguage
-from .....core.identity import TransactionId
+from .....core.identity.transaction_ids import TransactionId
 from .....tests.terminal_sizes import TERMINAL_WIDE
 from ....tui.components.host import ScreenHostApp
 from ....tui.navigation import TuiFocusIdentityV1, TuiScreenContextV1

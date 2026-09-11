@@ -9,13 +9,12 @@ from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
-from ....adapters.outbound.aeat.sede._iva_compensation_wallet_parsing import WALLET_URL
-from ....adapters.outbound.aeat.sede.iva_compensation_wallet import parse_iva_compensation_wallet_html
+from ....adapters.outbound.aeat.sede.iva_compensation_wallet_parsing import parse_iva_compensation_wallet_html
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
+from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI, load_external_constants
 from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
@@ -29,9 +28,9 @@ from ....domain.iva_compensation.reconciliation import IvaCompensationReconcilia
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    FilingInstanceEvidence,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -40,6 +39,9 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 from ..work_lifecycle import create_work_unit
+
+_EXTERNAL = load_external_constants()
+WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
 
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _TAXPAYER_NIF = "12345678Z"
@@ -261,7 +263,7 @@ def _store_operator_profile_with_tax_id(tax_id: str) -> None:
 
 
 @cache
-def _workflow_profile(tax_id: str = _TAXPAYER_NIF) -> TaxpayerProfile:
+def workflow_profile(tax_id: str = _TAXPAYER_NIF) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=tax_id,
         iva_regime=IVARegime.GENERAL,

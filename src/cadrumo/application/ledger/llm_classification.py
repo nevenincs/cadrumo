@@ -75,7 +75,7 @@ from ...domain.categories.spending_category import SpendingCategory
 from ...domain.iva.saturation import resolve_category_rate, split_gross_at_rate
 from ...domain.iva.schema import IvaCategory
 from ...domain.transactions.enums import BUSINESS_BEARING_STATES, BusinessClassification, TransactionLifecycleState
-from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
+from ...domain.transactions.errors import LLMClassifierError, TransactionNotFoundError, TransactionValidationError
 from ...domain.transactions.llm import (
     LLMClassificationResponse,
     LLMClassifier,
@@ -334,7 +334,6 @@ def _run_on_host_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
     import httpx
 
     from ...adapters.outbound.llm.errors import LLMProviderError
-    from ...domain.transactions.llm import LLMClassifierError
 
     try:
         return run()

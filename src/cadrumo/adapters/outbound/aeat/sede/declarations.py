@@ -49,6 +49,9 @@ from ._auth_state import storage_state_for_session
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_NETWORKIDLE as _WAIT_NETWORKIDLE,
 )
+from ._browser_constants import (
+    navigation_timeout_ms,
+)
 from ._declarations_diagnostics import (
     declarations_page_shape_context as _declarations_page_shape_context,
 )
@@ -62,7 +65,6 @@ from ._declarations_fetch import (
     assert_declarations_read_http,
     get_buscar_settle_ms,
     get_form_interaction_timeout_ms,
-    get_navigation_timeout_ms,
 )
 from ._declarations_listbox import _has_class, _parse_listbox, _parse_presented_at
 from .declarations_observations import (
@@ -708,7 +710,7 @@ async def _open_register_form(
         await page.goto(
             _LISTING_URL,
             wait_until=_WAIT_NETWORKIDLE,
-            timeout=get_navigation_timeout_ms(),
+            timeout=navigation_timeout_ms(),
         )
     except PlaywrightError as exc:
         raise SedeNavigationError(

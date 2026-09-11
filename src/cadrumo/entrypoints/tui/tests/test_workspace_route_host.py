@@ -38,7 +38,7 @@ from ....application.operations.composition import OperationComposedServices
 from ....application.operator_actions.catalogue import lookup_action
 from ....application.operator_actions.models import ActionReference
 from ....application.search.workbench import WorkbenchDestinationAdmissionState
-from ....core.identity import TransactionId
+from ....core.identity.transaction_ids import TransactionId
 from ..app import CadrumoTuiApp
 from ..home import HomeScreen
 from ..ledger.entries import LedgerEntriesScreen

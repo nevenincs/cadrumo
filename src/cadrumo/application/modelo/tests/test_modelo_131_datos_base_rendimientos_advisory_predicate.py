@@ -42,7 +42,7 @@ from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from .._verification_predicates import evaluate_advisory_predicate_fires, evaluate_predicate_expression
+from ..verification_predicates import evaluate_advisory_predicate_fires, evaluate_predicate_expression
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -13,7 +13,7 @@ from ...calculations.cross_period_models import (
     CrossPeriodDependencyOrigin,
     CrossPeriodDependencyRequirement,
 )
-from .._verification_cross_period import _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS, _cross_period_clean_state_findings
+from ..verification_cross_period import _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS, cross_period_clean_state_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -45,7 +45,7 @@ def test_not_applicable_verify_finding_is_locale_neutral() -> None:
         dependencies=(evidence,),
     )
 
-    findings = _cross_period_clean_state_findings(verdict, activity_start_date=None)
+    findings = cross_period_clean_state_findings(verdict, activity_start_date=None)
 
     assert len(findings) == 1
     finding = findings[0]

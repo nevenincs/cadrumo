@@ -80,12 +80,11 @@ from ...aggregation.source_mesh import (
     CallerOverrideDisposition,
     precedence_ladder_sources,
 )
-from ...calculations.observations_repository import CalculationObservationRepository
+from ...calculations.observations_repository import APP_FILING_SOURCE_KIND, CalculationObservationRepository
 from ..calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ..filed_revision_observation import APP_FILING_SOURCE_KIND
 from ..work_lifecycle import create_work_unit
 from ._fold_in_assertions_support import _assert_distinct_positive
 

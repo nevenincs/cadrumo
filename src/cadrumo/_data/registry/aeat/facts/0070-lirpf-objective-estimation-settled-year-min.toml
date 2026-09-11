@@ -1,0 +1,23 @@
+[fact]
+fact_id = "lirpf-objective-estimation-settled-year-min"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "lirpf-objective-estimation-settled-year-min:2016-01-01"
+date_axis = "filing_period"
+valid_from = 2016-01-01
+valid_to = 2026-12-31
+legal_refs = ["ley-35-2006:art-31", "ley-35-2006:dt-32"]
+source_refs = ["boe-lirpf-dt-32-2016-01-01", "boe-lirpf-art-31-2016-01-01"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-dt-32-2016-01-01"
+required_text = ["quedan fijadas en 250.000 y 125.000 euros"]
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-art-31-2016-01-01"
+required_text = ["actividades agrícolas, ganaderas y forestales, 250.000 euros anuales."]
+[fact.variants.payload]
+kind = "scalar"
+value = 2016
+unit = "year"

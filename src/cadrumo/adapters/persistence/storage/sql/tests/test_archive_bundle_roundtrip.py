@@ -37,7 +37,8 @@ from ......core.classification.policies import SensitivityClass
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from ..orm import Base
-from ..secure_objects import SecureObjectRawRow, SecureObjectRepository
+from ..secure_object_records import SecureObjectRawRow
+from ..secure_objects import SecureObjectRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

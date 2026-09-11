@@ -22,9 +22,9 @@ from ...core.i18n.render import tr
 from ...core.period import Period
 from ...domain.iva_compensation.errors import IvaCompensationSeedConflictError
 from ...domain.modelos.errors import ModeloError
-from ._common import active_bucket_id_or_refuse, emit_envelope
-from ._modelo_payloads import IvaWalletBalanceResult, IvaWalletOverrideResult, IvaWalletSeedResult
+from ._modelo_iva_wallet_payloads import IvaWalletBalanceResult, IvaWalletOverrideResult, IvaWalletSeedResult
 from ._modelo_payloads_m036 import IvaWalletCorrectResult
+from .common import active_bucket_id_or_refuse, emit_envelope
 
 
 def _wallet_amount(amount: str) -> Decimal:

@@ -6,15 +6,15 @@ import typer
 
 from ...application.modelo.work_lifecycle import lifecycle_continuation_for_work_list, list_work_units
 from ...core.external_constants import OutputLanguage
-from ._common import (
+from ._modelo_behavior_support import require_active_profile
+from ._modelo_payloads import WorkSelectResult
+from ._modelo_rendering import work_unit_list_lines, work_unit_payload
+from .common import (
     activate_subcommand_output_language,
     active_profile_label,
     emit_envelope,
     resolve_lifecycle_continuation_notice,
 )
-from ._modelo_behavior_support import require_active_profile
-from ._modelo_payloads import WorkSelectResult
-from ._modelo_rendering import work_unit_list_lines, work_unit_payload
 
 __all__ = ["work_select"]
 

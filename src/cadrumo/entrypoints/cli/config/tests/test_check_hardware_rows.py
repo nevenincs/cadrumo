@@ -19,14 +19,14 @@ from .....application.provisioning import (
     AcceleratorReading,
     HardwareProfile,
     SystemMemoryReading,
-    assess_model_load_contention,
     probe_hardware_profile,
 )
+from .....application.provisioning_runtime import assess_model_load_contention
 from .....core.config import override_settings
 from .....core.hardware import AcceleratorKind, ContentionCause
 from ...tests.cli_runner import invoke_cached_cli
 from .._check_hardware_rows import CONTENTION_ROW_ID, contention_row
-from .._check_payloads import CheckDependencyPayload
+from ..check_payloads import CheckDependencyPayload
 from .isolated_storage_fixture import config_check_backend, config_check_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

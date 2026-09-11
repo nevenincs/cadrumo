@@ -438,28 +438,23 @@ def test_legacy_source_provenance_without_required_identity_is_rejected_at_encry
     import json as _json
 
     from .....core.classification.policies import SensitivityClass
-    from ..modelos_calculation import (
-        _CALCULATION_CATALOGUE_VERSION,
-        _CALCULATION_NAMESPACE,
-        _CALCULATION_OBJECT_KEY,
-    )
 
     original = _revision(_source_provenance())
     repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
     record = secure_objects.load(
-        _CALCULATION_NAMESPACE,
-        _CALCULATION_OBJECT_KEY,
+        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
         expected_class=SensitivityClass.FINANCIAL,
-        max_supported_version=_CALCULATION_CATALOGUE_VERSION,
+        max_supported_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
     )
     assert record is not None
     envelope = _json.loads(record.payload.decode("utf-8"))
     row = envelope["payload"]["revisions"][original.calculation_revision_id]["source_provenance"][0]
     assert row.pop(missing_field) == expected_value
     secure_objects.save(
-        namespace=_CALCULATION_NAMESPACE,
-        object_key=_CALCULATION_OBJECT_KEY,
+        namespace=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+        object_key=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
         classification=record.classification,
         schema_version=record.schema_version,
         written_at=record.written_at,
@@ -484,21 +479,16 @@ def test_source_provenance_blank_source_ref_payload_rejected_at_load(secure_obje
     import json as _json
 
     from .....core.classification.policies import SensitivityClass
-    from ..modelos_calculation import (
-        _CALCULATION_CATALOGUE_VERSION,
-        _CALCULATION_NAMESPACE,
-        _CALCULATION_OBJECT_KEY,
-    )
 
     original = _revision(_source_provenance())
     repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
 
     record = secure_objects.load(
-        _CALCULATION_NAMESPACE,
-        _CALCULATION_OBJECT_KEY,
+        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
         expected_class=SensitivityClass.FINANCIAL,
-        max_supported_version=_CALCULATION_CATALOGUE_VERSION,
+        max_supported_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
     )
     assert record is not None
     envelope = _json.loads(record.payload.decode("utf-8"))
@@ -509,8 +499,8 @@ def test_source_provenance_blank_source_ref_payload_rejected_at_load(secure_obje
     )
     row["source_ref"] = ""
     secure_objects.save(
-        namespace=_CALCULATION_NAMESPACE,
-        object_key=_CALCULATION_OBJECT_KEY,
+        namespace=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+        object_key=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
         classification=record.classification,
         schema_version=record.schema_version,
         written_at=record.written_at,
@@ -535,21 +525,16 @@ def test_source_provenance_dropped_dependency_treatment_breaks_content_identity(
     import json as _json
 
     from .....core.classification.policies import SensitivityClass
-    from ..modelos_calculation import (
-        _CALCULATION_CATALOGUE_VERSION,
-        _CALCULATION_NAMESPACE,
-        _CALCULATION_OBJECT_KEY,
-    )
 
     original = _revision(_source_provenance())
     repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
 
     record = secure_objects.load(
-        _CALCULATION_NAMESPACE,
-        _CALCULATION_OBJECT_KEY,
+        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
         expected_class=SensitivityClass.FINANCIAL,
-        max_supported_version=_CALCULATION_CATALOGUE_VERSION,
+        max_supported_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
     )
     assert record is not None
     envelope = _json.loads(record.payload.decode("utf-8"))
@@ -560,8 +545,8 @@ def test_source_provenance_dropped_dependency_treatment_breaks_content_identity(
     )
     del row["dependency_treatment"]
     secure_objects.save(
-        namespace=_CALCULATION_NAMESPACE,
-        object_key=_CALCULATION_OBJECT_KEY,
+        namespace=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+        object_key=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
         classification=record.classification,
         schema_version=record.schema_version,
         written_at=record.written_at,

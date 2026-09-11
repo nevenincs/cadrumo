@@ -22,10 +22,13 @@ from decimal import Decimal
 import pytest
 
 from ....core.aggregation import BindingSourceKind
+from ....core.modelo import Modelo
 from ....core.prorrata_register import ProrrataRegisterRegime
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.binding_targets import casillas_by_binding
+from ....domain.calculations.registry.bindings import ProrrataRegularizacionOutput
 from ....domain.prorrata_register.register import ProrrataProvisionalResolution, ProrrataRegisterEntry
 from ..prorrata_regularizacion import (
-    CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
     build_prorrata_missing_provisional_advisory,
     derive_prorrata_applicability,
 )
@@ -51,7 +54,15 @@ def test_missing_provisional_advisory_names_prior_definitive_follow_up() -> None
 
     assert diagnostic is not None
     assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
-    assert diagnostic.casilla_id == CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA
+    snapshot = bundled_authority().snapshot(Modelo.M303.value, filing_year=2026, period="4T")
+    canonical_target = next(
+        casilla_id
+        for binding in snapshot.revision.bindings
+        if binding.source is BindingSourceKind.PRORRATA_REGULARIZACION
+        and binding.selector.regularizacion_output is ProrrataRegularizacionOutput.MODELO_303_CASILLA_44
+        for casilla_id in casillas_by_binding(snapshot.revision)[binding.id]
+    )
+    assert diagnostic.casilla_id == canonical_target
     assert "2026" in diagnostic.message
     assert "definitiva del ejercicio anterior" in diagnostic.message
     assert "por defecto" in diagnostic.message

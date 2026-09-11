@@ -23,7 +23,7 @@ import pytest
 from pydantic import ValidationError
 
 from ..enums import SplitRole
-from ..models import SplitLineage, derive_split_group_id
+from ..lineage_models import SplitLineage, derive_split_group_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

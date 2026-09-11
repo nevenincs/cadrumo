@@ -1,18 +1,14 @@
-"""Repository-backed Modelo 210 IRNR Spanish-source income aggregation.
+"""Repository-backed IRNR income ledger mechanics.
 
-The ``ledger_irnr_income_aggregation`` source converts only a transaction's
-explicit, persisted :class:`M210IncomeClassification` into the M210
-``rendimientos_integros`` fact.  It deliberately does not derive an M210 code
-from ``irpf_category``, the raw bank amount, or a narrative: those generic
-axes cannot distinguish the official Modelo 210 codes that share a rate.
+The module retains transaction filtering, classification folding, period
+partitioning, and typed issue/provenance mechanics.  Target coordinates,
+income-type namespaces, model applicability, source-scope membership, and
+binding/legal declarations belong to the selected registry revision.
 
-The source-scope gate is deliberately ahead of classification admission.  An
-incoming row with a foreign source jurisdiction, or with no resolved
-jurisdiction, becomes a typed issue and cannot silently affect an IRNR base.
-An ES-source row then needs a complete explicit M210 classification whose
-official code is declared on the selected revision.  Rows classified for a
-different official code simply belong to that other M210 declaration and do
-not contribute to the selected code's filing window.
+TODO(fact-relocation): resolve IRNR ledger target and M210 income-type parameter namespace from selected registry revision
+
+No target, parameter prefix, applicability set, or binding identifier is
+declared as a Python fallback.
 """
 
 from __future__ import annotations
@@ -24,13 +20,12 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.casilla_id import CasillaId
 from ...core.country_code import CountryCodeAlpha2
 from ...core.i18n.render import tr
 from ...core.i18n.translatable import Translatable as t
-from ...core.identity import TransactionId
+from ...core.identity.transaction_ids import TransactionId
 from ...core.irnr import M210PayerMode
-from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.prose_elision import IssueDetail
@@ -44,13 +39,6 @@ from . import _shared_issue_reasons
 from ._grouping import fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
 from .errors import AggregationPeriodError, AggregationValidationError
-
-_TARGET_CASILLA_RENDIMIENTOS_INTEGROS: CasillaId = validated_casilla_id(
-    "rendimientos_integros",
-    surface="_TARGET_CASILLA_RENDIMIENTOS_INTEGROS",
-)
-_SPANISH_SOURCE_JURISDICTION = "ES"
-_M210_TIPO_RENTA_PARAMETER_PREFIX = "m210-tipo-renta-code-"
 
 
 class IrnrIncomeLedgerAggregationIssueReason(StrEnum):
@@ -111,6 +99,8 @@ def aggregate_irnr_income_ledger_from_repositories(
     bucket_id: str,
     period: Period,
     revision: ModeloRevision,
+    modelo: str,
+    target_casilla_id: CasillaId,
     selected_official_tipo_renta_code: str,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
 ) -> IrnrIncomeLedgerAggregation:
@@ -137,6 +127,8 @@ def aggregate_irnr_income_ledger_from_repositories(
             bucket_id=bucket_id,
             period=period,
             revision=revision,
+            modelo=modelo,
+            target_casilla_id=target_casilla_id,
             selected_official_tipo_renta_code=selected_official_tipo_renta_code,
         )
 
@@ -146,6 +138,8 @@ def aggregate_irnr_income_ledger_from_repositories(
         bucket_id=bucket_id,
         period=period,
         revision=revision,
+        modelo=modelo,
+        target_casilla_id=target_casilla_id,
         selected_official_tipo_renta_code=selected_official_tipo_renta_code,
     )
     out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
@@ -160,12 +154,16 @@ def aggregate_irnr_income_ledger(
     bucket_id: str,
     period: Period,
     revision: ModeloRevision,
+    modelo: str,
+    target_casilla_id: CasillaId,
     selected_official_tipo_renta_code: str,
 ) -> IrnrIncomeLedgerAggregation:
-    """Aggregate selected-code, incoming, Spanish-source M210 income.
+    """Aggregate selected-code, incoming, registry-admitted IRNR income.
 
     ``transactions`` is the :class:`TransactionCatalogue` to aggregate.
     ``revision`` is the :class:`ModeloRevision` that declares the binding.
+    ``modelo`` and ``target_casilla_id`` are selected-revision coordinates;
+    neither has a Python fallback.
 
     The classification's ``gross_income_amount`` is the declared M210 fact; it
     is intentionally not derived from the signed raw ledger amount.  This
@@ -179,7 +177,7 @@ def aggregate_irnr_income_ledger(
             context={"period": str(period)},
         )
 
-    declared_codes = _declared_m210_tipo_renta_codes(revision, period)
+    declared_codes = _resolve_selected_income_type_codes(revision, period)
     if selected_official_tipo_renta_code not in declared_codes:
         raise AggregationValidationError(
             t("aggregation.irnr_income_ledger.diagnostics.tipo_renta_code_not_declared"),
@@ -199,6 +197,7 @@ def aggregate_irnr_income_ledger(
             period=period,
             selected_official_tipo_renta_code=selected_official_tipo_renta_code,
             declared_codes=declared_codes,
+            target_casilla_id=target_casilla_id,
         )
         if outcome is None:
             continue
@@ -208,31 +207,20 @@ def aggregate_irnr_income_ledger(
             observations.append(outcome)
 
     return IrnrIncomeLedgerAggregation(
-        modelo=Modelo.M210.value,
+        modelo=modelo,
         period=period,
         selected_official_tipo_renta_code=selected_official_tipo_renta_code,
         observations=tuple(observations),
         issues=tuple(issues),
-        casilla_aggregation=_irnr_gross_income_casilla_aggregation(period, observations),
+        casilla_aggregation=_irnr_gross_income_casilla_aggregation(modelo, period, observations),
     )
 
 
-def _declared_m210_tipo_renta_codes(revision: ModeloRevision, period: Period) -> frozenset[str]:
-    """Return official M210 codes active for ``period`` from the live revision."""
-    parameters = tuple(
-        parameter
-        for parameter in revision.parameters
-        if str(parameter.id).startswith(_M210_TIPO_RENTA_PARAMETER_PREFIX)
-    )
-    if len(parameters) != 1:
-        raise AggregationValidationError(
-            t("aggregation.irnr_income_ledger.errors.official_tipo_renta_parameter_count"),
-            context={"revision_id": str(revision.id)},
-        )
-    return frozenset(
-        entry.key
-        for entry in parameters[0].keyed_brackets
-        if entry.valid_from <= period.end_date and (entry.valid_to is None or entry.valid_to >= period.start_date)
+def _resolve_selected_income_type_codes(revision: ModeloRevision, period: Period) -> frozenset[str]:
+    """Require selected-revision income-type resolution at the registry seam."""
+    del revision, period
+    raise AggregationValidationError(
+        "resolve IRNR ledger target and income-type parameter namespace from selected registry revision",
     )
 
 
@@ -240,7 +228,7 @@ def _irnr_source_jurisdiction_issue(
     transaction_id: str,
     declared_jurisdiction: str | None,
 ) -> IrnrIncomeLedgerAggregationIssue | None:
-    """Reject an unresolved or foreign source jurisdiction (TRLIRNR art. 13), else ``None``."""
+    """Reject an unresolved source jurisdiction; registry scope owns membership."""
     if declared_jurisdiction is None:
         return IrnrIncomeLedgerAggregationIssue(
             transaction_id=transaction_id,
@@ -248,25 +236,11 @@ def _irnr_source_jurisdiction_issue(
             detail=tr(
                 "aggregation.irnr_income_ledger.diagnostics.source_jurisdiction_unresolved",
                 default=(
-                    "source_jurisdiction is unresolved (None) on an incoming M210 candidate; "
-                    "TRLIRNR art. 13 admits only Spanish-source income to this IRNR projection"
+                    "source_jurisdiction is unresolved (None) on an incoming IRNR candidate; "
+                    "resolve source-scope membership from the selected registry revision"
                 ),
             ),
             rejected_source_jurisdiction=None,
-        )
-    if declared_jurisdiction != _SPANISH_SOURCE_JURISDICTION:
-        return IrnrIncomeLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            reason=IrnrIncomeLedgerAggregationIssueReason.FOREIGN_SOURCE_OUT_OF_SCOPE,
-            detail=tr(
-                "aggregation.irnr_income_ledger.diagnostics.foreign_source_out_of_scope",
-                source_jurisdiction=declared_jurisdiction,
-                default=(
-                    "source_jurisdiction %{source_jurisdiction} is foreign-source; "
-                    "TRLIRNR art. 13 excludes it from the Modelo 210 Spanish-source gross-income projection"
-                ),
-            ),
-            rejected_source_jurisdiction=declared_jurisdiction,
         )
     return None
 
@@ -286,8 +260,8 @@ def _irnr_classification_issue(
             detail=tr(
                 "aggregation.irnr_income_ledger.diagnostics.incomplete_m210_classification",
                 default=(
-                    "Spanish-source incoming transaction has no explicit M210 income classification; "
-                    "the IRNR projection never infers an official tipo-renta code from irpf_category"
+                    "in-scope incoming transaction has no explicit income classification; "
+                    "the IRNR projection never infers an official income type from irpf_category"
                 ),
             ),
         )
@@ -300,7 +274,7 @@ def _irnr_classification_issue(
                 tipo_renta_code=classification.official_tipo_renta_code,
                 period=str(period),
                 default=(
-                    "M210 official tipo-renta code %{tipo_renta_code} is not declared "
+                    "official income type %{tipo_renta_code} is not declared "
                     "for the selected revision and filing period %{period}"
                 ),
             ),
@@ -314,8 +288,9 @@ def _classify_irnr_income_transaction(
     period: Period,
     selected_official_tipo_renta_code: str,
     declared_codes: frozenset[str],
+    target_casilla_id: CasillaId,
 ) -> IrnrIncomeObservation | IrnrIncomeLedgerAggregationIssue | None:
-    """Classify one incoming transaction for the selected M210 source projection."""
+    """Classify one incoming transaction for the selected registry projection."""
     if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
         return None
     if transaction.direction is not TransactionDirection.INCOMING:
@@ -338,7 +313,7 @@ def _classify_irnr_income_transaction(
     # The classification helper returns None only for a present, declared classification.
     if classification is None:
         msg = (
-            f"transaction {transaction_id} raised no M210 classification issue while carrying no "
+            f"transaction {transaction_id} raised no classification issue while carrying no "
             "income classification; the classification screen and the row disagree"
         )
         raise ValueError(msg)
@@ -350,12 +325,12 @@ def _classify_irnr_income_transaction(
         return IrnrIncomeLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=IrnrIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD,
-            detail=f"filing date {filing_date} is outside the selected Modelo 210 filing window {period!s}",
+            detail=f"filing date {filing_date} is outside the selected filing window {period!s}",
         )
 
     return IrnrIncomeObservation(
         transaction_id=transaction_id,
-        target_casilla_id=_TARGET_CASILLA_RENDIMIENTOS_INTEGROS,
+        target_casilla_id=target_casilla_id,
         official_tipo_renta_code=classification.official_tipo_renta_code,
         gross_income_amount=classification.gross_income_amount,
         applicable_rate=classification.applicable_rate,
@@ -363,17 +338,18 @@ def _classify_irnr_income_transaction(
         payer_id=classification.payer_id,
         asset_or_right_id=classification.asset_or_right_id,
         filing_date=filing_date,
-        source_jurisdiction=_SPANISH_SOURCE_JURISDICTION,
+        source_jurisdiction=transaction.source_jurisdiction,
     )
 
 
 def _irnr_gross_income_casilla_aggregation(
+    modelo: str,
     period: Period,
     observations: Sequence[IrnrIncomeObservation],
 ) -> CasillaAggregation:
     return fold_casilla_observations(
         observations,
-        modelo=Modelo.M210.value,
+        modelo=modelo,
         period=period,
         amount_fn=lambda observation: observation.gross_income_amount,
     )

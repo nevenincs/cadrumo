@@ -391,7 +391,7 @@ def test_a_relative_root_is_scanned_and_kept_relative(tree: Path) -> None:
 
 def test_the_primitive_is_owned_by_its_public_defining_module() -> None:
     """The inert core namespace cannot become a second scan authority."""
-    core = importlib.import_module("cadrumo.core")
+    core = importlib.import_module("..", package=__package__)
 
     scan_directory_module = inspect.getmodule(scan_directory)
     iter_directory_module = inspect.getmodule(iter_directory)

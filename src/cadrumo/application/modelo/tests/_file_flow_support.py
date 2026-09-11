@@ -296,7 +296,7 @@ _DEFAULT_130_BASELINE_INPUTS: dict[CasillaId, Decimal] = {
 }
 
 
-def _workflow_profile() -> TaxpayerProfile:
+def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
@@ -335,7 +335,7 @@ def _workflow_gate(
     work_unit: WorkUnit,
     clock: datetime,
 ) -> _WorkflowGate:
-    profile = _workflow_profile()
+    profile = workflow_profile()
     return _WorkflowGate(
         profile=profile,
         engine=build_revision_workflow_engine(
@@ -484,5 +484,5 @@ seed_work_unit = _seed_work_unit
 target_filing_records = _target_filing_records
 verify_revision = _verify_revision
 workflow_gate = _workflow_gate
-workflow_profile = _workflow_profile
+workflow_profile = workflow_profile
 FileFlowRuntime = _FileFlowRuntime

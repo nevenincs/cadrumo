@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, override
 
-from ....core.resources._repository import ResourceCacheRepository
+from ....core.resources.repository import ResourceCacheRepository
 
 if TYPE_CHECKING:
     from ...categories.profile import CategoryProfile

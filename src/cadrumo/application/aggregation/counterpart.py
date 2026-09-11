@@ -15,14 +15,16 @@ for consumers that need the 347 threshold decision.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, InstanceOf, NonNegativeInt, field_validator, model_validator
 
 from ...core.aggregation import (
     CounterpartSourceKind,
-    OperationKind347,
-    OperationKind349,
     counterpart_source_kind,
 )
 from ...core.country_code import CountryCodeAlpha2
@@ -30,38 +32,93 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import IsoDateString
 from ...core.period import FilingPeriodCode, Period
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.m347_threshold import m347_declarable_party_ids
 from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 
 def _validate_source_kind(value: str) -> CounterpartSourceKind:
     return counterpart_source_kind(value)
 
 
-_CANONICAL_OPERATION_KINDS: frozenset[str] = frozenset(kind.value for kind in (*OperationKind347, *OperationKind349))
+@dataclass(frozen=True, slots=True)
+class _CounterpartRegistryCatalogue:
+    """Generic counterpart projection of the selected registry mapping."""
+
+    model_kinds: Mapping[str, frozenset[str]]
+    groi_countries: frozenset[str]
+    nif_iva_for_non_groi_country: bool
+
+    @property
+    def operation_kinds(self) -> frozenset[str]:
+        """Return the union used by the operator-boundary vocabulary check."""
+        return frozenset().union(*self.model_kinds.values())
+
+
+# fact-relocation: selected M347/M349 counterpart declarations are consumed through RegistryQueryService and the dated mapping fact
+def _registry_counterpart_catalogue(
+    effective_date: date,
+    *,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> _CounterpartRegistryCatalogue:
+    """Resolve counterpart kinds and readiness gates from registry authority."""
+    selected_authority = authority or bundled_authority()
+    query_service = RegistryQueryService(selected_authority)
+    query_service.describe_modelo(Modelo.M347.value, as_of=effective_date)
+    query_service.describe_modelo(Modelo.M349.value, as_of=effective_date)
+    resolved = selected_authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="m347-m349-counterpart-operation-catalogue",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise TypeError("counterpart operation declarations must resolve as a mapping fact")
+    entries: dict[str, str] = {}
+    for entry in resolved.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            raise TypeError("counterpart operation mapping entries must be string-to-string")
+        if entry.key in entries:
+            raise ValueError(f"duplicate counterpart registry mapping key {entry.key!r}")
+        entries[entry.key] = entry.value
+
+    def required(key: str) -> str:
+        value = entries.get(key)
+        if value is None or not value.strip():
+            raise ValueError(f"counterpart registry mapping is missing {key!r}")
+        return value
+
+    def tokens(key: str) -> frozenset[str]:
+        result = frozenset(token.strip() for token in required(key).split(",") if token.strip())
+        if not result:
+            raise ValueError(f"counterpart registry mapping {key!r} has no tokens")
+        return result
+
+    readiness = required("modelo.349.readiness.nif_iva_for_non_groi_country").casefold()
+    if readiness not in {"true", "false"}:
+        raise ValueError("counterpart registry readiness flag must be true or false")
+    return _CounterpartRegistryCatalogue(
+        model_kinds={
+            Modelo.M347.value: tokens("modelo.347.operation_kinds"),
+            Modelo.M349.value: tokens("modelo.349.operation_kinds"),
+        },
+        groi_countries=frozenset({required("modelo.349.readiness.groi_country").strip()}),
+        nif_iva_for_non_groi_country=readiness == "true",
+    )
 
 
 def _validate_operation_kind(value: str) -> str:
-    """Refuse an ``operation_kind`` outside the declared 347/349 clave vocabulary.
-
-    Bounding this field by non-blankness alone made an unrecognised token
-    *silently declarable-invisible* rather than refused. The aggregator routes
-    each observation to its modelo by testing ``operation_kind`` against that
-    modelo's clave set (:func:`~._grouping.filter_observations_for_modelo`), so
-    a token in neither set matches neither pass and is dropped from the rollup —
-    while the aggregation's own totals still reconcile, because they are summed
-    from the surviving rollups. A capitalisation slip on a real above-threshold
-    operation therefore produced a Modelo 347 preview reporting zero
-    counterparties and a zero base, with no error and no notice.
-
-    The cross-modelo filtering itself is correct and stays: a 349 clave passed
-    to the 347 pass *should* be skipped. Only a token belonging to neither
-    vocabulary is a defect, and refusing it here — at the operator JSON
-    boundary, where the provenance to explain the refusal still exists — is
-    what separates the two cases.
-    """
-    if value not in _CANONICAL_OPERATION_KINDS:
-        accepted = ", ".join(sorted(_CANONICAL_OPERATION_KINDS))
+    """Refuse an operation token absent from the selected registry vocabulary."""
+    catalogue = _registry_counterpart_catalogue(date.today())
+    if value not in catalogue.operation_kinds:
+        accepted = ", ".join(sorted(catalogue.operation_kinds))
         raise ValueError(f"operation_kind must be a declared 347/349 clave, got {value!r}; accepted: {accepted}")
     return value
 
@@ -186,24 +243,17 @@ class CounterpartAggregation(BaseModel):
         return self
 
 
-_MODELO_347_KINDS: frozenset[str] = frozenset(k.value for k in OperationKind347)
-_MODELO_349_KINDS: frozenset[str] = frozenset(k.value for k in OperationKind349)
-_MODELO_KIND_CATALOGUE: dict[str, frozenset[str]] = {
-    Modelo.M347.value: _MODELO_347_KINDS,
-    Modelo.M349.value: _MODELO_349_KINDS,
-}
-
-
 def _aggregate_for_modelo(
     observations: tuple[CounterpartObservation, ...],
     *,
     modelo: str,
     period: Period,
 ) -> CounterpartAggregation:
+    registry_catalogue = _registry_counterpart_catalogue(period.end_date)
     filtered = filter_observations_for_modelo(
         observations,
         modelo=modelo,
-        catalogue=_MODELO_KIND_CATALOGUE,
+        catalogue=registry_catalogue.model_kinds,
         attribute_fn=lambda obs: obs.operation_kind,
         aggregator_label="counterpart aggregator",
     )
@@ -223,7 +273,12 @@ def _aggregate_for_modelo(
             counterparty_nif=nif,
             operation_kind=op_kind,
         )
-        readiness = _counterpart_readiness_for_modelo(modelo=modelo, country=country, observations=tuple(group))
+        readiness = _counterpart_readiness_for_modelo(
+            modelo=modelo,
+            country=country,
+            observations=tuple(group),
+            registry_catalogue=registry_catalogue,
+        )
         rollups.append(
             CounterpartRollup(
                 source_kind=source_kind,
@@ -304,6 +359,7 @@ def _counterpart_readiness_for_modelo(
     modelo: str,
     country: str,
     observations: tuple[CounterpartObservation, ...],
+    registry_catalogue: _CounterpartRegistryCatalogue,
 ) -> dict[str, bool]:
     if modelo != Modelo.M349.value:
         return {
@@ -313,8 +369,10 @@ def _counterpart_readiness_for_modelo(
             "nif_iva_ready": True,
             "declarable_readiness_satisfied": True,
         }
-    requires_groi = country == "ES"
-    requires_nif_iva = country != "ES"
+    requires_groi = country in registry_catalogue.groi_countries
+    requires_nif_iva = (
+        registry_catalogue.nif_iva_for_non_groi_country and country not in registry_catalogue.groi_countries
+    )
     groi_ready = (not requires_groi) or all(obs.groi_verified for obs in observations)
     nif_iva_ready = (not requires_nif_iva) or all(obs.nif_iva_verified for obs in observations)
     return {

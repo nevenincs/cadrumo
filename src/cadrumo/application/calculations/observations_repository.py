@@ -38,7 +38,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping
 from datetime import datetime
 from enum import StrEnum
-from typing import ClassVar, Literal, cast, override
+from typing import ClassVar, Final, Literal, cast, override
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
@@ -118,6 +118,10 @@ class ObservationSourceKind(StrEnum):
             self.AEAT_SEDE_LIVE_CAPTURE,
             self.AEAT_CSV_REGISTER,
         )
+
+
+APP_FILING_SOURCE_KIND: Final[ObservationSourceKind] = ObservationSourceKind.APP_FILING
+"""Non-official provenance stamped on observations filed through the app."""
 
 
 def is_official_aeat_observation_source(source_kind: ObservationSourceKind | str) -> bool:
@@ -892,6 +896,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
 
 
 __all__ = [
+    "APP_FILING_SOURCE_KIND",
     "CalculationObservationRepository",
     "IvaWalletDecisionRepository",
     "iva_wallet_decision_event_key",

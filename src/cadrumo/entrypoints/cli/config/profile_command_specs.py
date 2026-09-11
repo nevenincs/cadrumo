@@ -62,7 +62,7 @@ _TOGGLE = ValueContract(
 # at spec-build time instead of failing lazily on first invocation.
 _HANDLER_MODULES: Final[dict[str, str]] = {
     "_archive_cli": "._archive_cli",
-    "_archive_reconcile": "._archive_reconcile",
+    "archive_reconcile": ".archive_reconcile",
     "_bucket_history": "._bucket_history",
     "_capabilities_cli": "._capabilities_cli",
     "_censo_transport": "._censo_transport",
@@ -73,7 +73,7 @@ _HANDLER_MODULES: Final[dict[str, str]] = {
     "_profile_delete": "._profile_delete",
     "_profile_inspect": "._profile_inspect",
     "_profile_repeatable_row": "._profile_repeatable_row",
-    "_restore_cli": "._restore_cli",
+    "restore_cli": ".restore_cli",
 }
 
 
@@ -427,7 +427,7 @@ PROFILE_COMMAND_SPECS = (
         "config_profile_archive",
         "reconcile",
         "cli.config.profile.archive.reconcile_help",
-        "_archive_reconcile",
+        "archive_reconcile",
         "profile_archive_reconcile",
         _PAYLOADS_ARCHIVE_RECONCILE,
         "ProfileBundleReconcileResult",
@@ -562,7 +562,7 @@ PROFILE_COMMAND_SPECS = (
                         MachineSecretFieldSpec("passphrase_confirmation"),
                     ),
                     DeferredTarget(
-                        "._scripted_registration",
+                        ".scripted_registration",
                         "ProfileCreationSecrets",
                         __package__,
                     ),
@@ -688,7 +688,7 @@ PROFILE_COMMAND_SPECS = (
         "config_profile_archive",
         "import",
         "cli.config.profile.archive.import_help",
-        "_restore_cli",
+        "restore_cli",
         "profile_archive_import",
         _PAYLOADS,
         "ConfigProfileArchiveImportResult",
@@ -739,13 +739,13 @@ PROFILE_COMMAND_SPECS = (
                 MachineSecretVariantSpec(
                     "passphrase",
                     (MachineSecretFieldSpec("passphrase"),),
-                    DeferredTarget("._restore_cli", "RestorePassphraseSecrets", __package__),
+                    DeferredTarget(".restore_cli", "RestorePassphraseSecrets", __package__),
                     MachineSecretConditionSpec("artifact", MachineSecretPresence.ABSENT),
                 ),
                 MachineSecretVariantSpec(
                     "recovery",
                     (MachineSecretFieldSpec("recovery_secret"),),
-                    DeferredTarget("._restore_cli", "RestoreRecoverySecrets", __package__),
+                    DeferredTarget(".restore_cli", "RestoreRecoverySecrets", __package__),
                     MachineSecretConditionSpec("artifact", MachineSecretPresence.PRESENT),
                 ),
             )

@@ -35,6 +35,7 @@ __all__ = [
     "FieldAmbiguityCandidate",
     "FieldProvenance",
     "InvoiceDraft",
+    "InvoiceDraftIdentityDocumentFields",
     "InvoiceDraftLine",
     "InvoiceDraftRateBreakdown",
 ]
@@ -395,7 +396,27 @@ def facturae_invoice_class_findings(
     return tuple(findings)
 
 
-class InvoiceDraft(BaseModel):
+class InvoiceDraftIdentityDocumentFields(BaseModel):
+    """Identity and printed-document fields shared by draft projections."""
+
+    supplier_tax_id: TaxIdIdentityToken | None = None
+    supplier_name: str | None = None
+    customer_tax_id: TaxIdIdentityToken | None = None
+    customer_name: str | None = None
+    supplier_postal_code: str | None = None
+    customer_postal_code: str | None = None
+    supplier_country: str | None = None
+    customer_country: str | None = None
+    supplier_country_code: str | None = None
+    customer_country_code: str | None = None
+    supplier_stated_country_code: str | None = None
+    customer_stated_country_code: str | None = None
+    invoice_number: str | None = None
+    invoice_series: str | None = None
+    rectifies_invoice_number: str | None = None
+
+
+class InvoiceDraft(InvoiceDraftIdentityDocumentFields):
     """Best-effort invoice fields extracted from an on-host PDF text layer.
 
     Every field is optional: a field the extractor cannot ground in the
@@ -556,21 +577,6 @@ class InvoiceDraft(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    supplier_tax_id: TaxIdIdentityToken | None = None
-    supplier_name: str | None = None
-    customer_tax_id: TaxIdIdentityToken | None = None
-    customer_name: str | None = None
-    supplier_postal_code: str | None = None
-    customer_postal_code: str | None = None
-    supplier_country: str | None = None
-    customer_country: str | None = None
-    supplier_country_code: str | None = None
-    customer_country_code: str | None = None
-    supplier_stated_country_code: str | None = None
-    customer_stated_country_code: str | None = None
-    invoice_number: str | None = None
-    invoice_series: str | None = None
-    rectifies_invoice_number: str | None = None
     proposed_supply_nature: SupplyNature | None = None
     """A model's PROPOSAL about goods-or-services, for a person to accept or discard.
 

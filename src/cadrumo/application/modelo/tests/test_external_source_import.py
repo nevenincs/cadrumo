@@ -9,10 +9,10 @@ import pytest
 
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.storage.errors import SecureObjectRevisionConflictError
-from ....adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
 from ....core.period import Period
+from ....core.secure_object_write import SecureObjectWrite
 from ....domain.buckets.event import BucketEventType
-from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
+from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ...calculations.cross_period_external_evidence import (
     filing_external_evidence_blockers as _filing_external_evidence_blockers,

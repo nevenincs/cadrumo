@@ -21,7 +21,7 @@ from ..core.identity.digest import ContentDigest
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import validate_utc_aware
 from ..domain.user_profile.values import ProfileSetupState
-from ._bucket_deletion_contracts import BucketDeletionFingerprint
+from .bucket_deletion_contracts import BucketDeletionFingerprint
 
 CONFIG_RESET_SCHEMA_VERSION = 2
 

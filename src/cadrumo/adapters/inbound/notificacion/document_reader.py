@@ -5,8 +5,8 @@ from __future__ import annotations
 from ....application.live.notification_ports import NotificationDocumentProtocol
 from ....domain.notifications.sancion import SancionLiquidacion
 from ..pdf.page_text_extraction import extract_pages_text_from_bytes
-from ._sancion import parse_sancion_document
 from .errors import NotificacionParseError, SancionParseError
+from .sancion import parse_sancion_document
 
 
 class NotificationDocumentReader:

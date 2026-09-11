@@ -6,9 +6,8 @@ encrypted secure object. Its ``namespace``, ``classification``, and envelope
 :class:`~adapters.persistence.storage.SecureObjectNamespaceDefinition`
 ``CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE`` rather than restated as literals in the
 auth adapter modules. The page-flow reads ``.sensitivity`` / ``.schema_version``
-off that def and takes its namespace from the module-local
-``_clave_movil_support.DIAGNOSTIC_NAMESPACE`` alias, which is itself derived from
-``def.namespace``.
+off that def and takes its namespace from the
+``CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace`` registry field.
 
 This is a write-path proof, not a bare constant-equality assertion: it persists
 one diagnostic row through the exact symbols the page-flow save uses, then reads
@@ -34,17 +33,17 @@ from .....persistence.storage.runtime_repository import secure_object_repository
 from .....persistence.storage.secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from .....persistence.storage.sql.orm import SecureObjectRow
 from .....persistence.storage.sql.session import session_scope
-from ..clave_movil_support import DIAGNOSTIC_NAMESPACE, mint_diagnostic_id
+from ..clave_movil_support import mint_diagnostic_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _BUCKET_ID = "1f6b0000-0000-4000-8000-00000000c0c0"
 
 
-def test_clave_movil_support_namespace_alias_resolves_to_registry_def() -> None:
-    """The module-local namespace alias the page-flow saves under is the def's namespace."""
+def test_clave_movil_support_namespace_resolves_to_registry_def() -> None:
+    """The page-flow namespace is the storage registry definition's value."""
 
-    assert CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace == DIAGNOSTIC_NAMESPACE
+    assert CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace == ("cadrumo.outbound.aeat.auth.clave_movil.diagnostics")
 
 
 def test_core_clave_movil_diagnostic_namespace_symbol_is_deleted() -> None:
@@ -63,7 +62,7 @@ def test_persisted_diagnostic_row_carries_registry_declared_metadata(tmp_path: P
             "captured_at": datetime(2026, 5, 26, 9, 0, tzinfo=UTC).isoformat(),
         }
         secure_object_repository_for_active_bucket().save(
-            namespace=DIAGNOSTIC_NAMESPACE,
+            namespace=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace,
             object_key=payload["diagnostic_id"],
             classification=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.sensitivity,
             schema_version=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.schema_version,
@@ -109,7 +108,7 @@ def test_rapid_diagnostic_captures_keep_distinct_encrypted_rows(tmp_path: Path) 
                 "captured_at": captured_at.isoformat(),
             }
             secure_object_repository_for_active_bucket().save(
-                namespace=DIAGNOSTIC_NAMESPACE,
+                namespace=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace,
                 object_key=diagnostic_id,
                 classification=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.sensitivity,
                 schema_version=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.schema_version,

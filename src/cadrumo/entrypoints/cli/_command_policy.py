@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ._command_schema import CommandCapabilityClass
+from ...application.operator_surface.command_ports import CommandCapabilityClass
 from .command_spec import CommandWriteRouteValue
 
 """Storage route a state-mutating callback is permitted to use."""

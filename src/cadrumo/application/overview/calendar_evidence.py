@@ -42,8 +42,8 @@ from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.period import Period as _Period
 from ...domain.calculations.registry.applicability_routes import TaxRoute
-from ..calculations._ports import FiledDeclaracionObservationProtocol
 from ..calculations.observations_repository import ObservationSourceKind
+from ..calculations.ports import FiledDeclaracionObservationProtocol
 from ._calendar_evidence_sources import (
     authenticated_identity_matches_expected as _authenticated_identity_matches_expected,
 )

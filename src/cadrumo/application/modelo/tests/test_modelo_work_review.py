@@ -67,7 +67,7 @@ _M130_INCOME_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
 
 def test_review_projection_has_one_public_defining_module_and_no_package_facade() -> None:
     """The application package cannot become a second home for review symbols."""
-    namespace = importlib.import_module("cadrumo.application.modelo")
+    namespace = importlib.import_module("..", package=__package__)
     review_symbols = (
         "BlockerRef",
         "ModeloWorkBindingOrigin",

@@ -14,11 +14,12 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field, model_validator
 
 from ....core.decimal.constants import MONEY_ZERO
+from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex as _content_hash_hex
 from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents as _quantize
-from ._closing_authority_records import (
+from .closing_authority_records import (
     InventoryClosingAuthorityDecision,
     InventoryClosingConflictDiagnostic,
     InventoryClosingResolution,
@@ -34,6 +35,8 @@ from .records import (
     ValuationMethod,
 )
 
+# TODO(fact-relocation): resolve M100 Anexo D record design, casilla bindings, and filing applicability from selected registry revision
+
 
 def _validate_anexo_d_quantised_values(result: InventoryAnexoDResult) -> None:
     monetary_values = (
@@ -42,27 +45,24 @@ def _validate_anexo_d_quantised_values(result: InventoryAnexoDResult) -> None:
         result.authoritative_closing_value,
         *(value for value in (result.physical_observed_closing_value,) if value is not None),
         result.complete_acquisition_total,
-        result.casilla_0177,
-        result.casilla_0181,
-        result.casilla_0182,
+        result.variation_increase_value,
+        result.variation_decrease_value,
     )
     if any(value != _quantize(value) for value in monetary_values):
-        raise InventoryValidationError("inventory Anexo D values must be quantised to cents")
+        raise InventoryValidationError("inventory projection values must be quantised to cents")
 
 
 def _validate_anexo_d_variation_split(result: InventoryAnexoDResult) -> None:
     signed_variation = _quantize(result.authoritative_closing_value - result.opening_value)
     expected_increase = max(signed_variation, MONEY_ZERO)
     expected_decrease = max(-signed_variation, MONEY_ZERO)
-    if result.casilla_0177 != expected_increase or result.casilla_0182 != expected_decrease:
+    if result.variation_increase_value != expected_increase or result.variation_decrease_value != expected_decrease:
         raise InventoryValidationError(
-            "inventory Anexo D outputs must be the mutually exclusive split of closing minus opening",
+            "inventory variation outputs must be the mutually exclusive split of closing minus opening",
         )
 
 
 def _validate_anexo_d_acquisition_values(result: InventoryAnexoDResult) -> None:
-    if result.casilla_0181 != result.complete_acquisition_total:
-        raise InventoryValidationError("casilla 0181 must equal complete inventory acquisition cost")
     if result.complete_acquisition_total > MONEY_ZERO and not result.acquisition_fingerprints:
         raise InventoryValidationError("nonzero acquisition cost requires acquisition fingerprints")
     if len(set(result.acquisition_fingerprints)) != len(result.acquisition_fingerprints):
@@ -146,14 +146,14 @@ def _validate_anexo_d_projection_fingerprint(result: InventoryAnexoDResult) -> N
 
 
 class InventoryAnexoDResult(BaseModel):
-    """Complete source-owned 2025 inventory projection for one activity."""
+    """Complete source-owned inventory projection for one activity."""
 
     model_config = _STRICT_FROZEN_CONFIG
 
     source_ledger: InventoryLedger = Field(exclude=True, repr=False)
     source_ledger_fingerprint: ContentDigest
     actividad_id: str = Field(min_length=1)
-    filing_year: Literal[2025]
+    filing_year: FilingYear
     opening_value: Decimal = Field(ge=MONEY_ZERO)
     movement_derived_closing_value: Decimal = Field(ge=MONEY_ZERO)
     authoritative_closing_value: Decimal = Field(ge=MONEY_ZERO)
@@ -167,9 +167,8 @@ class InventoryAnexoDResult(BaseModel):
     prior_closing_link_fingerprint: ContentDigest
     complete_acquisition_total: Decimal = Field(ge=MONEY_ZERO)
     acquisition_fingerprints: tuple[ContentDigest, ...]
-    casilla_0177: Decimal = Field(ge=MONEY_ZERO)
-    casilla_0181: Decimal = Field(ge=MONEY_ZERO)
-    casilla_0182: Decimal = Field(ge=MONEY_ZERO)
+    variation_increase_value: Decimal = Field(ge=MONEY_ZERO)
+    variation_decrease_value: Decimal = Field(ge=MONEY_ZERO)
     closing_conflict: InventoryClosingConflictDiagnostic | None = None
     issues: tuple[Literal["physical_closing_conflict"], ...] = ()
     projection_fingerprint: ContentDigest

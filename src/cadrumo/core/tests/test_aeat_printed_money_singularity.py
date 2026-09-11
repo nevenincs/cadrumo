@@ -57,9 +57,9 @@ import re
 
 import pytest
 
-from ...adapters.inbound.notificacion import _sancion
+from ...adapters.inbound.notificacion import sancion
 from ...adapters.inbound.pdf.label_regex import SPANISH_AMOUNT_GROUP
-from ...adapters.outbound.aeat.sede import _iva_compensation_wallet_parsing
+from ...adapters.outbound.aeat.sede import iva_compensation_wallet_parsing
 from ...tests.inventory import aeat_relative, production_python_files
 from ..decimal.printed_money import AEAT_THOUSANDS_SEPARATORS, is_aeat_printed_money
 
@@ -136,8 +136,8 @@ def test_every_consumer_resolves_to_the_one_grammar_object() -> None:
     satisfy a behavioural comparison while still being the second copy this
     gate exists to forbid.
     """
-    assert _sancion.is_aeat_printed_money is is_aeat_printed_money
-    assert _iva_compensation_wallet_parsing.is_aeat_printed_money is is_aeat_printed_money
+    assert sancion.is_aeat_printed_money is is_aeat_printed_money
+    assert iva_compensation_wallet_parsing.is_aeat_printed_money is is_aeat_printed_money
 
 
 @pytest.mark.parametrize("separator", list(AEAT_THOUSANDS_SEPARATORS))
@@ -168,7 +168,7 @@ def test_every_grammar_reads_the_same_thousands_separators(separator: str) -> No
     assert is_aeat_printed_money(printed), f"anchored grammar rejects {printed!r}"
     match = re.fullmatch(SPANISH_AMOUNT_GROUP, printed)
     assert match is not None and match.group(1) == printed, f"capture group rejects {printed!r}"
-    found = _iva_compensation_wallet_parsing._SPANISH_AMOUNT_RE.findall(printed)
+    found = iva_compensation_wallet_parsing._SPANISH_AMOUNT_RE.findall(printed)
     assert found == [printed], f"wallet aggregate finder read {found!r} out of {printed!r}"
 
 
@@ -189,7 +189,7 @@ def test_no_grammar_treats_column_whitespace_as_a_thousands_separator(separator:
 
     assert not is_aeat_printed_money(printed)
     assert re.fullmatch(SPANISH_AMOUNT_GROUP, printed) is None
-    assert printed not in _iva_compensation_wallet_parsing._SPANISH_AMOUNT_RE.findall(printed)
+    assert printed not in iva_compensation_wallet_parsing._SPANISH_AMOUNT_RE.findall(printed)
 
 
 @pytest.mark.parametrize(

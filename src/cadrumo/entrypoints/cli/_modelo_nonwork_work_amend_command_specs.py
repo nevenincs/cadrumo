@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 from ._modelo_nonwork_command_spec_policies import _INTERACTIVE_MODEL_WRITE
-from ._modelo_work_command_specs import _ADDRESS, _LANGUAGE, _a, _o
 from .command_spec import (
     CommandNodeKind,
     CommandSpec,
@@ -16,6 +15,7 @@ from .command_spec import (
     SchemaState,
     TranslationKey,
 )
+from .modelo_work_command_specs import _ADDRESS, _LANGUAGE, _a, _o
 
 MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(

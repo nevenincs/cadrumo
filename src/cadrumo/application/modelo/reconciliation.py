@@ -64,11 +64,6 @@ from ...domain.calculations.registry.schema_references import RegistrySnapshotRe
 from ...domain.filing.reconciliation.errors import ReconciliationDeclaracionParseError
 from ...domain.justificante.errors import JustificanteParseError
 from ._reconcile_casilla import CasillaDivergence, CasillaDivergenceKind, detect_casilla_divergences
-from ._work_selection import (
-    ModeloWorkSelectorRequest,
-    ModeloWorkSelectorState,
-    select_modelo_work_resolution,
-)
 from .action_errors import WorkUnitNotFoundError
 from .calculation_repository import calculation_revision_catalogue_repository
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
@@ -86,6 +81,11 @@ from .reconciliation_records import (
     modelo_reconciliation_persistence,
 )
 from .work_addressing import ModeloWorkUnitNotFoundError
+from .work_selection import (
+    ModeloWorkSelectorRequest,
+    ModeloWorkSelectorState,
+    select_modelo_work_resolution,
+)
 from .work_unit_repository import work_unit_catalogue_repository
 
 #: Width of a bucket-event payload value. Mirrors the constraint declared on the
@@ -393,7 +393,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     except JustificanteParseError as exc:
         raise _evidence_invalid_refusal(exc, source_ref=str(command.source_path)) from exc
     catalogue, bucket_id = _active_reconciliation_catalogue()
-    return _reconcile_parsed_justificante(
+    return reconcile_parsed_justificante(
         work_unit=_resolve_work_unit_for_reconciliation(
             work_unit_id=command.work_unit_id,
             catalogue=catalogue,
@@ -437,7 +437,7 @@ def modelo_reconcile_bytes(command: ModeloReconciliationBytesCommand) -> ModeloR
     except JustificanteParseError as exc:
         raise _evidence_invalid_refusal(exc, source_ref=command.source_ref) from exc
     catalogue, bucket_id = _active_reconciliation_catalogue()
-    return _reconcile_parsed_justificante(
+    return reconcile_parsed_justificante(
         work_unit=_resolve_work_unit_for_reconciliation(
             work_unit_id=command.work_unit_id,
             catalogue=catalogue,
@@ -450,7 +450,7 @@ def modelo_reconcile_bytes(command: ModeloReconciliationBytesCommand) -> ModeloR
     )
 
 
-def _reconcile_parsed_justificante(
+def reconcile_parsed_justificante(
     *,
     work_unit: WorkUnit,
     source_kind: ModeloReconciliationEvidenceKind,
@@ -1242,7 +1242,7 @@ __all__ = [
     "ModeloReconciliationVerdict",
     "ReconciliationDeclaracionSourceUnsupportedError",
     "ReconciliationEvidenceInvalidError",
-    "WorkUnitNotFoundError",
+    "reconcile_parsed_justificante",
     "modelo_reconcile",
     "modelo_reconcile_bytes",
 ]

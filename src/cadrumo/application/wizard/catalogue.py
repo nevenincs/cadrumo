@@ -19,13 +19,13 @@ from ...core.wizard_catalogue import register_wizard_catalogue
 from ...domain.contribuyente.ccaa import CCAA
 from ...domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ...domain.contribuyente.renta_codes import (
+    FiscalResidency,
     RentaDisabilityGrade,
     RentaMaritalStatus,
     RentaSexCode,
     SituacionFamiliar,
 )
 from ...domain.deadlines.models import (
-    FiscalResidency,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IrpfSpecialRegime,

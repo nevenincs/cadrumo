@@ -19,7 +19,7 @@ The type-level half -- that truncation is total, visible, and word-clean for any
 input -- belongs with the type and stays in the aggregation suite.
 
 Lives beside the advisories rather than beside the cap. The subject under test is
-``_minimo_descendientes_advisory``'s private message builders, so the narrowest
+``minimo_descendientes_advisory``'s private message builders, so the narrowest
 owning package is this one; the cap comes from the aggregation facade, which is
 where the constraint is declared.
 
@@ -42,12 +42,14 @@ from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ...aggregation.source_mesh import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
 from .._minimo_descendientes_advisory import (
+    _guarderia_madre_meses_advisory,
+    _guarderia_shape_advisory,
+)
+from ..minimo_descendientes_advisory import (
     _count_desync_advisory,
     _dependencia_assimilated_advisory,
     _dependencia_suppressed_advisory,
     _entry_date_missing_advisory,
-    _guarderia_madre_meses_advisory,
-    _guarderia_shape_advisory,
     _prorrata_inferred_advisory,
     _rentas_undeclared_advisory,
     _undeclared_advisory,

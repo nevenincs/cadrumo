@@ -32,10 +32,9 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.period import PeriodKind, registry_period_kind
-from cadrumo.core.resources.bundled_data import bundled_path
-
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import PeriodKind, registry_period_kind
+from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
 from ..formula_runtime import calculate_registry_snapshot
 from ..temporal import select_revision

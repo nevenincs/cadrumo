@@ -41,7 +41,7 @@ from ....tests.secure_sql import TestRuntimeProfile
 from ..batch_ingest import BatchRunResult, run_evidence_batch
 from ..evidence import PurchaseInvoiceEvidenceService
 from ..extraction_draft_store import load_extraction_drafts
-from ._loopback_reader import serving_a_loopback_reader
+from .loopback_reader import serving_a_loopback_reader
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

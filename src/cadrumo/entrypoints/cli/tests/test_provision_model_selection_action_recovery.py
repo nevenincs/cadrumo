@@ -10,11 +10,11 @@ import pytest
 import typer
 import typer.main
 
-from ....application.provisioning import ProvisioningPreconditionCondition
+from ....application.provisioning_contracts import ProvisioningPreconditionCondition
 from ....core.config import override_settings
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.operator_action_enums import NoRecoveryOutcome
-from ..config.provision_cli import _emit_provision_pull, _emit_provision_verify
+from ..config.provision_cli import provision_pull, provision_verify
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -50,11 +50,11 @@ def _invoke_refusal(
 
 
 def _pull(ctx: typer.Context) -> None:
-    _emit_provision_pull(ctx, model=None, role=None)
+    provision_pull(ctx)
 
 
 def _verify(ctx: typer.Context) -> None:
-    _emit_provision_verify(ctx, model=None, role=None)
+    provision_verify(ctx)
 
 
 @pytest.mark.parametrize("emitter", [_pull, _verify])

@@ -17,7 +17,8 @@ from ....core.payment_election import PaymentElection
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
-from ..export import FilingExportError, export_draft
+from ....domain.filing.errors import FilingExportError
+from ..export import export_draft
 from ..producer_snapshot import (
     FilingElectionFacts,
     Modelo111ProfileFacts,
@@ -25,7 +26,7 @@ from ..producer_snapshot import (
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
 )
-from ._export_support import _approved_modelo_111_registry_draft, _schema_provider
+from .export_support import _approved_modelo_111_registry_draft, _schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

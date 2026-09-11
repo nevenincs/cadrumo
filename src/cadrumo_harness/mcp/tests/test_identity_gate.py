@@ -18,9 +18,9 @@ import anyio
 import pytest
 
 from .._command_policy import command_policy
-from .._dispatch import tool_name_for_command
-from .._harness_tools import HARNESS_LOAD_TOOL, WHOAMI_TOOL
-from .._identity_gate import (
+from ..dispatch import tool_name_for_command
+from ..harness_tools import HARNESS_LOAD_TOOL, WHOAMI_TOOL
+from ..identity_gate import (
     ACTIVE_IDENTITY_CHANGING_COMMANDS,
     IDENTITY_READ_COMMANDS,
     IDENTITY_READ_CONSOLE_TOOLS,
@@ -28,8 +28,8 @@ from .._identity_gate import (
     identity_elicitation_echo,
     identity_gate_refusal,
 )
-from .._tools import build_tool_descriptors
-from ._session import connected_server_and_client_session as connect
+from ..tools import build_tool_descriptors
+from .session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -199,7 +199,7 @@ def _execute_refusal_text(server: Any) -> str:
 
 
 def test_unconfirmed_first_mutation_refuses_on_both_paths_byte_identical() -> None:
-    from .._server import build_server
+    from ..server import build_server
 
     descriptors = build_tool_descriptors()
     if not _SDK_PRESENT:
@@ -222,7 +222,7 @@ def test_unconfirmed_first_mutation_refuses_on_both_paths_byte_identical() -> No
 
 
 def test_a_whoami_read_clears_the_gate_on_the_direct_path() -> None:
-    from .._server import build_server
+    from ..server import build_server
 
     descriptors = build_tool_descriptors()
     if not _SDK_PRESENT:
@@ -253,7 +253,7 @@ def test_a_harness_load_read_clears_the_gate_on_the_direct_path() -> None:
     # The harness.load identity read carries the block, so loading
     # the floor clears the gate - the subsequent first mutation is not identity-
     # refused (it refuses instead at the confirmation route, a distinct text).
-    from .._server import build_server
+    from ..server import build_server
 
     descriptors = build_tool_descriptors()
     if not _SDK_PRESENT:
@@ -282,7 +282,7 @@ def test_identity_state_is_shared_across_the_two_call_paths() -> None:
     # subprocess) clears the gate for a subsequent ``execute`` mutating call on
     # the same session, so the execute call is no longer identity-refused (it
     # refuses instead at the confirmation route, a distinct text).
-    from .._server import build_server
+    from ..server import build_server
 
     descriptors = build_tool_descriptors()
     if not _SDK_PRESENT:
@@ -318,7 +318,7 @@ def test_strong_logout_re_arms_identity_on_direct_and_execute_paths(
     logout_arguments: dict[str, object],
 ) -> None:
     """Both server paths re-arm before the strong-logout confirmation route."""
-    from .._server import build_server
+    from ..server import build_server
 
     descriptors = build_tool_descriptors()
     if not _SDK_PRESENT:

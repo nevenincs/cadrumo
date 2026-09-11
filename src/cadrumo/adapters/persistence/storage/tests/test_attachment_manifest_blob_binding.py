@@ -26,7 +26,8 @@ from .....domain.attachments.enums import AttachmentKind, AttachmentSource
 from .....domain.attachments.errors import AttachmentValidationError
 from .....domain.attachments.models import Attachment
 from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from ..attachment import _ATTACHMENT_MANIFEST_NAMESPACE, AttachmentStore
+from ..attachment import AttachmentStore
+from ..secure_object_namespaces import ATTACHMENT_MANIFEST_NAMESPACE
 from ..sql.engine import get_engine
 from ..sql.orm import SecureObjectRow
 
@@ -117,7 +118,7 @@ def test_tampered_stored_bytes_size_is_refused_on_load(tmp_path: Path) -> None:
         mutate_encrypted_secure_object_json(
             engine,
             row_statement=select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _ATTACHMENT_MANIFEST_NAMESPACE,
+                SecureObjectRow.namespace == ATTACHMENT_MANIFEST_NAMESPACE.namespace,
                 SecureObjectRow.object_key == attachment.attachment_id,
             ),
             mutate=tamper_size,

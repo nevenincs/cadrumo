@@ -1,0 +1,31 @@
+[fact]
+fact_id = "modelo-232-related-party-row-materialisation-mapping"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-232-related-party-row-materialisation-mapping:2018-y-siguientes"
+date_axis = "filing_period"
+valid_from = 2018-01-01
+source_refs = ["aeat-modelo-232-2018", "orden-hfp-816-2017"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-232-2018"
+required_text = ["operaciones vinculadas", "NIF", "importe"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "modelo", value = "232" },
+  { key = "revision", value = "2018-y-siguientes" },
+  { key = "row.capacity", value = "5" },
+  { key = "row.slot_ids", value = "1,2,3,4,5" },
+  { key = "row.field_ids", value = "nif,tipo-vinculacion,tipo-operacion,metodo-valoracion,importe" },
+  { key = "row.field_id_template", value = "vinculada-{slot}-{field}" },
+  { key = "row.binding_namespace", value = "modelo-232-2018.page_01" },
+  { key = "row.detail_record_id", value = "m232-operaciones-vinculadas" },
+  { key = "row.export_layout_id", value = "generated-modelo-232-2018-y-siguientes-fichero" },
+  { key = "row.applicability_id", value = "m232-seed" },
+  { key = "row.source_kind", value = "modelo_232_related_party_row" },
+]

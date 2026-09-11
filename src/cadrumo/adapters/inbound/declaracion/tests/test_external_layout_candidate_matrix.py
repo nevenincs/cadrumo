@@ -25,6 +25,7 @@ from .....tests.fixtures.external_layout_candidates.models import (
 )
 from .....tests.inventory import FIXTURES_DIR
 from ...pdf.extracted_casilla import ExtractedCasilla
+from .._parsers.pdfplumber_backend import extract_pages_text
 from ..parser import (
     _classify_target,
     _load_pages_words,
@@ -32,7 +33,6 @@ from ..parser import (
     _partition_target_outcomes,
     _printed_box_numbers,
     _select_extraction_profile,
-    extract_pages_text,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

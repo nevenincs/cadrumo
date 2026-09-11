@@ -52,9 +52,9 @@ from .._modelo_nonwork_review_package_command_specs import (
     MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS,
 )
 from .._modelo_nonwork_work_amend_command_specs import MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS
-from .._modelo_work_command_specs import _ADDRESS, _LANGUAGE, _a, _o
 from ..command_spec import CommandNodeKind, SchemaState, TranslationKey
 from ..command_specs import COMMAND_GRAPH
+from ..modelo_work_command_specs import _ADDRESS, _LANGUAGE, _a, _o
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

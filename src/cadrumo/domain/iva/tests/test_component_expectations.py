@@ -41,7 +41,7 @@ from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path
 from ..classification import InvoiceKind
 from ..components import (
-    IVA_CATEGORY_COMPONENTS,
+    registry_component_catalogue,
     IvaCategoryComponents,
     IvaComponentPresence,
     IvaCuotaSettlement,
@@ -67,6 +67,7 @@ if TYPE_CHECKING:
 _SENTINEL_CATEGORIES: frozenset[IvaCategory] = frozenset(
     {IvaCategory.UNKNOWN, IvaCategory.ERRONEOUS_INVOICE},
 )
+COMPONENT_CATALOGUE = registry_component_catalogue()
 
 
 def _category_id(category: IvaCategory) -> str:
@@ -103,7 +104,7 @@ def _bundled_legal_ref_ids() -> frozenset[str]:
 
 
 def _rows() -> Iterable[IvaCategoryComponents]:
-    return IVA_CATEGORY_COMPONENTS.values()
+    return COMPONENT_CATALOGUE.values()
 
 
 # --------------------------------------------------------------------------- #
@@ -118,14 +119,14 @@ def test_every_iva_category_declares_its_components() -> None:
     data, so adding a category forces the author to state what it carries
     rather than leaving each decomposition site to guess.
     """
-    declared = {category for category, _kind in IVA_CATEGORY_COMPONENTS}
+    declared = {category for category, _kind in COMPONENT_CATALOGUE}
     undeclared = sorted(category.value for category in IvaCategory if category not in declared)
     assert undeclared == [], f"IvaCategory members without an Axis-A row: {undeclared}"
 
 
 def test_table_declares_no_category_outside_the_enum() -> None:
     """Every table key is a live enum member, and its row agrees with its key."""
-    for (category, kind), row in IVA_CATEGORY_COMPONENTS.items():
+    for (category, kind), row in COMPONENT_CATALOGUE.items():
         assert isinstance(category, IvaCategory)
         assert isinstance(kind, InvoiceKind)
         assert row.category is category, f"row keyed {category.value!r} declares {row.category.value!r}"
@@ -136,7 +137,7 @@ def test_lookup_returns_the_keyed_row_for_every_member() -> None:
     """The public accessor resolves every member without falling through."""
     for category in IvaCategory:
         for kind in InvoiceKind:
-            assert category_components(category, kind) is IVA_CATEGORY_COMPONENTS[(category, kind)]
+            assert category_components(category, kind) is COMPONENT_CATALOGUE[(category, kind)]
 
 
 # --------------------------------------------------------------------------- #
@@ -165,7 +166,7 @@ def test_per_category_cuota_columns_agree_with_the_frozenset(category: IvaCatego
     arising = [
         row
         for kind in InvoiceKind
-        for row in (IVA_CATEGORY_COMPONENTS[(category, kind)],)
+        for row in (COMPONENT_CATALOGUE[(category, kind)],)
         if row.applicability is IvaKindApplicability.ARISES
     ]
     assert arising, f"{category.value} declares no arising kind at all"
@@ -191,7 +192,7 @@ def test_the_cuota_less_partition_is_non_trivial() -> None:
     passes against an equally-collapsed frozenset.
     """
     derived = cuota_less_m303_categories_from_table()
-    assert 0 < len(derived) < len(IVA_CATEGORY_COMPONENTS)
+    assert 0 < len(derived) < len(COMPONENT_CATALOGUE)
 
 
 def test_evidence_exempt_extends_the_cuota_less_set_by_the_three_sentinels() -> None:
@@ -227,7 +228,7 @@ def test_cuota_less_categories_still_require_a_taxable_base(category: IvaCategor
     what a bare cash amount cannot tell you.
     """
     for kind in InvoiceKind:
-        row = IVA_CATEGORY_COMPONENTS[(category, kind)]
+        row = COMPONENT_CATALOGUE[(category, kind)]
         if row.applicability is IvaKindApplicability.DOES_NOT_ARISE:
             continue
         assert category_bears_taxable_base(category, kind), (
@@ -237,7 +238,7 @@ def test_cuota_less_categories_still_require_a_taxable_base(category: IvaCategor
 
 def test_only_sentinel_categories_answer_unknown() -> None:
     """Every real category commits to an expectation; only sentinels may abstain."""
-    for (category, kind), row in IVA_CATEGORY_COMPONENTS.items():
+    for (category, kind), row in COMPONENT_CATALOGUE.items():
         if row.applicability is IvaKindApplicability.DOES_NOT_ARISE:
             continue
         del kind
@@ -259,7 +260,7 @@ def test_zero_by_law_cuota_is_exactly_the_determinable_zero_predicate() -> None:
     determinable from the declared category" rather than "explicit iva_amount
     recorded" so a declared-exempt invoice can recover its retención.
     """
-    for (category, kind), row in IVA_CATEGORY_COMPONENTS.items():
+    for (category, kind), row in COMPONENT_CATALOGUE.items():
         assert category_cuota_is_zero_by_law(category, kind) is (row.cuota is IvaComponentPresence.ZERO_BY_LAW)
 
 
@@ -302,7 +303,7 @@ def test_pending_legal_refs_are_genuinely_unbundled() -> None:
 
 def test_bundled_corpus_grounding_requires_a_citation() -> None:
     """A row cannot claim bundled grounding while citing nothing."""
-    for (category, _kind), row in IVA_CATEGORY_COMPONENTS.items():
+    for (category, _kind), row in COMPONENT_CATALOGUE.items():
         claims_bundled = IvaGroundingConfidence.BUNDLED_CORPUS in (
             row.cuota_grounding,
             row.recargo_grounding,
@@ -327,7 +328,7 @@ def test_every_retencion_expectation_carries_its_caveat() -> None:
     gone, so coverage cannot leak out of this gate through the grounding column
     again.
     """
-    for (category, kind), row in IVA_CATEGORY_COMPONENTS.items():
+    for (category, kind), row in COMPONENT_CATALOGUE.items():
         assert row.retencion_note.strip(), (
             f"{category.value}/{kind.value}: retención expectation is "
             f"{row.retencion.value!r} at grounding {row.retencion_grounding.value!r} "
@@ -337,7 +338,7 @@ def test_every_retencion_expectation_carries_its_caveat() -> None:
 
 def test_live_source_only_rows_name_the_unbundled_provision() -> None:
     """Live-source-only grounding must point at the provision still to be bundled."""
-    for (category, _kind), row in IVA_CATEGORY_COMPONENTS.items():
+    for (category, _kind), row in COMPONENT_CATALOGUE.items():
         if IvaGroundingConfidence.LIVE_SOURCE_ONLY not in (
             row.cuota_grounding,
             row.recargo_grounding,
@@ -352,7 +353,7 @@ def test_live_source_only_rows_name_the_unbundled_provision() -> None:
 def test_sentinel_rows_declare_their_grounding_as_ungrounded() -> None:
     """A sentinel abstains honestly rather than borrowing someone else's citation."""
     for category in sorted(_SENTINEL_CATEGORIES, key=_category_id):
-        row = IVA_CATEGORY_COMPONENTS[(category, InvoiceKind.RECEIVED)]
+        row = COMPONENT_CATALOGUE[(category, InvoiceKind.RECEIVED)]
         assert row.cuota_grounding is IvaGroundingConfidence.UNGROUNDED
         assert row.recargo_grounding is IvaGroundingConfidence.UNGROUNDED
         assert row.retencion_grounding is IvaGroundingConfidence.UNGROUNDED
@@ -361,7 +362,7 @@ def test_sentinel_rows_declare_their_grounding_as_ungrounded() -> None:
 
 def test_no_row_cites_the_same_ref_as_both_bundled_and_pending() -> None:
     """A provision is either in the catalogue or it is not."""
-    for (category, _kind), row in IVA_CATEGORY_COMPONENTS.items():
+    for (category, _kind), row in COMPONENT_CATALOGUE.items():
         overlap = sorted(set(row.legal_refs) & set(row.pending_legal_refs))
         assert overlap == [], f"{category.value} cites {overlap} as both bundled and pending"
 
@@ -505,7 +506,7 @@ def test_every_category_kind_pair_declares_a_row() -> None:
         f"{category.value}/{kind.value}"
         for category in IvaCategory
         for kind in InvoiceKind
-        if (category, kind) not in IVA_CATEGORY_COMPONENTS
+        if (category, kind) not in COMPONENT_CATALOGUE
     )
     assert missing == [], f"(category, kind) pairs without an Axis-A row: {missing}"
 
@@ -524,8 +525,8 @@ def test_the_kind_axis_actually_bifurcates_at_least_one_category() -> None:
     bifurcated = [
         category.value
         for category in IvaCategory
-        if _kind_distinguishing_columns(IVA_CATEGORY_COMPONENTS[(category, InvoiceKind.ISSUED)])
-        != _kind_distinguishing_columns(IVA_CATEGORY_COMPONENTS[(category, InvoiceKind.RECEIVED)])
+        if _kind_distinguishing_columns(COMPONENT_CATALOGUE[(category, InvoiceKind.ISSUED)])
+        != _kind_distinguishing_columns(COMPONENT_CATALOGUE[(category, InvoiceKind.RECEIVED)])
     ]
     assert bifurcated, (
         "no category differs across ISSUED and RECEIVED — the (category, kind) key is doing no "
@@ -546,7 +547,7 @@ def test_retencion_role_is_the_credit_liability_inversion_the_kind_dictates() ->
     art. 110.3.a) and their liability to AEAT on one they received. A row that
     got this backwards would invert a deduction into a debt.
     """
-    for (category, kind), row in IVA_CATEGORY_COMPONENTS.items():
+    for (category, kind), row in COMPONENT_CATALOGUE.items():
         label = f"{category.value}/{kind.value}"
         if row.retencion is IvaRetencionExpectation.UNKNOWN:
             assert row.retencion_role is IvaRetencionRole.UNKNOWN, label
@@ -564,7 +565,7 @@ def test_both_retencion_roles_are_actually_used() -> None:
     A table that only ever declared one role would pass the coherence gate
     above trivially — that gate checks agreement, not that both branches occur.
     """
-    roles = {row.retencion_role for row in IVA_CATEGORY_COMPONENTS.values()}
+    roles = {row.retencion_role for row in COMPONENT_CATALOGUE.values()}
     assert IvaRetencionRole.TAXPAYER_CREDIT in roles
     assert IvaRetencionRole.TAXPAYER_LIABILITY in roles
 
@@ -579,11 +580,11 @@ def test_non_arising_pairs_are_a_strict_nonempty_subset() -> None:
     """
     non_arising = {
         (category.value, kind.value)
-        for (category, kind), row in IVA_CATEGORY_COMPONENTS.items()
+        for (category, kind), row in COMPONENT_CATALOGUE.items()
         if row.applicability is IvaKindApplicability.DOES_NOT_ARISE
     }
     assert non_arising, "no pair is declared non-arising, so no category is treated as directional"
-    assert len(non_arising) < len(IVA_CATEGORY_COMPONENTS), "every pair is non-arising; the table describes nothing"
+    assert len(non_arising) < len(COMPONENT_CATALOGUE), "every pair is non-arising; the table describes nothing"
 
 
 def test_a_role_contradicting_its_kind_is_refused() -> None:

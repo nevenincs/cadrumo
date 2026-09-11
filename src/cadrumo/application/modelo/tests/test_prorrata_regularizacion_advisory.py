@@ -41,16 +41,19 @@ from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
 from ....core.prorrata_register import ProrrataRegisterRegime
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.binding_targets import casillas_by_binding
+from ....domain.calculations.registry.bindings import ProrrataRegularizacionOutput
 from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
 )
+from ....domain.iva_compensation.filed_derivation import (
+    M303_COMPENSATION_RESULTADO_CASILLA as M303_RESULTADO_CASILLA,
+)
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations.iva_compensation_casillas import M303_RESULTADO_CASILLA
 from ...calculations.observations_repository import CalculationObservationRepository
-from ...calculations.prorrata_regularizacion import CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA
 from .._prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -265,7 +268,14 @@ def test_mid_year_active_prorrata_without_provisional_emits_missing_carry(tmp_pa
     assert len(diagnostics) == 1
     diagnostic = diagnostics[0]
     assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
-    assert diagnostic.casilla_id == CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA
+    revision = _revision(period="1T")
+    prorrata_binding = next(
+        binding
+        for binding in revision.bindings
+        if binding.source is BindingSourceKind.PRORRATA_REGULARIZACION
+        and binding.selector.regularizacion_output is ProrrataRegularizacionOutput.MODELO_303_CASILLA_44
+    )
+    assert diagnostic.casilla_id in casillas_by_binding(revision)[prorrata_binding.id]
     assert "definitiva del ejercicio anterior" in diagnostic.message
     assert "por defecto" in diagnostic.message
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 from types import MappingProxyType
-from typing import Final, Literal, Self
+from typing import Self
 
 from pydantic import BaseModel, field_serializer, field_validator, model_validator
 
@@ -38,26 +38,11 @@ from .calculation_revision_m303_evidence import (
 )
 from .errors import ModeloValidationError
 
-# The 2022 Modelo 390 record design declares these ten annual simplified-regime
-# endpoints in this semantic order.  Keep the source-declared 51, 53, 52 order
-# on the sibling selector; this target order follows the official 74--83 page.
-M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS: Final[tuple[CasillaId, ...]] = (
-    "iva.anual.regimen-simplificado.cuota-resultante-no-agricola",
-    "iva.anual.regimen-simplificado.cuota-resultante-agricola",
-    "iva.anual.regimen-simplificado.aic-bienes-cuota-devengada",
-    "iva.anual.regimen-simplificado.inversion-sujeto-pasivo",
-    "iva.anual.regimen-simplificado.entrega-activos-fijos",
-    "iva.anual.reconciliacion.devengada-simplificado-303",
-    "iva.anual.regimen-simplificado.iva-soportado-activos-fijos",
-    "iva.anual.regimen-simplificado.regularizacion-bienes-inversion",
-    "iva.anual.regimen-simplificado.suma-deducciones",
-    "iva.anual.regimen-simplificado.resultado",
-)
-"""Canonical Modelo 390 casilla endpoints for the immutable 303 4T handoff."""
+# TODO(fact-relocation): resolve M303/M390 handoff relation, projection, revision applicability, and binding/legal declarations from selected registry revision
 
 
 class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):
-    """One frozen, source-identified Modelo 303 4T -> Modelo 390 0A handoff.
+    """One frozen, source-identified cross-model handoff.
 
     The handoff is calculated before its enclosing target revision has an id.
     Its digest and unsigned identity payload therefore deliberately exclude
@@ -70,7 +55,7 @@ class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     source_bucket_id: BucketId
-    source_modelo: Literal["303"] = "303"
+    source_modelo: str
     source_work_unit_id: WorkUnitId
     source_calculation_revision_id: CalculationRevisionId
     source_registry_revision_id: RevisionId
@@ -83,7 +68,7 @@ class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):
     # which the application assembler refuses before it reaches this carrier.
     source_evidence_references: tuple[FilingEvidenceReference, ...] = ()
     target_bucket_id: BucketId
-    target_modelo: Literal["390"] = "390"
+    target_modelo: str
     target_work_unit_id: WorkUnitId
     target_registry_revision_id: RevisionId
     target_filing_year: FilingYear
@@ -117,29 +102,33 @@ class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):
         cls,
         *,
         source_bucket_id: BucketId,
+        source_modelo: str,
         source_work_unit_id: WorkUnitId,
         source_calculation_revision_id: CalculationRevisionId,
         source_registry_revision_id: RevisionId,
         source_filing_year: int,
+        source_period_code: str,
         source_result_digest: ContentDigest,
         source_evidence_references: tuple[FilingEvidenceReference, ...],
         target_bucket_id: BucketId,
+        target_modelo: str,
         target_work_unit_id: WorkUnitId,
         target_registry_revision_id: RevisionId,
         target_filing_year: int,
+        target_period_code: str,
         values: Mapping[CasillaId, Decimal],
     ) -> Self:
         """Build an unsigned handoff with its content digest.
 
-        This is the only pre-persistence constructor.  It fixes the source to
-        the annual fourth quarter and the target to the annual Modelo 390
-        period, so application callers cannot accidentally form a quarterly or
-        cross-year carrier and then rely on a later projection to repair it.
+        This is the only pre-persistence constructor.  Revision-selected
+        relation metadata supplies model and period coordinates; this carrier
+        retains only generic identity and evidence mechanics.
         """
-        source_period = Period.from_year_and_code(source_filing_year, "4T")
-        target_period = Period.from_year_and_code(target_filing_year, "0A")
+        source_period = Period.from_year_and_code(source_filing_year, source_period_code)
+        target_period = Period.from_year_and_code(target_filing_year, target_period_code)
         unsigned = cls.model_construct(
             source_bucket_id=source_bucket_id,
+            source_modelo=source_modelo,
             source_work_unit_id=source_work_unit_id,
             source_calculation_revision_id=source_calculation_revision_id,
             source_registry_revision_id=source_registry_revision_id,
@@ -148,6 +137,7 @@ class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):
             source_result_digest=source_result_digest,
             source_evidence_references=source_evidence_references,
             target_bucket_id=target_bucket_id,
+            target_modelo=target_modelo,
             target_work_unit_id=target_work_unit_id,
             target_registry_revision_id=target_registry_revision_id,
             target_filing_year=target_filing_year,
@@ -158,6 +148,7 @@ class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):
         )
         return cls(
             source_bucket_id=source_bucket_id,
+            source_modelo=source_modelo,
             source_work_unit_id=source_work_unit_id,
             source_calculation_revision_id=source_calculation_revision_id,
             source_registry_revision_id=source_registry_revision_id,
@@ -166,6 +157,7 @@ class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):
             source_result_digest=source_result_digest,
             source_evidence_references=source_evidence_references,
             target_bucket_id=target_bucket_id,
+            target_modelo=target_modelo,
             target_work_unit_id=target_work_unit_id,
             target_registry_revision_id=target_registry_revision_id,
             target_filing_year=target_filing_year,
@@ -192,18 +184,11 @@ class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):
 
     @field_validator("values")
     @classmethod
-    def _freeze_exact_ten_values(cls, value: Mapping[CasillaId, Decimal]) -> Mapping[CasillaId, Decimal]:
+    def _freeze_values(cls, value: Mapping[CasillaId, Decimal]) -> Mapping[CasillaId, Decimal]:
         values = dict(value)
-        expected = set(M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS)
-        actual = set(values)
-        if actual != expected:
-            raise ModeloValidationError(
-                "M303 simplified annual-summary handoff must carry exactly the ten Modelo 390 boxes "
-                f"74-83; missing={sorted(expected - actual)!r} extra={sorted(actual - expected)!r}",
-            )
-        return MappingProxyType(
-            {casilla_id: values[casilla_id] for casilla_id in M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS},
-        )
+        if not values:
+            raise ModeloValidationError("cross-model handoff must carry at least one selected value")
+        return MappingProxyType(values)
 
     @field_serializer("values")
     def _serialize_values(self, value: Mapping[CasillaId, Decimal]) -> dict[CasillaId, Decimal]:
@@ -218,10 +203,6 @@ class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):
             raise ModeloValidationError(
                 "M303 simplified annual-summary handoff source and target filing year must agree"
             )
-        if self.source_period != Period.from_year_and_code(self.source_filing_year, "4T"):
-            raise ModeloValidationError("M303 simplified annual-summary handoff source period must be 4T")
-        if self.target_period != Period.from_year_and_code(self.target_filing_year, "0A"):
-            raise ModeloValidationError("M303 simplified annual-summary handoff target period must be 0A")
         expected_digest = _m303_regimen_simplificado_annual_summary_handoff_digest(self)
         if self.digest != expected_digest:
             raise ModeloValidationError(
@@ -233,7 +214,7 @@ class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):
 def _m303_regimen_simplificado_annual_summary_handoff_payload(
     handoff: M303RegimenSimplificadoAnnualSummaryHandoff,
 ) -> dict[str, object]:
-    """Canonical target-id-free payload for the annual Modelo 390 handoff."""
+    """Canonical target-id-free payload for a selected cross-model handoff."""
     return {
         "source": {
             "bucket_id": handoff.source_bucket_id,
@@ -259,7 +240,7 @@ def _m303_regimen_simplificado_annual_summary_handoff_payload(
                 "casilla_id": casilla_id,
                 "value": _canonical_decimal(handoff.values[casilla_id]),
             }
-            for casilla_id in M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
+            for casilla_id in sorted(handoff.values, key=str)
         ),
     }
 

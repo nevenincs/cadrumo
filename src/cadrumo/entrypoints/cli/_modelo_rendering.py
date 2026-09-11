@@ -12,7 +12,7 @@ and CommandSpec-declared JSON payload fragments. The payload side feeds
 :class:`~cadrumo.entrypoints.cli._modelo_payloads.ModeloRecordPayload`,
 :class:`~cadrumo.entrypoints.cli._modelo_payloads.VerificationReportPayload`,
 and uniform :class:`~cadrumo.core.json_contract.Notice` rows into
-:func:`~cadrumo.entrypoints.cli._common.emit_envelope`.
+:func:`~cadrumo.entrypoints.cli.common.emit_envelope`.
 """
 
 from __future__ import annotations
@@ -41,22 +41,24 @@ from ...domain.modelos.row_models import Modelo184MemberRow
 from ...domain.modelos.verification_report import ModeloVerificationFinding, VerificationReport
 from ...domain.modelos.work_unit import WorkUnit
 from ._action_rendering import resolved_precondition_action_json_cell
-from ._common import resolve_cli_precondition_action
+from ._modelo_bindings_payloads import BindingEncodedOptionPayload
 from ._modelo_payloads import (
-    BindingEncodedOptionPayload,
     CalculationRevisionPayload,
     ExternalEvidencePayload,
     FindingPayload,
     ModeloRecordPayload,
-    ObservationPayload,
-    ResultSummaryRowPayload,
-    SourceProvenancePayload,
     VerificationReportPayload,
     WorkConditionalRecargoPreviewPayload,
     WorkDeadlinePosturePayload,
     WorkUnitPayload,
 )
-from ._modelo_revision_payload_parts import DetailRowPayload
+from ._modelo_revision_payload_parts import (
+    DetailRowPayload,
+    ObservationPayload,
+    ResultSummaryRowPayload,
+    SourceProvenancePayload,
+)
+from .common import resolve_cli_precondition_action
 
 if TYPE_CHECKING:
     # Annotation-only: `from __future__ import annotations` keeps this lazy so the

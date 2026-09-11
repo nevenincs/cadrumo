@@ -28,8 +28,8 @@ from uuid import UUID
 import typer
 
 from ....core.external_constants import OutputLanguage
-from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
-from .._common import emit_envelope
+from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
+from ..common import emit_envelope
 
 if TYPE_CHECKING:
     from ....application.user_profile.capsule_archive import (

@@ -22,7 +22,7 @@ from ..export_verification import (
 )
 from ..producer_snapshot import FilingProducerSnapshot, GeneralFilingProfileFacts, build_filing_producer_snapshot
 from ..runtime import RegistrySchemaAccessor
-from ._export_support import (
+from .export_support import (
     _approved_modelo_131_historical_registry_draft,
     _schema_provider,
     _typed_producer_snapshot,

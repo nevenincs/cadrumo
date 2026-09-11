@@ -6,7 +6,7 @@ from pathlib import Path
 
 import typer
 
-from ._common import active_bucket_id_or_refuse, emit_envelope
+from .common import active_bucket_id_or_refuse, emit_envelope
 
 
 def _evidence_bundle_service():
@@ -22,7 +22,7 @@ def audit_view(
     """Render an evidence bundle's manifest and referenced record list."""
     bucket_id = active_bucket_id_or_refuse()
     bundle = _evidence_bundle_service().show(bucket_id=bucket_id, bundle_id=bundle_id)
-    from ._modelo_payloads import EvidenceRecordRefPayload, ModeloAuditViewResult
+    from .modelo_aux_payloads import EvidenceRecordRefPayload, ModeloAuditViewResult
 
     result = ModeloAuditViewResult(
         bundle_id=bundle.bundle_id,
@@ -63,7 +63,7 @@ def audit_check(
     """Re-verify the evidence bundle's integrity without mutating state."""
     bucket_id = active_bucket_id_or_refuse()
     report = _evidence_bundle_service().check(bucket_id=bucket_id, bundle_id=bundle_id)
-    from ._modelo_payloads import EvidenceBundleCheckFindingPayload, ModeloAuditCheckResult
+    from .modelo_aux_payloads import EvidenceBundleCheckFindingPayload, ModeloAuditCheckResult
 
     result = ModeloAuditCheckResult(
         bundle_id=report.bundle_id,
@@ -104,7 +104,7 @@ def audit_export(
         force_incomplete=force_incomplete,
     )
     bundle = service.show(bucket_id=bucket_id, bundle_id=bundle_id)
-    from ._modelo_payloads import ModeloAuditExportResult
+    from .modelo_aux_payloads import ModeloAuditExportResult
 
     result = ModeloAuditExportResult(
         bucket_id=bucket_id,

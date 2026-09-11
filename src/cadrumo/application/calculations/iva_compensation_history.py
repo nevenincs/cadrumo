@@ -69,24 +69,36 @@ from ...domain.iva_compensation.errors import (
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
 )
-from ._ports import FiledDeclaracionObservationProtocol
+from ...domain.iva_compensation.filed_derivation import (
+    M303_COMPENSATION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
+)
+from ...domain.iva_compensation.filed_derivation import (
+    M303_COMPENSATION_AVAILABLE_CASILLA as _M303_DISPONIBLE_CASILLA,
+)
+from ...domain.iva_compensation.filed_derivation import (
+    M303_COMPENSATION_GENERADA_CASILLA as _M303_GENERADA_CASILLA,
+)
+from ...domain.iva_compensation.filed_derivation import (
+    M303_COMPENSATION_PENDING_PRIOR_CASILLA as _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+)
+from ...domain.iva_compensation.filed_derivation import (
+    M303_COMPENSATION_POSTERIOR_CASILLA as _M303_POSTERIOR_CASILLA,
+)
+from ...domain.iva_compensation.filed_derivation import (
+    M303_COMPENSATION_RESULTADO_CASILLA as _M303_RESULTADO_CASILLA,
+)
+from ...domain.iva_compensation.filed_derivation import (
+    M303_COMPENSATION_RESULTADO_FINAL_CASILLA as _M303_RESULTADO_FINAL_CASILLA,
+)
+from ...domain.iva_compensation.filed_derivation import (
+    M390_COMPENSATION_GENERATED_OUTSIDE_LAST_PERIOD_CASILLA as _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA,
+)
+from ...domain.iva_compensation.filed_derivation import (
+    M390_COMPENSATION_LAST_PERIOD_CASILLA as _M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA,
+)
 from .errors import IvaCompensationModeloError
-from .iva_compensation_casillas import M303_COMPENSACION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA
-from .iva_compensation_casillas import (
-    M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA as _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
-)
-from .iva_compensation_casillas import M303_DISPONIBLE_CASILLA as _M303_DISPONIBLE_CASILLA
-from .iva_compensation_casillas import M303_GENERADA_CASILLA as _M303_GENERADA_CASILLA
-from .iva_compensation_casillas import M303_POSTERIOR_CASILLA as _M303_POSTERIOR_CASILLA
-from .iva_compensation_casillas import M303_RESULTADO_CASILLA as _M303_RESULTADO_CASILLA
-from .iva_compensation_casillas import M303_RESULTADO_FINAL_CASILLA as _M303_RESULTADO_FINAL_CASILLA
-from .iva_compensation_casillas import (
-    M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA as _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA,
-)
-from .iva_compensation_casillas import (
-    M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA as _M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA,
-)
 from .observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
+from .ports import FiledDeclaracionObservationProtocol
 from .revision_carry_gate import revision_carry_outcome
 
 
@@ -467,7 +479,7 @@ def iva_compensation_annual_summary_from_filed_observation(
     """Build an :class:`~application.calculations.iva_compensation_history.IvaCompensationAnnualSummary`.
 
     The source is a filed Modelo 390
-    :class:`~application.calculations._ports.FiledDeclaracionObservationProtocol`.
+    :class:`~application.calculations.ports.FiledDeclaracionObservationProtocol`.
 
     ``iva.anual.compensacion-ultimo-periodo-97`` carries the final-period amount
     to compensate. ``iva.anual.compensacion-generada-ejercicio-no-97`` carries

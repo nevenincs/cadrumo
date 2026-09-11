@@ -67,9 +67,9 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
-    FilingInstanceEvidence,
     derive_calculation_revision_id,
 )
+from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.filing_record import (
     ExternalEvidence,
@@ -97,12 +97,6 @@ from ..user_profile.custody_ports import default_profile_bucket_event_history_re
 from ..workflow.active_profile import require_active_profile_bucket_id
 from ._calculation_helpers import external_filing_observations as _external_filing_observations
 from ._registry_helpers import reject_unknown_import_casillas as _reject_unknown_import_casillas
-from ._work_selection import (
-    ModeloWorkResolution,
-    ModeloWorkSelectionMode,
-    ModeloWorkSelectorRequest,
-    select_modelo_work_resolution,
-)
 from .action_errors import ExternalModeloImportError
 from .calculation_repository import calculation_revision_catalogue_repository
 from .filing_repository import modelo_record_catalogue_repository
@@ -115,6 +109,12 @@ from .work_addressing import (
     law_selected_revision_for_work_target,
 )
 from .work_lifecycle import ActiveWorkUnitUse, create_work_unit, require_active_work_unit
+from .work_selection import (
+    ModeloWorkResolution,
+    ModeloWorkSelectionMode,
+    ModeloWorkSelectorRequest,
+    select_modelo_work_resolution,
+)
 from .work_unit_repository import work_unit_catalogue_repository
 
 

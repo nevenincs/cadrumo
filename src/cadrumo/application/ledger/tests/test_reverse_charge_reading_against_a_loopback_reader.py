@@ -58,7 +58,7 @@ from ..evidence_input import EvidenceInput
 from ..evidence_textlayer import transcribe_text_layer
 from ..invoice_draft_extraction import _read_transcription_semantically
 from ..regime_contradiction import draft_prints_a_repercutido_line, regime_contradiction_finding
-from ._loopback_reader import READING_RUNTIME_MODEL
+from .loopback_reader import READING_RUNTIME_MODEL
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

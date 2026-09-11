@@ -8,9 +8,9 @@ from ....application.overview.status_report import overview_status_report_from_p
 from ....application.state_projection import (
     OperatorStateProjection,
     ProjectionActiveProfile,
-    ProjectionAuthReadiness,
     ProjectionWorkspaceSummary,
 )
+from ....application.state_projection_auth import ProjectionAuthReadiness
 from ....core.json_contract import strict_round_trip
 from .._overview_payloads import OverviewStatusResult
 

@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core.secure_object_write import SecureObjectWrite
 from .....tests.master_key import EphemeralMasterKeyProvider
 from ..errors import StorageError, StorageValidationError
 from ..master_key.active_session import activate_session
@@ -24,7 +25,6 @@ from ..master_key.bucket_session import BucketSession
 from ..namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ..runtime_repository import secure_object_repository_for_staged_bucket
 from ..secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
-from ..sql.secure_objects import SecureObjectWrite
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

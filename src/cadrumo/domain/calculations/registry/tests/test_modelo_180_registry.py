@@ -8,9 +8,8 @@ from typing import get_args
 
 import pytest
 
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.resources.bundled_data import bundled_path
-
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..errors import RegistryValidationError

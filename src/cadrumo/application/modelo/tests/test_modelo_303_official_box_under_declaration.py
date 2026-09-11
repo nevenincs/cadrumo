@@ -53,7 +53,7 @@ from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
-from ....domain.modelos.calculation_revision import FilingInstanceEvidence
+from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -143,7 +143,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
         yield profile.repository
 
 
-def _workflow_profile() -> TaxpayerProfile:
+def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="12345678Z",
         iva_regime=IVARegime.GENERAL,
@@ -441,7 +441,7 @@ def test_verify_passes_with_projected_boxes_and_no_under_declaration_advisory(
     report = verify_modelo_revision(
         result.revision.calculation_revision_id,
         actor="operator-A",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
@@ -491,7 +491,7 @@ def test_equals_consistency_predicate_blocks_a_drifted_box() -> None:
     predicate holds. This proves the consistency operator is a real evaluator, not a
     tautology that cannot fail.
     """
-    from ..verification_actions import _evaluate_verification_predicates
+    from ..verification_predicates import evaluate_verification_predicates
 
     auth = _authority_for_303()
     snap = auth.snapshot("303", filing_year=2026, period="1T")
@@ -500,7 +500,7 @@ def test_equals_consistency_predicate_blocks_a_drifted_box() -> None:
     )
     assert len(equals_predicates) == len(_BOX_SOURCE_MAP), "every projected box must carry an equals predicate"
 
-    profile = _workflow_profile()
+    profile = workflow_profile()
 
     # Consistent state: box == source for every pair → no findings.
     consistent: dict[CasillaId, Decimal] = {}
@@ -508,12 +508,12 @@ def test_equals_consistency_predicate_blocks_a_drifted_box() -> None:
         value = Decimal(10 + index)  # distinct non-zero per box so a copy cannot mask drift
         consistent[box] = value
         consistent[source] = value
-    assert _evaluate_verification_predicates(equals_predicates, consistent, profile) == []
+    assert evaluate_verification_predicates(equals_predicates, consistent, profile) == []
 
     # Drifted state: box 27 mutated away from its source → exactly one violation.
     drifted = dict(consistent)
     drifted[_OFFICIAL_CUOTA_DEVENGADA_TOTAL] = drifted[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA] + Decimal("1")
-    findings = _evaluate_verification_predicates(equals_predicates, drifted, profile)
+    findings = evaluate_verification_predicates(equals_predicates, drifted, profile)
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
 

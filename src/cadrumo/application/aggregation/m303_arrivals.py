@@ -1,37 +1,50 @@
-"""Canonical evidence arrivals for Modelo 303 informational producer facts.
-
-This module deliberately composes the two owned fact stores instead of adding
-profile flags: the IVA aggregation's period-stamped observation stream proves
-whether the taxpayer received supplier-regime cash-accounting operations, and
-the cross-period prorrata register proves an option or revocation transition.
-The filing snapshot consumes these immutable arrivals as facts; it does not
-re-scan ledger rows or reconstruct register state.
-"""
+"""Generic evidence-arrival and transition-validation mechanics."""
 
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Final
 
 from pydantic import BaseModel, field_validator, model_validator
 
 from ...core.i18n.render import tr as t
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period, StandardPeriodCode
+from ...core.period import Period
 from ...core.prorrata_register import ProrrataEspecialTransitionKind, ProrrataRegisterRegime
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.iva.schema import IvaCashAccountingTreatment
 from ...domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from .errors import AggregationValidationError
 from .iva_ledger import IvaLedgerAggregation
 
-# Modelo 303's 2026 record design, DP30301 Note 6: the option and revocation
-# fields are blank before the annual final liquidation and carry SI/NO only in
-# 4T (quarterly) or 12 (monthly).  An annual ``0A`` is not a Modelo 303 filing
-# period, so it deliberately does not belong to this closed set.
-_M303_PRORRATA_TRANSITION_FINAL_PERIODS: Final[frozenset[StandardPeriodCode]] = frozenset(
-    {StandardPeriodCode.Q4, StandardPeriodCode.DEC}
-)
+
+# fact-relocation: selected registry schedule and transition declarations are consumed
+def _transition_period_applicability_from_registry(period: Period) -> bool:
+    """Resolve transition-period applicability from selected registry declarations."""
+    authority = bundled_authority()
+    report = RegistryQueryService(authority).describe_modelo_for_scope(
+        "303",
+        filing_year=period.filing_year,
+        period=period.registry_token,
+    )
+    registry_period = report.period or period.registry_token
+    snapshot = authority.snapshot(
+        report.code,
+        filing_year=period.filing_year,
+        period=registry_period,
+    )
+    schedules = tuple(snapshot.revision.filing_schedules)
+    relations = tuple(snapshot.revision.relations)
+    if not schedules or not relations:
+        raise NotImplementedError("selected registry transition declarations are unavailable")
+    relation_periods = {token for relation in relations for token in relation.target_periods}
+    transition_periods = {
+        schedule.periods[-1]
+        for schedule in schedules
+        if schedule.periods and relation_periods.intersection(schedule.periods)
+    }
+    return period.registry_token in transition_periods
 
 
 class M303SupplierRegimeArrival(BaseModel):
@@ -70,13 +83,7 @@ class M303SupplierRegimeArrival(BaseModel):
 
 
 class M303ProrrataTransitionArrival(BaseModel):
-    """Period-specific prorrata-especial option or revocation evidence.
-
-    ``transition`` is absent only when the register records no transition for
-    the filing year.  When present, every entry in ``register_evidence`` names
-    that one transition, so the two Modelo 303 choices can never arrive true
-    together.
-    """
+    """Period-specific prorrata option or revocation evidence."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -86,8 +93,8 @@ class M303ProrrataTransitionArrival(BaseModel):
 
     @property
     def is_applicable(self) -> bool:
-        """Whether DP30301's option/revocation slots apply to this filing period."""
-        return self.period.standard_code in _M303_PRORRATA_TRANSITION_FINAL_PERIODS
+        """Whether the selected registry revision applies the transition."""
+        return _transition_period_applicability_from_registry(self.period)
 
     @model_validator(mode="after")
     def _transition_matches_register_evidence(self) -> M303ProrrataTransitionArrival:
@@ -247,14 +254,8 @@ def resolve_m303_prorrata_transition_arrival(
     period: Period,
     prorrata_register: ProrrataRegister,
 ) -> M303ProrrataTransitionArrival:
-    """Resolve the final-period special-prorrata transition from the register.
-
-    The current registro records the year-level legal transition. DP30301 Note
-    6 makes the two filing slots inapplicable before the year's final Modelo
-    303 period, so those periods preserve ``None`` rather than manufacturing a
-    false ``NO`` answer from the absence of evidence.
-    """
-    if period.standard_code not in _M303_PRORRATA_TRANSITION_FINAL_PERIODS:
+    """Resolve a registry-selected prorrata transition from register evidence."""
+    if not _transition_period_applicability_from_registry(period):
         return M303ProrrataTransitionArrival(period=period, transition=None, register_evidence=())
     if not prorrata_register.has_complete_current_entry_coverage(period.filing_year):
         raise AggregationValidationError(

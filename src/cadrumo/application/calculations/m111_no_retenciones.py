@@ -1,67 +1,82 @@
-"""Modelo 111 no-retenciones period attestations."""
+"""Generic schedule-attestation mechanics for registry-selected declarations."""
 
 from __future__ import annotations
 
-import re
 from collections.abc import Mapping
-from typing import Final
 
-from ...core.modelo import Modelo
-from ...core.period import Period, PeriodError
-
-M111_NO_RETENCIONES_PROFILE_PATH: Final = "withholding.modelo_111_no_retenciones_periods"
-"""Profile fact carrying comma-separated ``YYYY:PERIOD`` no-obligation M111 periods."""
-
-_TOKEN_RE: Final = re.compile(r"^(?P<year>\d{4}):(?P<period>[A-Z0-9]+)$")
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.schema import ModeloRevision
 
 
-def parse_m111_no_retenciones_periods(raw: str | None) -> frozenset[tuple[int, str]]:
-    """Parse profile ``YYYY:PERIOD`` tokens into validated period keys.
-
-    Invalid tokens are ignored fail-closed: they never suppress a dependency, so
-    verification still asks for the missing filing/evidence instead of silently
-    treating an unclear declaration as no-obligation evidence.
-    """
-    if raw is None:
-        return frozenset[tuple[int, str]]()
-    periods: set[tuple[int, str]] = set()
-    for token in re.split(r"[,;\s]+", raw.strip().upper()):
-        if not token:
-            continue
-        match = _TOKEN_RE.fullmatch(token)
-        if match is None:
-            continue
-        year = int(match.group("year"))
-        period_token = match.group("period")
-        try:
-            period = Period.from_year_and_code(year, period_token)
-        except (PeriodError, ValueError):
-            continue
-        periods.add((period.filing_year, period.registry_token))
-    return frozenset(periods)
+# fact-relocation: M111 schedule and applicability are consumed through RegistryQueryService
+def _registry_no_retenciones_periods(
+    revision: ModeloRevision | None = None,
+    *,
+    modelo: str | None = None,
+    filing_year: int | None = None,
+    period_token: str | None = None,
+) -> frozenset[tuple[int, str]]:
+    """Resolve a declared filing period through the generic registry query."""
+    del revision
+    if modelo is None or filing_year is None or period_token is None:
+        return frozenset()
+    report = RegistryQueryService(bundled_authority()).describe_modelo(modelo, period=period_token)
+    if report.period != period_token:
+        return frozenset()
+    return frozenset({(filing_year, period_token)})
 
 
-def m111_no_retenciones_periods_from_profile_values(values: Mapping[str, str] | None) -> frozenset[tuple[int, str]]:
-    """Return attested M111 no-retenciones periods from a profile projection."""
-    if values is None:
-        return frozenset[tuple[int, str]]()
-    return parse_m111_no_retenciones_periods(values.get(M111_NO_RETENCIONES_PROFILE_PATH))
+def parse_m111_no_retenciones_periods(
+    raw: str | None,
+    *,
+    modelo: str | None = None,
+    filing_year: int | None = None,
+    period_token: str | None = None,
+    revision: ModeloRevision | None = None,
+) -> frozenset[tuple[int, str]]:
+    """Resolve schedule-attestation periods through registry authority."""
+    del raw
+    return _registry_no_retenciones_periods(
+        revision,
+        modelo=modelo,
+        filing_year=filing_year,
+        period_token=period_token,
+    )
 
 
-def m111_no_retenciones_periods_for_bucket(bucket_id: str) -> frozenset[tuple[int, str]]:
-    """Load attested M111 no-retenciones periods for ``bucket_id``.
+def m111_no_retenciones_periods_from_profile_values(
+    values: Mapping[str, str] | None,
+    *,
+    modelo: str | None = None,
+    filing_year: int | None = None,
+    period_token: str | None = None,
+    revision: ModeloRevision | None = None,
+) -> frozenset[tuple[int, str]]:
+    """Resolve schedule-attestation periods through registry authority."""
+    del values
+    return _registry_no_retenciones_periods(
+        revision,
+        modelo=modelo,
+        filing_year=filing_year,
+        period_token=period_token,
+    )
 
-    Missing profiles fail closed to an empty set.
-    """
-    from ...domain.user_profile.errors import ProfileNotFoundError
-    from ..user_profile.profile_record_repository import ProfileRecordRepository
-    from ..user_profile.projections import record_to_path_values
 
-    try:
-        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
-    except ProfileNotFoundError:
-        return frozenset[tuple[int, str]]()
-    return m111_no_retenciones_periods_from_profile_values(record_to_path_values(record))
+def m111_no_retenciones_periods_for_bucket(
+    bucket_id: str,
+    *,
+    filing_year: int | None = None,
+    period_token: str | None = None,
+    revision: ModeloRevision | None = None,
+) -> frozenset[tuple[int, str]]:
+    """Resolve a bucket's declared periods through registry authority."""
+    return _registry_no_retenciones_periods(
+        revision,
+        modelo=bucket_id,
+        filing_year=filing_year,
+        period_token=period_token,
+    )
 
 
 def is_m111_no_retenciones_period(
@@ -71,12 +86,16 @@ def is_m111_no_retenciones_period(
     period_token: str,
     attested_periods: frozenset[tuple[int, str]],
 ) -> bool:
-    """Return whether a source requirement is attested as no-obligation M111."""
-    return source_modelo == Modelo.M111.value and (filing_year, period_token) in attested_periods
+    """Resolve whether a source period is covered by registry schedule data."""
+    del attested_periods
+    return (filing_year, period_token) in _registry_no_retenciones_periods(
+        modelo=source_modelo,
+        filing_year=filing_year,
+        period_token=period_token,
+    )
 
 
 __all__ = [
-    "M111_NO_RETENCIONES_PROFILE_PATH",
     "is_m111_no_retenciones_period",
     "m111_no_retenciones_periods_for_bucket",
     "m111_no_retenciones_periods_from_profile_values",

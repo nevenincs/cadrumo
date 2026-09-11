@@ -17,7 +17,8 @@ from typing import TYPE_CHECKING
 import typer
 
 from ...application.ledger.participation_read import get_transaction_participation
-from ._common import (
+from ._ledger_read_cli import resolve_ledger_transaction_id
+from .common import (
     ResolveTransactionId,
     active_bucket_id_or_bad,
     current_workflow_state,
@@ -25,7 +26,6 @@ from ._common import (
     emit_help_text,
     transaction_catalogue_repo,
 )
-from ._ledger_read_cli import resolve_ledger_transaction_id
 
 if TYPE_CHECKING:
     from ._ledger_payloads import LedgerTransactionParticipationEntryPayload

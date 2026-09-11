@@ -38,10 +38,18 @@ from ..operations.models import OperationId
 from ..operator_actions.models import ActionReference
 from .edit_contract import (
     EditModel,
-    ModeloEditCompatibilityTupleV1,
-    ModeloEditExecutionEffect,
-    ModeloEditMutationFamily,
-    ModeloEditMutationResultReceiptV1,
+)
+from .edit_contract import (
+    ModeloEditCompatibilityTupleV1 as _ModeloEditCompatibilityTupleV1,
+)
+from .edit_contract import (
+    ModeloEditExecutionEffect as _ModeloEditExecutionEffect,
+)
+from .edit_contract import (
+    ModeloEditMutationFamily as _ModeloEditMutationFamily,
+)
+from .edit_contract import (
+    ModeloEditMutationResultReceiptV1 as _ModeloEditMutationResultReceiptV1,
 )
 
 _MAX_FINDINGS = 500
@@ -443,7 +451,7 @@ class ModeloEditBaselineV1(EditModel):
     """
 
     edit_contract_version: Literal[1] = 1
-    compatibility: ModeloEditCompatibilityTupleV1
+    compatibility: _ModeloEditCompatibilityTupleV1
     bucket_id: BucketId
     modelo: ModeloCode
     filing_year: FilingYear
@@ -457,7 +465,7 @@ class ModeloEditBaselineV1(EditModel):
     schema_version: Annotated[int, Field(ge=1)]
     permitted_surface: Annotated[tuple[ModeloEditPermittedSurfaceEntryV1, ...], Field(max_length=_MAX_SURFACE_ENTRIES)]
     permitted_surface_digest: ContentDigest
-    mutation_family: ModeloEditMutationFamily
+    mutation_family: _ModeloEditMutationFamily
     issued_at: datetime
     expires_at: datetime
     baseline_id: ModeloEditBaselineId
@@ -808,7 +816,7 @@ class ModeloEditSubmissionV1(EditModel):
 
     edit_contract_version: Literal[1] = 1
     baseline: ModeloEditBaselineV1
-    mutation_family: ModeloEditMutationFamily
+    mutation_family: _ModeloEditMutationFamily
     scalar_intents: Annotated[tuple[ModeloScalarEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
     binding_intents: Annotated[tuple[ModeloBindingEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
     row_intents: Annotated[tuple[ModeloRowEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
@@ -840,14 +848,14 @@ class ModeloEditApplyRequestV1(EditModel):
 class ModeloEditExecutionUpdatedV1(EditModel):
     """The successful compare-and-swap arm carrying the authoritative receipt."""
 
-    effect: Literal[ModeloEditExecutionEffect.UPDATED] = ModeloEditExecutionEffect.UPDATED
-    receipt: ModeloEditMutationResultReceiptV1
+    effect: Literal[_ModeloEditExecutionEffect.UPDATED] = _ModeloEditExecutionEffect.UPDATED
+    receipt: _ModeloEditMutationResultReceiptV1
 
 
 class ModeloEditExecutionNoEffectV1(EditModel):
     """The failed compare-and-swap arm; writes nothing and names the refusal."""
 
-    effect: Literal[ModeloEditExecutionEffect.NONE] = ModeloEditExecutionEffect.NONE
+    effect: Literal[_ModeloEditExecutionEffect.NONE] = _ModeloEditExecutionEffect.NONE
     refusal: ModeloEditRefusalV1
 
 
@@ -868,19 +876,15 @@ __all__ = [
     "ModeloEditBindingAddressV1",
     "ModeloEditBindingIntentKind",
     "ModeloEditCompatibilityRefusalV1",
-    "ModeloEditCompatibilityTupleV1",
     "ModeloEditDetailRowAddressV1",
     "ModeloEditDetailRowIntentKind",
     "ModeloEditDomainRefusalV1",
-    "ModeloEditExecutionEffect",
     "ModeloEditExecutionNoEffectV1",
     "ModeloEditExecutionResultV1",
     "ModeloEditExecutionUpdatedV1",
     "ModeloEditExistingRowAddressV1",
     "ModeloEditFindingSeverity",
     "ModeloEditFindingV1",
-    "ModeloEditMutationFamily",
-    "ModeloEditMutationResultReceiptV1",
     "ModeloEditNewRowCorrelationV1",
     "ModeloEditNonWritableBindingOverrideSurfaceEntryV1",
     "ModeloEditNonWritableReason",

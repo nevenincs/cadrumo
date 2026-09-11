@@ -8,9 +8,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.resources.bundled_data import bundled_path
-
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
 from ..bindings import CasillaObservation, RegistryModeloObservation
 from ..errors import RegistryValidationError

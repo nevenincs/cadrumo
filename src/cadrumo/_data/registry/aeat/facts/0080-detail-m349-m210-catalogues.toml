@@ -1,0 +1,28 @@
+[fact]
+fact_id = "detail-m349-m210-catalogues"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "detail-m349-m210-catalogues:2026-01-01"
+date_axis = "filing_period"
+valid_from = 2026-01-01
+legal_refs = ["orden-hac-174-2020:art-1", "orden-hac-56-2024:art-4.1"]
+source_refs = ["aeat-modelo-349-procedure", "aeat-modelo-210-procedure"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-349-procedure"
+required_text = ["operaciones intracomunitarias"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "detail_bearing_modelos", value = "184,232,347,349" },
+  { key = "m349.operation_keys", value = "E,M,H,A,T,S,I,R,D,C" },
+  { key = "m349.country_prefixes", value = "registry_declared" },
+  { key = "m349.service_keys", value = "S,I" },
+  { key = "m349.transition.first_periods", value = "01,1M,1T" },
+  { key = "m349.transition.year", value = "2021" },
+  { key = "m210.annual_grouping_codes", value = "01,35" },
+  { key = "m210.grouping_period", value = "0A" },
+  { key = "m210.code35.payer_mode", value = "multiple_payers_code_35" },
+]

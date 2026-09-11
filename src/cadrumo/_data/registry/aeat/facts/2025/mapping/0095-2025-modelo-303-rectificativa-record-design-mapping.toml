@@ -1,0 +1,36 @@
+[fact]
+fact_id = "modelo-303-rectificativa-record-design-mapping"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-303-rectificativa-record-design-mapping:2024-09-01"
+date_axis = "filing_period"
+valid_from = 2024-09-01
+source_refs = [
+  "aeat-dr-303-2024-late",
+  "aeat-dr-303-2025",
+  "aeat-dr-303-2026",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "amendment.kind", value = "rectificativa" },
+  { key = "motive.rectificaciones", value = "rectificaciones" },
+  { key = "motive.discrepancia_criterio_administrativo", value = "discrepancia_criterio_administrativo" },
+  { key = "record_design.2024-desde-09-y-3t.source_ref", value = "aeat-dr-303-2024-late" },
+  { key = "record_design.2024-desde-09-y-3t.content_digest", value = "2095dd633413f4aed28053bc88402461d80865f454156c01ebc4a2ab68cb76a8" },
+  { key = "record_design.2024-desde-09-y-3t.epoch", value = "2024-late" },
+  { key = "record_design.2025.source_ref", value = "aeat-dr-303-2025" },
+  { key = "record_design.2025.content_digest", value = "6c3d7eeb714e0deb52f91d7e8dbadeb83f16c1d32d25f9e871756f3ddf0117e6" },
+  { key = "record_design.2025.epoch", value = "2025" },
+  { key = "record_design.2026-y-siguientes.source_ref", value = "aeat-dr-303-2026" },
+  { key = "record_design.2026-y-siguientes.content_digest", value = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b" },
+  { key = "record_design.2026-y-siguientes.epoch", value = "2026" },
+  { key = "applicability.source", value = "selected_modelo_revision" },
+  { key = "binding.source", value = "selected_modelo_revision" },
+  { key = "legal_reference.source", value = "selected_registry_revision" },
+  { key = "fact_id.source", value = "selected_registry_revision" },
+]

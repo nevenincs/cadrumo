@@ -10,14 +10,14 @@ from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos.errors import ModeloError
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ..verification_actions import evaluate_advisory_predicate_fires, evaluate_verification_predicates
-from ._verification_substance_support import (
+from ..verification_predicates import evaluate_advisory_predicate_fires, evaluate_verification_predicates
+from .verification_substance_support import (
     _CASILLA_00501,
     _CASILLA_01,
     _CASILLA_06,
     _M200_BIN_GENERATED_CASILLA,
     _casilla_values,
-    _workflow_profile,
+    workflow_profile,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -84,7 +84,7 @@ def test_art109_profile_advisory_emits_warning_when_profile_flag_is_enabled() ->
         expression=_M130_ART109_PROFILE_ADVISORY,
         finding_kind="ADVISORY",
     )
-    profile = _workflow_profile().model_copy(update={"art109_activity_income_withholding_ge_70pct": True})
+    profile = workflow_profile().model_copy(update={"art109_activity_income_withholding_ge_70pct": True})
     casilla_values: dict[CasillaId, Decimal] = {
         _CASILLA_06: Decimal("0"),
         _CASILLA_01: Decimal("15000"),
@@ -106,7 +106,7 @@ def test_art109_profile_advisory_ignores_professional_only_profile_flag() -> Non
         expression=_M130_ART109_PROFILE_ADVISORY,
         finding_kind="ADVISORY",
     )
-    profile = _workflow_profile().model_copy(update={"professional_income_withholding_ge_70pct": True})
+    profile = workflow_profile().model_copy(update={"professional_income_withholding_ge_70pct": True})
     casilla_values: dict[CasillaId, Decimal] = {
         _CASILLA_06: Decimal("0"),
         _CASILLA_01: Decimal("15000"),
@@ -130,7 +130,7 @@ def test_art109_profile_advisory_ignores_high_retention_amount_ratio_when_profil
         _CASILLA_01: Decimal("15000"),
     }
 
-    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+    findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
     assert findings == []
 
 

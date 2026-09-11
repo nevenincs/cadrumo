@@ -36,16 +36,18 @@ from ..provisioning import (
     AcceleratorDevice,
     AcceleratorReading,
     HardwareProfile,
-    RuntimeResident,
     SystemMemoryReading,
-    assess_model_load_contention,
-    cadrumo_selected_models,
     probe_hardware_profile,
     probe_local_inference_hardware,
-    pull_runtime_model,
-    read_runtime_residents,
     read_system_memory,
     select_model_for_role,
+)
+from ..provisioning_runtime import (
+    RuntimeResident,
+    assess_model_load_contention,
+    cadrumo_selected_models,
+    pull_runtime_model,
+    read_runtime_residents,
     unload_runtime_model,
     verify_model_ready,
 )

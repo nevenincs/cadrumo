@@ -25,7 +25,7 @@ from ....core.ed25519_signing import (
     sign_digest_hex,
 )
 
-review_signing = import_module("cadrumo.application.modelo.review_package_signing")
+review_signing = import_module("..review_package_signing", package=__package__)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

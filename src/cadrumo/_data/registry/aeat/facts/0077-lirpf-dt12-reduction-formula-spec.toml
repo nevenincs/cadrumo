@@ -1,0 +1,37 @@
+[fact]
+fact_id = "lirpf-dt12-reduction-formula-spec"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "lirpf-dt12-reduction-formula-spec:2015-01-01"
+date_axis = "filing_period"
+valid_from = 2015-01-01
+legal_refs = ["ley-35-2006:dt-12"]
+source_refs = ["boe-lirpf-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = ["reducción del 40 por ciento"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "formula.kind", value = "pre_2007_share_times_gross_rescate_times_rate" },
+  { key = "formula.input.gross_rescate", value = "operator_input" },
+  { key = "formula.input.aportaciones_pre_2007", value = "operator_input" },
+  { key = "formula.input.aportaciones_totales", value = "operator_input" },
+  { key = "formula.rate_fact_id", value = "lirpf-dt12-rescate-reduction-rate" },
+  { key = "formula.rounding", value = "money-2" },
+  { key = "formula.guard.aportaciones_totales", value = "positive" },
+  { key = "formula.guard.inputs_non_negative", value = "gross_rescate,aportaciones_pre_2007" },
+  { key = "formula.guard.pre_2007_subset", value = "aportaciones_pre_2007 <= aportaciones_totales" },
+  { key = "eligibility.comparison", value = "contingencia_year <= rescate_year <= eligible_through_year" },
+  { key = "eligibility.general.following_years_fact_id", value = "lirpf-dt12-general-window-following-years" },
+  { key = "eligibility.transitional.first_year_fact_id", value = "lirpf-dt12-transitional-contingency-first-year" },
+  { key = "eligibility.transitional.last_year_fact_id", value = "lirpf-dt12-transitional-contingency-last-year" },
+  { key = "eligibility.transitional.following_years_fact_id", value = "lirpf-dt12-transitional-window-following-years" },
+  { key = "eligibility.cliff.last_year_fact_id", value = "lirpf-dt12-cliff-last-year" },
+  { key = "eligibility.cliff.opening", value = "contingencia_year <= transitional_first_year - 1" },
+  { key = "eligibility.transitional.opening", value = "transitional_first_year <= contingencia_year <= transitional_last_year" },
+  { key = "eligibility.general.opening", value = "contingencia_year > transitional_last_year" },
+]

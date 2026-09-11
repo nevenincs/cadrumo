@@ -1,0 +1,54 @@
+[fact]
+fact_id = "iva-deduction-applicability-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "iva-deduction-applicability-catalogue:2022-01-01"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-93", "ley-37-1992:art-107"]
+source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "category.domestic", value = "domestic_general,domestic_reduced,domestic_super_reduced,domestic_zero,domestic_reverse_charge" },
+  { key = "category.intra_eu", value = "intra_community_acquisition_reverse_charge,intra_community_service_acquisition_reverse_charge" },
+  { key = "category.import", value = "import_third_country" },
+  { key = "category.reagp", value = "reagp_compensation" },
+  { key = "kind.domestic", value = "domestic_current,domestic_investment" },
+  { key = "kind.import", value = "import_current,import_investment" },
+  { key = "kind.intra_eu", value = "intra_eu_current,intra_eu_investment" },
+  { key = "kind.rectification", value = "rectification" },
+  { key = "kind.reagp", value = "reagp_compensation" },
+  { key = "kind.owner_only", value = "investment_goods_regularisation" },
+  { key = "kind.investment_acquisition", value = "domestic_investment,import_investment,intra_eu_investment" },
+  { key = "kind.required_authority.domestic_current", value = "invoice_evidence" },
+  { key = "kind.required_authority.domestic_investment", value = "invoice_evidence" },
+  { key = "kind.required_authority.import_current", value = "customs_declaration" },
+  { key = "kind.required_authority.import_investment", value = "customs_declaration" },
+  { key = "kind.required_authority.intra_eu_current", value = "intra_eu_self_assessment" },
+  { key = "kind.required_authority.intra_eu_investment", value = "intra_eu_self_assessment" },
+  { key = "kind.required_authority.reagp_compensation", value = "reagp_receipt" },
+  { key = "kind.required_authority.rectification", value = "rectification_evidence" },
+  { key = "kind.required_authority.investment_goods_regularisation", value = "bienes_inversion_register" },
+  { key = "flow.domestic", value = "soportado,inversion_sujeto_pasivo" },
+  { key = "flow.import", value = "soportado" },
+  { key = "flow.intra_eu", value = "inversion_sujeto_pasivo" },
+  { key = "flow.reagp", value = "soportado" },
+  { key = "rate.rectification_forbidden", value = "exempt" },
+  { key = "rate.reagp", value = "exempt" },
+  { key = "rectification_flow.domestic_general", value = "soportado" },
+  { key = "rectification_flow.domestic_reduced", value = "soportado" },
+  { key = "rectification_flow.domestic_super_reduced", value = "soportado" },
+  { key = "rectification_flow.domestic_reverse_charge", value = "inversion_sujeto_pasivo" },
+  { key = "rectification_flow.import_third_country", value = "soportado" },
+  { key = "rectification_flow.intra_community_acquisition_reverse_charge", value = "inversion_sujeto_pasivo" },
+  { key = "rectification_flow.intra_community_service_acquisition_reverse_charge", value = "inversion_sujeto_pasivo" },
+  { key = "label.domestic", value = "domestic deduction input or recipient reverse-charge" },
+  { key = "label.import", value = "import soportado deduction" },
+  { key = "label.intra_eu", value = "intra-EU recipient reverse-charge deduction" },
+  { key = "label.reagp", value = "REAGP exempt compensation deduction" },
+]

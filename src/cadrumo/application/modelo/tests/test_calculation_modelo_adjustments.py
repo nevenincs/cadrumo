@@ -16,8 +16,8 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.row_models import Modelo349OperadorRow, ModeloDetailRow
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .._calculation_modelo_adjustments import (
-    _m390_303_reconciliation_targets,
     detail_row_binding_values_for_calculation,
+    reconciliation_relation_targets,
     union_detail_rows_by_identity,
 )
 from ..action_errors import ModeloAggregationBindingError
@@ -50,7 +50,7 @@ def test_m390_reconciliation_target_reaches_a_binding_declared_only_as_an_altern
         update={"revision": snapshot.revision.model_copy(update={"casillas": revised_casillas})},
     )
 
-    relation_targets = _m390_303_reconciliation_targets(revised_snapshot)
+    relation_targets = reconciliation_relation_targets(revised_snapshot)
     target = next(row for row in relation_targets if row[0] == _RELATION)
 
     assert target[1] == _TARGET_BINDING

@@ -18,7 +18,6 @@ from ....core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
-    BindingExportDataType,
     invariant_diagnostics,
     optional_uppercase_alpha_code,
     selector_against_model,
@@ -28,6 +27,7 @@ from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .schema import DataBindingDefinition, ModeloRevision
+from .schema_exports import ExportFieldDataType
 
 __all__ = [
     "AtributionMemberObservation",
@@ -166,7 +166,7 @@ class _RelatedPartySelector(BaseModel):
     row_field: _RelatedPartyRowField | None = None
     grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
-    data_type: BindingExportDataType | None = None
+    data_type: ExportFieldDataType | None = None
     """Scalar type of the value this row field contributes to the export.
 
     The same fact ``BindingRowExportSelector.data_type`` carries; declared here
@@ -249,7 +249,7 @@ class _ForeignAssetSelector(BaseModel):
     asset_classes: tuple[str, ...] = ()
     grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
-    data_type: BindingExportDataType | None = None
+    data_type: ExportFieldDataType | None = None
     """Scalar type of the value this row field contributes to the export.
 
     The same fact ``BindingRowExportSelector.data_type`` carries; declared here
@@ -488,7 +488,7 @@ class _AtributionSelector(BaseModel):
     row_field: _AtributionRowField | None = None
     grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
-    data_type: BindingExportDataType | None = None
+    data_type: ExportFieldDataType | None = None
     """Scalar type of the value this row field contributes to the export.
 
     The same fact ``BindingRowExportSelector.data_type`` carries; declared here
@@ -629,7 +629,7 @@ class _RefundSelector(BaseModel):
     row_field: _RefundRowField | None = None
     grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
-    data_type: BindingExportDataType | None = None
+    data_type: ExportFieldDataType | None = None
     """Scalar type of the value this row field contributes to the export.
 
     The same fact ``BindingRowExportSelector.data_type`` carries; declared here

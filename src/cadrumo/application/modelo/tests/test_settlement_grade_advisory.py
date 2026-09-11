@@ -14,10 +14,8 @@ from __future__ import annotations
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from .._settlement_grade_advisory import (
-    SETTLEMENT_SEMANTIC_ROLES,
-    collect_settlement_not_computed_diagnostics,
-)
+from .._settlement_grade_advisory import collect_settlement_not_computed_diagnostics
+from ..settlement_casilla import SETTLEMENT_SEMANTIC_ROLES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

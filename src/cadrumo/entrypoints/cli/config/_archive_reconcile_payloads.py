@@ -14,7 +14,7 @@ and left journalled for a later attempt, which matters to an operator precisely
 because a journal left behind may still describe cleartext bundle bytes on disk.
 
 See Also:
-    :mod:`~entrypoints.cli.config._archive_reconcile`
+    :mod:`~entrypoints.cli.config.archive_reconcile`
         CLI transport that populates these payloads.
     :mod:`~application.user_profile`
         Application facade owning the reconciliation this module projects.

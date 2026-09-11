@@ -37,7 +37,7 @@ from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryO
 from ....core.time.clock import now
 from ....core.tty import stdin_is_tty
 from ....domain.user_profile.errors import ProfileNotFoundError
-from ...persistence.storage.master_key.master_key import looks_like_real_tax_id
+from ...persistence.storage.master_key.master_key_tax_id import looks_like_real_tax_id
 from .errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthLoopbackBindError,
@@ -105,7 +105,7 @@ def check_unsecured_mode_safety(profile: str, tax_id: str) -> None:
             When
             ``cadrumo_secret_store_backend=unsecured`` and ``tax_id`` parses as a
             real Spanish tax identifier per
-            :func:`adapters.persistence.storage.master_key.looks_like_real_tax_id`.
+            :func:`adapters.persistence.storage.master_key.master_key_tax_id.looks_like_real_tax_id`.
     """
     settings = load_settings()
     if settings.cadrumo_secret_store_backend is not SecretStoreBackend.UNSECURED:

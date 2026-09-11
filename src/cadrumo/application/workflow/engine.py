@@ -37,6 +37,7 @@ from ...core.time.clock import now as _utcnow
 from ...core.time.clock import today_madrid
 from ...domain.deadlines.models import ModeloDeadline, ObligationStatus, TaxpayerProfile
 from ...domain.filing.errors import ModeloBuilderError
+from ...domain.filing.protocols import ModeloInputs
 from ...domain.submission.errors import SubmissionPreflightError
 from ...domain.submission.models import ModeloDraftStatus
 from ..filing.runtime import build_runtime_schema_provider
@@ -56,19 +57,18 @@ from .engine_helpers import (
 )
 from .engine_recording import record_site_unavailable, record_unhandled
 from .errors import WorkflowAbortSignalError, WorkflowError, WorkflowInputMismatchError
+from .abort import WorkflowAbortReason
 from .protocols import (
     CertificateBundleProtocol,
     DeadlineEngineProtocol,
     ExpedientesSource,
     ModeloDraftBuilderProtocol,
-    ModeloInputs,
     ModeloInputsProviderProtocol,
     NotificationsSource,
     RegistryModeloDraftProtocol,
     SubmissionEngineProtocol,
 )
 from .run_models import (
-    WorkflowAbortReason,
     WorkflowAlreadyFiledDetails,
     WorkflowAuthCheckDetails,
     WorkflowDeadlineContextDetails,

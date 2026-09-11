@@ -23,7 +23,7 @@ not a stronger fixture but an unconstructible record. That exclusion is
 asserted rather than assumed, so it fails if the pinning is ever relaxed.
 
 The fixture material itself lives in
-:mod:`_profile_record_boundary_support`, shared with the cross-process suite
+:mod:`profile_record_boundary_support`, shared with the cross-process suite
 so the two prove their claims about the same record rather than about two
 fixtures that happen to look alike.
 
@@ -53,7 +53,7 @@ from ..capsule_record import (
     profile_record_object_key,
 )
 from ..custody_ports import profile_custody_secure_object_namespace, profile_custody_secure_object_repository
-from ._profile_record_boundary_support import (
+from .profile_record_boundary_support import (
     CREATED_AT,
     PROFILE_ID,
     RECORD_NAMESPACE,

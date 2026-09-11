@@ -1,0 +1,31 @@
+[fact]
+fact_id = "m200-projection-family-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "m200-projection-family-catalogue:2025-01-01"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+legal_refs = ["ley-27-2014:art-124"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+    { key = "modelo.200.projection.m200_administrador.family", value = "administrador" },
+    { key = "modelo.200.projection.m200_entidad_menor_dependiente.family", value = "entidad_menor_dependiente" },
+    { key = "modelo.200.projection.m200_entidad_participada.family", value = "entidad_participada" },
+    { key = "modelo.200.projection.m200_establecimiento_permanente.family", value = "establecimiento_permanente" },
+    { key = "modelo.200.projection.m200_incn_establecimiento_permanente.family", value = "none" },
+    { key = "modelo.200.projection.m200_incn_grupo_sociedad.family", value = "incn_grupo_sociedad" },
+    { key = "modelo.200.projection.m200_operacion_reestructuracion.family", value = "operacion_reestructuracion" },
+    { key = "modelo.200.projection.m200_participacion_directa.family", value = "participacion_directa" },
+    { key = "modelo.200.projection.m200_participacion_socio.family", value = "participacion_socio" },
+    { key = "modelo.200.projection.m200_participe_aie_ute.family", value = "participe_aie_ute" },
+    { key = "modelo.200.projection.m200_representante_legal.family", value = "representante_legal" },
+    { key = "modelo.200.projection.m200_secretario_consejo.family", value = "secretario_consejo" },
+    { key = "modelo.200.projection.m200_socio_sicav_disolucion.family", value = "socio_sicav_disolucion" },
+    { key = "modelo.200.projection.m200_transparencia_fiscal_internacional.family", value = "transparencia_fiscal_internacional" },
+]

@@ -24,8 +24,9 @@ import pytest
 
 from ......core.aeat_csv import is_aeat_csv
 from ......tests.live_gate import requires_live_enabled
-from ..declarations import Declaracion, open_declarations_register, walk_declarations_register
+from ..declarations import open_declarations_register, walk_declarations_register
 from ..declarations_remote import extract_csv_from_url
+from ..declarations_schema import Declaracion
 from ..errors import SedeError
 from ..schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 

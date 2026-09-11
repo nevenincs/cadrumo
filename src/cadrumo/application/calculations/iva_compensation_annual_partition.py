@@ -44,6 +44,18 @@ from ...domain.iva_compensation.carry_forward import (
     build_iva_compensation_carry_forward_report,
     derive_iva_compensation_year_end_carry_partition,
 )
+from ...domain.iva_compensation.filed_derivation import (
+    M303_COMPENSATION_APLICADA_CASILLA as M303_COMPENSACION_APLICADA_CASILLA,
+)
+from ...domain.iva_compensation.filed_derivation import (
+    M303_COMPENSATION_AVAILABLE_CASILLA as M303_DISPONIBLE_CASILLA,
+)
+from ...domain.iva_compensation.filed_derivation import (
+    M303_COMPENSATION_GENERADA_CASILLA as M303_GENERADA_CASILLA,
+)
+from ...domain.iva_compensation.filed_derivation import (
+    M303_COMPENSATION_POSTERIOR_CASILLA as M303_POSTERIOR_CASILLA,
+)
 from ..aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -51,12 +63,6 @@ from ..aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
-from .iva_compensation_casillas import (
-    M303_COMPENSACION_APLICADA_CASILLA,
-    M303_DISPONIBLE_CASILLA,
-    M303_GENERADA_CASILLA,
-    M303_POSTERIOR_CASILLA,
-)
 from .m303_carry_ingress import M303CarryIngressError, validate_normalized_m303_carry_observation_envelope
 from .observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 from .revision_carry_gate import revision_carry_outcome

@@ -16,8 +16,8 @@ from ..export import export_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-modelo_export = import_module("cadrumo.application.modelo.export")
-m303_filing_evidence = import_module("cadrumo.application.modelo._m303_filing_evidence")
+modelo_export = import_module("...modelo.export", package=__package__)
+m303_filing_evidence = import_module("...modelo.m303_filing_evidence", package=__package__)
 
 #: The three Exonerado-390 evidence classes are defined here, not in
 #: calculation_revision. That module used to carry them and kept importing

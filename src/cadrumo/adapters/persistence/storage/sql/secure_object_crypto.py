@@ -105,7 +105,7 @@ def verify_revision_self_consistency(
     an older shape this application ever wrote; the pre-release compatibility
     regime carries no read path for shapes nothing released produced. Refusing
     here is also what keeps this gate the single authority on the question:
-    :class:`~._secure_object_records.SecureObjectRecord` types ``revision_id``
+    :class:`~.secure_object_records.SecureObjectRecord` types ``revision_id``
     as an exactly-64-character digest, so a row this function admitted with no
     revision id could only ever fail again — untyped, and past the gate — while
     the record was being built. A row whose ``revision_id`` is present but

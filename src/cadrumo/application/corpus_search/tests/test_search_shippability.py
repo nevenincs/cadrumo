@@ -65,14 +65,14 @@ def test_retrieval_surface_imports_on_a_bare_core_install() -> None:
     # The whole shipped retrieval surface must import with no optional stack;
     # a real import-machinery check, not a mock.
     for module in (
-        "cadrumo.application.corpus_search.lexical_index",
-        "cadrumo.application.corpus_search.citation_lookup",
-        "cadrumo.application.corpus_search._retrieval",
-        "cadrumo.application.corpus_search.runtime",
-        "cadrumo.application.corpus_search",
-        "cadrumo.application.command_search",
+        "..lexical_index",
+        "..citation_lookup",
+        ".._retrieval",
+        "..runtime",
+        "..",
+        "...command_search",
     ):
-        assert importlib.import_module(module) is not None
+        assert importlib.import_module(module, package=__package__) is not None
 
 
 def _production_search_modules() -> list[Path]:

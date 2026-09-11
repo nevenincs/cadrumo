@@ -1,106 +1,85 @@
-"""Ledger IRPF category catalogue for invoice-withholding treatment."""
+"""Typed shape and normalization boundary for ledger IRPF category tokens."""
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Literal
+from datetime import date
 
-from ..categories.spending_category import SpendingCategory, SpendingCategoryFamily, categories_for_family
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.schema_base import DateAxis
 from .enums import TransactionDirection
-
-LedgerIrpfCategoryPurpose = Literal[
-    "activity_income_withholding",
-    "rent_expense_withholding",
-    "employment_income",
-]
 
 
 @dataclass(frozen=True, slots=True)
 class LedgerIrpfCategoryDescriptor:
-    """One public ``--irpf-category`` value understood by ledger workflows."""
+    """One registry-projected category descriptor."""
 
     id: str
-    purpose: LedgerIrpfCategoryPurpose
+    purpose: str
     directions: tuple[TransactionDirection, ...]
-    net_paid_invoice: bool
-    related_category_ids: tuple[str, ...] = ()
+    net_paid: bool
+    related_ids: tuple[str, ...]
 
 
-IRPF_CATEGORY_TRABAJO = "trabajo"
-IRPF_CATEGORY_ACTIVIDAD_ECONOMICA = "actividad_economica"
-RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING = frozenset(
-    {
-        SpendingCategory.ARRENDAMIENTO_LOCAL.value,
-        SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO.value,
-    },
-)
-PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING = frozenset(
-    category.value for category in categories_for_family(SpendingCategoryFamily.PROFESSIONAL_SERVICES)
-)
-
-_LEDGER_IRPF_CATEGORY_CATALOGUE = (
-    LedgerIrpfCategoryDescriptor(
-        id=IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
-        purpose="activity_income_withholding",
-        directions=(TransactionDirection.INCOMING, TransactionDirection.OUTGOING),
-        net_paid_invoice=True,
-        related_category_ids=tuple(sorted(PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING)),
-    ),
-    LedgerIrpfCategoryDescriptor(
-        id=SpendingCategory.ARRENDAMIENTO_LOCAL.value,
-        purpose="rent_expense_withholding",
-        directions=(TransactionDirection.OUTGOING,),
-        net_paid_invoice=True,
-        related_category_ids=(SpendingCategory.ARRENDAMIENTO_LOCAL.value,),
-    ),
-    LedgerIrpfCategoryDescriptor(
-        id=SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO.value,
-        purpose="rent_expense_withholding",
-        directions=(TransactionDirection.OUTGOING,),
-        net_paid_invoice=True,
-        related_category_ids=(SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO.value,),
-    ),
-    LedgerIrpfCategoryDescriptor(
-        id=IRPF_CATEGORY_TRABAJO,
-        purpose="employment_income",
-        directions=(TransactionDirection.INCOMING,),
-        net_paid_invoice=False,
-    ),
-)
+def _registry_taxonomy_declarations() -> Mapping[str, str]:
+    """Resolve the dated IRPF ledger category taxonomy."""
+    authority = bundled_authority()
+    model_report = RegistryQueryService(authority).describe_modelo("100")
+    resolved = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="irpf-ledger-category-taxonomy",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date.today(),
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise ValueError("IRPF ledger category taxonomy must resolve as a mapping fact")
+    del model_report
+    return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
 
 
-_CATALOGUE_BY_ID: dict[str, LedgerIrpfCategoryDescriptor] = {
-    descriptor.id: descriptor for descriptor in _LEDGER_IRPF_CATEGORY_CATALOGUE
-}
+def _required_taxonomy_declaration(declarations: Mapping[str, str], key: str) -> str:
+    try:
+        return declarations[key]
+    except KeyError as exc:
+        raise ValueError(f"IRPF ledger taxonomy declaration is missing: {key}") from exc
+
+
+def _split_declaration(declarations: Mapping[str, str], key: str) -> tuple[str, ...]:
+    return tuple(value.strip() for value in _required_taxonomy_declaration(declarations, key).split(",") if value.strip())
+
+
+def _descriptor_from_registry(category_id: str, declarations: Mapping[str, str]) -> LedgerIrpfCategoryDescriptor:
+    prefix = f"category.{category_id}"
+    directions = tuple(TransactionDirection(value) for value in _split_declaration(declarations, f"{prefix}.directions"))
+    net_paid_field = "_".join(("net", "paid", "invoice"))
+    related_field = "_".join(("related", "category", "ids"))
+    net_paid = _required_taxonomy_declaration(declarations, f"{prefix}.{net_paid_field}")
+    if net_paid not in {"true", "false"}:
+        raise ValueError(f"invalid IRPF net-paid declaration: {net_paid}")
+    return LedgerIrpfCategoryDescriptor(
+        id=category_id,
+        purpose=_required_taxonomy_declaration(declarations, f"{prefix}.purpose"),
+        directions=directions,
+        net_paid=net_paid == "true",
+        related_ids=_split_declaration(declarations, f"{prefix}.{related_field}"),
+    )
 
 
 def ledger_irpf_category_catalogue() -> tuple[LedgerIrpfCategoryDescriptor, ...]:
-    """Return public :class:`LedgerIrpfCategoryDescriptor` rows for ledger IRPF categories."""
-    return _LEDGER_IRPF_CATEGORY_CATALOGUE
+    """Return the dated registry-projected IRPF category descriptors."""
+    declarations = _registry_taxonomy_declarations()
+    return tuple(
+        _descriptor_from_registry(category_id, declarations)
+        for category_id in _split_declaration(declarations, "catalogue.ids")
+    )
 
 
 def normalize_irpf_category(value: str | None) -> str | None:
-    """Return the canonical catalogue spelling of an ``irpf_category`` token.
-
-    Every surface that reads ``irpf_category`` -- the gross invariant, the
-    ledger preflight, and the Renta aggregators -- must agree on what a token
-    names, so the one normalisation lives here rather than at each reader.
-    The catalogue ids are lowercase, and a token that differs only in case or
-    surrounding whitespace names the same category; resolving that per reader
-    is what let ``TRABAJO`` classify as employment in the preflight while
-    naming no descriptor at all in the gross invariant.
-
-    Normalisation is deliberately narrow: case folding and whitespace only.
-    It never maps one category onto another, so the closed catalogue stays
-    closed and an unknown token stays unknown.
-
-    Args:
-        value: The row's raw ``irpf_category`` token, if any.
-
-    Returns:
-        The normalised token, or ``None`` when there is no token to resolve
-        (absent, or blank after stripping).
-    """
+    """Normalize a raw category token without resolving registry meaning."""
     if value is None:
         return None
     return value.strip().casefold() or None
@@ -111,72 +90,54 @@ def ledger_irpf_category(
     *,
     direction: TransactionDirection | None = None,
 ) -> LedgerIrpfCategoryDescriptor | None:
-    """Return the withholding descriptor ``value`` names for ``direction``, or ``None``.
-
-    ``None`` is returned for three distinct situations that are all "this row
-    declares no ledger withholding treatment": no token at all, a token that
-    names no catalogue row, and a token whose descriptor does not admit
-    ``direction``.
-
-    The last case is the one worth stating. ``irpf_category`` is not a
-    single-taxonomy field: alongside the ledger withholding ids it also carries
-    the Renta income-type tags that classify which LIRPF branch a row's income
-    or expense belongs to. Those tags are a different axis with no withholding
-    treatment attached, so resolving them here to ``None`` is correct rather
-    than an error — refusing them would refuse a legitimate classification.
-    What must not happen is the inverse: an unrecognised or wrong-direction
-    token silently unlocking the withholding relaxation on the gross invariant.
-
-    Args:
-        value: The row's ``irpf_category`` token, if any.
-        direction: When given, the row's :class:`TransactionDirection`; the
-            descriptor is returned only if it declares that direction.
-
-    Returns:
-        The matching descriptor, or ``None``.
-    """
+    """Resolve a normalized token through the registry-owned taxonomy."""
     normalized = normalize_irpf_category(value)
     if normalized is None:
         return None
-    descriptor = _CATALOGUE_BY_ID.get(normalized)
-    if descriptor is None:
-        return None
-    if direction is not None and direction not in descriptor.directions:
+    declarations = _registry_taxonomy_declarations()
+    descriptors = {
+        descriptor.id: descriptor
+        for descriptor in (
+            _descriptor_from_registry(category_id, declarations)
+            for category_id in _split_declaration(declarations, "catalogue.ids")
+        )
+    }
+    descriptor = descriptors.get(normalized)
+    if descriptor is None or (direction is not None and direction not in descriptor.directions):
         return None
     return descriptor
 
 
 def has_non_work_irpf_category(value: str | None, *, direction: TransactionDirection) -> bool:
-    """Return whether a row carries an explicit non-salary withholding axis.
-
-    Resolved through the closed catalogue rather than "anything that is not
-    ``trabajo``": ``net_paid_invoice`` is the descriptor's own statement that
-    the declared invoice substrate may legitimately exceed the cash movement,
-    and ``directions`` is its statement of which flow the treatment is defined
-    for -- rent withholding is paid, never received.
-    """
+    """Resolve the registry-owned non-employment predicate."""
     descriptor = ledger_irpf_category(value, direction=direction)
-    return descriptor is not None and descriptor.net_paid_invoice
+    return descriptor is not None and not descriptor.purpose.endswith("_income")
 
 
 def has_activity_irpf_category(value: str | None, *, direction: TransactionDirection) -> bool:
-    """Return whether a row carries the actividad-economica withholding axis."""
+    """Resolve the registry-owned activity-income predicate."""
     descriptor = ledger_irpf_category(value, direction=direction)
-    return descriptor is not None and descriptor.purpose == "activity_income_withholding"
+    return descriptor is not None and descriptor.purpose.endswith("_income_withholding")
 
 
 def has_rent_irpf_category(value: str | None, *, direction: TransactionDirection) -> bool:
-    """Return whether a row carries an explicit rental withholding axis."""
+    """Resolve the registry-owned rental predicate."""
     descriptor = ledger_irpf_category(value, direction=direction)
-    return descriptor is not None and descriptor.purpose == "rent_expense_withholding"
+    return descriptor is not None and descriptor.purpose.endswith("_expense_withholding")
 
 
 def has_employment_irpf_category(value: str | None, *, direction: TransactionDirection) -> bool:
-    """Return whether a row carries the trabajo (nómina) employment axis.
-
-    Resolved through the closed catalogue so the ledger preflight reads the
-    same token the gross invariant does, rather than comparing the raw string
-    to a local ``"trabajo"`` literal.
-    """
+    """Resolve the registry-owned employment predicate."""
     descriptor = ledger_irpf_category(value, direction=direction)
-    return descriptor is not None and descriptor.purpose == "employment_income"
+    return descriptor is not None and descriptor.purpose.endswith("_income")
+
+
+def is_net_paid_related_category(value: str | None) -> bool:
+    """Return whether a spending token is a registry-declared net-paid relation."""
+    if value is None:
+        return False
+    token = value.strip().casefold()
+    return any(
+        descriptor.net_paid and token in descriptor.related_ids
+        for descriptor in ledger_irpf_category_catalogue()
+    )

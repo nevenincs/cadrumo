@@ -20,7 +20,8 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from ..master_key import EnvelopeDocument, _extract_profile_tax_ids
+from .._master_key_records import EnvelopeDocument
+from ..master_key import _extract_profile_tax_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

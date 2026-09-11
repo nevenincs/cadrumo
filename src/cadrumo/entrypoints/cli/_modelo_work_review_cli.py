@@ -12,10 +12,10 @@ from ...adapters.persistence.profile.modelos_verification_reports import Verific
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...application.modelo.work_review import build_modelo_work_review
 from ...core.external_constants import OutputLanguage
-from ._common import activate_subcommand_output_language, emit_envelope
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_payloads import WorkReviewPayload, WorkReviewResult
 from ._modelo_rendering import verification_findings_notices
+from .common import activate_subcommand_output_language, emit_envelope
 
 
 def _review_lines(result: WorkReviewResult) -> list[str]:

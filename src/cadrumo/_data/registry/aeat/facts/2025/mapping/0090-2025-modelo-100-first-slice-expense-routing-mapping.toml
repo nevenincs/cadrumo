@@ -1,0 +1,66 @@
+[fact]
+fact_id = "modelo-100-first-slice-expense-routing-mapping"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-100-first-slice-expense-routing-mapping:2025"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+source_refs = ["aeat-modelo-100-2025", "boe-lirpf-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-100-2025"
+required_text = ["estimación directa", "gastos fiscalmente deducibles"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "modelo", value = "100" },
+  { key = "revision", value = "2025" },
+  { key = "selector.SUMINISTROS_CLIENTE_DIRECTOS", value = "0183" },
+  { key = "selector.CUOTAS_AUTONOMOS_SS", value = "0186" },
+  { key = "selector.MANUTENCION_DIETAS_NACIONAL", value = "0191" },
+  { key = "selector.MANUTENCION_DIETAS_EXTRANJERO", value = "0191" },
+  { key = "selector.ARRENDAMIENTO_LOCAL", value = "0192" },
+  { key = "selector.ARRENDAMIENTO_VIVIENDA_AFECTO", value = "0192" },
+  { key = "selector.REPARACIONES_CONSERVACION", value = "0193" },
+  { key = "selector.VEHICULO_MANTENIMIENTO", value = "0193" },
+  { key = "selector.SUMINISTROS_LOCAL_AFECTO", value = "0194" },
+  { key = "selector.SUMINISTROS_HOME_OFFICE_LUZ", value = "0194" },
+  { key = "selector.SUMINISTROS_HOME_OFFICE_AGUA", value = "0194" },
+  { key = "selector.SUMINISTROS_HOME_OFFICE_GAS", value = "0194" },
+  { key = "selector.SUMINISTROS_HOME_OFFICE_INTERNET", value = "0194" },
+  { key = "selector.TELEFONIA_FIJA", value = "0194" },
+  { key = "selector.MUTUALIDAD_ALTERNATIVA", value = "0195" },
+  { key = "selector.ASESORIA_CONTABLE", value = "0199" },
+  { key = "selector.ASESORIA_FISCAL", value = "0199" },
+  { key = "selector.ASESORIA_JURIDICA", value = "0199" },
+  { key = "selector.MATERIAL_OFICINA", value = "0199" },
+  { key = "selector.SOFTWARE_SUSCRIPCION", value = "0199" },
+  { key = "selector.TELEFONIA_MOVIL", value = "0199" },
+  { key = "selector.PUBLICIDAD_MARKETING", value = "0199" },
+  { key = "selector.SUBCONTRATACION", value = "0199" },
+  { key = "selector.SEGUROS_RESPONSABILIDAD_CIVIL", value = "0200" },
+  { key = "selector.SEGUROS_SALUD_AUTONOMO", value = "0200" },
+  { key = "selector.VEHICULO_SEGURO", value = "0200" },
+  { key = "selector.VEHICULO_COMBUSTIBLE", value = "0202" },
+  { key = "selector.VEHICULO_PEAJE", value = "0202" },
+  { key = "selector.VEHICULO_PARKING", value = "0202" },
+  { key = "selector.FORMACION_PROFESIONAL", value = "0202" },
+  { key = "selector.VIAJES_TRANSPORTE", value = "0202" },
+  { key = "selector.VIAJES_ALOJAMIENTO", value = "0202" },
+  { key = "selector.GASTOS_BANCARIOS", value = "0203" },
+  { key = "selector.GASTOS_FINANCIEROS", value = "0203" },
+  { key = "selector.IBI_LOCAL_AFECTO", value = "0206" },
+  { key = "selector.IBI_VIVIENDA_AFECTO", value = "0206" },
+  { key = "selector.TRIBUTOS_FISCALMENTE_DEDUCIBLES", value = "0206" },
+  { key = "selector.AMORTIZACION_VIVIENDA_AFECTO", value = "0208" },
+  { key = "selector.HARDWARE_AMORTIZABLE", value = "0208" },
+  { key = "selector.MOBILIARIO_AMORTIZABLE", value = "0208" },
+  { key = "selector.CUOTAS_COLEGIALES", value = "0217" },
+  { key = "selector.COMUNIDAD_VIVIENDA_AFECTO", value = "0217" },
+  { key = "applicability.source", value = "selected_modelo_100_revision" },
+  { key = "source_kind", value = "first_slice_expense_routing" },
+]

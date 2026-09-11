@@ -27,8 +27,8 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UnitProportion
-from ..calculations.registry.facts.resolution import FactSelector, MappingFactQuery, ResolvedMappingFact
-from ..calculations.registry.facts.schema import MappingFactPayload
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.facts.schema import FactSelector, MappingFactPayload
 from ..calculations.registry.schema_base import DateAxis
 from .errors import IvaCatalogueError, IvaValidationError
 

@@ -15,20 +15,19 @@ from typing import TYPE_CHECKING, override
 
 from pydantic import field_validator
 
-from ....core.resources._repository import ResourceCacheRepository
 from ....core.resources.errors import ResourceValidationError
+from ....core.resources.repository import ResourceCacheRepository
 from .._keys import TypedResourceKey
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
     from ....core.config import Settings
+    from ...manuals.ids import ManualId, ManualPart
     from ...manuals.schema import (
         Manual,
         ManualCasillaReference,
         ManualCatalogue,
-        ManualId,
-        ManualPart,
         Rule,
         RuleKind,
         Section,
@@ -60,7 +59,7 @@ class ManualKey(TypedResourceKey):
         quote regulatory text from. Failing closed at key construction keeps a
         mis-keyed lookup from ever selecting an authority.
         """
-        from ...manuals.schema import ManualPart
+        from ...manuals.ids import ManualPart
 
         try:
             return str(ManualPart(value))
@@ -97,8 +96,8 @@ class ManualRepository(ResourceCacheRepository["Manual", ManualKey]):
 
     @override
     def _load(self, key: ManualKey) -> Manual:
+        from ...manuals.ids import ManualId, ManualPart
         from ...manuals.loader import load_manual
-        from ...manuals.schema import ManualId, ManualPart
 
         manual_id = ManualId(key.manual_id)
         # No fallback: ManualKey already refused any part outside the canonical

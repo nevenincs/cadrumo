@@ -1,12 +1,12 @@
 """Transport dispatch: turn a tool descriptor plus arguments into one outcome.
 
-This is the SDK-independent layer that :mod:`cadrumo_harness.mcp._server` composes to
+This is the SDK-independent layer that :mod:`cadrumo_harness.mcp.server` composes to
 run a verb. Local ``READ`` and ``MUTATE`` verbs run warm in-process
-(:func:`~cadrumo_harness.mcp._inprocess.dispatch_verb_in_process`); the AEAT-sede /
+(:func:`~cadrumo_harness.mcp.inprocess.dispatch_verb_in_process`); the AEAT-sede /
 open-world ``LIVE`` family stays on the supervised subprocess
 (:func:`~cadrumo_harness.mcp._call_runtime.run_supervised`). Both transports return the
 same :class:`SubprocessToolOutcome` and parse through the same
-:func:`~cadrumo_harness.mcp._inprocess.parse_cli_envelope`, so the envelope cannot fork
+:func:`~cadrumo_harness.mcp.inprocess.parse_cli_envelope`, so the envelope cannot fork
 between them. :func:`_run_tool` is the single entry point the server's direct and
 ``execute`` paths share; it owns the fail-fast wedge handling that degrades a
 warm-eligible verb to the subprocess transport (with a visible warning Notice)
@@ -43,16 +43,16 @@ from cadrumo.core.operator_action_enums import ActionEvidenceProvenance, NoRecov
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 
 from ._call_runtime import CallTier, run_supervised, tier_for, timeout_seconds
-from ._inprocess import (
+from ._meta_tools import ToolRunOutcome
+from ._settings import load_mcp_settings
+from .inprocess import (
     CompletedCliRun,
     dispatch_verb_in_process,
     parse_cli_envelope,
     tier_runs_in_process,
     warm_capture_holder_age,
 )
-from ._meta_tools import ToolRunOutcome
-from ._settings import load_mcp_settings
-from ._tools import McpToolDescriptor
+from .tools import McpToolDescriptor
 
 
 class McpTransport(StrEnum):
@@ -467,10 +467,10 @@ def _run_inprocess_tool(
     """Serve one verb through the warm in-process runtime under a wall-clock ceiling.
 
     The verb runs in the server process through the real CLI pipeline
-    (:func:`~cadrumo_harness.mcp._inprocess.dispatch_verb_in_process`), reusing the
+    (:func:`~cadrumo_harness.mcp.inprocess.dispatch_verb_in_process`), reusing the
     same command functions and envelope builders as the subprocess transport, so
     the envelope - parsed through the same
-    :func:`~cadrumo_harness.mcp._inprocess.parse_cli_envelope` - is byte-identical.
+    :func:`~cadrumo_harness.mcp.inprocess.parse_cli_envelope` - is byte-identical.
     The per-tier ceiling is retained: an in-process call cannot be
     force-terminated the way a supervised subprocess tree can, so the call runs in
     a dedicated worker thread joined with the timeout. On breach the localized
@@ -580,7 +580,7 @@ def _run_tool(  # pyright: ignore[reportUnusedFunction]
     not per call); the AEAT-sede / open-world ``LIVE`` family stays on the
     supervised subprocess for its process-tree kill and operator progress sink.
     Both transports return the same :class:`SubprocessToolOutcome` shape and parse
-    through the same :func:`~cadrumo_harness.mcp._inprocess.parse_cli_envelope`, so the
+    through the same :func:`~cadrumo_harness.mcp.inprocess.parse_cli_envelope`, so the
     envelope cannot fork between them. Both meta-execute and the direct per-verb
     path route through here.
 

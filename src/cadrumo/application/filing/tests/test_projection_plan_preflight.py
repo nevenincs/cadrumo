@@ -24,7 +24,6 @@ from ....domain.calculations.registry.schema_exports import (
     ExportRecordDefinition,
 )
 from ....domain.filing.errors import FilingExportValidationError
-from ..export import _preflight_projection_plan
 from ..producer_snapshot import build_filing_producer_snapshot
 from ..projection import (
     FilingProjectionPlan,
@@ -34,6 +33,7 @@ from ..projection import (
     _require_regimen_snapshot_matches_registry,
     build_m303_filing_projection_plan,
 )
+from ..record_renderer import preflight_projection_plan
 from .test_producer_snapshot import _elections, _m303_filing_facts, _m303_profile, _presenter, _taxpayer_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -122,7 +122,7 @@ def test_projection_preflight_accepts_only_the_exact_address_bijection() -> None
         occurrence=1,
         value="722",
     )
-    assert _preflight_projection_plan(FilingProjectionPlan(contexts=(context,), values=(value,))) == {
+    assert preflight_projection_plan(FilingProjectionPlan(contexts=(context,), values=(value,))) == {
         (context.record.id, 1, reference): "722",
     }
 
@@ -146,10 +146,10 @@ def test_projection_preflight_accepts_only_the_exact_address_bijection() -> None
         (value.model_copy(update={"occurrence": 2}),),
     ):
         with pytest.raises(FilingExportValidationError):
-            _preflight_projection_plan(FilingProjectionPlan(contexts=(context,), values=invalid_values))
+            preflight_projection_plan(FilingProjectionPlan(contexts=(context,), values=invalid_values))
 
     with pytest.raises(FilingExportValidationError, match="duplicate record occurrences"):
-        _preflight_projection_plan(FilingProjectionPlan(contexts=(context, context), values=(value,)))
+        preflight_projection_plan(FilingProjectionPlan(contexts=(context, context), values=(value,)))
 
 
 def test_render_context_and_m303_builder_refuse_nonowned_or_cross_period_authority() -> None:

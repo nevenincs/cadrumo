@@ -1,0 +1,26 @@
+[fact]
+fact_id = "lirpf-art-30-insured-coverage-applicability"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "lirpf-art-30-insured-coverage-applicability:2007-01-01"
+date_axis = "filing_period"
+valid_from = 2007-01-01
+legal_refs = ["ley-35-2006:art-30", "rd-439-2007:art-72"]
+source_refs = ["lirpf-cuota-chain-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["a) Las primas de seguro de enfermedad satisfechas por el contribuyente en la parte correspondiente a su propia cobertura y a la de su cónyuge e hijos menores de veinticinco años que convivan con él. El límite máximo de deducción será de 500 euros por cada una de las personas señaladas anteriormente o de 1.500 euros por cada una de ellas con discapacidad."]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "insured_population.taxpayer", value = "included" },
+  { key = "insured_population.spouse", value = "included_when_marital_status_is_casado" },
+  { key = "insured_population.child", value = "included_when_cohabiting_and_below_lirpf-art-30-insured-child-maximum-age" },
+  { key = "insured_population.child.death_gate", value = "excluded_when_death_precedes_filing_year" },
+  { key = "coverage_limb.discapacidad", value = "rirpf-art-72-disability-minimum-grade" },
+  { key = "coverage_limb.general", value = "default_when_disability_threshold_is_not_met" },
+  { key = "coverage_caps", value = "categories.profile:seguros_salud_autonomo" },
+]

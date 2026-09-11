@@ -30,6 +30,9 @@ from ....domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from ....domain.iva_compensation.filed_derivation import (
+    M303_COMPENSATION_RESULTADO_CASILLA as M303_RESULTADO_CASILLA,
+)
 from ....domain.justificante.schema import Justificante
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -66,7 +69,6 @@ from ..cross_period_models import (
     CrossPeriodDependencyRequirement,
     CrossPeriodExpectedMemberSet,
 )
-from ..iva_compensation_casillas import M303_RESULTADO_CASILLA
 from ..observations_repository import CalculationObservationRepository, ObservationSourceKind
 
 _PROFILE_ID = "39039039-0390-4390-8390-390390390390"

@@ -34,7 +34,6 @@ from ...application.modelo.projection import (
 from ...core.modelo import Modelo
 from ...core.output_rendering import jsonable_output_payload
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from ._common import emit_envelope
 from ._modelo_behavior_support import require_active_profile
 from ._modelo_cli_support import (
     bad_parameter_from_error,
@@ -51,6 +50,7 @@ from ._modelo_payloads import (
     ModeloCompareResult,
     ModeloProjectResult,
 )
+from .common import emit_envelope
 
 
 def _delta_row_payload(row: ModeloCompareDeltaRow) -> DeltaRowPayload:

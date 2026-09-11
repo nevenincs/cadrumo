@@ -16,8 +16,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.authority_grade import RegistryAuthorityGrade
-
+from .....core.authority_grade import RegistryAuthorityGrade
 from ..formula_runtime import calculate_registry_snapshot
 from ._published_authority import artifact_snapshot
 

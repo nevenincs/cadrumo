@@ -29,7 +29,7 @@ from ._app_live_borrador_payloads import (
     Borrador100SnapshotSummaryPayload,
     Borrador100ViewResult,
 )
-from ._common import active_bucket_id_or_refuse, emit_envelope
+from .common import active_bucket_id_or_refuse, emit_envelope
 
 
 class _BorradorRow(TypedDict):

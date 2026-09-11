@@ -45,18 +45,6 @@ from ...core.logging import get_logger
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.modelos.work_unit import WorkUnit
-from ._common import (
-    activate_subcommand_output_language,
-    bad,
-    current_workflow_state,
-    declared_tax_id,
-    emit_envelope,
-    load_drafts,
-    load_invoices,
-    no_active_profile_refusal,
-    profile_to_taxpayer,
-    transaction_catalogue_repo,
-)
 from ._date_parsing import _parse_iso_date
 from ._overview_evidence import (
     live_censo_verified_profile_keys,
@@ -83,6 +71,18 @@ from ._overview_rendering import (
     overview_pipeline_output,
     overview_prepare_output,
     overview_status_output,
+)
+from .common import (
+    activate_subcommand_output_language,
+    bad,
+    current_workflow_state,
+    declared_tax_id,
+    emit_envelope,
+    load_drafts,
+    load_invoices,
+    no_active_profile_refusal,
+    profile_to_taxpayer,
+    transaction_catalogue_repo,
 )
 from .period_parsing import _canonical_period
 
@@ -141,7 +141,7 @@ def _incomplete_profile_refusal(warnings: Sequence[CalendarWarning]) -> CliRefus
         CliExceptionPrecondition,
         cli_exception_no_recovery_verdict,
     )
-    from ._common import attach_cli_policy_verdict
+    from .common import attach_cli_policy_verdict
     from .errors import CliRefusedBoundaryError
 
     return attach_cli_policy_verdict(
@@ -184,7 +184,7 @@ def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> CliRefusedBo
     from ...domain.calculations.registry.profile_grounding import build_profile_grounding_index
     from ...domain.contribuyente.entity_type import EntityType
     from ...domain.user_profile.loader import load_user_profile_schema
-    from ._common import attach_cli_policy_verdict
+    from .common import attach_cli_policy_verdict
     from .errors import CliRefusedBoundaryError
 
     missing: list[str] = []

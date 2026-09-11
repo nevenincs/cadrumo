@@ -11,7 +11,6 @@ from ..provenance import SYNTHETIC_FIXTURE_PRODUCER
 from ._generate_base import (
     _FIXTURES,
     _draw,
-    _Fixture,
     _write_sidecar,
 )
 from ._generate_iva_corpus import (
@@ -40,13 +39,6 @@ from ._generate_misc_a import (
     _draw_modelo_349,
     _draw_modelo_369,
     _draw_modelo_720,
-    _Modelo036Fixture,
-    _Modelo115Fixture,
-    _Modelo180Fixture,
-    _Modelo193Fixture,
-    _Modelo349Fixture,
-    _Modelo369Fixture,
-    _Modelo720Fixture,
 )
 from ._generate_misc_b import (
     _MODELO_123_FIXTURES,
@@ -98,29 +90,20 @@ from ._generate_modelo_390_english import (
 )
 
 __all__ = [
-    "_FIXTURES",
-    "_Fixture",
-    "_Modelo036Fixture",
     "_Modelo100CorpusFixture",
     "_Modelo100CurrentYearFixture",
     "_Modelo111Fixture",
-    "_Modelo115Fixture",
     "_Modelo123Fixture",
     "_Modelo130CorpusFixture",
     "_Modelo131Fixture",
-    "_Modelo180Fixture",
     "_Modelo184Fixture",
     "_Modelo190Fixture",
-    "_Modelo193Fixture",
     "_Modelo202Fixture",
     "_Modelo232Fixture",
     "_Modelo303CorpusFixture",
     "_Modelo347Fixture",
-    "_Modelo349Fixture",
-    "_Modelo369Fixture",
     "_Modelo390CorpusFixture",
     "_Modelo390EnglishFixture",
-    "_Modelo720Fixture",
     "_Modelo840Fixture",
     "main",
 ]

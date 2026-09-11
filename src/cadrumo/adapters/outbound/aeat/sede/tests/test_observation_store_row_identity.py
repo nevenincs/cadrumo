@@ -34,8 +34,13 @@ from ......core.config import Settings
 from ......core.period import Period
 from ......domain.calculations.registry.authority import bundled_authority
 from ......tests.secure_sql import isolated_runtime_profile
-from .._iva_compensation_wallet_parsing import WALLET_URL
+from .....persistence.storage.secure_object_namespaces import (
+    AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
+    AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
+    AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
+)
 from ..errors import SedeValidationError
+from ..iva_compensation_wallet_parsing import WALLET_URL
 from ..observation_store import FiledDeclaracionObservationStore
 from ..schema import (
     FiledDeclaracionArtefact,
@@ -140,8 +145,6 @@ def _substitute(engine, namespace: str, *, victim_marker: str, donor_marker: str
 
 def test_a_filed_observation_under_a_foreign_row_is_refused_on_targeted_load(tmp_path: Path) -> None:
     """The targeted lookup refuses instead of answering with the other declaration."""
-    from ..observation_store import _OBSERVATION_NAMESPACE
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
         artefact = _artefact(b"%PDF-1.7 A")
@@ -150,7 +153,7 @@ def test_a_filed_observation_under_a_foreign_row_is_refused_on_targeted_load(tmp
 
         _substitute(
             profile.repository._engine,
-            _OBSERVATION_NAMESPACE,
+            AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.namespace,
             victim_marker="202310013522456T",
             donor_marker="202410013522999B",
         )
@@ -165,8 +168,6 @@ def test_a_filed_observation_under_a_foreign_row_is_refused_on_enumeration(tmp_p
     A consumer that lists rather than looks up would otherwise carry the
     substituted evidence with no key ever compared.
     """
-    from ..observation_store import _OBSERVATION_NAMESPACE
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
         artefact = _artefact(b"%PDF-1.7 A")
@@ -175,7 +176,7 @@ def test_a_filed_observation_under_a_foreign_row_is_refused_on_enumeration(tmp_p
 
         _substitute(
             profile.repository._engine,
-            _OBSERVATION_NAMESPACE,
+            AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.namespace,
             victim_marker="202310013522456T",
             donor_marker="202410013522999B",
         )
@@ -190,8 +191,6 @@ def test_a_wallet_observation_under_a_foreign_row_is_refused(tmp_path: Path) -> 
     A wallet balance read against the wrong target period is a wrong number in
     a filing, not a mislabelled record.
     """
-    from ..observation_store import _IVA_WALLET_OBSERVATION_NAMESPACE
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
         path_a = store.persist_iva_wallet_observation(_wallet(2026, datetime(2026, 4, 1, 9, 0, tzinfo=UTC)))
@@ -199,7 +198,7 @@ def test_a_wallet_observation_under_a_foreign_row_is_refused(tmp_path: Path) -> 
 
         _substitute(
             profile.repository._engine,
-            _IVA_WALLET_OBSERVATION_NAMESPACE,
+            AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE.namespace,
             victim_marker='"target_year":2026',
             donor_marker='"target_year":2025',
         )
@@ -218,8 +217,6 @@ def test_the_substituted_row_really_holds_a_valid_foreign_payload(tmp_path: Path
     new identity check. Here the substituted bytes are a complete, parseable
     envelope for the OTHER row.
     """
-    from ..observation_store import _OBSERVATION_NAMESPACE
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
         artefact = _artefact(b"%PDF-1.7 A")
@@ -228,14 +225,17 @@ def test_the_substituted_row_really_holds_a_valid_foreign_payload(tmp_path: Path
 
         _substitute(
             profile.repository._engine,
-            _OBSERVATION_NAMESPACE,
+            AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.namespace,
             victim_marker="202310013522456T",
             donor_marker="202410013522999B",
         )
 
         payloads = [
             json.loads(plaintext.decode("utf-8"))
-            for _, _, plaintext in _rows(profile.repository._engine, _OBSERVATION_NAMESPACE)
+            for _, _, plaintext in _rows(
+                profile.repository._engine,
+                AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.namespace,
+            )
         ]
         expedientes = sorted(payload["payload"]["expediente_id"] for payload in payloads)
 
@@ -270,8 +270,6 @@ def test_an_artefact_whose_bytes_do_not_match_its_reference_is_refused(tmp_path:
     evidence, so bytes that cannot re-derive their own address cannot defend a
     figure whatever they contain.
     """
-    from ..observation_store import _ARTEFACT_NAMESPACE
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
         body_a = b"%PDF-1.7 body A"
@@ -283,7 +281,7 @@ def test_an_artefact_whose_bytes_do_not_match_its_reference_is_refused(tmp_path:
 
         _substitute(
             profile.repository._engine,
-            _ARTEFACT_NAMESPACE,
+            AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE.namespace,
             victim_marker="body A",
             donor_marker="body B",
         )
@@ -291,7 +289,13 @@ def test_an_artefact_whose_bytes_do_not_match_its_reference_is_refused(tmp_path:
         # The row under ref A now holds B's genuine bytes: intact, decryptable,
         # and exactly what the pre-fix read returned. Nothing but the re-hash
         # stands between the caller and the wrong evidence.
-        stored = [plaintext for _, _, plaintext in _rows(profile.repository._engine, _ARTEFACT_NAMESPACE)]
+        stored = [
+            plaintext
+            for _, _, plaintext in _rows(
+                profile.repository._engine,
+                AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE.namespace,
+            )
+        ]
         assert stored.count(body_b) == 2
         assert body_a not in stored
 

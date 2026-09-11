@@ -27,7 +27,7 @@ __all__ = ["_isolated_backend"]
 from ....core.config import override_settings
 from ....tests.profile_capsule import forge_colliding_capsule_label
 from ....tests.user_profile import register_cli_profile
-from .._common import cli_policy_refusal_projection
+from ..common import cli_policy_refusal_projection
 from ..errors import CliRefusedBoundaryError, suspend_error_boundary
 from .cli_runner import cadrumo_click_command, invoke_cached_cli
 

@@ -74,7 +74,7 @@ def profile_resolvable_binding_ids(
     resolved_period = (
         period.registry_token
         if period is not None
-        else _annual_period_for_year(
+        else annual_period_for_year(
             authority,
             modelo=modelo,
             filing_year=filing_year,
@@ -128,7 +128,7 @@ def profile_resolvable_binding_ids(
     return frozenset(str(binding_id) for binding_id in profile_resolved_binding_ids(result))
 
 
-def _annual_period_for_year(
+def annual_period_for_year(
     authority: ValidatedRegistryAuthority,
     *,
     modelo: str,

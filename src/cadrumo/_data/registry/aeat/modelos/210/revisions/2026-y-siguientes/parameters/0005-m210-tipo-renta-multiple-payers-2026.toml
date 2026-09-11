@@ -1,0 +1,26 @@
+# M210 income-code applicability for the payer-mode rule.
+#
+# This keyed presence table is intentionally separate from the complete
+# income-code catalogue in 0004. A declared row means that the selected code
+# requires the multiple-payer transaction mode; absence means that no special
+# multiple-payer requirement is declared by this parameter.
+
+[[revisions."2026-y-siguientes".parameters]]
+id = "m210-tipo-renta-multiple-payers-required-2026"
+data_type = "keyed_bracket_table"
+unit = "boolean"
+legal_refs = [
+    "orden-eha-3316-2010:art-1",
+]
+source_refs = [
+    "aeat-modelo-210-procedure",
+    "boe-modelo-210-base-order",
+]
+[[revisions."2026-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["HOJA INFORMATIVA 210", "TIPOS DE RENTA"]
+
+[[revisions."2026-y-siguientes".parameters.keyed_brackets]]
+key = "35"
+value = 1
+valid_from = 2025-01-01

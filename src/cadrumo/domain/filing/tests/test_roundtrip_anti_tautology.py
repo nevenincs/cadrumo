@@ -36,11 +36,11 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ...calculations.registry.schema_references import RegistrySnapshotRef
+from ...submission.models import ModeloDraftStatus
 from ..schema import (
     ModeloApprovalBasis,
     ModeloCasillaProvenance,
     ModeloDraft,
-    ModeloDraftStatus,
     ModeloValue,
     ModeloValueKind,
     compute_modelo_draft_id,

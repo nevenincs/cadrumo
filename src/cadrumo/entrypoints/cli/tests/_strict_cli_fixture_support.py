@@ -13,11 +13,8 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ._cli_surface_support import isolated_cli_surface_backend
-from ._english_locale_fixture import english_locale_fixture
 
 _DIAGNOSTICS_BUCKET_ID = "22222222-3333-4444-8555-666666666666"
-
-__all__ = ["english_locale_fixture"]
 
 
 @pytest.fixture(name="_isolated_backend")

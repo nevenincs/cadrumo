@@ -47,7 +47,6 @@ from ...domain.calculations.registry.applicability import derive_taxpayer_files_
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.modelos.calculation_revision import CalculationRevisionState
-from ._common import activate_subcommand_output_language, emit_envelope, filing_taxpayer_or_refuse
 from ._modelo_behavior_support import require_active_profile, resolve_revision_for_cli
 from ._modelo_cli_support import bad_parameter_from_error, resolve_default_actor
 from ._modelo_payloads import (
@@ -68,6 +67,7 @@ from ._modelo_rendering import (
     verification_report_notices,
     verification_report_payload,
 )
+from .common import activate_subcommand_output_language, emit_envelope, filing_taxpayer_or_refuse
 
 
 def _profile_expected_member_sets(profile: object) -> tuple[CrossPeriodExpectedMemberSet, ...]:

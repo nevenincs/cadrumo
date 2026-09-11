@@ -14,7 +14,6 @@ from typing import cast
 import typer
 
 from ...core.output_rendering import OutputFormat
-from ._common import preserve_requested_cli_leaf
 from ._log_levels import resolve_log_level
 from ._root_support import (
     activate_profile_override,
@@ -24,6 +23,7 @@ from ._root_support import (
     is_introspection_only_invocation,
     normalize_root_active_profile,
 )
+from .common import preserve_requested_cli_leaf
 
 
 def root_command(
@@ -78,8 +78,8 @@ def app_root(ctx: typer.Context, help_: bool = False) -> None:
     if help_ or ctx.invoked_subcommand is None:
         from ...application.operator_surface.help import build_help_document, render_help_text
         from ...core.json_contract import strict_round_trip
-        from ._common import emit_envelope
         from ._root_payloads import AppRootResult
+        from .common import emit_envelope
 
         document = build_help_document("app")
         typed_app = strict_round_trip(AppRootResult, document)

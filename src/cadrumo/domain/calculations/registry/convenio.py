@@ -17,9 +17,10 @@ the domestic tariff, and ``exempt`` drives the source-state rate to zero.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 from pydantic import Field, field_validator, model_validator
 
@@ -29,6 +30,9 @@ from ....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from .errors import RegistryValidationError
 from .ids import LegalRefId
 from .schema_base import RegistryModel
+
+if TYPE_CHECKING:
+    from .facts.resolution import ResolvedOverrideFact
 
 
 class ConvenioOverrideRow(RegistryModel):
@@ -199,3 +203,89 @@ class ConvenioAuthority(RegistryModel):
 
 
 CONVENIO_OVERRIDE_FACT_ID = "irnr.convenio.override"
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedConvenioOverride:
+    """One provider-selected treaty override with legal provenance."""
+
+    kind: ConvenioOverrideKind
+    rate: Decimal | None
+    country_code: str
+    document_id: str
+    fact: ResolvedOverrideFact
+
+
+def resolve_convenio_override(
+    *,
+    country_code: str,
+    tipo_renta: TipoRentaIrnr,
+    devengo_date: date,
+) -> ResolvedConvenioOverride | None:
+    """Resolve and validate the exact dated treaty fact, or return no row.
+
+    Registry corruption, an ambiguous selection, unsupported payloads, and
+    missing legal provenance remain registry refusals.  Only the absence of a
+    matching dated selector is represented by ``None``.
+    """
+    from .authority import bundled_authority
+    from .facts.resolution import OverrideFactQuery, ResolvedOverrideFact
+    from .facts.schema import FactSelector
+
+    if not isinstance(tipo_renta, TipoRentaIrnr):
+        raise RegistryValidationError("convenio override requires a TipoRentaIrnr value")
+
+    authority = bundled_authority()
+    authority.validate_registry()
+    normalized_country = country_code.upper()
+    selectors = (
+        FactSelector(name="country_code", value=normalized_country),
+        FactSelector(name="tipo_renta", value=tipo_renta.value),
+    )
+    fact = authority.catalogues.facts.facts.get(CONVENIO_OVERRIDE_FACT_ID)
+    if fact is None:
+        raise RegistryValidationError(f"governed fact {CONVENIO_OVERRIDE_FACT_ID!r} is not registered")
+    selector_identity = frozenset((selector.name, type(selector.value), selector.value) for selector in selectors)
+    if not any(
+        variant.date_axis is DateAxis.DEVENGO_DATE
+        and variant.valid_from <= devengo_date
+        and (variant.valid_to is None or devengo_date <= variant.valid_to)
+        and frozenset((selector.name, type(selector.value), selector.value) for selector in variant.selectors)
+        == selector_identity
+        for variant in fact.variants
+    ):
+        return None
+    resolved = authority.resolve_governed_fact(
+        OverrideFactQuery(
+            fact_id=CONVENIO_OVERRIDE_FACT_ID,
+            date_axis=DateAxis.DEVENGO_DATE,
+            effective_date=devengo_date,
+            selectors=selectors,
+        ),
+    )
+    if not isinstance(resolved, ResolvedOverrideFact):
+        raise RegistryValidationError(f"convenio override resolved non-override fact {resolved.fact_id!r}")
+    try:
+        kind = ConvenioOverrideKind(resolved.payload.override_code)
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"convenio override fact {resolved.fact_id!r} has unknown kind {resolved.payload.override_code!r}",
+        ) from exc
+    rate = resolved.payload.value
+    if rate is not None and not isinstance(rate, Decimal):
+        raise RegistryValidationError(f"convenio override fact {resolved.fact_id!r} resolved non-decimal rate {rate!r}")
+    if not resolved.legal_refs:
+        raise RegistryValidationError(f"convenio override fact {resolved.fact_id!r} lacks legal provenance")
+    try:
+        document_id = authority.catalogues.legal[resolved.legal_refs[0]].document_id
+    except KeyError as exc:
+        raise RegistryValidationError(
+            f"convenio override fact {resolved.fact_id!r} names unknown legal reference {resolved.legal_refs[0]!r}",
+        ) from exc
+    return ResolvedConvenioOverride(
+        kind=kind,
+        rate=rate,
+        country_code=normalized_country,
+        document_id=document_id,
+        fact=resolved,
+    )

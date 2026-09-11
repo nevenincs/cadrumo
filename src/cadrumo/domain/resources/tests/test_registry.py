@@ -7,7 +7,6 @@ from typing import override
 import pytest
 from pydantic import ValidationError
 
-from ....core.resources._repository import ResourceCacheRepository, ResourceRepository
 from ....core.resources.bundled_data import as_path, bundled_path, packaged_data
 from ....core.resources.errors import (
     ResourceBackendError,
@@ -15,6 +14,7 @@ from ....core.resources.errors import (
     ResourceNotFoundError,
     ResourceValidationError,
 )
+from ....core.resources.repository import ResourceCacheRepository, ResourceRepository
 from .._keys import TypedResourceKey
 from ..registry import ResourceRegistry, resources
 

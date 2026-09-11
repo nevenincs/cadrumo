@@ -11,9 +11,9 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.operations.secure_references import (
-    OPERATION_SECURE_REFERENCE_NAMESPACE,
     operation_secure_reference_repository,
 )
+from ....adapters.persistence.storage.secure_object_namespaces import OPERATION_SECURE_REFERENCE_NAMESPACE
 from ....adapters.persistence.storage.errors import RepositoryError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url

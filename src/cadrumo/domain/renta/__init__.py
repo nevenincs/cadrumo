@@ -18,14 +18,13 @@ proportionality rules and citations remain in
 mapping from :class:`domain.categories.SpendingCategory` to registry
 casilla ids for the supported first slice; the registry validates those targets
 through a cross-domain snapshot check registered at package import time.
-:data:`RENTA_130_RETENCIONES_OUTPUT_CASILLA` is the equivalent single-casilla
-fact for the M130 retenciones-a-cuenta binding, validated by the same
-mechanism.
+The M130 retenciones-a-cuenta route is selected from governed registry data
+and validated by the same cross-domain mechanism.
 
 The maritime surface exposes :class:`MaritimeWorkerFacts`, Art. 7.p and REBECA
 eligibility/calculation helpers, the inactive DA 41 guard, and the RETMAR
-mandatory-filing completeness gate. Exemption calculations route to
-:data:`RENTA_EXENTA_CASILLA` and return
+mandatory-filing completeness gate. Exemption calculations resolve their
+target from registry authority and return
 :class:`domain.calculations.registry.CasillaObservation` records with
 legal and source provenance. This domain surface is pure substrate logic:
 repositories, active-profile reads, CLI transport, and live AEAT access belong

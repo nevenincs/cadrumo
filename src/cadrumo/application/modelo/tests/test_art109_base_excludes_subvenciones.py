@@ -38,7 +38,7 @@ from ....domain.transactions.volumen_ingresos import (
     counts_toward_art_109_activity_income,
     counts_toward_volumen_de_ingresos,
 )
-from ...aggregation.tests.renta_income_aggregation_support import _raw_transaction
+from ...aggregation.tests.renta_income_aggregation_support import raw_transaction
 from .._art109_activity_income import (
     Art109ActivityIncomeCoverageStatus,
     derive_art109_activity_income_coverage,
@@ -72,7 +72,7 @@ def _row(
     retencion = (amount * Decimal("0.02")) if withheld else Decimal("0.00")
     return Transaction.model_validate(
         {
-            "raw": _raw_transaction(
+            "raw": raw_transaction(
                 provider_id,
                 booked_date=_IN_WINDOW,
                 value_date=_IN_WINDOW,

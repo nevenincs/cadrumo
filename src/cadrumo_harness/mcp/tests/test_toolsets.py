@@ -8,14 +8,14 @@ from __future__ import annotations
 
 import pytest
 
-from .._toolsets import (
+from ..command_surface import command_surface
+from ..toolsets import (
     Toolset,
     ToolsetGroup,
     _family_domain_map,
     build_toolsets,
     toolset_for_command,
 )
-from ..command_surface import command_surface
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

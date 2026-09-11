@@ -22,9 +22,10 @@ from .....core.config_support import LLMProvider
 from .....core.hashing import canonical_json_bytes
 from .....core.redaction.rules import default_rules_for_class, redact_structured
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ....persistence.storage.secure_object_namespaces import LLM_USAGE_NAMESPACE
 from ..errors import LLMCacheError
 from ..models import UsageRecord
-from ..usage import _USAGE_NAMESPACE, _USAGE_VERSION, UsageRecorder
+from ..usage import UsageRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -38,10 +39,10 @@ def _inject_corrupt_usage_record(recorder: UsageRecorder, *, request_id: str, an
     )
     payload = {"logical_root": recorder._logical_root(), "record": redacted}
     secure_object_repository_for_active_bucket().save(
-        namespace=_USAGE_NAMESPACE,
+        namespace=LLM_USAGE_NAMESPACE.namespace,
         object_key=f"{recorder._logical_root()}|{record.created_at.isoformat()}|{request_id}|corrupt",
         classification=SensitivityClass.DIAGNOSTIC,
-        schema_version=_USAGE_VERSION,
+        schema_version=LLM_USAGE_NAMESPACE.schema_version,
         written_at=record.created_at,
         payload=canonical_json_bytes(payload),
     )

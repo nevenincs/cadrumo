@@ -23,13 +23,12 @@ from ....domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
-from ....domain.modelos.calculation_revision import FilingInstanceEvidence
 from ....domain.modelos.calculation_revision_m303_evidence import (
     M303Exonerado390FilingEvidence,
     M303InsolvencyFilingFact,
     M303InsolvencyFilingSubtype,
 )
-from ....domain.modelos.calculation_revision_m303_handoff import M303FilingInstanceEvidence
+from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence, M303FilingInstanceEvidence
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 
 __all__ = ["build_m303_filing_evidence", "default_insolvency_fact", "write_m303_filing_evidence"]

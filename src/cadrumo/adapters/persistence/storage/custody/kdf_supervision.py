@@ -20,15 +20,6 @@ from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
 from ..crypto.aead import KEY_SIZE
 from ._kdf_codec import (
-    KDF_FRAME_CONTROL,
-    KDF_FRAME_DEK,
-    KDF_FRAME_HEADER,
-    KDF_FRAME_MAGIC,
-    KDF_FRAME_VERSION,
-    read_kdf_frame,
-    write_kdf_frame,
-)
-from ._kdf_codec import (
     canonical_frame_bytes as _canonical_frame_bytes,
 )
 from ._kdf_codec import (
@@ -654,11 +645,6 @@ def _release_kdf_file_lease(descriptor: int) -> None:
 
 
 __all__ = [
-    "KDF_FRAME_CONTROL",
-    "KDF_FRAME_DEK",
-    "KDF_FRAME_HEADER",
-    "KDF_FRAME_MAGIC",
-    "KDF_FRAME_VERSION",
     "PROFILE_CUSTODY_KDF_CALIBRATION_VERSION",
     "PROFILE_CUSTODY_KDF_SAMPLE_COUNT",
     "PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS",
@@ -675,11 +661,9 @@ __all__ = [
     "profile_kdf_lease",
     "profile_kdf_resources",
     "profile_password_wrap_aad",
-    "read_kdf_frame",
     "unlock_profile_custody",
     "unlock_profile_custody_password_material",
     "unlock_profile_custody_recovery_material",
     "wrap_profile_custody_password_material",
     "wrap_profile_custody_recovery_material",
-    "write_kdf_frame",
 ]

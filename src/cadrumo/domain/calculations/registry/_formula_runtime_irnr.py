@@ -5,7 +5,7 @@ keep that module under its size budget (`aeat-architecture-boundaries`,
 `aeat-architecture-boundaries`). Holds the two IRNR-specific formula
 ops -- ``irnr_resolve_tipo_gravamen`` and ``m210_resolve_base_imponible`` --
 and their private argument-resolution and rate-computation helpers. Dispatch
-still lives in :func:`~domain.calculations.registry._formula_runtime._evaluate_with_ctx`,
+still lives in :func:`~domain.calculations.registry.formula_runtime.evaluate_with_context`,
 which imports this module at package level and calls
 :func:`evaluate_irnr_resolve_tipo_gravamen` /
 :func:`evaluate_m210_resolve_base_imponible` exactly as it calls the sibling
@@ -17,7 +17,7 @@ runtime import cycle back into the dispatcher module.
 
 See Also:
     :mod:`~domain.calculations.registry._formula_runtime`
-        Owns the dispatcher and :class:`_EvalContext`.
+        Owns the dispatcher and :class:`~domain.calculations.registry.formula_runtime.EvalContext`.
     :mod:`~domain.calculations.registry._formula_runtime_ops`
         Owns the shared unresolved-formula error types,
         :class:`RegistryUnresolvedOutcomeReason`, and
@@ -35,10 +35,8 @@ from ....core.casilla_id import CasillaId
 from ....core.decimal.constants import ZERO
 from ....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from ...contribuyente.renta_codes import UE_EEA_COUNTRY_CODES
-from .convenio import CONVENIO_OVERRIDE_FACT_ID
+from .convenio import ResolvedConvenioOverride, resolve_convenio_override
 from .errors import RegistryValidationError
-from .facts.resolution import OverrideFactQuery, ResolvedOverrideFact
-from .facts.schema import FactSelector
 from .formula_runtime_ops import (
     RegistryUnresolvedOutcomeReason,
     UnresolvedFormulaOutcomeError,
@@ -54,7 +52,6 @@ from .formula_runtime_ops import (
     resolve_scalar_parameter as _resolve_scalar_parameter,
 )
 from .ids import BindingId, ParameterId
-from .schema_base import DateAxis
 from .schema_formula import FormulaExpression
 
 if TYPE_CHECKING:
@@ -90,15 +87,6 @@ class _M210ResolveBaseArgs:
     recent_rate_parameter: ParameterId
     old_rate_parameter: ParameterId
     no_catastral_fraction_parameter: ParameterId
-
-
-@dataclass(frozen=True, slots=True)
-class _ResolvedConvenioOverride:
-    """The provider-selected treaty override and its retained provenance."""
-
-    kind: ConvenioOverrideKind
-    rate: Decimal | None
-    fact: ResolvedOverrideFact
 
 
 def evaluate_irnr_resolve_tipo_gravamen(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
@@ -239,7 +227,7 @@ def _resolve_convenio_override(
     *,
     country: str,
     tipo_renta: str,
-) -> _ResolvedConvenioOverride | None:
+) -> ResolvedConvenioOverride | None:
     """Resolve the treaty override for the declared country + income type, or None.
 
     Hydrates the free-text ``tipo_renta`` casilla value to the closed
@@ -255,51 +243,18 @@ def _resolve_convenio_override(
     devengo_date = ctx.date_context.get("filing_period")
     if not isinstance(devengo_date, date):
         raise RegistryValidationError("IRNR convenio override requires a filing_period devengo date")
-    from .authority import bundled_authority
-
-    authority = bundled_authority()
-    authority.validate_registry()
-    selectors = (
-        FactSelector(name="country_code", value=country.upper()),
-        FactSelector(name="tipo_renta", value=tipo_enum.value),
+    resolved = resolve_convenio_override(
+        country_code=country,
+        tipo_renta=tipo_enum,
+        devengo_date=devengo_date,
     )
-    fact = authority.catalogues.facts.facts.get(CONVENIO_OVERRIDE_FACT_ID)
-    if fact is None:
-        raise RegistryValidationError(f"governed fact {CONVENIO_OVERRIDE_FACT_ID!r} is not registered")
-    selector_identity = frozenset((selector.name, type(selector.value), selector.value) for selector in selectors)
-    if not any(
-        variant.date_axis is DateAxis.DEVENGO_DATE
-        and variant.valid_from <= devengo_date
-        and (variant.valid_to is None or devengo_date <= variant.valid_to)
-        and frozenset((selector.name, type(selector.value), selector.value) for selector in variant.selectors)
-        == selector_identity
-        for variant in fact.variants
-    ):
+    if resolved is None:
         return None
-    resolved = authority.resolve_governed_fact(
-        OverrideFactQuery(
-            fact_id=CONVENIO_OVERRIDE_FACT_ID,
-            date_axis=DateAxis.DEVENGO_DATE,
-            effective_date=devengo_date,
-            selectors=selectors,
-        ),
-    )
-    if not isinstance(resolved, ResolvedOverrideFact):
-        raise RegistryValidationError(f"convenio override resolved non-override fact {resolved.fact_id!r}")
-    try:
-        kind = ConvenioOverrideKind(resolved.payload.override_code)
-    except ValueError as exc:
-        raise RegistryValidationError(
-            f"convenio override fact {resolved.fact_id!r} has unknown kind {resolved.payload.override_code!r}",
-        ) from exc
-    rate = resolved.payload.value
-    if rate is not None and not isinstance(rate, Decimal):
-        raise RegistryValidationError(f"convenio override fact {resolved.fact_id!r} resolved non-decimal rate {rate!r}")
-    ctx.operand_refs.append(f"{resolved.fact_id}:{resolved.variant_id}")
-    return _ResolvedConvenioOverride(kind=kind, rate=rate, fact=resolved)
+    ctx.operand_refs.append(f"{resolved.fact.fact_id}:{resolved.fact.variant_id}")
+    return resolved
 
 
-def _apply_convenio_override(override: _ResolvedConvenioOverride, *, baseline_rate: Decimal | None) -> Decimal | None:
+def _apply_convenio_override(override: ResolvedConvenioOverride, *, baseline_rate: Decimal | None) -> Decimal | None:
     """Apply a non-pension treaty override to the domestic baseline rate."""
     kind = override.kind
     if kind is ConvenioOverrideKind.EXEMPT:
@@ -320,7 +275,7 @@ def _irnr_pension_effective_rate(
     args: _IrnrResolveTipoGravamenArgs,
     ctx: _EvalContext,
     *,
-    override: _ResolvedConvenioOverride | None,
+    override: ResolvedConvenioOverride | None,
     country: str,
 ) -> Decimal | None:
     if country:

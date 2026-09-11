@@ -7,9 +7,8 @@ from datetime import date
 from decimal import Decimal
 from functools import lru_cache
 
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
-from cadrumo.core.resources.bundled_data import bundled_path
-
+from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
+from .....core.resources.bundled_data import bundled_path
 from ..ids import LegalRefId, SourceRefId
 from ._published_authority import artifact_components
 from ._scenarios import (

@@ -20,7 +20,8 @@ from ...calculations.cross_period_models import (
     CrossPeriodDependencyOrigin,
     CrossPeriodDependencyRequirement,
 )
-from ..verification_actions import _classify_verification_outcome, _cross_period_clean_state_findings
+from ..verification_actions import _classify_verification_outcome
+from ..verification_cross_period import cross_period_clean_state_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -59,7 +60,7 @@ def test_registry_revision_divergence_produces_blocking_finding_with_grounding()
         blockers=(CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE,),
     )
 
-    (finding,) = _cross_period_clean_state_findings(_verdict(evidence))
+    (finding,) = cross_period_clean_state_findings(_verdict(evidence))
 
     assert finding.kind is ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN
     assert finding.severity is ModeloVerificationFindingSeverity.BLOCKING
@@ -74,7 +75,7 @@ def test_registry_revision_divergence_blocks_verified_complete_grant() -> None:
         requirement=_requirement(),
         blockers=(CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE,),
     )
-    findings = list(_cross_period_clean_state_findings(_verdict(evidence)))
+    findings = list(cross_period_clean_state_findings(_verdict(evidence)))
 
     _completeness, granted = _classify_verification_outcome(findings=findings, missing_required=[])
 
@@ -87,4 +88,4 @@ def test_clean_current_dependency_produces_no_findings() -> None:
         blockers=(),
     )
 
-    assert _cross_period_clean_state_findings(_verdict(evidence)) == ()
+    assert cross_period_clean_state_findings(_verdict(evidence)) == ()

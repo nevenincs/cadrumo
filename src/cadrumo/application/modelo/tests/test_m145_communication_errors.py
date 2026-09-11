@@ -1,7 +1,7 @@
 """Service-error and logging tests for Modelo 145 local communication records.
 
 See Also:
-    :mod:`~application.modelo._m145_communication_records`
+    :mod:`~application.modelo.m145_communication_records`
         Backend service whose error and log vocabulary is constrained here.
     :class:`~application.modelo.M145CommunicationServiceError`
         Base service error registered in the central error catalogue.

@@ -26,14 +26,6 @@ import argparse
 from pathlib import Path
 
 from ._annotations import McpAnnotations, annotations_for_command
-from ._dispatch import command_key_for_tool, tool_name_for_command, tool_request_argv
-from ._faithfulness import FaithfulnessResult, faithfulness_check
-from ._hitl import ConfirmationPolicy, confirmation_for_tool
-from ._identity_gate import (
-    IDENTITY_READ_CONSOLE_TOOLS,
-    SessionIdentityState,
-    identity_gate_refusal,
-)
 from ._persona_scope import (
     PERSONA_TOOL_SCOPES,
     AgentPersona,
@@ -42,8 +34,16 @@ from ._persona_scope import (
     live_family_mutability,
     scope_for_persona,
 )
-from ._server import build_server
-from ._tools import McpToolDescriptor, build_tool_descriptors
+from .dispatch import command_key_for_tool, tool_name_for_command, tool_request_argv
+from .faithfulness import FaithfulnessResult, faithfulness_check
+from .hitl import ConfirmationPolicy, confirmation_for_tool
+from .identity_gate import (
+    IDENTITY_READ_CONSOLE_TOOLS,
+    SessionIdentityState,
+    identity_gate_refusal,
+)
+from .server import build_server
+from .tools import McpToolDescriptor, build_tool_descriptors
 
 __all__ = [
     "IDENTITY_READ_CONSOLE_TOOLS",
@@ -78,7 +78,7 @@ def main() -> None:
     runtime is incomplete, it refuses with the install hint and a non-zero exit rather than
     raising a raw ``ModuleNotFoundError``.
     """
-    from ._server import serve
+    from .server import serve
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--profile-secrets-file", type=Path)

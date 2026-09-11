@@ -301,7 +301,7 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
     ),
     AllowlistRule(
         path=_path(
-            r"^src/cadrumo/entrypoints/cli/_common\.py$|^src/cadrumo/entrypoints/cli/tests/test_ledger_period_grammar\.py$"
+            r"^src/cadrumo/entrypoints/cli/common\.py$|^src/cadrumo/entrypoints/cli/tests/test_ledger_period_grammar\.py$"
         ),
         reason="CLI period grammar refusal docs and tests prove calendar/hybrid spellings are rejected",
     ),

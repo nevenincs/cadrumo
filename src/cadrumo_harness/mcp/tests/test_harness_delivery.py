@@ -37,15 +37,6 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.application.workflow.profile_health import ProfileHealthStatus
 
 from ...resources import iter_operator_rules, iter_personas, iter_skill_documents, operator_rules_text
-from .._harness_tools import (
-    HARNESS_LOAD_TOOL,
-    WHOAMI_TOOL,
-    WhoamiIdentity,
-    build_harness_floor_payload,
-    build_whoami_identity,
-    render_harness_floor_text,
-    render_whoami_identity_text,
-)
 from .._persona_scope import AgentPersona
 from .._resources import (
     HarnessResourceKind,
@@ -55,10 +46,19 @@ from .._resources import (
     read_harness_resource,
     resource_uri,
 )
-from .._tools import build_tool_descriptors
+from ..harness_tools import (
+    HARNESS_LOAD_TOOL,
+    WHOAMI_TOOL,
+    WhoamiIdentity,
+    build_harness_floor_payload,
+    build_whoami_identity,
+    render_harness_floor_text,
+    render_whoami_identity_text,
+)
+from ..tools import build_tool_descriptors
 from ._profile import PROFILE_PASSPHRASE, READY_PROFILE_FACTS, verify_recovery_handover
-from ._session import connected_server_and_client_session as connect
 from ._support import composed_profile_persistence_ports, isolated_profile_storage_root
+from .session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -141,7 +141,7 @@ def test_floor_text_embeds_both_the_rules_and_the_active_persona() -> None:
 def test_floor_payload_carries_the_off_host_consent_disclosure() -> None:
     # The off-host privacy disclosure rides on every floor load, for every
     # persona and the un-personified session, so it can never be skipped.
-    from .._harness_tools import off_host_consent_text
+    from ..harness_tools import off_host_consent_text
 
     for persona in (None, AgentPersona.VERIFIER, AgentPersona.MODELO_PREPARER):
         payload = build_harness_floor_payload(persona=persona)
@@ -214,7 +214,7 @@ def test_unknown_or_malformed_uri_refuses_cleanly(uri: str) -> None:
 
 
 def test_floor_tool_and_resources_are_wired_into_the_built_server() -> None:
-    from .._server import build_server
+    from ..server import build_server
 
     descriptors = build_tool_descriptors()
     if not _SDK_PRESENT:
@@ -251,7 +251,7 @@ def test_floor_tool_and_resources_are_wired_into_the_built_server() -> None:
 
 
 def test_floor_tool_call_returns_the_active_persona_payload() -> None:
-    from .._server import build_server
+    from ..server import build_server
 
     descriptors = build_tool_descriptors()
     if not _SDK_PRESENT:
@@ -336,8 +336,8 @@ def test_whoami_is_always_advertised_and_never_persona_scoped_away() -> None:
     # whoami is a console tool like search/execute: advertised on every session,
     # in CORE and FULL, with no persona and under a restrictive persona — the
     # identity assertion must never be scoped away.
-    from .._server import build_server
     from .._surface import SurfaceMode
+    from ..server import build_server
 
     descriptors = build_tool_descriptors()
     if not _SDK_PRESENT:
@@ -360,7 +360,7 @@ def test_whoami_is_always_advertised_and_never_persona_scoped_away() -> None:
 
 
 def test_whoami_tool_call_returns_the_active_profile_label(tmp_path: Any) -> None:
-    from .._server import build_server
+    from ..server import build_server
 
     descriptors = build_tool_descriptors()
     if not _SDK_PRESENT:
@@ -402,7 +402,7 @@ def test_whoami_tool_call_returns_the_active_profile_label(tmp_path: Any) -> Non
 
 
 def test_floor_response_carries_the_active_identity_block(tmp_path: Any) -> None:
-    from .._server import build_server
+    from ..server import build_server
 
     descriptors = build_tool_descriptors()
     if not _SDK_PRESENT:
@@ -438,7 +438,7 @@ def test_floor_response_carries_the_active_identity_block(tmp_path: Any) -> None
 
 
 def test_server_negotiates_prompts_and_resources_capabilities() -> None:
-    from .._server import build_server
+    from ..server import build_server
 
     descriptors = build_tool_descriptors()
     if not _SDK_PRESENT:

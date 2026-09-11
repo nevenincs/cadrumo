@@ -88,20 +88,16 @@ def test_un_enveloped_blob_is_refused(
     """
     from datetime import UTC, datetime
 
-    from ....adapters.persistence.storage.attachment import (
-        _ATTACHMENT_BLOB_NAMESPACE,
-        _ATTACHMENT_BLOB_SENSITIVITY,
-        _ATTACHMENT_BLOB_VERSION,
-    )
+    from ....adapters.persistence.storage.secure_object_namespaces import ATTACHMENT_BLOB_NAMESPACE
 
     store = AttachmentStore()
     body = b"%PDF-1.4\nun-enveloped blob\n%%EOF"
     digest = hashlib.sha256(body).hexdigest()
     store._objects_repo().save(
-        namespace=_ATTACHMENT_BLOB_NAMESPACE,
+        namespace=ATTACHMENT_BLOB_NAMESPACE.namespace,
         object_key=digest,
-        classification=_ATTACHMENT_BLOB_SENSITIVITY,
-        schema_version=_ATTACHMENT_BLOB_VERSION,
+        classification=ATTACHMENT_BLOB_NAMESPACE.sensitivity,
+        schema_version=ATTACHMENT_BLOB_NAMESPACE.schema_version,
         written_at=datetime(2026, 4, 27, 10, 0, tzinfo=UTC),
         payload=body,
     )
@@ -165,30 +161,26 @@ def test_foreign_bucket_manifest_is_isolated_from_load_and_listing(
     del runtime_profile
     from datetime import UTC, datetime
 
-    from ....adapters.persistence.storage.attachment import (
-        _ATTACHMENT_MANIFEST_NAMESPACE,
-        _ATTACHMENT_MANIFEST_SENSITIVITY,
-        _ATTACHMENT_MANIFEST_VERSION,
-    )
     from ....adapters.persistence.storage.envelope.contract import Envelope
+    from ....adapters.persistence.storage.secure_object_namespaces import ATTACHMENT_MANIFEST_NAMESPACE
 
     store = AttachmentStore()
     body = b"%PDF-1.4\nforeign bucket evidence to isolate\n%%EOF"
     digest = store.put_bytes(body)
     foreign = _attachment(body, bucket_id=_FOREIGN_BUCKET_ID)
     envelope = Envelope[Attachment](
-        schema_version=_ATTACHMENT_MANIFEST_VERSION,
+        schema_version=ATTACHMENT_MANIFEST_NAMESPACE.schema_version,
         written_at=datetime(2026, 4, 27, 10, 0, tzinfo=UTC),
-        classification=_ATTACHMENT_MANIFEST_SENSITIVITY,
+        classification=ATTACHMENT_MANIFEST_NAMESPACE.sensitivity,
         payload=foreign,
     )
     envelope_dict = json.loads(envelope.model_dump_json())
     del envelope_dict["payload"]["attachment_id"]
     store._objects_repo().save(
-        namespace=_ATTACHMENT_MANIFEST_NAMESPACE,
+        namespace=ATTACHMENT_MANIFEST_NAMESPACE.namespace,
         object_key=digest,
-        classification=_ATTACHMENT_MANIFEST_SENSITIVITY,
-        schema_version=_ATTACHMENT_MANIFEST_VERSION,
+        classification=ATTACHMENT_MANIFEST_NAMESPACE.sensitivity,
+        schema_version=ATTACHMENT_MANIFEST_NAMESPACE.schema_version,
         written_at=envelope.written_at,
         payload=json.dumps(envelope_dict).encode("utf-8"),
     )

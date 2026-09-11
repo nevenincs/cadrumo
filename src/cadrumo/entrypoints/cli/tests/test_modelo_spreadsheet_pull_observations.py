@@ -13,8 +13,8 @@ from ....application.storage.calc_sheets.engine import collect_row_sets
 from ....application.storage.calc_sheets.row_set_assembly import assemble_row_sets_for_snapshot
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
-from .._modelo_spreadsheet_cli import _assemble_pull_observations
 from ..errors import CliRefusedBoundaryError
+from ..modelo_spreadsheet_cli import _assemble_pull_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -56,15 +56,15 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.core.config import DEV_TEST_DATABASE_PASSWORD
 
 from .._call_runtime import tier_for
-from .._dispatch import tool_name_for_command
-from .._harness_tools import WHOAMI_TOOL
-from .._inprocess import tier_runs_in_process
 from .._profile_secret_channel import clear_profile_secret, load_profile_secret_file
-from .._server import build_server
-from .._tools import build_tool_descriptors
+from ..dispatch import tool_name_for_command
+from ..harness_tools import WHOAMI_TOOL
+from ..inprocess import tier_runs_in_process
+from ..server import build_server
+from ..tools import build_tool_descriptors
 from ._profile import PROFILE_PASSPHRASE, READY_PROFILE_FACTS, verify_recovery_handover
-from ._session import connected_server_and_client_session as connect
 from ._support import composed_profile_persistence_ports, temporary_env
+from .session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -83,17 +83,17 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.query_reports import ModeloCasillaRow
-from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from ...domain.modelos.calculation_revision_amendment import (
+    CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
     m303_rectificativa_motive_is_applicable,
 )
-from ._common import activate_subcommand_output_language, emit_envelope
 from ._modelo_amend_wizard_payloads import AmendWizardCorrectedCasillaPayload, WorkAmendWizardResult
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_cli_support import bad_parameter_from_error, resolve_default_actor
 from ._modelo_rendering import filing_record_lines
 from ._modelo_work_wizard_cli import resolve_modelo_work_unit_for_wizard
+from .common import activate_subcommand_output_language, emit_envelope
 
 if TYPE_CHECKING:
     from ...domain.modelos.calculation_revision import CalculationRevision

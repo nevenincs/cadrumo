@@ -11,7 +11,6 @@ from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
 from ....application.ledger.models import (
-    LedgerReviewStatus,
     LedgerSourceImportResult,
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
@@ -25,8 +24,10 @@ from ....application.ledger.workspace import (
     LedgerWorkspaceStatus,
 )
 from ....application.operator_actions.models import ActionReference
+from ....application.review.filter import LedgerReviewStatus
 from ....core.i18n.render import tr
-from ....core.identity import InvoiceId, TransactionId
+from ....core.identity.hex_ids import InvoiceId
+from ....core.identity.transaction_ids import TransactionId
 from ..components.theme import BASE_CSS, tokenised
 from ..components.workspace_host import replace_workspace_body
 from ..navigation import TuiFocusIdentityV1, TuiScreenContextV1

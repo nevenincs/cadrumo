@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from datetime import date
 from enum import StrEnum
 
 from pydantic import BaseModel, model_validator
 
 from ...core.identity.hex_ids import FilingRecordId
 from ...core.models import STRICT_FROZEN_CONFIG
+from ..calculations.registry.authority import bundled_authority
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.ids import RevisionId
+from ..calculations.registry.queries import RegistryQueryService
 from ..calculations.registry.schema import RegistrySnapshot
+from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.schema_references import SourceReference
 from .errors import ModeloValidationError
 
@@ -20,14 +26,12 @@ class CalculationRevisionAmendmentKind(StrEnum):
     Each member names the instrument it files, so the article travels with the
     kind rather than only with the regime that admits it:
 
-    * ``COMPLEMENTARIA`` -- LGT art. 122.2 (``ley-58-2003:art-122``), an
-      additional declaration correcting an already-presented one upward.
-    * ``SUSTITUTIVA`` -- LGT art. 122.1 (``ley-58-2003:art-122``), a material
-      restatement that replaces an already-presented filing in full. Not
-      time-boxed by the rectificativa reform, which is why it is admitted in
-      both regimes below.
-    * ``RECTIFICATIVA`` -- LGT art. 120.4, the unified ordinary-correction
-      mechanism each modelo adopts from its own effective period.
+    * ``COMPLEMENTARIA`` -- an additional declaration correcting an
+      already-presented one upward.
+    * ``SUSTITUTIVA`` -- a material restatement that replaces an
+      already-presented filing in full.
+    * ``RECTIFICATIVA`` -- the ordinary-correction mechanism selected by the
+      applicable modelo revision.
     """
 
     COMPLEMENTARIA = "complementaria"
@@ -61,28 +65,28 @@ class CalculationRevisionAmendmentIdentity(BaseModel):
         return self
 
 
-_M303_RECTIFICATIVA_RECORD_DESIGNS: frozenset[tuple[RevisionId, str, str, str]] = frozenset(
-    {
-        (
-            "2024-desde-09-y-3t",
-            "aeat-dr-303-2024-late",
-            "2095dd633413f4aed28053bc88402461d80865f454156c01ebc4a2ab68cb76a8",
-            "2024-late",
+def _registry_m303_rectificativa_declarations() -> Mapping[str, str]:
+    """Resolve M303 amendment declarations from the dated registry mapping."""
+    authority = bundled_authority()
+    model_report = RegistryQueryService(authority).describe_modelo("303")
+    resolved = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="modelo-303-rectificativa-record-design-mapping",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date.today(),
         ),
-        (
-            "2025",
-            "aeat-dr-303-2025",
-            "6c3d7eeb714e0deb52f91d7e8dbadeb83f16c1d32d25f9e871756f3ddf0117e6",
-            "2025",
-        ),
-        (
-            "2026-y-siguientes",
-            "aeat-dr-303-2026",
-            "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b",
-            "2026",
-        ),
-    },
-)
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise ModeloValidationError("M303 rectificativa declarations must resolve as a mapping fact")
+    del model_report
+    return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
+
+
+def _required_registry_declaration(declarations: Mapping[str, str], key: str) -> str:
+    try:
+        return declarations[key]
+    except KeyError as exc:
+        raise ModeloValidationError(f"M303 rectificativa registry declaration is missing: {key}") from exc
 
 
 def m303_rectificativa_motive_is_applicable(
@@ -91,12 +95,19 @@ def m303_rectificativa_motive_is_applicable(
     record_design: SourceReference,
 ) -> bool:
     """Return whether the exact reviewed revision/source coordinate admits a motive."""
+    declarations = _registry_m303_rectificativa_declarations()
+    prefix = f"record_design.{registry_revision_id}"
     return (
         registry_revision_id,
         record_design.id,
         record_design.sha256,
         record_design.record_design_epoch or "",
-    ) in _M303_RECTIFICATIVA_RECORD_DESIGNS
+    ) == (
+        registry_revision_id,
+        _required_registry_declaration(declarations, f"{prefix}.source_ref"),
+        _required_registry_declaration(declarations, f"{prefix}.content_digest"),
+        _required_registry_declaration(declarations, f"{prefix}.epoch"),
+    )
 
 
 def m303_rectificativa_record_design_from_snapshot(snapshot: RegistrySnapshot) -> SourceReference | None:

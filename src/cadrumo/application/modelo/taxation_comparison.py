@@ -64,12 +64,12 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.modelos.work_unit import WorkUnitCatalogue
-from ._work_selection import (
+from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_semantic_role
+from .work_selection import (
     ModeloWorkResolution,
     ModeloWorkSelectorRequest,
     select_modelo_work_resolution,
 )
-from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_semantic_role
 
 # ---------------------------------------------------------------------------
 # Output types
@@ -371,9 +371,9 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
     from ...domain.calculations.registry.errors import RegistrySnapshotError
     from ..aggregation.source_mesh import CalculationSourceContext
     from ..aggregation.source_profile import ProfileSourceResolver
-    from ._work_selection import ModeloWorkSelectorState, resolve_modelo_work_bucket
     from .action_errors import WorkUnitNotFoundError
     from .binding_resolution import resolve_declaration_period_inputs
+    from .work_selection import ModeloWorkSelectorState, resolve_modelo_work_bucket
 
     request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id)
     bucket_id = resolve_modelo_work_bucket(request)
@@ -463,11 +463,11 @@ def compare_taxation_for_work_address(address: object) -> TaxationComparisonResu
         A :class:`TaxationComparisonResult` for the resolved work unit.
     """
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ._work_selection import (
+    from .work_addressing import ModeloWorkAddress, resolve_modelo_work_address_unit
+    from .work_selection import (
         ModeloWorkSelectorRequest,
         resolve_modelo_work_bucket,
     )
-    from .work_addressing import ModeloWorkAddress, resolve_modelo_work_address_unit
 
     if not isinstance(address, ModeloWorkAddress):
         raise TypeError(f"expected ModeloWorkAddress, got {type(address).__name__}")

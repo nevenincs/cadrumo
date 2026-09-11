@@ -74,6 +74,8 @@ from ...domain.calculations.registry.applicability import derive_taxpayer_files_
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
+from ...domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ...domain.calculations.registry.ids import (
     LegalRefId,
     SourceRefId,
@@ -84,6 +86,9 @@ from ...domain.calculations.registry.schema_references import RegistrySnapshotRe
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.iva.schema import CUOTA_LESS_M303_IVA_CATEGORIES
+from ...domain.iva_compensation.filed_derivation import (
+    M303_COMPENSATION_PENDING_PRIOR_CASILLA as M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+)
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -124,7 +129,6 @@ from ..aggregation.source_mesh import (
     CalculationSourceDiagnostic,
 )
 from ..calculations.cross_period_models import CrossPeriodDependencyEvidence, CrossPeriodExpectedMemberSet
-from ..calculations.iva_compensation_casillas import M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
 from ..calculations.m303_regimen_simplificado_annual_summary import (
     validate_m303_regimen_simplificado_annual_summary_target_revision,
 )
@@ -133,17 +137,14 @@ from ..calculations.verification_report_gate import require_verification_report_
 from ..workflow.engine import WorkflowEngine
 from ..workflow.persistence import WorkflowRunRepository
 from ..workflow.run_models import WorkflowPurpose
-from ._art20_advisory import _art20_reduccion_advisory_finding
-from ._art52_advisory import _art52_reduccion_advisory_finding
 from ._art109_activity_income import derive_art109_activity_income_coverage_for_work_unit as _derive_art109_coverage
 from ._attribution_received_advisory import _attribution_received_omission_advisory_findings
 from ._autonomic_deduccion_advisory import _madrid_nacimiento_adopcion_advisory_finding_for_work_unit
-from ._dt12_advisory import _dt12_reduccion_advisory_finding
-from ._dt12_antiquity_advisory import _dt12_antiquity_advisory_finding
 from ._ledger_anchor_capture import capture_revision_ledger_evidence
 from ._ledger_drift_gate import ledger_drift_findings
 from ._m210_agrupacion_renta import m210_agrupacion_renta_verification_findings
 from ._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding
+from ._m210_rate import resolve_m210_rate as _resolve_m210_rate
 from ._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 from ._m720_redeclaration_gate import modelo_720_redeclaration_findings
 from ._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
@@ -152,37 +153,17 @@ from ._registry_helpers import assert_revision_content_integrity as _assert_revi
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
-from ._verification_cross_period import (
-    IVA_COMPENSATION_CARRY_LEGAL_REF as _IVA_COMPENSATION_CARRY_LEGAL_REF,
-)
-from ._verification_cross_period import (
-    cross_period_clean_state_findings as _cross_period_clean_state_findings,
-)
-from ._verification_cross_period import (
-    cross_period_clean_state_verdict_for_work_unit as _cross_period_clean_state_verdict_for_work_unit,
-)
-from ._verification_cross_period import (
-    cross_period_expected_member_sets_from_profile as _cross_period_expected_member_sets_from_profile,
-)
-from ._verification_cross_period import (
-    cross_period_expected_member_sets_from_profile as cross_period_expected_member_sets_from_profile,
-)
-from ._verification_cross_period import (
-    modelo_202_incomplete_modality_finding as _modelo_202_incomplete_modality_finding,
-)
-from ._verification_cross_period import (
-    require_cross_period_clean_state as _require_cross_period_clean_state,
-)
-from ._verification_cross_period import (
-    zero_value_previous_filing_binding_ids as _zero_value_previous_filing_binding_ids,
-)
 from .action_errors import (
     WORKFLOW_GATE_LEGAL_REFS,
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     WorkUnitNotFoundError,
 )
+from .art20_advisory import art20_reduccion_advisory_finding
+from .art52_advisory import art52_reduccion_advisory_finding
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
+from .dt12_advisory import dt12_reduccion_advisory_finding
+from .dt12_antiquity_advisory import dt12_antiquity_advisory_finding
 from .iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from .iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
@@ -193,6 +174,14 @@ from .revision_persistence import (
 )
 from .revision_persistence import (
     require_filing_instance_evidence_for_work_unit,
+)
+from .verification_cross_period import (
+    IVA_COMPENSATION_CARRY_LEGAL_REF,
+    cross_period_clean_state_findings,
+    cross_period_clean_state_verdict_for_work_unit,
+    cross_period_expected_member_sets_from_profile,
+    modelo_202_incomplete_modality_finding,
+    zero_value_previous_filing_binding_ids,
 )
 from .verification_preconditions import (
     ModeloVerificationResult,
@@ -206,30 +195,57 @@ from .workflow_gate import run_revision_workflow_gate as _run_revision_workflow_
 if TYPE_CHECKING:
     from ..calculations.observations_repository import IvaWalletDecisionRepository
 
-from ._verification_predicates import (
-    M349_IMPORTE_RECTIFICACIONES_CASILLA as _M349_IMPORTE_RECTIFICACIONES_CASILLA,
-)
-from ._verification_predicates import (
-    M349_NUMERO_RECTIFICACIONES_CASILLA as _M349_NUMERO_RECTIFICACIONES_CASILLA,
-)
-from ._verification_predicates import (
-    evaluate_advisory_predicate_fires as evaluate_advisory_predicate_fires,
-)
-from ._verification_predicates import (
-    evaluate_predicate_expression as evaluate_predicate_expression,
-)
-from ._verification_predicates import (
-    evaluate_verification_predicates as _evaluate_verification_predicates,
-)
-from ._verification_predicates import (
-    evaluate_verification_predicates as evaluate_verification_predicates,
-)
-from ._verification_predicates import (
-    m210_unresolved_outcome_findings as _m210_unresolved_outcome_findings,
-)
 from .m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
+from .verification_predicates import (
+    evaluate_verification_predicates,
+)
 
 # Retain pinned verification-actions test imports while consuming public helper contracts.
+
+M349_NUMERO_RECTIFICACIONES_CASILLA: CasillaId = "decl.numero-rectificaciones"
+M349_IMPORTE_RECTIFICACIONES_CASILLA: CasillaId = "decl.importe-rectificaciones"
+
+_M210_UNRESOLVED_RATE_REASONS = frozenset(
+    {
+        RegistryUnresolvedOutcomeReason.M210_BASELINE_TIPO_DEFERRED,
+        RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING,
+    },
+)
+
+
+def m210_unresolved_outcome_findings(
+    unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...],
+    *,
+    profile: TaxpayerProfile,
+    snapshot: RegistrySnapshot,
+    year: int,
+    devengo_date: date,
+    tipo_renta: str,
+    blocking_finding_observer: Callable[
+        [ModeloVerificationFinding, RegistryCalculationUnresolvedOutcome],
+        None,
+    ]
+    | None = None,
+) -> list[ModeloVerificationFinding]:
+    """Convert typed M210 unresolved engine outcomes into verification findings."""
+    findings: list[ModeloVerificationFinding] = []
+    for outcome in unresolved_outcomes:
+        if outcome.reason not in _M210_UNRESOLVED_RATE_REASONS:
+            continue
+        resolved_tipo_renta = tipo_renta or outcome.context.get("tipo_renta", "")
+        _rate, obs_findings = _resolve_m210_rate(
+            profile,
+            resolved_tipo_renta,
+            year,
+            snapshot,
+            devengo_date=devengo_date,
+            casilla_id=outcome.casilla_id,
+        )
+        findings.extend(obs_findings)
+        if blocking_finding_observer is not None:
+            for finding in obs_findings:
+                blocking_finding_observer(finding, outcome)
+    return findings
 
 
 def _optional_observation_refs(observations: Iterable[CasillaObservation | None], field_name: str) -> tuple[str, ...]:
@@ -448,7 +464,7 @@ def _collect_verification_gate_findings(
             transaction_repository=transaction_repository,
         )
     )
-    incomplete_modality_finding = _modelo_202_incomplete_modality_finding(
+    incomplete_modality_finding = modelo_202_incomplete_modality_finding(
         work_unit=work_unit,
         profile=workflow_profile,
     )
@@ -481,13 +497,13 @@ def _collect_verification_gate_findings(
         finding = _iva_wallet_error_verification_finding(exc)
         findings.append(finding)
         failures_by_finding_id[id(finding)] = exc.precondition_failure
-    clean_state_verdict = _cross_period_clean_state_verdict_for_work_unit(
+    clean_state_verdict = cross_period_clean_state_verdict_for_work_unit(
         work_unit,
         observation_repository=observation_repository,
         filing_repository=filing_repository,
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,
-        expected_member_sets=_cross_period_expected_member_sets_from_profile(
+        expected_member_sets=cross_period_expected_member_sets_from_profile(
             workflow_profile,
             cross_period_expected_member_sets,
         ),
@@ -499,7 +515,7 @@ def _collect_verification_gate_findings(
         ).modality,
         taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
         workflow_profile=workflow_profile,
-        zero_value_previous_filing_binding_ids=_zero_value_previous_filing_binding_ids(target),
+        zero_value_previous_filing_binding_ids=zero_value_previous_filing_binding_ids(target),
     )
 
     def _observe_cross_period_finding(
@@ -539,7 +555,7 @@ def _collect_verification_gate_findings(
         )
 
     findings.extend(
-        _cross_period_clean_state_findings(
+        cross_period_clean_state_findings(
             clean_state_verdict,
             iva_compensation_decision=iva_compensation_decision,
             activity_start_date=workflow_profile.activity_start_date,
@@ -1275,18 +1291,18 @@ def _append_revision_advisory_findings(
         devengo_date=fact_coordinate,
     )
     for finding in (
-        _dt12_reduccion_advisory_finding(snapshot.revision, target.casilla_values),
-        _art20_reduccion_advisory_finding(
+        dt12_reduccion_advisory_finding(snapshot.revision, target.casilla_values),
+        art20_reduccion_advisory_finding(
             snapshot.revision,
             target.casilla_values,
             context=modelo_fact_context,
         ),
-        _art52_reduccion_advisory_finding(
+        art52_reduccion_advisory_finding(
             snapshot.revision,
             target.casilla_values,
             context=modelo_fact_context,
         ),
-        _dt12_antiquity_advisory_finding(snapshot.revision, target.casilla_values),
+        dt12_antiquity_advisory_finding(snapshot.revision, target.casilla_values),
         _madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
             snapshot,
             target.casilla_values,
@@ -1596,7 +1612,7 @@ def _append_registry_predicate_findings(
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
 ) -> None:
     findings.extend(
-        _evaluate_verification_predicates(
+        evaluate_verification_predicates(
             snapshot.revision.verification_predicates,
             target.casilla_values,
             predicate_profile,
@@ -1627,7 +1643,7 @@ def _append_unresolved_outcome_findings(
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
 ) -> None:
     findings.extend(
-        _m210_unresolved_outcome_findings(
+        m210_unresolved_outcome_findings(
             target.unresolved_outcomes,
             profile=predicate_profile,
             snapshot=snapshot,
@@ -1777,12 +1793,9 @@ def _detail_row_template_casilla_is_satisfied(
         return False
     if any(getattr(row, "row_type", None) == "rectificacion" for row in target.detail_rows):
         return True
-    return target.casilla_values.get(_M349_NUMERO_RECTIFICACIONES_CASILLA, Decimal("0")) == Decimal(
+    return target.casilla_values.get(M349_NUMERO_RECTIFICACIONES_CASILLA, Decimal("0")) == Decimal(
         "0"
-    ) and target.casilla_values.get(_M349_IMPORTE_RECTIFICACIONES_CASILLA, Decimal("0")) == Decimal("0")
-
-
-require_cross_period_clean_state = _require_cross_period_clean_state
+    ) and target.casilla_values.get(M349_IMPORTE_RECTIFICACIONES_CASILLA, Decimal("0")) == Decimal("0")
 
 
 def _missing_required_casilla_finding(
@@ -1821,7 +1834,7 @@ def _iva_wallet_error_verification_finding(error: ModeloIvaWalletReconciliationB
             "condition_id": error.precondition_failure.verdict.failed_condition_id,
             "scenario_id": error.precondition_failure.scenario_id,
         },
-        legal_refs=(_IVA_COMPENSATION_CARRY_LEGAL_REF,),
+        legal_refs=(IVA_COMPENSATION_CARRY_LEGAL_REF,),
     )
 
 

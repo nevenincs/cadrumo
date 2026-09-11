@@ -40,7 +40,8 @@ from ...adapters.persistence.storage.schema_lineage import (
     inner_envelope_version_is_current,
 )
 from ...adapters.persistence.storage.secure_object_namespaces import LIVE_VERIFY_OBSERVATION_NAMESPACE
-from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRecord, SecureObjectRepository
+from ...adapters.persistence.storage.sql.secure_object_records import SecureObjectRecord
+from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core.config import Settings, load_settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import sha256_hex

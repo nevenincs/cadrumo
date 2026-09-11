@@ -16,7 +16,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from .....application.filing.draft_construction import _binding_provenance
+from .....application.filing.draft_construction import binding_provenance
 from .....application.modelo.calculation_actions import assert_no_novel_source_kinds
 from .....application.modelo.calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
 from .....core.aggregation import BindingSourceKind
@@ -153,7 +153,7 @@ def test_filing_binding_provenance_is_copied_verbatim_from_validated_authority()
     """Filing values inherit non-empty typed provenance from each binding declaration."""
     records = _filing_grade_bindings()
     for record in records:
-        source, legal_refs, source_refs = _binding_provenance(record.binding)
+        source, legal_refs, source_refs = binding_provenance(record.binding)
         assert source is record.binding.source
         assert legal_refs == record.binding.legal_refs
         assert source_refs == record.binding.source_refs
@@ -162,5 +162,5 @@ def test_filing_binding_provenance_is_copied_verbatim_from_validated_authority()
 
     ungrounded = records[0].binding.model_copy(update={"legal_refs": ()})
     with pytest.raises(ModeloBuilderError) as raised:
-        _binding_provenance(ungrounded)
+        binding_provenance(ungrounded)
     assert raised.value.translated_message == "application.filing.build_draft.errors.binding_provenance_missing"

@@ -1,0 +1,46 @@
+[fact]
+fact_id = "iva-regime-legend-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "iva-regime-legend-catalogue:2013-01-01"
+date_axis = "filing_period"
+valid_from = 2013-01-01
+legal_refs = ["rd-1619-2012:art-6.1.d"]
+source_refs = ["boe-rd-1619-2012-art-6"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "legend_order", value = "01,02,03,04,05,06,07" },
+  { key = "legend.01.phrase", value = "inversión del sujeto pasivo" },
+  { key = "legend.01.provision", value = "art-6.1.m" },
+  { key = "legend.01.declares", value = "domestic_reverse_charge" },
+  { key = "legend.01.expects_repercutido_line", value = "false" },
+  { key = "legend.02.phrase", value = "facturación por el destinatario" },
+  { key = "legend.02.provision", value = "art-6.1.l" },
+  { key = "legend.02.declares", value = "none" },
+  { key = "legend.02.expects_repercutido_line", value = "true" },
+  { key = "legend.03.phrase", value = "régimen especial de las agencias de viajes" },
+  { key = "legend.03.provision", value = "art-6.1.n" },
+  { key = "legend.03.declares", value = "none" },
+  { key = "legend.03.expects_repercutido_line", value = "true" },
+  { key = "legend.04.phrase", value = "régimen especial de los bienes usados" },
+  { key = "legend.04.provision", value = "art-6.1.o" },
+  { key = "legend.04.declares", value = "none" },
+  { key = "legend.04.expects_repercutido_line", value = "true" },
+  { key = "legend.05.phrase", value = "régimen especial de los objetos de arte" },
+  { key = "legend.05.provision", value = "art-6.1.o" },
+  { key = "legend.05.declares", value = "none" },
+  { key = "legend.05.expects_repercutido_line", value = "true" },
+  { key = "legend.06.phrase", value = "régimen especial de las antigüedades y objetos de colección" },
+  { key = "legend.06.provision", value = "art-6.1.o" },
+  { key = "legend.06.declares", value = "none" },
+  { key = "legend.06.expects_repercutido_line", value = "true" },
+  { key = "legend.07.phrase", value = "régimen especial del criterio de caja" },
+  { key = "legend.07.provision", value = "art-6.1.p" },
+  { key = "legend.07.declares", value = "none" },
+  { key = "legend.07.expects_repercutido_line", value = "true" },
+]

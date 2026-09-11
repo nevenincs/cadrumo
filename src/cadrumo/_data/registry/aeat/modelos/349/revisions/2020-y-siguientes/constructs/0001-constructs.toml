@@ -36,6 +36,7 @@ source_refs = [
     "aeat-calendario-contribuyente-2026",
 ]
 bindings = [
+    "modelo-349-ledger-intracommunity-guard",
     "iva-349-declarante-numero-operadores",
     "iva-349-declarante-importe-operaciones",
     "iva-349-declarante-numero-rectificaciones",

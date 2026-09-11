@@ -13,13 +13,12 @@ from pydantic import BeforeValidator, Field, ValidationInfo, field_validator, mo
 
 from .....core.frozen_mapping import FROZEN_MAPPING
 from ..errors import RegistryValidationError
+from ..ids import LegalRefId, SourceRefId
 from ..schema_base import (
     DateAxisField,
-    LegalRefId,
     RegistryModel,
     RevisionReviewStatusField,
     SourceCitation,
-    SourceRefId,
     coerce_enum_member,
 )
 from ..schema_scalars import DecimalValue

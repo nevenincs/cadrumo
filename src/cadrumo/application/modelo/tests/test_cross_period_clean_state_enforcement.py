@@ -58,6 +58,7 @@ from ...calculations.cross_period_models import (
     NoPriorObligationProvenanceKind,
 )
 from ...calculations.observations_repository import (
+    APP_FILING_SOURCE_KIND,
     CalculationObservationRepository,
     ObservationSourceKind,
     is_official_aeat_observation_source,
@@ -68,7 +69,6 @@ from ..calculation_actions import (
 )
 from ..export import ModeloExportCommand, export_modelo_revision
 from ..external_import_actions import import_external_filing_evidence
-from ..filed_revision_observation import APP_FILING_SOURCE_KIND
 from ..filing_actions import file_modelo_revision
 from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit
@@ -113,7 +113,7 @@ _DECLARED_CROSS_PERIOD_PROFILE_IDS = {
 }
 
 
-def _workflow_profile() -> TaxpayerProfile:
+def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
@@ -378,7 +378,7 @@ def test_export_refuses_verified_cross_period_revision_without_clean_sources(tmp
                     output_path=tmp_path / "modelo-180.txt",
                     actor="operator-test",
                 ),
-                workflow_profile=_workflow_profile(),
+                workflow_profile=workflow_profile(),
                 clock=_CLOCK,
             )
 
@@ -398,7 +398,7 @@ def test_file_refuses_verified_cross_period_revision_without_clean_sources(tmp_p
             file_modelo_revision(
                 revision_id,
                 actor="operator-test",
-                workflow_profile=_workflow_profile(),
+                workflow_profile=workflow_profile(),
                 clock=_CLOCK,
             )
 
@@ -436,7 +436,7 @@ def test_file_refuses_declared_cross_period_modelos_without_clean_sources(
             file_modelo_revision(
                 revision_id,
                 actor="operator-test",
-                workflow_profile=_workflow_profile(),
+                workflow_profile=workflow_profile(),
                 clock=_CLOCK,
             )
 
@@ -455,7 +455,7 @@ def test_verify_modelo_303_reports_clean_state_blocker_for_carry_forward_depende
         report = verify_modelo_revision(
             revision_id,
             actor="operator-test",
-            workflow_profile=_workflow_profile(),
+            workflow_profile=workflow_profile(),
             settings=ready_clave_settings("X1234567L"),
             clock=_CLOCK,
         )
@@ -482,7 +482,7 @@ def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(tmp
             filing_year=2025,
             period="0A",
         )
-        salaried = _workflow_profile().model_copy(
+        salaried = workflow_profile().model_copy(
             update={
                 "entity_type": EntityType.NATURAL_PERSON,
                 "irpf_income_categories": frozenset({IrpfIncomeCategory.TRABAJO}),
@@ -546,7 +546,7 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path:
         assert Decimal(revision.casilla_values[retenciones_trabajo_casilla]) == retenciones_trabajo_amount
         assert Decimal(revision.binding_overrides[retenciones_trabajo_binding]) == retenciones_trabajo_amount
         revision_id = revision.calculation_revision_id
-        salaried = _workflow_profile().model_copy(
+        salaried = workflow_profile().model_copy(
             update={
                 "entity_type": EntityType.NATURAL_PERSON,
                 "irpf_income_categories": frozenset({IrpfIncomeCategory.TRABAJO}),
@@ -733,7 +733,7 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(tm
         filing = file_modelo_revision(
             revision_id,
             actor="operator-test",
-            workflow_profile=_workflow_profile(),
+            workflow_profile=workflow_profile(),
             clock=_CLOCK,
         )
 
@@ -797,7 +797,7 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(tmp_p
             file_modelo_revision(
                 revision_id,
                 actor="operator-test",
-                workflow_profile=_workflow_profile(),
+                workflow_profile=workflow_profile(),
                 cross_period_expected_member_sets=(
                     CrossPeriodExpectedMemberSet(
                         source_modelo="322",
@@ -865,7 +865,7 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: P
             filing_year=2026,
             period="12",
         )
-        workflow_profile = _workflow_profile().model_copy(
+        workflow_profile = workflow_profile().model_copy(
             update={
                 "cross_period_group_member_rosters": (
                     CrossPeriodGroupMemberRoster(

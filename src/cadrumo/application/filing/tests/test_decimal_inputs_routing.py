@@ -7,7 +7,7 @@ binding value through ``Decimal()``. String-valued enum bindings (e.g.
 
 The fix routes enum-consumed bindings via the ``enum_binding_values`` channel
 in ``calculate_registry_snapshot``, bypassing the Decimal coercion path.
-The same fix skips enum bindings in ``_filing_binding_values`` because they
+The same fix skips enum bindings in ``filing_binding_values`` because they
 carry no fichero-BOE addressing and must not be coerced to Decimal there either.
 """
 
@@ -24,7 +24,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ..draft_construction import _filing_binding_values, _string_inputs_for_ids
+from ..draft_construction import _string_inputs_for_ids, filing_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -98,7 +98,7 @@ def test_string_inputs_for_ids_extracts_enum_binding() -> None:
 
 
 def test_filing_binding_values_skips_enum_bindings() -> None:
-    """_filing_binding_values must not attempt Decimal coercion on enum bindings."""
+    """filing_binding_values must not attempt Decimal coercion on enum bindings."""
     snap = _m200_snapshot()
     bindings = {binding.id: binding for binding in snap.revision.bindings}
     enum_ids = enum_consumed_binding_ids(snap.revision)
@@ -109,7 +109,7 @@ def test_filing_binding_values_skips_enum_bindings() -> None:
     }
 
     # Must not raise ModeloBuilderError for the string enum binding
-    binding_values = _filing_binding_values(inputs, bindings, enum_ids)
+    binding_values = filing_binding_values(inputs, bindings, enum_ids)
 
     # The enum binding should be absent from the returned binding values
     binding_ids = {bv.binding_id for bv in binding_values}

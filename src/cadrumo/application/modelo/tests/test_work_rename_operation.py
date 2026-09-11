@@ -14,7 +14,7 @@ from pydantic import ValidationError
 
 from ....core.operations import OperationCancellation, OperationDurability, OperationEffect
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
+from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ...operations.capabilities import (
     OperationBaselinePolicy,
     OperationConflictScope,

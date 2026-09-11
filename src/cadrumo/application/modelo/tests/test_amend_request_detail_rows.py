@@ -31,7 +31,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
-from ....domain.modelos.row_models import DETAIL_ROW_BEARING_MODELOS, Modelo347ContraparteRow
+from ....domain.modelos.row_models import Modelo347ContraparteRow
+from .._calculation_modelo_adjustments import detail_row_declaration_modelos
 from ..operation_definitions import (
     ModeloWorkAmendBaseline,
     ModeloWorkAmendOverride,
@@ -68,7 +69,7 @@ def _request(**overrides: object) -> ModeloWorkAmendRequest:
 
 def test_the_domain_still_names_the_four_modelos_this_field_exists_for() -> None:
     """The premise: rows are the declaration for exactly these four."""
-    assert DETAIL_ROW_BEARING_MODELOS == _EXPECTED_BEARING
+    assert detail_row_declaration_modelos() == _EXPECTED_BEARING
 
 
 def test_an_amendment_that_declares_nothing_about_rows_is_the_default() -> None:

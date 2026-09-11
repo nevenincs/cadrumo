@@ -6,7 +6,7 @@ import typer
 
 from ....application.user_profile.censal_operation import CensalReviewProjectionV1
 from ....core.i18n.render import tr
-from .._common import emit_progress_line
+from ..common import emit_progress_line
 
 
 def confirm_censal_review(projection: CensalReviewProjectionV1) -> bool:

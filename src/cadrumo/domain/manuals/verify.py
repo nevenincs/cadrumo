@@ -17,8 +17,9 @@ from ...core.i18n.render import tr
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
 from .errors import ManifestError, ManualNotFoundError, ManualParseError
+from .ids import ManualId, ManualPart
 from .loader import iter_sections, load_manual, resolve_part_root
-from .schema import ManualId, ManualPart, Section
+from .schema import Section
 
 _logger = get_logger(__name__)
 

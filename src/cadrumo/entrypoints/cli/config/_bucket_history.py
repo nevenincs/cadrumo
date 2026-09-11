@@ -15,8 +15,8 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.time.utc import coerce_utc_aware
 from ....domain.buckets.event import BucketEvent, BucketEventType
-from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
-from .._common import emit_envelope
+from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
+from ..common import emit_envelope
 
 if TYPE_CHECKING:
     from ....domain.buckets.event import BucketEventHistoryCatalogue
@@ -164,7 +164,7 @@ def _resolve_profile_history_target(profile: str | None, *, ctx: typer.Context |
     from ....application.workflow.errors import ProfileLabelAmbiguousError
     from ....application.workflow.profile_bucket_scan import resolve_profile_bucket
     from ....core.bucket_pointer import resolve_active_bucket_id
-    from .._common import no_active_profile_refusal
+    from ..common import no_active_profile_refusal
 
     if profile is not None:
         if ctx is None:

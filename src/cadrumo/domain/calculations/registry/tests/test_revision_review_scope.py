@@ -13,8 +13,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.revision_review import RevisionReviewStatus
-
+from .....core.revision_review import RevisionReviewStatus
 from ..schema import ModeloRevision
 from ..schema_references import PeriodSelector
 

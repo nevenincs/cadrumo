@@ -26,11 +26,11 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ..actions_lifecycle import remove_manual_transaction
-from ._remove_draft_revision_support import _create_row, _seed_revision_citing_transaction
 from .action_fixtures import (
     _BUCKET_ID,
     _repositories,
 )
+from .remove_draft_revision_support import create_row, seed_revision_citing_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -39,12 +39,12 @@ def test_remove_advises_on_draft_revision_and_still_removes(
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    transaction_id = _create_row(
+    transaction_id = create_row(
         secure_objects,
         idempotency_key="remove-draft-cited",
         description="draft-cited income",
     )
-    draft_revision_id = _seed_revision_citing_transaction(
+    draft_revision_id = seed_revision_citing_transaction(
         secure_objects,
         transaction_id=transaction_id,
         state=CalculationRevisionState.BORRADOR,
@@ -83,12 +83,12 @@ def test_remove_dry_run_surfaces_draft_advisory_without_mutation(
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    transaction_id = _create_row(
+    transaction_id = create_row(
         secure_objects,
         idempotency_key="remove-draft-dry",
         description="draft-cited income",
     )
-    draft_revision_id = _seed_revision_citing_transaction(
+    draft_revision_id = seed_revision_citing_transaction(
         secure_objects,
         transaction_id=transaction_id,
         state=CalculationRevisionState.BORRADOR,
@@ -116,17 +116,17 @@ def test_remove_uncited_row_yields_empty_draft_advisory(
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    cited_id = _create_row(
+    cited_id = create_row(
         secure_objects,
         idempotency_key="remove-draft-other",
         description="cited income",
     )
-    uncited_id = _create_row(
+    uncited_id = create_row(
         secure_objects,
         idempotency_key="remove-draft-free",
         description="uncited income",
     )
-    _seed_revision_citing_transaction(
+    seed_revision_citing_transaction(
         secure_objects,
         transaction_id=cited_id,
         state=CalculationRevisionState.BORRADOR,
@@ -154,12 +154,12 @@ def test_remove_discarded_draft_is_not_advised(
     # A DESCARTADO (discarded) draft is not a live filing: removing a row it
     # cites must NOT raise an advisory.
     transaction_repository, event_repository = _repositories(secure_objects)
-    transaction_id = _create_row(
+    transaction_id = create_row(
         secure_objects,
         idempotency_key="remove-discarded",
         description="discarded-draft income",
     )
-    _seed_revision_citing_transaction(
+    seed_revision_citing_transaction(
         secure_objects,
         transaction_id=transaction_id,
         state=CalculationRevisionState.DESCARTADO,

@@ -80,7 +80,7 @@ A fixed-width glyph run rather than the value's own length, so the mask
 does not leak how long the secret is.
 """
 
-_MASK_KEYWORDS: Final[frozenset[str]] = ALWAYS_REDACT_KEY_TERMS | frozenset(
+MASK_KEYWORDS: Final[frozenset[str]] = ALWAYS_REDACT_KEY_TERMS | frozenset(
     {
         "secreto",
         "contraseña",
@@ -352,7 +352,7 @@ def mask_profile_field(*, path: str, label: str, sensitivity: SensitivityClass |
 
     A field the schema classifies is decided by its declaration alone: it
     masks when classed ``SECRET`` and not otherwise. Only a fact the
-    schema does not declare falls through to :data:`_MASK_KEYWORDS`,
+    schema does not declare falls through to :data:`MASK_KEYWORDS`,
     which is what "defence in depth" means here -- a net under the
     unclassified, not a second opinion on the classified.
 
@@ -383,7 +383,7 @@ def mask_profile_field(*, path: str, label: str, sensitivity: SensitivityClass |
     if sensitivity is not None:
         return False
     haystack = f"{path} {label}".casefold()
-    return any(keyword in haystack for keyword in _MASK_KEYWORDS)
+    return any(keyword in haystack for keyword in MASK_KEYWORDS)
 
 
 def _field_view(

@@ -33,9 +33,9 @@ from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import (
-    _evaluate_expression,
-    _UnresolvedFormulaDependencyError,
+    evaluate_expression,
 )
+from ....domain.calculations.registry.formula_runtime_ops import UnresolvedFormulaDependencyError
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_formula import FormulaExpression
 from ...aggregation.source_mesh import CalculationSourceResolution
@@ -134,7 +134,7 @@ def test_merge_carries_unresolved_binding_ids_and_discards_resolved() -> None:
 
 
 def _evaluate_binding_leaf(*, unresolved: frozenset[str]) -> Decimal:
-    return _evaluate_expression(
+    return evaluate_expression(
         FormulaExpression(binding="b1"),
         values={},
         binding_values={},
@@ -164,6 +164,6 @@ def test_marked_unresolved_binding_leaf_escapes_non_blocking() -> None:
     raising ``binding_value_missing`` — the same non-blocking contract the relation
     channel provides via ``_UnresolvedFormulaDependencyError``.
     """
-    with pytest.raises(_UnresolvedFormulaDependencyError) as exc:
+    with pytest.raises(UnresolvedFormulaDependencyError) as exc:
         _evaluate_binding_leaf(unresolved=frozenset({"b1"}))
     assert exc.value.dependency_ids == ("b1",)

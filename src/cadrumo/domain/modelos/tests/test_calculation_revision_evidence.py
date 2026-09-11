@@ -22,7 +22,6 @@ from ..calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     CalculationSourceRef,
-    FilingInstanceEvidence,
     derive_calculation_revision_id,
 )
 from ..calculation_revision_m303_evidence import (
@@ -32,7 +31,7 @@ from ..calculation_revision_m303_evidence import (
     M303InsolvencyFilingFact,
     M303InsolvencyFilingSubtype,
 )
-from ..calculation_revision_m303_handoff import M303FilingInstanceEvidence
+from ..calculation_revision_m303_handoff import FilingInstanceEvidence, M303FilingInstanceEvidence
 from ._calculation_revision_test_support import (
     _INPUT_CASILLA_001,
     _OUTPUT_CASILLA_002,

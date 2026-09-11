@@ -99,7 +99,7 @@ def _required_manual_casillas_for_m130() -> tuple[CasillaId, ...]:
     return tuple(c.id for c in snap.revision.casillas if c.required and c.input_kind == InputKind.MANUAL)
 
 
-def _workflow_profile() -> TaxpayerProfile:
+def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
@@ -314,7 +314,7 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(re
     report = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator-test",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         settings=ready_clave_settings("X1234567L"),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -386,7 +386,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> No
     report = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator-test",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         settings=ready_clave_settings("X1234567L"),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,

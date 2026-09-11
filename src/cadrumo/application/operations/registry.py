@@ -42,12 +42,6 @@ from ._registry_contracts import (
 from ._registry_contracts import (
     validate_public_registration as _validate_public_registration,
 )
-from ._registry_schema_validation import (
-    strict_model_json_schema as _strict_model_json_schema,
-)
-from ._registry_schema_validation import (
-    validate_credential_free_schema as _validate_credential_free_schema,
-)
 from .capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -69,6 +63,7 @@ from .models import (
     OperationTerminalReceipt,
 )
 from .owner import OperationExecutor, OperationResumableExecutor
+from .registry_schema_validation import strict_model_json_schema, validate_credential_free_schema
 from .secret_submission import OperationEphemeralSecretDeclaration
 
 _STRICT_RUNTIME_BINDING_CONFIG = ConfigDict(
@@ -108,7 +103,7 @@ class OperationSchemaIdentityV1(BaseModel):
         model_type: type[BaseModel],
     ) -> OperationSchemaIdentityV1:
         """Derive the identity from the canonical closed schema of ``model_type``."""
-        schema = _strict_model_json_schema(model_type)
+        schema = strict_model_json_schema(model_type)
         return cls(
             schema_id=schema_id,
             schema_version=schema_version,
@@ -319,8 +314,8 @@ class OperationDefinition(BaseModel):
             raise ValueError(
                 "credential-free journal request type must explicitly inherit CredentialFreeOperationRequest"
             )
-        schema = _strict_model_json_schema(self.request_type)
-        _validate_credential_free_schema(schema)
+        schema = strict_model_json_schema(self.request_type)
+        validate_credential_free_schema(schema)
 
     def _validate_ephemeral_secret(self) -> None:
         if self.ephemeral_secret is None:
@@ -388,7 +383,7 @@ class OperationSchemaBindingV1(BaseModel):
 
     @model_validator(mode="after")
     def _validate_fingerprint(self) -> OperationSchemaBindingV1:
-        schema = _strict_model_json_schema(self.model_type)
+        schema = strict_model_json_schema(self.model_type)
         fingerprint = content_hash_hex(schema)
         if fingerprint != self.identity.schema_fingerprint:
             raise ValueError("registered operation schema fingerprint does not match its exact model")

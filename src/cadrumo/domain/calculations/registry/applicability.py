@@ -50,7 +50,7 @@ does not treat pass-through income taxation as an exemption from
 non-income-tax obligations.
 
 **Canonical applicability authority — modelo level.**
-:data:`_MODELO_APPLICABILITY_RULES` is the single canonical source for
+:data:`MODELO_APPLICABILITY_RULES` is the single canonical source for
 modelo-level applicability. Any question of the form "does this
 taxpayer ever owe this modelo?" is answered here. Code that derives
 applicability verdicts MUST read from this table; it MUST NOT
@@ -102,8 +102,8 @@ from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.time.clock import today_madrid
 from ...contribuyente.entity_type import EntityType
+from ...contribuyente.renta_codes import FiscalResidency
 from ...deadlines.models import (
-    FiscalResidency,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IVARegime,
@@ -492,7 +492,7 @@ _INCOMPLETE_UNRULED_REASON = (
 )
 """``INCOMPLETE`` rationale for a *modelo with no seed rule*.
 
-Used when :data:`_MODELO_APPLICABILITY_RULES` carries no rule for the
+Used when :data:`MODELO_APPLICABILITY_RULES` carries no rule for the
 requested modelo. The profile may be fully declared; this verdict is a
 statement about the seed coverage, not about the operator. It must never tell a declared operator to declare
 their taxpayer type.
@@ -536,7 +536,7 @@ _IMPATRIADO_M720_EXEMPT_REASON = (
 
 Surfaced when ``profile.irpf_special_regime is IrpfSpecialRegime.IMPATRIADO``
 and ``modelo == "720"``. The pre-check in :func:`derive_modelo_applicability`
-fires before the :data:`_MODELO_APPLICABILITY_RULES` lookup to guarantee the
+fires before the :data:`MODELO_APPLICABILITY_RULES` lookup to guarantee the
 exemption is enforced even when ``bienes_extranjero_above_threshold`` is
 ``True``.
 """
@@ -689,7 +689,7 @@ _IVA_SELF_ASSESSMENT_REGIMES: frozenset[IVARegime] = frozenset(
     {IVARegime.GENERAL, IVARegime.SIMPLIFICADO},
 )
 
-_MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
+MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # Modelo 390 — declaración-resumen anual del IVA. The annual companion
     # to Modelo 303: a taxpayer in a periodic IVA self-assessment regime
     # files it. A natural person must also declare actividad económica;
@@ -759,7 +759,7 @@ a rationale naming the deferred expansion, never a confident guess.
 
 
 #: Modelo ids whose applicability rule is authored in the registry rather than
-#: declared as a Python literal in :data:`_MODELO_APPLICABILITY_RULES` below.
+#: declared as a Python literal in :data:`MODELO_APPLICABILITY_RULES` below.
 #: 303 and 390 stay literal -- their authoring trees are owned by the
 #: export-fragment-generator-authority campaign, not unplaced by omission.
 #:
@@ -775,7 +775,7 @@ a rationale naming the deferred expansion, never a confident guess.
 #: count is stated here because a tally of either goes stale on the next entry.
 #:
 #: This is the single declaration of the mixed-surface state
-#: ``_MODELO_APPLICABILITY_RULES`` is now in: these modelos resolve from the
+#: ``MODELO_APPLICABILITY_RULES`` is now in: these modelos resolve from the
 #: registry, 303 and 390 still resolve from the literal table. The literal
 #: table retires outright once the export-fragment campaign closes those two
 #: trees and they are migrated the same way; this module then stops authoring
@@ -918,7 +918,7 @@ def _modelo_applicability_rule(
     """
     if modelo in REGISTRY_RESOLVED_APPLICABILITY_MODELOS:
         return _resolve_registry_applicability_rule(Modelo(modelo), authority=authority)
-    return _MODELO_APPLICABILITY_RULES.get(modelo)
+    return MODELO_APPLICABILITY_RULES.get(modelo)
 
 
 def iter_modelo_applicability_rules() -> tuple[ModeloApplicabilityRule, ...]:
@@ -930,7 +930,7 @@ def iter_modelo_applicability_rules() -> tuple[ModeloApplicabilityRule, ...]:
     API.
     """
     known_modelos = sorted(
-        {str(modelo) for modelo in _MODELO_APPLICABILITY_RULES} | REGISTRY_RESOLVED_APPLICABILITY_MODELOS,
+        {str(modelo) for modelo in MODELO_APPLICABILITY_RULES} | REGISTRY_RESOLVED_APPLICABILITY_MODELOS,
     )
     return tuple(rule for modelo in known_modelos if (rule := _modelo_applicability_rule(modelo)) is not None)
 
@@ -1121,6 +1121,7 @@ def derive_not_applicable_source_modelos(profile: TaxpayerProfile, modelos: Iter
 
 
 __all__ = [
+    "MODELO_APPLICABILITY_RULES",
     "ApplicabilityVerdict",
     "ModeloApplicability",
     "ModeloApplicabilityRule",

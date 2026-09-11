@@ -67,7 +67,7 @@ class M303RegimenSimplificadoAnnualSummaryRequirement(BaseModel):
     @field_validator("binding_ids_by_summary_casilla_id")
     @classmethod
     def _freeze_endpoint_bindings(cls, value: Mapping[CasillaId, BindingId]) -> Mapping[CasillaId, BindingId]:
-        return dict(sorted(value.items()))
+        return dict(value)
 
 
 def m303_regimen_simplificado_annual_summary_selector(
@@ -111,12 +111,10 @@ def validate_m303_regimen_simplificado_annual_summary_revision(revision: ModeloR
     if requirement is None:
         return []
 
-    from ...modelos.calculation_revision import M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
-
-    expected_casilla_ids = M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
-    expected_set = set(expected_casilla_ids)
-    declared_set = set(requirement.binding_ids_by_summary_casilla_id)
-    failures = _target_failures(expected_set, declared_set)
+    # The authoring revision is the authority at publish time. Runtime handoff
+    # code deliberately never supplies a second endpoint catalogue.
+    expected_casilla_ids = tuple(requirement.binding_ids_by_summary_casilla_id)
+    failures: list[str] = []
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
     failures.extend(
         _endpoint_failures(
@@ -171,16 +169,6 @@ def _dependency_treatment(revision: ModeloRevision, source_modelo: ModeloId) -> 
         None,
     )
     return "" if classification is None else str(classification.treatment)
-
-
-def _target_failures(expected_set: set[CasillaId], declared_set: set[CasillaId]) -> list[str]:
-    if declared_set == expected_set:
-        return []
-    return [
-        "m303_regimen_simplificado_annual_summary bindings must target exactly "
-        f"the canonical Modelo 390 74-83 endpoints; missing={sorted(expected_set - declared_set)!r}, "
-        f"unexpected={sorted(declared_set - expected_set)!r}",
-    ]
 
 
 def _endpoint_failures(

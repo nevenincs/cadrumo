@@ -20,7 +20,8 @@ from ...core.logging import get_logger
 from ...core.time.clock import now as _utc_now
 from .enums import BusinessClassification
 from .errors import TransactionCatalogueError, TransactionNotFoundError
-from .models import ClassificationHistoryEntry, Transaction, TransactionCatalogue
+from .lineage_models import ClassificationHistoryEntry
+from .models import Transaction, TransactionCatalogue
 
 _LOGGER = get_logger(__name__)
 

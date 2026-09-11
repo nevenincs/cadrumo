@@ -1,0 +1,35 @@
+[fact]
+fact_id = "irpf-ledger-category-taxonomy"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "irpf-ledger-category-taxonomy:2025"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+legal_refs = ["ley-35-2006:art-101", "rd-439-2007:art-95"]
+source_refs = ["boe-rirpf-category-profile-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "catalogue.ids", value = "actividad_economica,arrendamiento_local,arrendamiento_vivienda_afecto,trabajo" },
+  { key = "category.actividad_economica.purpose", value = "activity_income_withholding" },
+  { key = "category.actividad_economica.directions", value = "incoming,outgoing" },
+  { key = "category.actividad_economica.net_paid_invoice", value = "true" },
+  { key = "category.actividad_economica.related_category_ids", value = "asesoria_contable,asesoria_fiscal,asesoria_juridica" },
+  { key = "category.arrendamiento_local.purpose", value = "rent_expense_withholding" },
+  { key = "category.arrendamiento_local.directions", value = "outgoing" },
+  { key = "category.arrendamiento_local.net_paid_invoice", value = "true" },
+  { key = "category.arrendamiento_local.related_category_ids", value = "arrendamiento_local" },
+  { key = "category.arrendamiento_vivienda_afecto.purpose", value = "rent_expense_withholding" },
+  { key = "category.arrendamiento_vivienda_afecto.directions", value = "outgoing" },
+  { key = "category.arrendamiento_vivienda_afecto.net_paid_invoice", value = "true" },
+  { key = "category.arrendamiento_vivienda_afecto.related_category_ids", value = "arrendamiento_vivienda_afecto" },
+  { key = "category.trabajo.purpose", value = "employment_income" },
+  { key = "category.trabajo.directions", value = "incoming" },
+  { key = "category.trabajo.net_paid_invoice", value = "false" },
+  { key = "category.trabajo.related_category_ids", value = "" },
+]

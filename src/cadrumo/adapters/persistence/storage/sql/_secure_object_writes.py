@@ -26,10 +26,10 @@ from ..crypto.encrypted_columns import (
     secure_object_payload_aad,
 )
 from ..errors import RepositoryError, SecureObjectRevisionConflictError, StorageValidationError
-from ._secure_object_records import SecureObjectDeletion
 from ._secure_object_schema import build_revision_ancestor_ids, parse_revision_ancestor_ids
 from .orm import SecureObjectRow
 from .secure_object_crypto import derive_revision_id
+from .secure_object_records import SecureObjectDeletion
 from .session import session_scope
 
 if TYPE_CHECKING:

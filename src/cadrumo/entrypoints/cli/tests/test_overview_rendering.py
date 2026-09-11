@@ -9,7 +9,7 @@ forward guidance from ONE resolved projection, never from two independently
 derived strings.
 
 The executable text line is produced by the production envelope helper
-:func:`.._common._action_text_lines` from the very notices the JSON envelope
+:func:`..common._action_text_lines` from the very notices the JSON envelope
 carries, so these tests drive that helper rather than reimplementing argv
 rendering; a second renderer here would defeat what they exist to prove.
 """
@@ -27,12 +27,12 @@ from ....application.overview.next_actions import OverviewStatusNextStepId
 from ....core.json_contract import Notice, ResolvedNoticeAction
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
-from .._common import _action_text_lines
 from .._overview_rendering import (
     overview_calendar_output,
     overview_coverage_notices,
     overview_status_output,
 )
+from ..common import _action_text_lines
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

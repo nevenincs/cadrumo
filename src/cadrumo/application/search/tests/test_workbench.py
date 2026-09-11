@@ -35,7 +35,7 @@ from ..workbench import (
 
 #: The defining module itself, for the attribute scoping below. Named through
 #: `import_module` rather than an absolute self-import, which the gate forbids.
-workbench_module = import_module("cadrumo.application.search.workbench")
+workbench_module = import_module("..workbench", package=__package__)
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CALCULATION_REVISION_ID = "c" * 64

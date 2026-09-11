@@ -1,0 +1,35 @@
+[fact]
+fact_id = "lirpf-art-81-maternity-formula-spec"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "lirpf-art-81-maternity-formula-spec:2023-01-01"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+legal_refs = ["ley-35-2006:art-81"]
+source_refs = ["boe-lirpf-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = ["forma proporcional al número de meses", "1.200 euros anuales", "150 euros"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "applicability.filing_year", value = "filing_period" },
+  { key = "applicability.increment", value = "only_when_child_id_in_alta_posterior_hijos_and_filing_year_at_or_after_effective_year" },
+  { key = "formula.kind", value = "sum(per_child_capped_amount)" },
+  { key = "formula.input.meses_por_hijo", value = "operator_input" },
+  { key = "formula.input.filing_year", value = "operator_input" },
+  { key = "formula.input.alta_posterior_hijos", value = "operator_input" },
+  { key = "formula.monthly_amount_fact_id", value = "lirpf-art-81-maternity-monthly-amount" },
+  { key = "formula.annual_cap_fact_id", value = "lirpf-art-81-maternity-annual-cap" },
+  { key = "formula.increment_fact_id", value = "lirpf-art-81-maternity-post-birth-enrollment-increment" },
+  { key = "formula.increment_effective_year_fact_id", value = "lirpf-art-81-maternity-post-birth-enrollment-effective-year" },
+  { key = "formula.ordinary_amount", value = "meses * monthly_amount" },
+  { key = "formula.qualifying_increment", value = "increment once when child qualifies" },
+  { key = "formula.qualifying_cap", value = "annual_cap + increment" },
+  { key = "formula.non_qualifying_cap", value = "annual_cap" },
+  { key = "formula.per_child", value = "min(ordinary_amount + qualifying_increment, qualifying_cap)" },
+  { key = "formula.aggregation", value = "sum(per_child_capped_amount)" },
+]

@@ -18,10 +18,10 @@ from ....domain.calculations.registry.schema_references import RegistrySnapshotR
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
-    CalculationRevisionAmendmentKind,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -62,9 +62,9 @@ from .import_flow_support import (
     _import_external_filing,
     _Repos,
     _seed_local_filing_record,
-    _seed_ready_profile,
     _seed_work_unit,
     repos,
+    seed_ready_profile,
 )
 
 __all__ = ["repos"]
@@ -263,7 +263,7 @@ def test_calculate_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: P
     calculation-revision addressing helpers in this same package.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_GUARD_BUCKET_B) as profile:
-        _seed_ready_profile(bucket_id=_GUARD_BUCKET_B)
+        seed_ready_profile(bucket_id=_GUARD_BUCKET_B)
         wu_repo = WorkUnitCatalogueRepository(bucket_id=_GUARD_BUCKET_A, objects=profile.repository)
         cr_repo = CalculationRevisionCatalogueRepository(objects=profile.repository)
         bv_repo = BucketEventHistoryRepository(objects=profile.repository)

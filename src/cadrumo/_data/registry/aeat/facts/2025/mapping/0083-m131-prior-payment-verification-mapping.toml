@@ -1,0 +1,32 @@
+[fact]
+fact_id = "m131-prior-payment-verification-mapping"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "m131-prior-payment-verification-mapping:2025"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["pago fraccionado"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "modelo", value = "131" },
+  { key = "revision", value = "2025" },
+  { key = "casilla.prior_payment", value = "05" },
+  { key = "casilla.cumulative_income", value = "01" },
+  { key = "casilla.prior_positive_part", value = "07" },
+  { key = "casilla.prior_minoracion", value = "16" },
+  { key = "relation.kind", value = "same_ejercicio_previous_period" },
+  { key = "relation.predicate.not_deducted", value = "prior_payment_zero_when_cumulative_income_positive_and_prior_filing_present" },
+  { key = "relation.predicate.minoracion_not_captured", value = "prior_positive_part_present_and_prior_minoracion_absent" },
+  { key = "applicability.source", value = "selected_modelo_131_revision" },
+]

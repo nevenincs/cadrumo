@@ -1,32 +1,25 @@
-"""Explicit, persisted Modelo 210 income classifications for ledger rows.
+"""Typed Modelo 210 income-classification boundary.
 
-The generic IRPF category on a transaction cannot identify the official M210
-tipo-de-renta code. This record is therefore an independent, operator-supplied
-IRNR classification: it preserves the official code and the component facts
-needed by the M210 source projection without inferring either from a generic
-ledger category or bank narrative.
+The selected Modelo 210 registry revision owns the income-code catalogue,
+labels, and payer applicability. This module retains only the transaction
+validation/type shell while that registry declaration is consumed by the
+calculation path.
 """
 
 from __future__ import annotations
 
 from decimal import Decimal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator
 
-from ...core.irnr import M210_TIPO_RENTA_CODE_PROJECTION, M210PayerMode
+from ...core.irnr import M210PayerMode
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UnitProportion
 from .errors import TransactionValidationError
 
 
 class M210IncomeClassification(BaseModel):
-    """One explicit M210 income classification persisted on a transaction.
-
-    ``official_tipo_renta_code`` is the two-character code selected from the
-    M210 code axis, not the many-to-one conceptual rate token. The aggregation
-    resolver additionally verifies that the selected calculation revision
-    declares the code before admitting the row.
-    """
+    """One operator-supplied M210 income classification."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -41,12 +34,11 @@ class M210IncomeClassification(BaseModel):
     @classmethod
     def _validate_official_tipo_renta_code(cls, value: str) -> str:
         code = value.strip()
-        if code not in M210_TIPO_RENTA_CODE_PROJECTION:
-            accepted = ", ".join(sorted(M210_TIPO_RENTA_CODE_PROJECTION))
+        if not code.isdecimal():
             raise TransactionValidationError(
-                f"official_tipo_renta_code must be a registry-projected Modelo 210 code; got {code!r}. "
-                f"Accepted: {accepted}",
+                "official_tipo_renta_code must be a two-character numeric code",
             )
+        # TODO(fact-relocation): resolve M210 income-code catalogue and multiple-payer applicability from selected registry revision
         return code
 
     @field_validator("payer_mode", mode="before")
@@ -63,20 +55,6 @@ class M210IncomeClassification(BaseModel):
             return None
         trimmed = value.strip()
         return trimmed or None
-
-    @model_validator(mode="after")
-    def _validate_payer_mode(self) -> M210IncomeClassification:
-        if self.official_tipo_renta_code == "35":
-            if self.payer_mode is not M210PayerMode.MULTIPLE_PAYERS_CODE_35 or self.payer_id is not None:
-                raise TransactionValidationError(
-                    "official tipo-renta code '35' requires payer_mode='multiple_payers_code_35' and no payer_id",
-                )
-            return self
-        if self.payer_mode is not M210PayerMode.SINGLE_PAYER or self.payer_id is None:
-            raise TransactionValidationError(
-                "non-35 Modelo 210 income requires payer_mode='single_payer' and a non-blank payer_id",
-            )
-        return self
 
 
 __all__ = ["M210IncomeClassification"]

@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from .._command_policy import CommandPolicyProjection, command_policy
-from .._identity_gate import identity_gate_refusal
-from .._tools import build_tool_descriptors
+from ..identity_gate import identity_gate_refusal
+from ..tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -438,7 +438,8 @@ def render_error_json(
     to avoid the ``json_contract`` <-> ``errors`` import cycle
     (``json_contract`` imports :class:`CadrumoError`).
     """
-    from ..json_contract import ENVELOPE_SCHEMA_VERSION, EnvelopeStatus, jsonable_output_payload
+    from ..json_contract import ENVELOPE_SCHEMA_VERSION, EnvelopeStatus
+    from ..output_rendering import jsonable_output_payload
 
     envelope = build_error_envelope(error, action=action, context=context, trace_id=trace_id)
     document = {

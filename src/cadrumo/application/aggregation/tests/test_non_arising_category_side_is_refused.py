@@ -48,7 +48,7 @@ from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeduct
 from ....core.period import Period
 from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ....domain.iva.classification import InvoiceKind
-from ....domain.iva.components import IVA_CATEGORY_COMPONENTS, IvaKindApplicability
+from ....domain.iva.components import IvaKindApplicability, registry_component_catalogue
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -65,6 +65,7 @@ _PERIOD = Period.from_year_and_code(2024, "4T")
 _ON = date(2024, 11, 6)
 _BASE = Decimal("1000.00")
 _CUOTA = Decimal("210.00")
+COMPONENT_CATALOGUE = registry_component_catalogue()
 
 
 def _transaction(
@@ -165,7 +166,7 @@ def _non_arising_pairs() -> list[tuple[IvaCategory, InvoiceKind]]:
     """Every pair the table declares impossible, read at runtime."""
     return [
         (category, kind)
-        for (category, kind), row in IVA_CATEGORY_COMPONENTS.items()
+        for (category, kind), row in COMPONENT_CATALOGUE.items()
         if row.applicability is IvaKindApplicability.DOES_NOT_ARISE
     ]
 
@@ -300,7 +301,7 @@ def test_the_refusal_names_the_counterpart_the_operator_probably_meant() -> None
     catalogue = TransactionCatalogue.model_validate({"transactions": {transaction.transaction_id: transaction}})
     detail = aggregate_iva_ledger_observations(catalogue, period=_PERIOD).issues[0].detail
 
-    note = IVA_CATEGORY_COMPONENTS[(IvaCategory.INTRA_COMMUNITY_SUPPLY, InvoiceKind.RECEIVED)].retencion_note
+    note = COMPONENT_CATALOGUE[(IvaCategory.INTRA_COMMUNITY_SUPPLY, InvoiceKind.RECEIVED)].retencion_note
     assert IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE.value in note, (
         "the table's note no longer names the counterpart, so the refusal below cannot carry it"
     )

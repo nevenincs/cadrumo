@@ -32,7 +32,6 @@ from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
-    BindingExportDataType,
     invariant_diagnostics,
     selector_against_model,
     uppercase_alpha_code,
@@ -41,6 +40,7 @@ from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .schema import DataBindingDefinition
 from .schema_base import coerce_enum_member
+from .schema_exports import ExportFieldDataType
 
 __all__ = [
     "DonativoDonorObservation",
@@ -134,7 +134,7 @@ class _DonativoSelector(BaseModel):
     row_field: _DonativoRowField | None = None
     grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
-    data_type: BindingExportDataType | None = None
+    data_type: ExportFieldDataType | None = None
     """Scalar type of the value this row field contributes to the export.
 
     The same fact ``BindingRowExportSelector.data_type`` carries; declared here

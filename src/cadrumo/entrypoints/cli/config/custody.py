@@ -12,8 +12,8 @@ from pydantic import SecretStr
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity
-from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
-from .._common import active_profile_label, emit_envelope
+from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
+from ..common import active_profile_label, emit_envelope
 
 if TYPE_CHECKING:
     from ....application.user_profile.login_session import ProfileLoginOutcome

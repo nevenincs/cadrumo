@@ -41,7 +41,6 @@ from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.json_contract import Notice
 from ...core.rescate_type import RescateType
 from ...domain.calculations.registry.errors import RegistryValidationError
-from ._common import activate_subcommand_output_language, emit_envelope
 from ._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_cli_support import (
@@ -60,6 +59,7 @@ from ._modelo_rendering import (
     work_unit_deadline_output,
     work_unit_plazo_lines,
 )
+from .common import activate_subcommand_output_language, emit_envelope
 from .errors import CliOutboundPayloadBoundaryError
 
 if TYPE_CHECKING:

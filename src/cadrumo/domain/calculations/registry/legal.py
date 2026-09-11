@@ -8,8 +8,7 @@ checks whether the artifact's selected citation is eligible for filing.
 
 from __future__ import annotations
 
-from cadrumo.core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES
-
+from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES
 from .citation_blocklist import CitationSource, find_known_bad
 from .errors import RegistryValidationError
 from .schema_references import LegalReference

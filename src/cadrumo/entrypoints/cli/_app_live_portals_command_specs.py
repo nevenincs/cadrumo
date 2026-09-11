@@ -9,7 +9,6 @@ from ._app_live_command_spec_support import (
     _METADATA_GROUP_INVOCATION,
     _METADATA_POLICY,
     NO_RESULT_SCHEMA,
-    _key,
 )
 from .command_spec import (
     ArgumentSpec,
@@ -23,6 +22,9 @@ from .command_spec import (
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
+)
+from .command_spec import (
+    translation_key as _key,
 )
 
 LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (

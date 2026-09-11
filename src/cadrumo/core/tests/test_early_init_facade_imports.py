@@ -198,10 +198,9 @@ def test_core_survives_settings_construction_while_resolving_a_facade_name() -> 
     trigger = _MidInitSettingsTrigger()
     sys.meta_path.insert(0, trigger)
     try:
-        # Absolute, string-form import by necessity: the assertion IS a fresh
-        # absolute import of `cadrumo.core` from a wiped `sys.modules`, which a
-        # relative form cannot reproduce.
-        importlib.import_module("cadrumo.core")
+        # Relative, string-form import by necessity: the assertion IS a fresh
+        # import of `cadrumo.core` from a wiped `sys.modules`.
+        importlib.import_module("..", package=__package__)
         # Resolving a name owned by the triggering module is what now drives the
         # hook, and reading it back IS the assertion: if the settings
         # construction re-entered a half-built facade this raises.

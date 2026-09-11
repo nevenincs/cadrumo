@@ -1,0 +1,31 @@
+[fact]
+fact_id = "modelo-calculate-input-declarations-mapping"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-calculate-input-declarations-mapping:2025"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+source_refs = ["aeat-modelo-100-2025", "aeat-modelo-303-2025"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-100-2025"
+required_text = ["casilla", "binding"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "modelo.binding.autoconsumo_promotor", value = "modelo-303-autoconsumo-promotor-base" },
+  { key = "modelo.role.inss_exenta", value = "irpf_rendimiento_trabajo_prestacion_inss_maternidad_paternidad_exenta" },
+  { key = "modelo.role.deduccion_maternidad", value = "irpf_deduccion_maternidad" },
+  { key = "modelo.role.reduccion_trabajo", value = "irpf_rendimiento_trabajo_reduccion" },
+  { key = "modelo.role.sal_reserva_especial", value = "is_sal_reserva_especial_dotacion" },
+  { key = "modelo.role.declarante_selector", value = "irpf_toma_datos_declarante_selector" },
+  { key = "detail_override.prefix.perc", value = "perc." },
+  { key = "detail_override.prefix.perceptor", value = "perceptor." },
+  { key = "detail_override.prefix.inmueble", value = "inmueble." },
+  { key = "applicability.source", value = "selected_modelo_revision" },
+  { key = "source_kind", value = "calculate_input_declaration" },
+]

@@ -17,9 +17,8 @@ import pytest
 
 # Importing the renta package registers the first-slice routing cross-domain
 # snapshot check required by Modelo 100 parity scenarios run via _scenarios.
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.resources.bundled_data import bundled_path
-
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.resources.bundled_data import bundled_path
 from ._published_authority import artifact_components
 from ._scenarios import (
     RegistryCalculationScenario,

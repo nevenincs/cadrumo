@@ -10,10 +10,10 @@ Supported row types:
   (``--row miembro nif=X share=Y importe=Z``)
 * ``Modelo232VinculadaRow`` — operación vinculada for modelo 232
   (``--row vinculada nif=X tipo_vinculacion=Y importe=Z metodo=M pais=P``)
-* ``Modelo349OperadorRow`` — operador intracomunitario for modelo 349
+* ``Modelo349OperadorRow`` — operador row for modelo 349
   (``--row operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=X clave_operacion=E importe=Y``)
   Used when no collectible-invoice ledger exists; maps directly to the
-  Tipo-2 operador record layout (Orden HAC/174/2020 Anexo II).
+  operator record layout.
 * ``Modelo349RectificacionRow`` — rectificación intracomunitaria for modelo 349
   (``--row rectificacion codigo_pais=DE nif_comunitario=DE123456789 razon_social=X``
   ``clave_operacion=E ejercicio=2025 periodo=2T base_rectificada=Y base_anterior=Z``)
@@ -34,7 +34,6 @@ before being carried into ``detail_rows`` on the ``CalculationRevision``.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
@@ -45,7 +44,7 @@ from pydantic import BaseModel, BeforeValidator, Field, StringConstraints, field
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.nif_iva import nif_iva_format_for_country
-from ...core.irnr import M210_TIPO_RENTA_CODE_PROJECTION, M210PayerMode
+from ...core.irnr import M210PayerMode
 from ...core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UnitProportion
@@ -322,74 +321,17 @@ class Modelo232VinculadaRow(BaseModel):
 # ---------------------------------------------------------------------------
 # Modelo 349 - operador intracomunitario row (manual-entry path)
 #
-# Legal authority: Orden HAC/174/2020 (Anexo II — Tipo 2 operador record);
-# Orden EHA/769/2010 art. 3; Ley 58/2003 art. 93; Ley 37/1992 arts. 66-70
-# (operaciones intracomunitarias).
-# One row per counterparty + clave_operacion combination.
-# NIF-IVA format validation enforces country-specific patterns from
-# Council Directive 2006/112/EC Annex XI (the VIES registry format rules).
+# The selected registry revision owns operation codes, country-prefix rules,
+# and period applicability. This module retains the row/type boundary and
+# generic shape validation only.
 # ---------------------------------------------------------------------------
 
-# Country-specific NIF-IVA format patterns for Modelo 349. Every current EU
-# Member State (plus post-Brexit Northern Ireland ``XI``) routes through the
-# canonical :data:`cadrumo.core.identity.nif_iva.NIF_IVA_FORMATS` authority so the
-# structural pattern lives in exactly one place (per the
-# aeat-registry-bindings discipline: a per-family collection is
-# derived from the core table, never hand-maintained as a parallel literal
-# set). ``GB`` is the sole deliberate exception: post-Brexit UK is not an EU
-# Member State, so the general IVA/invoice counterparty boundary
-# (:mod:`cadrumo.domain.invoices`) correctly carries no GB structural pattern and
-# falls back to its generic non-EU shape check. Modelo 349's Brexit-transition
-# filing rules (:func:`validate_m349_country_prefix_context`) still permit a
-# historical ``GB`` prefix for pre-2021 rectifications and the 2021 1M/1T
-# transition period, so the exact GB IVA structural shape (9 or 12 digits, or
-# the ``GD``/``HA`` government/health-authority forms) is retained here only,
-# scoped to Modelo 349's own transition-period need.
-_M349_GB_NIF_PATTERN: re.Pattern[str] = re.compile(r"^GB(\d{9}|\d{12}|GD\d{3}|HA\d{3})$")
 
-
-class Modelo349ClaveOperacion(StrEnum):
-    """Clave de operación declarable on a Modelo 349 row.
-
-    The closed code set is fixed by Orden HAC/174/2020 Anexo II, which also defines
-    what each letter means; the meanings are not restated here, because a paraphrase
-    of the Orden in a docstring is a second authority that can drift from the first.
-
-    Distinct from :class:`Modelo347ClaveOperacion` despite the shared field name and
-    five shared letters: the two forms draw from different Órdenes, and a letter
-    valid on one is not thereby valid on the other. They must never be merged.
-    """
-
-    E = "E"
-    M = "M"
-    H = "H"
-    A = "A"
-    T = "T"
-    S = "S"
-    I = "I"  # noqa: E741
-    R = "R"
-    D = "D"
-    C = "C"
-
-
-Modelo349ClaveOperacionValue = Literal[
-    Modelo349ClaveOperacion.E,
-    Modelo349ClaveOperacion.M,
-    Modelo349ClaveOperacion.H,
-    Modelo349ClaveOperacion.A,
-    Modelo349ClaveOperacion.T,
-    Modelo349ClaveOperacion.S,
-    Modelo349ClaveOperacion.I,
-    Modelo349ClaveOperacion.R,
-    Modelo349ClaveOperacion.D,
-    Modelo349ClaveOperacion.C,
+Modelo349ClaveOperacionValue = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=1),
 ]
-"""The same code set for a wire or operation payload field.
-
-An operation model graph must not customise its Pydantic core schema, and a bare enum
-under strict validation refuses the plain letter a serialised row carries, so those
-fields take this literal over the members above rather than respelling the set.
-"""
+"""Typed one-character operation-key shell; the selected registry owns its values."""
 _M349_RECTIFICACION_PERIODO = Literal[
     "01",
     "02",
@@ -409,10 +351,7 @@ _M349_RECTIFICACION_PERIODO = Literal[
     "3T",
     "4T",
 ]
-_M349_NI_PREFIX = "XI"
-_M349_GB_PREFIX = "GB"
-_M349_SERVICE_CLAVES = frozenset({"S", "I"})
-_M349_2021_FIRST_PERIODS = frozenset({"01", "1M", "1T"})
+# TODO(fact-relocation): resolve detail-model, M349 code, and M210 grouping catalogues from selected registry revisions
 
 
 class Modelo349CountryPrefixContextError(CadrumoError, ValueError):
@@ -460,21 +399,7 @@ def _validate_m349_nif_comunitario(value: str) -> str:
 
 
 class Modelo349OperadorRow(BaseModel):
-    """One operador intracomunitario row for Modelo 349 (manual-entry path).
-
-    Fields mirror the Tipo-2 operador record layout declared in
-    ``349/revisions/2020-y-siguientes/bindings/0007-bindings.toml``.
-
-    This row is used when the collectible-invoice ledger is absent and
-    the operator declares intracom counterparties directly via the CLI.
-
-    Parity assertions:
-    * ``codigo_pais`` -> ``op.codigo-pais`` (record positions 76-77)
-    * ``nif_comunitario`` -> ``op.nif-comunitario`` (record positions 78-92)
-    * ``razon_social`` -> ``op.apellidos-razon-social`` (record positions 93-132)
-    * ``clave_operacion`` -> ``op.clave-operacion`` (record position 133)
-    * ``importe`` -> ``op.base-imponible`` (record positions 134-146)
-    """
+    """One typed operator row for Modelo 349 manual-entry input."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -499,26 +424,12 @@ class Modelo349OperadorRow(BaseModel):
     @classmethod
     def _importe_non_negative(cls, value: Decimal) -> Decimal:
         if value < Decimal("0"):
-            raise ValueError(f"importe must be non-negative per Orden HAC/174/2020 Anexo II constraint; got {value}")
+            raise ValueError(f"importe must be non-negative; got {value}")
         return value
 
 
 class Modelo349RectificacionRow(BaseModel):
-    """One rectificación row for Modelo 349 (manual-entry path).
-
-    Fields mirror the Tipo-2 rectificación record layout declared in
-    ``349/revisions/2020-y-siguientes/bindings/0007-bindings.toml``.
-
-    Parity assertions:
-    * ``codigo_pais`` -> ``op.codigo-pais`` (record positions 76-77)
-    * ``nif_comunitario`` -> ``op.nif-comunitario`` (record positions 78-92)
-    * ``razon_social`` -> ``op.apellidos-razon-social`` (record positions 93-132)
-    * ``clave_operacion`` -> ``op.clave-operacion`` (record position 133)
-    * ``ejercicio`` -> ``rect.ejercicio-rectificado`` (record positions 147-150)
-    * ``periodo`` -> ``rect.periodo-rectificado`` (record positions 151-152)
-    * ``base_rectificada`` -> ``rect.base-rectificada`` (record positions 153-165)
-    * ``base_anterior`` -> ``rect.base-anterior`` (record positions 166-178)
-    """
+    """One typed rectification row for Modelo 349 manual-entry input."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -564,115 +475,20 @@ class Modelo349RectificacionRow(BaseModel):
     @classmethod
     def _bases_non_negative(cls, value: Decimal) -> Decimal:
         if value < Decimal("0"):
-            raise ValueError("rectification bases must be non-negative per Orden HAC/174/2020 Anexo II constraint")
+            raise ValueError("rectification bases must be non-negative")
         return value
 
 
 def validate_m349_nif_format(nif: str, pais: str) -> bool:
-    """Return True when ``nif`` matches the expected NIF-IVA format for ``pais``.
-
-    Every current EU Member State (plus ``XI``) resolves its structural
-    pattern from the canonical :func:`cadrumo.core.identity.nif_iva.nif_iva_format_for_country`
-    authority. ``GB`` is validated against Modelo 349's own Brexit-transition
-    pattern (see :data:`_M349_GB_NIF_PATTERN`), since post-Brexit UK carries no
-    entry in the general EU NIF-IVA authority. Unsupported country prefixes
-    fail closed. The NIF string must include the same two-letter country
-    prefix.
-    """
+    """Return whether the canonical country-format authority accepts ``nif``."""
     normalized_pais = pais.upper()
     normalized_nif = nif.upper()
     if not normalized_nif.startswith(normalized_pais):
         return False
-    if normalized_pais == "GB":
-        return bool(_M349_GB_NIF_PATTERN.match(normalized_nif))
     spec = nif_iva_format_for_country(normalized_pais)
     if spec is None:
         return False
     return bool(spec.pattern.match(normalized_nif))
-
-
-def _is_before_m349_transition(year: int | None) -> bool:
-    """Return whether a filing or rectification predates the 2021 transition."""
-    return year is not None and year < 2021
-
-
-def _is_m349_2021_goods_transition(*, year: int | None, period: str, clave: str) -> bool:
-    """Return whether a code is allowed in the first 2021 goods transition period."""
-    return year == 2021 and period in _M349_2021_FIRST_PERIODS and clave not in _M349_SERVICE_CLAVES
-
-
-def _validate_m349_xi_context(
-    *,
-    country: str,
-    clave: str,
-    filing_year: int,
-    period_code: str,
-    is_rectification: bool,
-    rectified_year: int | None,
-) -> None:
-    """Apply the Modelo 349 Northern Ireland prefix rules in their refusal order."""
-    if clave in _M349_SERVICE_CLAVES:
-        _raise_m349_country_context_error(
-            country_code=country,
-            clave_operacion=clave,
-            filing_year=filing_year,
-            period=period_code,
-            reason="Northern Ireland prefix XI is not accepted for service keys S or I",
-        )
-    if is_rectification and _is_before_m349_transition(rectified_year):
-        _raise_m349_country_context_error(
-            country_code=country,
-            clave_operacion=clave,
-            filing_year=filing_year,
-            period=period_code,
-            reason="pre-2021 rectifications use GB, not XI",
-        )
-    if not is_rectification and _is_before_m349_transition(filing_year):
-        _raise_m349_country_context_error(
-            country_code=country,
-            clave_operacion=clave,
-            filing_year=filing_year,
-            period=period_code,
-            reason="XI applies only from 2021 onward",
-        )
-
-
-def _validate_m349_gb_context(
-    *,
-    country: str,
-    clave: str,
-    filing_year: int,
-    period_code: str,
-    is_rectification: bool,
-    rectified_year: int | None,
-    rectified_period_code: str | None,
-) -> None:
-    """Apply the Modelo 349 Great Britain transition exceptions."""
-    if is_rectification:
-        if _is_before_m349_transition(rectified_year):
-            return
-        if _is_m349_2021_goods_transition(year=rectified_year, period=rectified_period_code or "", clave=clave):
-            return
-        _raise_m349_country_context_error(
-            country_code=country,
-            clave_operacion=clave,
-            filing_year=filing_year,
-            period=period_code,
-            reason="GB is limited to pre-2021 rectifications and the 2021 1M/1T transition case",
-        )
-        return
-
-    if _is_before_m349_transition(filing_year):
-        return
-    if _is_m349_2021_goods_transition(year=filing_year, period=period_code, clave=clave):
-        return
-    _raise_m349_country_context_error(
-        country_code=country,
-        clave_operacion=clave,
-        filing_year=filing_year,
-        period=period_code,
-        reason="ordinary post-transition Modelo 349 rows use XI for Northern Ireland goods and exclude GB",
-    )
 
 
 def validate_m349_country_prefix_context(
@@ -685,39 +501,10 @@ def validate_m349_country_prefix_context(
     rectified_year: int | None = None,
     rectified_period: str | None = None,
 ) -> None:
-    """Validate post-Brexit ``GB`` / ``XI`` rules for Modelo 349.
-
-    AEAT's Brexit IVA instructions keep ``XI`` for Northern Ireland goods
-    operations after 2021 and exclude ``S`` / ``I`` service keys from ``XI``.
-    Ordinary ``GB`` rows are not valid for post-transition periods, except for
-    the limited 2021 first-period and pre-2021 rectification cases named by
-    the official instructions.
-    """
-    country = country_code.strip().upper()
-    clave = clave_operacion.strip().upper()
-    period_code = _normalise_m349_period(period)
-    rectified_period_code = _normalise_m349_period(rectified_period) if rectified_period is not None else None
-
-    if country == _M349_NI_PREFIX:
-        _validate_m349_xi_context(
-            country=country,
-            clave=clave,
-            filing_year=filing_year,
-            period_code=period_code,
-            is_rectification=is_rectification,
-            rectified_year=rectified_year,
-        )
-        return
-    if country == _M349_GB_PREFIX:
-        _validate_m349_gb_context(
-            country=country,
-            clave=clave,
-            filing_year=filing_year,
-            period_code=period_code,
-            is_rectification=is_rectification,
-            rectified_year=rectified_year,
-            rectified_period_code=rectified_period_code,
-        )
+    """Resolve the selected registry's M349 country-prefix applicability."""
+    del country_code, clave_operacion, filing_year, period, is_rectification, rectified_year, rectified_period
+    # TODO(fact-relocation): resolve detail-model, M349 code, and M210 grouping catalogues from selected registry revisions
+    raise NotImplementedError("M349 country-prefix applicability is unresolved")
 
 
 def _normalise_m349_period(period: str | None) -> str:
@@ -727,23 +514,6 @@ def _normalise_m349_period(period: str | None) -> str:
     if len(token) == 1 and token.isdigit():
         return f"0{token}"
     return token
-
-
-def _raise_m349_country_context_error(
-    *,
-    country_code: str,
-    clave_operacion: str,
-    filing_year: int,
-    period: str,
-    reason: str,
-) -> None:
-    raise Modelo349CountryPrefixContextError(
-        country_code=country_code,
-        clave_operacion=clave_operacion,
-        filing_year=filing_year,
-        period=period,
-        reason=reason,
-    )
 
 
 def m349_nif_number_for_export(nif: str, pais: str) -> str:
@@ -778,9 +548,8 @@ def m349_nif_number_for_export(nif: str, pais: str) -> str:
 class Modelo347ClaveOperacion(StrEnum):
     """Clave de operación declarable on a Modelo 347 counterparty row.
 
-    The closed code set is fixed by the M347 form under Orden EHA/3012/2008, which
-    defines each letter. Distinct from :class:`Modelo349ClaveOperacion`; see that
-    class for why the overlap does not make them one vocabulary.
+    This operation-key type is specific to the M347 row family and is not shared
+    with the registry-owned M349 operation-key shell.
     """
 
     A = "A"
@@ -859,29 +628,14 @@ class Modelo347ContraparteRow(BaseModel):
 # ---------------------------------------------------------------------------
 # Modelo 210 - annual grouped-renta rows
 #
-# Orden HAC/56/2024 art. 4.1 substitutes the M210 grouping rule in Orden
-# EHA/3316/2010 art. 2: grouped rents share one official renta code, rate and
-# (where applicable) property/right; one payer is required except for code 35;
-# components must not offset one another. Annual 0A is the lease/sublease
-# grouping period, represented by official codes 01 and 35.
+# The selected registry revision owns the grouping catalogue and its
+# applicability rules. This module retains the row shape and generic
+# cross-row mechanics only.
 # ---------------------------------------------------------------------------
-
-_M210_ANNUAL_AGRUPACION_CODES = frozenset({"01", "35"})
 
 
 class Modelo210AgrupacionRentaRow(BaseModel):
-    """One non-offsetting component renta in an annual Modelo 210 grouping.
-
-    The record deliberately carries the official M210 code rather than the
-    rate-concept token used by the formula engine. Several official codes map to
-    the same conceptual rate, but Article 2's grouping test is on the official
-    code itself. ``source_id`` remains stable across persistence and can name a
-    manual supporting record now or a classified ledger transaction later.
-
-    Rows evidence the legality of a grouped declaration. They do not sum into a
-    casilla: the registry-owned manual M210 formula remains the sole arithmetic
-    path.
-    """
+    """One typed component row in an annual Modelo 210 grouping."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -899,25 +653,14 @@ class Modelo210AgrupacionRentaRow(BaseModel):
 
     @field_validator("tipo_renta_code")
     @classmethod
-    def _tipo_renta_code_is_registry_declared(cls, value: str) -> str:
-        if value not in M210_TIPO_RENTA_CODE_PROJECTION:
-            accepted = ", ".join(sorted(M210_TIPO_RENTA_CODE_PROJECTION))
-            raise ValueError(
-                f"tipo_renta_code must be a registry-declared Modelo 210 official code; "
-                f"got {value!r}; accepted codes: {accepted}"
-            )
-        return value
+    def _tipo_renta_code_has_shape(cls, value: str) -> str:
+        code = value.strip()
+        if not code.isdecimal():
+            raise ValueError("tipo_renta_code must be a two-character numeric code")
+        return code
 
     @model_validator(mode="after")
-    def _statutory_identity_contract(self) -> Modelo210AgrupacionRentaRow:
-        if self.tipo_renta_code == "35":
-            if self.pagador_mode is not M210PayerMode.MULTIPLE_PAYERS_CODE_35:
-                raise ValueError("tipo_renta_code '35' requires the explicit multiple-payers code-35 mode")
-        elif self.pagador_mode is not M210PayerMode.SINGLE_PAYER:
-            raise ValueError("only tipo_renta_code '35' may use the multiple-payers code-35 mode")
-        elif self.pagador_id is None:
-            raise ValueError("single-payer grouped renta rows require a non-blank pagador_id")
-
+    def _typed_identity_contract(self) -> Modelo210AgrupacionRentaRow:
         if self.deriva_de_bien_derecho:
             if self.bien_derecho_id is None:
                 raise ValueError("a renta derived from a bien or derecho requires bien_derecho_id")
@@ -927,10 +670,10 @@ class Modelo210AgrupacionRentaRow(BaseModel):
 
 
 class Modelo210AgrupacionRentaRowsError(CadrumoError, ValueError):
-    """A Modelo 210 annual grouped-renta set violates Article 2 compatibility."""
+    """A Modelo 210 annual grouped-renta set violates row compatibility."""
 
     def __init__(self, *, reason: str, detail: str) -> None:
-        """Record which Article 2 compatibility rule the row set broke."""
+        """Record which row compatibility rule the row set broke."""
         self.reason = reason
         self.detail = detail
         super().__init__(f"Modelo 210 annual agrupación rows are invalid ({reason}): {detail}")
@@ -964,11 +707,9 @@ def _resolve_single_agrupacion_tipo_renta_code(rows: Sequence[Modelo210Agrupacio
 
 
 def _require_annual_agrupacion_code(code: str) -> None:
-    if code not in _M210_ANNUAL_AGRUPACION_CODES:
-        raise Modelo210AgrupacionRentaRowsError(
-            reason="annual_code_not_lease_or_sublease",
-            detail=f"period 0A is limited to lease/sublease grouped rentas (01 or 35), got {code}",
-        )
+    del code
+    # TODO(fact-relocation): resolve detail-model, M349 code, and M210 grouping catalogues from selected registry revisions
+    raise NotImplementedError("M210 grouping-code catalogue is unresolved")
 
 
 def _require_single_agrupacion_tipo_gravamen(rows: Sequence[Modelo210AgrupacionRentaRow]) -> None:
@@ -995,35 +736,13 @@ def _require_shared_agrupacion_bien_derecho(rows: Sequence[Modelo210AgrupacionRe
 
 
 def _validate_agrupacion_payer_grouping(rows: Sequence[Modelo210AgrupacionRentaRow], code: str) -> None:
-    if code == "35":
-        if any(row.pagador_mode is not M210PayerMode.MULTIPLE_PAYERS_CODE_35 for row in rows):
-            raise Modelo210AgrupacionRentaRowsError(
-                reason="code_35_payer_mode",
-                detail="code 35 requires the explicit multiple-payers mode on every component",
-            )
-        return
-
-    payer_ids = {row.pagador_id for row in rows}
-    if None in payer_ids or len(payer_ids) != 1:
-        raise Modelo210AgrupacionRentaRowsError(
-            reason="mixed_pagador",
-            detail="non-35 grouped rentas must proceed from one identified payer",
-        )
+    del rows, code
+    # TODO(fact-relocation): resolve detail-model, M349 code, and M210 grouping catalogues from selected registry revisions
+    raise NotImplementedError("M210 payer/grouping applicability is unresolved")
 
 
 def validate_m210_agrupacion_renta_rows(rows: Sequence[Modelo210AgrupacionRentaRow]) -> None:
-    """Validate the complete M210 annual ``0A`` grouped-renta row set.
-
-    The validator makes the statutory grouping facts explicit: at least one
-    component; one official renta code, rate, and identified property/right;
-    and one payer unless the set declares the explicit code-35 multi-payer
-    exception. Individual row validation forbids negative components, so no
-    component can offset another in the group.
-
-    Raises:
-        Modelo210AgrupacionRentaRowsError: if the supplied row set cannot be a
-            lawful annual grouping.
-    """
+    """Validate the typed shape of an annual grouped-renta row set."""
     _require_nonempty_agrupacion(rows)
     _require_unique_agrupacion_source_ids(rows)
     code = _resolve_single_agrupacion_tipo_renta_code(rows)
@@ -1046,19 +765,8 @@ ModeloDetailRow = (
     | Modelo210AgrupacionRentaRow
 )
 
-#: Modelos whose detail rows ARE the declaration rather than an annex to it.
-#:
-#: For these four the per-counterpart rows carry the substance: M347 declares
-#: counterparties over the threshold, M349 the intra-EU operators, M184 the
-#: members an entity attributes income to, and M232 the operaciones
-#: vinculadas. A return of these filed with no rows declares that there were
-#: none, which is a statement about the period, not an omission of detail.
-#:
-#: Modelo 210 is deliberately ABSENT even though
-#: :class:`Modelo210AgrupacionRentaRow` exists: its agrupación groups several
-#: rentas into one return as a convenience, so a 210 with no grouping rows is
-#: an ordinary single-renta return rather than a nil declaration.
-DETAIL_ROW_BEARING_MODELOS: frozenset[str] = frozenset({"184", "232", "347", "349"})
+# Detail-bearing model membership is registry-owned; no Python fallback set is
+# retained here.
 
 
 # ---------------------------------------------------------------------------
@@ -1139,7 +847,6 @@ def validate_m184_member_share_sum(rows: Sequence[Modelo184MemberRow]) -> None:
 
 
 __all__ = [
-    "DETAIL_ROW_BEARING_MODELOS",
     "M184Clave",
     "M184ClaveDeclarado",
     "M184NaturalezaInmueble",

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....persistence.storage.sql.secure_objects import SecureObjectRawRow
+from ....persistence.storage.sql.secure_object_records import SecureObjectRawRow
 from ..local import LocalFileSystemProvider
 from ..mirror_manifest import (
     build_remote_mirror_namespace_manifest,

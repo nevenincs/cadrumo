@@ -22,6 +22,7 @@ from ....core.casilla_id import CasillaId
 from ....core.hashing import sha256_hex
 from ....core.i18n.render import tr
 from ....core.period import Period
+from ....core.time.clock import now
 from ....domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ....domain.calculations.registry.binding_selector_utils import (
     BindingRowSetSelector,
@@ -77,7 +78,6 @@ from .records import (
     SheetTariffTableRow,
     SheetValueCell,
     TabName,
-    _utc_now,
 )
 
 # This stamp binds a rendered workbook to the layout compiler as well as the
@@ -173,7 +173,7 @@ def _stamp_registry_metadata(snapshot: RegistrySnapshot) -> SheetExportMetadata:
         period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
         engine_version=CALC_SHEETS_ENGINE_VERSION,
         registry_sha=registry_sha(snapshot),
-        exported_at=_utc_now(),
+        exported_at=now(),
     )
 
 

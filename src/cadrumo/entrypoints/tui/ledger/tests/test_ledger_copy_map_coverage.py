@@ -26,12 +26,12 @@ from pathlib import Path
 import pytest
 import yaml
 
-from .....application.ledger.models import LedgerReviewStatus
 from .....application.ledger.workspace import (
     LedgerWorkspaceArea,
     LedgerWorkspaceAvailability,
     LedgerWorkspaceStatus,
 )
+from .....application.review.filter import LedgerReviewStatus
 from ..controller import area_label, availability_label, review_status_label, status_label
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

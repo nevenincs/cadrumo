@@ -11,7 +11,7 @@ catalogue action; :func:`resolve_notice_action` resolves it once against the
 live command tree; the resulting
 :class:`~core.json_contract.ResolvedNoticeAction` is then the single object
 carried by the payload row, by the envelope notice, and - through
-:func:`~._common._action_text_lines` - by the executable text line.  Text and
+:func:`~.common._action_text_lines` - by the executable text line.  Text and
 JSON therefore cannot state different advice, because there is only one thing
 to state.
 
@@ -61,7 +61,6 @@ from ...core.json_contract import (
 )
 from ...core.notificacion_estado_servicio import NotificacionEstadoServicio
 from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
-from ._common import resolve_notice_action
 from ._ledger_payloads import LedgerStatusResult
 from ._overview_payloads import (
     OverviewAgendaResult,
@@ -75,6 +74,7 @@ from ._overview_payloads import (
     OverviewPrepareResult,
     OverviewPrepareStepPayload,
 )
+from .common import resolve_notice_action
 
 _NEXT_STEP_NOTICE_CODE = "overview.status.next_step"
 

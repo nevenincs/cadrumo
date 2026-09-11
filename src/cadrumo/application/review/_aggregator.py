@@ -1,7 +1,7 @@
 """Cross-source review-queue aggregator.
 
 Provides :class:`ReviewQueue`, which combines the per-source adapters
-in :mod:`cadrumo.application.review._adapters` into one deterministically
+in :mod:`cadrumo.application.review.source_adapters` into one deterministically
 sorted tuple of :class:`cadrumo.application.review.ReviewItem` values.
 """
 
@@ -11,14 +11,14 @@ from decimal import Decimal
 
 from ...core.config import Settings
 from ...core.logging import get_logger
-from ._adapters import (
+from .enums import ReviewItemKind, ReviewState, severity_rank
+from .models import ReviewItem
+from .source_adapters import (
     drafts_pending,
     invoices_pending,
     transactions_low_confidence,
     transactions_pending,
 )
-from .enums import ReviewItemKind, ReviewState, severity_rank
-from .models import ReviewItem
 
 _logger = get_logger(__name__)
 

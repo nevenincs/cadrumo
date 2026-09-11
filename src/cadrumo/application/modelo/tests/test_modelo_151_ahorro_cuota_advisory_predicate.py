@@ -38,7 +38,7 @@ from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from .._verification_predicates import evaluate_predicate_expression
+from ..verification_predicates import evaluate_predicate_expression
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

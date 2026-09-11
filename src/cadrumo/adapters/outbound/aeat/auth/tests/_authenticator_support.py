@@ -6,7 +6,6 @@ import asyncio
 import functools
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import NoReturn as NoReturn
 
 import pytest
 from cryptography import x509
@@ -15,7 +14,6 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
-from ......application.auth.providers import AuthProvider as AuthProvider
 from ......application.auth.session_types import (
     AeatLoginAssertion,
     AeatSession,
@@ -24,7 +22,6 @@ from ......application.auth.session_types import (
 )
 from ......application.auth_credentials import unnamed_certificate_credentials
 from ......core.auth_provider import AuthProviderDescription as AuthProviderDescription
-from ......core.auth_provider import AuthProviderKind as AuthProviderKind
 from ......core.config import Settings
 from ......core.config_support import (
     AEAT_CERTIFICATE_PROTECTED_ORIGIN,
@@ -34,11 +31,7 @@ from ......core.errors.hierarchy import AeatLoginAssertionError
 from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..authenticator import AEAT_SESSION_IDLE_TTL, AeatAuthenticator
 from ..certificate import CertificateBundle, LoadedCertificate, extract_nif_from_subject, load_certificate
-from ..certificate import CertificateError as CertificateError
-from ..certificate import CertificateNifParseError as CertificateNifParseError
 from ..errors import AeatSessionExpiredError, AuthConfigurationError
-from ..errors import AuthValidationError as AuthValidationError
-from ..provider_selection import select_provider as select_provider
 from ._auth_fixtures import SECRET_PASSPHRASE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

@@ -34,6 +34,8 @@ from ....core.period import Period
 from ....core.prorrata_register import ProrrataProvisionalProvenance
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.binding_targets import casillas_by_binding
+from ....domain.calculations.registry.bindings import ProrrataRegularizacionOutput
 from ....domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     declared_casilla_ids,
@@ -60,7 +62,6 @@ from ...modelo.revision_persistence import persist_filed_revision
 from ...prorrata_register.seed import evaluate_carried_prior_definitiva_seed
 from ..observations_repository import CalculationObservationRepository
 from ..prorrata_regularizacion import (
-    CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
     build_prorrata_declared_volume_divergence_advisory,
     build_prorrata_missing_provisional_advisory,
     build_prorrata_regularizacion_advisory,
@@ -217,7 +218,19 @@ def test_mixed_trader_in_year_missing_carry_is_visible_not_defaulted_to_100() ->
     assert "declared_sin_derecho_volume" in applicability.evidence_kinds
     assert diagnostic is not None
     assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
-    assert diagnostic.casilla_id == CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA
+    snapshot = bundled_authority().snapshot(
+        Modelo.M303.value,
+        filing_year=_SETTLEMENT_YEAR,
+        period=_SETTLEMENT_PERIOD,
+    )
+    canonical_target = next(
+        casilla_id
+        for binding in snapshot.revision.bindings
+        if binding.source is BindingSourceKind.PRORRATA_REGULARIZACION
+        and binding.selector.regularizacion_output is ProrrataRegularizacionOutput.MODELO_303_CASILLA_44
+        for casilla_id in casillas_by_binding(snapshot.revision)[binding.id]
+    )
+    assert diagnostic.casilla_id == canonical_target
     assert "por defecto" in diagnostic.message
     assert "definitiva del ejercicio anterior" in diagnostic.message
 
@@ -236,7 +249,18 @@ def test_advisory_fires_for_casilla_44_when_prorrata_applies_and_percentages_dif
     assert diagnostic is not None
     assert diagnostic.source_kind == BindingSourceKind.PRORRATA_REGULARIZACION.value
     assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
-    assert CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA == "44"
+    snapshot = bundled_authority().snapshot(
+        Modelo.M303.value,
+        filing_year=_SETTLEMENT_YEAR,
+        period=_SETTLEMENT_PERIOD,
+    )
+    prorrata_binding = next(
+        binding
+        for binding in snapshot.revision.bindings
+        if binding.source is BindingSourceKind.PRORRATA_REGULARIZACION
+        and binding.selector.regularizacion_output is ProrrataRegularizacionOutput.MODELO_303_CASILLA_44
+    )
+    assert diagnostic.casilla_id in casillas_by_binding(snapshot.revision)[prorrata_binding.id]
     assert "casilla 44" in diagnostic.message
     assert "2000.00" in diagnostic.message
 
@@ -255,7 +279,18 @@ def test_projection_feeds_m303_casilla_44_from_declared_volume_definitive_percen
 
     assert projection.result.prorrata_definitiva_pct == declared_definitive_percentage
     assert projection.operaciones_sin_derecho_deduccion == Decimal("50000.00")
-    assert projection.modelo_303_casilla_44_id == CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA
+    snapshot = bundled_authority().snapshot(
+        Modelo.M303.value,
+        filing_year=_SETTLEMENT_YEAR,
+        period=_SETTLEMENT_PERIOD,
+    )
+    prorrata_binding = next(
+        binding
+        for binding in snapshot.revision.bindings
+        if binding.source is BindingSourceKind.PRORRATA_REGULARIZACION
+        and binding.selector.regularizacion_output is ProrrataRegularizacionOutput.MODELO_303_CASILLA_44
+    )
+    assert projection.modelo_303_casilla_44_id in casillas_by_binding(snapshot.revision)[prorrata_binding.id]
     assert projection.modelo_303_casilla_44_value == projection.result.importe
     assert projection.modelo_390_regularizacion_anual_value == projection.result.importe
 

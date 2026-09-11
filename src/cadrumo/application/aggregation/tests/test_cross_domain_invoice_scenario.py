@@ -54,7 +54,7 @@ from ..iva_ledger import (
 )
 from ..renta_income_ledger import aggregate_renta_income_ledger
 from .iva_authority_support import aggregate_iva_ledger_observations
-from .renta_income_aggregation_support import _raw_transaction
+from .renta_income_aggregation_support import raw_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -118,7 +118,7 @@ def _invoice_transaction(
         # Reuses the module-local raw-row factory the other income tests build
         # on, so this scenario cannot drift from them on the shape of a ledger
         # line while claiming to describe the same pipeline.
-        "raw": _raw_transaction(
+        "raw": raw_transaction(
             provider_id,
             booked_date=_VALUE_DATE,
             value_date=_VALUE_DATE,

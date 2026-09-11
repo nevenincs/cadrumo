@@ -44,9 +44,8 @@ from ....domain.iva.regimen_simplificado_rows import (
     RegimenSimplificadoFilingRows,
 )
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
-from ....domain.modelos.calculation_revision import FilingInstanceEvidence
 from ....domain.modelos.calculation_revision_m303_evidence import M303Exonerado390FilingEvidence
-from ....domain.modelos.calculation_revision_m303_handoff import M303FilingInstanceEvidence
+from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence, M303FilingInstanceEvidence
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

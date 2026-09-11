@@ -29,10 +29,10 @@ from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secu
 from ..borrador_100 import (
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
-    SnapshotLifecycleState,
     derive_borrador_100_snapshot_id,
 )
 from ..errors import LiveApplicationInputError
+from ..snapshot_base import SnapshotLifecycleState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PERIOD = Period.from_year_and_code(2024, "0A")

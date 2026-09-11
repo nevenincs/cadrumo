@@ -66,7 +66,8 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepo
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
+from ....domain.contribuyente.renta_codes import FiscalResidency
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, VerificationReport
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -141,7 +142,7 @@ def _seed_minimal_m210_profile(objects: SecureObjectRepository) -> None:
     seed_test_profile_record(record)
 
 
-def _irnr_gb_workflow_profile() -> TaxpayerProfile:
+def _irnr_gbworkflow_profile() -> TaxpayerProfile:
     """Non-resident IRNR profile with a fiscal representative (GB, non-EEA).
 
     Satisfies the ``m210-representante-fiscal-required`` BLOCKING predicate
@@ -213,7 +214,7 @@ def _calculate_and_verify_m210_inmobiliaria(
         report = verify_modelo_revision(
             revision.calculation_revision_id,
             actor="system",
-            workflow_profile=_irnr_gb_workflow_profile(),
+            workflow_profile=_irnr_gbworkflow_profile(),
             work_unit_repository=work_repo,
             calculation_repository=calc_repo,
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID),

@@ -34,7 +34,7 @@ from cadrumo.core.i18n.render import tr
 
 from ._command_policy import CommandPolicyProjection
 from ._command_policy import command_policy as descriptor_command_policy
-from ._hitl import ConfirmationPolicy, is_handoff_command
+from .hitl import ConfirmationPolicy, is_handoff_command
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 

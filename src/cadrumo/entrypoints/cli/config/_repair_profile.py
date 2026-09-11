@@ -19,7 +19,7 @@ from ....core.redaction.rules import (
     redact_structured_for_cli_output,
 )
 from ....core.type_guards import is_object_dict
-from .._common import emit_envelope, resolve_cli_precondition_action
+from ..common import emit_envelope, resolve_cli_precondition_action
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from .errors import ConfigBoundaryError as _ConfigBoundaryError
 from .status_rendering import precondition_action_lines

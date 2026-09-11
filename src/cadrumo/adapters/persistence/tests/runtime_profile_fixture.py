@@ -11,7 +11,6 @@ from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..profile.transactions import TransactionCatalogueRepository
 
 __all__ = [
-    "_runtime_profile",
     "bucket_scoped_runtime_profile_fixture",
     "bucket_scoped_transaction_catalogue_fixture",
     "default_bucket_runtime_profile_fixture",
@@ -112,8 +111,3 @@ def bucket_scoped_transaction_catalogue_fixture(
             yield TransactionCatalogueRepository(bucket_id=bucket_id, objects=profile.repository)
 
     return _bucket_scoped_transaction_catalogue
-
-
-#: The default-bucket autouse runtime every persistence adapter suite installs.
-#: Bound through the factory rather than written out, so the body has one home.
-_runtime_profile = default_bucket_runtime_profile_fixture()

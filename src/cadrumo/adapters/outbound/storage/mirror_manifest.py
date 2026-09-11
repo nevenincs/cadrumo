@@ -19,7 +19,7 @@ from pydantic import ValidationError
 from ....application.operator_actions.preconditions import no_action_precondition_verdict
 from ....core.hashing import sha256_hex
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ...persistence.storage.sql.secure_objects import SecureObjectRawRow
+from ...persistence.storage.sql.secure_object_records import SecureObjectRawRow
 from .errors import OutboundStorageIntegrityError, OutboundStorageNotFoundError, OutboundStorageValidationError
 from .protocol import StorageProvider
 from .records import (

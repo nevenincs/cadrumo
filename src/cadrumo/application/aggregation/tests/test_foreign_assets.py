@@ -541,7 +541,7 @@ class TestInvariants:
 
 from pydantic import TypeAdapter, ValidationError  # noqa: E402
 
-from ....core.identity import TransactionId  # noqa: E402
+from ....core.identity.transaction_ids import TransactionId  # noqa: E402
 
 
 @pytest.mark.parametrize("impossible", ["2026-99-99", "2026-02-30", "2025-13-01", "0000-00-00"])

@@ -36,4 +36,3 @@ See Also:
 from __future__ import annotations
 
 __all__: tuple[str, ...] = ()
-"""Inert namespace: every contract is reached at the module that defines it."""

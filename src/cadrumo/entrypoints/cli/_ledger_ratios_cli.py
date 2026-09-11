@@ -11,11 +11,11 @@ import typer
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...domain.categories.spending_category import SpendingCategory
-from ._common import activate_subcommand_output_language as _activate_subcommand_output_language
-from ._common import active_bucket_id_or_refuse as _ratios_bucket_id
-from ._common import bad, emit_envelope
 from ._decimal_parsing import parse_decimal_amount
 from ._ledger_support import ledger_cli_no_recovery
+from .common import activate_subcommand_output_language as _activate_subcommand_output_language
+from .common import active_bucket_id_or_refuse as _ratios_bucket_id
+from .common import bad, emit_envelope
 
 
 def _ratios_bucket_and_profile() -> tuple[str, str | None]:
@@ -50,7 +50,7 @@ def ratios_list(
     )
     from ...application.user_profile.censo_sync import CensoSyncService
     from ...domain.usage_ratios.errors import CensoRatioMismatchError
-    from ._ledger_payloads import RatiosListResult, RatiosRowPayload
+    from ._ledger_ratios_payloads import RatiosListResult, RatiosRowPayload
 
     bucket_id, profile_id = _ratios_bucket_and_profile()
     raw_afectacion = None
@@ -99,7 +99,7 @@ def ratios_set(
     _activate_subcommand_output_language(ctx, output_language)
     from ...application.ledger.ratios import apply_usage_ratio_override
     from ...application.user_profile.censo_sync import CensoSyncService
-    from ._ledger_payloads import RatiosSetResult
+    from ._ledger_ratios_payloads import RatiosSetResult
 
     parsed = parse_decimal_amount(ratio, label="ratio")
     bucket_id, profile_id = _ratios_bucket_and_profile()
@@ -133,7 +133,7 @@ def ratios_unset(
     _activate_subcommand_output_language(ctx, output_language)
     from ...application.ledger.ratios import clear_usage_ratio_override
     from ...domain.usage_ratios.errors import UsageRatioValidationError
-    from ._ledger_payloads import RatiosUnsetResult
+    from ._ledger_ratios_payloads import RatiosUnsetResult
 
     bucket_id = _ratios_bucket_id()
     try:
@@ -162,7 +162,7 @@ def ratios_eligible(
     """List every ``SpendingCategory`` that may carry a per-category proportional-deduction override."""
     _activate_subcommand_output_language(ctx, output_language)
     from ...application.ledger.ratios import list_eligible_ratios_for_bucket
-    from ._ledger_payloads import RatiosEligibleResult, RatiosEligibleRowPayload
+    from ._ledger_ratios_payloads import RatiosEligibleResult, RatiosEligibleRowPayload
 
     bucket_id = _ratios_bucket_id()
     rows = list_eligible_ratios_for_bucket(bucket_id=bucket_id, year=_resolved_ratio_year(year))
@@ -201,7 +201,7 @@ def ratios_validate(
     """Validate per-category usage-ratio overrides against eligibility and bound rules without mutating state."""
     _activate_subcommand_output_language(ctx, output_language)
     from ...application.ledger.ratios import validate_ratios_for_bucket
-    from ._ledger_payloads import RatiosValidateFindingPayload, RatiosValidateResult
+    from ._ledger_ratios_payloads import RatiosValidateFindingPayload, RatiosValidateResult
 
     bucket_id = _ratios_bucket_id()
     report = validate_ratios_for_bucket(bucket_id=bucket_id)

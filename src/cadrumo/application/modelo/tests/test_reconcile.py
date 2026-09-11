@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from ...tests.profile_backend_fixtures import _isolated_backend
+from ...tests.profile_backend_fixtures import isolated_backend
 
-__all__ = ["_isolated_backend"]
+__all__ = ["isolated_backend"]
 
 from ....adapters.inbound.justificante.parser import parse_justificante
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -21,12 +21,12 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.inventory import FIXTURES_DIR
 from ...workflow.persistence import workflow_state_repository
+from ..action_errors import WorkUnitNotFoundError
 from ..reconciliation import (
     ModeloReconciliationCommand,
     ReconciliationDeclaracionSourceUnsupportedError,
     ReconciliationEvidenceInvalidError,
-    WorkUnitNotFoundError,
-    _reconcile_parsed_justificante,
+    reconcile_parsed_justificante,
     modelo_reconcile,
 )
 from ..reconciliation_records import (
@@ -139,7 +139,7 @@ def test_modelo_reconcile_mismatches_when_profile_tax_id_differs() -> None:
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     parsed = parse_justificante(MODELO_130_FIXTURE)
 
-    report = _reconcile_parsed_justificante(
+    report = reconcile_parsed_justificante(
         work_unit=_stored_work_unit(work_unit_id),
         source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
         source_ref=str(MODELO_130_FIXTURE),
@@ -205,7 +205,7 @@ def test_reconcile_records_its_event_for_an_evidence_path_longer_than_the_payloa
     # proves nothing about the overflow it exists to cover.
     assert len(over_long_ref) > 500
 
-    report = _reconcile_parsed_justificante(
+    report = reconcile_parsed_justificante(
         work_unit=_stored_work_unit(work_unit_id),
         source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
         source_ref=over_long_ref,

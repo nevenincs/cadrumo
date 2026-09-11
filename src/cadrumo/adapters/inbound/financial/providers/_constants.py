@@ -13,8 +13,6 @@ edit in every dispatch branch.
 
 from __future__ import annotations
 
-from .....core.external_constants import PDF_EXTENSION, XLSX_EXTENSION
-
 CSV_EXTENSIONS: frozenset[str] = frozenset({".csv", ".txt"})
 """File extensions treated as CSV-compatible input by the CSV provider."""
 
@@ -25,4 +23,4 @@ OFX_EXTENSIONS: frozenset[str] = frozenset({".ofx", ".qfx"})
 :class:`~adapters.inbound.financial.providers.OfxProvider`.
 """
 
-__all__ = ["CSV_EXTENSIONS", "OFX_EXTENSIONS", "PDF_EXTENSION", "XLSX_EXTENSION"]
+__all__ = ["CSV_EXTENSIONS", "OFX_EXTENSIONS"]

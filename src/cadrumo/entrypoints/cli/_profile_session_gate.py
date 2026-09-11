@@ -12,7 +12,7 @@ from ...core.profile_session import ProfileSessionRefusalReason
 from .command_spec import CommandSpec, ProfileAuthenticationPosture
 
 if TYPE_CHECKING:
-    from ._common import RequestedCliLeaf
+    from .common import RequestedCliLeaf
     from .config.secure_input import MachineSecretSelection, ProfileSecretSelection
 
 
@@ -47,7 +47,7 @@ def session_refusal_translation_key(refusal: ProfileSessionRefusalReason) -> str
 
 def _common() -> Any:
     """Resolve the already-initialized facade without a static runtime cycle."""
-    return import_module("._common", __package__)
+    return import_module(".common", __package__)
 
 
 def bind_profile_target(ctx: typer.Context, *, bucket_id: str) -> None:

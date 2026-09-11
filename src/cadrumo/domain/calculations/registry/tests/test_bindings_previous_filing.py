@@ -33,8 +33,9 @@ from ..bindings_previous_filing import (
 from ..errors import RegistryValidationError
 from ..period_offset_math import same_ejercicio_prior_quarter_anchors
 from ..relations import source_presence_gaps
-from ..schema import BindingSelectorMap, DataBindingDefinition, ModeloRevision
+from ..schema import DataBindingDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
+from ..schema_scalars import BindingSelectorMap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

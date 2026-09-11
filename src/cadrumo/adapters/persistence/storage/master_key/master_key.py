@@ -48,8 +48,8 @@ from ..errors import (
 from ._master_key_records import (
     EnvelopeDocument,
 )
-from ._master_key_tax_id import looks_like_real_tax_id as looks_like_real_tax_id
 from ._provider_session import exit_provider_session
+from .master_key_tax_id import looks_like_real_tax_id
 
 
 @runtime_checkable

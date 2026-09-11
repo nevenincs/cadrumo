@@ -60,7 +60,8 @@ def test_wizard_catalogue_materializes_bounded_dynamic_choice_keys() -> None:
     """Enum- and language-derived choice labels must be concrete descriptor keys."""
     from ..core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
     from ..domain.contribuyente.entity_type import EntityType
-    from ..domain.deadlines.models import FiscalResidency, IrpfIncomeCategory
+    from ..domain.contribuyente.renta_codes import FiscalResidency
+    from ..domain.deadlines.models import IrpfIncomeCategory
 
     keys = _wizard_descriptor_translation_keys()
 

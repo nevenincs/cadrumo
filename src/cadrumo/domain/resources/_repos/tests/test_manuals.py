@@ -16,7 +16,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.resources.errors import ResourceValidationError
-from .....domain.manuals.schema import ManualPart
+from .....domain.manuals.ids import ManualPart
 from ..manuals import ManualKey, ManualRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

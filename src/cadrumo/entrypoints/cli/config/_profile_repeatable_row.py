@@ -5,7 +5,7 @@ from __future__ import annotations
 import typer
 
 from ....core.external_constants import OutputLanguage
-from .._common import activate_subcommand_output_language, emit_envelope
+from ..common import activate_subcommand_output_language, emit_envelope
 from ..errors import CliRefusedBoundaryError
 
 

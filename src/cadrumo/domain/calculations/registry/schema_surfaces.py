@@ -11,8 +11,8 @@ from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from ....core.aggregation import RelationAggregation
 from ....core.casilla_id import CasillaId
-from ....core.identity import ContinuidadId
 from ....core.identity.aeat_box import AeatBoxNumber
+from ....core.identity.continuidad import ContinuidadId
 from ....core.period import FilingPeriodCode, RegistrySelectorPeriodCode
 from ._schema_export_exemption import ExportExemptionReasonValue
 from .casilla_lineage import CasillaLineageOriginField

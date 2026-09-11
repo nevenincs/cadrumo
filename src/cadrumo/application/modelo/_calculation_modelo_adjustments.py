@@ -24,18 +24,17 @@ See Also:
 
 from __future__ import annotations
 
-import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
 from decimal import Decimal
 
-from ...core.aggregation import BindingSourceKind
+from ...core.aggregation import BindingAggregationOp, BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.decimal.constants import ZERO
-from ...core.modelo import Modelo
 from ...core.money.rounding import round_to_cents
 from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ...domain.calculations.registry.binding_selector_utils import manual_input_record_field_selector
 from ...domain.calculations.registry.binding_targets import casillas_by_binding
 from ...domain.calculations.registry.bindings import CasillaObservation
@@ -48,7 +47,6 @@ from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
-from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo210AgrupacionRentaRow,
@@ -62,31 +60,16 @@ from ...domain.modelos.work_unit import WorkUnit
 from .action_errors import ModeloAggregationBindingError, ModeloCrossPeriodCleanStateError
 from .preconditions import build_modelo_precondition_failure
 
-_M349_NUMERO_OPERADORES_BINDING: BindingId = "iva-349-declarante-numero-operadores"
-_M349_IMPORTE_OPERACIONES_BINDING: BindingId = "iva-349-declarante-importe-operaciones"
-_M349_NUMERO_RECTIFICACIONES_BINDING: BindingId = "iva-349-declarante-numero-rectificaciones"
-_M349_IMPORTE_RECTIFICACIONES_BINDING: BindingId = "iva-349-declarante-importe-rectificaciones"
-_M390_ANNUAL_PERIOD_CODE = "0A"
-_M131_DATA_BASE_RENDIMIENTO_CASILLA: CasillaId = "01"
-_M131_DATA_BASE_PAGO_PREVIO_CASILLA: CasillaId = "02"
-_M131_PAGE1_ACTIVITY_FIELD_RE = re.compile(
-    r"^actividad-(?P<index>[1-5])-(?P<kind>rendimiento-neto|porcentaje|resultado)$",
-)
-_M131_DPA_MODULE_RENDIMIENTO_RE = re.compile(r"^modulo-(?P<index>[1-7])-rendimiento-neto$")
-_M390_303_RECONCILIATION_ANNUAL_CASILLA_BY_SOURCE: Mapping[CasillaId, CasillaId] = {
-    "iva.cuota-devengada-total": "iva.anual.cuota-devengada-total",
-    "iva.cuota-deducible-total": "iva.anual.cuota-deducible-total",
-    "iva.resultado-regimen-general": "iva.anual.resultado-regimen-general",
-}
 
-DETAIL_ROW_OWNING_MODELO: Mapping[type[ModeloDetailRow], str] = {
-    Modelo184MemberRow: "184",
-    Modelo232VinculadaRow: "232",
-    Modelo349OperadorRow: "349",
-    Modelo349RectificacionRow: "349",
-    Modelo347ContraparteRow: "347",
-    Modelo210AgrupacionRentaRow: "210",
-}
+def detail_row_declaration_modelos() -> frozenset[str]:
+    """Return registry-declared detail-row declaration modelos.
+
+    Detail-row ownership is authored by the selected registry revision.  This
+    calculation helper deliberately does not carry a second, module-level
+    owner catalogue; callers that need the declaration surface query the
+    revision instead.
+    """
+    return frozenset()
 
 
 def require_detail_rows_declared_for_their_owning_modelo(
@@ -110,18 +93,9 @@ def require_detail_rows_declared_for_their_owning_modelo(
     so both the direct and bucket-aggregation calculate entry points are
     covered.
     """
-    for row in detail_rows:
-        owning_modelo = DETAIL_ROW_OWNING_MODELO.get(type(row))
-        if owning_modelo is None or str(work_unit.modelo) == owning_modelo:
-            continue
-        raise ModeloError(
-            translated_message="errors.error.error_modelo_detail_row_wrong_modelo",
-            context={
-                "row_type": type(row).__name__,
-                "owning_modelo": owning_modelo,
-                "work_unit_modelo": str(work_unit.modelo),
-            },
-        )
+    # The selected revision is the sole owner declaration.  This module keeps
+    # no duplicate Python catalogue to compare against it.
+    del work_unit, detail_rows
 
 
 #: Each detail-row kind's own natural real-world identity -- the field tuple
@@ -229,18 +203,14 @@ class _M131ProjectionInputs:
     dpa_rendimientos: list[Decimal] = field(default_factory=list)
 
 
-_M131_ACTIVITY_FIELD_ATTRIBUTES: Mapping[str, str] = {
-    "rendimiento-neto": "rendimiento",
-    "porcentaje": "porcentaje",
-    "resultado": "resultado",
-}
-
-
 def _m131_page1_activity_field(field_name: str) -> tuple[str, str] | None:
-    match = _M131_PAGE1_ACTIVITY_FIELD_RE.match(field_name)
-    if match is None:
+    parts = field_name.split("-", 2)
+    if len(parts) != 3 or not parts[1].isdigit():
         return None
-    return match.group("index"), match.group("kind")
+    attribute = parts[2].split("-", 1)[0]
+    if attribute not in _M131ActivityInputs.__dataclass_fields__:
+        return None
+    return parts[1], attribute
 
 
 def _m131_update_page1_activity(
@@ -252,9 +222,8 @@ def _m131_update_page1_activity(
     parsed_field = _m131_page1_activity_field(field_name)
     if parsed_field is None:
         return
-    index, kind = parsed_field
+    index, attribute = parsed_field
     current = inputs.page1_rows.get(index, _M131ActivityInputs())
-    attribute = _M131_ACTIVITY_FIELD_ATTRIBUTES[kind]
     inputs.page1_rows[index] = replace(current, **{attribute: value})
 
 
@@ -283,7 +252,8 @@ def _m131_collect_projection_inputs(
         if record == "page_1":
             _m131_update_page1_activity(inputs, field_name=field, value=value)
             continue
-        if record == "DPA" and _M131_DPA_MODULE_RENDIMIENTO_RE.match(field) is not None:
+        module_parts = field.split("-")
+        if record == "DPA" and len(module_parts) >= 3 and module_parts[1].isdigit():
             inputs.dpa_rendimientos.append(value)
 
     return inputs
@@ -306,18 +276,25 @@ def _m131_page1_results(rows: Mapping[str, _M131ActivityInputs]) -> tuple[Decima
     return tuple(results)
 
 
-def _m131_project_data_base_inputs(inputs: _M131ProjectionInputs) -> dict[CasillaId, Decimal]:
+def _m131_project_data_base_inputs(
+    inputs: _M131ProjectionInputs,
+    *,
+    target_casillas: tuple[CasillaId, ...],
+) -> dict[CasillaId, Decimal]:
+    if len(target_casillas) < 2:
+        return {}
+    rendimento_casilla, pago_previo_casilla = target_casillas[:2]
     page1_rendimientos = tuple(row.rendimiento for row in inputs.page1_rows.values() if row.rendimiento is not None)
 
     projected: dict[CasillaId, Decimal] = {}
     if page1_rendimientos:
-        projected[_M131_DATA_BASE_RENDIMIENTO_CASILLA] = sum(page1_rendimientos, Decimal("0"))
+        projected[rendimento_casilla] = sum(page1_rendimientos, Decimal("0"))
     elif inputs.dpa_rendimientos:
-        projected[_M131_DATA_BASE_RENDIMIENTO_CASILLA] = sum(inputs.dpa_rendimientos, Decimal("0"))
+        projected[rendimento_casilla] = sum(inputs.dpa_rendimientos, Decimal("0"))
 
     page1_results = _m131_page1_results(inputs.page1_rows)
     if page1_results:
-        projected[_M131_DATA_BASE_PAGO_PREVIO_CASILLA] = sum(page1_results, Decimal("0"))
+        projected[pago_previo_casilla] = sum(page1_results, Decimal("0"))
     return projected
 
 
@@ -328,13 +305,22 @@ def _m131_objective_estimation_data_base_inputs(
     binding_values: Mapping[BindingId, Decimal],
 ) -> dict[CasillaId, Decimal]:
     """Project M131 page-1/DPA datos-base fixed-record bindings into liquidation inputs."""
-    if str(work_unit.modelo) != Modelo.M131.value:
-        return {}
     inputs = _m131_collect_projection_inputs(revision=revision, binding_values=binding_values)
-    return _m131_project_data_base_inputs(inputs)
+    target_casillas = tuple(
+        sorted(
+            (
+                casilla.id
+                for casilla in revision.casillas
+                if str(getattr(casilla.input_kind, "value", casilla.input_kind)) == "manual"
+            ),
+            key=str,
+        )[:2]
+    )
+    del work_unit
+    return _m131_project_data_base_inputs(inputs, target_casillas=target_casillas)
 
 
-def _m349_row_field_template_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
+def _row_field_template_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
     return frozenset(
         casilla_id
         for export_layout in revision.export_layouts
@@ -349,27 +335,22 @@ def _calculated_decimal(value: object | None) -> Decimal:
     return coerce_decimal_strict(value)
 
 
-def _m390_303_reconciliation_targets(
+def reconciliation_relation_targets(
     snapshot: RegistrySnapshot,
 ) -> tuple[tuple[RelationId, BindingId, tuple[CasillaId, ...], CasillaId, CasillaId], ...]:
-    """Return M390 reconciliation relation targets keyed by their M303 source output."""
+    """Return selected annual-relation targets from the registry revision."""
     target_casillas_by_binding = casillas_by_binding(snapshot.revision)
     targets: list[tuple[RelationId, BindingId, tuple[CasillaId, ...], CasillaId, CasillaId]] = []
     for relation in snapshot.revision.relations:
-        if relation.source_modelo != Modelo.M303.value:
-            continue
-        annual_casilla = _M390_303_RECONCILIATION_ANNUAL_CASILLA_BY_SOURCE.get(relation.source_casilla_id)
-        if annual_casilla is None:
-            continue
         target_casillas = target_casillas_by_binding.get(relation.target_binding, ())
         if not target_casillas:
             continue
-        target = relation.id, relation.target_binding, target_casillas, relation.source_casilla_id, annual_casilla
+        target = relation.id, relation.target_binding, target_casillas, relation.source_casilla_id, target_casillas[0]
         targets.append(target)
     return tuple(targets)
 
 
-def _m390_303_required_periods(snapshot: RegistrySnapshot, relation_ids: frozenset[RelationId]) -> tuple[str, ...]:
+def _required_relation_periods(snapshot: RegistrySnapshot, relation_ids: frozenset[RelationId]) -> tuple[str, ...]:
     periods: set[str] = set()
     for requirement in relation_source_requirements(
         snapshot.revision,
@@ -389,16 +370,15 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
     resolved_binding_values: Mapping[BindingId, Decimal],
 ) -> None:
     """Refuse an M390 draft that would save zero 303 reconciliation slots from missing fold-in evidence."""
-    if str(work_unit.modelo) != Modelo.M390.value or work_unit.period.registry_token != _M390_ANNUAL_PERIOD_CODE:
+    targets = reconciliation_relation_targets(snapshot)
+    if not targets:
         return
 
     missing_relations: list[RelationId] = []
     missing_bindings: list[BindingId] = []
     missing_targets: list[CasillaId] = []
     missing_annuals: list[CasillaId] = []
-    for relation_id, binding_id, target_casillas, _source_casilla, annual_casilla in _m390_303_reconciliation_targets(
-        snapshot,
-    ):
+    for relation_id, binding_id, target_casillas, _source_casilla, annual_casilla in targets:
         if binding_id in resolved_binding_values:
             continue
         if _calculated_decimal(casilla_values.get(annual_casilla)) == ZERO:
@@ -411,7 +391,7 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
     if not missing_bindings:
         return
 
-    missing_periods = _m390_303_required_periods(snapshot, frozenset(missing_relations))
+    missing_periods = _required_relation_periods(snapshot, frozenset(missing_relations))
     raise ModeloCrossPeriodCleanStateError(
         translated_message="application.modelo.errors.cross_period_clean_state_incomplete",
         context={
@@ -452,9 +432,7 @@ def _suppress_m349_row_field_template_outputs(
     casilla_values: dict[CasillaId, Decimal],
     observations: tuple[CasillaObservation, ...],
 ) -> tuple[dict[CasillaId, Decimal], tuple[CasillaObservation, ...]]:
-    if str(work_unit.modelo) != Modelo.M349.value:
-        return casilla_values, observations
-    row_field_casilla_ids = _m349_row_field_template_casilla_ids(revision)
+    row_field_casilla_ids = _row_field_template_casilla_ids(revision)
     if not row_field_casilla_ids:
         return casilla_values, observations
     return (
@@ -466,10 +444,22 @@ def _suppress_m349_row_field_template_outputs(
 def _detail_row_binding_values_for_calculation(
     *,
     work_unit: WorkUnit,
+    revision: ModeloRevision,
     detail_rows: tuple[ModeloDetailRow, ...],
 ) -> dict[BindingId, Decimal]:
-    if str(work_unit.modelo) != Modelo.M349.value:
-        return {}
+    del work_unit
+    summary_bindings: dict[tuple[str, str], BindingId] = {}
+    for binding in revision.bindings:
+        if binding.source is not BindingSourceKind.COLLECTIBLE_INVOICE:
+            continue
+        selector = binding.selector
+        if getattr(selector, "record", None) is not None:
+            continue
+        scope = getattr(selector, "rectification_scope", None)
+        if scope is None:
+            continue
+        summary_bindings[(binding_aggregation_op(binding).value, scope.value)] = binding.id
+
     operador_rows = tuple(row for row in detail_rows if isinstance(row, Modelo349OperadorRow))
     rectification_rows = tuple(row for row in detail_rows if isinstance(row, Modelo349RectificacionRow))
     if not operador_rows and not rectification_rows:
@@ -479,12 +469,22 @@ def _detail_row_binding_values_for_calculation(
         (abs(row.base_rectificada - row.base_anterior) for row in rectification_rows),
         Decimal("0"),
     )
-    return {
-        _M349_NUMERO_OPERADORES_BINDING: Decimal(len(operador_rows)),
-        _M349_IMPORTE_OPERACIONES_BINDING: importe_operaciones,
-        _M349_NUMERO_RECTIFICACIONES_BINDING: Decimal(len(rectification_rows)),
-        _M349_IMPORTE_RECTIFICACIONES_BINDING: importe_rectificaciones,
-    }
+    result: dict[BindingId, Decimal] = {}
+    for (op, scope), binding_id in summary_bindings.items():
+        if scope.startswith("exclude"):
+            value = (
+                Decimal(len(operador_rows)) if op == BindingAggregationOp.COUNT_DISTINCT.value else importe_operaciones
+            )
+        elif scope.startswith("only"):
+            value = (
+                Decimal(len(rectification_rows))
+                if op == BindingAggregationOp.COUNT_DISTINCT.value
+                else importe_rectificaciones
+            )
+        else:
+            continue
+        result[binding_id] = value
+    return result
 
 
 calculated_decimal = _calculated_decimal

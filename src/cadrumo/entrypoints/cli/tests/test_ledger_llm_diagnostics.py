@@ -21,10 +21,11 @@ import pytest
 from click.testing import Result
 from pydantic import ValidationError
 
-from ....adapters.outbound.llm.models import LLMProvider, LLMResponse
+from ....adapters.outbound.llm.models import LLMResponse
 from ....adapters.outbound.llm.usage import UsageRecorder
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core.config import override_settings
+from ....core.config_support import LLMProvider
 from ....core.i18n.render import clear_output_language_cache, tr
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue

@@ -84,8 +84,8 @@ def test_real_child_a_to_b_to_a_advances_every_transition_and_refuses_stale_aba(
 
 def test_defining_modules_are_the_only_public_pointer_transition_surface() -> None:
     """Only canonical defining modules own pointer transition contracts."""
-    profile_pointer = import_module("cadrumo.application.user_profile.profile_pointer")
-    bucket_pointer = import_module("cadrumo.core.bucket_pointer")
+    profile_pointer = import_module("..profile_pointer", package=__package__)
+    bucket_pointer = import_module("....core.bucket_pointer", package=__package__)
 
     assert profile_pointer.active_profile_pointer_transaction.__module__.endswith("profile_pointer")
     assert profile_pointer.observe_active_profile_pointer.__module__.endswith("profile_pointer")

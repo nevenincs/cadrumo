@@ -36,7 +36,7 @@ from .. import errors as errors_module
 from .. import m303_carry_ingress as m303_module
 from .. import observations_repository as observations_module
 from ..errors import CalculationRefusalPrecondition, ObservationEvidenceDisplacementError
-from ..m303_carry_ingress import M303CarryIngressError, _resolve_available_compensation_formula_id
+from ..m303_carry_ingress import M303CarryIngressError, resolve_available_compensation_formula_id
 from ..observations_repository import (
     CalculationObservationRepository,
     ObservationSourceKind,
@@ -114,7 +114,7 @@ _TERMINAL_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
             ("basis", "str(derivation.basis)"),
         ),
     ),
-    "m303_carry_ingress:_resolve_available_compensation_formula_id:M303CarryIngressError:1": _contract(
+    "m303_carry_ingress:resolve_available_compensation_formula_id:M303CarryIngressError:1": _contract(
         CalculationRefusalPrecondition.M303_CARRY_MATCHES_REGISTRY_FORMULA,
         (
             ("formula_id", "str(formula.id)"),
@@ -457,7 +457,7 @@ def test_m303_registry_formula_contradiction_has_an_exact_safety_verdict() -> No
     )
 
     with pytest.raises(M303CarryIngressError) as raised:
-        _resolve_available_compensation_formula_id(revision, contradictory_derivation)
+        resolve_available_compensation_formula_id(revision, contradictory_derivation)
 
     _assert_exact_terminal_contract(
         raised.value,

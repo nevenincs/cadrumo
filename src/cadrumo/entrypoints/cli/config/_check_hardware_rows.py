@@ -1,7 +1,7 @@
 """Project the hardware profile and contention verdict onto ``config check`` rows.
 
 Both render into the existing
-:class:`~entrypoints.cli.config._check_payloads.CheckDependencyPayload` shape.
+:class:`~entrypoints.cli.config.check_payloads.CheckDependencyPayload` shape.
 Semantics stay in :mod:`~application.provisioning`; this module only projects
 the typed outcome onto the row contract.
 
@@ -29,7 +29,8 @@ from typing import TYPE_CHECKING
 from ....core.hardware import ContentionCause
 
 if TYPE_CHECKING:
-    from ....application.provisioning import ContentionSnapshot, DependencyStatus
+    from ....application.provisioning import DependencyStatus
+    from ....application.provisioning_runtime import ContentionSnapshot
 
 __all__ = ["CONTENTION_ROW_ID", "contention_row"]
 

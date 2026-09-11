@@ -305,7 +305,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("._ledger_evidence_cli", "evidence_extract", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(".ledger_business_payloads", "EvidenceExtractResult", __package__),
+            target=DeferredTarget("...application.ledger.invoice_draft_payloads", "EvidenceExtractResult", __package__),
             identity="ledger.evidence.extract",
         ),
     ),

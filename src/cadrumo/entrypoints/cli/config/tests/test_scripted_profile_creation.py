@@ -22,9 +22,9 @@ import pytest
 from .....core.config import override_settings
 from .....core.i18n.render import tr
 from ... import command_specs as _command_specs
-from ..._verb_input_schema import build_verb_input_schemas, project_recovery_handoff_contract
 from ...command_spec import ArgumentSpec
 from ...tests.cli_runner import invoke_cached_cli
+from ...verb_input_schema import build_verb_input_schemas, project_recovery_handoff_contract
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

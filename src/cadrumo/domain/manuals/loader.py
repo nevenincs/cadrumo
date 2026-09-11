@@ -35,13 +35,12 @@ from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.paths import path_stat_fingerprint, resolve_relative_subpath
 from .errors import ManualNotFoundError, ManualParseError
+from .ids import ManualId, ManualPart
 from .schema import (
     Chapter,
     Manual,
     ManualCasillaReference,
     ManualCatalogue,
-    ManualId,
-    ManualPart,
     Rule,
     RuleKind,
     Section,

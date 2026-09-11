@@ -221,7 +221,7 @@ def _project_activity_ref(
     if ref.field is M303RegimenSimplificadoActivityField.IAE_EPIGRAFE:
         if not isinstance(row, ActividadNoAgricolaSimplificado):
             raise RegistryValidationError("IAE-epigraph reference resolved an agricultural row")
-        return _m303_iae_epigraph_wire_value(row.iae_epigrafe)
+        return m303_iae_epigraph_wire_value(row.iae_epigrafe)
     if ref.field is M303RegimenSimplificadoActivityField.AUXILIARY_ACTIVITY_INDICATOR:
         if not isinstance(row, ActividadNoAgricolaSimplificado):
             raise RegistryValidationError("auxiliary activity indicator reference resolved an agricultural row")
@@ -229,7 +229,7 @@ def _project_activity_ref(
     raise RegistryValidationError(f"unsupported regimen-simplificado activity field {ref.field!r}")
 
 
-def _m303_iae_epigraph_wire_value(iae_epigrafe: str) -> str:
+def m303_iae_epigraph_wire_value(iae_epigrafe: str) -> str:
     """Encode one canonical annual-Orden IAE identity for DP30302's four-byte field.
 
     The annual Orden keeps an epigraph such as ``691.9`` in its official,
@@ -378,6 +378,7 @@ def _select_calculated_module_cuota(
 __all__ = [
     "M303RegimenSimplificadoFieldProjection",
     "M303RegimenSimplificadoRecordProjection",
+    "m303_iae_epigraph_wire_value",
     "project_m303_regimen_simplificado_rows",
     "validate_m303_regimen_simplificado_endpoint_epoch",
 ]

@@ -88,6 +88,8 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevisionCatalogue,
     CalculationSourceIssue,
     CalculationSourceRef,
+)
+from ...domain.modelos.calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
@@ -141,7 +143,6 @@ from ._calculation_source_staging import (
     resolve_prorrata_regularizacion_sources as _resolve_prorrata_regularizacion_sources,
 )
 from ._m210_agrupacion_renta import validate_m210_agrupacion_renta_rows_for_calculation
-from ._m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from ._m349_ledger_guard import (
     raise_if_m349_intracom_ledger_rows_need_operator_rows as _raise_if_m349_intracom_ledger_rows_need_operator_rows,
 )
@@ -159,6 +160,7 @@ from .calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
 from .calculation_route import CalculationRouteStage as _CalculationRouteStage
 from .calculation_route import require_calculation_route_resolver as _require_calculation_route_resolver
 from .calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
+from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from .m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
 from .preconditions import build_modelo_precondition_failure
 from .revision_persistence import persist_calculation_revision
@@ -1263,6 +1265,7 @@ def _bucket_aggregation_channels(
     )
     detail_row_binding_values = _detail_row_binding_values_for_calculation(
         work_unit=preparation.work_unit,
+        revision=preparation.snapshot.revision,
         detail_rows=detail_rows,
     )
     backend_binding_values = _merge_detail_row_binding_values(

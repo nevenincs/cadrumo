@@ -7,8 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path
-
+from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
 from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id

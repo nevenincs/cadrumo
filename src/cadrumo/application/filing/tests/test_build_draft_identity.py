@@ -25,7 +25,7 @@ from ....domain.calculations.registry.casilla_membership import format_noncanoni
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.filing.errors import ModeloBuilderError
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
-from ..draft_construction import _filing_period_date, build_draft
+from ..draft_construction import build_draft, filing_period_date
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -269,6 +269,6 @@ def test_build_draft_rejects_ambiguous_reused_printed_number() -> None:
 def test_typed_extended_and_event_periods_resolve_filing_date_context() -> None:
     """Typed non-standard registry periods still supply the calculation date axis."""
 
-    assert _filing_period_date(Period.from_year_and_code(2025, "EXT-1T")) == date(2025, 3, 31)
-    assert _filing_period_date(Period.from_year_and_code(2025, "EXT-4T")) == date(2025, 12, 31)
-    assert _filing_period_date(Period.from_year_and_code(2025, "AD-HOC")) == date(2025, 12, 31)
+    assert filing_period_date(Period.from_year_and_code(2025, "EXT-1T")) == date(2025, 3, 31)
+    assert filing_period_date(Period.from_year_and_code(2025, "EXT-4T")) == date(2025, 12, 31)
+    assert filing_period_date(Period.from_year_and_code(2025, "AD-HOC")) == date(2025, 12, 31)

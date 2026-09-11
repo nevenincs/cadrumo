@@ -32,7 +32,7 @@ from .....application.ledger.invoice_extraction_authority import resolve_invoice
 from .....core.config_support import LLMProvider
 from .....core.period import Period
 from .....core.time.clock import now
-from .....domain.transactions.models import DecisionProvenance
+from .....domain.transactions.lineage_models import DecisionProvenance
 from ..cache import LLMCache
 from ..evidence_draft_text import TextInvoiceFieldExtractor
 from ..evidence_draft_vision import LocalVisionDocumentTranscriber

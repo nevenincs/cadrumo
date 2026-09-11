@@ -50,7 +50,7 @@ from ...persistence.storage.secure_object_namespaces import (
     GOOGLE_OAUTH_METADATA_NAMESPACE,
     GOOGLE_OAUTH_TOKEN_NAMESPACE,
 )
-from ...persistence.storage.sql._secure_object_records import SecureObjectDeletion
+from ...persistence.storage.sql.secure_object_records import SecureObjectDeletion
 from ...persistence.storage.sql.secure_objects import SecureObjectRepository
 from .impersonation import GoogleCredentialSourceSelection
 from .records import DriveConfig, OAuthClient, OAuthMetadata, OAuthToken

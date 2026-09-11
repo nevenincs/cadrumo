@@ -27,14 +27,17 @@ from ....domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionRegularizacionParameters,
 )
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry.binding_targets import casillas_by_binding
+from ....domain.calculations.registry.bindings import (
+    BienesInversionRegularizacionOutput,
+    CasillaObservation,
+    RegistryModeloObservation,
+)
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation.source_mesh import CalculationSourceContext
 from ..bienes_inversion_regularizacion import (
-    CASILLA_M390_REGULARIZACION_BIENES_INVERSION,
-    CASILLA_REGULARIZACION_BIENES_INVERSION,
     BienesInversionRegularizacionSourceResolver,
     build_bienes_inversion_regularizacion_advisory,
     build_bienes_inversion_transmision_advisory,
@@ -124,6 +127,17 @@ def _m303_revision() -> ModeloRevision:
     return bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period="4T").revision
 
 
+def _canonical_bienes_target(*, modelo: str, period: str, output: BienesInversionRegularizacionOutput) -> str:
+    revision = bundled_authority().snapshot(modelo, filing_year=_FILING_YEAR, period=period).revision
+    binding = next(
+        binding
+        for binding in revision.bindings
+        if binding.source is BindingSourceKind.BIENES_INVERSION_REGULARIZACION
+        and binding.selector.regularizacion_output is output
+    )
+    return casillas_by_binding(revision)[binding.id][0]
+
+
 def _register() -> BienesInversionIvaRegister:
     return BienesInversionIvaRegister(
         records=(
@@ -184,9 +198,14 @@ def test_advisory_surfaces_proposed_casilla_43_for_in_window_goods() -> None:
     assert diagnostic is not None
     assert diagnostic.source_kind == BindingSourceKind.BIENES_INVERSION_REGULARIZACION.value
     assert diagnostic.binding_source is BindingSourceKind.BIENES_INVERSION_REGULARIZACION
-    assert CASILLA_REGULARIZACION_BIENES_INVERSION in diagnostic.message
+    canonical_target = _canonical_bienes_target(
+        modelo="303",
+        period="4T",
+        output=BienesInversionRegularizacionOutput.MODELO_303_CASILLA_43,
+    )
+    assert canonical_target in diagnostic.message
     assert "200.00" in diagnostic.message
-    assert diagnostic.casilla_id == CASILLA_REGULARIZACION_BIENES_INVERSION
+    assert diagnostic.casilla_id == canonical_target
     # Casilla-derived grounding, threaded from the registry rather than
     # restated: casilla 43 carries LIVA arts. 107-110 among its own refs.
     assert "ley-37-1992:art-107" in diagnostic.legal_refs
@@ -239,7 +258,13 @@ def test_source_resolver_projects_repository_register_to_binding_and_bound_casil
         ).resolve(_context())
 
     assert resolution.binding_values[_BINDING_ID] == Decimal("200.00")
-    assert resolution.bound_inputs_by_casilla_id[CASILLA_REGULARIZACION_BIENES_INVERSION] == Decimal("200.00")
+    assert resolution.bound_inputs_by_casilla_id[
+        _canonical_bienes_target(
+            modelo="303",
+            period="4T",
+            output=BienesInversionRegularizacionOutput.MODELO_303_CASILLA_43,
+        )
+    ] == Decimal("200.00")
     assert _BINDING_ID not in resolution.unresolved_binding_ids
     assert resolution.diagnostics == ()
     assert BindingSourceKind.BIENES_INVERSION_REGULARIZACION in resolution.owned_sources
@@ -277,7 +302,14 @@ def test_source_resolver_projects_m390_binding_from_stamped_m303_prorrata_observ
         ).resolve(_context(modelo="390", period="0A"))
 
     assert resolution.binding_values == {}
-    assert CASILLA_M390_REGULARIZACION_BIENES_INVERSION not in resolution.bound_inputs_by_casilla_id
+    assert (
+        _canonical_bienes_target(
+            modelo="390",
+            period="0A",
+            output=BienesInversionRegularizacionOutput.MODELO_390_CASILLA_63,
+        )
+        not in resolution.bound_inputs_by_casilla_id
+    )
     assert _M390_BINDING_ID in resolution.unresolved_binding_ids
     assert resolution.diagnostics != ()
     assert "declares no capital-goods regularisation figure" in resolution.diagnostics[0].message
@@ -394,7 +426,14 @@ def test_source_resolver_leaves_binding_unresolved_without_current_year_prorrata
 
     assert _BINDING_ID in resolution.unresolved_binding_ids
     assert _BINDING_ID not in resolution.binding_values
-    assert CASILLA_REGULARIZACION_BIENES_INVERSION not in resolution.bound_inputs_by_casilla_id
+    assert (
+        _canonical_bienes_target(
+            modelo="303",
+            period="4T",
+            output=BienesInversionRegularizacionOutput.MODELO_303_CASILLA_43,
+        )
+        not in resolution.bound_inputs_by_casilla_id
+    )
     assert resolution.diagnostics
     assert resolution.diagnostics[0].binding_source is BindingSourceKind.BIENES_INVERSION_REGULARIZACION
     assert "iva.prorrata-porcentaje" in resolution.diagnostics[0].message
@@ -412,7 +451,13 @@ def test_source_resolver_adds_disposal_year_art_110_amount(tmp_path: Path) -> No
         ).resolve(_context())
 
     assert resolution.binding_values[_BINDING_ID] == Decimal("-2400.00")
-    assert resolution.bound_inputs_by_casilla_id[CASILLA_REGULARIZACION_BIENES_INVERSION] == Decimal("-2400.00")
+    assert resolution.bound_inputs_by_casilla_id[
+        _canonical_bienes_target(
+            modelo="303",
+            period="4T",
+            output=BienesInversionRegularizacionOutput.MODELO_303_CASILLA_43,
+        )
+    ] == Decimal("-2400.00")
     assert _BINDING_ID not in resolution.unresolved_binding_ids
     assert resolution.diagnostics == ()
 
@@ -428,7 +473,13 @@ def test_source_resolver_resolves_empty_register_to_explicit_zero(tmp_path: Path
         ).resolve(_context())
 
     assert resolution.binding_values[_BINDING_ID] == Decimal("0.00")
-    assert resolution.bound_inputs_by_casilla_id[CASILLA_REGULARIZACION_BIENES_INVERSION] == Decimal("0.00")
+    assert resolution.bound_inputs_by_casilla_id[
+        _canonical_bienes_target(
+            modelo="303",
+            period="4T",
+            output=BienesInversionRegularizacionOutput.MODELO_303_CASILLA_43,
+        )
+    ] == Decimal("0.00")
     assert resolution.unresolved_binding_ids == ()
     assert resolution.diagnostics == ()
 
@@ -466,9 +517,14 @@ def test_transmision_advisory_surfaces_proposed_casilla_43_for_disposed_good() -
     assert projection.proposed_casilla_43 == Decimal("-2400.00")
     assert diagnostic is not None
     assert diagnostic.source_kind == "bienes_inversion_regularizacion_transmision"
-    assert CASILLA_REGULARIZACION_BIENES_INVERSION in diagnostic.message
+    canonical_target = _canonical_bienes_target(
+        modelo="303",
+        period="4T",
+        output=BienesInversionRegularizacionOutput.MODELO_303_CASILLA_43,
+    )
+    assert canonical_target in diagnostic.message
     assert "-2400.00" in diagnostic.message
-    assert diagnostic.casilla_id == CASILLA_REGULARIZACION_BIENES_INVERSION
+    assert diagnostic.casilla_id == canonical_target
     assert "ley-37-1992:art-110" in diagnostic.legal_refs
 
 

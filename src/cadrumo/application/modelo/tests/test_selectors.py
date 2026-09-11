@@ -30,13 +30,6 @@ from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitSt
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from .._work_selection import (
-    ModeloWorkSelectionMode,
-    ModeloWorkSelectorRequest,
-    ModeloWorkSelectorState,
-    resolve_modelo_work_bucket,
-    select_modelo_work_resolution,
-)
 from ..action_errors import CalculationRevisionStateError, WorkUnitRevisionDivergenceError
 from ..selectors import (
     ModeloCalculationRevisionSelector,
@@ -57,6 +50,13 @@ from ..work_addressing import (
     resolve_verifiable_modelo_calculation_revision_address,
 )
 from ..work_lifecycle import create_work_unit
+from ..work_selection import (
+    ModeloWorkSelectionMode,
+    ModeloWorkSelectorRequest,
+    ModeloWorkSelectorState,
+    resolve_modelo_work_bucket,
+    select_modelo_work_resolution,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

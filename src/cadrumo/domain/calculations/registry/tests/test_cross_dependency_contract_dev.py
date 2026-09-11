@@ -11,25 +11,25 @@ from dev.registry.compiler.validate_relation_periods import select_relation_sour
 from dev.registry.compiler.validator import RegistryValidator
 from dev.registry.conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
-from cadrumo.core.aggregation import RelationAggregationOp
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
-from cadrumo.domain.calculations.registry.bindings import binding_source_casilla_ids
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.handoffs import relation_consumption_channels, relation_consumption_index
-from cadrumo.domain.calculations.registry.iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
-from cadrumo.domain.calculations.registry.relation_aggregation import relation_aggregation_op
-from cadrumo.domain.calculations.registry.relations import relation_source_requirements
-from cadrumo.domain.calculations.registry.runtime_graph import expression_relation_refs
-from cadrumo.domain.calculations.registry.schema import (
+from .....core.aggregation import RelationAggregationOp
+from .....core.resources.bundled_data import bundled_path
+from ..binding_selector_utils import selector_as_dict
+from ..bindings import binding_source_casilla_ids
+from ..errors import RegistryValidationError
+from ..handoffs import relation_consumption_channels, relation_consumption_index
+from ..iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
+from ..relation_aggregation import relation_aggregation_op
+from ..relations import relation_source_requirements
+from ..runtime_graph import expression_relation_refs
+from ..schema import (
     DataBindingDefinition,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
 )
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.schema_revision_members import DependencyClassificationDefinition
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
+from ..schema_input_kind import InputKind
+from ..schema_revision_members import DependencyClassificationDefinition
+from ..schema_surfaces import RelationDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

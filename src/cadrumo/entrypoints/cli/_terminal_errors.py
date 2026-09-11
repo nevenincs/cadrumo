@@ -360,7 +360,7 @@ def _emit_click_exception(exc: BaseException) -> NoReturn:
         )
     else:
         if authentication_notices:
-            from ._common import notice_lines
+            from .common import notice_lines
             from .errors import write_stderr
 
             write_stderr("\n".join(notice_lines(authentication_notices)) + "\n")
@@ -427,7 +427,7 @@ def _emit_crash(exc: Exception) -> NoReturn:
     defect. Forward it verbatim instead, with its own exit code.
     """
     from ...core.logging import OPERATOR_DOCUMENT_LOG_EXTRA, get_logger
-    from ._common import (
+    from .common import (
         cli_policy_refusal_projection,
         current_requested_cli_leaf,
         project_cli_policy_refusal,
@@ -549,7 +549,7 @@ def run_standalone_with_error_contract(
     and ``--language`` tokens even when the failure carries no command context;
     it defaults to ``sys.argv[1:]`` for a console launch.
     """
-    from ._common import boundary_requested_leaf_scope
+    from .common import boundary_requested_leaf_scope
 
     captured = tuple(argv) if argv is not None else tuple(sys.argv[1:])
     token = _INVOCATION_ARGV.set(captured)

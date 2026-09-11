@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import override
 
-from ....core.resources._repository import ResourceCacheRepository
+from ....core.resources.repository import ResourceCacheRepository
 
 
 class RecargoBandsRepository(ResourceCacheRepository[object, None]):

@@ -1,0 +1,28 @@
+[fact]
+fact_id = "m130-retenciones-output-routing"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "m130-retenciones-output-routing:2019-01-01"
+date_axis = "filing_period"
+valid_from = 2019-01-01
+legal_refs = [
+    "rd-439-2007:art-110",
+    "orden-eha-672-2007:art-1",
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-95",
+]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+    { key = "modelo", value = "130" },
+    { key = "binding_id", value = "modelo-130-actividad-economica-retenciones-cumulative" },
+    { key = "observation_target_casilla", value = "01" },
+    { key = "output_casilla", value = "06" },
+    { key = "relation", value = "observation_target_to_output_casilla_redirect" },
+    { key = "applicability", value = "when_binding_is_declared" },
+]

@@ -66,7 +66,8 @@ from ...core.period import Period
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from .errors import WorkflowError
 from .persistence import list_runs, load_run
-from .run_models import WorkflowAbortReason, WorkflowObligationFacts, WorkflowResult, WorkflowStage
+from .abort import WorkflowAbortReason
+from .run_models import WorkflowObligationFacts, WorkflowResult, WorkflowStage
 
 if TYPE_CHECKING:
     #: ``RevisionId`` is an ``Annotated[str, ...]`` alias, but importing it from
@@ -126,7 +127,7 @@ _NON_RESUMABLE_REASONS: frozenset[WorkflowAbortReason] = frozenset(
 
 def _captured_work_catalogue(bucket_id: str | None) -> tuple[WorkUnitCatalogue, str]:
     """Capture the catalogue once at the workflow operation boundary."""
-    from ..modelo._work_selection import ModeloWorkSelectorRequest, resolve_modelo_work_bucket
+    from ..modelo.work_selection import ModeloWorkSelectorRequest, resolve_modelo_work_bucket
     from ..modelo.work_unit_repository import work_unit_catalogue_repository
 
     resolved_bucket_id = resolve_modelo_work_bucket(ModeloWorkSelectorRequest(bucket_id=bucket_id))

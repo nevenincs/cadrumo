@@ -26,7 +26,9 @@ from datetime import date
 import pytest
 
 from ....core.resources.bundled_data import bundled_path
-from ..classification import _CLASSIFICATION_RULES, _R99_FALLTHROUGH_ID
+from ...calculations.registry.authority import bundled_authority
+from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...calculations.registry.schema_base import DateAxis
 from ..errors import IvaCatalogueError
 from ..place_of_supply import (
     IvaPlaceOfSupplyRule,
@@ -85,7 +87,24 @@ def _declared_rule_ids() -> frozenset[str]:
     Taking only the table would leave the one id a reader is most likely to meet
     on an unclassifiable document outside the grounding contract entirely.
     """
-    return frozenset(rule.rule_id for rule in _CLASSIFICATION_RULES) | {_R99_FALLTHROUGH_ID}
+    resolved = bundled_authority().resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="iva-invoice-classification-catalogue",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=_ON,
+        ),
+    )
+    assert isinstance(resolved, ResolvedMappingFact)
+    rule_order = next(
+        (
+            entry.value
+            for entry in resolved.payload.entries
+            if entry.key == "rule_order" and isinstance(entry.value, str)
+        ),
+        None,
+    )
+    assert rule_order is not None
+    return frozenset(rule_order.split(","))
 
 
 def test_every_declared_rule_is_grounded_and_every_row_grounds_a_rule() -> None:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
 from ._verification_chain_m100_support import (
@@ -14,7 +16,6 @@ from ._verification_chain_m100_support import (
     _parse_m100_corpus,
 )
 from ._verification_chain_support import (
-    Decimal,
     _calculate_engine_values_from_inputs,
     _decimal_inputs_from_extracted_values,
 )

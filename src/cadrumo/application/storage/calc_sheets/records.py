@@ -44,7 +44,6 @@ from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.parsing.codes import IsoCurrencyCode
 from ....core.period import Period
-from ....core.time.clock import now as _utc_now
 from ....core.time.utc import validate_utc_aware
 from ....domain.calculations.registry.ids import (
     BindingId,
@@ -56,11 +55,11 @@ from ....domain.calculations.registry.ids import (
     RevisionId,
     SourceRefId,
 )
-from ....domain.calculations.registry.schema import DecimalValue as _RegistryDecimalValue
 from ....domain.calculations.registry.schema_base import (
     CasillaSignConstraint,
     CasillaSignConstraintValue,
 )
+from ....domain.calculations.registry.schema_scalars import DecimalValue as _RegistryDecimalValue
 from .errors import CalcSheetsRecordError
 from .theme import WORKBOOK_FONT_FAMILY, StyleRole
 
@@ -941,7 +940,6 @@ __all__ = [
     "SheetTariffTableRow",
     "SheetValueCell",
     "TabName",
-    "_utc_now",
     "column_index_to_letters",
     "column_letters_to_index",
 ]

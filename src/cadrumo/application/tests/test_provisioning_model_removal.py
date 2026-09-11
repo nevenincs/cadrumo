@@ -42,11 +42,9 @@ from ...tests.loopback_llm import (
 )
 from ..provisioning import (
     LOCAL_MODEL_PROVISIONING_SERVICE,
-    InstalledModel,
     probe_local_model_provisioning,
-    read_installed_models,
-    remove_runtime_model,
 )
+from ..provisioning_runtime import InstalledModel, read_installed_models, remove_runtime_model
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

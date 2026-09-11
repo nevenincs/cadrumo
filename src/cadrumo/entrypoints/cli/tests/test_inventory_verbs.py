@@ -65,7 +65,7 @@ _ACQUISITION = json.dumps(
 
 
 def _authority_payload(*, reason: str = "Reviewed movement-derived closing.") -> str:
-    from ....domain.contribuyente.inventory._closing_authority_records import (
+    from ....domain.contribuyente.inventory.closing_authority_records import (
         InventoryClosingAuthorityDecision,
         InventoryClosingAuthorityRecord,
         PriorAuthoritativeClosingLink,
@@ -116,7 +116,7 @@ def _authority_payload(*, reason: str = "Reviewed movement-derived closing.") ->
 
 
 def _physical_authority_payload() -> str:
-    from ....domain.contribuyente.inventory._closing_authority_records import InventoryClosingAuthorityRecord
+    from ....domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
 
     base = InventoryClosingAuthorityRecord.model_validate_json(_authority_payload())
     observation = PhysicalClosingObservation(

@@ -25,9 +25,8 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
-
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from ....contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
 from ._published_authority import artifact_snapshot

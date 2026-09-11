@@ -236,7 +236,7 @@ def _draft_input_channels(
         enum_binding_inputs=_string_inputs_for_ids(inputs, enum_binding_ids),
         date_binding_inputs=_date_inputs_for_ids(inputs, date_binding_ids),
         relation_inputs=_decimal_inputs_for_ids(inputs, relation_ids),
-        filing_binding_values=_filing_binding_values(
+        filing_binding_values=filing_binding_values(
             inputs,
             bindings,
             enum_binding_ids,
@@ -255,7 +255,7 @@ def _calculate_draft_result(
         return _calculate_registry_snapshot(
             snapshot,
             inputs=input_channels.casilla_inputs,
-            date_context={"filing_period": _filing_period_date(period)},
+            date_context={"filing_period": filing_period_date(period)},
             binding_values=input_channels.binding_inputs,
             enum_binding_values=input_channels.enum_binding_inputs or None,
             relation_values=input_channels.relation_inputs or None,
@@ -483,7 +483,7 @@ def _registry_period(period: object) -> tuple[int, str]:
     return period.filing_year, period.registry_token
 
 
-def _filing_period_date(period: _Period) -> date:
+def filing_period_date(period: _Period) -> date:
     """Return the shared calculation filing date for a typed draft period."""
     _registry_period(period)
     return _calculation_filing_date(period)
@@ -706,7 +706,7 @@ def _string_inputs_for_ids(inputs: _ModeloInputs, input_ids: frozenset[_BindingI
     return string_inputs
 
 
-def _binding_provenance(
+def binding_provenance(
     binding: _DataBindingDefinition,
 ) -> tuple[_BindingSourceKind, tuple[_LegalRefId, ...], tuple[_SourceRefId, ...]]:
     """Extract the typed source kind and grounding from a binding definition.
@@ -735,7 +735,7 @@ def _binding_provenance(
     return source, legal_refs, source_refs
 
 
-def _filing_binding_values(
+def filing_binding_values(
     inputs: _ModeloInputs,
     bindings: Mapping[_BindingId, _DataBindingDefinition],
     enum_binding_ids: frozenset[_BindingId] = frozenset(),
@@ -753,7 +753,7 @@ def _filing_binding_values(
         if binding_id not in inputs:
             continue
         raw_value = inputs[binding_id]
-        source, legal_refs, source_refs = _binding_provenance(binding)
+        source, legal_refs, source_refs = binding_provenance(binding)
         if isinstance(raw_value, list | tuple):
             values.extend(
                 _ModeloBindingValue(

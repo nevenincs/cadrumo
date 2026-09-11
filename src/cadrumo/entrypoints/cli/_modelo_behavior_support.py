@@ -32,7 +32,6 @@ from ...core.logging import get_logger
 from ...core.period import Period, PeriodError
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
-from ._common import no_active_profile_refusal
 from ._modelo_cli_support import (
     bad_parameter_from_error,
     bad_parameter_from_localized_context,
@@ -42,6 +41,7 @@ from ._modelo_cli_support import (
     validate_calculation_revision_id,
     validate_work_unit_id,
 )
+from .common import no_active_profile_refusal
 
 _log = get_logger(__name__)
 

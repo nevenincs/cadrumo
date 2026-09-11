@@ -31,7 +31,7 @@ fichero-BOE they file.
 
 Exemptions are keyed by ``(module, enclosing function, primitive)`` and never by
 line number. File granularity is not enough: a module that legitimately owns the
-funnel — ``_common.py`` owns ``_render_and_echo`` —
+funnel — ``common.py`` owns ``_render_and_echo`` —
 would otherwise blanket-exempt every future emit added anywhere inside it, so a
 bypass dropped into a neighbouring function in an already-listed module would
 pass silently. Line numbers are rejected for the opposite reason: they move with
@@ -65,7 +65,7 @@ _APPLICATION_OUTPUT_ROOTS = (_SRC_ROOT / "application" / "wizard",)
 # without passing the redacting renderer. Keep the reason specific enough that a
 # reviewer can re-derive the decision without reading the call site.
 _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
-    ("entrypoints/cli/_common.py", "_render_and_echo", "typer.echo"): (
+    ("entrypoints/cli/common.py", "_render_and_echo", "typer.echo"): (
         "IS the success funnel, and is now the ONLY one: echoes "
         "render_command_output()'s text arm, which applied redact_for_cli_output "
         "before returning. The closing envelope and the streamed progress channel "
@@ -77,7 +77,7 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "IS the stderr funnel: every write in this function emits redacted_text, "
         "already through the error-path redaction boundary."
     ),
-    ("entrypoints/cli/_common.py", "emit_help_text", "typer.echo"): (
+    ("entrypoints/cli/common.py", "emit_help_text", "typer.echo"): (
         "Click-generated help text (ctx.get_help()), composed by click from "
         "static command metadata. It carries no operator data to redact."
     ),

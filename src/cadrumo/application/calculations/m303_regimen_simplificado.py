@@ -36,14 +36,7 @@ _DANA_2024_REDUCTION_FACT_ID = "rdl-7-2024-art-11-2:iva-simplificado-reduccion-c
 
 
 class M303RegimenSimplificadoCalculationError(CoreValidationError):
-    """Raised when exact annual-Orden inputs cannot form a calculation result.
-
-    Roots at :class:`~core.errors.CoreValidationError` like every other refusal
-    in this package, so the class binds to the error registry and its refusal
-    carries a code, a category and locale-resolved text. That base already
-    carries :exc:`ValueError`, which the row validation below relies on to
-    convert the domain refusal into this one.
-    """
+    """Raised when exact annual-Orden inputs cannot form a calculation result."""
 
 
 def calculate_m303_regimen_simplificado_result(
@@ -55,12 +48,7 @@ def calculate_m303_regimen_simplificado_result(
     dana_2024_eligibility: M303DANA2024EligibilityEvidence | None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> M303RegimenSimplificadoCalculationResult:
-    """Calculate one immutable, source-pinned annual result from filing rows.
-
-    The annual Orden defines every module coefficient and annual reduction.  The
-    DANA relief is admitted solely by an evidenced eligibility decision and is
-    applied to each eligible activity's 2024 annual cuota devengada once.
-    """
+    """Calculate one immutable, source-pinned annual result from filing rows."""
     _validate_coordinate(
         period=period,
         scope_decision=scope_decision,

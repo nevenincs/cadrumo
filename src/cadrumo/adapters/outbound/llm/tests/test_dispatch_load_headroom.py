@@ -30,12 +30,14 @@ import pytest
 from .....application.provisioning import (
     AcceleratorDevice,
     AcceleratorReading,
-    ContentionSnapshot,
     HardwareProfile,
-    RuntimeResident,
     SystemMemoryReading,
-    assess_model_load_contention,
     probe_hardware_profile,
+)
+from .....application.provisioning_runtime import (
+    ContentionSnapshot,
+    RuntimeResident,
+    assess_model_load_contention,
     read_runtime_residents,
 )
 from .....core.config import override_settings

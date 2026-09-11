@@ -1,0 +1,30 @@
+[fact]
+fact_id = "renta-ledger-category-variant-routing-mapping"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "renta-ledger-category-variant-routing-mapping:2025"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+source_refs = ["aeat-modelo-100-2025", "boe-lirpf-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-100-2025"
+required_text = ["gastos fiscalmente deducibles", "seguro de enfermedad"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "insurance.variant.general", value = "general" },
+  { key = "insurance.variant.discapacidad", value = "discapacidad" },
+  { key = "insurance.count_field.general", value = "general" },
+  { key = "insurance.count_field.discapacidad", value = "discapacidad" },
+  { key = "category_profile.source", value = "selected_modelo_revision" },
+  { key = "category_route.source_fact", value = "modelo-100-first-slice-expense-routing-mapping" },
+  { key = "issue_rules.source", value = "renta-ledger-issue-taxonomy" },
+  { key = "applicability.modelos", value = "100,130,131" },
+  { key = "binding.source_kind", value = "ledger_renta_gastos_estimacion_directa_aggregation" },
+  { key = "legal_reference.source", value = "selected_registry_revision" },
+]

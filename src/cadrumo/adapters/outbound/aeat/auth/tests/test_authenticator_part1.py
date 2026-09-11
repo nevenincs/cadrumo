@@ -3,48 +3,40 @@
 from __future__ import annotations
 
 import logging
-from datetime import timezone
+from datetime import UTC, datetime, timedelta, timezone
+from pathlib import Path
+from typing import NoReturn
 
 import pytest
+from cryptography import x509
+from cryptography.x509.oid import NameOID
 from pydantic import ValidationError
 
+from ......application.auth.providers import AuthProvider
 from ......application.auth.session_types import (
+    AeatLoginAssertion,
+    AeatSession,
     ClaveMovilSessionDetail,
     ClavePermanenteSessionDetail,
     is_exact_active_provider_session,
 )
+from ......application.auth_credentials import unnamed_certificate_credentials
+from ......core.auth_provider import AuthProviderKind
 from ......core.errors.hierarchy import AeatLoginAssertionError
 from ......core.i18n.render import tr
 from .. import authenticator as authenticator
-from ..authenticator import _require_exact_active_certificate_session
-from ..errors import AuthConfigurationError
+from ..authenticator import AEAT_SESSION_IDLE_TTL, AeatAuthenticator, _require_exact_active_certificate_session
+from ..certificate import CertificateError, CertificateNifParseError, extract_nif_from_subject
+from ..errors import AuthConfigurationError, AuthValidationError
+from ..provider_selection import select_provider
+from ._auth_fixtures import SECRET_PASSPHRASE
 from ._authenticator_support import (
     _SENSITIVE_HEALTH_PAYLOAD,
     _SENSITIVE_STORAGE_BASENAME,
-    AEAT_SESSION_IDLE_TTL,
-    SECRET_PASSPHRASE,
-    UTC,
-    AeatAuthenticator,
-    AeatLoginAssertion,
-    AeatSession,
-    AuthProvider,
-    AuthProviderKind,
-    AuthValidationError,
-    CertificateError,
-    CertificateNifParseError,
-    NameOID,
-    NoReturn,
-    Path,
     _build_bundle,
     _certificate_assertion,
     _certificate_session,
     _load_cert,
-    datetime,
-    extract_nif_from_subject,
-    select_provider,
-    timedelta,
-    unnamed_certificate_credentials,
-    x509,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

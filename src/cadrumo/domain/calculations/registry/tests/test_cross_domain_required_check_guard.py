@@ -18,6 +18,7 @@ is told to, and the real guard judges the real registration list.
 
 from __future__ import annotations
 
+import importlib.util
 import subprocess
 import sys
 import textwrap
@@ -162,7 +163,13 @@ def test_every_required_check_module_is_one_the_builder_installs() -> None:
     requires would be dead capacity.
     """
 
-    assert set(REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES.values()) == set(_CROSS_DOMAIN_CHECK_MODULES)
+    installed_modules = {
+        importlib.util.resolve_name(name, "cadrumo.domain.calculations.registry")
+        if name.startswith(".")
+        else name
+        for name in _CROSS_DOMAIN_CHECK_MODULES
+    }
+    assert set(REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES.values()) == installed_modules
 
 
 def test_the_identity_index_and_the_check_list_hold_the_same_checks() -> None:

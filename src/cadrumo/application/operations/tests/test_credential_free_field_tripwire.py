@@ -28,10 +28,7 @@ from __future__ import annotations
 import pytest
 
 from ....application.modelo.operation_definitions import ModeloWorkAmendRequest
-from ..registry import (
-    _strict_model_json_schema,
-    _validate_credential_free_schema,
-)
+from ..registry_schema_validation import strict_model_json_schema, validate_credential_free_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -73,7 +70,7 @@ def _schema(field_name: str) -> dict[str, object]:
 def test_a_field_naming_credential_material_is_refused(field_name: str) -> None:
     """Each word the tripwire had missed, refused through the real validator."""
     with pytest.raises(ValueError, match="forbidden security meaning"):
-        _validate_credential_free_schema(_schema(field_name))
+        validate_credential_free_schema(_schema(field_name))
 
 
 @pytest.mark.parametrize("field_name", _MUST_STILL_PASS)
@@ -85,14 +82,14 @@ def test_an_ordinary_field_that_merely_contains_one_is_admitted(field_name: str)
     and every ``clave``-bearing detail row. Separating the two states is what
     says the tripwire reads tokens rather than substrings.
     """
-    _validate_credential_free_schema(_schema(field_name))
+    validate_credential_free_schema(_schema(field_name))
 
 
 def test_the_words_the_original_set_already_held_are_still_refused() -> None:
     """Extending a list must not reorganise it into dropping what it had."""
     for field_name in ("session_token", "api_key", "password", "wrapped_secret"):
         with pytest.raises(ValueError, match="forbidden security meaning"):
-            _validate_credential_free_schema(_schema(field_name))
+            validate_credential_free_schema(_schema(field_name))
 
 
 def test_the_real_amend_request_still_publishes_a_credential_free_schema() -> None:
@@ -105,4 +102,4 @@ def test_the_real_amend_request_still_publishes_a_credential_free_schema() -> No
     registry build, not at the operator, which is why this is worth pinning
     beside the word list rather than left to the registry's own construction.
     """
-    _validate_credential_free_schema(_strict_model_json_schema(ModeloWorkAmendRequest))
+    validate_credential_free_schema(strict_model_json_schema(ModeloWorkAmendRequest))

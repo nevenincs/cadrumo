@@ -19,7 +19,6 @@ from ....core.filing_projection_ref import filing_projection_ref_casilla_id
 from ..export_field_kind import CasillaFieldKind
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
-    BindingExportDataType,
     BindingExportSelector,
     BindingFixedExportSelector,
     BindingRowExportSelector,
@@ -34,7 +33,7 @@ from .fixed_width_codec import ExportJustification, ExportPadding
 from .ids import ExportFieldId
 from .schema import DataBindingDefinition, ModeloRevision, RegistrySnapshot
 from .schema_base import ZERO_PADDED_EXPORT_DATA_TYPES, RegistryModel
-from .schema_exports import ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition
+from .schema_exports import ExportFieldDataType, ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition
 from .schema_references import SourceReference
 
 _BindingExportMember = tuple[DataBindingDefinition, BindingExportSelector]
@@ -510,13 +509,13 @@ def _export_field_from_binding(
     )
 
 
-def _padding_for_binding_data_type(data_type: BindingExportDataType) -> ExportPadding:
+def _padding_for_binding_data_type(data_type: ExportFieldDataType) -> ExportPadding:
     if data_type in ZERO_PADDED_EXPORT_DATA_TYPES:
         return ExportPadding.LEFT_ZERO
     return ExportPadding.RIGHT_SPACE
 
 
-def _justification_for_binding_data_type(data_type: BindingExportDataType) -> ExportJustification:
+def _justification_for_binding_data_type(data_type: ExportFieldDataType) -> ExportJustification:
     if data_type in ZERO_PADDED_EXPORT_DATA_TYPES:
         return ExportJustification.RIGHT
     return ExportJustification.LEFT

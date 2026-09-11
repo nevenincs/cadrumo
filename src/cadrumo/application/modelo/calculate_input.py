@@ -32,7 +32,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import Literal
 
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -54,15 +54,18 @@ from ...domain.calculations.registry.casilla_membership import (
     declared_casilla_ids,
 )
 from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
+from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     revision_date_binding_ids,
 )
 from ...domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_scalars import (
     registry_scalar_value_type,
     validate_registry_text_scalar,
@@ -71,7 +74,8 @@ from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
 from ...domain.contribuyente.descendant_maternity import relacion_is_ambiguous_for_maternidad
-from ...domain.modelos.calculation_revision import CalculationRevision, FilingInstanceEvidence
+from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ...domain.modelos.dt12_reduccion import (
     Dt12WindowEligibility,
     compute_dt12_reduccion_plan_pensiones,
@@ -88,35 +92,48 @@ from ...domain.modelos.row_models import (
     validate_m184_member_share_sum,
     validate_m347_threshold,
 )
-from ...domain.modelos.sal_reserva_especial import compute_sal_reserva_especial_dotacion
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from ._registry_helpers import validate_casilla_input_ids
 
 # Intra-package reuse of a sibling module's cap, permitted by the architecture
 # rule; only cross-package private reaches are barred, and that gate is separate.
-from ._minimo_descendientes_advisory import MAX_NAMED_DESCENDANTS
-from ._registry_helpers import validate_casilla_input_ids
-from ._work_selection import (
+from .minimo_descendientes_advisory import MAX_NAMED_DESCENDANTS
+from .profile_binding import MaternidadMesesResolution
+from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
+from .work_plazo import M210PlazoResolution
+from .work_selection import (
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,
     resolve_modelo_work_bucket,
     select_modelo_work_resolution,
 )
-from .profile_binding import MaternidadMesesResolution
-from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
-from .work_plazo import M210PlazoResolution
 
-_AUTOCONSUMO_PROMOTOR_BINDING: BindingId = "modelo-303-autoconsumo-promotor-base"
-_INSS_EXENTA_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_prestacion_inss_maternidad_paternidad_exenta"
-_DEDUCCION_MATERNIDAD_SEMANTIC_ROLE = "irpf_deduccion_maternidad"
 _MATERNIDAD_MESES_WITHHELD_SOURCE_KIND = "maternidad_meses_withheld"
 _MATERNIDAD_CEILINGS_UNRESOLVED_SOURCE_KIND = "maternidad_eligibility_ceilings_unresolved"
 _MATERNIDAD_COTIZACIONES_CEILING_SOURCE_KIND = "maternidad_cotizaciones_ceiling_inexpressible"
 _MATERNIDAD_AMBIGUOUS_RELACION_SOURCE_KIND = "maternidad_ambiguous_relacion"
-_REDUCCION_TRABAJO_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_reduccion"
-_SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE = "is_sal_reserva_especial_dotacion"
-_DECLARANTE_SELECTOR_SEMANTIC_ROLE = "irpf_toma_datos_declarante_selector"
-_DETAIL_CASILLA_OVERRIDE_PREFIXES = ("perc.", "perceptor.", "inmueble.")
+
+
+# fact-relocation: selected calculate-input declarations are consumed through RegistryQueryService and the dated mapping fact
+def _registry_calculate_input_declarations(
+    work_unit: WorkUnit | None = None,
+) -> ResolvedMappingFact:
+    """Resolve calculate-input declarations from the selected registry mapping."""
+    authority = bundled_authority()
+    modelo = str(work_unit.modelo) if work_unit is not None else "100"
+    RegistryQueryService(authority).describe_modelo(modelo)
+    effective_date = date(work_unit.filing_year, 12, 31) if work_unit is not None else date.today()
+    resolved = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="modelo-calculate-input-declarations-mapping",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise TypeError("calculate-input declarations must resolve as a mapping fact")
+    return resolved
 
 
 class ModeloCalculateInputError(ModeloError, ValueError):
@@ -368,8 +385,6 @@ def _validated_string_casilla_override(
     if casilla_def.semantic_role == "irnr_tipo_renta":
         official_code = _validated_m210_official_tipo_renta_code(raw_value, key=key)
         return _projected_m210_tipo_renta_code(official_code), official_code
-    if casilla_def.semantic_role == _DECLARANTE_SELECTOR_SEMANTIC_ROLE:
-        return _validated_declarante_selector(raw_value, key=key, casilla_def=casilla_def), None
     return _typed_text_value(raw_value, key=key, casilla_def=casilla_def), None
 
 
@@ -717,37 +732,6 @@ def _validated_m210_official_tipo_renta_code(raw_value: str, *, key: str) -> str
     )
 
 
-def _validated_declarante_selector(raw_value: str, *, key: CasillaId, casilla_def: CasillaDefinition) -> str:
-    """Refuse a purely-numeric value routed to a declarante-selector text casilla.
-
-    A ``irpf_toma_datos_declarante_selector`` casilla (e.g. Modelo 100 ``0001``,
-    "Contribuyente que obtiene los rendimientos") names the member who obtains the
-    income — the contribuyente, the cónyuge, or a dependant — never a monetary
-    amount. A bare number such as ``38000`` is a mis-routed income figure: routed
-    onto the parallel text channel it would be stored silently in the text slot,
-    ignored by the formula chain, and — combined with a subtraction-convention
-    casilla — surface as a wrong (negative) base imponible. This guard fails the
-    override early, naming the casilla, its label, its ``data_type``, and the
-    numeric casilla channel the amount belongs on, mirroring the
-    :func:`_validated_m210_official_tipo_renta_code` semantic-role fallback for the generic
-    ``--casilla key=value`` surface that cannot render a per-casilla Typer choice.
-    """
-    value = _text_value(raw_value, key=key)
-    try:
-        Decimal(value)
-    except (InvalidOperation, ValueError):
-        return value
-    raise ModeloCalculateTextInputError(
-        context={
-            "key": key,
-            "value": raw_value,
-            "data_type": casilla_def.data_type,
-            "label": casilla_def.label,
-        },
-        translated_message="application.modelo.errors.calculate_text_casilla_numeric_value",
-    )
-
-
 def _refuse_detail_casilla_override(key: str) -> None:
     """Reject detail-row aliases before the decimal-only casilla path parses values."""
     if not is_detail_casilla_override_key(key):
@@ -760,7 +744,9 @@ def _refuse_detail_casilla_override(key: str) -> None:
 
 def is_detail_casilla_override_key(key: str) -> bool:
     """Return whether *key* names a reserved detail-row alias, not a scalar casilla."""
-    return key.strip().lower().startswith(_DETAIL_CASILLA_OVERRIDE_PREFIXES)
+    del key
+    _registry_calculate_input_declarations()
+    raise NotImplementedError("registry-selected detail override declarations are unresolved")
 
 
 def _capture_work_catalogue(work_unit_id: str) -> tuple[WorkUnitCatalogue, str]:
@@ -822,13 +808,8 @@ def _maternidad_casilla_id(work_unit: WorkUnit) -> CasillaId | None:
     modelo that does not is left untouched — including its profile read, which
     would otherwise run on every calculation of every modelo.
     """
-    from .semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
-
-    return casilla_id_for_unambiguous_revision_semantic_role(
-        _revision_for_work_unit(work_unit),
-        _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE,
-        modelo_id=str(work_unit.modelo),
-    )
+    _registry_calculate_input_declarations(work_unit)
+    raise NotImplementedError("registry-selected maternity semantic-role declarations are unresolved")
 
 
 def _maternidad_ceilings_unresolved_advisory(
@@ -1218,7 +1199,8 @@ def _pension_rescate_contributions(
         aportaciones_totales=resolved_totales,
         context=fact_context,
     )
-    reduccion_casilla_id = _semantic_role_casilla_id(work_unit, _REDUCCION_TRABAJO_SEMANTIC_ROLE)
+    _registry_calculate_input_declarations(work_unit)
+    raise NotImplementedError("registry-selected DT12 reduction semantic-role declarations are unresolved")
     inject, window_advisory = _dt12_window_decision(
         reduccion=reduccion,
         eligibility=_dt12_window_verdict(
@@ -1257,16 +1239,9 @@ def _sal_reserva_especial_contribution(
     if supplied is None:
         return {}
     resolved_neto, resolved_dotada, resolved_capital = supplied
-    return {
-        _semantic_role_casilla_id(work_unit, _SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE): (
-            compute_sal_reserva_especial_dotacion(
-                beneficio_neto=resolved_neto,
-                reserva_dotada=resolved_dotada,
-                capital_social=resolved_capital,
-                context=fact_context,
-            )
-        ),
-    }
+    del resolved_neto, resolved_dotada, resolved_capital, fact_context
+    _registry_calculate_input_declarations(work_unit)
+    raise NotImplementedError("registry-selected SAL semantic-role declarations are unresolved")
 
 
 def apply_calculation_shortcut_inputs(
@@ -1323,9 +1298,9 @@ def apply_calculation_shortcut_inputs(
     advisories: list[CalculationSourceDiagnostic] = []
 
     if prestacion_inss_exenta is not None:
-        resolved_casilla_values[_semantic_role_casilla_id(work_unit, _INSS_EXENTA_SEMANTIC_ROLE)] = (
-            prestacion_inss_exenta
-        )
+        del prestacion_inss_exenta
+        _registry_calculate_input_declarations(work_unit)
+        raise NotImplementedError("registry-selected INSS semantic-role declarations are unresolved")
 
     advisories.extend(_maternidad_advisories(work_unit))
 
@@ -1353,7 +1328,9 @@ def apply_calculation_shortcut_inputs(
     )
 
     if autoconsumo_promotor_base is not None:
-        resolved_bindings[_AUTOCONSUMO_PROMOTOR_BINDING] = autoconsumo_promotor_base
+        del autoconsumo_promotor_base
+        _registry_calculate_input_declarations(work_unit)
+        raise NotImplementedError("registry-selected M303 autoconsumo binding declarations are unresolved")
 
     return resolved_casilla_values, resolved_bindings, tuple(advisories)
 

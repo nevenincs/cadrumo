@@ -35,9 +35,9 @@ def test_retenciones_check_is_registered_with_the_registry_validator() -> None:
     registration side effect landed (importing this test module imports
     ``renta``).
     """
-    from ...calculations.registry.validate_cross_domain_snapshot import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+    from ...calculations.registry.validate_cross_domain_snapshot import registered_cross_domain_check_identities
 
-    assert check_m130_retenciones_output_casilla in _CROSS_DOMAIN_SNAPSHOT_CHECKS
+    assert check_m130_retenciones_output_casilla.__module__ in registered_cross_domain_check_identities()
 
 
 def test_check_fires_only_when_the_declared_binding_has_nowhere_to_report() -> None:

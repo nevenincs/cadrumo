@@ -295,3 +295,4 @@ def collect_prior_payment_minoracion_not_captured_diagnostics(
             legal_refs=casilla_registry_legal_refs(revision, _PRIOR_PAYMENT_CASILLA),
         ),
     )
+

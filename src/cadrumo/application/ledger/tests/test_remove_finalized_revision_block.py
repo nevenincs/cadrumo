@@ -10,11 +10,11 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepo
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.transactions.errors import TransactionValidationError
 from ..actions_lifecycle import remove_manual_transaction
-from ._remove_draft_revision_support import _create_row, _seed_revision_citing_transaction
 from .action_fixtures import (
     _BUCKET_ID,
     _repositories,
 )
+from .remove_draft_revision_support import create_row, seed_revision_citing_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -25,12 +25,12 @@ def test_remove_finalized_revision_still_blocks_and_not_advised(
     # Re-pin the finalized BLOCK path: a VERIFICADO_COMPLETO revision citing the
     # row still refuses removal, and the draft-advisory channel stays empty.
     transaction_repository, event_repository = _repositories(secure_objects)
-    transaction_id = _create_row(
+    transaction_id = create_row(
         secure_objects,
         idempotency_key="remove-finalized",
         description="finalized-cited income",
     )
-    finalized_revision_id = _seed_revision_citing_transaction(
+    finalized_revision_id = seed_revision_citing_transaction(
         secure_objects,
         transaction_id=transaction_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,

@@ -28,10 +28,9 @@ import typing
 import pytest
 from pydantic import BaseModel
 
-from ..binding_selector_utils import BindingExportDataType
 from ..errors import RegistryValidationError
 from ..manual_input_selector import ManualInputDataType
-from ..schema_exports import ExportFieldDefinition
+from ..schema_exports import ExportFieldDataType, ExportFieldDefinition
 from ..schema_formula import ParameterDefinition
 from ..schema_scalars import _REGISTRY_SCALAR_VALUE_TYPES, registry_scalar_value_type
 from ..schema_surfaces import CasillaDefinition
@@ -70,7 +69,7 @@ def _declared_members(model: type[BaseModel]) -> frozenset[str]:
 #: The narrowings, each expected to stay inside the casilla vocabulary.
 _SCALAR_NARROWINGS: dict[str, frozenset[str]] = {
     "ExportFieldDefinition.data_type": _declared_members(ExportFieldDefinition),
-    "BindingExportDataType": _vocabulary_of(BindingExportDataType),
+    "ExportFieldDataType": _vocabulary_of(ExportFieldDataType),
     "ManualInputDataType": _vocabulary_of(ManualInputDataType),
 }
 

@@ -24,16 +24,15 @@ from ...calculations.registry.applicability_routes import TaxRoute
 from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.schema_base import DateAxis
+from ...contribuyente.entity_type import EntityType, LegalEntityForm
+from ...contribuyente.renta_codes import FiscalResidency
 from ..fact_context import DeadlineFactResolutionContext
 from ..models import (
     CrossPeriodGroupMemberRoster,
-    EntityType,
-    FiscalResidency,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IrpfSpecialRegime,
     IVARegime,
-    LegalEntityForm,
     M303RegimeComposition,
     M303TaxTerritory,
     ModeloIVAProfile,

@@ -33,9 +33,9 @@ from ..actions import update_auth
 from ..certificate_source_operations import (
     register_operator_certificate_source,
     remove_operator_certificate_source_secret,
-    resolve_certificate_source_secret,
     set_operator_certificate_source_secret,
 )
+from ..credentials import resolve_certificate_source_secret
 from ..models import AuthCleanupOperationKind, CertificateSecretMutationEventKind
 from ..operator import (
     configure_operator_auth,

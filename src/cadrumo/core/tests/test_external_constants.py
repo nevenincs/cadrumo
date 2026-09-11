@@ -411,8 +411,8 @@ def test_subdomain_enum_aligns_with_aeat_domains() -> None:
 def test_portal_paths_registry_covers_literal_free_portal_entries() -> None:
     """Portal catalogue route paths are owned by external constants."""
 
-    from ...domain.portals._entries.common import portal_path
     from ...domain.portals.codes import Portal
+    from ...domain.portals.registry import PORTAL_REGISTRY
 
     constants = load_external_constants().aeat
     assert re.compile(constants.portal_paths.filing_censo_path_regex)
@@ -422,7 +422,7 @@ def test_portal_paths_registry_covers_literal_free_portal_entries() -> None:
     }
     for portal_id, path in constants.portal_paths.paths.items():
         assert path.startswith("/")
-        assert portal_path(Portal(portal_id)) == path
+        assert str(PORTAL_REGISTRY[Portal(portal_id)].url.path) == path
 
 
 def test_portal_registry_modules_do_not_reintroduce_route_or_host_literals(

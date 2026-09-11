@@ -23,9 +23,9 @@ from ....domain.filing.schema import ModeloApprovalBasis, ModeloDraft
 from ....domain.submission.models import ModeloDraftStatus
 from ....tests.profile_capsule import open_test_profile_session
 from ...filing.draft_review import ModeloApprovalStaleReason, describe_stale_reason
-from .._adapters import _to_stale_approval_item, drafts_pending
 from ..enums import ReviewSeverity, ReviewState
 from ..operator import _to_row
+from ..source_adapters import _to_stale_approval_item, drafts_pending
 from .test_adapters import (
     _PROFILE_ID,
     _build_settings,

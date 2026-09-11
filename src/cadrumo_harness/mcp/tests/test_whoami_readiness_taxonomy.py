@@ -22,7 +22,7 @@ from pydantic import ValidationError
 
 from cadrumo.application.workflow.profile_health import ActiveProfileHealth, ProfileHealthStatus
 
-from .._harness_tools import HarnessFloorPayload, WhoamiIdentity
+from ..harness_tools import HarnessFloorPayload, WhoamiIdentity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

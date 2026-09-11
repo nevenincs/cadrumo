@@ -41,7 +41,7 @@ from ...core.foreign_asset_obligation import (
     foreign_asset_obligation_group,
 )
 from ...core.hashing import content_hash_hex
-from ...core.identity import TransactionId
+from ...core.identity.transaction_ids import TransactionId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import IsoDateString, require_iso8601_date

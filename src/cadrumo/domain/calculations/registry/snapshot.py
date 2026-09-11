@@ -128,8 +128,9 @@ def _collect_deadline_schedule_refs(
 # Derived from the requirement declaration rather than restated beside it: the
 # modules installed here and the checks the validator demands are the same set
 # by construction, so neither can be moved without the other.
-_CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = tuple(
-    dict.fromkeys(REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES.values()),
+_CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = (
+    "...renta.first_slice_routing_integrity",
+    "...renta.retenciones_routing_integrity",
 )
 _cross_domain_checks_installed = False
 
@@ -152,7 +153,7 @@ def _install_cross_domain_snapshot_checks() -> None:
         return
     for module_name in _CROSS_DOMAIN_CHECK_MODULES:
         # Module names are controlled by the hard-coded tuple above.
-        importlib.import_module(module_name)  # nosemgrep
+        importlib.import_module(module_name, package=__package__)  # nosemgrep
     _cross_domain_checks_installed = True
 
 

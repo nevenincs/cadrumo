@@ -61,14 +61,13 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation.source_mesh import CalculationSourceProvenance, CalculationSourceResolution
 from ...aggregation.source_resolution_operations import merge_source_resolutions
-from ...calculations.observations_repository import CalculationObservationRepository
+from ...calculations.observations_repository import APP_FILING_SOURCE_KIND, CalculationObservationRepository
 from ..calculation_actions import (
     _resolve_bucket_source_mesh,
     _source_resolution_excluding_iva_compensation,
     calculate_modelo_revision,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ..filed_revision_observation import APP_FILING_SOURCE_KIND
 from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ..work_lifecycle import create_work_unit
 from ._file_flow_support import (
@@ -397,7 +396,7 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
     from ....domain.modelos.calculation_repository import upsert_calculation_revision
     from ....domain.modelos.calculation_revision import CalculationRevisionState
     from ...calculations.cross_period_models import CrossPeriodCleanStateBlocker
-    from ..verification_actions import _cross_period_clean_state_verdict_for_work_unit
+    from ..verification_cross_period import cross_period_clean_state_verdict_for_work_unit
 
     wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
     _seed_first_year_activity_profile(repos)
@@ -449,7 +448,7 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
     # is clean) and it carries the disclosing non-official-local-chain advisory. A
     # cross-YEAR dependency (the M100 prior-year minoración evidence) is NOT relaxed, so
     # the anti-laundering scope holds. The app_filing source stays non-official.
-    verdict = _cross_period_clean_state_verdict_for_work_unit(
+    verdict = cross_period_clean_state_verdict_for_work_unit(
         work_unit_2t,
         observation_repository=CalculationObservationRepository(),
         filing_repository=ModeloRecordCatalogueRepository(objects=bv_repo.secure_object_repository),
@@ -849,7 +848,7 @@ def test_first_filer_same_year_chain_is_fully_reachable(repos: _Repos) -> None:
     """
     from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-    from ..verification_actions import _cross_period_clean_state_verdict_for_work_unit
+    from ..verification_cross_period import cross_period_clean_state_verdict_for_work_unit
 
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     _seed_first_year_activity_profile(repos)
@@ -865,7 +864,7 @@ def test_first_filer_same_year_chain_is_fully_reachable(repos: _Repos) -> None:
         clock=_T4,
     )
 
-    verdict = _cross_period_clean_state_verdict_for_work_unit(
+    verdict = cross_period_clean_state_verdict_for_work_unit(
         work_unit_2t,
         observation_repository=CalculationObservationRepository(),
         filing_repository=ModeloRecordCatalogueRepository(objects=bv_repo.secure_object_repository),

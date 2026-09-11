@@ -9,7 +9,7 @@ See Also:
         Typer command group that calls these emitters.
     :mod:`~entrypoints.cli._modelo_payloads_m145`
         Typed payload classes returned by the JSON envelope.
-    :func:`~entrypoints.cli._common.emit_envelope`
+    :func:`~entrypoints.cli.common.emit_envelope`
         Shared CLI output path used by each emitter in this module.
     :class:`~application.modelo.M145CommunicationRecord`
         Application record rendered by record mutation emitters.
@@ -25,13 +25,13 @@ from typing import TYPE_CHECKING, Literal
 
 import typer
 
-from ._common import emit_envelope
 from ._modelo_payloads_m145 import (
     M145CommunicationExportResultPayload,
     M145CommunicationRecordPayload,
     M145CommunicationRecordResult,
     M145CommunicationValidationResultPayload,
 )
+from .common import emit_envelope
 
 if TYPE_CHECKING:
     from ...application.modelo.m145_communication_records import (

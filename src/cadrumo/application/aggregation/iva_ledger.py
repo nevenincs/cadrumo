@@ -51,7 +51,7 @@ from ...core.decimal.constants import HUNDRED
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.render import tr
 from ...core.i18n.translatable import Translatable as t
-from ...core.identity import TransactionId
+from ...core.identity.transaction_ids import TransactionId
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period

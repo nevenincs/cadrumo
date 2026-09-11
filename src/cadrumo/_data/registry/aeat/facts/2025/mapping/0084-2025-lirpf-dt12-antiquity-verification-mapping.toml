@@ -1,0 +1,30 @@
+[fact]
+fact_id = "lirpf-dt12-antiquity-verification-mapping"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "lirpf-dt12-antiquity-verification-mapping:2025"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+legal_refs = ["ley-35-2006:dt-12", "trlirpf:art-17-2-a"]
+source_refs = ["boe-lirpf-statutory-facts", "aeat-renta-2025-manual-parte1"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = ["dos años", "invalidez"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "modelo", value = "100" },
+  { key = "revision", value = "2025" },
+  { key = "predicate.trigger", value = "positive_dt12_reduction" },
+  { key = "predicate.operand_role", value = "irpf_rendimiento_trabajo_reduccion" },
+  { key = "antiquity.minimum_elapsed_years", value = "2" },
+  { key = "antiquity.exception", value = "invalidez" },
+  { key = "advisory.message_key", value = "application.modelo.findings.dt12a_reduccion_antiquity_possible" },
+  { key = "applicability.source", value = "selected_modelo_100_revision" },
+  { key = "source_kind", value = "verification_advisory" },
+]

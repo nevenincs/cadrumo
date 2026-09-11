@@ -40,6 +40,7 @@ from typing import TYPE_CHECKING
 
 from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.logging import get_logger
+from ....core.secure_object_write import SecureObjectWrite
 from ....domain.modelos.errors import raise_catalogue_integrity_error
 from ....domain.modelos.repository import WorkUnitPersistenceError
 from ....domain.modelos.work_unit import WorkUnitCatalogue
@@ -51,7 +52,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     # pragma: no cover — import-cycle guard
-    from ..storage.sql.secure_objects import SecureObjectRepository, SecureObjectWrite
+    from ..storage.sql.secure_objects import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
 _WORK_UNIT_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_work_unit_persistence"

@@ -46,7 +46,7 @@ from ..taxation_comparison import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # Importing the renta package registers the first-slice routing check.
-importlib.import_module("cadrumo.domain.renta")
+importlib.import_module("....domain.renta", package=__package__)
 
 
 @pytest.fixture(scope="module")
@@ -340,7 +340,7 @@ def test_taxation_comparison_module_imports_cleanly() -> None:
     """
     import importlib
 
-    mod = importlib.import_module("cadrumo.application.modelo.taxation_comparison")
+    mod = importlib.import_module("..taxation_comparison", package=__package__)
     assert hasattr(mod, "compare_taxation_modes")
     assert hasattr(mod, "TaxationComparisonResult")
     assert hasattr(mod, "TaxationComparisonError")

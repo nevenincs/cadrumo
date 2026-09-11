@@ -17,7 +17,13 @@ from ..namespace_registry import (
     secure_object_logical_path,
     secure_object_namespace_logical_path,
 )
-from ..namespace_taxonomy import StoragePathAnchor, StoragePathKind
+from ..namespace_taxonomy import (
+    StorageCustodyDisposition,
+    StorageNamespaceScope,
+    StoragePathAnchor,
+    StoragePathKind,
+    StorageRemoteMirrorPolicy,
+)
 from ..secure_object_namespaces import (
     AEAT_BROWSER_SESSION_NAMESPACE,
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
@@ -54,10 +60,7 @@ from ..secure_object_namespaces import (
     TRANSACTION_PARTICIPATION_INDEX_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
     SecureObjectNamespaceDefinition,
-    StorageCustodyDisposition,
     StorageHierarchyRegistry,
-    StorageNamespaceScope,
-    StorageRemoteMirrorPolicy,
 )
 from ..storage_path_definitions import (
     BLOB_MANIFEST_SCHEMA_VERSION,

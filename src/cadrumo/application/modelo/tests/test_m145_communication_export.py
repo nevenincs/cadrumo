@@ -1,7 +1,7 @@
 """Real-runtime export tests for Modelo 145 local communication records.
 
 See Also:
-    :mod:`~application.modelo._m145_communication_records`
+    :mod:`~application.modelo.m145_communication_records`
         Backend service that validates and renders the local record.
     :func:`~application.modelo.export_m145_communication_record`
         Public facade export function exercised by these tests.

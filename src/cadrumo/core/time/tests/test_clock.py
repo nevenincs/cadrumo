@@ -75,13 +75,10 @@ class TestFrozenClockSeam:
             pass
         # Guard did not leave a dangling frozen instant.
 
-    def test_calc_sheets_utc_now_alias_follows_the_seam(self) -> None:
-        """The calc-sheets ``_utc_now`` alias IS ``now``, so it freezes too."""
-        from ....application.storage.calc_sheets.records import _utc_now
-
-        assert _utc_now is now
+    def test_calc_sheets_clock_seam_follows_the_seam(self) -> None:
+        """The calc-sheets consumers use the canonical clock seam."""
         with frozen_clock(self._INSTANT):
-            assert _utc_now() == self._INSTANT
+            assert now() == self._INSTANT
 
 
 class TestTodayMadrid:

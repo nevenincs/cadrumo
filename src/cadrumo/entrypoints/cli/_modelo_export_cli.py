@@ -32,13 +32,13 @@ from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ...domain.deadlines.models import TaxpayerProfile
-from ._common import emit_envelope, filing_taxpayer_or_refuse
 from ._modelo_behavior_support import resolve_exportable_revision_for_cli
 from ._modelo_cli_support import (
     bad_parameter_from_error,
     resolve_default_actor,
 )
 from ._modelo_payloads import ModeloExportPayload
+from .common import emit_envelope, filing_taxpayer_or_refuse
 
 
 def _local_export_evidence_notice(result: ModeloExportResult) -> Notice:

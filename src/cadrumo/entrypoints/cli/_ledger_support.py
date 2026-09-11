@@ -39,8 +39,8 @@ from ...domain.deadlines.models import IrpfSpecialRegime
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.transactions.errors import TransactionIdPrefixError, TransactionValidationError
 from ...domain.transactions.models import Transaction
-from ._common import attach_cli_policy_verdict, bad, emit_envelope
 from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
+from .common import attach_cli_policy_verdict, bad, emit_envelope
 
 
 class TransactionRepo(Protocol):

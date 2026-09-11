@@ -1,0 +1,53 @@
+[fact]
+fact_id = "modelo-100-m130-projection-mapping"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-100-m130-projection-mapping:2025"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+source_refs = ["aeat-modelo-100-2025", "aeat-modelo-130-2025"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-100-2025"
+required_text = ["Modelo 100", "Modelo 130"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "source.modelo", value = "130" },
+  { key = "target.modelo", value = "100" },
+  { key = "revision", value = "2025" },
+  { key = "source.casilla.ingresos", value = "01" },
+  { key = "source.casilla.gastos", value = "02" },
+  { key = "source.casilla.rendimiento_neto", value = "03" },
+  { key = "source.casilla.resultado_final", value = "19" },
+  { key = "target.casilla.rendimiento_neto_projected", value = "0171" },
+  { key = "target.casilla.base_liquidable_general", value = "0505" },
+  { key = "target.casilla.cuota_integra_estatal", value = "0545" },
+  { key = "target.casilla.cuota_integra_autonomica", value = "0546" },
+  { key = "target.casilla.cuota_liquida_estatal", value = "0595" },
+  { key = "target.casilla.cuota_liquida_autonomica", value = "0596" },
+  { key = "target.casilla.cuota_resultante", value = "0597" },
+  { key = "target.casilla.pagos_fraccionados", value = "0604" },
+  { key = "binding.template.estimacion_directa", value = "renta-{year}-modelo-100-estimacion-directa-es-normal" },
+  { key = "binding.template.declaration_type", value = "renta-{year}-profile-declaration-type" },
+  { key = "binding.template.family_minor_children", value = "renta-{year}-profile-family-minor-children-in-unit" },
+  { key = "binding.template.guarderia_expenses", value = "renta-{year}-profile-guarderia-gastos-reales" },
+  { key = "binding.template.maternal_social_contributions", value = "renta-{year}-profile-cotizaciones-ss-madre" },
+  { key = "binding.template.marriage_full_year", value = "renta-{year}-profile-marriage-full-year" },
+  { key = "binding.template.marriage_month_start", value = "renta-{year}-profile-marriage-month-start" },
+  { key = "binding.template.marriage_month_end", value = "renta-{year}-profile-marriage-month-end" },
+  { key = "binding.template.prior_negative_general_base", value = "renta-{year}-base-liquidable-negativa-general-anterior" },
+  { key = "binding.template.retenciones_111", value = "renta-{year}-modelo-111-retenciones-periodicas" },
+  { key = "binding.template.retenciones_123", value = "renta-{year}-modelo-123-retenciones-periodicas" },
+  { key = "binding.template.retenciones_193", value = "renta-{year}-modelo-193-retenciones-anuales" },
+  { key = "binding.template.tax_residence_ccaa", value = "renta-{year}-profile-tax-residence-ccaa" },
+  { key = "relation.template.m130_pagos_fraccionados", value = "renta-{year}-rel-130-pagos-fraccionados" },
+  { key = "relation.template.m131_pagos_fraccionados", value = "renta-{year}-rel-131-pagos-fraccionados" },
+  { key = "applicability.source", value = "selected_modelo_100_revision" },
+  { key = "period.default", value = "0A" },
+  { key = "source_kind", value = "cross_model_projection" },
+]

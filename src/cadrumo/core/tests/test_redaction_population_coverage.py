@@ -41,7 +41,7 @@ from ..iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ..identity.documents import IdentityError, validate_identity
 from ..identity.nif_iva import nif_iva_format_for_country, normalise_nif_iva
 from ..redaction.rules import (
-    _NIF_PATTERN,
+    NIF_PATTERN,
     default_rules_for_class,
     redact_for_cli_output,
     redact_for_log,
@@ -211,7 +211,7 @@ def _admitting_authority(span: str) -> str | None:
     canonical = normalise_iban(span)
     if IBAN_SHAPE_RE.match(canonical) and iban_mod_97(canonical) == 1:
         return "iban"
-    if re.fullmatch(_NIF_PATTERN, span):
+    if re.fullmatch(NIF_PATTERN, span):
         # The personal-identity arm is ungated BY DESIGN: it matches on shape
         # alone and hashes a lookalike rather than risk missing a mistyped
         # identity. A span it accepts is therefore not evidence of over-firing.

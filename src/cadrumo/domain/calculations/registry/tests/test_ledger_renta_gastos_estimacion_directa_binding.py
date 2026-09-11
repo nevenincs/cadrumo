@@ -9,19 +9,18 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.categories.registry import resolve_category_profiles
-from cadrumo.domain.categories.spending_category import SpendingCategory
-from cadrumo.domain.renta.ledger_expenses import (
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.resources.bundled_data import bundled_path
+from .....tests.registry_snapshot import build_snapshot
+from ....categories.registry import resolve_category_profiles
+from ....categories.spending_category import SpendingCategory
+from ....renta.ledger_expenses import (
     RentaDeductibilityContext,
     RentaDeductibleExpenseFact,
     RentaExpenseDirection,
     build_renta_deductible_expense_observation,
     evaluate_renta_deductibility,
 )
-
-from .....tests.registry_snapshot import build_snapshot
 from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot

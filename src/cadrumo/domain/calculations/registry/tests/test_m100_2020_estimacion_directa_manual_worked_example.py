@@ -170,9 +170,8 @@ from decimal import Decimal
 import pytest
 from dev.registry.tests.manual_oracle_support import oracle_declared_figures
 
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.resources.bundled_data import bundled_path
-
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.resources.bundled_data import bundled_path
 from ..authority import ValidatedRegistryAuthority
 from ._scenarios import (
     RegistryCalculationScenario,

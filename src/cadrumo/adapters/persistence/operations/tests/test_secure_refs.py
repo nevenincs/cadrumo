@@ -15,11 +15,8 @@ from .....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_byte
 from ...storage.errors import RepositoryError
 from ...storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ...storage.namespace_taxonomy import StorageCustodyDisposition, StorageNamespaceScope
-from ..secure_references import (
-    OPERATION_SECURE_REFERENCE_NAMESPACE,
-    OperationSecureReferenceRepository,
-    operation_secure_reference_repository,
-)
+from ...storage.secure_object_namespaces import OPERATION_SECURE_REFERENCE_NAMESPACE
+from ..secure_references import OperationSecureReferenceRepository, operation_secure_reference_repository
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

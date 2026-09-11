@@ -12,12 +12,12 @@ from ._modelo_nonwork_command_specs import MODELO_NONWORK_COMMAND_SPECS
 from ._modelo_projection_command_specs import MODELO_PROJECTION_COMMAND_SPECS
 from ._modelo_readiness_command_specs import MODELO_READINESS_COMMAND_SPECS
 from ._modelo_spreadsheet_command_specs import MODELO_SPREADSHEET_COMMAND_SPECS
-from ._modelo_work_command_specs import MODELO_WORK_COMMAND_SPECS
 from ._overview_command_specs import OVERVIEW_COMMAND_SPECS
 from ._review_command_specs import REVIEW_COMMAND_SPECS
 from ._root_command_specs import ROOT_COMMAND_SPECS
 from .command_spec import CommandSpec, CommandSpecGraph
 from .config.command_specs import CONFIG_COMMAND_SPECS
+from .modelo_work_command_specs import MODELO_WORK_COMMAND_SPECS
 
 COMMAND_SPECS: tuple[CommandSpec, ...] = (
     *ROOT_COMMAND_SPECS,

@@ -1,0 +1,8 @@
+[[revisions."2025".applicability]]
+id = "m100-maritime-exempt-income"
+applicable_entity_types = ["natural_person"]
+applicable_fiscal_residencies = ["resident_irpf"]
+applicable_reason = "Modelo 100 maritime exempt-income declarations are selected for an applicable natural-person resident revision; pathway membership and status come from the canonical category registry."
+not_applicable_reason = "The selected Modelo 100 revision is not applicable to the taxpayer profile; no maritime exempt-income declaration is selected."
+cuota_bearing = true
+legal_refs = ["ley-35-2006:art-99", "ley-19-1994:art-75"]

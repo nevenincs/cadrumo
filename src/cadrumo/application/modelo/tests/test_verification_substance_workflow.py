@@ -29,7 +29,7 @@ from ..action_errors import StoredCalculationDriftError
 from ..calculation_actions import calculate_modelo_revision
 from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit
-from ._verification_substance_support import (
+from .verification_substance_support import (
     _ABSENT_REGISTRY_CASILLA,
     _CASILLA_01,
     _CASILLA_02,
@@ -49,7 +49,7 @@ from ._verification_substance_support import (
     _T2,
     _Repos,
     _seed_ready_profile,
-    _workflow_profile,
+    workflow_profile,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -125,7 +125,7 @@ def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repo
     report = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator-test",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
@@ -313,7 +313,7 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     report = verify_modelo_revision(
         invalid_revision.calculation_revision_id,
         actor="operator-test",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
@@ -385,7 +385,7 @@ def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     report = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator-test",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         verification_repository=vr_repo,

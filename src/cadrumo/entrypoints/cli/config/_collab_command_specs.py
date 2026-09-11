@@ -27,13 +27,13 @@ _RECIPIENT_ID = ArgumentSpec(
 
 
 def _handler(name: str) -> LazyBinding:
-    return LazyBinding.available(DeferredTarget("._collab", name, __package__))
+    return LazyBinding.available(DeferredTarget(".collab", name, __package__))
 
 
 def _schema(name: str, identity: str) -> ResultSchemaSpec:
     return ResultSchemaSpec(
         SchemaState.TARGET,
-        target=DeferredTarget("._collab_payloads", name, __package__),
+        target=DeferredTarget(".collab_payloads", name, __package__),
         identity=identity,
     )
 

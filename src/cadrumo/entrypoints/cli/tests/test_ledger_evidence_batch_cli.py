@@ -39,7 +39,7 @@ from ....application.ledger.batch_ingest import (
 )
 from ....application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 from ....application.operator_actions.models import ConditionEvidence, PreconditionVerdict
-from ....application.provisioning import ProvisioningPreconditionCondition
+from ....application.provisioning_contracts import ProvisioningPreconditionCondition
 from ....core.config import override_settings
 from ....core.json_contract import ResolvedActionReference, ResolvedNoticeAction, ResolvedPreconditionAction
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome

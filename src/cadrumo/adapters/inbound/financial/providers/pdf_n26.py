@@ -24,11 +24,10 @@ from pathlib import Path
 from typing import TypedDict, override
 
 from .....core.decimal.grammar import DecimalSeparator
-from .....core.external_constants import DEFAULT_CURRENCY
+from .....core.external_constants import DEFAULT_CURRENCY, PDF_EXTENSION
 from .....core.logging import get_logger
 from .....domain.transactions.raw_transaction import SourceFormat
 from ...pdf.redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
-from ._constants import PDF_EXTENSION
 from .base import (
     FinancialProvider,
     InvalidFinancialSourceError,

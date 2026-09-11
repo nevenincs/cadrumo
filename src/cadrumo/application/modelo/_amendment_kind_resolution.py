@@ -45,7 +45,7 @@ from ...core.amendment_kind_regime import (
 from ...core.casilla_id import CasillaId
 from ...core.period import Period
 from ...core.result_disposition import result_disposition_casilla_ids
-from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
+from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from .action_errors import AmendmentComplementariaLiabilityDecreaseError, AmendmentKindNotPermittedError
 
 __all__ = [

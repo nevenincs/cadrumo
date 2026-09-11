@@ -28,11 +28,11 @@ import pytest
 from .....core.period import Period
 from .....domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 from ...profile.submission import SubmissionRepository
-from ...tests.runtime_profile_fixture import _runtime_profile
+from ...tests.runtime_profile_fixture import default_bucket_runtime_profile_fixture
 from ..errors import SecureObjectRowIdentityError
 from ..sql.secure_objects import SecureObjectRepository
 
-__all__ = ["_runtime_profile"]
+_runtime_profile = default_bucket_runtime_profile_fixture()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

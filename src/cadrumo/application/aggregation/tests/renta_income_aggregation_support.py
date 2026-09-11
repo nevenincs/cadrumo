@@ -26,7 +26,7 @@ _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01
 _M130_RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
 
 
-def _raw_transaction(
+def raw_transaction(
     provider_id: str,
     *,
     booked_date: date,
@@ -66,7 +66,7 @@ def _income_transaction(
 ) -> Transaction:
     return Transaction.model_validate(
         {
-            "raw": _raw_transaction(
+            "raw": raw_transaction(
                 provider_id,
                 booked_date=value_date,
                 value_date=value_date,
@@ -104,7 +104,7 @@ def _actividad_transaction(
 ) -> Transaction:
     return Transaction.model_validate(
         {
-            "raw": _raw_transaction(
+            "raw": raw_transaction(
                 provider_id,
                 booked_date=value_date,
                 value_date=value_date,
@@ -137,7 +137,7 @@ def _actividad_transaction_with_source(
 ) -> Transaction:
     return Transaction.model_validate(
         {
-            "raw": _raw_transaction(
+            "raw": raw_transaction(
                 provider_id,
                 booked_date=value_date,
                 value_date=value_date,

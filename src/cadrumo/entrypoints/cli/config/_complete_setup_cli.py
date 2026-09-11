@@ -27,7 +27,7 @@ import typer
 
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.i18n.render import tr
-from .._common import bad, emit_envelope
+from ..common import bad, emit_envelope
 
 # on the CLI build path, keeping the leaf in the JSON-contract registry.
 from ._complete_setup_payloads import ProfileCompleteSetupResult
@@ -62,7 +62,7 @@ def profile_complete_setup(ctx: typer.Context) -> None:
     from ....application.user_profile.profile_record_repository import ProfileRecordRepository
     from ....domain.user_profile.errors import ProfileSchemaValidationError
     from ....domain.user_profile.values import ProfileSetupState
-    from .._common import no_active_profile_refusal
+    from ..common import no_active_profile_refusal
 
     profile_id = resolve_active_bucket_id()
     if profile_id is None:

@@ -100,5 +100,4 @@ __all__ = [
     "_filed_capture_failure_lines",
     "_filed_capture_lines",
     "_source_filed_capture_lines",
-    "metric_line",
 ]

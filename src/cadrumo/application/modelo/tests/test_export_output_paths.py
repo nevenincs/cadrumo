@@ -40,9 +40,11 @@ from ....domain.deadlines.models import (
 )
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
+    derive_calculation_revision_id_from_revision,
+)
+from ....domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
     CalculationRevisionAmendmentKind,
-    derive_calculation_revision_id_from_revision,
 )
 from ....domain.modelos.filing_record import (
     ExternalEvidence,

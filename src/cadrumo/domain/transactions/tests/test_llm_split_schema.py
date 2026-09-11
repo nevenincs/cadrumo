@@ -17,8 +17,8 @@ from pydantic import ValidationError
 
 from ...iva.schema import IvaCategory
 from ..enums import TransactionDirection
+from ..errors import LLMClassifierError
 from ..llm import (
-    LLMClassifierError,
     LLMSplitChild,
     LLMSplitResponse,
     build_split_prompt,

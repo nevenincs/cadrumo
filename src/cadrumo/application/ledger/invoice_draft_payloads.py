@@ -8,8 +8,8 @@ renders these strict contracts.
 from __future__ import annotations
 
 from ...core.identity.bucket import BucketId
-from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.json_contract import OutputSchema
+from .invoice_draft_records import InvoiceDraftIdentityDocumentFields
 
 
 class EvidenceDraftLinePayload(OutputSchema):
@@ -69,27 +69,12 @@ class EvidenceDraftDiscrepancyPayload(OutputSchema):
     observed: str | None = None
 
 
-class EvidenceExtractResult(OutputSchema):
+class EvidenceExtractResult(InvoiceDraftIdentityDocumentFields, OutputSchema):
     """Reviewable application result for best-effort invoice extraction."""
 
     bucket_id: BucketId
     evidence_id: str | None = None
     attachment_id: str | None = None
-    supplier_tax_id: TaxIdIdentityToken | None = None
-    supplier_name: str | None = None
-    customer_tax_id: TaxIdIdentityToken | None = None
-    customer_name: str | None = None
-    supplier_postal_code: str | None = None
-    customer_postal_code: str | None = None
-    supplier_country: str | None = None
-    customer_country: str | None = None
-    supplier_country_code: str | None = None
-    customer_country_code: str | None = None
-    supplier_stated_country_code: str | None = None
-    customer_stated_country_code: str | None = None
-    invoice_number: str | None = None
-    invoice_series: str | None = None
-    rectifies_invoice_number: str | None = None
     proposed_supply_nature: str | None = None
     invoice_date: str | None = None
     taxable_base: str | None = None

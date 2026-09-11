@@ -10,15 +10,14 @@ from typing import get_args
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.filing_projection_ref import (
+from .....core.authority_grade import RegistryAuthorityGrade
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.filing_projection_ref import (
     FilingProjectionRef,
     compile_filing_projection_ref,
     filing_projection_ref_casilla_id,
 )
-from cadrumo.core.resources.bundled_data import bundled_path
-
+from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
 from ..authority import bundled_authority
 from ..errors import RegistryValidationError

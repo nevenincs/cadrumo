@@ -7,14 +7,13 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.aggregation import RetencionClave
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.deadlines.errors import DeadlineValidationError
-from cadrumo.domain.deadlines.festivos import shift_deadline
-from cadrumo.tests.aeat_literal_fixtures import aeat_host
-
+from .....core.aggregation import RetencionClave
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.resources.bundled_data import bundled_path
+from .....tests.aeat_literal_fixtures import aeat_host
 from .....tests.registry_snapshot import build_snapshot
+from ....deadlines.errors import DeadlineValidationError
+from ....deadlines.festivos import shift_deadline
 from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot

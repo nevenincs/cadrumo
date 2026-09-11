@@ -30,7 +30,7 @@ from .._prompts import (
     build_prompt_catalogue,
     prompt_document,
 )
-from ._session import connected_server_and_client_session as connect
+from .session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -91,7 +91,7 @@ def test_unknown_prompt_name_raises_prompt_not_found() -> None:
 
 
 def test_server_lists_and_serves_every_prompt() -> None:
-    from .._server import build_server
+    from ..server import build_server
 
     if not _SDK_PRESENT:
         with pytest.raises(ModuleNotFoundError, match="mcp"):
@@ -137,7 +137,7 @@ def test_server_lists_and_serves_every_prompt() -> None:
 
 
 def test_server_get_prompt_orientation_embeds_the_rules() -> None:
-    from .._server import build_server
+    from ..server import build_server
 
     if not _SDK_PRESENT:
         with pytest.raises(ModuleNotFoundError, match="mcp"):
@@ -160,7 +160,7 @@ def test_server_get_prompt_orientation_embeds_the_rules() -> None:
 
 
 def test_server_get_prompt_unknown_name_is_a_protocol_error() -> None:
-    from .._server import build_server
+    from ..server import build_server
 
     if not _SDK_PRESENT:
         with pytest.raises(ModuleNotFoundError, match="mcp"):

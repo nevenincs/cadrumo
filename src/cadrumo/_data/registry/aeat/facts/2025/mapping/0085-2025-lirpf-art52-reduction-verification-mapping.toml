@@ -1,0 +1,33 @@
+[fact]
+fact_id = "lirpf-art-52-reduction-verification-mapping"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "lirpf-art-52-reduction-verification-mapping:2025"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-lirpf-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = ["aportaciones", "previsión social"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "modelo", value = "100" },
+  { key = "revision", value = "2025" },
+  { key = "target.role", value = "irpf_reduccion_prevision_social_total" },
+  { key = "backing.role.worker_with_employer_contribution", value = "irpf_red_prevision_social_aportaciones_trabajador_con_contribucion_empresarial" },
+  { key = "backing.role.employer_contribution", value = "irpf_red_prevision_social_contribuciones_empresariales_excepto_scd" },
+  { key = "backing.role.self_employed_contribution", value = "irpf_red_prevision_social_aportaciones_autonomos_empresarios" },
+  { key = "cap.kind", value = "individual_contribution_sublimit" },
+  { key = "cap.fact_id", value = "lirpf-art-52-individual-contribution-sublimit" },
+  { key = "predicate", value = "reduction_exceeds_sublimit_when_all_backing_roles_absent" },
+  { key = "applicability.source", value = "selected_modelo_100_revision" },
+  { key = "source_kind", value = "verification_advisory" },
+  { key = "advisory.message_key", value = "application.modelo.findings.art52_reduccion_individual_sublimit_possible" },
+]

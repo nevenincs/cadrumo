@@ -262,10 +262,10 @@ def test_diagnostic_payload_rejects_non_object_json() -> None:
     import json as _json
 
     from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
-    from ..diagnostics import _payload
+    from ..diagnostics import diagnostic_payload
 
     with pytest.raises(AuthDiagnosticPayloadError) as raised:
-        _payload(_json.dumps([1, 2, 3]).encode(UTF_8_ENCODING))
+        diagnostic_payload(_json.dumps([1, 2, 3]).encode(UTF_8_ENCODING))
 
     error = raised.value
     assert isinstance(error, ValueError)

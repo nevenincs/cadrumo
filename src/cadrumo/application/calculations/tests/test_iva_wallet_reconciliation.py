@@ -25,6 +25,7 @@ from ....domain.iva_compensation.reconciliation import (
     IvaCompensationDecisionReason,
     IvaCompensationOverride,
     IvaCompensationWalletObservationProtocol,
+    reconcile_iva_compensation_wallet,
 )
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation.source_mesh import CalculationSourceContext
@@ -32,7 +33,6 @@ from ..binding_prefill import BindingPrefillReport, extract_modelo_303_local_iva
 from ..iva_compensation_history import IvaCompensationHistoryRepository
 from ..iva_wallet_reconciliation import (
     IvaWalletDecisionSourceResolver,
-    reconcile_iva_compensation_wallet,
     reconcile_modelo_303_iva_compensation,
 )
 from ..observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository

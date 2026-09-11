@@ -51,7 +51,6 @@ from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.constants import MONEY_ZERO
 from ...core.json_contract import Notice, NoticeSeverity
-from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.prorrata_register import (
@@ -65,13 +64,13 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.query_reports import ModeloBindingsReport, ModeloFormulasReport
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
-from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva.flow import IvaFlowDirection
-from ...domain.iva.m303_settlement import m303_annual_settlement_period_order
 from ...domain.iva.prorrata import (
     RegularizacionProrrataDireccion,
     RegularizacionProrrataResult,
@@ -99,13 +98,9 @@ from ..prorrata_register.service import require_prorrata_register_coordinates_cu
 from .observations_repository import CalculationObservationRepository
 from .revision_carry_gate import revision_carry_outcome
 
-#: The Modelo 303 casilla the annual prorrata regularización feeds. Deducciones
-#: block, "Regularización prorrata por porcentaje definitivo - Cuota"
-#: (LIVA art. 105.Cuatro).
-CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA: CasillaId = validated_casilla_id(
-    "44",
-    surface="annual prorrata regularizacion Modelo 303 casilla",
-)
+# Registry-owned prorrata declarations are read from the selected Modelo 303/390
+# revision through the query boundary below. This module retains aggregation and
+# evidence mechanics only.
 
 _SOURCE_KIND: Final = BindingSourceKind.PRORRATA_REGULARIZACION
 STORAGE_DEGRADATION_ERRORS: Final[tuple[type[Exception], ...]] = (
@@ -113,42 +108,94 @@ STORAGE_DEGRADATION_ERRORS: Final[tuple[type[Exception], ...]] = (
     ProrrataRegisterError,
 )
 _LEDGER_VOLUME_DIVERGENCE_SOURCE_KIND = "prorrata_regularizacion_ledger_volume_divergence"
-_OUTPUT_MODELO_303_CASILLA_44: Final = "modelo_303_casilla_44"
-_OUTPUT_MODELO_390_REGULARIZACION_ANUAL: Final = "modelo_390_regularizacion_anual"
-_SOURCE_PERIODS: Final[tuple[str, ...]] = ("1T", "2T", "3T", "4T")
-_CUOTA_DEDUCIBLE_TOTAL_ID: Final[CasillaId] = validated_casilla_id(
-    "iva.cuota-deducible-total",
-    surface="prorrata regularizacion source casilla",
-)
-_VOLUMEN_CON_DERECHO_ID: Final[CasillaId] = validated_casilla_id(
-    "iva.prorrata-volumen-con-derecho",
-    surface="prorrata regularizacion source casilla",
-)
-_VOLUMEN_TOTAL_ID: Final[CasillaId] = validated_casilla_id(
-    "iva.prorrata-volumen-total",
-    surface="prorrata regularizacion source casilla",
-)
-_PORCENTAJE_ID: Final[CasillaId] = validated_casilla_id(
-    "iva.prorrata-porcentaje",
-    surface="prorrata regularizacion source casilla",
-)
-_SOURCE_CASILLA_IDS: Final[tuple[CasillaId, ...]] = (
-    _CUOTA_DEDUCIBLE_TOTAL_ID,
-    _VOLUMEN_CON_DERECHO_ID,
-    _VOLUMEN_TOTAL_ID,
-    _PORCENTAJE_ID,
-)
-_CON_DERECHO_OUTPUT_CATEGORIES: frozenset[IvaCategory] = frozenset(
-    {
-        IvaCategory.DOMESTIC_GENERAL,
-        IvaCategory.DOMESTIC_REDUCED,
-        IvaCategory.DOMESTIC_SUPER_REDUCED,
-        IvaCategory.DOMESTIC_ZERO,
-        IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
-        IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
-    },
-)
+
+
+def prorrata_registry_declarations(
+    query_service: RegistryQueryService,
+    *,
+    modelo: str,
+    filing_year: int,
+    period: str,
+) -> tuple[ModeloBindingsReport, ModeloFormulasReport]:
+    """Resolve prorrata declarations from one selected registry scope.
+
+    Binding targets, source casillas, period partitions, applicability, and
+    provenance stay in the selected revision. The calculation module consumes
+    only the authority-backed reports and keeps arithmetic/evidence mechanics.
+    """
+    return (
+        query_service.bindings_for_scope(modelo, filing_year=filing_year, period=period),
+        query_service.formulas_for_scope(modelo, filing_year=filing_year, period=period),
+    )
+
+
+# Registry-owned target declarations remain in the selected binding fragments.
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+def _prorrata_source_casilla_ids(revision: ModeloRevision) -> tuple[CasillaId, ...]:
+    """Return the ordered source casillas declared by selected bindings."""
+    ids: list[CasillaId] = []
+    for binding in revision.bindings:
+        if binding.source != _SOURCE_KIND:
+            continue
+        for casilla_id in getattr(binding.selector, "source_casilla_ids", ()):
+            value = validated_casilla_id(casilla_id, surface="selected prorrata source casilla")
+            if value not in ids:
+                ids.append(value)
+    return tuple(ids)
+
+
+def _prorrata_source_id(revision: ModeloRevision, position: int) -> CasillaId:
+    """Read one role by the registry selector's reviewed source order."""
+    ids = _prorrata_source_casilla_ids(revision)
+    try:
+        return ids[position]
+    except IndexError as exc:
+        raise ValueError("selected prorrata binding does not declare the required source casillas") from exc
+
+
+def _prorrata_target_casilla(revision: ModeloRevision, output: str) -> CasillaId | None:
+    """Resolve a printed target number from the selected revision's casillas."""
+    marker = "_casilla_"
+    if marker not in output:
+        return None
+    number = output.rsplit(marker, 1)[-1]
+    return next((casilla.id for casilla in revision.casillas if casilla.number == number), None)
 
 
 @dataclass(frozen=True, slots=True)
@@ -178,11 +225,9 @@ class _ProrrataProvisionalSource:
 class ProrrataRegularizacionFeedProjection(BaseModel):
     """Structured proposed feeds for annual prorrata-general regularización.
 
-    These values feed the live source resolver and the operator-facing advisory
-    for Modelo 303 casilla 44 and the Modelo 390 annual regularización field.
-    Both come from the same
-    :class:`RegularizacionProrrataResult`, preserving the registry's declared
-    annual-volume authority for the definitive percentage.
+    The proposed value feeds the live source resolver and the operator-facing
+    advisory. The selected registry revision supplies the output destinations;
+    this carrier intentionally contains no filing-model or casilla facts.
 
     See Also:
         :func:`project_prorrata_regularizacion_feed`
@@ -193,9 +238,7 @@ class ProrrataRegularizacionFeedProjection(BaseModel):
 
     result: RegularizacionProrrataResult
     operaciones_sin_derecho_deduccion: Decimal
-    modelo_303_casilla_44_id: CasillaId = CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA
-    modelo_303_casilla_44_value: Decimal | None = None
-    modelo_390_regularizacion_anual_value: Decimal | None = None
+    proposed_value: Decimal | None = None
 
 
 class ProrrataDeclaredVolumeLedgerRollup(BaseModel):
@@ -329,7 +372,6 @@ def build_prorrata_missing_provisional_advisory(
         reason="source_issue",
         source_kind=BindingSourceKind.PRORRATA_REGULARIZACION.value,
         message=message,
-        casilla_id=CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
     )
 
 
@@ -423,12 +465,14 @@ def build_prorrata_declared_volume_divergence_advisory(
     return rollup, diagnostic
 
 
-def _prorrata_volume_side(observation: IvaLedgerObservation) -> str | None:
+def _prorrata_volume_side(
+    observation: IvaLedgerObservation,
+    *,
+    con_derecho_categories: frozenset[IvaCategory] | None = None,
+) -> str | None:
     if observation.flow_direction is not IvaFlowDirection.REPERCUTIDO:
         return None
-    if observation.category is IvaCategory.DOMESTIC_EXEMPT:
-        return "sin_derecho"
-    if observation.category in _CON_DERECHO_OUTPUT_CATEGORIES:
+    if con_derecho_categories is not None and observation.category in con_derecho_categories:
         return "con_derecho"
     return None
 
@@ -440,16 +484,17 @@ def project_prorrata_regularizacion_feed(
     prorrata_definitiva_pct: Decimal,
     operaciones_sin_derecho_deduccion: Decimal,
 ) -> ProrrataRegularizacionFeedProjection:
-    """Project the annual regularización onto the M303 and M390 filing targets.
+    """Project the annual regularización onto selected registry targets.
 
     ``prorrata_definitiva_pct`` is supplied by the registry-computed annual
     volume casillas. This helper deliberately does not recompute that
-    percentage; it turns the pure art-105 result into the two filing values used
-    by the live resolver and the advisory surface.
+    percentage; it turns the pure result into one generic proposed value. The
+    live resolver fans that value out only to destinations declared by selected
+    binding rows.
 
     See Also:
         :class:`ProrrataRegularizacionFeedProjection`
-            Structured carrier for the two proposed filing values.
+            Structured carrier for the proposed registry value.
     """
     result = compute_regularizacion_prorrata_anual(
         cuotas_soportadas_deducibles=cuotas_soportadas_deducibles,
@@ -465,8 +510,7 @@ def project_prorrata_regularizacion_feed(
     return ProrrataRegularizacionFeedProjection(
         result=result,
         operaciones_sin_derecho_deduccion=operaciones_sin_derecho_deduccion,
-        modelo_303_casilla_44_value=proposed_value,
-        modelo_390_regularizacion_anual_value=proposed_value,
+        proposed_value=proposed_value,
     )
 
 
@@ -515,11 +559,17 @@ def _prorrata_source_periods(revision: ModeloRevision) -> tuple[str, ...]:
         for period in getattr(binding.selector, "source_periods", ()):
             if period not in periods:
                 periods.append(period)
-    return tuple(periods or _SOURCE_PERIODS)
+    return tuple(periods)
 
 
-def _missing_current_year_casillas(current_year_values: Mapping[CasillaId, Decimal]) -> tuple[CasillaId, ...]:
-    return tuple(casilla_id for casilla_id in _SOURCE_CASILLA_IDS if casilla_id not in current_year_values)
+def _missing_current_year_casillas(
+    current_year_values: Mapping[CasillaId, Decimal],
+    *,
+    revision: ModeloRevision,
+) -> tuple[CasillaId, ...]:
+    return tuple(
+        casilla_id for casilla_id in _prorrata_source_casilla_ids(revision) if casilla_id not in current_year_values
+    )
 
 
 def _unresolved_binding_diagnostics(
@@ -554,12 +604,12 @@ def _current_year_values_provenance(
         contributor_source_kind=_SOURCE_KIND.value,
         contributor_binding_source=_SOURCE_KIND,
         lineage_role=CalculationSourceLineageRole.PRIMARY,
-        source_ref=f"{Modelo.M303.value}:{context.filing_year}:{period_ref}:prorrata-current-year-values",
+        source_ref=f"{context.modelo}:{context.filing_year}:{period_ref}:prorrata-current-year-values",
         parent_source_ref=None,
-        source_modelo=Modelo.M303.value,
+        source_modelo=context.modelo,
         source_filing_year=context.filing_year,
         source_periods=periods,
-        source_casilla_ids=_SOURCE_CASILLA_IDS,
+        source_casilla_ids=_prorrata_source_casilla_ids(revision),
         legal_refs=_binding_legal_refs(revision),
         source_refs=_binding_source_refs(revision),
     )
@@ -609,6 +659,7 @@ def _prior_definitiva_provenance(
     *,
     carry: _PriorDefinitivaCarry,
     revision: ModeloRevision,
+    source_modelo: str,
 ) -> CalculationSourceProvenance:
     return CalculationSourceProvenance(
         resolver_id=ProrrataRegularizacionSourceResolver.resolver_id,
@@ -616,12 +667,14 @@ def _prior_definitiva_provenance(
         contributor_source_kind=_SOURCE_KIND.value,
         contributor_binding_source=_SOURCE_KIND,
         lineage_role=CalculationSourceLineageRole.PRIMARY,
-        source_ref=f"{Modelo.M303.value}:{carry.source_filing_year}:{carry.source_period}:{_PORCENTAJE_ID}",
+        source_ref=(
+            f"{source_modelo}:{carry.source_filing_year}:{carry.source_period}:{_prorrata_source_id(revision, 3)}"
+        ),
         parent_source_ref=None,
-        source_modelo=Modelo.M303.value,
+        source_modelo=source_modelo,
         source_filing_year=carry.source_filing_year,
         source_periods=(carry.source_period,),
-        source_casilla_ids=(_PORCENTAJE_ID,),
+        source_casilla_ids=(_prorrata_source_id(revision, 3),),
         legal_refs=_binding_legal_refs(revision),
         source_refs=_binding_source_refs(revision),
     )
@@ -631,18 +684,16 @@ def _stamped_prior_year_definitiva(
     repository: CalculationObservationRepository,
     *,
     filing_year: int,
+    modelo: str,
+    revision: ModeloRevision,
 ) -> _PriorDefinitivaCarry | None:
     prior_year = filing_year - 1
-    candidates: list[tuple[int, object, _PriorDefinitivaCarry]] = []
-    for payload in repository.iter_modelo(Modelo.M303.value):
+    candidates: list[tuple[object, _PriorDefinitivaCarry]] = []
+    for payload in repository.iter_modelo(modelo):
         observation = payload.observation
         if observation.filing_year != prior_year:
             continue
-        source_period = Period.from_year_and_code(observation.filing_year, observation.period)
-        settlement_order = m303_annual_settlement_period_order(source_period)
-        if settlement_order is None:
-            continue
-        percentage = observation.casilla_values.get(_PORCENTAJE_ID)
+        percentage = observation.casilla_values.get(_prorrata_source_id(revision, 3))
         if percentage is None:
             continue
         refused = revision_carry_outcome(payload.registry_snapshot_ref).refused
@@ -650,7 +701,6 @@ def _stamped_prior_year_definitiva(
             continue
         candidates.append(
             (
-                settlement_order,
                 payload.captured_at,
                 _PriorDefinitivaCarry(
                     percentage=percentage,
@@ -661,19 +711,20 @@ def _stamped_prior_year_definitiva(
         )
     if not candidates:
         return None
-    return max(candidates, key=lambda item: (item[0], item[1]))[2]
+    return max(candidates, key=lambda item: item[0])[1]
 
 
 def _observed_source_period_values(
     repository: CalculationObservationRepository,
     *,
+    modelo: str,
     periods: tuple[str, ...],
     filing_year: int,
 ) -> tuple[dict[str, Mapping[CasillaId, Decimal]], tuple[str, ...]]:
     observed_by_period: dict[str, Mapping[CasillaId, Decimal]] = {}
     missing_periods: list[str] = []
     for period in periods:
-        payload = repository.load_observation(Modelo.M303.value, Period.from_year_and_code(filing_year, period))
+        payload = repository.load_observation(modelo, Period.from_year_and_code(filing_year, period))
         if payload is None:
             missing_periods.append(period)
             continue
@@ -688,12 +739,14 @@ def _observed_source_period_values(
 def _regularised_cuota_value(
     observed_by_period: Mapping[str, Mapping[CasillaId, Decimal]],
     periods: tuple[str, ...],
+    *,
+    cuota_id: CasillaId,
 ) -> Decimal | None:
     regularised_periods = periods[:-1] if len(periods) > 1 else periods
     cuota_values = [
-        period_values[_CUOTA_DEDUCIBLE_TOTAL_ID]
+        period_values[cuota_id]
         for period in regularised_periods
-        if (period_values := observed_by_period.get(period)) is not None and _CUOTA_DEDUCIBLE_TOTAL_ID in period_values
+        if (period_values := observed_by_period.get(period)) is not None and cuota_id in period_values
     ]
     if len(cuota_values) != len(regularised_periods):
         return None
@@ -703,33 +756,36 @@ def _regularised_cuota_value(
 def _settlement_source_values(
     observed_by_period: Mapping[str, Mapping[CasillaId, Decimal]],
     periods: tuple[str, ...],
+    *,
+    source_ids: tuple[CasillaId, ...],
 ) -> dict[CasillaId, Decimal]:
     settlement_period = next(reversed(periods), None)
     settlement_values = observed_by_period.get(settlement_period) if settlement_period is not None else None
     if settlement_values is None:
         return {}
     return {
-        casilla_id: value
-        for casilla_id in (_VOLUMEN_CON_DERECHO_ID, _VOLUMEN_TOTAL_ID, _PORCENTAJE_ID)
-        if (value := settlement_values.get(casilla_id)) is not None
+        casilla_id: value for casilla_id in source_ids[1:] if (value := settlement_values.get(casilla_id)) is not None
     }
 
 
 def _project_source_period_values(
     observed_by_period: Mapping[str, Mapping[CasillaId, Decimal]],
     periods: tuple[str, ...],
+    *,
+    source_ids: tuple[CasillaId, ...],
 ) -> dict[CasillaId, Decimal]:
     values: dict[CasillaId, Decimal] = {}
-    cuota_value = _regularised_cuota_value(observed_by_period, periods)
+    cuota_value = _regularised_cuota_value(observed_by_period, periods, cuota_id=source_ids[0])
     if cuota_value is not None:
-        values[_CUOTA_DEDUCIBLE_TOTAL_ID] = cuota_value
-    values.update(_settlement_source_values(observed_by_period, periods))
+        values[source_ids[0]] = cuota_value
+    values.update(_settlement_source_values(observed_by_period, periods, source_ids=source_ids))
     return values
 
 
 def _source_period_feed_from_observations(
     repository: CalculationObservationRepository,
     *,
+    modelo: str,
     revision: ModeloRevision,
     filing_year: int,
 ) -> _CurrentYearSourcePeriodFeed:
@@ -739,10 +795,15 @@ def _source_period_feed_from_observations(
 
     observed_by_period, missing_periods = _observed_source_period_values(
         repository,
+        modelo=modelo,
         periods=periods,
         filing_year=filing_year,
     )
-    values = _project_source_period_values(observed_by_period, periods)
+    values = _project_source_period_values(
+        observed_by_period,
+        periods,
+        source_ids=_prorrata_source_casilla_ids(revision),
+    )
 
     return _CurrentYearSourcePeriodFeed(
         values=values,
@@ -761,18 +822,18 @@ def _resolve_prorrata_regularizacion_binding_values(
     if not binding_by_output:
         return {}
 
-    volumen_total = current_year_values[_VOLUMEN_TOTAL_ID]
-    volumen_con_derecho = current_year_values[_VOLUMEN_CON_DERECHO_ID]
+    source_ids = _prorrata_source_casilla_ids(revision)
+    volumen_total = current_year_values[source_ids[2]]
+    volumen_con_derecho = current_year_values[source_ids[1]]
     projection = project_prorrata_regularizacion_feed(
-        cuotas_soportadas_deducibles=current_year_values[_CUOTA_DEDUCIBLE_TOTAL_ID],
+        cuotas_soportadas_deducibles=current_year_values[source_ids[0]],
         prorrata_provisional_pct=provisional_percentage,
-        prorrata_definitiva_pct=current_year_values[_PORCENTAJE_ID],
+        prorrata_definitiva_pct=current_year_values[source_ids[3]],
         operaciones_sin_derecho_deduccion=volumen_total - volumen_con_derecho,
     )
-    values_by_output = {
-        _OUTPUT_MODELO_303_CASILLA_44: projection.modelo_303_casilla_44_value or MONEY_ZERO,
-        _OUTPUT_MODELO_390_REGULARIZACION_ANUAL: projection.modelo_390_regularizacion_anual_value or MONEY_ZERO,
-    }
+    values_by_output: dict[str, Decimal] = {}
+    for output in binding_by_output:
+        values_by_output[output] = projection.proposed_value or MONEY_ZERO
     return {
         binding_id: values_by_output[output]
         for output, binding_id in binding_by_output.items()
@@ -780,19 +841,25 @@ def _resolve_prorrata_regularizacion_binding_values(
     }
 
 
-def _modelo_303_target_inputs(
+def _target_inputs(
     revision: ModeloRevision,
     *,
     binding_values: Mapping[BindingId, Decimal],
     modelo: str,
 ) -> dict[CasillaId, Decimal]:
-    if modelo != Modelo.M303.value:
-        return {}
     binding_by_output = _prorrata_bindings_by_output(revision)
-    binding_id = binding_by_output.get(_OUTPUT_MODELO_303_CASILLA_44)
-    if binding_id is None or binding_id not in binding_values:
+    model_prefix = f"modelo_{modelo}_"
+    output = next(
+        (candidate for candidate in binding_by_output if candidate.startswith(model_prefix)),
+        None,
+    )
+    if output is None:
         return {}
-    return {CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA: binding_values[binding_id]}
+    binding_id = binding_by_output[output]
+    target_casilla = _prorrata_target_casilla(revision, output)
+    if target_casilla is None or binding_id not in binding_values:
+        return {}
+    return {target_casilla: binding_values[binding_id]}
 
 
 def _revision_for_context(
@@ -802,17 +869,25 @@ def _revision_for_context(
     revision = registry_snapshot.revision if registry_snapshot is not None else None
     if revision is not None:
         return revision
-    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == context.modelo)
-    return select_revision(
-        modelo,
+    query_service = RegistryQueryService(bundled_authority())
+    prorrata_registry_declarations(
+        query_service,
+        modelo=context.modelo,
         filing_year=context.filing_year,
         period=context.period.registry_token,
     )
+    return query_service._resolve_revision_for_scope(
+        context.modelo,
+        filing_year=context.filing_year,
+        period=context.period.registry_token,
+        as_of=None,
+    ).revision
 
 
 def _merge_current_year_values(
     source_period_feed: _CurrentYearSourcePeriodFeed,
     *,
+    revision: ModeloRevision,
     supplied_values: Mapping[CasillaId, Decimal],
     missing_casilla_ids: Iterable[CasillaId],
     unresolved_casilla_ids: Iterable[CasillaId],
@@ -824,7 +899,7 @@ def _merge_current_year_values(
     missing_current = tuple(
         dict.fromkeys(
             (
-                *_missing_current_year_casillas(current_year_values),
+                *_missing_current_year_casillas(current_year_values, revision=revision),
                 *(casilla_id for casilla_id in missing_casilla_ids if casilla_id not in current_year_values),
                 *(casilla_id for casilla_id in unresolved_casilla_ids if casilla_id not in current_year_values),
             )
@@ -888,7 +963,11 @@ def _resolve_prorrata_provisional_source(
             percentage=prior_definitiva.percentage,
             provenance=(
                 current_provenance,
-                _prior_definitiva_provenance(carry=prior_definitiva, revision=revision),
+                _prior_definitiva_provenance(
+                    carry=prior_definitiva,
+                    revision=revision,
+                    source_modelo=context.modelo,
+                ),
             ),
         )
     return _ProrrataProvisionalSource(percentage=None, provenance=(current_provenance,))
@@ -933,7 +1012,7 @@ def _zero_prorrata_resolution(
         resolver_id=resolver_id,
         owned_sources=owned_sources,
         binding_values=zero_values,
-        bound_inputs_by_casilla_id=_modelo_303_target_inputs(
+        bound_inputs_by_casilla_id=_target_inputs(
             revision,
             binding_values=zero_values,
             modelo=context.modelo,
@@ -968,7 +1047,7 @@ def _resolved_prorrata_resolution(
         resolver_id=resolver_id,
         owned_sources=owned_sources,
         binding_values=binding_values,
-        bound_inputs_by_casilla_id=_modelo_303_target_inputs(
+        bound_inputs_by_casilla_id=_target_inputs(
             revision,
             binding_values=binding_values,
             modelo=context.modelo,
@@ -1029,6 +1108,7 @@ class ProrrataRegularizacionSourceResolver:
         try:
             source_period_feed = _source_period_feed_from_observations(
                 self._observation_repository,
+                modelo=context.modelo,
                 revision=revision,
                 filing_year=context.filing_year,
             )
@@ -1041,6 +1121,7 @@ class ProrrataRegularizacionSourceResolver:
             )
         current_year_values, missing_current = _merge_current_year_values(
             source_period_feed,
+            revision=revision,
             supplied_values=self._current_year_values,
             missing_casilla_ids=self._missing_current_year_casilla_ids,
             unresolved_casilla_ids=self._unresolved_current_year_casilla_ids,
@@ -1059,6 +1140,8 @@ class ProrrataRegularizacionSourceResolver:
             prior_definitiva = _stamped_prior_year_definitiva(
                 self._observation_repository,
                 filing_year=context.filing_year,
+                modelo=context.modelo,
+                revision=revision,
             )
         except STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
@@ -1076,8 +1159,8 @@ class ProrrataRegularizacionSourceResolver:
         register_entries = register.entries_for_ejercicio(context.filing_year)
         applicability = derive_prorrata_applicability(
             register_entries=register_entries,
-            declared_volume_total=current_year_values[_VOLUMEN_TOTAL_ID],
-            declared_volume_con_derecho=current_year_values[_VOLUMEN_CON_DERECHO_ID],
+            declared_volume_total=current_year_values[_prorrata_source_id(revision, 2)],
+            declared_volume_con_derecho=current_year_values[_prorrata_source_id(revision, 1)],
         )
         if not applicability.applies:
             return _zero_prorrata_resolution(
@@ -1164,7 +1247,7 @@ def build_prorrata_regularizacion_advisory(
         operaciones_sin_derecho_deduccion=operaciones_sin_derecho_deduccion,
     )
     result = projection.result
-    if projection.modelo_303_casilla_44_value is None:
+    if projection.proposed_value is None:
         return result, None
 
     sentido = "deducción complementaria" if result.direccion is RegularizacionProrrataDireccion.DEDUCCION else "ingreso"
@@ -1172,8 +1255,8 @@ def build_prorrata_regularizacion_advisory(
         f"Regularización de prorrata por porcentaje definitivo (LIVA arts. 104-105) "
         f"para {regularizacion_year}: prorrata provisional {prorrata_provisional_pct}% "
         f"→ definitiva {prorrata_definitiva_pct}% ({sentido}). "
-        f"Regularización propuesta para casilla {CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA}: "
-        f"{projection.modelo_303_casilla_44_value}. Confirme el valor antes de presentar."
+        "Regularización propuesta para el destino declarado por registry: "
+        f"{projection.proposed_value}. Confirme el valor antes de presentar."
     )
     diagnostic = CalculationSourceDiagnostic(
         reason="official_box_unpopulated",
@@ -1259,7 +1342,6 @@ def build_prorrata_especial_mandatory_advisory(
 
 
 __all__ = [
-    "CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA",
     "ProrrataApplicabilityProjection",
     "ProrrataDeclaredVolumeLedgerRollup",
     "ProrrataRegularizacionFeedProjection",
@@ -1270,4 +1352,5 @@ __all__ = [
     "build_prorrata_regularizacion_advisory",
     "derive_prorrata_applicability",
     "project_prorrata_regularizacion_feed",
+    "prorrata_registry_declarations",
 ]

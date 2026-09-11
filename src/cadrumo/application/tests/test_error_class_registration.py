@@ -47,10 +47,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_session_deserialization_error_raised_on_bad_type() -> None:
-    from ..auth.sessions import SessionDeserializationError, _session_metadata_datetime
+    from ..auth.sessions import SessionDeserializationError, session_metadata_datetime
 
     with pytest.raises(SessionDeserializationError):
-        _session_metadata_datetime(12345, field="started_at")
+        session_metadata_datetime(12345, field="started_at")
 
 
 # ---------------------------------------------------------------------------
@@ -88,12 +88,12 @@ def test_iva_compensation_year_range_error_raised_on_out_of_range_as_of_year() -
 def test_auth_diagnostic_payload_error_raised_on_non_object_json() -> None:
     import json
 
-    from ..auth.diagnostics import _payload
+    from ..auth.diagnostics import diagnostic_payload
     from ..auth.errors import AuthDiagnosticPayloadError
 
     raw = json.dumps([1, 2, 3]).encode()
     with pytest.raises(AuthDiagnosticPayloadError):
-        _payload(raw)
+        diagnostic_payload(raw)
 
 
 # ---------------------------------------------------------------------------

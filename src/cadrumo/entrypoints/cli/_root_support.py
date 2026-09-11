@@ -7,13 +7,13 @@ import typer
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.json_contract import strict_round_trip as _strict_round_trip
 from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
-from ._common import (
+from .command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
+from .common import (
     active_profile_label,
     attach_cli_policy_verdict,
     emit_envelope,
     requested_cli_leaf,
 )
-from .command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 
 
 def emit_version_report_and_exit(*, detail: bool) -> None:

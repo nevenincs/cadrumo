@@ -29,11 +29,10 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
-from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
-
+from .....core.authority_grade import RegistryAuthorityGrade
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from ....contribuyente.entity_type import EntityType, LegalEntityForm
+from ....deadlines.models import IVARegime, TaxpayerProfile
 from ..applicability_modelo202 import (
     Modelo202Modality,
     derive_modelo_202_modality,

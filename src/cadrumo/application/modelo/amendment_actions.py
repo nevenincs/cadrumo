@@ -60,11 +60,8 @@ from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
-    CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
-    FilingInstanceEvidence,
     derive_calculation_revision_id,
 )
 from ...domain.modelos.calculation_revision_aggregate import (
@@ -72,9 +69,12 @@ from ...domain.modelos.calculation_revision_aggregate import (
     CalculationRevisionAggregateContext,
 )
 from ...domain.modelos.calculation_revision_amendment import (
+    CalculationRevisionAmendmentIdentity,
+    CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
     m303_rectificativa_motive_is_applicable,
 )
+from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ...domain.modelos.filing_record import (
     ModeloRecord,
     ModeloRecordCatalogue,
@@ -88,7 +88,7 @@ from ...domain.modelos.protocols import (
     ModeloRecordCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.repository import upsert_work_unit
-from ...domain.modelos.row_models import DETAIL_ROW_BEARING_MODELOS, ModeloDetailRow
+from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..aggregation.ledger_filing_snapshot import (
@@ -101,8 +101,8 @@ from ._amendment_kind_resolution import (
 )
 from ._calculation_helpers import amendment_observations as _amendment_observations
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
+from ._calculation_modelo_adjustments import detail_row_declaration_modelos
 from ._ledger_anchor_capture import capture_revision_ledger_evidence
-from ._m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from ._profile_export_binding import resolve_export_identity
 from ._registry_helpers import reject_incomplete_amendment_casillas as _reject_incomplete_amendment_casillas
 from ._registry_helpers import reject_unknown_override_casillas as _reject_unknown_override_casillas
@@ -117,6 +117,7 @@ from .action_errors import (
     WorkUnitNotFoundError,
 )
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
+from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from .revision_persistence import build_modelo_bucket_event as _build_bucket_event
 
 
@@ -563,7 +564,7 @@ def _require_amendment_detail_rows(
     Every other modelo has no detail rows to declare, so ``None`` there is
     simply their normal shape and yields the empty tuple.
     """
-    if modelo not in DETAIL_ROW_BEARING_MODELOS:
+    if modelo not in detail_row_declaration_modelos():
         return tuple(supplied or ())
     if supplied is None:
         raise AmendmentDetailRowsRequiredError(

@@ -19,6 +19,7 @@ See Also:
 from __future__ import annotations
 
 import re
+from datetime import date
 
 import pytest
 
@@ -26,13 +27,12 @@ from ....core.corpus_text import resolve_anchored_extracted_unit
 from ....core.resources.bundled_data import bundled_path
 from ..schema import IvaCategory
 from ..supply_nature import (
-    LIVA_CITATION_QUALIFIERS,
-    STATUTORY_CITATIONS,
     StatutoryCitation,
     SupplyNature,
     SupplyNatureDerivationOutcome,
     derive_supply_nature_from_citation,
     match_statutory_citations,
+    registry_citation_catalogue,
     supply_nature_implied_by_category,
 )
 
@@ -43,6 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # would go stale the moment the module moves, and it silently resolves to a
 # directory that does not exist rather than saying so.
 _BUNDLED_ROOT = bundled_path()
+_CITATION_CATALOGUE = registry_citation_catalogue(effective_date=date.today())
 
 # Words the statute itself uses for each limb. The check below reads the bundled
 # article and asks which limbs its rubric and opening reach; these are the tokens
@@ -127,7 +128,7 @@ def _assert_row_matches_its_article(citation: StatutoryCitation) -> None:
         assert establishes is SupplyNature.SERVICES
 
 
-@pytest.mark.parametrize("citation", STATUTORY_CITATIONS, ids=lambda c: c.article)
+@pytest.mark.parametrize("citation", _CITATION_CATALOGUE.citations, ids=lambda c: c.article)
 def test_every_row_says_what_the_bundled_article_says(citation: StatutoryCitation) -> None:
     """Every shipped row, against the text it cites.
 
@@ -206,7 +207,7 @@ def test_assimilated_exports_still_cannot_be_read_from_its_own_words() -> None:
         "art. 22's opening now names a limb, so what it establishes has become readable and the "
         "table's recorded reason for omitting it no longer holds"
     )
-    assert "22" not in {citation.article for citation in STATUTORY_CITATIONS}, (
+    assert "22" not in {citation.article for citation in _CITATION_CATALOGUE.citations}, (
         "art. 22 has a row while its own words still cannot be read, so the row rests on nothing"
     )
 
@@ -236,7 +237,7 @@ def test_the_table_carries_both_natures_and_at_least_one_that_fixes_nothing() ->
     Stated as a property rather than a count: pinning the number of rows would
     encode this moment and fail the next time an article is bundled.
     """
-    established = {citation.establishes for citation in STATUTORY_CITATIONS}
+    established = {citation.establishes for citation in _CITATION_CATALOGUE.citations}
     assert SupplyNature.GOODS in established
     assert SupplyNature.SERVICES in established
     assert None in established, "no row establishes nothing, so the mixed-article case is untested"
@@ -407,13 +408,13 @@ def test_every_qualifier_is_lowercase_so_the_casefolded_match_can_find_it() -> N
     verbatim, so a qualifier carrying a capital could not be found in any input.
     That failure is silent -- the axis would simply stop deriving.
     """
-    for qualifier in LIVA_CITATION_QUALIFIERS:
+    for qualifier in _CITATION_CATALOGUE.qualifiers:
         assert qualifier == qualifier.casefold()
 
 
 def test_no_declared_article_pattern_matches_a_bare_number_in_running_text() -> None:
     """Every row needs the article word; none may fire on a naked figure."""
-    for citation in STATUTORY_CITATIONS:
+    for citation in _CITATION_CATALOGUE.citations:
         bare = re.sub(r"\s+", " ", citation.article)
         assert match_statutory_citations(f"Total {bare} LIVA") == (), (
             f"row {citation.article} matched a number with no article reference before it"

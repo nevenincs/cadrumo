@@ -40,13 +40,13 @@ import asyncio
 import sys
 from typing import TYPE_CHECKING
 
-from .. import __version__
 from ..core.async_cleanup import close_async_resources
 from ..core.config import Settings
 from ..core.errors.hierarchy import SiteHealthError, SiteHealthState
 from ..core.i18n.render import tr
 from ..core.logging import default_log_file_path, get_logger
 from ..core.operator_action_enums import NoRecoveryOutcome
+from ..core.package_version import PACKAGE_VERSION as __version__
 from ..core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ..core.requirement import Requirement, RequirementValue
 from ..core.time.clock import now
@@ -426,7 +426,7 @@ def _probe_secure_objects_integrity() -> _SecureObjectIntegrityReport:
     from ..adapters.persistence.storage.runtime_repository import (
         secure_object_repository_for_active_bucket_or_default_route,
     )
-    from ..adapters.persistence.storage.sql.secure_objects import SecureObjectNamespaceIntegrity
+    from ..adapters.persistence.storage.sql.secure_object_records import SecureObjectNamespaceIntegrity
 
     try:
         repo = secure_object_repository_for_active_bucket_or_default_route()

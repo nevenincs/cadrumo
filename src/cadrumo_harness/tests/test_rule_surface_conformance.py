@@ -79,7 +79,7 @@ def _valid_command_paths() -> frozenset[str]:
     """
     schemas: tuple[CommandSchemaRef, ...] = build_operator_surface_manifest(
         envelope_schema_version=ENVELOPE_SCHEMA_VERSION,
-        command_schemas=_command_schema_refs_via_cli(),
+        command_schemas=command_schema_refs_via_cli(),
     ).command_schemas
     valid: set[str] = {"", "aeat", "app", "config"}
     for ref in schemas:
@@ -91,7 +91,7 @@ def _valid_command_paths() -> frozenset[str]:
     return frozenset(valid)
 
 
-def _command_schema_refs_via_cli() -> tuple[CommandSchemaRef, ...]:
+def command_schema_refs_via_cli() -> tuple[CommandSchemaRef, ...]:
     # Reuse the installed command-surface projection so the gate sees exactly
     # the registered command surface the capability manifest reports.
     return command_surface().command_schema_refs()

@@ -26,7 +26,7 @@ from .errors import DiagnosticModelError
 from .operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 
 if TYPE_CHECKING:
-    from ..adapters.persistence.storage.sql.secure_objects import SecureObjectNamespaceIntegrity
+    from ..adapters.persistence.storage.sql.secure_object_records import SecureObjectNamespaceIntegrity
     from .wizard.status import WizardStatusReport
 
 
@@ -226,7 +226,7 @@ def ensure_models_rebuilt() -> None:
     global _models_rebuilt
     if _models_rebuilt:
         return
-    from ..adapters.persistence.storage.sql.secure_objects import SecureObjectNamespaceIntegrity
+    from ..adapters.persistence.storage.sql.secure_object_records import SecureObjectNamespaceIntegrity
     from .wizard.status import WizardStatusReport
 
     _model_rebuild_types = (SecureObjectNamespaceIntegrity, WizardStatusReport)

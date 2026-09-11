@@ -20,7 +20,7 @@ This module is the transport adapter over
 and :func:`~application.diagnostics_telemetry.flush_telemetry`. It emits
 :class:`~entrypoints.cli._diagnostics_payloads.TelemetryStatusResult` and
 :class:`~entrypoints.cli._diagnostics_payloads.TelemetryFlushResult`
-through :func:`~entrypoints.cli._common.emit_envelope`.
+through :func:`~entrypoints.cli.common.emit_envelope`.
 
 See Also:
     :func:`~application.diagnostics_telemetry.build_telemetry_status_report`
@@ -39,11 +39,11 @@ import typer
 
 from ...core.i18n.render import tr
 from ...core.telemetry.tier import TelemetryTier
-from ._common import emit_envelope
 from ._diagnostics_payloads import (
     TelemetryFlushResult,
     TelemetryStatusResult,
 )
+from .common import emit_envelope
 
 
 def diagnostics_telemetry_status(

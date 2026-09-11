@@ -1,7 +1,7 @@
 """Bucket-event tests for Modelo 145 local communication records.
 
 See Also:
-    :mod:`~application.modelo._m145_communication_records`
+    :mod:`~application.modelo.m145_communication_records`
         Backend service that emits communication-specific bucket events.
     :class:`~domain.buckets.BucketEvent`
         Bucket-local audit record asserted by this module.

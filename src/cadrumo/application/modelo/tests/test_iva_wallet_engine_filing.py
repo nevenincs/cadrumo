@@ -42,7 +42,7 @@ from ._iva_wallet_engine_support import (
     _wallet_observation,
     _work_unit_repositories,
     _work_unit_repositories_with_modelo_303_work_unit,
-    _workflow_profile,
+    workflow_profile,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -96,7 +96,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
         verification_report = verify_modelo_revision(
             revision.calculation_revision_id,
             actor="operator",
-            workflow_profile=_workflow_profile(taxpayer_nif),
+            workflow_profile=workflow_profile(taxpayer_nif),
             work_unit_repository=work_repo,
             calculation_repository=calc_repo,
             filing_repository=filing_repo,
@@ -112,7 +112,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
         filing = file_modelo_revision(
             revision.calculation_revision_id,
             actor="operator",
-            workflow_profile=_workflow_profile(taxpayer_nif),
+            workflow_profile=workflow_profile(taxpayer_nif),
             work_unit_repository=work_repo,
             calculation_repository=calc_repo,
             filing_repository=filing_repo,
@@ -150,7 +150,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
     taxpayer_nif = "X1234567L"
     filed_period = _period(_TARGET_YEAR, "1T")
     decided_1t_at = datetime(2026, 3, 19, 12, 0, 0, tzinfo=UTC)
-    workflow_profile = _workflow_profile(taxpayer_nif).model_copy(
+    workflow_profile = workflow_profile(taxpayer_nif).model_copy(
         update={"activity_start_date": date(2026, 1, 1)},
     )
     with _secure_backend(tmp_path):

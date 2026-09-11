@@ -500,7 +500,7 @@ def test_withholding_selector_rejects_unknown_fact() -> None:
             "claves": ("A",),
         },
         binding_id="bad-withholding-fact",
-        expected_substrings=("bad-withholding-fact", "_WithholdingSelector", "bogus_fact_value"),
+        expected_substrings=("bad-withholding-fact", "WithholdingSelector", "bogus_fact_value"),
     )
 
 

@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.sede._iva_compensation_wallet_parsing import WALLET_URL
-from ....adapters.outbound.aeat.sede.iva_compensation_wallet import parse_iva_compensation_wallet_html
+from ....adapters.outbound.aeat.sede.iva_compensation_wallet_parsing import parse_iva_compensation_wallet_html
 from ....adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
+from ....core.external_constants import load_external_constants
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
@@ -38,6 +38,9 @@ from ..iva_remote_state import (
     list_iva_compensation_history,
     persist_and_reconcile_iva_compensation_wallet,
 )
+
+_EXTERNAL = load_external_constants()
+WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
