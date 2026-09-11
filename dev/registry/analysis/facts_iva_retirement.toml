@@ -1,4 +1,4 @@
-schema_version = 1
+schema_version = 2
 classification = "governed_fact_provider_retirement"
 provider_steps = ["W02.P05.S13", "W02.P05.S14"]
 consumer_step = "W03.P12.S26"
@@ -10,30 +10,30 @@ closure_step = "W04.P19.S58"
 [[lanes]]
 lane_id = "iva-rate-table"
 source_path = "src/cadrumo/domain/iva/rates.py"
-data_path = "src/cadrumo/_data/registry/aeat/iva/rates.toml"
+data_path = ""
 destination_family = "dated_mapping"
 destination_id = "iva-rate-schedule"
 dependencies = ["W02.P05.S13", "W03.P12.S26", "W04.P15.S30", "W04.P17.S56", "W04.P19.S58"]
-delete_symbols = ["load_iva_rate_table", "_load_iva_rate_table_cached", "_parse_rate", "_reference_ids", "_source_window_covers", "_source_window_failure", "_source_ref_failures", "_verify_rate_grounding", "_assert_no_overlap"]
-retain_symbols = ["IvaRateRecord", "lookup_rate", "rate_table_covers", "rate_table_covers_any_positive_tier", "coexisting_tier_rates", "rate_kinds_for_declared_rate"]
+delete_symbols = ["_load_iva_rate_table_cached", "_parse_rate", "_reference_ids", "_source_window_covers", "_source_window_failure", "_source_ref_failures", "_verify_rate_grounding", "_assert_no_overlap"]
+retain_symbols = ["IvaRateRecord", "load_iva_rate_table", "lookup_rate", "rate_table_covers", "rate_table_covers_any_positive_tier", "coexisting_tier_rates", "rate_kinds_for_declared_rate"]
 callers = ["src/cadrumo/domain/iva/lookup.py:lookup_rate", "src/cadrumo/domain/iva/lookup.py:rate_table_covers", "src/cadrumo/domain/iva/lookup.py:coexisting_tier_rates", "src/cadrumo/domain/iva/lookup.py:rate_kinds_for_declared_rate", "src/cadrumo/application/ledger/invoice_extraction_authority.py:_overlapping_iva_rate_pcts", "src/cadrumo/core/resources/_repos/iva_rate_tables.py:IvaRateTableRepository._load"]
 destination = "registered facts provider owns typed rows, member-state/tier/date selection, overlap refusal, evidence, fingerprints and invalidation; retained lookup functions project provider results"
 data_disposition = "normalize into src/cadrumo/_data/registry/aeat/facts then delete old TOML path"
-closure = "provider resolves every current row with provenance; all callers use authority or retained projections; no direct rates.toml read remains; provider cache/reset tests pass"
+closure = "closed in W04.P17.S56: authored provider resolves every current row with provenance; all callers use authority or retained projections; raw parser, cache, registration, tests and rates.toml path are deleted"
 
 [[lanes]]
 lane_id = "iva-recargo-rate-table"
 source_path = "src/cadrumo/domain/iva/recargo_equivalencia.py"
-data_path = "src/cadrumo/_data/registry/aeat/iva/recargo-rates.toml"
+data_path = ""
 destination_family = "dated_mapping"
 destination_id = "iva-recargo-by-applied-rate"
 dependencies = ["W02.P05.S14", "W03.P12.S26", "W03.P12.S51", "W04.P15.S30", "W04.P17.S56", "W04.P19.S58"]
-delete_symbols = ["load_recargo_rate_table", "_load_recargo_rate_table_cached", "_hydrate_row", "_coerce_legal_refs", "_reject_overlapping_windows"]
-retain_symbols = ["RecargoRateRecord", "recargo_rate_for_applied_rate", "LivaArt161RecargoRates", "load_recargo_rates"]
+delete_symbols = ["_load_recargo_rate_table_cached", "_hydrate_row", "_coerce_legal_refs", "_reject_overlapping_windows"]
+retain_symbols = ["RecargoRateRecord", "load_recargo_rate_table", "recargo_rate_for_applied_rate", "LivaArt161RecargoRates", "load_recargo_rates"]
 callers = ["src/cadrumo/domain/iva/recargo_equivalencia.py:recargo_rate_for_applied_rate", "src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva.py:_recargo_rate_divergence"]
 destination = "registered facts provider owns applied-rate/date selection, typed rows, overlap refusal, evidence, fingerprints and invalidation; public record and lookup remain provider projections until callers migrate"
 data_disposition = "normalize into src/cadrumo/_data/registry/aeat/facts then delete old TOML path"
-closure = "provider resolves every pairing with provenance; aggregation caller uses authority or retained projection; no direct recargo-rates.toml read remains; cache/reset tests pass"
+closure = "closed in W04.P17.S56: authored provider resolves every pairing with provenance; aggregation caller uses authority or retained projection; raw parser, cache, registration, tests and recargo-rates.toml path are deleted"
 
 [[lanes]]
 lane_id = "iva-local-grounding"
@@ -44,7 +44,7 @@ destination_id = "facts-variant-evidence-validation"
 dependencies = ["W02.P05.S13", "W02.P05.S14", "W03.P12.S26", "W04.P17.S57", "W04.P19.S58"]
 delete_symbols = ["registry_catalogues", "legal_evidence_fingerprints", "_resolved_evidence_path", "_evidence_file_fingerprint", "legal_ref_failures", "verify_table_legal_refs"]
 retain_symbols = []
-callers = ["src/cadrumo/domain/iva/rates.py:_verify_rate_grounding", "src/cadrumo/domain/iva/recargo_equivalencia.py:load_recargo_rate_table", "src/cadrumo/domain/iva/catalogue.py:load_iva_catalogue", "src/cadrumo/domain/iva/place_of_supply.py:load_place_of_supply_table", "src/cadrumo/domain/iva/establishment.py:_territory_carve_outs", "src/cadrumo/domain/iva/establishment.py:_excluded_territories_by_prefix", "src/cadrumo/domain/iva/verify.py:verify_catalogue"]
+callers = ["src/cadrumo/domain/iva/place_of_supply.py:_rules_in_table", "src/cadrumo/domain/iva/establishment.py:_territory_carve_outs", "src/cadrumo/domain/iva/establishment.py:_excluded_territories_by_prefix"]
 destination = "facts validation owns legal/source evidence closure and fingerprints for rates, recargo, IVA catalogue, place-of-supply, establishment territories and verification"
 data_disposition = "none"
 closure = "every listed caller uses facts validation or a registry-level evidence service; no IVA-local catalogue, fingerprint or citation-validation path remains"

@@ -6,7 +6,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:7f632baa2828478ec4951a5ca84acbc45d2ca438251bcaa2e0f6b7913752a1bb'
+body_hash: 'sha256:b27f40802f96d2794d70940f9b1b1136943985a38356b9eb3fa46c15f646a2a5'
 related:
   - '[[2026-09-09-facts-registry-W01-P01-S01]]'
   - '[[2026-09-09-facts-registry-W01-P01-S02]]'
@@ -72,6 +72,7 @@ related:
   - '[[2026-09-09-facts-registry-W04-P16-S31]]'
   - '[[2026-09-09-facts-registry-W04-P16-S32]]'
   - '[[2026-09-09-facts-registry-W04-P16-S33]]'
+  - '[[2026-09-09-facts-registry-W04-P17-S56]]'
   - '[[2026-09-09-facts-registry-authority-plumbing-research]]'
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
   - '[[2026-09-09-facts-registry-discovery-blast-radius-research]]'
@@ -102,6 +103,7 @@ related:
   - '[[2026-09-11-facts-registry-s31-external-constants-retirement-audit]]'
   - '[[2026-09-11-facts-registry-s32-iva-interpretation-retirement-audit]]'
   - '[[2026-09-11-facts-registry-s33-routing-retirement-audit]]'
+  - '[[2026-09-11-facts-registry-s56-iva-raw-retirement-audit]]'
 ---
 
 # `facts-registry` feature index
@@ -135,6 +137,7 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-11-facts-registry-s31-external-constants-retirement-audit` - `facts-registry` audit: `s31 external constants retirement`
 - `2026-09-11-facts-registry-s32-iva-interpretation-retirement-audit` - `facts-registry` audit: `S32 IVA interpretation retirement`
 - `2026-09-11-facts-registry-s33-routing-retirement-audit` - `facts-registry` audit: `S33 routing retirement`
+- `2026-09-11-facts-registry-s56-iva-raw-retirement-audit` - `facts-registry` audit: `S56 IVA raw provider retirement review`
 
 ### exec
 
@@ -202,6 +205,7 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-09-facts-registry-W04-P16-S31` - Delete migrated statutory declarations but retain technical configuration
 - `2026-09-09-facts-registry-W04-P16-S32` - Delete numeric IVA interpretation but retain persisted enum tokens
 - `2026-09-09-facts-registry-W04-P16-S33` - Replace the remaining technical model-routing aliases with their specialized aggregation and calendar-policy owners, then delete the aliases
+- `2026-09-09-facts-registry-W04-P17-S56` - `facts-registry` execution: `W04.P17.S56`
 
 ### plan
 

@@ -156,8 +156,8 @@ def test_a_declared_zero_resolves_to_the_zero_tier_on_every_date() -> None:
     Spain zero-rates on FOUR grounds, three of them permanent: exports to a
     third country (LIVA art. 21), intra-community supplies (art. 25), entregas
     of donativos to Ley 49/2002 entities (art. 91.Cuatro), and the temporary
-    RD-ley 4/2024 basic-foods window. ``rates.toml`` records only the last --
-    and says so itself, because a flat ``kind = "zero"`` record cannot be
+    RD-ley 4/2024 basic-foods window. The authored rate schedule records only
+    the last, because a flat ``kind = "zero"`` record cannot be
     bounded to a class of supply.
 
     Reading that partial table as exhaustive made ``rate_kinds_for_declared_rate``

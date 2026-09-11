@@ -343,8 +343,8 @@ def rate_kinds_for_declared_rate(
         # exports to a third country (LIVA art. 21), intra-community supplies
         # (art. 25), entregas of donativos to Ley 49/2002 entities
         # (art. 91.Cuatro), and the temporary RD-ley 4/2024 basic-foods window.
-        # ``rates.toml`` records only the last, and says so itself -- a flat
-        # ``kind = "zero"`` record cannot be bounded to a class of supply, so an
+        # The authored rate schedule records only the last -- a flat ``kind =
+        # "zero"`` record cannot be bounded to a class of supply, so an
         # open one would zero-rate everything. Reading that partial table as
         # exhaustive made every export and intra-EU supply unclassifiable
         # outside one 2024 quarter.

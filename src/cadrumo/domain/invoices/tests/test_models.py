@@ -321,7 +321,7 @@ def test_invoice_rejects_invalid_core_fields() -> None:
 
 
 def test_iva_rate_percentage_is_resolved_against_centralized_iva_substrate() -> None:
-    """iva_rate_percentage must derive its values from registry/aeat/iva/rates.toml.
+    """iva_rate_percentage must derive its values from the authored IVA-rate fact.
 
     The helper carries no hardcoded ``RATE_21 -> 0.21`` literal; every
     numeric slot is resolved against :func:`cadrumo.domain.iva.lookup_rate`
