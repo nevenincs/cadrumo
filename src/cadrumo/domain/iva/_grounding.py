@@ -37,8 +37,11 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
+from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ...core.resources.bundled_data import bundled_path
+from .compilation_catalogues import compiling_catalogues_in_scope
 from .errors import IvaCatalogueError
 
 if TYPE_CHECKING:
@@ -57,7 +60,7 @@ def registry_catalogues() -> tuple[Mapping[str, LegalReference], Mapping[str, So
     from ..calculations.registry.authority import bundled_authority
 
     authority = bundled_authority()
-    return authority.catalogues.legal, authority.catalogues.sources
+    return authority.catalogues.legal, authority.catalogues.sources, bundled_path()
 
 
 def verify_table_legal_refs(table: str, citations: Sequence[tuple[str, Sequence[str]]]) -> None:

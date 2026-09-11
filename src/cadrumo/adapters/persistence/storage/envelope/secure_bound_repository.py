@@ -47,7 +47,8 @@ from ..runtime_repository import (
     secure_object_repository_for_bucket,
 )
 from ..schema_lineage import inner_envelope_classification_is_expected
-from ..sql import SecureObjectDeletion, SecureObjectRecord, SecureObjectRepository
+from ..sql._secure_object_records import SecureObjectDeletion
+from ..sql.secure_objects import SecureObjectRecord, SecureObjectRepository
 from .contract import Envelope, parameterized_envelope_type
 
 _log = get_logger(__name__)

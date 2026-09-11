@@ -117,8 +117,11 @@ def _art52_reduccion_advisory_finding(
     autonomos_empresarios_value = casilla_values.get(autonomos_empresarios_id, Decimal(0))
 
     resolved_sublimit = context.resolved_decimal(_ART52_INDIVIDUAL_SUBLIMIT_FACT_ID)
+    sublimit = resolved_sublimit.payload.value
+    if not isinstance(sublimit, Decimal):
+        raise ModeloError("Art. 52 individual sublimit fact must resolve to a Decimal")
     if (
-        reduccion_value > resolved_sublimit.payload.value
+        reduccion_value > sublimit
         and trabajador_con_contribucion_value == Decimal(0)
         and empresarial_value == Decimal(0)
         and autonomos_empresarios_value == Decimal(0)
@@ -131,7 +134,7 @@ def _art52_reduccion_advisory_finding(
             message_facts={
                 "reduccion_id": reduccion_id,
                 "reduccion_value": reduccion_value,
-                "sublimit": resolved_sublimit.payload.value,
+                "sublimit": sublimit,
             },
             legal_refs=resolved_sublimit.legal_refs,
         )

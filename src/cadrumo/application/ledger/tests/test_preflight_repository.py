@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import TransactionCatalogue
 from ....tests.secure_sql import isolated_runtime_profile

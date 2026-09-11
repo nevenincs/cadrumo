@@ -58,8 +58,8 @@ from ......core.config import override_settings
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ......tests.secure_sql import mutate_encrypted_secure_object_json
 from ...errors import ClassificationError
-from ...sql import Base, SecureObjectRow
 from ...sql.engine import create_engine_from_settings, dispose_engine
+from ...sql.orm import Base, SecureObjectRow
 from ..contract import Envelope
 from ..secure_bound_repository import SecureBoundRepository
 

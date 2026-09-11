@@ -14,7 +14,8 @@ from pathlib import Path
 from sqlalchemy import Engine
 
 from .....core.config import Settings
-from ..sql import Base, create_engine_from_settings
+from ..sql.engine import create_engine_from_settings
+from ..sql.orm import Base
 
 
 def bootstrap_sqlite_engine(db_path: Path) -> Engine:

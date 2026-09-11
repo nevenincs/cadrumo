@@ -15,7 +15,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 def test_auth_package_initializer_is_inert() -> None:
     """The package root must not expose a compatibility facade."""
-    package = importlib.import_module("cadrumo.adapters.outbound.aeat.auth")
+    package = importlib.import_module("..", __package__)
     assert package.__all__ == []
 
 

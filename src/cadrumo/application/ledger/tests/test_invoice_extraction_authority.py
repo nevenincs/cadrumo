@@ -135,7 +135,7 @@ class TestTheRendererCannotReachAroundItsArgument:
         is the only source. A renderer that helpfully merged its own lookup with
         the argument would pass the first half alone.
         """
-        from ....llm.invoice_extraction_prompt import render_invoice_extraction_prompt
+        from ....adapters.outbound.llm.invoice_extraction_prompt import render_invoice_extraction_prompt
 
         real = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026)
         rendered = render_invoice_extraction_prompt(values=_fabricated_values())
@@ -152,7 +152,7 @@ class TestTheRendererCannotReachAroundItsArgument:
 
     def test_the_compiled_artefact_reports_the_values_it_rendered(self) -> None:
         """The stamp must describe the read that happened, not a re-resolution."""
-        from ....llm.invoice_extraction_prompt import render_invoice_extraction_prompt
+        from ....adapters.outbound.llm.invoice_extraction_prompt import render_invoice_extraction_prompt
 
         rendered = render_invoice_extraction_prompt(values=_fabricated_values())
 
@@ -172,7 +172,7 @@ class TestTheProductionReadPathSuppliesTheValues:
         request, because doing so would need live inference this gate must not
         perform.
         """
-        from ....llm.evidence_draft_text import build_text_field_extraction_prompt
+        from ....adapters.outbound.llm.evidence_draft_text import build_text_field_extraction_prompt
 
         prompt = build_text_field_extraction_prompt("Factura 1", values=_fabricated_values())
 

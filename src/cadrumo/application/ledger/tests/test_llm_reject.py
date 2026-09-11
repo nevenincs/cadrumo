@@ -16,9 +16,14 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.outbound.llm.suggestions import (
+    LLMClassificationSuggestion,
+    LLMSaturatedSuggestion,
+    LLMSuggestionRejectionResult,
+)
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....domain.buckets.event import BucketEvent, BucketEventType
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.iva.schema import IvaCategory
@@ -26,7 +31,6 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.errors import TransactionNotFoundError
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....llm.suggestions import LLMClassificationSuggestion, LLMSaturatedSuggestion, LLMSuggestionRejectionResult
 from ....tests.secure_sql import isolated_runtime_profile
 from ..llm_classification import reject_llm_suggestion
 from ..llm_review_workflow import (

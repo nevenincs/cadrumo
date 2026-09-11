@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import importlib
 import inspect
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -313,7 +314,7 @@ def test_google_auth_failure_totality_uses_one_canonical_no_action_projection() 
 
 def test_google_auth_modules_never_construct_verdict_or_evidence_locally() -> None:
     """Google auth delegates terminal construction to application.operator_actions."""
-    for module in (*_AUTH_PRODUCER_MODULES, __import__("cadrumo.adapters.outbound.google.errors", fromlist=["*"])):
+    for module in (*_AUTH_PRODUCER_MODULES, importlib.import_module("..errors", __package__)):
         tree = ast.parse(inspect.getsource(module))
         constructed = {
             _call_name(node.func)

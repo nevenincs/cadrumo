@@ -30,7 +30,7 @@ import pytest
 
 from ....adapters.inbound.einvoice.parsers import parse_einvoice_document
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.aggregation import IntracomOperationType
 from ....core.config import Settings
 from ....core.external_constants import DEFAULT_CURRENCY

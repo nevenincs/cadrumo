@@ -15,8 +15,8 @@ from ......application.auth.session_types import (
 )
 from ......core.config import Settings
 from ......core.errors.hierarchy import AeatLoginAssertionError
-from ...browser import Profile
 from ...browser.factory import create_browser_session
+from ...browser.profile import Profile
 from ...tests.process_support import wait_for_process_exit
 from ..browser_lifecycle import (
     CloseIntentBarrier,

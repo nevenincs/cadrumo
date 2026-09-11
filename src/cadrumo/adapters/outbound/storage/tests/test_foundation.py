@@ -188,17 +188,17 @@ def test_storage_contracts_resolve_at_their_defining_modules_and_backends_stay_p
         ),
     }
     for module_name, symbols in contracts.items():
-        module = importlib.import_module(f"cadrumo.adapters.outbound.storage.{module_name}")
+        module = importlib.import_module(f"..{module_name}", __package__)
         for symbol in symbols:
             assert hasattr(module, symbol), f"{module_name}.{symbol}"
 
-    root = importlib.import_module("cadrumo.adapters.outbound.storage")
+    root = importlib.import_module("..", __package__)
     assert not root.__all__, "the storage package root is inert and must export nothing"
 
     for backend in ("GoogleDriveProvider", "LocalFileSystemProvider", "InMemoryDriveProvider"):
         assert not hasattr(root, backend), backend
         for module_name in ("protocol", "records", "factory", "mirror_manifest"):
-            module = importlib.import_module(f"cadrumo.adapters.outbound.storage.{module_name}")
+            module = importlib.import_module(f"..{module_name}", __package__)
             assert not hasattr(module, backend), f"{module_name}.{backend}"
 
 

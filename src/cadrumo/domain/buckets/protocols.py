@@ -14,12 +14,10 @@ services to emit :class:`BucketEvent` history without importing the concrete
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
+from ...core.secure_object_write import SecureObjectWrite
 from .event import BucketEventHistoryCatalogue
-
-if TYPE_CHECKING:  # pragma: no cover - typing-only storage boundary import
-    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
 
 
 @runtime_checkable

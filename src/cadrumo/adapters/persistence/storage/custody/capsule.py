@@ -326,7 +326,7 @@ def _release_bucket_file_handles(profile_id: UUID) -> None:
     The import is deferred to keep this module's import graph free of the SQL
     engine, mirroring the only other disposal owner, ``BucketSession.close``.
     """
-    from ..sql import dispose_engines_for_bucket
+    from ..sql.engine import dispose_engines_for_bucket
 
     dispose_engines_for_bucket(str(profile_id))
 

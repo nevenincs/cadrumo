@@ -28,10 +28,10 @@ import pytest
 
 from .....core.config import override_settings
 from .....core.storage_taxonomy import StorageCategory
-from .....llm.models import LLMProvider, LLMRequest, LLMResponse
 from .....tests import assert_path_matches_grammar
 from .....tests.storage_scope import storage_overrides
 from ..cache import LLMCache
+from ..models import LLMProvider, LLMRequest, LLMResponse
 from ..run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from ..usage import UsageRecorder
 

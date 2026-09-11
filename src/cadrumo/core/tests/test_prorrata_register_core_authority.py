@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ...tests import ast_for_path, repo_path, repo_relative
+from ...tests.inventory import ast_for_path, repo_path, repo_relative
 from ..prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

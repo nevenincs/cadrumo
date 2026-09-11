@@ -179,7 +179,7 @@ def test_deleting_a_populated_optional_field_from_disk_surfaces_as_refusal(tmp_p
     """
     from sqlalchemy import select
 
-    from ...storage.sql import SecureObjectRow
+    from ...storage.sql.orm import SecureObjectRow
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         invoice = _invoice_with_every_optional_monetary_field_populated()
@@ -215,7 +215,7 @@ def test_a_genuinely_unparseable_optional_field_still_refuses(tmp_path: Path) ->
     """
     from sqlalchemy import select
 
-    from ...storage.sql import SecureObjectRow
+    from ...storage.sql.orm import SecureObjectRow
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         invoice = _invoice_with_every_optional_monetary_field_populated()

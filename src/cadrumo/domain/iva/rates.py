@@ -12,6 +12,7 @@ from decimal import Decimal
 from types import MappingProxyType
 
 from ..calculations.registry.facts.resolution import ResolvedMappingFact
+from ..calculations.registry.facts.schema import MappingFactPayload
 from .errors import IvaCatalogueError
 from .schema import EUMemberState, IvaRateKind, IvaRateRecord
 
@@ -37,6 +38,8 @@ def load_iva_rate_table() -> Mapping[EUMemberState, tuple[IvaRateRecord, ...]]:
         raise IvaCatalogueError("installed authority has no IVA rate facts")
     table: dict[EUMemberState, list[IvaRateRecord]] = {}
     for variant in fact.variants:
+        if not isinstance(variant.payload, MappingFactPayload):
+            raise IvaCatalogueError("IVA rate fact contains a non-mapping variant")
         selectors = {selector.name: selector.value for selector in variant.selectors}
         member_state = EUMemberState(str(selectors["member_state"]))
         payload = {str(entry.key): entry.value for entry in variant.payload.entries}

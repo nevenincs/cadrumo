@@ -64,7 +64,7 @@ from ..storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATAL
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ..storage.sql import SecureObjectRepository, SecureObjectWrite
+    from ..storage.sql.secure_objects import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
 _CALCULATION_NAMESPACE = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace

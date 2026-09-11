@@ -16,7 +16,8 @@ from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterR
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.errors import EnvelopeVersionError
 from ....adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
-from ....adapters.persistence.storage.sql import SecureObjectRepository, session_scope
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.sql.session import session_scope
 from ....core.aggregation import BindingSourceKind
 from ....core.classification.policies import SensitivityClass
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind

@@ -53,14 +53,14 @@ from ..storage.envelope.contract import Envelope
 from ..storage.errors import ClassificationError, EnvelopeVersionError
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ..storage.schema_lineage import inner_envelope_classification_is_expected, inner_envelope_version_is_current
-from ..storage.sql import SecureObjectRepository, SecureObjectWrite
+from ..storage.sql.secure_objects import SecureObjectRepository, SecureObjectWrite
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from ....core.classification.policies import SensitivityClass
     from ..storage.secure_object_namespaces import SecureObjectNamespaceDefinition
-    from ..storage.sql import SecureObjectRecord
+    from ..storage.sql.secure_objects import SecureObjectRecord
 
 __all__ = ["SecureSnapshotRepository"]
 

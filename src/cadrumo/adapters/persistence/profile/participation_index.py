@@ -36,7 +36,7 @@ from ..storage.secure_object_namespaces import TRANSACTION_PARTICIPATION_INDEX_N
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from collections.abc import Iterable
 
-    from ..storage.sql import SecureObjectRepository, SecureObjectWrite
+    from ..storage.sql.secure_objects import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
 
@@ -206,7 +206,7 @@ class TransactionParticipationIndexRepository:
             The number of stale participation objects removed.
         """
         from ..storage.crypto.encrypted_columns import secure_object_key_digest
-        from ..storage.sql import SecureObjectDeletion
+        from ..storage.sql._secure_object_records import SecureObjectDeletion
 
         writes = tuple(self.to_secure_object_write(index) for index in indexes)
         retained = {secure_object_key_digest(write.object_key).hex() for write in writes}
@@ -229,7 +229,7 @@ class TransactionParticipationIndexRepository:
         slot, co-emitting atomically with the revision save.
         """
         from ..storage.envelope.contract import Envelope
-        from ..storage.sql import SecureObjectWrite
+        from ..storage.sql.secure_objects import SecureObjectWrite
 
         envelope = Envelope[TransactionRevisionParticipationIndex](
             schema_version=_PARTICIPATION_INDEX_SCHEMA_VERSION,

@@ -166,7 +166,7 @@ from .runtime_repository import (
     secure_object_repository_for_staged_bucket,
 )
 from .secure_object_namespaces import USER_PROFILE_SNAPSHOT_NAMESPACE, USER_PROFILE_VALUE_NAMESPACE
-from .sql import SecureObjectRepository
+from .sql.secure_objects import SecureObjectRepository
 
 
 def _capsule_relative(category: StorageCategory) -> Path:

@@ -99,7 +99,7 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
         """
         from ..storage.crypto.encrypted_columns import secure_object_key_digest
         from ..storage.errors import SecureObjectRowIdentityError
-        from ..storage.sql import SecureObjectRecord
+        from ..storage.sql.secure_objects import SecureObjectRecord
 
         envelope_cls = self._envelope_cls()
         records: list[tuple[str, ModeloPresentado]] = []

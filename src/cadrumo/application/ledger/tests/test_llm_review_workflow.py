@@ -15,6 +15,12 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.outbound.llm.suggestions import (
+    LLMClassificationSuggestion,
+    LLMSaturatedSuggestion,
+    LLMSplitApplyResult,
+    LLMSplitSuggestion,
+)
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
@@ -26,12 +32,6 @@ from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.llm import LLMSplitResponse
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....llm.suggestions import (
-    LLMClassificationSuggestion,
-    LLMSaturatedSuggestion,
-    LLMSplitApplyResult,
-    LLMSplitSuggestion,
-)
 from ....tests.secure_sql import isolated_runtime_profile
 from ..llm_classification import (
     apply_evidence_split,

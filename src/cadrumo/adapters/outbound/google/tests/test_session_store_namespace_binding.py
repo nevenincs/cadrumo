@@ -34,7 +34,7 @@ from ....persistence.storage.secure_object_namespaces import (
     GOOGLE_OAUTH_TOKEN_NAMESPACE,
     SecureObjectNamespaceDefinition,
 )
-from ....persistence.storage.sql import SecureObjectRow
+from ....persistence.storage.sql.orm import SecureObjectRow
 from ....persistence.storage.sql.session import session_scope
 from .. import session_store
 from ..impersonation import GoogleCredentialSourceSelection

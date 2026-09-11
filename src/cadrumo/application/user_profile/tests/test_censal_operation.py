@@ -12,7 +12,7 @@ from ....adapters.outbound.aeat.sede.censal_datos import parse_censal_datos
 from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ....domain.buckets.event import BucketEventType
-from ....tests import FIXTURES_DIR
+from ....tests.inventory import FIXTURES_DIR
 from ...operations.interactions import (
     OperationApplyResponse,
     OperationRejectResponse,

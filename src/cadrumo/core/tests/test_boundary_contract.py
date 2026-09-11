@@ -47,7 +47,7 @@ from pathlib import Path
 
 import pytest
 
-from ...tests import SRC_CADRUMO, production_ast_items, production_python_files, repo_relative
+from ...tests.inventory import SRC_CADRUMO, production_ast_items, production_python_files, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

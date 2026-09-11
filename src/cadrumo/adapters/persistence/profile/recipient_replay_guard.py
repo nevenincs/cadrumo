@@ -63,7 +63,7 @@ from ..storage.secure_object_namespaces import MODELO_REVIEW_PACKAGE_RECIPIENT_R
 from ._secure_model_document import ProfileBareModelSecurePersistence, resolve_profile_secure_object_repository
 
 if TYPE_CHECKING:
-    from ..storage.sql import SecureObjectRepository
+    from ..storage.sql.secure_objects import SecureObjectRepository
 
 
 # A stale writer always fails closed at the secure-object CAS boundary. This

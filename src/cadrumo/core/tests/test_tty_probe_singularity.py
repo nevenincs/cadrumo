@@ -30,7 +30,7 @@ from pathlib import Path
 
 import pytest
 
-from ...tests import production_python_files
+from ...tests.inventory import production_python_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

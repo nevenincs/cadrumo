@@ -35,7 +35,7 @@ from ....domain.usage_ratios.service import derive_home_office_ratios_from_censo
 from ..storage.secure_object_namespaces import USAGE_RATIO_PROFILE_NAMESPACE
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ..storage.sql import SecureObjectRepository
+    from ..storage.sql.secure_objects import SecureObjectRepository
 
 __all__ = [
     "load_usage_ratios",

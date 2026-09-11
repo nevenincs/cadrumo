@@ -136,7 +136,7 @@ def test_bucket_event_payload_tampering_surfaces_at_load(tmp_path: Path) -> None
 
     from sqlalchemy import select
 
-    from ...storage.sql import SecureObjectRow
+    from ...storage.sql.orm import SecureObjectRow
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         bucket_id = "b" * 32

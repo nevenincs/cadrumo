@@ -70,7 +70,7 @@ from typing import Final
 
 import pytest
 
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.classifier_input_source import ClassifierInputSource
 from ....core.config import Settings
 from ....core.field_grounding import FieldGroundingOutcome

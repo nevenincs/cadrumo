@@ -37,7 +37,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.config import Settings
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ..invoice_draft_extraction import extract_invoice_draft_from_evidence

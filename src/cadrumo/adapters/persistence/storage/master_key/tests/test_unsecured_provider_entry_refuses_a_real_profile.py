@@ -32,8 +32,8 @@ from ......core.storage_taxonomy import StorageCategory
 from ......core.storage_taxonomy_locations import bucket_scoped_storage_path
 from ...errors import UnsecuredModeRefusedError
 from ...secure_object_namespaces import USER_PROFILE_VALUE_NAMESPACE
-from ...sql import SecureObjectRepository
 from ...sql.engine import create_engine_from_settings
+from ...sql.secure_objects import SecureObjectRepository
 from ..active_session import activate_session, current_active_bucket_session
 from ..bucket_session import BucketSession
 from ..master_key import UnsecuredMasterKeyProvider

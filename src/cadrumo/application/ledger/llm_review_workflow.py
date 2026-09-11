@@ -29,14 +29,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core.config import Settings, load_settings
-from ...core.identity import BucketId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.time.clock import now
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.transactions.errors import TransactionValidationError
-from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ...llm.suggestions import (
+from ...adapters.outbound.llm.suggestions import (
     LLMClassificationSuggestion,
     LLMSaturatedSuggestion,
     LLMSplitApplyResult,
@@ -44,6 +37,13 @@ from ...llm.suggestions import (
     LLMSuggestionRejectionResult,
     OperatorIvaDerivationResult,
 )
+from ...core.config import Settings, load_settings
+from ...core.identity import BucketId
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.time.clock import now
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from .extraction_draft_store import ExtractionDraftDocument, write_extraction_draft
 from .invoice_draft_records import InvoiceDraft
 from .llm_classification import (

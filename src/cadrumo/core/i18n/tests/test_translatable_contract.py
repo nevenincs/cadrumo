@@ -20,7 +20,7 @@ from typing import override
 
 import pytest
 
-from ....tests import SRC_CADRUMO, package_ast_items, repo_relative
+from ....tests.inventory import SRC_CADRUMO, package_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -24,11 +24,11 @@ from PIL import Image
 from ....adapters.inbound.einvoice.parsers import parse_einvoice_document
 from ....adapters.inbound.einvoice.xml import EInvoiceXmlParseError
 from ....adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
+from ....adapters.outbound.llm.errors import LLMPdfRasterisationError
+from ....adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
 from ....core.directory_scan import scan_directory
 from ....core.document_shape import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ....llm.errors import LLMPdfRasterisationError
-from ....llm.providers.local import rasterise_pdf_pages_to_base64_png
 from ....tests.fixtures.provenance import (
     FIXTURE_PROVENANCE_REAL,
     RECOGNISED_FIXTURE_PROVENANCES,

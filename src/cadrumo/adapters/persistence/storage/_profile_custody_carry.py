@@ -71,7 +71,7 @@ from .secure_object_namespaces import (
     USER_PROFILE_VALUE_NAMESPACE,
     SecureObjectNamespaceDefinition,
 )
-from .sql import SecureObjectRecord
+from .sql.secure_objects import SecureObjectRecord
 
 _TYPED_CATEGORY_NAMESPACES: frozenset[str] = frozenset(
     {
@@ -389,7 +389,7 @@ def _ledger_extraction_natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
         entry = EvidenceConsentLedgerEntry.model_validate_json(json.dumps(entry_payload))
         return evidence_consent_ledger_entry_object_key(entry)
 
-    resolvers["cadrumo.outbound.llm.evidence_consent_ledger"] = _evidence_consent_ledger_key
+    resolvers["cadrumo.adapters.outbound.llm.evidence_consent_ledger"] = _evidence_consent_ledger_key
     return resolvers
 
 

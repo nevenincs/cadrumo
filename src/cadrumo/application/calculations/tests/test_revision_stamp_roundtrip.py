@@ -165,8 +165,8 @@ def test_stamped_revision_id_anti_tautology_missing_refuses_load(tmp_path: Path)
     """
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.sql import SecureObjectRow
     from ....adapters.persistence.storage.sql.engine import get_engine
+    from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 
     namespace = CalculationObservationRepository.namespace
 
@@ -280,8 +280,8 @@ def test_carry_divergent_stamp_refuses_single_observation(tmp_path: Path) -> Non
     """
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.sql import SecureObjectRow
     from ....adapters.persistence.storage.sql.engine import get_engine
+    from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = CalculationObservationRepository()

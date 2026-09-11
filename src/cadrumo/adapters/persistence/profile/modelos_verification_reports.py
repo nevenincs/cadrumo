@@ -47,7 +47,7 @@ from ..storage.secure_object_namespaces import MODELO_VERIFICATION_REPORT_CATALO
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ..storage.sql import SecureObjectRepository
+    from ..storage.sql.secure_objects import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
 _VERIFICATION_NAMESPACE = MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE.namespace

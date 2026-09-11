@@ -14,8 +14,8 @@ import pytest
 from pydantic import ValidationError
 
 from ......tests.aeat_literal_fixtures import PDF_MODELO_130_2024_PATH_FIXTURE, aeat_url, sede_pdf_url
-from .. import CorpusArtifactRecord, ModeloCatalogueRecord, PortalAuthMethod, PortalRecord
 from .._secure_object_records import SecureObjectRawRow
+from ..records import CorpusArtifactRecord, ModeloCatalogueRecord, PortalAuthMethod, PortalRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

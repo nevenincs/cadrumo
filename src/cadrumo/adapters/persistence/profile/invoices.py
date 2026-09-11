@@ -32,7 +32,7 @@ from ..storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:
-    from ..storage.sql import SecureObjectRepository, SecureObjectWrite
+    from ..storage.sql.secure_objects import SecureObjectRepository, SecureObjectWrite
 
 _log = get_logger(__name__)
 

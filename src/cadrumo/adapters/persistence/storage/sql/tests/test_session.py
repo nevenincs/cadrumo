@@ -17,7 +17,7 @@ from sqlalchemy.engine import Engine
 
 from ...errors import StorageValidationError
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
-from .. import session_scope
+from ..session import session_scope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _SESSION_LOGGER_NAME = "cadrumo.adapters.persistence.storage.sql.session"

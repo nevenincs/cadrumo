@@ -820,7 +820,7 @@ GOOGLE_CREDENTIAL_SOURCE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 LLM_CACHE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="llm_cache",
-    namespace="cadrumo.outbound.llm.cache",
+    namespace="cadrumo.adapters.outbound.llm.cache",
     owner="cadrumo.adapters.outbound.llm",
     sensitivity=SensitivityClass.DIAGNOSTIC,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
@@ -830,7 +830,7 @@ LLM_CACHE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 LLM_USAGE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="llm_usage",
-    namespace="cadrumo.outbound.llm.usage",
+    namespace="cadrumo.adapters.outbound.llm.usage",
     owner="cadrumo.adapters.outbound.llm",
     sensitivity=SensitivityClass.DIAGNOSTIC,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
@@ -840,7 +840,7 @@ LLM_USAGE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 LLM_RUN_TELEMETRY_NAMESPACE = SecureObjectNamespaceDefinition(
     key="llm_run_telemetry",
-    namespace="cadrumo.outbound.llm.run_telemetry",
+    namespace="cadrumo.adapters.outbound.llm.run_telemetry",
     owner="cadrumo.adapters.outbound.llm",
     sensitivity=SensitivityClass.DIAGNOSTIC,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
@@ -857,7 +857,7 @@ LLM_RUN_TELEMETRY_NAMESPACE = SecureObjectNamespaceDefinition(
 # document bytes, the prompt, or the response.
 LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
     key="llm_evidence_consent_ledger",
-    namespace="cadrumo.outbound.llm.evidence_consent_ledger",
+    namespace="cadrumo.adapters.outbound.llm.evidence_consent_ledger",
     owner="cadrumo.adapters.outbound.llm",
     sensitivity=SensitivityClass.IDENTITY,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,

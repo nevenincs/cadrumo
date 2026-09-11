@@ -48,7 +48,7 @@ from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....core.time.clock import now
 from ..storage.namespace_registry import secure_object_logical_path
 from ..storage.secure_object_namespaces import SecureObjectNamespaceDefinition
-from ..storage.sql import SecureObjectRepository, SecureObjectWrite
+from ..storage.sql.secure_objects import SecureObjectRepository, SecureObjectWrite
 from ._revision_guarded_singleton_mutation import mutate_revision_guarded_singleton
 
 

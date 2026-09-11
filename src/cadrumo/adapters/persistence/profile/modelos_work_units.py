@@ -51,7 +51,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     # pragma: no cover — import-cycle guard
-    from ..storage.sql import SecureObjectRepository, SecureObjectWrite
+    from ..storage.sql.secure_objects import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
 _WORK_UNIT_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_work_unit_persistence"

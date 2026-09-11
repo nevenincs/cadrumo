@@ -17,12 +17,12 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.outbound.llm.models import MultimodalImageInput
+from ....adapters.outbound.llm.vision_classifier import LocalVisionLLMClassifier
 from ....core.config import Settings
 from ....core.image_media_type import ImageMediaType
 from ....domain.transactions.llm import prompt_spec_with_saturation_fields
 from ....domain.user_profile.values import ProfileSetupState
-from ....llm.models import MultimodalImageInput
-from ....llm.vision_classifier import LocalVisionLLMClassifier
 from ....tests.llm_vision_evidence_support import _png_image, _transaction
 from ....tests.persistence_vision_evidence_support import (
     _add_evidence,

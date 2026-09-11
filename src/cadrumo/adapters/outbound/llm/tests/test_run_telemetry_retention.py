@@ -42,8 +42,8 @@ import pytest
 from .....core.classification.policies import SensitivityClass
 from .....core.config import override_settings
 from .....core.hashing import canonical_json_bytes
-from .....llm.errors import LLMCacheError
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ..errors import LLMCacheError
 from ..run_telemetry import _RUN_TELEMETRY_NAMESPACE, _RUN_TELEMETRY_VERSION, LLMRunRecord, LLMRunTelemetryRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -183,7 +183,7 @@ def test_client_construction_sweeps_the_run_telemetry_store(tmp_path: Path) -> N
     once-per-client retention sweep - proving the retention R3 promises fires in
     production rather than depending on a manual prune() call.
     """
-    from .....llm.client import LLMClient
+    from ..client import LLMClient
 
     anchor = datetime.now(UTC)
     recorder = LLMRunTelemetryRecorder(root_dir=tmp_path / "llm-run-telemetry")

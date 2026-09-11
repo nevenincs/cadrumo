@@ -136,7 +136,12 @@ class RentaFamilyProfile(BaseModel):
         """
         return not (self.anualidades_alimentos_euros is not None and self.anualidades_alimentos_euros > 0)
 
-    def dependencia_assimilated_indices(self, filing_year: int) -> tuple[int, ...]:
+    def dependencia_assimilated_indices(
+        self,
+        filing_year: int,
+        *,
+        context: FamilyFactResolutionContext | None = None,
+    ) -> tuple[int, ...]:
         """Indices of descendants reaching the mínimo ONLY through the dependency limb.
 
         The disclosure surface for a judgement the operator most needs to see:
@@ -153,12 +158,15 @@ class RentaFamilyProfile(BaseModel):
         disclosure rather than a missing one.
         """
         available = self.dependencia_assimilation_available
+        if context is None:
+            return ()
         return tuple(
             index
             for index, descendant in enumerate(self.descendientes)
             if descendant.assimilated_by_dependencia(dependencia_assimilation_available=available)
             and descendant.meets_non_income_conditions(
                 filing_year,
+                context=context,
                 dependencia_assimilation_available=available,
             )
         )

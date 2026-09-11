@@ -26,8 +26,8 @@ from .....core.period import Period
 from .....domain.justificante import Justificante
 from .....tests.aeat_literal_fixtures import justificante_wlpl_cotejo_url
 from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from ....persistence.storage.sql import SecureObjectRow
 from ....persistence.storage.sql.engine import get_engine
+from ....persistence.storage.sql.orm import SecureObjectRow
 from ...storage.errors import SecureObjectRowIdentityError
 from ...storage.secure_object_namespaces import JUSTIFICANTE_METADATA_NAMESPACE
 from ..justificante import JustificanteRepository

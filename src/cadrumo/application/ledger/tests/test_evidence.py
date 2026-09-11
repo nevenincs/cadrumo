@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.attachment import AttachmentStore
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.config import Settings
 from ....domain.buckets.event import BucketEventType
 from ..evidence import (

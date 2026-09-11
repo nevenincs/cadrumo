@@ -56,7 +56,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ...tests import SRC_CADRUMO, non_test_package_python_files, repo_relative
+from ...tests.inventory import SRC_CADRUMO, non_test_package_python_files, repo_relative
 from ..directory_scan import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -122,7 +122,7 @@ def _verify_settings_field(symbol: str) -> None:
 
 def _verify_consent_predicate(symbol: str) -> None:
     """Assert the consent predicate is importable from the package facade and callable."""
-    from ...llm.consent import cloud_evidence_read_permitted
+    from ...adapters.outbound.llm.consent import cloud_evidence_read_permitted
 
     assert cloud_evidence_read_permitted.__name__ == symbol
     assert callable(cloud_evidence_read_permitted)
@@ -299,7 +299,7 @@ def test_the_reinstated_consent_apparatus_exists_and_is_wired_at_the_choke_point
     import inspect
     import textwrap
 
-    from ...llm.client import LLMClient
+    from ...adapters.outbound.llm.client import LLMClient
 
     for symbol in _REINSTATED_CONSENT_SYMBOLS:
         _REINSTATED_CONSENT_VERIFIERS[symbol](symbol)
@@ -342,16 +342,16 @@ def _transport_of(stamp: str) -> str:
 
 
 def _text_classifier_transport() -> str:
+    from ...adapters.outbound.llm.text_classifier import LocalTextLLMClassifier
     from ...domain.transactions.llm import prompt_spec_with_every_spending_category
-    from ...llm.text_classifier import LocalTextLLMClassifier
 
     spec = prompt_spec_with_every_spending_category(year=2025)
     return _transport_of(LocalTextLLMClassifier(spec=spec, model="qwen2.5:3b").decided_by)
 
 
 def _vision_classifier_transport() -> str:
+    from ...adapters.outbound.llm.vision_classifier import LocalVisionLLMClassifier
     from ...domain.transactions.llm import prompt_spec_with_every_spending_category
-    from ...llm.vision_classifier import LocalVisionLLMClassifier
 
     spec = prompt_spec_with_every_spending_category(year=2025)
     return _transport_of(LocalVisionLLMClassifier(spec=spec, model="qwen2.5vl:3b").decided_by)
@@ -384,7 +384,7 @@ def _pinned_authority_values() -> InvoiceExtractionAuthorityValues:
 
 
 def _text_extractor_transport(provider: LLMProvider | None = None) -> str:
-    from ...llm.evidence_draft_text import TextInvoiceFieldExtractor
+    from ...adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor
     from ..config import LLMProvider
 
     resolved = provider if provider is not None else LLMProvider.LOCAL
@@ -398,7 +398,7 @@ def _text_extractor_transport(provider: LLMProvider | None = None) -> str:
 
 
 def _vision_transcriber_transport(provider: LLMProvider | None = None) -> str:
-    from ...llm.evidence_draft_vision import LocalVisionDocumentTranscriber
+    from ...adapters.outbound.llm.evidence_draft_vision import LocalVisionDocumentTranscriber
     from ..config import LLMProvider
 
     resolved = provider if provider is not None else LLMProvider.LOCAL
@@ -407,7 +407,7 @@ def _vision_transcriber_transport(provider: LLMProvider | None = None) -> str:
 
 
 def _column_role_mapper_transport(provider: LLMProvider | None = None) -> str:
-    from ...llm.column_role_mapping import SemanticColumnRoleMapper
+    from ...adapters.outbound.llm.column_role_mapping import SemanticColumnRoleMapper
     from ..config import LLMProvider
 
     resolved = provider if provider is not None else LLMProvider.LOCAL
@@ -419,7 +419,7 @@ def _column_role_mapper_transport(provider: LLMProvider | None = None) -> str:
 
 
 def _supply_nature_proposer_transport(provider: LLMProvider | None = None) -> str:
-    from ...llm.supply_nature_proposal import SupplyNatureProposer
+    from ...adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposer
     from ..config import LLMProvider
 
     resolved = provider if provider is not None else LLMProvider.LOCAL
@@ -481,8 +481,8 @@ def test_every_transport_mintable_without_a_consent_token_is_on_host() -> None:
     """
     import inspect
 
-    from ...llm.text_classifier import LocalTextLLMClassifier
-    from ...llm.vision_classifier import LocalVisionLLMClassifier
+    from ...adapters.outbound.llm.text_classifier import LocalTextLLMClassifier
+    from ...adapters.outbound.llm.vision_classifier import LocalVisionLLMClassifier
     from ..provenance_stamp import LOCAL_TRANSPORT_LABEL
 
     classes = {

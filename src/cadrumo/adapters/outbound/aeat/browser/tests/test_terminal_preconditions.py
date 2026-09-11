@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import asyncio
+import importlib
 import inspect
 from dataclasses import dataclass
 from types import ModuleType
@@ -260,7 +261,7 @@ def test_browser_failure_totality_uses_one_canonical_no_action_projection() -> N
 
 def test_browser_producers_have_no_direct_verdict_constructor_or_authored_recovery_command() -> None:
     """The browser boundary delegates construction and carries factual failures only."""
-    errors_module = __import__("cadrumo.adapters.outbound.aeat.browser.errors", fromlist=["*"])
+    errors_module = importlib.import_module("..errors", __package__)
     for module in (*_BROWSER_PRODUCER_MODULES, errors_module):
         source = inspect.getsource(module).lower()
         assert "playwright install" not in source

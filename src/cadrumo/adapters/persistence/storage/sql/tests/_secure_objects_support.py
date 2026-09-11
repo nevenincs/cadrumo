@@ -39,13 +39,13 @@ from ...secure_object_namespaces import StorageCustodyDisposition as StorageCust
 from ...secure_object_namespaces import StorageHierarchyRegistry as StorageHierarchyRegistry
 from ...secure_object_namespaces import StorageNamespaceScope as StorageNamespaceScope
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
-from .. import SecureObjectNamespaceIntegrity as SecureObjectNamespaceIntegrity
-from .. import SecureObjectWrite as SecureObjectWrite
 from .._secure_object_records import SecureObjectRecord as SecureObjectRecord
 from .._secure_object_records import SecureObjectUnreadable as SecureObjectUnreadable
+from ..secure_objects import SecureObjectNamespaceIntegrity as SecureObjectNamespaceIntegrity
 from ..secure_objects import (
     SecureObjectRepository,
 )
+from ..secure_objects import SecureObjectWrite as SecureObjectWrite
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

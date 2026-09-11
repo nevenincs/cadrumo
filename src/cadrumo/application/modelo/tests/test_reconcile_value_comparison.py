@@ -40,7 +40,7 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....tests import FIXTURES_DIR
+from ....tests.inventory import FIXTURES_DIR
 from ....tests.registry_observations import registry_grounded_observations
 from ...workflow.persistence import workflow_state_repository
 from ..reconciliation import (

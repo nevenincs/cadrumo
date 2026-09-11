@@ -1,7 +1,7 @@
 """Strict roundtrip across the encrypted ``LLMCache`` boundary.
 
 ``LLMCache`` persists :class:`CachedEntry` records under the
-``cadrumo.outbound.llm.cache`` namespace at
+``cadrumo.adapters.outbound.llm.cache`` namespace at
 ``SensitivityClass.DIAGNOSTIC``.
 
 Anti-tautology: the fixture populates every defaultable field on
@@ -20,9 +20,9 @@ from pathlib import Path
 
 import pytest
 
-from .....llm.models import LLMProvider, LLMRequest, LLMResponse
 from .....tests.secure_sql import TestRuntimeProfile, mutate_encrypted_secure_object_json
 from ..cache import LLMCache
+from ..models import LLMProvider, LLMRequest, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -156,9 +156,9 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
 
     from sqlalchemy import select
 
-    from .....llm.errors import LLMCacheError
-    from ....persistence.storage.sql import SecureObjectRow
+    from ....persistence.storage.sql.orm import SecureObjectRow
     from ..cache import _CACHE_NAMESPACE
+    from ..errors import LLMCacheError
 
     created_at = _CREATED_AT
     request = _populated_request()

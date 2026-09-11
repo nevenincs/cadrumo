@@ -12,9 +12,9 @@ from ......application.auth.protocols import BrowserSessionPort
 from ......core.config import Settings
 from ......core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...tests.process_support import wait_for_process_exit
-from .. import Profile
 from ..errors import BrowserError, BrowserPreconditionCondition
 from ..factory import create_browser_session, opened_browser_page, shared_playwright_runtime
+from ..profile import Profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

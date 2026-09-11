@@ -30,7 +30,7 @@ __all__ = ["secure_objects"]
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage.secure_object_namespaces import LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.classification.policies import SensitivityClass
 from ..evidence import (
     MediaKind,

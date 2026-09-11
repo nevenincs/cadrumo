@@ -89,7 +89,7 @@ class _MappedRowFields:
 def _resolve_roles_semantically(table: NormalizedTable) -> ColumnRoleMapping | None:
     """Establish ``table``'s column roles with the semantic column-role mapper.
 
-    The import is deferred to call time for two reasons: ``cadrumo.llm`` is an
+    The import is deferred to call time for two reasons: ``cadrumo.adapters.outbound.llm`` is an
     optional extra, and it is a SIBLING of this package in the layering
     contract rather than an inner tier. Reaching it here, only once a file has
     actually arrived at this lane, keeps a host without the extra able to
@@ -115,7 +115,7 @@ def _resolve_roles_semantically(table: NormalizedTable) -> ColumnRoleMapping | N
     ``llm`` extra's identity rather than a rendered installation command.
     """
     try:
-        from .....llm.column_role_mapping import SemanticColumnRoleMapper
+        from ....outbound.llm.column_role_mapping import SemanticColumnRoleMapper
     except MissingOptionalExtraError:
         raise
     except ImportError:

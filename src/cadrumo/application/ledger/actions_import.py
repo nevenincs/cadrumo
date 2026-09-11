@@ -1,7 +1,7 @@
 """Ledger source import services for bucket-scoped transaction catalogues.
 
-Provider rows arrive as
-:class:`~cadrumo.adapters.inbound.financial.providers.ParsedLedgerRow` objects.
+Provider rows arrive through the
+:class:`~cadrumo.application.ledger.protocols.ParsedLedgerRowProtocol` port.
 This module classifies them against a loaded :class:`TransactionCatalogue`,
 persists imported :class:`~cadrumo.domain.transactions.Transaction` instances,
 records ``LEDGER_TRANSACTION_IMPORTED`` bucket events, and returns
@@ -11,25 +11,18 @@ records ``LEDGER_TRANSACTION_IMPORTED`` bucket events, and returns
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, NamedTuple
-
-from ...core.hashing import sha256_hex
-
-if TYPE_CHECKING:
-    from ...adapters.inbound.financial.providers.base import ParsedLedgerRow, ProviderValidation
-
-from collections.abc import Sequence
+from typing import Final, NamedTuple
 
 from ...adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
 from ...core.directory_scan import DirectoryEntryKind, scan_directory
 from ...core.errors.error_codes import resolve_error_message
 from ...core.external_constants import DEFAULT_CURRENCY, XLS_EXTENSION, XLSX_EXTENSION
-from ...core.hashing import canonical_json_bytes, sha256_file
+from ...core.hashing import canonical_json_bytes, sha256_file, sha256_hex
 from ...core.i18n import tr
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_events
@@ -67,7 +60,7 @@ from .models import (
     LedgerSourceValidationReport,
     LedgerSourceVerificationReport,
 )
-from .protocols import FinancialProviderProtocol
+from .protocols import FinancialProviderProtocol, ParsedLedgerRowProtocol, ProviderValidationProtocol
 
 
 class LedgerProviderID(StrEnum):
@@ -102,8 +95,8 @@ class _ImportRowPlan(NamedTuple):
 class _PreparedSourceImport(NamedTuple):
     """Validated source rows and the reports produced before persistence."""
 
-    parsed_rows: tuple[ParsedLedgerRow, ...]
-    validation: ProviderValidation
+    parsed_rows: tuple[ParsedLedgerRowProtocol, ...]
+    validation: ProviderValidationProtocol
     source_verification: LedgerSourceVerificationReport
 
 
@@ -151,13 +144,13 @@ def _evaluate_import_rows(
     *,
     bucket_id: str,
     catalogue: TransactionCatalogue,
-    parsed_rows: tuple[ParsedLedgerRow, ...],
+    parsed_rows: tuple[ParsedLedgerRowProtocol, ...],
     currency_normalizer: CurrencyNormalizationService | None = None,
     occurred_at: datetime | None = None,
 ) -> _ImportRowPlan:
     """Classify every parsed row as imported / skipped / likely-duplicate.
 
-    Each :class:`~cadrumo.adapters.inbound.financial.providers.ParsedLedgerRow`
+    Each :class:`~cadrumo.application.ledger.protocols.ParsedLedgerRowProtocol`
     carries the magnitude :class:`~cadrumo.domain.transactions.RawTransaction`
     and the authoritative ``direction`` the provider derived from the source
     sign at the parse boundary; this classifier never re-derives flow from a
@@ -281,7 +274,7 @@ def _load_source_catalogue(
 def _source_import_diagnostics(
     *,
     command: LedgerSourceImportCommand,
-    parsed_rows: tuple[ParsedLedgerRow, ...],
+    parsed_rows: tuple[ParsedLedgerRowProtocol, ...],
     existing_catalogue: TransactionCatalogue,
 ) -> tuple[tuple[LedgerImportDiagnostic, ...], tuple[LedgerImportDiagnosticReport, ...]]:
     """Run optional verification and return raw facts plus safe report rows."""
@@ -303,10 +296,10 @@ def _source_import_diagnostics(
 def _build_dry_run_source_result(
     *,
     command: LedgerSourceImportCommand,
-    parsed_rows: tuple[ParsedLedgerRow, ...],
+    parsed_rows: tuple[ParsedLedgerRowProtocol, ...],
     existing_catalogue: TransactionCatalogue,
     currency_normalizer: CurrencyNormalizationService | None,
-    validation: ProviderValidation,
+    validation: ProviderValidationProtocol,
     source_verification: LedgerSourceVerificationReport,
     diagnostics: tuple[LedgerImportDiagnosticReport, ...],
 ) -> LedgerSourceImportResult:
@@ -337,12 +330,12 @@ def _persist_source_import(
     *,
     command: LedgerSourceImportCommand,
     bucket_id: str,
-    parsed_rows: tuple[ParsedLedgerRow, ...],
+    parsed_rows: tuple[ParsedLedgerRowProtocol, ...],
     repository: TransactionCatalogueRepositoryProtocol,
     event_repository: BucketEventHistoryRepositoryProtocol,
     currency_normalizer: CurrencyNormalizationService | None,
     raw_diagnostics: tuple[LedgerImportDiagnostic, ...],
-    validation: ProviderValidation,
+    validation: ProviderValidationProtocol,
     source_verification: LedgerSourceVerificationReport,
     diagnostics: tuple[LedgerImportDiagnosticReport, ...],
 ) -> LedgerSourceImportResult:
@@ -390,7 +383,7 @@ def _persist_source_import(
 def import_ledger_transactions(
     *,
     bucket_id: str,
-    parsed_rows: Iterable[ParsedLedgerRow],
+    parsed_rows: Iterable[ParsedLedgerRowProtocol],
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     actor: str = "operator",
@@ -400,7 +393,7 @@ def import_ledger_transactions(
 ) -> LedgerImportOperationResult:
     """Import provider rows into one bucket catalogue and emit events.
 
-    Each :class:`~cadrumo.adapters.inbound.financial.providers.ParsedLedgerRow`
+    Each :class:`~cadrumo.application.ledger.protocols.ParsedLedgerRowProtocol`
     carries the magnitude :class:`~cadrumo.domain.transactions.RawTransaction`
     plus the authoritative ``direction`` the provider derived at the parse
     boundary, so the import path never re-derives flow from a sign.
@@ -578,7 +571,7 @@ def _require_readable_source(path: Path) -> None:
         )
 
 
-def _validate_import_source(provider: FinancialProviderProtocol, path: Path) -> ProviderValidation:
+def _validate_import_source(provider: FinancialProviderProtocol, path: Path) -> ProviderValidationProtocol:
     _require_readable_source(path)
     validation = provider.validate_source(path)
     if not validation.is_valid:
@@ -615,7 +608,7 @@ def _unsupported_import_source(path: Path) -> TransactionValidationError:
     )
 
 
-def _validation_report(validation: ProviderValidation) -> LedgerSourceValidationReport:
+def _validation_report(validation: ProviderValidationProtocol) -> LedgerSourceValidationReport:
     return LedgerSourceValidationReport(
         valid=validation.is_valid,
         warnings=tuple(validation.warnings),

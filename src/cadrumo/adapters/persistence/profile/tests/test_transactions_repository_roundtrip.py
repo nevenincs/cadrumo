@@ -44,7 +44,7 @@ from .....domain.transactions.raw_transaction import RawProvenance, RawTransacti
 from .....tests.secure_sql import isolated_runtime_profile
 from ...storage.bucket.directory_layout import bucket_paths
 from ...storage.errors import ClassificationError, EnvelopeVersionError, SecureObjectRowIdentityError
-from ...storage.sql import SecureObjectRawRow, SecureObjectRepository
+from ...storage.sql.secure_objects import SecureObjectRawRow, SecureObjectRepository
 from ..transactions import (
     _TX_CATALOGUE_VERSION,
     TX_BUCKET_NAMESPACE,

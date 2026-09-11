@@ -44,7 +44,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.inbound.einvoice.parsers import parse_einvoice_document
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.config import Settings
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin

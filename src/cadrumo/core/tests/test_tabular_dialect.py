@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from ...tests import FIXTURES_DIR
+from ...tests.inventory import FIXTURES_DIR
 from ..tabular import TabularSourceError, normalize_tabular_bytes, normalize_tabular_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

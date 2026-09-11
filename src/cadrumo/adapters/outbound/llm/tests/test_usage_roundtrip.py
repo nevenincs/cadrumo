@@ -1,7 +1,7 @@
 """Strict roundtrip across the encrypted ``UsageRecorder`` boundary.
 
 ``UsageRecorder`` persists :class:`UsageRecord` rows under the
-``cadrumo.outbound.llm.usage`` namespace at
+``cadrumo.adapters.outbound.llm.usage`` namespace at
 ``SensitivityClass.DIAGNOSTIC``.
 
 Anti-tautology: writes two distinct records on different dates with
@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from .....llm.models import LLMProvider, UsageRecord
+from ..models import LLMProvider, UsageRecord
 from ..usage import UsageRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

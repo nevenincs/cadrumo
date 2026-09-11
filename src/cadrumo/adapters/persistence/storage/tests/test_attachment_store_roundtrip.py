@@ -50,8 +50,8 @@ from ..crypto.encrypted_columns import (
     encrypt_secure_object_payload,
     secure_object_payload_aad,
 )
-from ..sql import SecureObjectRow
 from ..sql.engine import get_engine
+from ..sql.orm import SecureObjectRow
 from ..sql.session import session_scope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

@@ -22,8 +22,8 @@ from sqlalchemy import select
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....adapters.persistence.storage.sql.engine import get_engine
+from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period

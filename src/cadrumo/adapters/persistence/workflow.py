@@ -36,7 +36,7 @@ from .storage.runtime_repository import (
 )
 from .storage.schema_lineage import inner_envelope_classification_is_expected, inner_envelope_version_is_current
 from .storage.secure_object_namespaces import WORKFLOW_RUN_NAMESPACE, WORKFLOW_STATE_NAMESPACE
-from .storage.sql import SecureObjectRepository
+from .storage.sql.secure_objects import SecureObjectRepository
 
 _logger = get_logger(__name__)
 

@@ -176,7 +176,7 @@ def test_encrypted_observation_roundtrip_detects_a_dropped_text_value(tmp_path: 
     """Anti-tautology: changing the persisted text scalar changes the loaded envelope."""
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.sql import SecureObjectRow
+    from ....adapters.persistence.storage.sql.orm import SecureObjectRow
     from ..observations_repository import observation_key
 
     period = Period.from_year_and_code(2025, "1T")
@@ -528,7 +528,7 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.sql import SecureObjectRow
+    from ....adapters.persistence.storage.sql.orm import SecureObjectRow
     from ..observations_repository import observation_key
 
     observation_namespace = CalculationObservationRepository.namespace
@@ -961,7 +961,7 @@ def _restamp_wallet_decision_row_as_v1(
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....adapters.persistence.storage.sql import SecureObjectRow
+    from ....adapters.persistence.storage.sql.orm import SecureObjectRow
     from ....adapters.persistence.storage.sql.secure_object_crypto import derive_revision_id
     from ....adapters.persistence.storage.sql.session import session_scope
     from ....core.hashing import sha256_hex

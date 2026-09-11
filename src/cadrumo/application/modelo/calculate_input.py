@@ -537,7 +537,7 @@ def build_work_calculate_input_bundle(
     )
 
 
-def _validate_detail_rows(rows: tuple[ModeloDetailRow, ...], *, effective_date: date | None = None) -> None:
+def _validate_detail_rows(rows: tuple[ModeloDetailRow, ...], *, effective_date: date) -> None:
     member_rows = [row for row in rows if isinstance(row, Modelo184MemberRow)]
     try:
         validate_m184_member_share_sum(member_rows)

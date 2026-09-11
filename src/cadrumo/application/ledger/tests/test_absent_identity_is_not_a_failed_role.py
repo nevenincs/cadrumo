@@ -24,10 +24,10 @@ import json
 
 import pytest
 
+from ....adapters.outbound.llm.invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
-from ....llm.invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
 from ..identity_roles import IdentityCandidate, resolve_counterparty_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

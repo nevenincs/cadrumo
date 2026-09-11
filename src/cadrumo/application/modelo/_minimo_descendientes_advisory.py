@@ -949,7 +949,10 @@ def collect_minimo_descendientes_dependencia_diagnostics(
 
     profile = _family_profile_from_facts(facts)
     diagnostics: list[CalculationSourceDiagnostic] = []
-    granted = profile.dependencia_assimilated_indices(revision.valid_to.year)
+    granted = profile.dependencia_assimilated_indices(
+        revision.valid_to.year,
+        context=_family_fact_context(revision.valid_to.year),
+    )
     if granted:
         diagnostics.append(_dependencia_assimilated_advisory(list(granted), estatal_id))
     suppressed = profile.dependencia_suppressed_indices()

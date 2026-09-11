@@ -8,11 +8,10 @@ from uuid import UUID
 import keyring
 import pytest
 
-from cadrumo.tests._os_keychain_hook import require_os_credential_store
-
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
 from .....core.time.clock import now as _now
+from .....tests._os_keychain_hook import require_os_credential_store
 from .....tests.secure_sql import (
     isolated_cli_runtime_profile,
     isolated_ephemeral_secure_sql,
