@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import override
 
-from .._repository import ResourceCacheRepository
+from ....core.resources._repository import ResourceCacheRepository
 
 
 class RecargoBandsRepository(ResourceCacheRepository[object, None]):
@@ -20,7 +20,7 @@ class RecargoBandsRepository(ResourceCacheRepository[object, None]):
 
     @override
     def _load(self, key: None) -> object:
-        from ....domain.deadlines.recargo import load_recargo_bands
+        from ...deadlines.recargo import load_recargo_bands
 
         return load_recargo_bands()
 

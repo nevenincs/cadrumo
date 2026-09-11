@@ -64,7 +64,7 @@ from cadrumo.application.calculations.relation_prefill import (
 from cadrumo.core.period import Period
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.core.resources import resources
+from cadrumo.domain.resources.registry import resources
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository

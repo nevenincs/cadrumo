@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import override
 
-from .._repository import ResourceCacheRepository
+from ....core.resources._repository import ResourceCacheRepository
 
 
 class ApoderamientosRepository(ResourceCacheRepository[object, None]):
@@ -21,7 +21,7 @@ class ApoderamientosRepository(ResourceCacheRepository[object, None]):
 
     @override
     def _load(self, key: None) -> object:
-        from ....domain.auth.apoderamientos.catalogue import load_default_catalogue
+        from ...auth.apoderamientos.catalogue import load_default_catalogue
 
         return load_default_catalogue()
 

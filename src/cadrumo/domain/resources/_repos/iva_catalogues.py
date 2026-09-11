@@ -11,8 +11,8 @@ from datetime import date
 from pathlib import Path
 from typing import override
 
-from .._repository import ResourceCacheRepository
-from ..errors import ResourceNotFoundError
+from ....core.resources._repository import ResourceCacheRepository
+from ....core.resources.errors import ResourceNotFoundError
 
 
 class IvaCatalogueRepository(ResourceCacheRepository[object, int]):
@@ -22,7 +22,7 @@ class IvaCatalogueRepository(ResourceCacheRepository[object, int]):
     the corpus onto the citations asserted over that filing year. The Settings
     env-override seam for ``CADRUMO_IVA_CATALOGUE_FILE`` is threaded through the
     constructor's ``path`` parameter; the
-    :func:`cadrumo.core.resources.resources` factory reads Settings and passes
+    :func:`cadrumo.domain.resources.registry.resources` factory reads Settings and passes
     the resolved path once at construction. A year the catalogue does not ground
     raises :class:`ResourceNotFoundError`.
     """
@@ -33,8 +33,8 @@ class IvaCatalogueRepository(ResourceCacheRepository[object, int]):
 
     @override
     def _load(self, key: int) -> object:
-        from ....domain.iva.catalogue import iva_catalogue_years, resolve_catalogue
-        from ....domain.iva.errors import IvaCatalogueError
+        from ...iva.catalogue import iva_catalogue_years, resolve_catalogue
+        from ...iva.errors import IvaCatalogueError
 
         if self._path is not None and key not in iva_catalogue_years(self._path):
             raise ResourceNotFoundError(f"no IVA catalogue grounded for year {key}")

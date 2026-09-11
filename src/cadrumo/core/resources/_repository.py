@@ -3,8 +3,8 @@
 Every read-only bundled-data resource in the project is exposed
 through one :class:`ResourceRepository` implementation. The
 repository owns its loader and its Identity Map cache; consumers
-go through :class:`ResourceRegistry` instead of importing loader
-functions directly.
+go through :class:`cadrumo.domain.resources.registry.ResourceRegistry` instead
+of importing loader functions directly.
 
 The base class implements the ``get(key)`` / ``clear_cache``
 contract on top of an unbounded ``dict[K, T]``. Subclasses

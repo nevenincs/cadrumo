@@ -1,13 +1,13 @@
 """Structural guard: resources() is the only resource-access surface.
 
 The resource-management API contract mandates a single resource-access
-boundary at ``src/cadrumo/core/resources/``. This test enforces the
+boundary at ``src/cadrumo/domain/resources/``. This test enforces the
 invariant by scanning every production module under ``src/cadrumo/``
 for unauthorised parallel-locator patterns.
 
 Allow-listed exceptions:
 
-* Files under ``src/cadrumo/core/resources/`` define the boundary itself.
+* Files under ``src/cadrumo/domain/resources/`` define the boundary itself.
 * Tests (``test_*.py``, ``_test_*.py``, ``conftest.py``) may use
   ``bundled_path`` directly to verify the bundled data-tree SHAPE
   rather than the Repository surface, as documented in the plan's
@@ -17,10 +17,10 @@ Allow-listed exceptions:
   legitimately greps the data tree.
 
 See Also:
-    :func:`~core.resources.resources`
+    :func:`~domain.resources.resources`
         Canonical repository factory that production code must use for bundled
         resource access.
-    :func:`~core.resources.bundled_path`
+    :func:`~core.resources.bundled_data.bundled_path`
         Lower-level bundled-data path helper allowed only at the resource
         boundary and in shape-verification tests.
     :func:`~tests._inventory.production_python_files`
@@ -36,11 +36,11 @@ from pathlib import Path
 
 import pytest
 
-from ....tests import SRC_CADRUMO, package_python_files, production_python_files, repo_relative
+from ....tests.inventory import SRC_CADRUMO, package_python_files, production_python_files, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_RESOURCES_PKG = SRC_CADRUMO / "core" / "resources"
+_RESOURCES_PKG = SRC_CADRUMO / "domain" / "resources"
 
 
 def _is_production_module(path: Path) -> bool:
@@ -72,7 +72,7 @@ def test_no_default_root_constants_in_production() -> None:
     assert not offenders, (
         "production files defining "
         "_DEFAULT_*_ROOT = bundled_path(...) found; these must "
-        f"route through cadrumo.core.resources.resources() instead: {offenders}"
+        f"route through cadrumo.domain.resources.resources() instead: {offenders}"
     )
 
 
@@ -126,7 +126,7 @@ def test_no_production_module_walks_out_of_the_package() -> None:
 def test_resources_package_re_exports_boundary() -> None:
     """The boundary functions stay accessible through the package init."""
 
-    from ..bundled_data import as_path, bundled_path, packaged_data
+    from ....core.resources.bundled_data import as_path, bundled_path, packaged_data
     from ..registry import resources
 
     assert packaged_data is not None

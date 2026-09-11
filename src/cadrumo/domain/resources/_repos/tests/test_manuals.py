@@ -15,8 +15,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....core.resources.errors import ResourceValidationError
 from .....domain.manuals.schema import ManualPart
-from ...errors import ResourceValidationError
 from ..manuals import ManualKey, ManualRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

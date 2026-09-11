@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...errors import ResourceNotFoundError
+from .....core.resources.errors import ResourceNotFoundError
 from ..category_profiles import CategoryProfileRepository
 from ..holiday_calendars import HolidayCalendarRepository
 from ..iva_catalogues import IvaCatalogueRepository

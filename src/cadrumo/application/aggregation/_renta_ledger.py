@@ -40,7 +40,6 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodKind
 from ...core.prorrata_register import regime_apportions_deduction
 from ...core.prose_elision import IssueDetail
-from ...core.resources.registry import resources
 from ...domain.categories.profile import CategoryProfile
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.contribuyente.ccaa import CCAA
@@ -67,6 +66,7 @@ from ...domain.renta.ledger_expenses import (
     resolve_region_category_profiles,
     select_deductibility_profile,
 )
+from ...domain.resources.registry import resources
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol

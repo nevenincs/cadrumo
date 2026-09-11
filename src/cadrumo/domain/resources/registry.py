@@ -42,7 +42,7 @@ class ResourceRegistry:
 
     def clear(self) -> None:
         """Clear every Repository's Identity Map."""
-        from ._repository import ResourceRepository
+        from ...core.resources._repository import ResourceRepository
 
         for attr in self.__dataclass_fields__:
             value = getattr(self, attr)
@@ -63,7 +63,7 @@ def resources() -> ResourceRegistry:
     Returns:
         The process-wide cached :class:`ResourceRegistry` instance.
     """
-    from ..config import load_settings
+    from ...core.config import load_settings
 
     settings = load_settings()
     return ResourceRegistry(

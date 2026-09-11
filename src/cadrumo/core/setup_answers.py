@@ -24,7 +24,7 @@ inside validators rather than at module level to break the circular import
 path: ``cadrumo.core.setup_answers`` -> ``cadrumo.domain.deadlines.models`` ->
 ``cadrumo.domain.deadlines.__init__`` -> ``cadrumo.domain.deadlines.profiles`` ->
 ``cadrumo.core.setup_answers``. This mirrors the deferral strategy used in
-``cadrumo.core.resources._repos.*`` and is the established project pattern.
+``cadrumo.domain.resources._repos.*`` and is the established project pattern.
 """
 
 from __future__ import annotations
