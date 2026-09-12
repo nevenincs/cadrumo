@@ -106,7 +106,7 @@ def _cash_accounting_transaction(
     return Transaction.model_validate(
         {
             "raw": _raw(provider_id, filing_date, Decimal("1210.00"), "criterio de caja"),
-            "direction": TransactionDirection.INCOMING,
+            "direction": TransactionDirection.OUTGOING,
             "business_classification": BusinessClassification.BUSINESS,
             "source_jurisdiction": "ES",
             "group_label": None,
@@ -114,7 +114,7 @@ def _cash_accounting_transaction(
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("210.00"),
             "iva_category": IvaCategory.DOMESTIC_GENERAL,
-            "cash_accounting_treatment": IvaCashAccountingTreatment.TAXPAYER_REGIME,
+            "cash_accounting_treatment": IvaCashAccountingTreatment.SUPPLIER_REGIME,
             "operation_date": operation_date,
             "cash_accounting_payment_evidence": (
                 IvaCashAccountingPaymentEvidence(

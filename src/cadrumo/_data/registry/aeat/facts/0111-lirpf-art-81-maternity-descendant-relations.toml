@@ -1,0 +1,25 @@
+[fact]
+fact_id = "lirpf-art-81-maternity-descendant-relations"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "lirpf-art-81-maternity-descendant-relations:2007-01-01"
+date_axis = "filing_period"
+valid_from = 2007-01-01
+legal_refs = ["ley-35-2006:art-81"]
+source_refs = ["boe-lirpf-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = [
+  "tutela o acogimiento permanente o de delegación de guarda para la convivencia preadoptiva",
+  "no resulta aplicable",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "catalogue.ids", value = "descendiente,adoptado,acogimiento_preadoptivo_o_permanente,tutela" },
+]

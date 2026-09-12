@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from ...core.descendant_relacion import ART_81_1_MATERNIDAD_RELACIONES
-from .descendant_maternity import DescendantMaternityMixin
+from .descendant_maternity import (
+    ART_81_1_MATERNIDAD_RELACIONES,
+    DescendantMaternityMixin,
+)
 from .family_fact_context import FamilyFactResolutionContext
 from .family_types import (
     MinimoDescendientesThresholds,

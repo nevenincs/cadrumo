@@ -11,6 +11,10 @@ source_refs = ["boe-lis-art-40-statutory-facts"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
+[[fact.variants.source_citations]]
+source_ref = "boe-lis-art-40-statutory-facts"
+required_text = ["6 millones de euros durante los 12 meses anteriores"]
+
 [fact.variants.payload]
 kind = "mapping"
 entries = [

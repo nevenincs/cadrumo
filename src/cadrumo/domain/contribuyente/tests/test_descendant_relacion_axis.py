@@ -502,7 +502,7 @@ class TestGuardaYCustodiaJudicial:
         is a non-member, so a later reader does not admit it on the assumption
         that its omission was an oversight.
         """
-        from ....core.descendant_relacion import ART_81_1_MATERNIDAD_RELACIONES
+        from ..descendant_maternity import ART_81_1_MATERNIDAD_RELACIONES
 
         assert DescendantRelacion.GUARDA_Y_CUSTODIA_JUDICIAL not in ART_81_1_MATERNIDAD_RELACIONES
 

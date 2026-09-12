@@ -100,7 +100,6 @@ def _article_filter_binding(**selector_updates: object) -> BindingDefinition:
         "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
         "cash_accounting_treatments": (
             IvaCashAccountingTreatment.NONE,
-            IvaCashAccountingTreatment.TAXPAYER_REGIME,
             IvaCashAccountingTreatment.SUPPLIER_REGIME,
         ),
     }

@@ -237,7 +237,6 @@ def test_invoice_sourced_rows_reach_their_own_rate_specific_box() -> None:
                 "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
                 "cash_accounting_treatments": (
                     IvaCashAccountingTreatment.NONE,
-                    IvaCashAccountingTreatment.TAXPAYER_REGIME,
                     IvaCashAccountingTreatment.SUPPLIER_REGIME,
                 ),
                 "applied_rates": (rate,),

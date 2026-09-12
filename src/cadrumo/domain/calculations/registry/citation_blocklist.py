@@ -1,4 +1,4 @@
-"""Known-bad Spanish-tax legal citation guardrails for registry validation."""
+"""Known-bad citation guardrails for registry validation."""
 
 from __future__ import annotations
 
@@ -16,19 +16,10 @@ CitationSource = Literal[
     "manual",
     "instruction",
 ]
-"""Closed set of Spanish-law source types a registry legal citation may reference.
+"""Closed parser token set for the registry citation ``source`` field.
 
-Maps to the ``source`` field on ``legal_refs`` entries in the modelo registry
-TOML authoring tree. Values are lowercase identifiers:
-
-* ``"ley"`` — primary legislation (e.g. LIRPF, LIS, LIVA).
-* ``"real_decreto"`` — Royal Decree (e.g. RIRPF, RIS).
-* ``"real_decreto_legislativo"`` — consolidated legislative text
-  approved by royal legislative decree (e.g. TRLIRNR).
-* ``"orden"`` — Ministerial Order (HAC/EHA prefixes).
-* ``"reglamento"`` — secondary regulation.
-* ``"manual"`` — AEAT published guidance manual.
-* ``"instruction"`` — AEAT instruction document.
+The tokens identify the syntax category accepted by the validation boundary;
+the cited declarations and their governing text remain registry data.
 """
 
 

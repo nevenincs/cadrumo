@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import date
+from collections.abc import Mapping, Sequence
+from datetime import date, timedelta
 from enum import StrEnum, auto
-from typing import Annotated, Final, Literal
+from types import MappingProxyType
+from typing import Annotated, Final, Literal, Self
 
 from pydantic import AfterValidator, BeforeValidator, Field, field_validator, model_validator
 
@@ -38,11 +40,19 @@ from .schema_base import (
 
 __all__ = [
     "LegalReference",
+    "DateSupportEnvelope",
     "PeriodSelector",
+    "PeriodScopedValidityWindow",
     "RegistryExternalLink",
     "RegistrySnapshotRef",
+    "RegistryTemporalBounds",
+    "RegistryValidityWindow",
     "SourceReference",
     "TemporalApplicability",
+    "TemporalSupportEnvelope",
+    "resolve_validity_window",
+    "resolve_supported_validity_window",
+    "materialize_date_window_series",
     "source_window_applies_across",
 ]
 
@@ -216,19 +226,216 @@ class PeriodSelector(RegistryModel):
         return year >= self.year_from and (self.year_to is None or year <= self.year_to)
 
 
-class TemporalApplicability(RegistryModel):
-    """Describe the date axis and optional period selector for a valid window."""
+class RegistryValidityWindow(RegistryModel):
+    """Common inclusive validity window for every revisioned registry declaration."""
 
-    date_axis: DateAxisField
     valid_from: date
     valid_to: date | None = None
-    period_selector: PeriodSelector | None = None
 
     @model_validator(mode="after")
-    def _validate_window(self) -> TemporalApplicability:
+    def _validate_window(self) -> Self:
         if self.valid_to is not None and self.valid_to < self.valid_from:
             raise RegistryValidationError("valid_to must be on or after valid_from")
         return self
+
+    def contains_date(self, coordinate: date) -> bool:
+        """Return whether ``coordinate`` falls inside this inclusive window."""
+        return coordinate >= self.valid_from and (self.valid_to is None or coordinate <= self.valid_to)
+
+
+class RegistryTemporalBounds(RegistryModel):
+    """Optional delta-authored bounds resolved against a containing window."""
+
+    valid_from: date | None = None
+    valid_to: date | None = None
+
+    @model_validator(mode="after")
+    def _validate_declared_order(self) -> Self:
+        if self.valid_from is not None and self.valid_to is not None and self.valid_to < self.valid_from:
+            raise RegistryValidationError("valid_to must be on or after valid_from")
+        return self
+
+
+def resolve_validity_window(
+    bounds: RegistryTemporalBounds,
+    *,
+    fallback: RegistryValidityWindow,
+) -> RegistryValidityWindow:
+    """Resolve omitted delta bounds from the containing revision/support window.
+
+    Endpoint inheritance is deliberately symmetric: an omitted lower bound
+    propagates backward to the fallback floor and an omitted upper bound
+    propagates forward to its ceiling (including an open ceiling). Constructing
+    the concrete result re-runs the common ordering invariant.
+    """
+    return RegistryValidityWindow(
+        valid_from=bounds.valid_from if bounds.valid_from is not None else fallback.valid_from,
+        valid_to=bounds.valid_to if bounds.valid_to is not None else fallback.valid_to,
+    )
+
+
+def resolve_supported_validity_window(
+    bounds: RegistryTemporalBounds,
+    *,
+    fallback: RegistryValidityWindow,
+    support: DateSupportEnvelope,
+    propagate_backward: bool = False,
+    propagate_forward: bool = False,
+) -> RegistryValidityWindow:
+    """Resolve delta bounds with explicit first/last-declaration propagation.
+
+    A first declaration may inherit the support floor instead of its containing
+    revision's lower bound. A last declaration may inherit the hard ceiling;
+    where no ceiling is declared that produces an open end. Interior omitted
+    endpoints inherit their containing revision window. Authored bounds always
+    win and are never rewritten.
+    """
+    valid_from = bounds.valid_from
+    if valid_from is None:
+        valid_from = support.floor if propagate_backward else fallback.valid_from
+    valid_to = bounds.valid_to
+    if valid_to is None:
+        valid_to = support.hard_ceiling if propagate_forward else fallback.valid_to
+    return RegistryValidityWindow(valid_from=valid_from, valid_to=valid_to)
+
+
+def materialize_date_window_series(
+    declarations: Sequence[tuple[str, RegistryTemporalBounds]],
+    *,
+    support: DateSupportEnvelope,
+) -> Mapping[str, RegistryValidityWindow]:
+    """Materialize one ordered delta series into concrete, gap-free default windows.
+
+    The first omitted lower endpoint propagates backward to ``support.floor``.
+    Every later declaration must state its lower endpoint, because otherwise no
+    authored event locates that transition. An omitted upper endpoint closes on
+    the day before the next declaration; the last propagates forward to the hard
+    ceiling, or stays open when the support envelope is open. Explicit endpoints
+    are retained verbatim.
+    """
+    if not declarations:
+        return MappingProxyType({})
+    identifiers = [identifier for identifier, _ in declarations]
+    if len(set(identifiers)) != len(identifiers):
+        raise RegistryValidationError("temporal delta series identifiers must be unique")
+
+    starts: list[date] = []
+    for index, (identifier, bounds) in enumerate(declarations):
+        if bounds.valid_from is not None:
+            start = bounds.valid_from
+        elif index == 0:
+            start = support.floor
+        else:
+            raise RegistryValidationError(
+                f"temporal delta {identifier!r} must declare valid_from; only the first declaration "
+                "can propagate backward to the support floor"
+            )
+        if starts and start <= starts[-1]:
+            raise RegistryValidationError("temporal delta series valid_from values must be strictly increasing")
+        starts.append(start)
+
+    materialized: dict[str, RegistryValidityWindow] = {}
+    for index, (identifier, bounds) in enumerate(declarations):
+        if bounds.valid_to is not None:
+            end = bounds.valid_to
+        elif index + 1 < len(declarations):
+            end = starts[index + 1] - timedelta(days=1)
+        else:
+            end = support.hard_ceiling
+        if end is not None and index + 1 < len(declarations) and end >= starts[index + 1]:
+            raise RegistryValidationError(
+                f"temporal delta {identifier!r} valid_to overlaps successor {identifiers[index + 1]!r}"
+            )
+        materialized[identifier] = RegistryValidityWindow(valid_from=starts[index], valid_to=end)
+    return MappingProxyType(materialized)
+
+
+class PeriodScopedValidityWindow(RegistryValidityWindow):
+    """A validity window whose filing-year/period coordinate is mandatory."""
+
+    period_selector: PeriodSelector
+
+
+class TemporalApplicability(RegistryValidityWindow):
+    """Describe the date axis and optional period selector for a valid window."""
+
+    date_axis: DateAxisField
+    period_selector: PeriodSelector | None = None
+
+
+def _validate_support_bounds[T](floor: T, horizon: T, hard_ceiling: T | None) -> None:
+    if horizon < floor:  # type: ignore[operator]
+        raise RegistryValidationError("temporal support horizon must be on or after floor")
+    if hard_ceiling is not None and hard_ceiling <= horizon:  # type: ignore[operator]
+        raise RegistryValidationError(
+            "temporal support hard_ceiling must be after horizon; a ceiling at or below "
+            "the horizon would close a span the corpus already declares coverage for"
+        )
+
+
+class _SupportEnvelopeMechanics:
+    """One implementation of hard-gate admission and newest-authority projection."""
+
+    floor: object
+    horizon: object
+    hard_ceiling: object | None
+
+    def admits_coordinate(self, coordinate: object) -> bool:
+        if coordinate < self.floor:  # type: ignore[operator]
+            return False
+        return self.hard_ceiling is None or coordinate <= self.hard_ceiling  # type: ignore[operator]
+
+    def projection_coordinate(self, coordinate: object) -> object | None:
+        if not self.admits_coordinate(coordinate):
+            return None
+        return min(coordinate, self.horizon)  # type: ignore[type-var]
+
+
+class DateSupportEnvelope(_SupportEnvelopeMechanics, RegistryModel):
+    """Hard gates and authored horizon on an effective-date axis."""
+
+    floor: date
+    horizon: date
+    hard_ceiling: date | None = None
+
+    @model_validator(mode="after")
+    def _bounds_are_ordered(self) -> Self:
+        _validate_support_bounds(self.floor, self.horizon, self.hard_ceiling)
+        return self
+
+
+class TemporalSupportEnvelope(_SupportEnvelopeMechanics, RegistryModel):
+    """Hard gates and authored horizon shared by forward-projecting registries.
+
+    ``floor`` and ``hard_ceiling`` are refusal boundaries. ``horizon`` is the
+    last explicitly authored coordinate, not an implicit ceiling: when no hard
+    ceiling exists, a consumer may carry the declaration at the horizon
+    forward. The actual projection remains a consumer decision and is exposed
+    explicitly by :meth:`projection_coordinate`.
+    """
+
+    floor: FilingYear
+    horizon: FilingYear
+    hard_ceiling: FilingYear | None = None
+
+    @model_validator(mode="after")
+    def _bounds_are_ordered(self) -> Self:
+        _validate_support_bounds(self.floor, self.horizon, self.hard_ceiling)
+        return self
+
+    @property
+    def years(self) -> tuple[int, ...]:
+        """Enumerate the explicitly authored span, both bounds inclusive."""
+        return tuple(range(self.floor, self.horizon + 1))
+
+    def admits_coordinate(self, coordinate: int) -> bool:
+        """Return whether ``coordinate`` is inside the envelope's hard gates."""
+        return super().admits_coordinate(coordinate)
+
+    def projection_coordinate(self, coordinate: int) -> int | None:
+        """Map an admitted coordinate to its authored coordinate, carrying the horizon forward."""
+        projected = super().projection_coordinate(coordinate)
+        return projected if isinstance(projected, int) else None
 
 
 def _validate_legal_governed_periods(

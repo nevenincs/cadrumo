@@ -14,6 +14,7 @@ from pydantic import BeforeValidator, Field, ValidationInfo, field_validator, mo
 from .....core.frozen_mapping import FROZEN_MAPPING
 from ..errors import RegistryValidationError
 from ..ids import LegalRefId, SourceRefId
+from ..revision_contracts import DeclaredPredecessor, DeclaredPredecessorField, NoPredecessor, validate_predecessor_forest
 from ..schema_base import (
     DateAxisField,
     RegistryModel,
@@ -22,6 +23,14 @@ from ..schema_base import (
     coerce_enum_member,
 )
 from ..schema_scalars import DecimalValue
+from ..schema_references import (
+    DateSupportEnvelope,
+    PeriodSelector,
+    RegistryTemporalBounds,
+    RegistryValidityWindow,
+    materialize_date_window_series,
+    resolve_supported_validity_window,
+)
 
 __all__ = [
     "TAGGED_FACT_ATOM_CONTEXT",
@@ -32,6 +41,7 @@ __all__ = [
     "FactId",
     "FactOwnership",
     "FactPayload",
+    "FactProjectionDirection",
     "FactSelector",
     "FactVariantId",
     "GovernedFact",
@@ -152,6 +162,14 @@ class FactOwnership(StrEnum):
 
 
 FactOwnershipField = Annotated[FactOwnership, BeforeValidator(coerce_enum_member(FactOwnership))]
+
+
+class FactProjectionDirection(StrEnum):
+    """How a fact result relates to the declaration that supplied its value."""
+
+    AUTHORED = "authored"
+    BACKWARD = "backward"
+    FORWARD = "forward"
 
 
 class FactSelector(RegistryModel):
@@ -385,14 +403,19 @@ FactPayload = Annotated[
 ]
 
 
-class GovernedFactVariant(RegistryModel):
-    """One immutable, evidence-bearing redaction or validity interval."""
+class GovernedFactVariant(RegistryTemporalBounds):
+    """One evidence-bearing fact revision on an exact semantic track.
+
+    ``variant_id`` is the stable revision identity. Bounds are delta-authored:
+    explicit dates remain authoritative, while an omitted endpoint can only be
+    materialised against the owning fact's declared support envelope.
+    """
 
     variant_id: FactVariantId
     selectors: tuple[FactSelector, ...] = ()
     date_axis: DateAxisField
-    valid_from: date
-    valid_to: date | None = None
+    period_selector: PeriodSelector | None = None
+    predecessor: DeclaredPredecessorField | None = None
     payload: FactPayload
     legal_refs: tuple[LegalRefId, ...] = ()
     source_refs: tuple[SourceRefId, ...] = ()
@@ -403,8 +426,6 @@ class GovernedFactVariant(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_variant(self) -> GovernedFactVariant:
-        if self.valid_to is not None and self.valid_to < self.valid_from:
-            raise RegistryValidationError("governed fact valid_to must be on or after valid_from")
         selector_names = [selector.name for selector in self.selectors]
         if len(set(selector_names)) != len(selector_names):
             raise RegistryValidationError("governed fact selector names must be unique")
@@ -412,6 +433,8 @@ class GovernedFactVariant(RegistryModel):
             raise RegistryValidationError("governed fact variant cannot take precedence over itself")
         if len(set(self.precedence_over)) != len(self.precedence_over):
             raise RegistryValidationError("governed fact precedence targets must be unique")
+        if isinstance(self.predecessor, DeclaredPredecessor) and self.predecessor.revision_id == self.variant_id:
+            raise RegistryValidationError("governed fact variant cannot declare itself as predecessor")
         cited = {citation.source_ref for citation in self.source_citations}
         if not cited.issubset(set(self.source_refs)):
             raise RegistryValidationError("governed fact citations must name a declared source_ref")
@@ -425,6 +448,7 @@ class GovernedFact(RegistryModel):
 
     fact_id: FactId
     family: GovernedFactFamilyField
+    support: DateSupportEnvelope | None = None
     variants: tuple[GovernedFactVariant, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
@@ -443,7 +467,35 @@ class GovernedFact(RegistryModel):
                 raise RegistryValidationError(
                     f"governed fact {self.fact_id!r} precedence names unknown variants {sorted(unknown)!r}"
                 )
+            if variant.valid_from is None and self.support is None:
+                raise RegistryValidationError(
+                    f"governed fact {self.fact_id!r} variant {variant.variant_id!r} omits valid_from "
+                    "without declaring a fact support envelope"
+                )
+            if self.support is not None:
+                for bound_name, bound in (("valid_from", variant.valid_from), ("valid_to", variant.valid_to)):
+                    if bound is not None and not self.support.admits_coordinate(bound):
+                        raise RegistryValidationError(
+                            f"governed fact {self.fact_id!r} variant {variant.variant_id!r} {bound_name} "
+                            "falls outside the fact support envelope"
+                        )
         return self
+
+    def validity_window(self, variant: GovernedFactVariant) -> RegistryValidityWindow:
+        """Materialise one variant's authored or support-propagated endpoints."""
+        if variant.valid_from is not None and (variant.valid_to is not None or self.support is None):
+            return RegistryValidityWindow(valid_from=variant.valid_from, valid_to=variant.valid_to)
+        if self.support is None:
+            # The model validator guarantees the lower endpoint in this lane.
+            return RegistryValidityWindow(valid_from=variant.valid_from, valid_to=None)  # type: ignore[arg-type]
+        fallback = RegistryValidityWindow(valid_from=self.support.floor, valid_to=self.support.hard_ceiling)
+        return resolve_supported_validity_window(
+            variant,
+            fallback=fallback,
+            support=self.support,
+            propagate_backward=variant.valid_from is None,
+            propagate_forward=variant.valid_to is None,
+        )
 
 
 class GovernedFactCatalogue(RegistryModel):

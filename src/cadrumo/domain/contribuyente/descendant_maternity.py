@@ -2,13 +2,38 @@
 
 from __future__ import annotations
 
-from ...core.descendant_relacion import ART_81_1_MATERNIDAD_RELACIONES, DescendantRelacion
+from ...core.descendant_relacion import DescendantRelacion
 from .descendant_record import DescendantRecordBase
 from .family_fact_context import FamilyFactResolutionContext
 from .family_types import (
     MinimoDescendientesThresholds,
     months_of_year_between,
 )
+
+
+ART_81_1_MATERNIDAD_RELACIONES: frozenset[DescendantRelacion] = frozenset(
+    {
+        DescendantRelacion.DESCENDIENTE,
+        DescendantRelacion.ADOPTADO,
+        DescendantRelacion.ACOGIMIENTO_PREADOPTIVO_O_PERMANENTE,
+        DescendantRelacion.TUTELA,
+    },
+)
+"""The relaciones the Art. 81.1 deducción por maternidad reaches.
+
+Art. 58.1 assimilates the widest group, Art. 58.2 narrows to the entry-event
+limb, and Art. 81.1 draws its own population again. This set belongs to the
+maternity domain because it is the Art. 81.1 rule consumed by the maternity and
+guardería behaviours; it is not a property of the generic relación axis.
+
+The authority excludes simple, emergency, and temporal acogimientos and
+judicial guarda y custodia, while positively including tutela and permanent or
+preadoptive acogimiento. ``DESCENDIENTE`` remains the default for an ordinary
+hijo. The set is deliberately separate from
+:data:`~cadrumo.core.descendant_relacion.ART_58_2_ENTITLING_RELACIONES` so a
+relationship assimilated for Art. 58.1 or eligible under Art. 58.2 cannot be
+silently granted the Art. 81.1 deduction.
+"""
 
 
 class DescendantMaternityMixin(DescendantRecordBase):
@@ -187,7 +212,7 @@ class DescendantMaternityMixin(DescendantRecordBase):
         temporal acogimiento while Art. 81.1 excludes it outright, so gating only
         on entitlement to the mínimo granted a temporal carer a full twelve
         months the authority refuses. Reading
-        :data:`~cadrumo.core.ART_81_1_MATERNIDAD_RELACIONES` rather than
+        :data:`ART_81_1_MATERNIDAD_RELACIONES` rather than
         restating the membership keeps the three populations on this axis
         distinct, which is the property whose loss produced that defect.
         """
@@ -220,7 +245,7 @@ def relacion_is_ambiguous_for_maternidad(relacion: DescendantRelacion) -> bool:
     guarda y custodia by judicial resolución -- and both were out of date.
     :attr:`~core.DescendantRelacion.GUARDA_Y_CUSTODIA_JUDICIAL` was added for
     exactly that carer and is excluded from
-    :data:`~core.ART_81_1_MATERNIDAD_RELACIONES`, so they can state their
+    :data:`ART_81_1_MATERNIDAD_RELACIONES`, so they can state their
     relationship truthfully and the deducción already does not reach them. The
     behaviour was right; the reasoning beside it was written twice and neither
     copy followed the axis when it gained the member. Stating it once is what

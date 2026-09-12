@@ -743,12 +743,19 @@ def _materialised_keys(edition: EditionStatus, by_edition: Mapping[str, EditionS
 @cache
 def _scenario_editions(modelo_id: str) -> frozenset[str] | None:
     """The editions the round-trip gate can render export bytes for, or ``None`` when unknowable."""
+    # The call is guarded as well as the import. The scenarios module builds its
+    # scenarios eagerly from typed models, so a governed fact it depends on going
+    # unregistered raises HERE rather than at import, and a guard around the
+    # import alone turns an unknowable answer into a crashed screen. This screen
+    # reports; it does not gate, and it must keep reporting when a neighbour is
+    # mid-edit.
     try:
         from ..edition_export_scenarios import edition_export_scenarios
+
+        return frozenset(edition_export_scenarios(modelo_id))
     except Exception as exc:
         _note_limitation(f"export_scenarios_unavailable: {type(exc).__name__}")
         return None
-    return frozenset(edition_export_scenarios(modelo_id))
 
 
 def _blockers(
@@ -1139,14 +1146,18 @@ class LedgerScope:
     unnamed_successor: int
 
 
-def ledger_scope(statuses: tuple[EditionStatus, ...], found_edges: tuple[Edge, ...]) -> LedgerScope | None:
+def ledger_scope(
+    statuses: tuple[EditionStatus, ...],
+    found_edges: tuple[Edge, ...],
+    path: Path = _LEDGER_FILE,
+) -> LedgerScope | None:
     """Measure the campaign's unchained rows against the seeder ledger's coverage.
 
     Returns ``None`` when the ledger cannot be read, recording a limitation, so
     an unreadable ledger never renders as a ledger that accounts for nothing.
     """
     try:
-        rows = tomllib.loads(_LEDGER_FILE.read_text(encoding="utf-8")).get("refusal", ())
+        rows = tomllib.loads(path.read_text(encoding="utf-8")).get("refusal", ())
         named = {(row["modelo"], row["revision"], row["casilla"]) for row in rows}
     except (OSError, tomllib.TOMLDecodeError, KeyError, TypeError) as exc:
         _note_limitation(f"lineage_ledger_unreadable: {type(exc).__name__}; ledger coverage is unmeasured")

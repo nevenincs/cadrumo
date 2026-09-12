@@ -196,7 +196,7 @@ def _instance_count(raw: str) -> int:
         return 0
 
 
-_DISABILITY_BAND_FACT_ID = "lirpf-descendant-disability-band-catalogue"
+_DISABILITY_BAND_FACT_ID = "lirpf-descendant-disability-grade-catalogue"
 
 
 def _accepted_disability_grades() -> frozenset[int]:

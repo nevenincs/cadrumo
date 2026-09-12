@@ -63,7 +63,6 @@ def _iva_binding(
                 "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
                 "cash_accounting_treatments": (
                     IvaCashAccountingTreatment.NONE,
-                    IvaCashAccountingTreatment.TAXPAYER_REGIME,
                     IvaCashAccountingTreatment.SUPPLIER_REGIME,
                 ),
                 "fact": "iva_amount_sum",

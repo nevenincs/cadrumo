@@ -1,0 +1,23 @@
+[fact]
+fact_id = "renta-expense-residence-policy"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "renta-expense-residence-policy:2025-01-01"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["boe-lirpf-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "residence_axis", value = "tax_residence.ccaa" },
+  { key = "default_profile_scope", value = "state" },
+  { key = "override_profile_scope", value = "category" },
+  { key = "override_catalogue", value = "empty" },
+  { key = "missing_axis_behavior", value = "fail_closed" },
+  { key = "territorial_variant_state", value = "empty" },
+]

@@ -15,13 +15,9 @@ from typing import Annotated, Final, Literal
 
 from pydantic import (
     BeforeValidator,
-    Discriminator,
     Field,
-    SerializerFunctionWrapHandler,
-    Tag,
     ValidationInfo,
     field_validator,
-    model_serializer,
     model_validator,
 )
 
@@ -35,7 +31,6 @@ from ....core.modelo import Modelo
 from ....core.period import Period, RegistrySelectorPeriodCode
 from ....core.revision_review import RevisionReviewStatus
 from ....core.tax_domain import TaxDomain
-from ....core.toml import freeze_toml_value
 from .binding_provider import BindingProvider
 from .binding_temporal import (
     AllRevisionContexts,
@@ -71,7 +66,7 @@ from .schema_governance import (
     validate_reviewed_at_within_horizon,
 )
 from .schema_input_kind import InputKind
-from .schema_references import RegistryExternalLink, RegistrySnapshotRef
+from .schema_references import RegistryExternalLink, RegistrySnapshotRef, TemporalSupportEnvelope
 from .schema_rounding import RegistryRoundingCode as RegistryRoundingCode
 from .schema_rounding import RegistryRoundingCodeValue
 from .schema_scalars import (
@@ -149,8 +144,12 @@ from .convenio import ConvenioAuthority
 from .facts.schema import GovernedFactCatalogue
 from .identifier_evolutions import IdentifierEvolution
 from .modelo_localization import require_modelo_localization, resolve_modelo_localization
-from .revision_predecessor_date_agreement import EditionWindow, validate_predecessor_date_agreement
-from .revision_predecessor_forest import validate_predecessor_forest
+from .revision_contracts import (
+    DeclaredPredecessor,
+    NoPredecessor,
+    RegistryRevisionDeclaration,
+    validate_revision_predecessors,
+)
 from .schema_base import (
     CHAIN_FAMILY,
     GOVERNANCE_STAMP,

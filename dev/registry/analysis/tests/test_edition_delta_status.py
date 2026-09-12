@@ -29,7 +29,9 @@ from ..edition_delta_status import (
     build_report,
     coverage_gaps,
     edges,
+    ledger_scope,
     modelo_signals,
+    projected_sources,
     render_report,
     scan_registry,
     supported_filing_years,
@@ -1492,3 +1494,134 @@ class TestRootKindReadsTheCause:
         lines = _signal_lines(build_report(tmp_path))
         assert [line for line in lines if line.startswith("rooted_recoverable ")]
         assert not [line for line in lines if line.startswith("rooted 999 ")]
+
+
+def _year_edition(root: Path, modelo: str, edition: str, *, valid: str, years: str, chained: bool = True) -> None:
+    """One edition admitting exactly the named years."""
+    lineage = f'continuidad_id = "c-{edition}"\n' if chained else ""
+    _write_edition(
+        root,
+        modelo,
+        edition,
+        manifest=(
+            f'valid_from = {valid}\nauthority_grade = "filing"\n'
+            f'period_selector = {{ years = [{years}], periods = ["0A"] }}'
+        ),
+        casillas=f'[[revisions."{edition}".casillas]]\nid = "01"\n{lineage}',
+    )
+
+
+class TestProjection:
+    """A year with coverage BELOW it is answerable, not a hole.
+
+    Pooling a projected year with an unserved one overstates the worklist by
+    every trailing-edge cell, and understates it by hiding the chains a
+    projection would have to carry forward.
+    """
+
+    def test_a_year_with_coverage_below_it_projects(self, tmp_path: Path) -> None:
+        _write_promise(tmp_path, (2024, 2025))
+        _year_edition(tmp_path, "999", "2024", valid="2024-01-01", years="2024")
+        (gap,) = coverage_gaps(scan_registry(tmp_path), supported_filing_years(tmp_path))
+        assert gap.kind == "promised_year_projected"
+        assert gap.filing_year == 2025
+
+    def test_a_year_with_no_coverage_below_it_is_unserved(self, tmp_path: Path) -> None:
+        """Leading edge: applying a later design to an earlier period is wrong as law."""
+        _write_promise(tmp_path, (2024, 2025))
+        _year_edition(tmp_path, "999", "2025", valid="2025-01-01", years="2025")
+        (gap,) = coverage_gaps(scan_registry(tmp_path), supported_filing_years(tmp_path))
+        assert gap.kind == "promised_year_unserved"
+        assert gap.filing_year == 2024
+
+    def test_a_fully_covered_modelo_reports_neither(self, tmp_path: Path) -> None:
+        _write_promise(tmp_path, (2024, 2025))
+        _year_edition(tmp_path, "999", "2024", valid="2024-01-01", years="2024")
+        _year_edition(tmp_path, "999", "2025", valid="2025-01-01", years="2025")
+        assert coverage_gaps(scan_registry(tmp_path), supported_filing_years(tmp_path)) == ()
+
+    def test_the_source_is_the_newest_edition_strictly_below(self, tmp_path: Path) -> None:
+        _write_promise(tmp_path, (2023, 2024, 2025))
+        _year_edition(tmp_path, "999", "2023", valid="2023-01-01", years="2023")
+        _year_edition(tmp_path, "999", "2024", valid="2024-01-01", years="2024")
+        statuses = scan_registry(tmp_path)
+        assert projected_sources(statuses, supported_filing_years(tmp_path)) == frozenset({("999", "2024")})
+
+    def test_an_unchained_row_at_a_projected_source_is_measured(self, tmp_path: Path) -> None:
+        """Today it asserts nothing; the moment projection ships it is a predecessor row."""
+        _write_promise(tmp_path, (2024, 2025))
+        _year_edition(tmp_path, "999", "2024", valid="2024-01-01", years="2024", chained=False)
+        kinds = _kinds_of(build_report(tmp_path))
+        assert kinds.count("row_missing_lineage_on_projected_edge") == 1
+        assert kinds.count("row_missing_lineage_unedged") == 1, "the original scope is unchanged"
+
+    def test_an_unchained_row_that_projects_nowhere_is_not_measured(self, tmp_path: Path) -> None:
+        _write_promise(tmp_path, (2024, 2025))
+        _year_edition(tmp_path, "999", "2025", valid="2025-01-01", years="2025", chained=False)
+        assert "row_missing_lineage_on_projected_edge" not in _kinds_of(build_report(tmp_path))
+
+
+class TestLedgerScope:
+    """The ledger's contract is successor rows, so its two unnamed populations differ."""
+
+    def _pair(self, root: Path, *, chained_successor: bool) -> None:
+        _write_promise(root, (2024, 2025))
+        _write_edition(
+            root,
+            "999",
+            "2024",
+            manifest='valid_from = 2024-01-01\nauthority_grade = "filing"',
+            casillas='[[revisions."2024".casillas]]\nid = "01"\n',
+        )
+        lineage = 'continuidad_id = "c1"\n' if chained_successor else ""
+        _write_edition(
+            root,
+            "999",
+            "2025",
+            manifest='valid_from = 2025-01-01\nauthority_grade = "filing"',
+            casillas=f'[[revisions."2025".casillas]]\nid = "01"\n{lineage}[[revisions."2025".casillas]]\nid = "02"\n',
+        )
+        _write_edition(
+            root,
+            "999",
+            "2026",
+            manifest='valid_from = 2026-01-01\nauthority_grade = "filing"',
+            casillas='[[revisions."2026".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+
+    def _scope(self, root: Path, ledger: str) -> object:
+        path = root / "ledger.toml"
+        path.write_text(ledger, encoding="utf-8")
+        statuses = scan_registry(root)
+        return ledger_scope(statuses, edges(statuses), path)
+
+    def test_a_first_edition_row_is_an_unclaimed_predecessor_not_a_miss(self, tmp_path: Path) -> None:
+        """2024 is never anyone's successor, so the ledger cannot name its rows."""
+        self._pair(tmp_path, chained_successor=True)
+        scope = self._scope(tmp_path, "")
+        assert scope.unclaimed_predecessor == 1
+        assert scope.unnamed_successor == 1, "2025's unchained row 02 is a genuine miss"
+
+    def test_naming_the_successor_row_moves_only_that_count(self, tmp_path: Path) -> None:
+        self._pair(tmp_path, chained_successor=True)
+        named = '[[refusal]]\nmodelo = "999"\nrevision = "2025"\ncasilla = "02"\n'
+        named += 'category = "held"\nreason = "r"\n'
+        scope = self._scope(tmp_path, named)
+        assert scope.unnamed_successor == 0
+        assert scope.unclaimed_predecessor == 1, "naming a successor row cannot claim a predecessor one"
+        assert scope.named == 1
+
+    def test_the_counts_account_for_every_unchained_row_on_an_edge(self, tmp_path: Path) -> None:
+        self._pair(tmp_path, chained_successor=True)
+        scope = self._scope(tmp_path, "")
+        assert scope.named + scope.unclaimed_predecessor + scope.unnamed_successor == scope.unchained_on_edge
+
+    def test_an_unreadable_ledger_says_so_rather_than_reporting_nothing(self, tmp_path: Path) -> None:
+        self._pair(tmp_path, chained_successor=True)
+        _LIMITATIONS.clear()
+        try:
+            statuses = scan_registry(tmp_path)
+            assert ledger_scope(statuses, edges(statuses), tmp_path / "absent.toml") is None
+            assert any(text.startswith("lineage_ledger_unreadable") for text in _LIMITATIONS)
+        finally:
+            _LIMITATIONS.clear()

@@ -12,9 +12,13 @@ legal_refs = [
   "orden-hac-610-2021:art-3",
   "ley-37-1992:art-163-tervicies",
 ]
-source_refs = ["aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+source_refs = ["aeat-dr-369-2021"]
 review_status = "agent_reviewed"
 ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-369-2021"
+required_text = ["Prestaciones de servicios. Tipo IVA", "S:", "R:"]
 
 [fact.variants.payload]
 kind = "mapping"

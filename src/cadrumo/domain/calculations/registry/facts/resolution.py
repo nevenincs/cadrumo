@@ -7,6 +7,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field, TypeAdapter, model_validator
 
+from .....core.period import RegistrySelectorPeriodCode
 from ..errors import RegistryValidationError
 from ..ids import LegalRefId, SourceRefId
 from ..schema_base import (
@@ -21,6 +22,7 @@ from .schema import (
     EventFactPayload,
     FactId,
     FactOwnershipField,
+    FactProjectionDirection,
     FactSelector,
     FactVariantId,
     GovernedFactCatalogue,
@@ -59,6 +61,7 @@ class _FactQuery(RegistryModel):
     date_axis: DateAxisField
     effective_date: date
     selectors: tuple[FactSelector, ...] = ()
+    period: RegistrySelectorPeriodCode | None = None
 
     @model_validator(mode="after")
     def _validate_selector_coordinates(self) -> _FactQuery:
@@ -138,13 +141,28 @@ class _ResolvedFact(RegistryModel):
     review_status: RevisionReviewStatusField
     ownership: FactOwnershipField
     authority_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    source_variant_id: FactVariantId | None = None
+    source_revision_id: FactVariantId | None = None
+    projection_direction: FactProjectionDirection = FactProjectionDirection.AUTHORED
+    projected_from_date: date | None = None
 
     @model_validator(mode="after")
     def _validate_resolution_context(self) -> _ResolvedFact:
         if self.valid_to is not None and self.valid_to < self.valid_from:
             raise RegistryValidationError("resolved governed fact valid_to must be on or after valid_from")
-        if self.effective_date < self.valid_from or (self.valid_to is not None and self.effective_date > self.valid_to):
-            raise RegistryValidationError("resolved governed fact effective_date must fall within its validity window")
+        inside_window = self.effective_date >= self.valid_from and (
+            self.valid_to is None or self.effective_date <= self.valid_to
+        )
+        if self.projection_direction is FactProjectionDirection.AUTHORED:
+            if not inside_window or self.projected_from_date is not None:
+                raise RegistryValidationError("authored governed fact resolution must fall within its validity window")
+        elif self.projection_direction is FactProjectionDirection.BACKWARD:
+            if self.effective_date >= self.valid_from or self.projected_from_date != self.valid_from:
+                raise RegistryValidationError("backward fact projection must originate at the validity floor")
+        elif self.valid_to is None or self.effective_date <= self.valid_to or self.projected_from_date != self.valid_to:
+            raise RegistryValidationError("forward fact projection must originate at the validity ceiling")
+        if (self.source_variant_id is None) != (self.source_revision_id is None):
+            raise RegistryValidationError("resolved governed fact source identities must be declared together")
         names = [selector.name for selector in self.matched_selectors]
         if len(set(names)) != len(names):
             raise RegistryValidationError("resolved governed fact selector names must be unique")
@@ -234,24 +252,37 @@ def resolve_governed_fact(
             f"governed fact {query.fact_id!r} has family {fact.family.value!r}, not {query.family.value!r}",
         )
     query_selectors = _selector_identity(query.selectors)
-    candidates = tuple(
-        variant
+    track = tuple(
+        (variant, fact.validity_window(variant))
         for variant in fact.variants
         if variant.date_axis is query.date_axis
-        and variant.valid_from <= query.effective_date
-        and (variant.valid_to is None or query.effective_date <= variant.valid_to)
         and _selector_identity(variant.selectors) == query_selectors
+        and _period_matches(variant.period_selector, query)
     )
+    candidates = tuple((variant, window) for variant, window in track if window.contains_date(query.effective_date))
+    projection_direction = FactProjectionDirection.AUTHORED
+    projected_from_date: date | None = None
+    if not candidates:
+        candidates, projection_direction, projected_from_date = _projection_candidates(
+            fact,
+            track,
+            effective_date=query.effective_date,
+        )
     if not candidates:
         raise RegistryValidationError(f"governed fact {query.fact_id!r} has no variant for the exact query context")
-    superseded = {variant_id for candidate in candidates for variant_id in candidate.precedence_over}
-    winners = tuple(candidate for candidate in candidates if candidate.variant_id not in superseded)
+    candidate_variants = tuple(variant for variant, _window in candidates)
+    superseded = {
+        variant_id
+        for candidate in candidate_variants
+        for variant_id in _transitive_precedence(candidate.variant_id, fact)
+    }
+    winners = tuple(candidate for candidate in candidates if candidate[0].variant_id not in superseded)
     if len(winners) != 1:
         raise RegistryValidationError(
             f"governed fact {query.fact_id!r} query is ambiguous across variants "
-            f"{sorted(candidate.variant_id for candidate in candidates)!r}",
+            f"{sorted(candidate.variant_id for candidate, _window in candidates)!r}",
         )
-    winner = winners[0]
+    winner, winner_window = winners[0]
     return _RESOLVED_FACT_ADAPTER.validate_python(
         {
             "family": fact.family,
@@ -259,8 +290,8 @@ def resolve_governed_fact(
             "variant_id": winner.variant_id,
             "date_axis": winner.date_axis,
             "effective_date": query.effective_date,
-            "valid_from": winner.valid_from,
-            "valid_to": winner.valid_to,
+            "valid_from": winner_window.valid_from,
+            "valid_to": winner_window.valid_to,
             "matched_selectors": winner.selectors,
             "payload": winner.payload,
             "legal_refs": winner.legal_refs,
@@ -269,9 +300,66 @@ def resolve_governed_fact(
             "review_status": winner.review_status,
             "ownership": winner.ownership,
             "authority_digest": authority_digest,
+            "source_variant_id": winner.variant_id,
+            "source_revision_id": winner.variant_id,
+            "projection_direction": projection_direction,
+            "projected_from_date": projected_from_date,
         },
     )
 
 
 def _selector_identity(selectors: tuple[FactSelector, ...]) -> frozenset[tuple[str, type[object], object]]:
     return frozenset((selector.name, type(selector.value), selector.value) for selector in selectors)
+
+
+def _period_matches(period_selector: object, query: _FactQuery) -> bool:
+    if period_selector is None:
+        return query.period is None
+    if query.period is None:
+        return False
+    return period_selector.includes_year(query.effective_date.year) and query.period in period_selector.periods
+
+
+def _projection_candidates(
+    fact: object,
+    track: tuple[tuple[object, object], ...],
+    *,
+    effective_date: date,
+) -> tuple[tuple[tuple[object, object], ...], FactProjectionDirection, date | None]:
+    support = fact.support
+    if support is None or not support.admits_coordinate(effective_date) or not track:
+        return (), FactProjectionDirection.AUTHORED, None
+    before = tuple(item for item in track if item[1].valid_to is not None and item[1].valid_to < effective_date)
+    after = tuple(item for item in track if item[1].valid_from > effective_date)
+    # A hole between two authored windows is missing authority, not permission
+    # to interpolate from either side.
+    if before and after:
+        return (), FactProjectionDirection.AUTHORED, None
+    if before:
+        boundary = max(item[1].valid_to for item in before)
+        return (
+            tuple(item for item in before if item[1].valid_to == boundary),
+            FactProjectionDirection.FORWARD,
+            boundary,
+        )
+    if after:
+        boundary = min(item[1].valid_from for item in after)
+        return (
+            tuple(item for item in after if item[1].valid_from == boundary),
+            FactProjectionDirection.BACKWARD,
+            boundary,
+        )
+    return (), FactProjectionDirection.AUTHORED, None
+
+
+def _transitive_precedence(variant_id: FactVariantId, fact: object) -> frozenset[FactVariantId]:
+    edges = {variant.variant_id: variant.precedence_over for variant in fact.variants}
+    pending = list(edges.get(variant_id, ()))
+    reached: set[FactVariantId] = set()
+    while pending:
+        current = pending.pop()
+        if current in reached:
+            continue
+        reached.add(current)
+        pending.extend(edges.get(current, ()))
+    return frozenset(reached)
