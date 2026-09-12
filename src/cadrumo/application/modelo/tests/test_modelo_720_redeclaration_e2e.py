@@ -76,7 +76,7 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.foreign_asset_redeclaration import modelo_720_prior_baseline_observation
 from ...calculations.observations_repository import CalculationObservationRepository
-from ..calculation_actions import _resolve_bucket_source_mesh, calculate_modelo_revision
+from ..calculation_actions import calculate_modelo_revision, resolve_bucket_source_mesh
 from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit
 
@@ -315,7 +315,7 @@ def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coord
             repository=work_unit_repository,
             clock=_CLOCK_N_PLUS_1,
         )
-        resolution_n1 = _resolve_bucket_source_mesh(
+        resolution_n1 = resolve_bucket_source_mesh(
             snapshot_n1,
             work_unit_n1,
             transaction_repository=None,
@@ -323,7 +323,7 @@ def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coord
             foreign_asset_observations=(),
             foreign_asset_row_observations=(),
         )
-        resolution_n2 = _resolve_bucket_source_mesh(
+        resolution_n2 = resolve_bucket_source_mesh(
             snapshot_n2,
             work_unit_n2,
             transaction_repository=None,

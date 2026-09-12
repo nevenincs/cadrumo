@@ -25,7 +25,8 @@ from ....domain.calculations.registry.binding_terminal_origin import (
     TerminalOriginClass,
     TerminalOriginExpectation,
 )
-from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision, PeriodSelector
+from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ..source_mesh import CalculationSourceProvenance, CalculationSourceResolution

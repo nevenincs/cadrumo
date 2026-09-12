@@ -60,7 +60,9 @@ class ResolvedCalculationChannels:
     """Merged engine binding channels for one calculation.
 
     ``bindings`` feeds the Decimal channel, ``enum_bindings`` feeds string
-    dispatch keys, and ``date_bindings`` feeds date-valued profile bindings.
+    dispatch keys, ``date_bindings`` feeds date-valued profile bindings, and
+    ``boolean_bindings`` feeds the truth values of bindings whose registry value
+    contract declares the boolean channel.
     The borrador fields carry the typed snapshot trace from
     :class:`~application.aggregation.CalculationSourceResolution` through to
     the persisted :class:`CalculationRevision`.
@@ -69,6 +71,7 @@ class ResolvedCalculationChannels:
     bindings: dict[BindingId, Decimal]
     enum_bindings: dict[BindingId, str]
     date_bindings: dict[BindingId, date]
+    boolean_bindings: dict[BindingId, bool]
     borrador_snapshot_id: str | None
     bindings_sourced_from_borrador: tuple[BindingId, ...]
 
@@ -125,7 +128,7 @@ def resolve_calculation_binding_channels(
 
     The source-precedence ladder is profile, backend, borrador, then caller. The
     returned :class:`ResolvedCalculationChannels` contains the merged Decimal,
-    enum, and date channels, plus any
+    enum, date, and boolean channels, plus any
     :class:`~application.live.Borrador100SnapshotRepository` provenance,
     after
     :func:`application.modelo.binding_resolution.reject_binding_channel_mismatch`
@@ -166,7 +169,13 @@ def resolve_calculation_binding_channels(
     resolved_bindings = dict(sorted(merged.binding_values.items()))
     resolved_enum_bindings = dict(sorted(merged.enum_binding_values.items()))
     resolved_date_bindings = dict(sorted(merged.date_binding_values.items()))
-    reject_binding_channel_mismatch(snapshot.revision, resolved_bindings, resolved_enum_bindings)
+    resolved_boolean_bindings = dict(sorted(merged.boolean_binding_values.items()))
+    reject_binding_channel_mismatch(
+        snapshot.revision,
+        resolved_bindings,
+        resolved_enum_bindings,
+        resolved_boolean_bindings,
+    )
     resolved_bindings = dict(
         sorted(
             lift_previous_filing_casilla_overrides_to_bindings(
@@ -181,6 +190,7 @@ def resolve_calculation_binding_channels(
         bindings=resolved_bindings,
         enum_bindings=resolved_enum_bindings,
         date_bindings=resolved_date_bindings,
+        boolean_bindings=resolved_boolean_bindings,
         borrador_snapshot_id=borrador_provenance.snapshot_id if borrador_provenance is not None else None,
         bindings_sourced_from_borrador=(
             borrador_provenance.bindings_sourced if borrador_provenance is not None else ()

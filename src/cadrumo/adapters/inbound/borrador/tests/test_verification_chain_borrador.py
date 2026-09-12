@@ -156,7 +156,7 @@ def _enum_binding_values_for_year(year: int) -> dict[str, str]:
     The CCAA dispatch uses Cataluña for all fixtures; the autonomic tariff is
     sourced from the committed registry parameter table.
     """
-    return {f"renta-{year}-profile-tax-residence-ccaa": "cataluna"}
+    return {"renta-profile-tax-residence-ccaa": "cataluna"}
 
 
 def _relation_values_for_year(year: int) -> dict[str, Decimal]:

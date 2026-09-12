@@ -80,7 +80,7 @@ def _law_determined_revision_id(modelo_id: str, *, filing_year: int, period: str
 
 _REVISION = _law_determined_revision_id("303", filing_year=2025, period="4T")
 
-_CARRY_RELATION: RelationId = "modelo-303-rel-self-compensacion-anteriores"
+_CARRY_RELATION: RelationId = "modelo-303-compensacion-pendiente-anteriores"
 _CARRY_BINDING = "modelo-303-compensacion-pendiente-anteriores"
 
 

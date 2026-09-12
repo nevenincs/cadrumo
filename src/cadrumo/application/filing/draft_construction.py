@@ -84,23 +84,35 @@ def _refuse_unsupported_filing_year(period: _Period) -> None:
     legitimate. What is not legitimate is BUILDING A FILING for a year nobody
     declared the product supports, which is what this guard refuses.
 
+    The declaration is bounded rather than enumerated, and only its hard gates
+    refuse here. Below the floor is outside what the product claims and is
+    refused. Above the horizon is not: no revision names such a year, but the
+    newest declared one carries forward into it, so the year is answerable and
+    this guard lets it through. A declared hard ceiling closes that open end.
+
+    A year above the horizon still has to resolve a revision, and that is the
+    resolver's refusal to make, with the modelo and period in hand. Refusing it
+    twice here would only name the earlier of two reasons.
+
     Raises:
-        ModeloApplicationError: When the period's filing year is outside the one
-            writable supported-year declaration. The message names the year and
-            that declaration, because a refusal an operator cannot act on is an
-            outage rather than a guard.
+        ModeloApplicationError: When the period's filing year falls outside the
+            hard gates of the one writable supported-year declaration. The
+            message names the year and that declaration, because a refusal an
+            operator cannot act on is an outage rather than a guard.
     """
     declaration = bundled_authority().catalogues.supported_filing_years
     if declaration is None:
         return
-    supported = tuple(declaration.years)
-    if period.filing_year in supported:
+    if declaration.admits_filing_year(period.filing_year):
         return
+    ceiling = declaration.hard_ceiling
     raise ModeloApplicationError(
         translated_message="application.filing.build_draft.errors.unsupported_filing_year",
         context={
             "filing_year": str(period.filing_year),
-            "supported_filing_years": ", ".join(str(year) for year in supported),
+            "supported_filing_years": (
+                f"{declaration.floor} and later" if ceiling is None else f"{declaration.floor} to {ceiling}"
+            ),
             "declaration": "registry/aeat/legal/supported-filing-years.toml",
         },
     )

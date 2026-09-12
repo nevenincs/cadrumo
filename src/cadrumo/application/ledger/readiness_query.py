@@ -28,7 +28,8 @@ from .preflight import preflight_ledger_tax_readiness
 
 if TYPE_CHECKING:
     from ...core.period import Period
-    from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+
+from .protocols import TransactionCatalogueCoCommitWriterProtocol
 
 
 class LedgerReadinessIssueV1(BaseModel):
@@ -56,14 +57,14 @@ def read_ledger_readiness(
     *,
     bucket_id: str,
     period: Period,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
 ) -> tuple[LedgerReadinessIssueV1, ...]:
     """Report this period's readiness issues with their explaining facts.
 
     Args:
         bucket_id: The owning profile bucket.
         period: The filing period to assess.
-        transaction_repository: Injected catalogue; resolved when omitted.
+        transaction_repository: Explicit bucket-scoped catalogue port.
 
     Returns:
         Every issue the preflight raised, in report order, each carrying the

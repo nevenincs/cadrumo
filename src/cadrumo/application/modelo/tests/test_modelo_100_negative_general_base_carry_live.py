@@ -196,7 +196,7 @@ def _calculate_m100(
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         casilla_inputs=casilla_inputs,
-        binding_values={f"renta-{filing_year}-modelo-100-estimacion-directa-es-normal": Decimal("1")},
+        binding_values={"renta-modelo-100-estimacion-directa-es-normal": Decimal("1")},
         work_unit_repository=work_repo,
         calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
         bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
@@ -285,10 +285,10 @@ def test_m100_2025_base_liquidable_carry_is_grounded_in_art_50_not_art_48() -> N
     for casilla_id in ("1388", "1391", "0501"):
         assert casillas[casilla_id].legal_refs[0] == art_50
         assert art_48 not in casillas[casilla_id].legal_refs
-    assert formulas["renta-2025-base-liquidable-negativa-general-2024-aplicada-maxima"].legal_refs == (art_50,)
-    assert formulas["renta-2025-base-liquidable-negativa-general-compensacion-total"].legal_refs == (art_50,)
-    assert formulas["renta-2025-base-imponible-general"].legal_refs[0] == art_48
-    assert art_50 not in formulas["renta-2025-base-imponible-general"].legal_refs
+    assert formulas["renta-base-liquidable-negativa-general-2024-aplicada-maxima"].legal_refs == (art_50,)
+    assert formulas["renta-base-liquidable-negativa-general-compensacion-total"].legal_refs == (art_50,)
+    assert formulas["renta-base-imponible-general"].legal_refs[0] == art_48
+    assert art_50 not in formulas["renta-base-imponible-general"].legal_refs
     prior_snapshot = bundled_authority().snapshot("100", filing_year=2024, period=_PERIOD)
     prior_binding = next(
         item

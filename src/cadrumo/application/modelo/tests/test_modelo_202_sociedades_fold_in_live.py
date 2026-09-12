@@ -10,7 +10,7 @@ not the direct-resolver path the existing continuity tests exercise:
   fraccionados de periodos anteriores") is bound by
   ``modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores``
   (``source = relation_prefill``), fed by the two self-pago relations
-  ``modelo-202-2025-y-siguientes-rel-self-pagos-2p`` (period 2P, sums the 1P
+  ``modelo-202-pagos-fraccionados-anteriores`` (period 2P, sums the 1P
   pago) and ``-rel-self-pagos-3p`` (period 3P, sums 1P + 2P), both reading
   ``source_casilla_id = '34'`` (the instalment ingresado). So a 2P calculate folds
   the prior 1P pago and a 3P calculate folds 1P + 2P.
@@ -65,7 +65,7 @@ Coverage map for the sociedades fold surface
   :func:`test_m200_0a_folds_m202_pagos_fraccionados_into_cuota_diferencial_live`).
   The fold reaches casilla ``DP200014B:00611`` ("cuota diferencial") via the
   formula ``modelo-200-cuota-diferencial``:
-  ``00611 = subtract(DP200014B:00599, relation["modelo-200-2024-rel-202-pagos-fraccionados"])``.
+  ``00611 = subtract(DP200014B:00599, relation["modelo-200-pagos-fraccionados-anuales"])``.
   The relation resolves the sum of the three M202 c34 instalments (1P + 2P + 3P)
   through the enrolled :class:`RelationPrefillSourceResolver`; ``00611`` is a
   *computed* casilla whose formula consumes the resolved relation value directly
@@ -160,16 +160,16 @@ _RELATION_PREFILL_SOURCE = "relation_prefill"
 #: The M200 relations that fold the same-year M202 pagos fraccionados.
 _M202_PAGO_RELATIONS = frozenset(
     {
-        "modelo-200-2024-rel-202-pagos-fraccionados",
-        "modelo-200-2024-rel-202-pagos-fraccionados-40-2",
+        "modelo-200-pagos-fraccionados-anuales",
+        "modelo-200-pagos-fraccionados-anuales-40-2",
     },
 )
 #: The M200 cross-year self-carries, absent for this pagos-only persona.
 _M200_SELF_CARRY_RELATIONS = frozenset(
     {
-        "modelo-200-2024-rel-self-bin-pendiente-anterior",
-        "modelo-200-2024-rel-self-dotaciones-deterioro-no-cumplido-anterior",
-        "modelo-200-2024-rel-self-dotaciones-deterioro-cumplido-anterior",
+        "modelo-200-bin-pendiente-ejercicios-anteriores",
+        "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores",
+        "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores",
     },
 )
 
@@ -618,7 +618,7 @@ def test_m200_0a_folds_m202_pagos_fraccionados_into_cuota_diferencial_live(
     Reconciles a prior dead-wiring false-alarm: the M200 <- M202 pagos fold is NOT dead — it
     reaches the *computed* casilla ``DP200014B:00611`` ("cuota diferencial") via
     the formula ``00611 = subtract(DP200014B:00599, relation[
-    modelo-200-2024-rel-202-pagos-fraccionados])`` through the enrolled
+    modelo-200-pagos-fraccionados-anuales])`` through the enrolled
     ``RelationPrefillSourceResolver`` (source_modelo 202, output 34, periods
     1P/2P/3P, sum). It does NOT flow through the manual ``is_pagos_fraccionados``
     casillas 00601/00447, which an earlier test exercised by mistake. The three DISTINCT seeded

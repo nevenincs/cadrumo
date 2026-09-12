@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...adapters.outbound.llm.suggestions import (
+from .llm_classification_ports import (
     LLMClassificationSuggestion,
     LLMSaturatedSuggestion,
     LLMSplitApplyResult,
@@ -222,6 +222,14 @@ def execute_reviewed_decision(
     non-split suggestion) raises :class:`TransactionValidationError`.
     """
     source_command = origin.source_command
+
+    if not isinstance(suggestion, ReviewedInvoiceDraft) and (
+        transaction_repository is None or bucket_event_repository is None
+    ):
+        raise TransactionValidationError(
+            "LLM review persistence requires caller-composed transaction and bucket-event repositories",
+            context={"origin": origin.value},
+        )
 
     if decision is LlmReviewDecision.REJECT:
         # The split lives HERE, inside the reject branch, rather than as a second

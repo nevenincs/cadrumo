@@ -119,7 +119,7 @@ def test_requires_reads_relation_prefill_alternates_and_advises_on_unbucketed_so
     relation_pairs = {(row["binding_id"], row["binding_source"]) for row in result["relation_prefill"]}
     assert {
         ("renta-modelo-111-retenciones-periodicas", "relation_prefill"),
-        ("renta-2025-modelo-190-retenciones-anuales", "relation_prefill"),
+        ("renta-modelo-190-retenciones-anuales", "relation_prefill"),
     } <= relation_pairs
     unbucketed_pairs = {(row["binding_id"], row["binding_source"]) for row in result["unbucketed_sources"]}
     assert ("renta-certificado-trabajo-retenciones", "manual_input") in unbucketed_pairs
@@ -191,9 +191,9 @@ def test_requires_warns_about_unresolved_profile_coefficients(_partial_m100_prof
     coefficient is still owed -- never a silent gap.
     """
     resolved = {
-        "renta-2025-profile-tax-residence-ccaa",
+        "renta-profile-tax-residence-ccaa",
         "renta-profile-declaration-type",
-        "renta-2025-profile-taxpayer-birth-date",
+        "renta-profile-taxpayer-birth-date",
     }
     invocation = invoke_cached_cli(
         [

@@ -32,8 +32,8 @@ from ..relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_REL_40_2: RelationId = "modelo-200-2024-rel-202-pagos-fraccionados-40-2"
-_REL_40_3: RelationId = "modelo-200-2024-rel-202-pagos-fraccionados"
+_REL_40_2: RelationId = "modelo-200-pagos-fraccionados-anuales-40-2"
+_REL_40_3: RelationId = "modelo-200-pagos-fraccionados-anuales"
 
 
 _M202_MODALIDAD_CUOTA_PAGO_CASILLA: CasillaId = validated_casilla_id("03")

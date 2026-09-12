@@ -512,10 +512,11 @@ def _latest_comparison_revision(
 
 def _comparison_year_pair(years: Iterable[int]) -> tuple[int, int]:
     """Validate and order the two filing years addressed by a comparison."""
-    requested_years = list(years)
-    if len(requested_years) != 2:
+    requested_years = sorted(years)
+    try:
+        year_a, year_b = requested_years
+    except ValueError:
         raise ModeloCompareNeedTwoYearsError(translated_message="cli.app.modelo.compare.need_two_years")
-    year_a, year_b = sorted(requested_years)
     return year_a, year_b
 
 

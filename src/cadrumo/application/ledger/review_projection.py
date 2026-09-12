@@ -13,20 +13,19 @@ from collections.abc import Callable
 
 from ...core.period import Period
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.models import Transaction, TransactionCatalogue
-from ..bucket_event_repository import bucket_event_history_repository
 from ..review.filter import LedgerReviewStatus
 from .actions_common import display_decimal, require_transaction
 from .models import LedgerReviewQuery, LedgerReviewQueryResult, LedgerReviewRow, LedgerTransactionPayload
+from .protocols import BucketEventHistoryCoCommitWriterProtocol
 
 
 def project_ledger_review_query(
     query: LedgerReviewQuery,
     *,
     catalogue: TransactionCatalogue,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol,
     transaction_payload_builder: Callable[[Transaction], LedgerTransactionPayload],
 ) -> LedgerReviewQueryResult:
     """Return a :class:`~cadrumo.application.ledger.models.LedgerReviewQueryResult`.
@@ -81,7 +80,7 @@ def _filter_ledger_review_rows(
     rows: tuple[Transaction, ...],
     query: LedgerReviewQuery,
     catalogue: TransactionCatalogue,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol,
 ) -> tuple[Transaction, ...]:
     rows = _filter_review_rows_by_period(rows, query.period)
     rows = _filter_review_rows_by_status(rows, query.status)
@@ -173,7 +172,7 @@ def _filter_review_rows_by_event(
     bucket_id: str,
     import_id: str | None,
     issue: str | None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol,
 ) -> tuple[Transaction, ...]:
     if import_id is None and issue is None:
         return rows
@@ -241,10 +240,9 @@ def _transaction_ids_for_review_event_filters(
     bucket_id: str,
     import_id: str | None,
     issue: str | None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol,
 ) -> frozenset[str]:
-    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
-    events = event_repository.load().for_bucket(
+    events = bucket_event_repository.load().for_bucket(
         bucket_id,
         event_types=(
             BucketEventType.LEDGER_TRANSACTION_IMPORTED,
@@ -261,16 +259,6 @@ def _transaction_ids_for_review_event_filters(
             continue
         matching.add(event.object_id)
     return frozenset(matching)
-
-
-def resolve_bucket_event_repository(
-    *,
-    bucket_id: str,
-    repository: BucketEventHistoryRepositoryProtocol | None,
-) -> BucketEventHistoryRepositoryProtocol:
-    if repository is not None:
-        return repository
-    return bucket_event_history_repository(bucket_id=bucket_id)
 
 
 __all__ = [

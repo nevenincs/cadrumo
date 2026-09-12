@@ -14,12 +14,10 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from ...core.hashing import sha256_hex
 from ...core.money.rounding import round_to_cents
 from ...domain.buckets.event import BucketEvent, BucketEventType
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
@@ -33,7 +31,6 @@ from ...domain.transactions.models import (
     Transaction,
     TransactionCatalogue,
 )
-from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .actions_common import (
     blocking_modelo_references,
@@ -44,7 +41,6 @@ from .actions_common import (
     require_source_command,
     require_transaction,
     resolve_bucket_event_repository,
-    resolve_invoice_repository,
     resolve_transaction_repository,
     save_transaction_catalogue_and_events,
     transaction_modelo_source_ids,
@@ -55,17 +51,13 @@ from .actions_manual import (
 from .actions_manual import (
     prepare_manual_transaction_update as _prepare_manual_transaction_update,
 )
+from .action_ports import LedgerActionPorts
 from .models import (
     ManualLedgerTransactionPatch,
     MergeTransactionsResult,
     SplitChildCommand,
     SplitTransactionResult,
 )
-
-if TYPE_CHECKING:
-    from ...domain.attachments.protocols import AttachmentStoreProtocol
-    from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
-
 
 def split_transaction(
     *,
@@ -75,10 +67,7 @@ def split_transaction(
     actor: str,
     source_command: str = "aeat app ledger split",
     reason: str = "",
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
 ) -> SplitTransactionResult:
     """Redistribute one parent transaction into N child transactions.
@@ -114,8 +103,8 @@ def split_transaction(
     trimmed_actor = require_actor(actor, operation="ledger split")
     trimmed_source_command = require_source_command(source_command, operation="ledger split")
     require_splittable_child_count(bucket_id=bucket_id, transaction_id=transaction_id, children=children)
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=ports.bucket_event_repository)
     catalogue = repository.load()
     parent_after, final_children, event, split_group_id, child_ids = _build_split_state(
         catalogue=catalogue,
@@ -126,8 +115,8 @@ def split_transaction(
         source_command=trimmed_source_command,
         reason=reason,
         now=now,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
+        work_unit_repository=ports.work_unit_repository,
+        calculation_repository=ports.calculation_repository,
     )
 
     updated_transactions = dict(catalogue.transactions)
@@ -312,8 +301,8 @@ def _build_split_state(
     source_command: str,
     reason: str,
     now: datetime,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
 ) -> tuple[Transaction, tuple[Transaction, ...], BucketEvent, str, tuple[str, ...]]:
     """Build the parent transition, child rows, and split event in memory.
 
@@ -382,12 +371,7 @@ def split_transaction_with_classified_children(
     actor: str,
     source_command: str,
     reason: str = "",
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
-    attachment_store: AttachmentStoreProtocol | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
 ) -> SplitTransactionResult:
     """Split a parent and persist fully-classified children in ONE transaction.
@@ -420,9 +404,8 @@ def split_transaction_with_classified_children(
             "each split child must carry exactly one classification patch",
             context={"children": len(children), "classifications": len(child_classifications)},
         )
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
-    invoices_repo = resolve_invoice_repository(bucket_id=bucket_id, repository=invoice_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=ports.bucket_event_repository)
     catalogue = repository.load()
 
     parent_after, bare_children, split_event, split_group_id, child_ids = _build_split_state(
@@ -434,8 +417,8 @@ def split_transaction_with_classified_children(
         source_command=trimmed_source_command,
         reason=reason,
         now=now,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
+        work_unit_repository=ports.work_unit_repository,
+        calculation_repository=ports.calculation_repository,
     )
 
     classified_children: list[Transaction] = []
@@ -454,8 +437,7 @@ def split_transaction_with_classified_children(
             command=command,
             previous_transaction_id=bare_child.transaction_id,
             now=now,
-            invoice_repository=invoices_repo,
-            attachment_store=attachment_store,
+            ports=ports,
         )
         if prepared is None:
             classified_children.append(bare_child)
@@ -536,8 +518,8 @@ def _reject_split_with_finalized_modelo_blockers(
     *,
     parent: Transaction,
     bucket_id: str,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
 ) -> None:
     """Refuse the split if any finalized modelo calculation references the parent.
 
@@ -749,10 +731,7 @@ def merge_transactions(
     actor: str,
     source_command: str = "aeat app ledger merge",
     reason: str = "",
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
 ) -> MergeTransactionsResult:
     """Re-merge a complete cohort of split children into a fresh transaction.
@@ -801,8 +780,8 @@ def merge_transactions(
             context={"bucket_id": bucket_id, "child_transaction_ids": tuple(child_transaction_ids)},
         )
 
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=ports.bucket_event_repository)
     catalogue = repository.load()
 
     children = tuple(require_transaction(catalogue, child_id) for child_id in child_transaction_ids)
@@ -823,8 +802,8 @@ def merge_transactions(
         catalogue=catalogue,
         parent=parent,
         child_transaction_ids=child_transaction_ids,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
+        work_unit_repository=ports.work_unit_repository,
+        calculation_repository=ports.calculation_repository,
     )
 
     sorted_child_ids = tuple(sorted(child_transaction_ids))
@@ -895,8 +874,8 @@ def _reject_merge_with_finalized_modelo_blockers(
     catalogue: TransactionCatalogue,
     parent: Transaction,
     child_transaction_ids: tuple[str, ...],
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
 ) -> None:
     transaction_ids_under_check = (parent.transaction_id, *child_transaction_ids)
     blocking_pool: list[str] = []

@@ -109,12 +109,9 @@ def emit_update_result(
 def _bucket_transaction_ids(transaction_repository: TransactionRepo) -> tuple[str, ...]:
     """Return the full transaction ids known to the active bucket."""
     bucket_id = transaction_repository.bucket_id
-    results = list_manual_transactions(
-        bucket_id=bucket_id,
-        transaction_repository=transaction_repository
-        if isinstance(transaction_repository, TransactionCatalogueRepository)
-        else None,
-    )
+    from ..ledger_action_composition import compose_ledger_action_ports
+
+    results = list_manual_transactions(bucket_id=bucket_id, ports=compose_ledger_action_ports(bucket_id=bucket_id))
     return tuple(result.transaction.transaction_id for result in results)
 
 

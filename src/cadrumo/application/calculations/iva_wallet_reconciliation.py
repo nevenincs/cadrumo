@@ -33,7 +33,7 @@ See Also:
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, ClassVar
 
@@ -44,6 +44,8 @@ from ...core.hashing import sha256_hex
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.facts.resolution import ScalarFactQuery, ResolvedScalarFact
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.iva_compensation.errors import IvaCompensationReconciliationInputError
 from ...domain.iva_compensation.reconciliation import (
     DEFAULT_MAX_WALLET_AGE_DAYS,
@@ -204,6 +206,25 @@ def _binding_source_or_none(source_kind: str) -> BindingSourceKind | None:
         return None
 
 
+def _resolve_first_period_compensation_amount(*, filing_year: int) -> Decimal:
+    """Resolve the governed first-period compensation amount."""
+    from ...domain.calculations.registry.authority import bundled_authority
+
+    resolved = bundled_authority().resolve_governed_fact(
+        ScalarFactQuery(
+            fact_id="liva-art-99:first-period-compensation-zero",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date(filing_year, 12, 31),
+        ),
+    )
+    if not isinstance(resolved, ResolvedScalarFact):
+        raise TypeError("first-period compensation declaration must resolve as a scalar fact")
+    value = resolved.payload.value
+    if isinstance(value, bool) or not isinstance(value, (Decimal, int)):
+        raise TypeError("first-period compensation declaration must resolve as a numeric amount")
+    return Decimal(str(value))
+
+
 def _resolve_reconciliation_repositories(
     *,
     repository: CalculationObservationRepository | None,
@@ -335,10 +356,8 @@ def reconcile_modelo_303_iva_compensation(
     )
     recurrence = local_recurrence
     local_recurrence_amount = recurrence.amount if recurrence is not None else None
-    # First-period treatment: with no live wallet and no prior recurrence, the
-    # caller-asserted first IVA period has a legally-certain zero
-    # ``iva.compensacion-pendiente-periodos-anteriores`` (LIVA art. 99.5).
-    # Pass an explicit zero recurrence + the first-period flag so the decision
+    # First-period treatment: resolve the caller-asserted first-period amount
+    # through the selected registry revision, then pass it with the first-period flag so the decision
     # is the non-blocking ``first_period_zero`` rather than the ``missing``
     # block. A present recurrence still flows through normally.
     #
@@ -353,7 +372,7 @@ def reconcile_modelo_303_iva_compensation(
     # false whenever it saw evidence it could not use.
     is_first_iva_period = treat_absent_recurrence_as_first_period and wallet is None and local_recurrence_amount is None
     if is_first_iva_period:
-        local_recurrence_amount = Decimal("0")
+        local_recurrence_amount = _resolve_first_period_compensation_amount(filing_year=int(snapshot.filing_year))
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=taxpayer_nif,
         target_year=snapshot.filing_year,

@@ -40,6 +40,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
+from datetime import date
 from typing import ClassVar, Final
 
 from pydantic import BaseModel
@@ -59,6 +60,8 @@ from ...core.prorrata_register import (
 )
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.ids import (
     BindingId,
     LegalRefId,
@@ -72,6 +75,7 @@ from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.iva.flow import IvaFlowDirection
 from ...domain.iva.prorrata import (
     RegularizacionProrrataDireccion,
@@ -1269,11 +1273,28 @@ def build_prorrata_regularizacion_advisory(
     return result, diagnostic
 
 
-#: The binding provision of the mandatory-especial obligation (LIVA art.
-#: 103.Dos.2.º, "cuando el montante total de las cuotas deducibles ... exceda en
-#: un 10 por ciento o más ... por aplicación de la regla de prorrata especial" in
-#: the redaction in force from filing year 2015; twenty percent before it).
-_ESPECIAL_MANDATORY_LEGAL_REF: Final = "ley-37-1992:art-103"
+_PRORRATA_SPECIAL_LEGAL_REF_KEY: Final = "prorrata_especial_mandatory.legal_ref"
+
+
+def _resolve_prorrata_special_legal_ref(*, ejercicio: int) -> str:
+    """Resolve the mandatory-special advisory's legal reference from registry data."""
+    resolved = bundled_authority().resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="renta-iva-deduction-ratio-policy",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date(ejercicio, 12, 31),
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise RegistryValidationError("Renta IVA ratio policy must resolve as a mapping fact")
+    for entry in resolved.payload.entries:
+        if entry.key == _PRORRATA_SPECIAL_LEGAL_REF_KEY:
+            value = str(entry.value).strip()
+            if value:
+                return value
+    raise RegistryValidationError(
+        f"Renta IVA ratio policy is missing {_PRORRATA_SPECIAL_LEGAL_REF_KEY!r}",
+    )
 
 
 def build_prorrata_especial_mandatory_advisory(
@@ -1339,7 +1360,7 @@ def build_prorrata_especial_mandatory_advisory(
             # the envelope can tell which redaction produced the obligation.
             "margin_percentage": str(rule.margin_percentage),
             "margin_inclusive": "true" if rule.inclusive else "false",
-            "legal_refs": _ESPECIAL_MANDATORY_LEGAL_REF,
+            "legal_refs": _resolve_prorrata_special_legal_ref(ejercicio=ejercicio),
         },
     )
 

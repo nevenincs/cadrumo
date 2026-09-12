@@ -92,7 +92,7 @@ _REDEME_LAST_PERIOD = "12"
 
 #: The carry chain casilla/relation: the prior period's end-of-period available
 #: compensación flows into the next period's casilla 110.
-_CARRY_RELATION: RelationId = "modelo-303-rel-self-compensacion-anteriores"
+_CARRY_RELATION: RelationId = "modelo-303-compensacion-pendiente-anteriores"
 
 
 _M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
@@ -447,7 +447,7 @@ def test_redeme_taxpayer_refunds_without_election_regression_guard(tmp_path: Pat
     (4T) the non-REDEME tests in this module use.
 
     The self-compensación carry relation
-    (``modelo-303-rel-self-compensacion-anteriores``) the registry declares
+    (``modelo-303-compensacion-pendiente-anteriores``) the registry declares
     targets only the quarterly periods (``target_periods = ["1T", "2T", "3T",
     "4T"]``, ``previous_quarter`` alignment); the registry models no monthly
     ``previous_month`` self-compensación carry. So the January-of-the-next-year

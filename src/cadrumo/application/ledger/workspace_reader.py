@@ -17,6 +17,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .actions_manual import ledger_transaction_payload, summarize_manual_transactions
+from .action_ports import LedgerActionPorts
 from .models import LedgerReviewQuery
 from .review_projection import project_ledger_review_query
 from .workspace import LedgerWorkspaceProjectionV1, project_ledger_workspace
@@ -24,21 +25,16 @@ from .workspace import LedgerWorkspaceProjectionV1, project_ledger_workspace
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
     from ...domain.invoices.models import InvoiceCatalogue
-    from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
     from ...domain.modelos.calculation_revision import CalculationRevision
     from ...domain.modelos.work_unit import WorkUnitCatalogue
     from ...domain.transactions.models import TransactionCatalogue
-    from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
 
 def read_ledger_workspace_projection(
     *,
     bucket_id: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
+    ports: LedgerActionPorts,
     calculation_revisions: Mapping[str, CalculationRevision],
     work_units: WorkUnitCatalogue,
     transactions: TransactionCatalogue | None = None,
@@ -56,19 +52,19 @@ def read_ledger_workspace_projection(
     scoped to a period, so asserting readiness here would answer a question
     the operator has not yet asked.
     """
-    catalogue = transactions if transactions is not None else transaction_repository.load()
-    invoice_catalogue = invoices if invoices is not None else invoice_repository.load()
+    catalogue = transactions if transactions is not None else ports.transaction_repository.load()
+    invoice_catalogue = invoices if invoices is not None else ports.invoice_repository.load()
     return project_ledger_workspace(
         summary=summarize_manual_transactions(
             bucket_id=bucket_id,
-            transaction_repository=transaction_repository,
+            ports=ports,
             catalogue=catalogue,
         ),
         preflight=None,
         review=project_ledger_review_query(
             LedgerReviewQuery(bucket_id=bucket_id),
             catalogue=catalogue,
-            bucket_event_repository=bucket_event_repository,
+            bucket_event_repository=ports.bucket_event_repository,
             transaction_payload_builder=ledger_transaction_payload,
         ),
         transactions=catalogue,

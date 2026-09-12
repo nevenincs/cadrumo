@@ -1,20 +1,8 @@
-"""Governed-fact resolution for LIVA art. 161 recargo de equivalencia rates.
+"""Resolve recargo de equivalencia pairings from governed registry data.
 
-The canonical ``iva-recargo-by-applied-rate`` mapping fact resolves the
-legally grounded recargo pairing at the rate and operation-date coordinate.
-The public lookup answers from the rate a line actually carried and the date
-it carried it, returning provenance with the resolved fact when required.
-
-The recargo de equivalencia regime (LIVA arts. 148-163) applies to
-comerciantes minoristas (retailers) with limited annual revenue who
-buy stock for resale; their suppliers charge them an additional
-recargo on top of the regular IVA rate. The four rates align with
-the four IVA tiers per LIVA art. 161:
-
-* General (21 % IVA) → 5.2 % recargo (art. 161 1.º).
-* Reduced (10 % IVA, art. 91 uno) → 1.4 % recargo (art. 161 2.º).
-* Super-reduced (4 % IVA, art. 91 dos) → 0.5 % recargo (art. 161 3.º).
-* Tobacco-specific → 1.75 % recargo (art. 161 4.º).
+The canonical ``iva-recargo-by-applied-rate`` mapping fact owns the legal
+pairing, date window, classification, and provenance.  This module retains
+only typed projection, date selection, and fail-closed lookup mechanics.
 """
 
 from __future__ import annotations
@@ -39,13 +27,11 @@ IVA_RECARGO_FACT_ID = "iva-recargo-by-applied-rate"
 
 
 class RecargoRateRecord(BaseModel):
-    """One recargo de equivalencia rate, paired with the IVA rate it accompanies.
+    """One governed recargo pairing projected into the public record.
 
-    Keyed on the accompanying IVA rate rather than on its tier. LIVA art. 161
-    pairs each recargo with a tier, and that was a sufficient key only while a
-    tier had exactly one rate. Between 2023-01-01 and 2024-09-30 the reduced
-    tier carried both its ordinary 10 % and the transitional 5 %, with different
-    recargos, so the tier no longer identifies the pairing and the rate does.
+    The applied rate is the selector because one classification can have more
+    than one dated pairing.  The authority supplies the legal references and
+    date window; this record carries them without defining their values.
 
     Attributes:
         iva_rate: The IVA rate this recargo accompanies, as a fraction.
@@ -115,10 +101,9 @@ def load_recargo_rate_table() -> tuple[RecargoRateRecord, ...]:
 def recargo_rate_for_applied_rate(applied_rate: Decimal, on_date: date) -> Decimal | None:
     """Return the recargo rate paired with ``applied_rate`` on ``on_date``.
 
-    This is the lookup that can express the 2023-2024 transitional rates. Asked
-    for 10 % inside that window it answers 1.4 %; asked for 5 % on the same date
-    it answers 0.62 %. A tier-keyed lookup cannot separate those, because both
-    rates sat on the reduced tier at once.
+    Date-scoped lookup is keyed by the applied rate rather than a broader
+    category, so overlapping dated pairings remain distinguishable without
+    reproducing the authority's classifications here.
 
     Args:
         applied_rate: The IVA rate the line actually carried, as a fraction.
@@ -129,9 +114,6 @@ def recargo_rate_for_applied_rate(applied_rate: Decimal, on_date: date) -> Decim
         the table models no pairing for that rate on that date -- an unmodelled
         combination, which callers must not read as "no recargo applies".
 
-    The tobacco rate is not reachable here: it attaches to a product rather
-    than an accompanying IVA rate and remains a separately resolved governed
-    fact.
     """
     if not _recargo_fact_candidate_exists(applied_rate, on_date):
         return None

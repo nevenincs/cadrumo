@@ -69,10 +69,12 @@ def test_translation_matrix_flags_unaccented_tax_prose() -> None:
             "es": {"modelo.help": "Descripción oficial de la casilla tributaria."},
             "ca": {"modelo.help": "Consulteu la descripcio oficial de la casella tributària."},
         },
+        {("ca", "modelo.help"): ("descripcio",)},
     )
 
     assert matrix["cells"]["needs_review"] == 1
-    assert matrix["backlog"][0]["reason"] == "translation_spelling_suspect"
+    assert matrix["backlog"][0]["reason"] == "translation_spelling_unknown"
+    assert matrix["backlog"][0]["unknown_words"] == ["descripcio"]
 
 
 def test_translation_matrix_refuses_dropped_expansion_and_casilla_tokens() -> None:

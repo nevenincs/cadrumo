@@ -94,10 +94,10 @@ _PATRIMONIO_TOTAL_CUOTA_INTEGRA: CasillaId = validated_casilla_id(
     "patrimonio.total-cuota-integra", surface="M714 enrollment casilla id"
 )
 
-_M714_REL_100_BASE_IMPONIBLE_GENERAL: RelationId = "m714-rel-100-base-imponible-general"
-_M714_REL_100_BASE_IMPONIBLE_AHORRO: RelationId = "m714-rel-100-base-imponible-ahorro"
-_M714_REL_100_CUOTA_INTEGRA_ESTATAL: RelationId = "m714-rel-100-cuota-integra-estatal"
-_M714_REL_100_CUOTA_INTEGRA_AUTONOMICA: RelationId = "m714-rel-100-cuota-integra-autonomica"
+_M714_REL_100_BASE_IMPONIBLE_GENERAL: RelationId = "m714-m100-base-imponible-general"
+_M714_REL_100_BASE_IMPONIBLE_AHORRO: RelationId = "m714-m100-base-imponible-ahorro"
+_M714_REL_100_CUOTA_INTEGRA_ESTATAL: RelationId = "m714-m100-cuota-integra-estatal"
+_M714_REL_100_CUOTA_INTEGRA_AUTONOMICA: RelationId = "m714-m100-cuota-integra-autonomica"
 
 
 @dataclass(frozen=True, slots=True)

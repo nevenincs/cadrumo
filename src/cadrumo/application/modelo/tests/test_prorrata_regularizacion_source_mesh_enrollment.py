@@ -8,7 +8,7 @@ See Also:
     :class:`~application.aggregation.CalculationSourceResolution`
         Source-mesh result envelope whose owned sources, binding values, and
         diagnostics are asserted by this enrollment gate.
-    :func:`~application.modelo._calculation_actions._resolve_bucket_source_mesh`
+    :func:`~application.modelo.calculation_actions.resolve_bucket_source_mesh`
         Calculate-path mesh entry point that enrolls the prorrata resolver.
     :class:`~application.calculations._prorrata_regularizacion.ProrrataRegularizacionSourceResolver`
         Live resolver promoted from resolver-only proof into the application
@@ -45,7 +45,7 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import CalculationObservationRepository, ResultDispositionProjection
-from ..calculation_actions import _resolve_bucket_source_mesh
+from ..calculation_actions import resolve_bucket_source_mesh
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -186,7 +186,7 @@ def test_source_mesh_resolves_prorrata_regularizacion_binding(tmp_path: Path) ->
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         ProrrataRegisterRepository(bucket_id=_BUCKET_ID).save(_register_with_carried_prior())
 
-        resolution = _resolve_bucket_source_mesh(
+        resolution = resolve_bucket_source_mesh(
             snapshot,
             work_unit,
             transaction_repository=None,
@@ -229,7 +229,7 @@ def test_source_mesh_resolves_m390_prorrata_binding_from_m303_source_periods(
         ProrrataRegisterRepository(bucket_id=_BUCKET_ID).save(_register_with_carried_prior())
         _save_current_year_source_observations(CalculationObservationRepository(objects=profile.repository))
 
-        resolution = _resolve_bucket_source_mesh(
+        resolution = resolve_bucket_source_mesh(
             snapshot,
             work_unit,
             transaction_repository=None,

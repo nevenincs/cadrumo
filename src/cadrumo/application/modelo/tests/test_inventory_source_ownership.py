@@ -39,7 +39,7 @@ def _binding(operation: str, target: str) -> BindingDefinition:
                 # `actividad_id`. The fixture's operation tokens already matched the
                 # registry's `row_field` values, so only the envelope moved.
                 "modelo": "100",
-                "filing_year": 2025,
+                "temporal": {"kind": "same_target_context"},
                 "projection_grain": "taxpayer_year_activity",
                 "fact": "row_field",
                 "record": "inventory_activity",
@@ -48,7 +48,7 @@ def _binding(operation: str, target: str) -> BindingDefinition:
                 "target_casilla_id": target,
             },
         },
-        value={"data_type": "money", "channel": "decimal"},
+        value={"data_type": "money", "channel": "row_set"},
         legal_refs=("ley-35-2006:art-30",),
         source_refs=("aeat-renta-2025-manual",),
     )

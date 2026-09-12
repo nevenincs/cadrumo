@@ -55,13 +55,14 @@ def calculate_m303_regimen_simplificado_result(
         rows=rows,
         regimen_snapshot=regimen_snapshot,
         dana_2024_eligibility=dana_2024_eligibility,
+        authority=authority,
     )
     _validate_rows_against_annual_orden(rows=rows, regimen_snapshot=regimen_snapshot, scope_decision=scope_decision)
     dana_authority = None
     if dana_2024_eligibility is not None:
         if authority is None:
             raise M303RegimenSimplificadoCalculationError(
-                "DANA 2024 eligibility requires a validated registry authority",
+                "DANA eligibility requires a validated registry authority",
             )
         dana_authority = _resolve_dana_2024_authority(authority=authority, effective_date=period.end_date)
     annual_by_id = {activity.orden_id: activity for activity in regimen_snapshot.orden.activities}
@@ -102,18 +103,49 @@ def _validate_coordinate(
     rows: RegimenSimplificadoFilingRows,
     regimen_snapshot: M303RegimenSimplificadoSnapshot,
     dana_2024_eligibility: M303DANA2024EligibilityEvidence | None,
+    authority: ValidatedRegistryAuthority | None,
 ) -> None:
     if rows.ejercicio != period.filing_year or regimen_snapshot.orden.ejercicio != period.filing_year:
         raise M303RegimenSimplificadoCalculationError("M303 simplified rows and annual Orden must use the filing year")
     if regimen_snapshot.scope_decision != scope_decision:
         raise M303RegimenSimplificadoCalculationError("M303 simplified scope must match the annual Orden snapshot")
     requires_dana_eligibility = (
-        period.filing_year == 2024 and is_last_filing_period_of_year(period) and not scope_decision.is_not_claimed
+        _dana_reduction_is_available(authority=authority, effective_date=period.end_date)
+        and is_last_filing_period_of_year(period)
+        and not scope_decision.is_not_claimed
     )
     if requires_dana_eligibility != (dana_2024_eligibility is not None):
         raise M303RegimenSimplificadoCalculationError(
-            "M303 DANA eligibility evidence is required only for the 2024 annual simplified result",
+            "M303 DANA eligibility evidence is required only when the selected registry reduction applies to the annual simplified result",
         )
+
+
+def _dana_reduction_is_available(
+    *,
+    authority: ValidatedRegistryAuthority | None,
+    effective_date: date,
+) -> bool:
+    """Return whether the selected authority publishes the DANA reduction now.
+
+    The applicability window belongs to the governed scalar fact.  This
+    coordinate check therefore asks the same authority used to resolve the
+    reduction instead of encoding a filing year in the calculation module.
+    """
+    if authority is None:
+        from ...domain.calculations.registry.authority import bundled_authority
+
+        authority = bundled_authority()
+    try:
+        authority.resolve_governed_fact(
+            ScalarFactQuery(
+                fact_id=_DANA_2024_REDUCTION_FACT_ID,
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=effective_date,
+            ),
+        )
+    except RegistryValidationError:
+        return False
+    return True
 
 
 def _validate_rows_against_annual_orden(
@@ -281,17 +313,17 @@ def _resolve_dana_2024_authority(*, authority: ValidatedRegistryAuthority, effec
         )
     except RegistryValidationError as exc:
         raise M303RegimenSimplificadoCalculationError(
-            "DANA 2024 IVA simplified-regime authority is unavailable",
+            "DANA IVA simplified-regime authority is unavailable",
         ) from exc
     scalar = cast("ResolvedScalarFact", resolved)
     if scalar.payload.unit != "fraction" or not isinstance(scalar.payload.value, Decimal):
         raise M303RegimenSimplificadoCalculationError(
-            "DANA 2024 IVA simplified-regime authority is not the exact fraction",
+            "DANA IVA simplified-regime authority is not the exact fraction",
         )
     rate = scalar.payload.value
     if not Decimal("0") < rate < Decimal("1"):
         raise M303RegimenSimplificadoCalculationError(
-            "DANA 2024 reduction rate must be a fraction between zero and one",
+            "DANA reduction rate must be a fraction between zero and one",
         )
     return _DANA2024Authority(
         rate=rate,
@@ -310,7 +342,7 @@ def _calculate_dana_2024_reduction(
         return None
     if authority is None:
         raise M303RegimenSimplificadoCalculationError(
-            "DANA 2024 eligibility cannot be evaluated without its legal authority",
+            "DANA eligibility cannot be evaluated without its legal authority",
         )
     return M303DANA2024ReductionResult(
         eligible=eligibility.eligible,

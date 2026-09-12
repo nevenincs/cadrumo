@@ -12,11 +12,10 @@ replaced it with "en un 10 por ciento o más" -- lowering the margin AND making
 it inclusive. A margin without its comparison direction is therefore only half
 the rule, which is why both travel together here.
 
-Only the current redaction is declared in the registry. No modelo 303 revision
-covers a pre-2015 filing year, and the bundled consolidated corpus carries only
-the text in force, so the repealed redaction has no citable authority in this
-tree. :func:`resolve_prorrata_especial_mandatory_parameters` therefore refuses a
-pre-2015 ejercicio by name rather than resolving it from an ungrounded figure.
+Only the current redaction is declared in the registry. The resolver derives its
+applicability window from the dated registry value rather than carrying a year
+boundary in Python; a filing period outside that window is refused as an
+ungrounded context.
 
 See Also:
     :mod:`domain.iva.prorrata`
@@ -42,10 +41,6 @@ if TYPE_CHECKING:
 
 #: The registry parameter carrying the art-103.Dos.2 margin.
 PRORRATA_ESPECIAL_MANDATORY_PARAMETER_ID = "m303-prorrata-especial-obligatoria-margen-porcentaje"
-
-#: First filing year the declared redaction governs (Ley 28/2014 art. 1.26).
-PRORRATA_ESPECIAL_MANDATORY_DECLARED_FIRST_YEAR = 2015
-
 
 class ProrrataEspecialMandatoryParameterError(_CadrumoError):
     """Raised when the art-103.Dos.2 margin cannot be grounded for an ejercicio."""
@@ -99,19 +94,9 @@ def resolve_prorrata_especial_mandatory_parameters(
         The resolved :class:`ProrrataEspecialMandatoryParameters`.
 
     Raises:
-        ProrrataEspecialMandatoryParameterError: For an ejercicio before the
-            declared redaction, or when the revision does not declare the
-            parameter or cannot resolve it for that ejercicio.
+        ProrrataEspecialMandatoryParameterError: When the revision does not
+            declare the parameter or cannot resolve it for that ejercicio.
     """
-    if ejercicio < PRORRATA_ESPECIAL_MANDATORY_DECLARED_FIRST_YEAR:
-        raise ProrrataEspecialMandatoryParameterError(
-            f"ejercicio {ejercicio} predates the only redaction of LIVA art. 103.Dos.2 this "
-            f"registry declares (in force from {PRORRATA_ESPECIAL_MANDATORY_DECLARED_FIRST_YEAR}). "
-            f"No revision covers a pre-{PRORRATA_ESPECIAL_MANDATORY_DECLARED_FIRST_YEAR} filing "
-            "year and the repealed redaction has no citable authority here, so the mandatory "
-            "prorrata especial margin cannot be grounded for it.",
-        )
-
     declared = next(
         (p for p in revision.parameters if p.id == PRORRATA_ESPECIAL_MANDATORY_PARAMETER_ID),
         None,

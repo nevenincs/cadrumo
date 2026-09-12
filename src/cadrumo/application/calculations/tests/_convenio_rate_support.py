@@ -13,7 +13,7 @@ from ....domain.calculations.registry.ids import BindingId
 
 _MODELO = "210"
 _YEAR = 2025
-_COUNTRY_BINDING = "m210-2025-profile-country-of-fiscal-residence"
+_COUNTRY_BINDING = "m210-profile-country-of-fiscal-residence"
 _SURFACE = "convenio_rate_test"
 _TIPO_GRAVAMEN = validated_casilla_id("tipo_gravamen", surface=_SURFACE)
 _CUOTA_INTEGRA = validated_casilla_id("cuota_integra", surface=_SURFACE)

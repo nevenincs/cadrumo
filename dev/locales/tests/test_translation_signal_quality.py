@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._signal import _has_unaccented_word, _suspicious_translation_locales
+from .._signal import _human_translation_text, _suspicious_translation_locales
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -22,10 +22,16 @@ def test_similarity_ignores_stable_transport_tokens() -> None:
     )
 
 
-def test_unaccented_signal_ignores_structured_transport_fields() -> None:
+def test_quality_normalization_ignores_structured_transport_fields() -> None:
     value = "Formato: NACIMIENTO=AAAA-MM-DD[,DECLARACION_PROPIA=true|false][,GASTOS_GUARDERIA=N]."
 
-    assert not _has_unaccented_word("es", value)
+    normalized = _human_translation_text(value)
+    assert "nacimiento" not in normalized
+    assert "declaracion_propia" not in normalized
+
+
+def test_quality_normalization_preserves_sentence_initial_letters() -> None:
+    assert _human_translation_text("Indique el importe.") == "indique el importe."
 
 
 def test_similarity_still_flags_long_copied_human_prose() -> None:

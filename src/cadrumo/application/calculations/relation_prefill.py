@@ -224,7 +224,6 @@ def _relation_provenance_ref(item: RelationValue) -> str:
     return f"{item.relation}:{source_modelo}:{source_year}:{source_periods}:{source_casillas}"
 
 
-
 def _contains_profile_token(raw: str | None, token: str) -> bool | None:
     """Return whether a profile projection value contains ``token``, or None if absent.
 

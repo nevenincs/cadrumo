@@ -267,9 +267,9 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
     assert annual_partition.binding_values["modelo-390-prev-303-compensacion-ultimo-periodo"] == Decimal("100.00")
     resolved_rels = {rv.relation for rv in relation_vals.values if rv.value is not None}
     assert resolved_rels == {
-        "modelo-390-rel-303-cuota-devengada-total",
-        "modelo-390-rel-303-cuota-deducible-total",
-        "modelo-390-rel-303-resultado-regimen-general",
+        "modelo-390-prev-303-cuota-devengada-total",
+        "modelo-390-prev-303-cuota-deducible-total",
+        "modelo-390-prev-303-resultado-regimen-general",
     }
     assert not annual_partition.relation_values
     assert not annual_partition.unresolved_binding_ids

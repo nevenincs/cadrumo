@@ -67,8 +67,8 @@ _M131_CURRENT_YEAR_EXPECTED_CASILLAS = frozenset(_M131_CURRENT_YEAR_EXPECTED_VAL
 @pytest.mark.parametrize(
     ("year", "profile_id"),
     [
-        (2024, "modelo-131-2024-declaracion-pdf"),
-        (2025, "modelo-131-2025-declaracion-pdf"),
+        (2024, "modelo-131-declaracion-pdf"),
+        (2025, "modelo-131-declaracion-pdf"),
     ],
     ids=["2024", "2025"],
 )

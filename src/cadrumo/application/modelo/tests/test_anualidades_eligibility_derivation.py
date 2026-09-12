@@ -1,10 +1,10 @@
 """LIRPF art. 64/75 anualidades separate-escala eligibility flag derivation.
 
 The régimen predicate for casillas 0528/0530/0529/0531 consumes a profile
-binding whose value is derived, not operator-typed: it is 1 (eligible — the
+binding whose value is derived, not operator-typed: it is true (eligible — the
 non-custodial payer without the mínimo por descendientes) unless custody is
 shared, in which case the payer retains the mínimo and the régimen is off
-(flag 0). These tests pin the derivation
+(flag false). These tests pin the derivation
 (:func:`inject_derived_anualidades_eligibility_facts`) directly on a
 fact-index dict so the custody negation and the per-year gating are exercised
 without the full calculation harness.
@@ -12,7 +12,6 @@ without the full calculation harness.
 
 from __future__ import annotations
 
-from decimal import Decimal
 from typing import Any
 
 import pytest
@@ -39,7 +38,7 @@ def test_default_eligible_when_no_descendants() -> None:
     fact_index: dict[str, object] = {}
     fact_index_narrowed: Any = fact_index
     inject_derived_anualidades_eligibility_facts(fact_index_narrowed, _snapshot(2024))
-    assert fact_index[_key(2024)] == Decimal("1")
+    assert fact_index[_key(2024)] is True
 
 
 def test_flag_off_when_custody_shared() -> None:
@@ -49,7 +48,7 @@ def test_flag_off_when_custody_shared() -> None:
     }
     fact_index_narrowed: Any = fact_index
     inject_derived_anualidades_eligibility_facts(fact_index_narrowed, _snapshot(2024))
-    assert fact_index[_key(2024)] == Decimal("0")
+    assert fact_index[_key(2024)] is False
 
 
 def test_flag_eligible_when_custody_not_shared() -> None:
@@ -59,7 +58,7 @@ def test_flag_eligible_when_custody_not_shared() -> None:
     }
     fact_index_narrowed: Any = fact_index
     inject_derived_anualidades_eligibility_facts(fact_index_narrowed, _snapshot(2024))
-    assert fact_index[_key(2024)] == Decimal("1")
+    assert fact_index[_key(2024)] is True
 
 
 def test_shared_custody_ignored_when_descendant_not_eligible_ordinary() -> None:
@@ -72,7 +71,7 @@ def test_shared_custody_ignored_when_descendant_not_eligible_ordinary() -> None:
     }
     fact_index_narrowed: Any = fact_index
     inject_derived_anualidades_eligibility_facts(fact_index_narrowed, _snapshot(2024))
-    assert fact_index[_key(2024)] == Decimal("1")
+    assert fact_index[_key(2024)] is True
 
 
 def test_untouched_for_out_of_scope_year() -> None:
@@ -93,17 +92,17 @@ def test_stored_fact_at_the_derived_path_is_overwritten_by_the_computation() -> 
     deferring to a stored fact and so let an operator decide a régimen
     question the law owns.
 
-    The seeded ``0`` discriminates here for a reason worth stating, since
-    unlike its mínimo sibling ``0`` IS reachable by the real derivation (a
+    The seeded ``False`` discriminates here for a reason worth stating, since
+    unlike its mínimo sibling ``False`` IS reachable by the real derivation (a
     shared-custody descendant yields it). It cannot be reached by THIS
     profile: no descendants are declared, so the form-faithful default is
-    ``1``. Seed and computation therefore differ, and the assertion proves
+    ``True``. Seed and computation therefore differ, and the assertion proves
     which one survived rather than restating the seed.
     """
-    fact_index: dict[str, object] = {_key(2024): Decimal("0")}
+    fact_index: dict[str, object] = {_key(2024): False}
     fact_index_narrowed: Any = fact_index
     inject_derived_anualidades_eligibility_facts(fact_index_narrowed, _snapshot(2024))
-    assert fact_index[_key(2024)] == Decimal("1")
+    assert fact_index[_key(2024)] is True
 
 
 @pytest.mark.parametrize("year", [2020, 2021, 2022, 2023, 2024, 2025])
@@ -111,4 +110,4 @@ def test_all_in_scope_years_default_eligible(year: int) -> None:
     fact_index: dict[str, object] = {}
     fact_index_narrowed: Any = fact_index
     inject_derived_anualidades_eligibility_facts(fact_index_narrowed, _snapshot(year))
-    assert fact_index[_key(year)] == Decimal("1")
+    assert fact_index[_key(year)] is True

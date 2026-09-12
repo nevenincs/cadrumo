@@ -191,19 +191,19 @@ def test_bindings_list_missing_m200_surfaces_m202_relation_inputs() -> None:
 
     assert result.exit_code == 0, result.output
     assert "missing_filter\tTrue" in result.output
-    assert "\tmodelo-200-2024-pagos-fraccionados-anuales\trelation_prefill\trelation input\t" in result.output
+    assert "\tmodelo-200-pagos-fraccionados-anuales\trelation_prefill\trelation input\t" in result.output
     assert "\tmodelo-200-2024-pagos-fraccionados-anuales-40-2\trelation_prefill\trelation input\t" in result.output
     assert "relation_guidance\tSome bindings below are fed by registry relations" in result.output
     assert "--relation RELATION_ID=VALUE before calculating." in result.output
     assert (
-        "relation_input\tmodelo-200-2024-pagos-fraccionados-anuales\t"
-        "fed by relation modelo-200-2024-rel-202-pagos-fraccionados\t"
-        "use --relation modelo-200-2024-rel-202-pagos-fraccionados=VALUE"
+        "relation_input\tmodelo-200-pagos-fraccionados-anuales\t"
+        "fed by relation modelo-200-pagos-fraccionados-anuales\t"
+        "use --relation modelo-200-pagos-fraccionados-anuales=VALUE"
     ) in result.output
     assert (
         "relation_input\tmodelo-200-2024-pagos-fraccionados-anuales-40-2\t"
-        "fed by relation modelo-200-2024-rel-202-pagos-fraccionados-40-2\t"
-        "use --relation modelo-200-2024-rel-202-pagos-fraccionados-40-2=VALUE"
+        "fed by relation modelo-200-pagos-fraccionados-anuales-40-2\t"
+        "use --relation modelo-200-pagos-fraccionados-anuales-40-2=VALUE"
     ) in result.output
 
 
@@ -230,8 +230,8 @@ def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_peri
     assert one_p.exit_code == 0, one_p.output
     assert "binding_count\t0" in one_p.output
     assert "modelo-202-pagos-fraccionados-anteriores" not in one_p.output
-    assert "modelo-202-2023-2024-rel-self-pagos-2p" not in one_p.output
-    assert "modelo-202-2023-2024-rel-self-pagos-3p" not in one_p.output
+    assert "modelo-202-pagos-fraccionados-anteriores" not in one_p.output
+    assert "modelo-202-pagos-fraccionados-anteriores" not in one_p.output
 
     two_p = invoke_cached_cli(
         [
@@ -251,8 +251,8 @@ def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_peri
         ],
     )
     assert two_p.exit_code == 0, two_p.output
-    assert "modelo-202-2023-2024-rel-self-pagos-2p" in two_p.output
-    assert "modelo-202-2023-2024-rel-self-pagos-3p" not in two_p.output
+    assert "modelo-202-pagos-fraccionados-anteriores" in two_p.output
+    assert "modelo-202-pagos-fraccionados-anteriores" not in two_p.output
 
     three_p = invoke_cached_cli(
         [
@@ -272,8 +272,8 @@ def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_peri
         ],
     )
     assert three_p.exit_code == 0, three_p.output
-    assert "modelo-202-2023-2024-rel-self-pagos-2p" not in three_p.output
-    assert "modelo-202-2023-2024-rel-self-pagos-3p" in three_p.output
+    assert "modelo-202-pagos-fraccionados-anteriores" not in three_p.output
+    assert "modelo-202-pagos-fraccionados-anteriores" in three_p.output
 
 
 def test_bindings_list_without_missing_does_not_append_m200_relation_guidance() -> None:
@@ -299,7 +299,7 @@ def test_bindings_list_without_missing_does_not_append_m200_relation_guidance() 
     assert result.exit_code == 0, result.output
     assert "missing_filter\tFalse" in result.output
     assert "relation_guidance\t" not in result.output
-    assert "relation_input\tmodelo-200-2024-rel-202-pagos-fraccionados" not in result.output
+    assert "relation_input\tmodelo-200-pagos-fraccionados-anuales" not in result.output
 
 
 def test_bindings_resolve_echoes_override_for_known_key() -> None:
@@ -663,9 +663,7 @@ def test_bindings_list_typed_payload_carries_relation_inputs_before_calculate() 
         assert rows[binding_id]["readiness"] == "relation input"
 
     # The specific M202 pagos-fraccionados fold-ins from the audit are present.
-    assert (
-        "modelo-200-2024-rel-202-pagos-fraccionados" in rows["modelo-200-pagos-fraccionados-anuales"]["relation_inputs"]
-    )
+    assert "modelo-200-pagos-fraccionados-anuales" in rows["modelo-200-pagos-fraccionados-anuales"]["relation_inputs"]
 
     # A non-relation-fed binding carries an empty relation_inputs tuple.
     non_relation = [r for r in rows.values() if r["source"] != "relation_prefill"]

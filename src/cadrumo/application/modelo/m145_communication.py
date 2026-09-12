@@ -24,6 +24,7 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from enum import StrEnum
 
 from pydantic import BaseModel, Field
@@ -32,9 +33,8 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.calculations.registry.temporal import select_revision
+from ...domain.calculations.registry.temporal import select_revision, select_revision_for_year
 
-M145_COMMUNICATION_PERIOD = "comunicacion"
 M145_COMMUNICATION_SERVICE_OWNER = "cadrumo.application.modelo"
 
 
@@ -76,7 +76,7 @@ class M145CommunicationServiceContract(BaseModel):
         pattern=r"^cadrumo\.application\.modelo$",
     )
     modelo: str = Field(default=Modelo.M145.value, pattern=r"^145$")
-    period_token: str = Field(default=M145_COMMUNICATION_PERIOD, pattern=r"^comunicacion$")
+    period_token: str = Field(min_length=1)
     revision_id: RevisionId = Field(min_length=1)
     actions: tuple[M145CommunicationAction, ...] = _EXPECTED_ACTIONS
     surfaces: tuple[str, ...]
@@ -85,7 +85,7 @@ class M145CommunicationServiceContract(BaseModel):
     source_refs: tuple[str, ...]
 
 
-def build_m145_communication_service_contract(*, filing_year: int = 2026) -> M145CommunicationServiceContract:
+def build_m145_communication_service_contract(*, filing_year: int | None = None) -> M145CommunicationServiceContract:
     """Return the registry-backed Modelo 145 local communication contract.
 
     Reads the law-selected Modelo 145 revision for the communication period
@@ -95,11 +95,17 @@ def build_m145_communication_service_contract(*, filing_year: int = 2026) -> M14
     the revision is read structurally (:func:`select_revision`) rather than
     through a filing-grade snapshot.
     """
+    selected_filing_year = date.today().year if filing_year is None else filing_year
     modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == Modelo.M145.value)
+    year_revision = select_revision_for_year(modelo, filing_year=selected_filing_year)
+    period_tokens = tuple(str(period) for period in year_revision.period_selector.periods)
+    if len(period_tokens) != 1:
+        raise ValueError("Modelo 145 communication contract requires one registry period token")
+    period_token = period_tokens[0]
     revision = select_revision(
         modelo,
-        filing_year=filing_year,
-        period=M145_COMMUNICATION_PERIOD,
+        filing_year=selected_filing_year,
+        period=period_token,
     )
     declared_surfaces = frozenset(str(link.surface) for link in revision.application_links)
     forbidden = tuple(sorted(declared_surfaces & _FORBIDDEN_SURFACES))
@@ -111,6 +117,7 @@ def build_m145_communication_service_contract(*, filing_year: int = 2026) -> M14
 
     return M145CommunicationServiceContract(
         revision_id=revision.id,
+        period_token=period_token,
         surfaces=_EXPECTED_SURFACES,
         export_layout_ids=tuple(sorted(layout.id for layout in revision.export_layouts)),
         legal_refs=tuple(sorted(str(ref) for ref in revision.legal_refs)),
@@ -119,7 +126,6 @@ def build_m145_communication_service_contract(*, filing_year: int = 2026) -> M14
 
 
 __all__ = [
-    "M145_COMMUNICATION_PERIOD",
     "M145_COMMUNICATION_SERVICE_OWNER",
     "M145CommunicationAction",
     "M145CommunicationServiceContract",

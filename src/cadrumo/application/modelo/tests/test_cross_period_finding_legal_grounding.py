@@ -31,20 +31,66 @@ from ...calculations.cross_period_models import (
     CrossPeriodDependencyRequirement,
 )
 from ..action_errors import WORKFLOW_GATE_LEGAL_REFS
-from ..verification_cross_period import (
-    _CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
-    _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS,
-    IVA_COMPENSATION_CARRY_LEGAL_REF,
-    cross_period_clean_state_findings,
-)
+from ..verification_cross_period import cross_period_clean_state_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _APPLICATION_ROOT = Path(__file__).resolve().parents[2]
 _LEGAL_REF_CONSTANT_RE = re.compile(r"LEGAL_REFS?$")
 _M303_SOURCE_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M303_SOURCE_CASILLA_01")
-_DEFAULT_DEPENDENCY_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-58-2003:art-119",)
+_DEFAULT_DEPENDENCY_LEGAL_REFS: tuple[LegalRefId, ...]
 _DEFAULT_DEPENDENCY_SOURCE_REFS: tuple[SourceRefId, ...] = ("aeat-modelo-303-procedure",)
+
+
+def _published_legal_refs_matching(*markers: str) -> tuple[LegalRefId, ...]:
+    """Select legal references from the published authority by evidence text."""
+    authority = bundled_authority()
+    matches = []
+    for reference_id, reference in authority.catalogues.legal.items():
+        evidence = " ".join((reference.notes or "", *reference.required_text)).casefold()
+        if all(marker.casefold() in evidence for marker in markers):
+            matches.append(reference_id)
+    return tuple(sorted(matches))
+
+
+def _cross_period_dependency_legal_refs() -> tuple[LegalRefId, ...]:
+    """Return the published LGT anchors for declarations and self-assessments."""
+    refs = tuple(
+        dict.fromkeys(
+            (
+                *_published_legal_refs_matching("todo documento presentado ante"),
+                *_published_legal_refs_matching("operaciones de calificación y cuantificación necesarias"),
+            ),
+        ),
+    )
+    assert refs, "published authority must carry cross-period declaration grounding"
+    return refs
+
+
+def _activity_start_legal_refs() -> tuple[LegalRefId, ...]:
+    """Return the published censo alta grounding for an activity start."""
+    refs = _published_legal_refs_matching("declaración de alta en el censo")
+    assert refs, "published authority must carry censo alta grounding"
+    return refs
+
+
+def _iva_compensation_carry_legal_ref() -> LegalRefId:
+    """Read the first legal anchor on the published previous-filing carry binding."""
+    authority = bundled_authority()
+    for modelo in authority.modelos:
+        for revision in modelo.revisions.values():
+            for binding in revision.bindings:
+                provider = binding.provider
+                provider_kind = getattr(getattr(provider, "kind", None), "value", None)
+                if provider_kind != "previous_filing" or "compensacion" not in str(binding.id).casefold():
+                    continue
+                refs = tuple(ref for ref in binding.legal_refs if ref in authority.catalogues.legal)
+                if refs:
+                    return refs[0]
+    raise AssertionError("published authority must carry an IVA compensation previous-filing binding")
+
+
+_DEFAULT_DEPENDENCY_LEGAL_REFS = _cross_period_dependency_legal_refs()
 
 
 def _unclean_evidence(
@@ -135,9 +181,9 @@ def test_application_legal_refs_resolve_to_bundled_corpus() -> None:
             f"published legal evidence is empty for {ref_id!r}"
         )
 
-    assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= ref_ids
-    assert set(_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS) <= ref_ids
-    assert IVA_COMPENSATION_CARRY_LEGAL_REF in ref_ids
+    assert set(_cross_period_dependency_legal_refs()) <= ref_ids
+    assert set(_activity_start_legal_refs()) <= ref_ids
+    assert _iva_compensation_carry_legal_ref() in ref_ids
     assert set(WORKFLOW_GATE_LEGAL_REFS) <= ref_ids
     assert all(ref.article for ref in references.values())
     assert all(ref.corpus_ref for ref in references.values())
@@ -156,8 +202,8 @@ def test_iva_compensacion_dependency_finding_cites_liva_and_lgt() -> None:
         if f.kind is ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN
         and f.message_locale_key == "application.modelo.findings.cross_period_dependency_unclean"
     )
-    assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= set(blocking.legal_refs)
-    assert IVA_COMPENSATION_CARRY_LEGAL_REF in blocking.legal_refs
+    assert set(_cross_period_dependency_legal_refs()) <= set(blocking.legal_refs)
+    assert _iva_compensation_carry_legal_ref() in blocking.legal_refs
     assert tuple(blocking.source_refs) == _DEFAULT_DEPENDENCY_SOURCE_REFS
 
 
@@ -176,7 +222,7 @@ def test_dependency_finding_carries_registry_requirement_refs() -> None:
     blocking = next(
         f for f in findings if f.message_locale_key == "application.modelo.findings.cross_period_dependency_unclean"
     )
-    assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= set(blocking.legal_refs)
+    assert set(_cross_period_dependency_legal_refs()) <= set(blocking.legal_refs)
     assert "rd-439-2007:art-110" in blocking.legal_refs
     assert tuple(blocking.source_refs) == ("aeat-modelo-130-instructions",)
 
@@ -190,8 +236,8 @@ def test_non_compensacion_dependency_finding_cites_lgt_only() -> None:
     blocking = next(
         f for f in findings if f.message_locale_key == "application.modelo.findings.cross_period_dependency_unclean"
     )
-    assert tuple(blocking.legal_refs) == _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS
-    assert IVA_COMPENSATION_CARRY_LEGAL_REF not in blocking.legal_refs
+    assert tuple(blocking.legal_refs) == _cross_period_dependency_legal_refs()
+    assert _iva_compensation_carry_legal_ref() not in blocking.legal_refs
     assert tuple(blocking.source_refs) == _DEFAULT_DEPENDENCY_SOURCE_REFS
 
 
@@ -204,7 +250,7 @@ def test_missing_activity_start_finding_cites_censo_alta() -> None:
     activity_start = next(
         f for f in findings if f.message_locale_key == "application.modelo.findings.cross_period_activity_start_missing"
     )
-    assert tuple(activity_start.legal_refs) == _CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS
+    assert tuple(activity_start.legal_refs) == _activity_start_legal_refs()
 
 
 def test_every_cross_period_finding_carries_legal_refs() -> None:
@@ -237,8 +283,8 @@ def test_not_applicable_suppression_summary_carries_dependency_legal_refs() -> N
     findings = cross_period_clean_state_findings(verdict, activity_start_date=None)
 
     summary = next(f for f in findings if f.kind is ModeloVerificationFindingKind.ADVISORY)
-    assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= set(summary.legal_refs)
-    assert IVA_COMPENSATION_CARRY_LEGAL_REF in summary.legal_refs
+    assert set(_cross_period_dependency_legal_refs()) <= set(summary.legal_refs)
+    assert _iva_compensation_carry_legal_ref() in summary.legal_refs
     assert tuple(summary.source_refs) == _DEFAULT_DEPENDENCY_SOURCE_REFS
     assert summary.message_locale_key == "application.modelo.findings.cross_period_modelo_not_applicable.message"
     assert summary.message_facts["source_modelos"] == "303"
@@ -267,6 +313,6 @@ def test_non_official_local_chain_advisory_carries_dependency_legal_refs() -> No
     assert len(findings) == 1
     advisory = findings[0]
     assert advisory.kind is ModeloVerificationFindingKind.ADVISORY
-    assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= set(advisory.legal_refs)
-    assert IVA_COMPENSATION_CARRY_LEGAL_REF in advisory.legal_refs
+    assert set(_cross_period_dependency_legal_refs()) <= set(advisory.legal_refs)
+    assert _iva_compensation_carry_legal_ref() in advisory.legal_refs
     assert tuple(advisory.source_refs) == _DEFAULT_DEPENDENCY_SOURCE_REFS

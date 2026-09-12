@@ -73,17 +73,8 @@ See Also:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, NoReturn
+from typing import NoReturn
 
-from ...adapters.inbound.einvoice.parsers import parse_einvoice_document
-from ...adapters.inbound.einvoice.xml import EInvoiceXmlParseError
-from ...adapters.outbound.llm.errors import LLMConsentError, LLMPdfRasterisationError, LLMProviderError
-from ...adapters.outbound.llm.models import MultimodalImageInput
-from ...adapters.outbound.llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
-from ...adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
-from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...adapters.persistence.storage.attachment import AttachmentStore
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.capabilities import ServiceCapability
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
@@ -92,27 +83,22 @@ from ...core.document_shape import PDF_CONTAINER_SHAPES, STRUCTURED_DOCUMENT_SHA
 from ...core.external_constants import XML_MIME_TYPE
 from ...core.image_media_type import ImageMediaType, detect_image_media_type
 from ...core.logging import get_logger
-from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.optional_extras import MissingOptionalExtraError
 from ...domain.attachments.models import normalize_media_type
 from ...domain.iva.supply_nature import SupplyNature
 from ..provisioning import probe_ollama_vision
 from ..user_profile.capabilities import resolve_active_capability
 from .document_transcription import DocumentTranscription
-from .evidence import PurchaseInvoiceEvidenceService
 from .evidence_errors import PurchaseInvoiceEvidenceInputError
-from .evidence_input import (
-    EvidenceInput,
-    resolve_attachment_evidence_input,
-    resolve_purchase_invoice_evidence_input,
-)
-from .evidence_reference import (
-    EvidenceReferenceOutcome,
-    classify_evidence_reference,
-    refuse_reference_without_document_bytes,
-    refuse_unresolved_evidence_reference,
-)
+from .evidence_input import EvidenceInput
 from .evidence_textlayer import transcribe_text_layer
+from .invoice_draft_extraction_ports import (
+    EvidenceConsentProof,
+    InvoiceDraftExtractionPorts,
+    InvoiceDraftReaderUnavailableError,
+    StructuredInvoiceReadError,
+    VisionImage,
+)
 from .invoice_draft_records import (
     InvoiceDraft,
     InvoiceDraftLine,
@@ -121,9 +107,6 @@ from .invoice_draft_records import (
 )
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
-if TYPE_CHECKING:
-    from ...adapters.outbound.llm.consent import EvidenceConsentToken
-
 __all__ = ["extract_invoice_draft_from_evidence"]
 
 
@@ -131,8 +114,9 @@ _CONSENT_BINDING_REFUSAL_LOCALE_KEY = "llm.evidence.consent.binding_mismatch"
 
 
 def _require_consent_token_binds_these_bytes(
-    consent_token: EvidenceConsentToken | None,
+    consent_token: EvidenceConsentProof | None,
     evidence_input: EvidenceInput,
+    ports: InvoiceDraftExtractionPorts,
 ) -> None:
     """Refuse a consent token minted for a document other than this one.
 
@@ -171,47 +155,7 @@ def _require_consent_token_binds_these_bytes(
         "consent_token_binding_valid": False,
         "evidence_content_address": evidence_input.content_sha256,
     }
-    raise LLMConsentError(
-        translated_message=_CONSENT_BINDING_REFUSAL_LOCALE_KEY,
-        context=facts,
-        precondition_verdict=llm_no_recovery_verdict(
-            LLMPreconditionCondition.EVIDENCE_TOKEN_BOUND,
-            facts=facts,
-            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-        ),
-    )
-
-
-def _resolve_invoice_evidence_input(
-    *,
-    bucket_id: str,
-    evidence_id: str | None,
-    attachment_id: str | None,
-    settings: Settings,
-) -> EvidenceInput:
-    """Resolve the selected evidence reference to in-memory document bytes."""
-    store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, settings))
-    if evidence_id is not None:
-        # Both id spaces are consulted so the refusal can be precise: only the
-        # evidence-record space carries document bytes, but a catalogue-invoice id is
-        # a legitimate reference that simply has no document behind it, and must not
-        # be reported as a missing record.
-        reference = classify_evidence_reference(
-            evidence_id,
-            bucket_id=bucket_id,
-            evidence_records=PurchaseInvoiceEvidenceService(settings=settings).list_all(bucket_id=bucket_id),
-            invoices=InvoiceCatalogueRepository(bucket_id=bucket_id).load(),
-        )
-        if reference.outcome is EvidenceReferenceOutcome.UNRESOLVED:
-            raise refuse_unresolved_evidence_reference(evidence_id)
-        if reference.record is None:
-            raise refuse_reference_without_document_bytes(evidence_id)
-        return resolve_purchase_invoice_evidence_input(reference.record, store=store)
-    if attachment_id is None:
-        raise PurchaseInvoiceEvidenceInputError(
-            translated_message="errors.refused.refused_ledger_evidence_input",
-        )
-    return resolve_attachment_evidence_input(attachment_id, store=store)
+    raise ports.consent_binding_error(facts)
 
 
 def extract_invoice_draft_from_evidence(
@@ -221,7 +165,8 @@ def extract_invoice_draft_from_evidence(
     attachment_id: str | None = None,
     settings: Settings | None = None,
     off_host_provider: LLMProvider | None = None,
-    consent_token: EvidenceConsentToken | None = None,
+    consent_token: EvidenceConsentProof | None = None,
+    ports: InvoiceDraftExtractionPorts,
 ) -> InvoiceDraft:
     """Resolve one stored evidence reference to bytes and extract its :class:`InvoiceDraft`.
 
@@ -286,14 +231,9 @@ def extract_invoice_draft_from_evidence(
     # prints it. Neither could reach it before, so both were structurally
     # unreachable on the live path however completely they were built.
     filer_tax_id = _active_filer_tax_id()
-    evidence_input = _resolve_invoice_evidence_input(
-        bucket_id=bucket_id,
-        evidence_id=evidence_id,
-        attachment_id=attachment_id,
-        settings=resolved_settings,
-    )
+    evidence_input = ports.resolve_evidence_input(bucket_id, evidence_id, attachment_id, resolved_settings)
 
-    _require_consent_token_binds_these_bytes(consent_token, evidence_input)
+    _require_consent_token_binds_these_bytes(consent_token, evidence_input, ports)
 
     # Routing order, and the order is itself a control rather than an
     # optimisation: a document carrying a STRUCTURED record is read exactly and
@@ -305,8 +245,8 @@ def extract_invoice_draft_from_evidence(
     # exact path.
     if evidence_input.document_shape in STRUCTURED_DOCUMENT_SHAPES:
         try:
-            return _extract_invoice_fields_from_structured_record(evidence_input)
-        except EInvoiceXmlParseError:
+            return _extract_invoice_fields_from_structured_record(evidence_input, ports=ports)
+        except StructuredInvoiceReadError:
             # A malformed structured record refuses rather than yielding a
             # partial one; fall through so a document whose embedded payload is
             # broken can still be read by the text or vision path.
@@ -338,6 +278,7 @@ def extract_invoice_draft_from_evidence(
                 off_host_provider=off_host_provider,
                 consent_token=consent_token,
                 taxpayer_tax_id=filer_tax_id,
+                ports=ports,
             )
     return _extract_invoice_fields_via_vision(
         evidence_input,
@@ -345,6 +286,7 @@ def extract_invoice_draft_from_evidence(
         off_host_provider=off_host_provider,
         consent_token=consent_token,
         taxpayer_tax_id=filer_tax_id,
+        ports=ports,
     )
 
 
@@ -427,6 +369,7 @@ def _proposed_supply_nature(
     transcription: DocumentTranscription,
     *,
     settings: Settings,
+    ports: InvoiceDraftExtractionPorts,
 ) -> SupplyNature | None:
     """Return a model's proposal about goods-or-services, or ``None``.
 
@@ -441,12 +384,12 @@ def _proposed_supply_nature(
     they were.
     """
     try:
-        from ...adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposer
-
-        return SupplyNatureProposer(settings=settings).propose(transcription.text.splitlines()).nature
+        proposal = ports.propose_supply_nature(transcription, settings)
     except Exception:
+        proposal = None
+    if proposal is None:
         get_logger(__name__).info("supply-nature proposal unavailable; the operator is asked as before")
-        return None
+    return proposal
 
 
 def _read_transcription_semantically(
@@ -455,9 +398,10 @@ def _read_transcription_semantically(
     *,
     settings: Settings,
     off_host_provider: LLMProvider | None = None,
-    consent_token: EvidenceConsentToken | None = None,
+    consent_token: EvidenceConsentProof | None = None,
     taxpayer_tax_id: str | None = None,
     propose_supply_nature: bool = False,
+    ports: InvoiceDraftExtractionPorts,
 ) -> InvoiceDraft:
     """Read a text-native PDF through the transcribe-extract-ground chain.
 
@@ -511,20 +455,6 @@ def _read_transcription_semantically(
             run. Deliberately OUTSIDE the caller's fallback ``try`` -- see
             :func:`_refuse_a_text_read_with_no_reader`.
     """
-    # Both imports are function-local by necessity, not preference, and both are
-    # cycle-breaks rather than lazy-loading:
-    #
-    # The outbound LLM adapter imports `InvoiceDraft` from this package, and
-    # `_grounded_reading` reaches this module through `_closure_findings`. A
-    # module-level import of either closes a loop through this file.
-    #
-    # The llm target names the OWNING PACKAGE'S PUBLIC FACADE, which is what the
-    # import rule requires of a deferred import; the second is intra-package and
-    # so may name its private module directly. Read both exactly as if they were
-    # written at module scope.
-    import httpx
-
-    from ...adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
     from .grounded_reading import ground_draft_against_transcription
     from .invoice_extraction_authority import (
         default_invoice_extraction_period,
@@ -540,26 +470,11 @@ def _read_transcription_semantically(
     authority_values = resolve_invoice_extraction_authority_values(period=default_invoice_extraction_period())
 
     try:
-        # The pinned wrapper stays the on-host route and is left untouched: its
-        # pin is a stated confidentiality property, and widening it with a
-        # pass-through provider would open the off-host route for every caller
-        # with no diff line that looks like a confidentiality change. An
-        # explicitly-consented read constructs the extractor DIRECTLY instead,
-        # so the reach-around gate keeps the wrapper as its target.
-        if off_host_provider is None:
-            read = extract_invoice_fields_from_text(transcription, authority_values=authority_values)
-        else:
-            read = TextInvoiceFieldExtractor(
-                provider=off_host_provider,
-                model=settings.cadrumo_llm_cloud_text_model,
-                settings=settings,
-                authority_values=authority_values,
-                consent_token=consent_token,
-            ).extract(transcription=transcription)
-    except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
+        read = ports.read_text(transcription, settings, off_host_provider, consent_token, authority_values)
+    except InvoiceDraftReaderUnavailableError as exc:
         # The reader is absent or unreachable. See the refusal's own docstring
         # for why this does not fall through to vision.
-        _refuse_a_text_read_with_no_reader(exc)
+        _refuse_a_text_read_with_no_reader(exc.cause)
     grounded_input = read.model_copy(
         update={
             "transcription_sha256": transcription.source_content_sha256,
@@ -570,7 +485,9 @@ def _read_transcription_semantically(
             # reaches a second model changes what the verb costs and what
             # leaves the host.
             "proposed_supply_nature": (
-                _proposed_supply_nature(transcription, settings=settings) if propose_supply_nature else None
+                _proposed_supply_nature(transcription, settings=settings, ports=ports)
+                if propose_supply_nature
+                else None
             ),
         },
     )
@@ -620,7 +537,9 @@ def _refuse_an_unrecognised_xml_document(evidence: EvidenceInput) -> None:
     )
 
 
-def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> InvoiceDraft:
+def _extract_invoice_fields_from_structured_record(
+    evidence: EvidenceInput, *, ports: InvoiceDraftExtractionPorts
+) -> InvoiceDraft:
     """Read a structured e-invoice exactly into the line-carrying draft.
 
     No model, no rasterisation, no network. The per-rate breakdown and the line
@@ -640,7 +559,7 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
         structured_provenance,
     )
 
-    parsed = parse_einvoice_document(evidence.data)
+    parsed = ports.parse_structured_invoice(evidence.data)
     # Resolved once and used twice: the draft carries these values and their
     # provenance envelopes describe them, so grounding the parser's verbatim
     # string instead would attach an envelope to a value the draft does not hold.
@@ -750,8 +669,9 @@ def _extract_invoice_fields_via_vision(
     *,
     settings: Settings,
     off_host_provider: LLMProvider | None = None,
-    consent_token: EvidenceConsentToken | None = None,
+    consent_token: EvidenceConsentProof | None = None,
     taxpayer_tax_id: str | None = None,
+    ports: InvoiceDraftExtractionPorts,
 ) -> InvoiceDraft:
     """Rasterise/encode *evidence*, TRANSCRIBE it with the on-host vision model, then read it.
 
@@ -774,8 +694,6 @@ def _extract_invoice_fields_via_vision(
     ``llm`` extra is reported separately as typed dependency facts, so a
     dependency gap is never mistaken for a daemon-reachability problem.
     """
-    import httpx
-
     if not resolve_active_capability(ServiceCapability.LLM_VISION, settings=settings).enabled:
         facts = {"llm_vision_enabled": False}
         raise PurchaseInvoiceEvidenceInputError(
@@ -787,15 +705,10 @@ def _extract_invoice_fields_via_vision(
         )
 
     try:
-        from ...adapters.outbound.llm.evidence_draft_vision import (
-            LocalVisionDocumentTranscriber,
-            transcribe_document_images,
-        )
-
         if evidence.document_shape in PDF_CONTAINER_SHAPES:
             images = tuple(
-                MultimodalImageInput.from_base64(page, ImageMediaType.PNG)
-                for page in rasterise_pdf_pages_to_base64_png(evidence.data)
+                VisionImage(base64_data=page, media_type=ImageMediaType.PNG)
+                for page in ports.rasterise_pdf(evidence.data)
             )
         else:
             import base64
@@ -804,10 +717,7 @@ def _extract_invoice_fields_via_vision(
             # detected from the bytes; an unsupported one refuses here rather than
             # travelling to a provider under a guessed label.
             images = (
-                MultimodalImageInput.from_base64(
-                    base64.b64encode(evidence.data).decode("ascii"),
-                    detect_image_media_type(evidence.data),
-                ),
+                VisionImage(base64.b64encode(evidence.data).decode("ascii"), detect_image_media_type(evidence.data)),
             )
         # Content-addressed to the SOURCE bytes, never to the renders: the same
         # document rasterised at another resolution is one document, and hashing
@@ -819,36 +729,24 @@ def _extract_invoice_fields_via_vision(
         # would take an operator's acknowledgement and then leave the read
         # entirely on-host -- an acknowledgement that changes nothing, which is
         # worse than not asking.
-        if off_host_provider is None:
-            transcription = transcribe_document_images(
-                images,
-                source_content_sha256=evidence.content_sha256,
-                settings=settings,
-            )
-        else:
-            transcription = LocalVisionDocumentTranscriber(
-                provider=off_host_provider,
-                model=settings.cadrumo_llm_cloud_vision_model,
-                settings=settings,
-                consent_token=consent_token,
-            ).transcribe(
-                evidence_images=images,
-                source_content_sha256=evidence.content_sha256,
-            )
-    except MissingOptionalExtraError as exc:
+        transcription = ports.transcribe_vision(
+            images, evidence.content_sha256, settings, off_host_provider, consent_token
+        )
+    except InvoiceDraftReaderUnavailableError as exc:
         # Ordered ahead of the runtime-failure branch deliberately. A missing
         # `llm` extra is a dependency problem, not a reachability problem: the
         # branch below probes runtime reachability, which is a different failed
         # condition and must not replace the dependency identity.
-        _refuse_with_unavailable_reader(exc, availability_fact="vision_reader_available")
-    except (httpx.HTTPError, LLMProviderError, LLMPdfRasterisationError) as exc:
+        cause = exc.cause
+        if isinstance(cause, MissingOptionalExtraError):
+            _refuse_with_unavailable_reader(cause, availability_fact="vision_reader_available")
         status = probe_ollama_vision(settings)
         if status.precondition_verdict is not None:
-            raise PurchaseInvoiceEvidenceInputError(precondition_verdict=status.precondition_verdict) from exc
+            raise PurchaseInvoiceEvidenceInputError(precondition_verdict=status.precondition_verdict) from cause
         facts: dict[str, str | bool] = {
             "vision_reader_available": False,
             "vision_reader_probe_available": True,
-            "vision_reader_error_type": exc.__class__.__name__,
+            "vision_reader_error_type": cause.__class__.__name__,
         }
         raise PurchaseInvoiceEvidenceInputError(
             context=facts,
@@ -856,7 +754,7 @@ def _extract_invoice_fields_via_vision(
                 LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE,
                 facts=facts,
             ),
-        ) from exc
+        ) from cause
 
     # OUTSIDE the try, deliberately, and for the same reason the text lane's
     # semantic read sits outside its transcription try: a failure here is a
@@ -870,4 +768,5 @@ def _extract_invoice_fields_via_vision(
         off_host_provider=off_host_provider,
         consent_token=consent_token,
         taxpayer_tax_id=taxpayer_tax_id,
+        ports=ports,
     )

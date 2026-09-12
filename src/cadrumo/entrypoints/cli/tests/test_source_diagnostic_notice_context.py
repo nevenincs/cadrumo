@@ -22,7 +22,10 @@ import pytest
 
 from ....application.calculations import relation_prefill
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.calculations.registry.relations import relation_source_requirements
+from ....domain.calculations.registry.relations import (
+    relation_prefill_bindings_for_period,
+    relation_source_requirements,
+)
 from .._modelo_rendering import source_diagnostic_notice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -39,19 +42,18 @@ def _m200_bound_carry_diagnostics():
     """
     snapshot = bundled_authority().snapshot("200", filing_year=2025, period="0A")
     requirements_by_relation = {
-        relation_id: requirement
+        binding_id: requirement
         for requirement in relation_source_requirements(
             snapshot.revision,
             filing_year=snapshot.filing_year,
             period=snapshot.period,
         )
-        for relation_id in requirement.relation_ids
+        for binding_id in requirement.target_bindings
     }
-    target_binding = {relation.id: relation.target_binding for relation in snapshot.revision.relations}
     self_carries = frozenset(
-        relation.id
-        for relation in snapshot.revision.relations
-        if relation.source_modelo == "200" and relation.id in requirements_by_relation
+        binding.id
+        for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
+        if provider.source_modelo == "200" and binding.id in requirements_by_relation
     )
     assert len(self_carries) >= 2, (
         "this gate needs at least two same-modelo carries on the M200 revision to compare; "
@@ -60,7 +62,6 @@ def _m200_bound_carry_diagnostics():
     return relation_prefill._absent_bound_carry_diagnostics(
         unresolved_relation_ids=self_carries,
         requirements_by_relation=requirements_by_relation,
-        relation_target_binding=target_binding,
         resolver_id="relation_prefill",
     )
 

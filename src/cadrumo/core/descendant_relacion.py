@@ -119,75 +119,7 @@ from the first entitling event, not a count restarted by the adoption.
 """
 
 
-ART_81_1_MATERNIDAD_RELACIONES: frozenset[DescendantRelacion] = frozenset(
-    {
-        DescendantRelacion.DESCENDIENTE,
-        DescendantRelacion.ADOPTADO,
-        DescendantRelacion.ACOGIMIENTO_PREADOPTIVO_O_PERMANENTE,
-        DescendantRelacion.TUTELA,
-    },
-)
-"""The relaciones the Art. 81.1 deducción por maternidad reaches.
-
-A THIRD set on this axis, and deliberately not merged with either of the other
-two. Art. 58.1 assimilates the widest group, Art. 58.2 narrows to the entry-event
-limb, and Art. 81.1 draws its own line again — three statutes, three populations.
-Conflating any two of them is how a carer entitled under one statute silently
-collects under another, which is exactly the defect this set closes: the deducción
-gated only on the Art. 58.1 test, which assimilates temporal acogimiento, so a
-temporal carer took a full twelve months the authority excludes outright.
-
-The authority states the exclusion directly and it is byte-stable across every
-manual vintage the registry serves, 2020 through 2025: the deducción "no resulta
-aplicable en el caso de nietos y demás descendientes por consanguinidad distintos
-de los hijos, ni cuando se trate de acogimientos familiares simples, de urgencia o
-temporales, ni en los casos de menores respecto de los que se tenga la guarda y
-custodia por resolución judicial".
-
-Tutela is INCLUDED, and that is stated positively rather than inferred from the
-exclusion list: "en el supuesto de tutela, el tutor tendrá derecho al importe de
-la deducción que corresponda al tiempo que reste hasta que el tutelado alcance los
-tres años de edad". The same passage names "tutela o acogimiento permanente o de
-delegación de guarda para la convivencia preadoptiva" as the qualifying set, which
-is why the preadoptivo-or-permanente member belongs here while the temporal one
-does not.
-
-Judicial guarda y custodia IS now expressible, and its exclusion here is by
-name rather than by absence: the passage above bars the deducción "en los casos
-de menores respecto de los que se tenga la guarda y custodia por resolución
-judicial". It reaches this set the same way every other non-member does — by
-not being added — but the omission is a reading of the statute, not a gap.
-
-A recorded tension, unresolved, so that a later reader meets it as a known
-question rather than as a discovery. Three sentences before that exclusion, the
-same section's multi-filer allocation rule names the same population: "en el
-supuesto de existencia de varios contribuyentes con derecho a la deducción por
-maternidad respecto del mismo tutelado o acogido o menor bajo su guarda y
-custodia para la convivencia preadoptiva o por resolución judicial, su importe
-deberá repartirse entre ellos por partes iguales". Both sentences are
-byte-stable across 2020-2025. The adopted reading is that the allocation rule
-is conditional rather than a grant — it opens on contributors "con derecho a"
-the deducción, and says how to divide an entitlement determined elsewhere,
-which for this population the exclusion denies. That reading is supported by
-the conditional wording but is NOT settled by it, because a drafter naming a
-population in an allocation rule plausibly expected some of it to qualify. The
-exclusion is the more specific statement and is the one implemented; the
-conservative direction is the same either way, since a member outside this set
-contributes zero months.
-
-One exclusion the axis still cannot express, recorded rather than silently
-approximated. A NIETO has no member, so a cohabiting grandchild under three is
-Art. 58.1-eligible and Art. 81.1-excluded but currently takes the deducción — a
-representability gap in the axis, not a gate that can be tightened here. It is
-deliberately NOT modelled as a member: hijo, nieto and bisnieto are one
-relationship type differing by generational DEGREE, and degree is a
-differently-shaped fact from legal basis. Encoding it here would bolt a second
-axis onto this one.
-"""
-
-
 __all__ = [
     "ART_58_2_ENTITLING_RELACIONES",
-    "ART_81_1_MATERNIDAD_RELACIONES",
     "DescendantRelacion",
 ]

@@ -19,6 +19,7 @@ from pydantic import (
 from pydantic_core import core_schema
 
 from ...core.concepto_ingreso import ConceptoIngreso
+from ...core.decimal.constants import ONE
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
@@ -115,7 +116,7 @@ _REFERENCE_NOISE = re.compile(r"[^0-9a-z]+")
 #: boundary of a fraction, not a regulatory rate -- the highest Spanish IVA rate
 #: is well below it -- so it stays a local constant rather than a registry lookup
 #: and cannot drift with a filing year.
-_MAX_IVA_RATE_FRACTION = Decimal("1")
+_MAX_IVA_RATE_FRACTION = ONE
 
 
 def normalise_movement_reference(value: str) -> str:

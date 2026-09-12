@@ -5,7 +5,7 @@ the operator suggest -> review -> confirm / override / reject loop without
 rebuilding the classifier. The contract is deliberately thin:
 
 * :func:`suggest_llm_classification` loads one transaction, runs the
-  (injected, default-resolved) classifier with the category-enabled prompt
+  caller-composed classifier port with the category-enabled prompt
   spec, and returns a typed
   :class:`~llm.suggestions.LLMClassificationSuggestion`
   **without persisting anything**. Rejecting a suggestion is simply not
@@ -15,8 +15,7 @@ rebuilding the classifier. The contract is deliberately thin:
   stamping ``classified_by`` with the classifier's ``decided_by`` (``llm:<model>``
   provenance, distinct from manual / ``rule:``) and recording the model's
   ``confidence`` and ``reason``. The accepted decision is appended to the
-  profile audit trail through a
-  :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository` as a
+  profile audit trail through the caller-injected bucket-event repository as a
   ``ledger.transaction.classified`` event.
 
 Hallucination containment stays inside the engine: the classifier's
@@ -40,15 +39,14 @@ is looked up from the registry and the base and amount are derived with
 from __future__ import annotations
 
 import base64
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from uuid import uuid4
+from typing import cast
 
-from ...adapters.outbound.llm.models import MultimodalImageInput
-from ...adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
-from ...adapters.outbound.llm.suggestions import (
+from .llm_classification_ports import (
+    EvidenceImage,
+    LLMClassificationPorts,
     LLMClassificationSuggestion,
     LLMSaturatedSuggestion,
     LLMSplitApplyResult,
@@ -56,13 +54,9 @@ from ...adapters.outbound.llm.suggestions import (
     LLMSplitSuggestion,
     LLMSuggestionRejectionResult,
     OperatorIvaDerivationResult,
+    VisionClassifier,
 )
-from ...adapters.outbound.llm.text_classifier import LocalTextLLMClassifier
-from ...adapters.outbound.llm.vision_classifier import LocalVisionLLMClassifier
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.storage.attachment import AttachmentStore
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ...core.config import Settings, load_settings
+from ...core.config import Settings
 from ...core.document_shape import PDF_CONTAINER_SHAPES
 from ...core.image_media_type import ImageMediaType, detect_image_media_type
 from ...core.logging import get_logger
@@ -92,24 +86,13 @@ from ...domain.transactions.service import set_classification
 from .actions_common import (
     build_ledger_bucket_event,
     build_manual_ledger_result,
-    require_concrete_repository,
     resolve_transaction_repository,
     save_transaction_catalogue_and_events,
 )
 from .actions_manual import update_manual_transaction_fields
 from .actions_split_merge import split_transaction_with_classified_children
-from .evidence import PurchaseInvoiceEvidenceService
 from .evidence_advisory import printed_iva_advisory
 from .evidence_errors import PurchaseInvoiceEvidenceInputError
-from .evidence_input import (
-    EvidenceInput,
-    resolve_attachment_evidence_input,
-    resolve_purchase_invoice_evidence_input,
-)
-from .evidence_reference import (
-    find_bytes_bearing_evidence_record,
-    refuse_reference_without_document_bytes,
-)
 from .evidence_split import derive_child_amounts
 from .evidence_textlayer import extract_evidence_text
 from .models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult, SplitChildCommand
@@ -135,7 +118,7 @@ class ResolvedEvidence:
 
     reference: str
     text: str | None
-    images: tuple[MultimodalImageInput, ...]
+    images: tuple[EvidenceImage, ...]
 
     @property
     def is_images(self) -> bool:
@@ -197,48 +180,12 @@ def _bounded_transport_label(label: str) -> str:
     return label[:keep] + _PROVENANCE_ELISION
 
 
-def _bytes_bearing_evidence_input(
-    evidence_id: str | None,
-    attachment_ids: tuple[str, ...],
-    *,
-    store: AttachmentStore,
-    settings: Settings,
-    bucket_id: str,
-) -> tuple[EvidenceInput, str]:
-    """Resolve the document bytes to read, and the reference they came from.
-
-    Only the evidence-record id space carries document bytes; the same field
-    may legitimately hold a catalogue-invoice id, which does not (see
-    ``_evidence_reference``). A reference that cannot supply bytes therefore
-    falls through to the row's own attachments rather than refusing a row
-    that does hold a readable document.
-    """
-    record = (
-        find_bytes_bearing_evidence_record(
-            evidence_id,
-            evidence_records=PurchaseInvoiceEvidenceService(settings=settings).list_all(bucket_id=bucket_id),
-        )
-        if evidence_id is not None
-        else None
-    )
-    if record is not None:
-        return resolve_purchase_invoice_evidence_input(record, store=store), record.evidence_id
-    if attachment_ids:
-        reference = attachment_ids[0]
-        return resolve_attachment_evidence_input(reference, store=store), reference
-    if evidence_id is None:
-        # The caller returns early when neither an attachment nor an evidence id is present.
-        raise TransactionValidationError(
-            "evidence resolution reached the document-bytes refusal without an evidence id",
-        )
-    raise refuse_reference_without_document_bytes(evidence_id)
-
-
 def _resolve_evidence(
     transaction: Transaction,
     *,
     bucket_id: str,
     settings: Settings,
+    ports: LLMClassificationPorts,
 ) -> ResolvedEvidence | None:
     """Resolve a transaction's linked evidence to an on-host read, or ``None``.
 
@@ -259,14 +206,8 @@ def _resolve_evidence(
     attachment_ids = transaction.attachment_ids
     if evidence_id is None and not attachment_ids:
         return None
-    store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, settings))
-    evidence_input, reference = _bytes_bearing_evidence_input(
-        evidence_id,
-        attachment_ids,
-        store=store,
-        settings=settings,
-        bucket_id=bucket_id,
-    )
+    resolved = ports.resolve_evidence_input(bucket_id, evidence_id, attachment_ids)
+    evidence_input, reference = resolved.evidence_input, resolved.reference
     if evidence_input.document_shape in PDF_CONTAINER_SHAPES:
         try:
             text = extract_evidence_text(evidence_input)
@@ -275,15 +216,15 @@ def _resolve_evidence(
         if text:
             return ResolvedEvidence(reference=reference, text=text, images=())
         images = tuple(
-            MultimodalImageInput.from_base64(page, ImageMediaType.PNG)
-            for page in rasterise_pdf_pages_to_base64_png(evidence_input.data)
+            EvidenceImage.from_base64(page, ImageMediaType.PNG)
+            for page in ports.rasterise_pdf(evidence_input.data)
         )
     else:
         # An attachment is whatever format the operator supplied, so the type is
         # detected from the bytes and an unsupported one refuses here rather than
         # travelling to a provider under a guessed label.
         images = (
-            MultimodalImageInput.from_base64(
+            EvidenceImage.from_base64(
                 base64.b64encode(evidence_input.data).decode("ascii"),
                 detect_image_media_type(evidence_input.data),
             ),
@@ -315,100 +256,16 @@ _TEXT_PATH_NEEDS_PROVIDER = (
 )
 
 
-def _run_on_host_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
-    """Run an on-host reader, preserving a typed unavailable-reader verdict.
-
-    Transport-neutral: it guards the VISION read and, since the local text
-    reader was wired, the TEXT read too. Named for the runtime it protects
-    rather than for one of its callers, because the previous name would have
-    become a quiet lie the moment the second caller arrived.
-
-    The local adapter only guards HTTP *status* errors; a connection-refused or a
-    model-missing failure escaped every CLI ``except`` clause as a raw
-    ``httpx.ConnectError`` / ``LLMProviderError`` traceback. This converts both into
-    an application evidence-input refusal when the probe confirms that the
-    reader is unavailable. The provisioning verdict remains unmodified for
-    later live-surface resolution. A call failure followed by an available probe
-    is not misclassified as an unavailable-reader precondition.
-    """
-    import httpx
-
-    from ...adapters.outbound.llm.errors import LLMProviderError
-
-    try:
-        return run()
-    except (httpx.HTTPError, LLMProviderError) as exc:
-        from ..provisioning import probe_ollama_vision
-
-        status = probe_ollama_vision(settings)
-        if status.precondition_verdict is not None:
-            raise PurchaseInvoiceEvidenceInputError(
-                LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE.value,
-                precondition_verdict=status.precondition_verdict,
-            ) from exc
-        raise LLMClassifierError("ledger.evidence.reader.operation_failed") from exc
-
-
-def _record_injected_classifier_run[T](run: Callable[[], T], *, provider: str) -> T:
-    """Run an INJECTED classifier call, recording local run-timing telemetry.
-
-    Renamed from ``_record_subprocess_run`` when the cloud subprocess transport
-    was deleted: no production path spawns a process any more, and the only
-    callers left supply their own classifier. The name described a transport
-    that no longer exists, which is the kind of stale prose this campaign kept
-    tripping over.
-
-    Wraps the injected classifier's call (classifiers stay pure and
-    time-unaware, per hexagonal layering -- the domain layer must not import the
-    storage-touching recorder). Records duration and outcome via
-    :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`, mirroring the
-    recording :class:`~llm.LLMClient.complete` performs
-    for the on-host vision transport. A run-telemetry write failure never masks
-    the real classification result or a real classifier error.
-    """
-    import time
-
-    from ...adapters.outbound.llm.errors import LLMCacheError
-    from ...adapters.outbound.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
-
-    started_at = now()
-    clock_start = time.monotonic()
-    recorder = LLMRunTelemetryRecorder()
-
-    def _write(*, succeeded: bool, error_kind: str) -> None:
-        try:
-            recorder.record(
-                LLMRunRecord(
-                    run_id=uuid4().hex,
-                    caller="cadrumo.application.ledger.llm_classification",
-                    duration_ms=max(0, round((time.monotonic() - clock_start) * 1000)),
-                    succeeded=succeeded,
-                    error_kind=error_kind,
-                    started_at=started_at,
-                    provider=provider,
-                ),
-            )
-        except LLMCacheError:
-            _logger.debug("llm run-telemetry write failed; continuing without it", exc_info=True)
-
-    try:
-        result = run()
-    except Exception as exc:
-        _write(succeeded=False, error_kind=type(exc).__name__)
-        raise
-    _write(succeeded=True, error_kind="")
-    return result
-
-
 def classify_with_evidence(
     transaction: Transaction,
     evidence: ResolvedEvidence | None,
     *,
     text_classifier: LLMClassifier | None,
     spec: PromptSpec,
-    vision_classifier: LocalVisionLLMClassifier | None,
+    vision_classifier: VisionClassifier | None,
     vision_model: str | None,
     settings: Settings,
+    ports: LLMClassificationPorts,
 ) -> tuple[LLMClassificationResponse, str]:
     """Classify, routing scan/image evidence to the on-host vision classifier.
 
@@ -429,12 +286,11 @@ def classify_with_evidence(
     if evidence is not None and evidence.is_images:
         # The vision path shells out through LLMClient.complete, which records
         # its own run-timing telemetry -- do not double-record here.
-        vision = vision_classifier or LocalVisionLLMClassifier(spec=spec, settings=settings, model=vision_model)
+        vision = vision_classifier or ports.make_vision_classifier(spec, vision_model)
         images = evidence.images
-        response = _run_on_host_or_refuse(
+        response = cast(LLMClassificationResponse, ports.run_reader(
             lambda: vision.classify(transaction, evidence_images=images),
-            settings=settings,
-        )
+        ))
         return response, vision.decided_by
     text = evidence.text if evidence is not None else None
     if text_classifier is None:
@@ -445,15 +301,14 @@ def classify_with_evidence(
         # taking the less private route, decided by nothing but how it happened
         # to be produced. Text-layer evidence now takes the same on-host path
         # scanned evidence already took.
-        local_text = LocalTextLLMClassifier(spec=spec, settings=settings)
-        return _run_on_host_or_refuse(
+        local_text = ports.make_text_classifier(spec)
+        return cast(LLMClassificationResponse, ports.run_reader(
             lambda: local_text.classify(transaction, evidence_text=text),
-            settings=settings,
-        ), local_text.decided_by
-    return _record_injected_classifier_run(
+        )), local_text.decided_by
+    return cast(LLMClassificationResponse, ports.record_classifier_run(
         lambda: text_classifier.classify(transaction, evidence_text=text),
-        provider=text_classifier.decided_by,
-    ), text_classifier.decided_by
+        text_classifier.decided_by,
+    )), text_classifier.decided_by
 
 
 def _split_with_evidence(
@@ -462,9 +317,10 @@ def _split_with_evidence(
     *,
     proposer: LLMSplitProposer | None,
     spec: PromptSpec,
-    vision_classifier: LocalVisionLLMClassifier | None,
+    vision_classifier: VisionClassifier | None,
     vision_model: str | None,
     settings: Settings,
+    ports: LLMClassificationPorts,
 ) -> tuple[LLMSplitResponse, str]:
     """Propose a split, routing scan/image evidence to the on-host vision classifier.
 
@@ -477,12 +333,11 @@ def _split_with_evidence(
     if evidence is not None and evidence.is_images:
         # The vision path shells out through LLMClient.complete, which records
         # its own run-timing telemetry -- do not double-record here.
-        vision = vision_classifier or LocalVisionLLMClassifier(spec=spec, settings=settings, model=vision_model)
+        vision = vision_classifier or ports.make_vision_classifier(spec, vision_model)
         images = evidence.images
-        response = _run_on_host_or_refuse(
+        response = cast(LLMSplitResponse, ports.run_reader(
             lambda: vision.propose_split(transaction, evidence_images=images),
-            settings=settings,
-        )
+        ))
         return response, vision.decided_by
     if proposer is None:
         raise TransactionValidationError(
@@ -490,10 +345,10 @@ def _split_with_evidence(
             context={"transaction_id": transaction.transaction_id},
         )
     text = evidence.text if evidence is not None else None
-    return _record_injected_classifier_run(
+    return cast(LLMSplitResponse, ports.record_classifier_run(
         lambda: proposer.propose_split(transaction, evidence_text=text),
-        provider=proposer.decided_by,
-    ), proposer.decided_by
+        proposer.decided_by,
+    )), proposer.decided_by
 
 
 def _load_llm_transaction(
@@ -513,24 +368,18 @@ def _load_llm_transaction(
     return repository, transaction
 
 
-def _resolve_llm_settings(settings: Settings | None) -> Settings:
-    """Use the supplied settings, or load the profile settings once."""
-    if settings is None:
-        return load_settings()
-    return settings
-
-
 def _resolve_requested_llm_evidence(
     transaction: Transaction,
     *,
     bucket_id: str,
     settings: Settings,
+    ports: LLMClassificationPorts,
     read_evidence: bool,
 ) -> ResolvedEvidence | None:
     """Resolve linked evidence only when the caller opted into reading it."""
     if not read_evidence:
         return None
-    return _resolve_evidence(transaction, bucket_id=bucket_id, settings=settings)
+    return _resolve_evidence(transaction, bucket_id=bucket_id, settings=settings, ports=ports)
 
 
 def _evidence_text_and_reference(evidence: ResolvedEvidence | None) -> tuple[str | None, str | None]:
@@ -550,11 +399,12 @@ def suggest_llm_classification(
     bucket_id: str,
     transaction_id: str,
     classifier: LLMClassifier | None = None,
-    vision_classifier: LocalVisionLLMClassifier | None = None,
+    vision_classifier: VisionClassifier | None = None,
     vision_model: str | None = None,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
     read_evidence: bool = False,
-    settings: Settings | None = None,
+    settings: Settings,
+    ports: LLMClassificationPorts,
 ) -> LLMClassificationSuggestion:
     """Run the LLM classifier for one transaction and return a suggestion.
 
@@ -593,12 +443,13 @@ def suggest_llm_classification(
         transaction_id=transaction_id,
         transaction_repository=transaction_repository,
     )
-    resolved_settings = _resolve_llm_settings(settings)
+    resolved_settings = settings
     resolved_classifier = classifier
     evidence = _resolve_requested_llm_evidence(
         transaction,
         bucket_id=bucket_id,
         settings=resolved_settings,
+        ports=ports,
         read_evidence=read_evidence,
     )
     response, provenance = classify_with_evidence(
@@ -609,6 +460,7 @@ def suggest_llm_classification(
         vision_classifier=vision_classifier,
         vision_model=vision_model,
         settings=resolved_settings,
+        ports=ports,
     )
     _logger.info(
         "llm suggest: transaction=%s decided_by=%s classification=%s confidence=%s",
@@ -680,8 +532,8 @@ def apply_llm_classification(
     business_pct: Decimal | None = None,
     actor: str = "operator",
     source_command: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
     """Persist an accepted LLM suggestion with ``llm:`` provenance.
@@ -725,11 +577,7 @@ def apply_llm_classification(
     classification = suggestion.classification
     occurred = coerce_utc_aware(occurred_at or now())
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repository = require_concrete_repository(
-        bucket_event_repository or BucketEventHistoryRepository(),
-        BucketEventHistoryRepository,
-        reason="apply_llm_classification",
-    )
+    event_repository = bucket_event_repository
     catalogue = repository.load()
     _validate_active_llm_transaction(catalogue, suggestion.transaction_id)
     category_id = _llm_category_id(suggestion)
@@ -834,12 +682,13 @@ def saturate_llm_classification(
     bucket_id: str,
     transaction_id: str,
     classifier: LLMClassifier | None = None,
-    vision_classifier: LocalVisionLLMClassifier | None = None,
+    vision_classifier: VisionClassifier | None = None,
     vision_model: str | None = None,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
     on_date: date | None = None,
     read_evidence: bool = False,
-    settings: Settings | None = None,
+    settings: Settings,
+    ports: LLMClassificationPorts,
 ) -> LLMSaturatedSuggestion:
     """Run the saturating LLM classifier for one transaction and return a suggestion.
 
@@ -880,12 +729,13 @@ def saturate_llm_classification(
         transaction_id=transaction_id,
         transaction_repository=transaction_repository,
     )
-    resolved_settings = _resolve_llm_settings(settings)
+    resolved_settings = settings
     resolved_classifier = classifier
     evidence = _resolve_requested_llm_evidence(
         transaction,
         bucket_id=bucket_id,
         settings=resolved_settings,
+        ports=ports,
         read_evidence=read_evidence,
     )
     response, provenance = classify_with_evidence(
@@ -896,6 +746,7 @@ def saturate_llm_classification(
         vision_classifier=vision_classifier,
         vision_model=vision_model,
         settings=resolved_settings,
+        ports=ports,
     )
     evidence_text, evidence_reference = _evidence_text_and_reference(evidence)
     effective_date = _effective_ledger_date(transaction, on_date)
@@ -939,8 +790,8 @@ def apply_saturated_llm_classification(
     business_pct: Decimal | None = None,
     actor: str = "operator",
     source_command: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
     """Persist an accepted saturated suggestion through the manual write path.
@@ -1041,8 +892,8 @@ def derive_operator_iva_substrate(
     on_date: date | None = None,
     actor: str = "operator",
     source_command: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     occurred_at: datetime | None = None,
 ) -> OperatorIvaDerivationResult:
     """Derive and persist the IVA substrate for an OPERATOR-chosen category.
@@ -1216,12 +1067,13 @@ def suggest_evidence_split(
     bucket_id: str,
     transaction_id: str,
     proposer: LLMSplitProposer | None = None,
-    vision_classifier: LocalVisionLLMClassifier | None = None,
+    vision_classifier: VisionClassifier | None = None,
     vision_model: str | None = None,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
     on_date: date | None = None,
     read_evidence: bool = True,
-    settings: Settings | None = None,
+    settings: Settings,
+    ports: LLMClassificationPorts,
 ) -> LLMSplitSuggestion:
     """Propose an evidence-driven N-way split for one transaction.
 
@@ -1264,12 +1116,13 @@ def suggest_evidence_split(
         transaction_id=transaction_id,
         transaction_repository=transaction_repository,
     )
-    resolved_settings = _resolve_llm_settings(settings)
+    resolved_settings = settings
     resolved_proposer = proposer
     evidence = _resolve_requested_llm_evidence(
         transaction,
         bucket_id=bucket_id,
         settings=resolved_settings,
+        ports=ports,
         read_evidence=read_evidence,
     )
     response, provenance = _split_with_evidence(
@@ -1280,6 +1133,7 @@ def suggest_evidence_split(
         vision_classifier=vision_classifier,
         vision_model=vision_model,
         settings=resolved_settings,
+        ports=ports,
     )
     _, evidence_reference = _evidence_text_and_reference(evidence)
     effective_date = _effective_ledger_date(transaction, on_date)
@@ -1334,8 +1188,8 @@ def apply_evidence_split(
     bucket_id: str,
     actor: str = "operator",
     source_command: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     occurred_at: datetime | None = None,
 ) -> LLMSplitApplyResult:
     """Apply a reviewed evidence-driven split through the single-writer split path.
@@ -1448,8 +1302,8 @@ def apply_evidence_classification(
     bucket_id: str,
     actor: str = "operator",
     source_command: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
     """Apply a no-split (single-child) evidence suggestion in place on the parent.
@@ -1544,8 +1398,8 @@ def reject_llm_suggestion(
     reason: str = "",
     actor: str = "operator",
     source_command: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     occurred_at: datetime | None = None,
 ) -> LLMSuggestionRejectionResult:
     """Record an explicit, audit-trailed rejection of an LLM suggestion.
@@ -1630,13 +1484,9 @@ def reject_llm_suggestion(
     )
     # Persist the event through the transaction repository's secure-write batch
     # (the unchanged catalogue rides along as a no-op), exactly as the apply path
-    # does — a bare BucketEventHistoryRepository().save() does not bind to the
-    # active bucket store in the CLI flow.
-    _event_repo_arg = require_concrete_repository(
-        bucket_event_repository or BucketEventHistoryRepository(),
-        BucketEventHistoryRepository,
-        reason="reject_llm_suggestion",
-    )
+    # does — the caller-composed event repository stays bound to the active
+    # bucket store in the CLI flow.
+    _event_repo_arg = bucket_event_repository
     save_transaction_catalogue_and_events(
         transaction_repository=repository,
         event_repository=_event_repo_arg,

@@ -11,19 +11,35 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.prorrata_register import ProrrataEspecialTransitionKind, ProrrataRegisterRegime
 from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.calculations.registry.binding_temporal import TargetPeriods
+from ...domain.calculations.registry.bindings_previous_filing import periodic_carry_bindings_for_period
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...domain.calculations.registry.queries import RegistryQueryService
-from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ...domain.iva.schema import IvaCashAccountingTreatment
 from ...domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from .errors import AggregationValidationError
 from .iva_ledger import IvaLedgerAggregation
 
 
-# fact-relocation: selected registry schedule and transition declarations are consumed
 def _transition_period_applicability_from_registry(period: Period) -> bool:
-    """Resolve transition-period applicability from selected registry declarations."""
+    """Resolve transition-period applicability from selected registry declarations.
+
+    The prorrata especial option and its revocation are exercised with the final
+    self-assessment of the year, so the fact is carried only by the last period
+    of the taxpayer's own filing schedule -- ``12`` on the monthly schedule, ``4T``
+    on the quarterly one. That is the record design's own rule for the box
+    ("SI para el ultimo periodo (12 y 4T)", Nota 6 of the official Modelo 303
+    record design), which the served revision cites as the ``aeat-dr-303-<year>``
+    source_ref on its casilla declarations. The period set is therefore derived
+    from the revision's declared ``filing_schedules`` and periodic carry bindings
+    rather than from a hardcoded ``{"12", "4T"}``, so a revision that changes its
+    schedule changes this answer with it.
+
+    Raises:
+        AggregationValidationError: If the selected revision declares no filing
+            schedule or no periodic carry binding. The period cannot then be
+            classified as transition-bearing or not, and a filing-bound answer
+            must not be guessed in either direction.
+    """
     authority = bundled_authority()
     report = RegistryQueryService(authority).describe_modelo_for_scope(
         "303",
@@ -37,19 +53,23 @@ def _transition_period_applicability_from_registry(period: Period) -> bool:
         period=registry_period,
     )
     schedules = tuple(snapshot.revision.filing_schedules)
-    folds = relation_prefill_bindings_for_period(snapshot.revision)
-    if not schedules or not folds:
-        raise NotImplementedError("selected registry transition declarations are unavailable")
-    relation_periods = {
-        token
-        for binding, _ in folds
-        if isinstance(binding.applicability, TargetPeriods)
-        for token in binding.applicability.periods
-    }
+    carries = periodic_carry_bindings_for_period(snapshot.revision)
+    if not schedules or not carries:
+        raise AggregationValidationError(
+            t("aggregation.m303_arrivals.errors.prorrata_transition_declarations_unavailable"),
+            context={
+                "modelo": report.code,
+                "filing_year": period.filing_year,
+                "period": registry_period,
+                "filing_schedule_count": len(schedules),
+                "periodic_carry_binding_count": len(carries),
+            },
+        )
+    carried_periods = {token for _, periods in carries for token in periods}
     transition_periods = {
         schedule.periods[-1]
         for schedule in schedules
-        if schedule.periods and relation_periods.intersection(schedule.periods)
+        if schedule.periods and carried_periods.intersection(schedule.periods)
     }
     return period.registry_token in transition_periods
 

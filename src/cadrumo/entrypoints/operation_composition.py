@@ -55,6 +55,7 @@ from ..application.user_profile.operations import (
 from ..core.config import Settings, load_settings
 from ..core.paths import effective_storage_root
 from ..core.time.clock import now
+from .cli.app_live_iva_remote_state_composition import pull_filed_history_with_cli_port
 
 _LEASE_DURATION = timedelta(minutes=10)
 _EXECUTION_TIMEOUT = timedelta(hours=1)
@@ -148,7 +149,8 @@ def build_production_operation_registry(
         )
     )
     filed_history_definition = build_filed_history_operation_definition(
-        sync_run_repository_factory=SyncRunRecordRepository
+        sync_run_repository_factory=SyncRunRecordRepository,
+        pull=pull_filed_history_with_cli_port,
     )
     definitions = tuple(
         sorted(

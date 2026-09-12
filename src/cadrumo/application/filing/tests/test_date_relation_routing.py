@@ -2,9 +2,9 @@
 
 Before the fix, ``build_draft`` extracted only casilla, decimal-binding, and
 enum-binding inputs from the flat ``ModeloInputs`` map; it never extracted the
-date-binding (e.g. ``renta-2024-profile-taxpayer-birth-date`` consumed by
+date-binding (e.g. ``renta-profile-taxpayer-birth-date`` consumed by
 ``age_at_year_end``) or the period-relation (e.g.
-``renta-2024-rel-130-pagos-fraccionados``) inputs, and never passed them to
+``renta-modelo-130-pagos-fraccionados``) inputs, and never passed them to
 ``calculate_registry_snapshot``'s ``date_binding_values`` / ``relation_values``
 channels.
 
@@ -47,12 +47,12 @@ from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_M100_BIRTH_DATE_BINDING = "renta-2024-profile-taxpayer-birth-date"
-_M100_TAX_RESIDENCE_CCAA_BINDING = "renta-2024-profile-tax-residence-ccaa"
+_M100_BIRTH_DATE_BINDING = "renta-profile-taxpayer-birth-date"
+_M100_TAX_RESIDENCE_CCAA_BINDING = "renta-profile-tax-residence-ccaa"
 _M100_ESTIMACION_DIRECTA_NORMAL_BINDING = "renta-modelo-100-estimacion-directa-es-normal"
 _M100_RELATIONS = (
-    "renta-2024-rel-130-pagos-fraccionados",
-    "renta-2024-rel-131-pagos-fraccionados",
+    "renta-modelo-130-pagos-fraccionados",
+    "renta-modelo-131-pagos-fraccionados",
 )
 
 
@@ -181,12 +181,8 @@ def test_build_draft_replay_routes_m100_tax_residence_ccaa_string_enum() -> None
             # Parte autonómica: non-Madrid profile mirrors the estatal zero.
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
-            "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
-            "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
-            "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
-            "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
-            "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
-            "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+            "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+            "renta-modelo-131-pagos-fraccionados": Decimal("0"),
         },
         schema_provider=build_runtime_schema_provider(modelos=("100",), filing_year=2024, period=period),
     )

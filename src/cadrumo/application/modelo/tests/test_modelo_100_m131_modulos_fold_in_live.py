@@ -17,10 +17,10 @@ See Also:
     :mod:`~domain.calculations.registry`
         Registry authority for relation declarations, binding ids, casillas,
         and formula execution.
-    ``renta-2024-modelo-131-rendimiento-neto-modulos``
+    ``renta-modelo-131-rendimiento-neto-modulos``
         M100/2024 relation-backed binding populated from Modelo 131 casilla
         ``01``.
-    ``renta-2024-rel-131-rendimiento-neto-modulos``
+    ``renta-modelo-131-rendimiento-neto-modulos``
         M100/2024 relation that sums the quarterly Modelo 131 source
         observations.
 """
@@ -86,9 +86,9 @@ _M131_PAGO_BY_PERIOD: dict[str, Decimal] = {
 }
 _EXPECTED_M131_RENDIMIENTO_TOTAL = Decimal("5400.00")
 _EXPECTED_M131_PAGOS_TOTAL = Decimal("108.00")
-_M131_RENDIMIENTO_BINDING: BindingId = "renta-2024-modelo-131-rendimiento-neto-modulos"
-_M131_RENDIMIENTO_RELATION = "renta-2024-rel-131-rendimiento-neto-modulos"
-_M131_PAGOS_RELATION = "renta-2024-rel-131-pagos-fraccionados"
+_M131_RENDIMIENTO_BINDING: BindingId = "renta-modelo-131-rendimiento-neto-modulos"
+_M131_RENDIMIENTO_RELATION = "renta-modelo-131-rendimiento-neto-modulos"
+_M131_PAGOS_RELATION = "renta-modelo-131-pagos-fraccionados"
 
 
 def _seed_taxpayer_profile(objects: SecureObjectRepository, *, estimation_regime: str) -> None:

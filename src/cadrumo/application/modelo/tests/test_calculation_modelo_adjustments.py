@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _TARGET_BINDING = "modelo-390-prev-303-cuota-devengada-total"
 _OTHER_BINDING = "modelo-390-prev-303-cuota-deducible-total"
 _TARGET_CASILLA = "iva.anual.reconciliacion.devengada-303"
-_RELATION = "modelo-390-rel-303-cuota-devengada-total"
+_RELATION = "modelo-390-prev-303-cuota-devengada-total"
 
 
 def test_m390_reconciliation_target_reaches_a_binding_declared_only_as_an_alternate() -> None:

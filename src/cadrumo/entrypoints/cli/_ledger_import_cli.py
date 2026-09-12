@@ -27,6 +27,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.transactions.errors import TransactionValidationError
 from ._ledger_support import ledger_transaction_validation_no_recovery
 from .common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
+from ..ledger_action_composition import compose_ledger_action_ports
 from .period_parsing import _optional_canonical_period
 
 if TYPE_CHECKING:
@@ -149,6 +150,7 @@ def _imported_files(
     Only the project's own failure taxonomy is caught. A ``TypeError`` here is
     a defect and must still crash rather than be reported as a bad statement.
     """
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
     results: list[LedgerSourceImportResult] = []
     refusals: list[_RefusedImportFile] = []
     for file_path in import_paths:
@@ -157,6 +159,7 @@ def _imported_files(
                 import_ledger_source(
                     command(file_path),
                     transaction_repository=transaction_repository,
+                    bucket_event_repository=ports.bucket_event_repository,
                     currency_normalizer=currency_normalizer,
                 ),
             )

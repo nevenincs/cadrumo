@@ -89,13 +89,13 @@ def local_live_calendar_events(
     """
     from ...adapters.persistence.profile.justificante import JustificanteRepository
     from ...application.live.expedientes import ExpedientesService
-    from ...application.live.justificante import JustificanteCaptureSnapshotService
     from ...application.live.notifications import NotificationsService
+    from ._app_live_justificante_composition import build_justificante_capture_service
 
     try:
         expedientes = ExpedientesService().list_snapshots(bucket_id=bucket_id)
         notifications = NotificationsService().list_snapshots(bucket_id=bucket_id)
-        justificante_captures = JustificanteCaptureSnapshotService(bucket_id=bucket_id).list_snapshots()
+        justificante_captures = build_justificante_capture_service(bucket_id).list_snapshots()
         justificantes = tuple(JustificanteRepository().iter_justificantes())
     except Exception:
         logger.warning(
@@ -278,11 +278,11 @@ def local_calendar_filing_evidence(
         from ...adapters.persistence.profile.justificante import JustificanteRepository
         from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
         from ...application.calculations.observations_repository import CalculationObservationRepository
-        from ...application.live.justificante import JustificanteCaptureSnapshotService
+        from ._app_live_justificante_composition import build_justificante_capture_service
 
         filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())
         justificantes = tuple(JustificanteRepository().iter_justificantes())
-        justificante_captures = JustificanteCaptureSnapshotService(bucket_id=bucket_id).list_snapshots()
+        justificante_captures = build_justificante_capture_service(bucket_id).list_snapshots()
         # Enrolled data-root location, not a hardcoded literal: this store holds
         # filed-declaration evidence and must move with the operator's
         # CADRUMO_LOCAL_STORAGE_ROOT like every other durable output.

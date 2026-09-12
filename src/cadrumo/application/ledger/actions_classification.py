@@ -35,13 +35,11 @@ from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.buckets.event import BucketEvent
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState, is_classified
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import Transaction
-from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from .actions_common import (
     blockers_by_source_transaction_id,
     normalise_timestamp,
@@ -62,6 +60,7 @@ from .actions_manual import (
 from .actions_manual import (
     update_manual_transaction_fields,
 )
+from .action_ports import LedgerActionPorts
 from .id_resolution import resolve_transaction_id
 from .models import (
     BULK_CLASSIFY_ALLOWED_COLUMNS,
@@ -248,6 +247,7 @@ def _apply_one_bulk_classify_row(
     source_command: str,
     now: datetime,
     blockers_by_txid: dict[str, tuple[LedgerRemovalBlocker, ...]],
+    ports: LedgerActionPorts,
 ) -> _BulkRowOutcome:
     """Validate and apply one parsed row against the working catalogue.
 
@@ -289,6 +289,7 @@ def _apply_one_bulk_classify_row(
             command=command,
             previous_transaction_id=resolved_transaction_id,
             now=now,
+            ports=ports,
         )
         if prepared is None:
             # field-for-field identical â€” classification already applied.
@@ -311,14 +312,8 @@ def _apply_bulk_classify_rows(
     bucket_id: str,
     actor: str,
     source_command: str,
-    # The accumulated end-of-batch save uses the application co-commit ports.
-    # The resolver validates the concrete implementation at the composition
-    # boundary, while this worker stays typed against the inward contract.
-    repository: TransactionCatalogueCoCommitWriterProtocol,
-    event_repo: BucketEventHistoryCoCommitWriterProtocol,
+    ports: LedgerActionPorts,
     parsed_rows: list[_ParsedBulkClassifyRow],
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
 ) -> tuple[int, int, list[BulkClassifyFailure], list[str]]:
     apply_failures: list[BulkClassifyFailure] = []
     all_event_ids: list[str] = []
@@ -331,12 +326,14 @@ def _apply_bulk_classify_rows(
     # once, mutate an in-memory working catalogue, accumulate events, and
     # persist a single atomic write at the end.
     now = normalise_timestamp(None)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+    event_repo = resolve_bucket_event_repository(bucket_id=bucket_id, repository=ports.bucket_event_repository)
     working = repository.load()
     all_events: list[BucketEvent] = []
     blockers_by_txid = blockers_by_source_transaction_id(
         bucket_id=bucket_id,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
+        work_unit_repository=ports.work_unit_repository,
+        calculation_repository=ports.calculation_repository,
     )
 
     for parsed_row in parsed_rows:
@@ -348,6 +345,7 @@ def _apply_bulk_classify_rows(
             source_command=source_command,
             now=now,
             blockers_by_txid=blockers_by_txid,
+            ports=ports,
         )
         working = outcome.working
         if outcome.failure is not None:
@@ -376,10 +374,7 @@ def bulk_classify_from_csv(
     csv_text: str,
     actor: str,
     source_command: str = "aeat app ledger classify --file",
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    ports: LedgerActionPorts,
 ) -> BulkClassifyResult:
     """Apply batch classifications from a CSV string.
 
@@ -402,8 +397,6 @@ def bulk_classify_from_csv(
 
     Returns a :class:`~application.ledger.models.BulkClassifyResult`.
     """
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repo = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     parsed_rows, parse_failures = _parse_bulk_classify_rows(csv_text)
     if not parsed_rows and not parse_failures:
         return BulkClassifyResult(total=0, applied=0, skipped=0)
@@ -412,11 +405,8 @@ def bulk_classify_from_csv(
         bucket_id=bucket_id,
         actor=actor,
         source_command=source_command,
-        repository=repository,
-        event_repo=event_repo,
+        ports=ports,
         parsed_rows=parsed_rows,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
     )
     all_failures = parse_failures + apply_failures
     return BulkClassifyResult(
@@ -558,7 +548,7 @@ def plan_classification_rules(
     *,
     bucket_id: str,
     reaffirm: bool = False,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    ports: LedgerActionPorts,
     rule_repository: LedgerClassificationRuleRepositoryProtocol | None = None,
 ) -> ClassificationRulePlan:
     """Resolve which stored rule would classify each in-scope transaction.
@@ -575,7 +565,7 @@ def plan_classification_rules(
     Args:
         bucket_id: The owning profile bucket.
         reaffirm: Whether to re-run over manually classified rows.
-        transaction_repository: Injected catalogue; resolved when omitted.
+        ports: Explicit ledger persistence bundle for the bucket.
         rule_repository: Injected rule store; resolved when omitted.
 
     Returns:
@@ -583,7 +573,7 @@ def plan_classification_rules(
     """
     from .rule_repository import ledger_classification_rule_repository
 
-    tx_repo = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    tx_repo = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
     rule_repo = (
         rule_repository if rule_repository is not None else ledger_classification_rule_repository(bucket_id=bucket_id)
     )
@@ -607,8 +597,7 @@ def apply_classification_rules(
     reaffirm: bool = False,
     actor: str,
     source_command: str = "aeat app ledger rule apply",
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    ports: LedgerActionPorts,
     rule_repository: LedgerClassificationRuleRepositoryProtocol | None = None,
 ) -> ApplyRulesResult:
     """Apply stored classification rules to unclassified ACTIVE transactions.
@@ -624,12 +613,10 @@ def apply_classification_rules(
 
     Returns an :class:`~application.ledger.models.ApplyRulesResult`.
     """
-    tx_repo = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repo = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     plan = plan_classification_rules(
         bucket_id=bucket_id,
         reaffirm=reaffirm,
-        transaction_repository=tx_repo,
+        ports=ports,
         rule_repository=rule_repository,
     )
 
@@ -648,8 +635,7 @@ def apply_classification_rules(
             classified_by_override=f"rule:{row.matched_rule_id}",
             source_command=source_command,
             reaffirm=reaffirm,
-            transaction_repository=tx_repo,
-            bucket_event_repository=event_repo,
+            ports=ports,
         )
         all_event_ids.extend(result.bucket_event_ids)
         applied_rows.append(

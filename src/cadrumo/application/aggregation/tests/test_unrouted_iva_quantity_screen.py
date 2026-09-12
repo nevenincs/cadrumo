@@ -216,7 +216,7 @@ def _revision_without_fact(revision: ModeloRevision, fact: str) -> ModeloRevisio
     kept = [
         binding
         for binding in revision.bindings
-        if not (binding.source.value == "ledger_iva_aggregation" and getattr(binding.selector, "fact", None) == fact)
+        if not (binding.source.value == "ledger_iva_aggregation" and getattr(binding.provider, "fact", None) == fact)
     ]
     return revision.model_copy(update={"bindings": tuple(kept)})
 

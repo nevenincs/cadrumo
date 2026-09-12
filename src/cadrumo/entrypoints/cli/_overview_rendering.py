@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Sequence
+from datetime import date
 
 from ...application.operator_actions.models import ActionReference, DeclaredNextAction
 from ...application.overview.agenda import OverviewAgenda
@@ -61,6 +62,9 @@ from ...core.json_contract import (
 )
 from ...core.notificacion_estado_servicio import NotificacionEstadoServicio
 from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
+from ...domain.calculations.registry.schema_base import DateAxis
 from ._ledger_payloads import LedgerStatusResult
 from ._overview_payloads import (
     OverviewAgendaResult,
@@ -296,20 +300,34 @@ def overview_post_filing_event_notices(events: Sequence[OverviewCalendarEvent]) 
 
 _DEEMED_SERVED_NOTICE_CODE = "overview.notificacion.rechazo_tacito"
 
-#: Legal-catalogue entry establishing the rechazo-tácito window the notice reports.
-#: It rides on :attr:`Notice.context` so the operator can trace the claim that a
-#: notification nobody opened is nevertheless legally served back to the provision
-#: that says so, rather than taking the surface's word for it.
-DEEMED_SERVED_LEGAL_REF = "ley-39-2015:art-43.2"
+
+def _deemed_served_legal_ref(*, effective_date: date) -> str:
+    """Project the legal reference from the governed DEHu window fact.
+
+    The renderer carries provenance, not a parallel legal-reference catalogue.
+    The existing scalar fact owns both the ten-day window and its legal
+    evidence; resolving it here keeps the notice's context attached to the
+    same authority row that drives service-state calculation.
+    """
+    resolved = bundled_authority().resolve_governed_fact(
+        ScalarFactQuery(
+            fact_id="dehu-tacit-rejection-natural-days",
+            date_axis=DateAxis.SUBMISSION_DATE,
+            effective_date=effective_date,
+        )
+    )
+    if not isinstance(resolved, ResolvedScalarFact) or not resolved.legal_refs:
+        raise RuntimeError("dehu tacit-rejection fact has no legal-reference provenance")
+    return str(resolved.legal_refs[0])
 
 
 def overview_deemed_served_notification_notices(events: Sequence[OverviewCalendarEvent]) -> list[Notice]:
     """Surface notifications the law already deems served, whatever their procedural kind.
 
     A DEHu notification left unopened for the
-    statutorily prescribed window is *rechazada*
-    under Ley 39/2015 art. 43.2 — served, with every downstream plazo already
-    running, even though the taxpayer never read it. That consequence attaches to
+    statutorily prescribed window is *rechazada* under the governed
+    notification rule — served, with every downstream plazo already running,
+    even though the taxpayer never read it. That consequence attaches to
     the notification's delivery state, not to its
     :class:`~cadrumo.core.PostFilingEventKind`, so a plain ``notificacion`` whose
     concepto matches no sharper procedural pattern carries it just as a
@@ -339,7 +357,7 @@ def overview_deemed_served_notification_notices(events: Sequence[OverviewCalenda
             message=message,
             action=resolve_notice_action(action=ActionReference(action_id="operator.live.notifications.list")),
             context={
-                "legal_ref": DEEMED_SERVED_LEGAL_REF,
+                "legal_ref": _deemed_served_legal_ref(effective_date=max(event.event_date for event in deemed_served)),
                 "certificado_ids": ",".join(certificado_ids),
                 "count": str(len(deemed_served)),
             },
@@ -1003,7 +1021,6 @@ def _calendar_event_text_line(event: OverviewCalendarEvent) -> str:
 
 
 __all__ = [
-    "DEEMED_SERVED_LEGAL_REF",
     "overview_agenda_output",
     "overview_backlog_output",
     "overview_calendar_output",

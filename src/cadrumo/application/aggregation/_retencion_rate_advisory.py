@@ -6,24 +6,21 @@ law actually fixes? — and answering it in one place keeps the comparison, its
 cent tolerance, and its grounding from being restated twice.
 
 The RECEIVED side (:func:`administrador_retencion_rate_advisory_observations`)
-screens operator-entered Modelo 111 per-perceptor rows. The ISSUED side
-(:func:`inferred_actividad_retencion_rate_advisory_observations`) screens the
-Modelo 130 actividad-económica retención the ledger *inferred* from a cash
-shortfall.
+screens operator-entered per-perceptor rows. The ISSUED side
+(:func:`inferred_actividad_retencion_rate_advisory_observations`) screens an
+activity-ledger withholding inferred from a cash shortfall.
 
 Administrador/consejero rows (RECEIVED side)
 --------------------------------------------
 
-Modelo 111 aggregates operator-supplied per-perceptor retención rows: each
+The received surface aggregates operator-supplied per-perceptor rows: each
 :class:`~.retenciones.RetencionObservation` carries both the ``taxable_base``
-and the withheld ``retencion_amount``. For ordinary empleados
-(:attr:`~core.aggregation.RetencionScheme.WORK_INCOME`) the withholding is a
-personalised progressive computation (LIRPF art. 101.1), so no single rate can be
-asserted. For administradores y miembros de consejos de administración
+and the withheld ``retencion_amount``. For ordinary work-income rows the
+withholding is a personalised progressive computation, so no single rate can be
+asserted. Fixed-rate administrator rows
 (:attr:`~core.aggregation.RetencionScheme.WORK_INCOME_DIRECTOR`) the law
-fixes the rate: LIRPF art. 101.2 (Ley 35/2006, BOE-A-2006-20764), developed by
-RIRPF art. 80.1.3.º (RD 439/2007), sets a general 35 % that drops to 19 % when the
-paying entity's importe neto de la cifra de negocios is below 100.000 euros.
+uses a fixed rate selected by the governing registry when the paying entity's
+turnover condition requires it.
 
 The engine does not compute the withheld amount (the operator enters it from their
 payroll), so the fixed rate could previously go unverified: an administrador row
@@ -37,21 +34,20 @@ carries only the STRUCTURAL fact that this scheme follows a fixed procedure;
 the rate figures themselves are regulatory data read from the registry, never a
 literal in this or the core layer (``aeat-registry-authority-flow``). Because
 the engine cannot always know the paying entity's INCN, a row whose effective
-rate matches EITHER statutory figure (35 % or 19 %) is treated as conforming;
-only a row consistent with neither raises the advisory, so a legitimate
-reduced-rate filing never false-fires.
+rate matches either authority-selected figure is treated as conforming; only a
+row consistent with neither raises the advisory.
 
 Inferred actividad-económica retención (ISSUED side)
 ----------------------------------------------------
 
-The Modelo 130 income ledger derives retención practicada as the declared invoice
-gross minus the cash actually received, bounded ABOVE by the RIRPF art. 95.1
-general rate. Nothing bounds it BELOW, and nothing can: a shortfall is a shortfall
+The activity income ledger derives retención practicada as the declared invoice
+gross minus the cash actually received, bounded ABOVE by the governed activity
+rate. Nothing bounds it BELOW, and nothing can: a shortfall is a shortfall
 whatever caused it. So a cash gap arising from something that is not a retención at
 all — a correspondent-bank fee on a foreign transfer, a rounding short-pay, a
 pronto-pago discount agreed after invoicing, a line the client disputed and deducted
 — lands in the same subtraction and becomes a pago-a-cuenta credit for tax nobody
-withheld and AEAT never received. It then settles against a payer Modelo 111 that
+withheld and AEAT never received. It then settles against a payer record that
 reports nothing.
 
 The inference itself is not the defect and is deliberately left alone: requiring a
@@ -61,61 +57,32 @@ taxpayer is genuinely owed. What was missing is that the inference was invisible
 the ``withheld_derivation`` marker recording that a figure was *inferred* rather than
 declared reached no operator surface at all.
 
-The discriminator is that a real retención is always ``base × a statutory rate``.
-A genuine 15 % withholding on a 2.000 EUR base is exactly 300,00; a bank fee, a
-rounding gap, or a disputed line lands on no such product. Screening on the rate
+The discriminator is that a real retención is a ``base × governed rate``.
+Screening on the rate
 rather than on the derivation marker is what keeps this advisory off the correct
 domestic-B2B majority, where the shortfall genuinely IS the retención — a blanket
 advisory on every inference would fire on those and train operators to ignore the
 channel, the failure mode ``aeat-ledger-contract``
 exists to prevent.
 
-The comparison reads the whole grounded art. 95 rate set — 15 %, 7 %, 2 % and 1 %
-— from governed facts, never a literal restated here. The
-sectoral rates (art. 95.4 agrícola/ganadera, with its 1 % engorde de porcino y
-avicultura carve-out from the 2 % general figure; art. 95.5 forestal; art. 95.6.1.º
-estimación objetiva) were grounded precisely because screening against the art. 95.1
-pair alone made every genuine sectoral withholding look like a phantom credit.
+The comparison reads the complete governed rate set and its classifications
+from registry facts, never a literal restated here. This keeps additional
+sectoral pairings visible to the advisory instead of treating them as unmatched.
 
-A match is not one verdict, because the rates differ in how easily an accident
-reaches them. 15 % and 7 % are large: a fee or rounding gap does not land on
-2.000 × 0,15 = 300,00 by coincidence, so a match there is a strong claim and the
-screen stays silent. 1 % and 2 % are small enough that a routine bank fee lands on
-them exactly — a 20,00 EUR correspondent fee on a 2.000,00 base is precisely 1 % —
-so a sectoral-only match is a WEAKER claim and raises its own advisory under a
-separate reason code, ``inferred_retencion_sectoral_rate_unconfirmed``. Separate
-rather than reworded, because a machine-readable caller
-that routes on fields: "matches nothing" and "matches a small rate that may be a
-coincidence" are different epistemic states and must not be collapsed into one.
+A match is not one verdict, because the authority classifications differ in how
+easily an accidental shortfall can reach them. A sectoral-only match therefore
+raises the separate ``inferred_retencion_sectoral_rate_unconfirmed`` reason code;
+"matches nothing" and "matches a weaker classification" are distinct machine
+states and must not be collapsed.
 
-The active profile words that sectoral advisory and never gates it. The
-distinction is load-bearing and easy to erode: it is tempting to read a
-non-agricultural profile and suppress the diagnostic entirely, but nothing in the
-profile can establish that a taxpayer is NOT agrícola, ganadero or forestal —
-that is an ACTIVITY TYPE and the profile records an estimation REGIME, which is
-independent of it. Suppressing on such a signal would hide a real finding behind
-a fact nothing verified. A weak signal may set how confidently we speak; it may
-never decide whether we speak at all.
+The active profile only words the sectoral advisory and never gates it. A weak
+signal may set how confidently we speak; it may never decide whether we speak.
 
-The grading matters most for a shortfall quoted as a PERCENTAGE, and that case is
-worth stating precisely because the flat-fee example above understates it. A
-20,00 EUR fee colliding with 1 % of a 2.000,00 base is arithmetic luck at one
-invoice size. A pronto-pago descuento is conventionally quoted as a percentage,
-and 1 % and 2 % are its standard values — so a base-quoted discount collides with
-the sectoral rates at EVERY base, by construction rather than by coincidence.
-Screening on the rate set alone would therefore have made one of the four phantom
-causes this advisory exists to catch invisible at its two commonest values, at
-every invoice size. It is the sectoral reason code that keeps it visible: those
-rows raise the weaker advisory rather than passing silently. A discount quoted on
-the invoice TOTAL instead of the base lands at 1,21 × the rate and collides with
-nothing, so it raises the strong unmatched advisory.
+The separate sectoral reason code keeps weaker classification matches visible
+instead of allowing them to pass silently.
 
-The residual limit, stated rather than left to be discovered: a shortfall landing
-on 15 % or 7 % is still indistinguishable from a real withholding and still passes
-silently. Closing that needs a declared retención, and requiring one was already
-rejected above for the same reason: the declared-first branch is not always
-reachable, and dropping the inference would under-declare a credit the taxpayer
-is genuinely owed.
+The residual limit remains: a strong authority-rate match is indistinguishable
+from a real withholding without a declared source, so it passes silently.
 """
 
 from __future__ import annotations
@@ -148,12 +115,12 @@ from .source_mesh import CalculationSourceDiagnostic
 if TYPE_CHECKING:
     from ...domain.deadlines.models import TaxpayerProfile
 
-#: Diagnostic ``source_kind`` for an administrador/consejero retención whose
-#: withheld amount matches neither statutory art. 101.2 fixed rate.
+#: Diagnostic ``source_kind`` for a fixed-rate administrator withholding whose
+#: amount matches neither authority-selected rate.
 ADMINISTRADOR_RETENCION_RATE_SOURCE_KIND = "administrador_retencion_rate"
 
-#: Diagnostic ``source_kind`` for an INFERRED actividad-económica retención whose
-#: figure matches no RIRPF art. 95 rate at all.
+#: Diagnostic ``source_kind`` for an inferred activity withholding whose figure
+#: matches no authority-selected rate.
 INFERRED_ACTIVIDAD_RETENCION_RATE_SOURCE_KIND = "inferred_actividad_retencion_rate"
 
 #: Diagnostic ``source_kind`` for an INFERRED retención matching ONLY a sectoral
@@ -211,7 +178,7 @@ def _conforms_to_fixed_rate(base: Decimal, amount: Decimal, rate: Decimal) -> bo
 
 @cache
 def _art95_refs(*, effective_date: date) -> tuple[LegalRefId, ...]:
-    """Return the art. 95 grounding, resolved once per process.
+    """Return the governed activity-rate grounding, resolved once per process.
 
     Cached because every diagnostic in this module cites the same set, and the
     grounding is read from the registry: re-resolving it per observation would
@@ -221,7 +188,7 @@ def _art95_refs(*, effective_date: date) -> tuple[LegalRefId, ...]:
 
 
 def _administrador_refs(*, effective_date: date) -> tuple[LegalRefId, ...]:
-    """Return the LIRPF art. 101.2 administrador grounding, resolved once per process.
+    """Return the administrator-rate grounding, resolved once per process.
 
     Same rationale as :func:`_art95_refs`: every administrador diagnostic in
     this module cites the same set, so resolving it once per process keeps a
@@ -235,17 +202,15 @@ def administrador_retencion_rate_advisory_observations(
     *,
     effective_date: date,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Return advisories for administrador rows inconsistent with art. 101.2.
+    """Return advisories for administrator rows inconsistent with authority rates.
 
     A :class:`~.source_mesh.CalculationSourceDiagnostic` (reason
     ``administrador_retencion_rate_mismatch``) is emitted for each
     :attr:`~core.aggregation.RetencionScheme.WORK_INCOME_DIRECTOR`
     observation with a strictly-positive ``taxable_base`` whose withheld
-    ``retencion_amount`` matches neither the general 35 % nor the reduced 19 %
-    fixed rate of LIRPF art. 101.2. Rows on any other scheme (empleados follow
-    the progressive art. 101.1 procedure, so no single rate applies; actividades,
-    premios, capital, and arrendamiento are not art. 101 trabajo), and
-    administrador rows with a non-positive base, are out of scope and never fire.
+    ``retencion_amount`` matches neither authority-selected fixed rate. Rows on
+    any other scheme and administrator rows with a non-positive base are out of
+    scope and never fire.
 
     Args:
         observations: The per-perceptor retención rows feeding the calculation.
@@ -279,17 +244,16 @@ def administrador_retencion_rate_advisory_observations(
                 reason="administrador_retencion_rate_mismatch",
                 source_kind=ADMINISTRADOR_RETENCION_RATE_SOURCE_KIND,
                 message=(
-                    f"Administrador/consejero retención for perceptor {observation.perceptor_nif!r} "
-                    f"(base {base}, withheld {amount}) matches neither the LIRPF art. 101.2 fixed "
-                    f"rate of {general_rate} nor the reduced {reduced_rate} for entities with net "
-                    f"turnover below {rates.reduced_incn_threshold_eur} EUR; confirm the applied "
+                    f"Administrator withholding for perceptor {observation.perceptor_nif!r} "
+                    f"(base {base}, withheld {amount}) matches neither authority-selected "
+                    f"rate ({general_rate} or {reduced_rate}) for the applicable turnover "
+                    f"condition below {rates.reduced_incn_threshold_eur} EUR; confirm the applied "
                     f"withholding rate before filing."
                 ),
                 # Read off the registry-backed rate set this advisory already
-                # resolved rather than restated here. The message names the
-                # article for a human; this is the field a machine consumer
-                # routes on, and it moves with the registry instead of
-                # asserting what the law says from a literal in this layer.
+                # resolved rather than restating it here. The machine consumer
+                # routes on this field, while legal provenance moves with the
+                # selected registry revision instead of living in this layer.
                 legal_refs=_administrador_refs(effective_date=effective_date),
             ),
         )
@@ -350,23 +314,15 @@ def _profile_suggests_sectoral_activity(bucket_id: str | None) -> bool | None:
     """Return whether the active profile hints at a sectoral activity.
 
     A HINT, and everything below the first check is deliberately weak. The
-    weakness has one cause: agrícola/forestal is an ACTIVITY TYPE, while the
-    rest of what the profile records is an estimation REGIME, and the two are
-    independent -- a farmer may file estimación directa and may sit in IVA
-    general. ``iae_epigraph`` cannot close that gap either, because
-    agricultural activities are largely IAE-exempt, so the field is emptiest
-    for exactly the filers it would need to identify.
+    profile's activity axis and estimation regime are independent, so the
+    regime is only a surrogate when the direct activity signal is silent.
 
     :attr:`~domain.deadlines.TaxpayerProfile.irpf_activity_kind` is the one
     signal here that is not a surrogate: it is the activity axis itself,
     operator-declared, so it answers the question asked rather than one
     correlated with it. It is therefore consulted FIRST and its answer is
-    final. That ordering matters in one real case -- a taxpayer who declares
-    PROFESIONAL while filing estimación objetiva now reads as non-sectoral,
-    where the objetiva surrogate alone called them sectoral. Objetiva is an
-    art. 95.6 regime that covers plenty of non-agrarian activity (taxis, bars),
-    so the declaration is the better answer and the surrogates stay only as
-    fallbacks for a profile that has not declared.
+    final. A direct activity declaration takes precedence over weaker regime
+    surrogates, which remain only as fallbacks for a profile that is silent.
 
     So this answers only "is there a POSITIVE indication of sectoral activity?":
     ``True`` on an explicit indicator, ``False`` when the profile declares a
@@ -400,13 +356,13 @@ def _sectoral_match_message(
     opening = (
         f"Transaction {transaction_id!r} was paid {amount} EUR short of its invoice total, "
         f"which was credited as retención practicada on a base of {base}. That is exactly "
-        f"{matched} of the base — a statutory RIRPF art. 95 sectoral rate, but also a common "
+        f"{matched} of the base — an authority-selected sectoral rate, but also a common "
         f"bank-fee or discount amount. "
     )
     if sectoral_hint is True:
         return opening + (
-            "Your profile declares an agricultural, forestry or módulos activity, so a "
-            "withholding at this rate is consistent with it."
+            "Your profile declares a sectoral activity, so a withholding at this rate "
+            "is consistent with it."
         )
     if sectoral_hint is False:
         # Deliberately does not name the mechanism: a False now arrives either
@@ -414,11 +370,11 @@ def _sectoral_match_message(
         # estimación directa régimen, and naming one would misdescribe the other.
         return opening + (
             "Your profile declares a non-sectoral activity, which is not normally subject "
-            "to this rate, so the shortfall may not be tax withheld at all."
+            "to this authority-selected rate, so the shortfall may not be tax withheld at all."
         )
     return opening + (
-        "Your profile does not say whether you carry on an agricultural, forestry or módulos "
-        "activity, so whether this rate can apply to you could not be checked."
+        "Your profile does not identify whether the sectoral classification applies, "
+        "so whether this rate can apply could not be checked."
     )
 
 
@@ -441,8 +397,8 @@ def _inferred_rate_matches(
         return None
     matched = frozenset(rate for rate in rates if _conforms_to_fixed_rate(base, observation.withheld_amount, rate))
     if matched & professional:
-        # A 15 % or 7 % match is a strong claim: those figures are too large
-        # for a fee or rounding gap to reach by accident. Nothing to say.
+        # A professional-rate match is a strong claim under the registry's
+        # classification. Nothing to say.
         return None
     return base, matched
 
@@ -493,7 +449,7 @@ def _unmatched_rate_diagnostic(
         message=(
             f"Transaction {observation.transaction_id!r} was paid {amount} EUR short of its "
             f"invoice total, which was credited as retención practicada on a base of {base}. "
-            f"That figure matches no RIRPF art. 95 retención rate ({rendered_rates}), so the "
+            f"That figure matches no authority-selected activity withholding rate ({rendered_rates}), so the "
             f"shortfall may be a bank fee, a discount, or a disputed amount rather than tax "
             f"withheld on your behalf."
         ),
@@ -512,30 +468,25 @@ def inferred_actividad_retencion_rate_advisory_observations(
     bucket_id: str | None = None,
     resolver_id: str | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Return advisories for inferred retención matching no RIRPF art. 95.1 rate.
+    """Return advisories for inferred retención against governed activity rates.
 
-    Three outcomes, decided by ARITHMETIC alone against the grounded art. 95
-    rates, for each row whose ``withheld_derivation`` says the figure was
+    Three outcomes, decided by arithmetic alone against the governed rate set,
+    for each row whose ``withheld_derivation`` says the figure was
     INFERRED from a cash shortfall and whose ``taxable_base_amount`` is
     positive. Rows carrying a retención DECLARED on a linked invoice, rows
     carrying no retención, and rows with no positive base never fire.
 
-    * The amount matches an art. 95.1 PROFESSIONAL rate (15 % or 7 %) — silent.
-      Those figures are too large for a fee or rounding gap to reach by
-      accident, so the match is a strong claim.
-    * The amount matches ONLY a sectoral rate (2 % or 1 %) — a
-      ``inferred_retencion_sectoral_rate_unconfirmed`` advisory. The figure is a
-      real statutory rate, but small enough that a bank fee or discount lands on
-      it by coincidence, so the claim is weaker and carries its own reason code.
+    * A professional-rate match is silent when the authority classifies it as a
+      strong claim.
+    * A sectoral-only match raises an
+      ``inferred_retencion_sectoral_rate_unconfirmed`` advisory because its
+      evidential strength is weaker.
     * The amount matches nothing — a ``inferred_retencion_rate_unmatched``
       advisory, the strong finding.
 
-    ``bucket_id`` is read ONLY to word the sectoral message, never to decide
-    whether it fires. That separation is the point: the profile cannot establish
-    that a taxpayer is not agrícola/ganadero/forestal (an activity type it does
-    not record), so promoting the hint into a gate would suppress a real finding
-    on a fact nothing verified. A weak signal may set how confidently we speak;
-    it may not decide whether we speak. Do not "improve" this into a filter.
+    ``bucket_id`` is read only to word the sectoral message, never to decide
+    whether it fires. A weak profile signal may shape confidence but cannot gate
+    the diagnostic.
 
     The rate set is read from governed facts via
     :func:`~domain.transactions.statutory_activity_retencion_rates`, so the

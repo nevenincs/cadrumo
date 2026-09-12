@@ -132,10 +132,12 @@ def iva_wallet_pull_cmd(
     decisions are profile-local evidence.
     """
     from ...application.live.iva_remote_state import capture_iva_compensation_wallet
+    from .app_live_iva_remote_state_composition import cli_iva_remote_state_port
 
     emit_live_auth_preflight()
     report = asyncio.run(
         capture_iva_compensation_wallet(
+            ports=cli_iva_remote_state_port(),
             target_year=year,
             target_period=_required_live_period_option(period, year=year),
             taxpayer_nif=taxpayer_nif,
@@ -193,8 +195,9 @@ def iva_wallet_history_cmd(
     profile storage without contacting AEAT.
     """
     from ...application.live.iva_remote_state import list_iva_compensation_history
+    from .app_live_iva_remote_state_composition import cli_iva_remote_state_port
 
-    report = list_iva_compensation_history(as_of_year=as_of_year)
+    report = list_iva_compensation_history(ports=cli_iva_remote_state_port(), as_of_year=as_of_year)
     result = _iva_wallet_history_result(report)
     emit_envelope(ctx, command="app.live.iva_wallet.history", result=result, lines=_iva_wallet_history_lines(report))
 
@@ -421,10 +424,12 @@ def iva_wallet_pull_history_cmd(
     """
     from ...application.live.iva_remote_state import capture_iva_compensation_history
     from ...core.config import load_settings
+    from .app_live_iva_remote_state_composition import cli_iva_remote_state_port
 
     emit_live_auth_preflight()
     report = asyncio.run(
         capture_iva_compensation_history(
+            ports=cli_iva_remote_state_port(),
             year_from=year_from,
             year_to=year_to,
             output_root=resolve_optional_root(
@@ -483,12 +488,14 @@ def iva_wallet_pull_evidence_cmd(
     """
     from ...application.live.iva_remote_state import capture_iva_remote_state
     from ...core.config import load_settings
+    from .app_live_iva_remote_state_composition import cli_iva_remote_state_port
 
     resolved_target_period = _required_live_period_option(target_period, year=target_year)
     emit_live_auth_preflight()
     report = asyncio.run(
         _run_live_iva_evidence_pull_command(
             capture_iva_remote_state(
+                ports=cli_iva_remote_state_port(),
                 year_from=year_from,
                 year_to=year_to,
                 target_year=target_year,
@@ -1113,12 +1120,14 @@ def filed_pull_all_cmd(
     denominator note says what was actually measured.
     """
     from ...core.config import load_settings
+    from .app_live_iva_remote_state_composition import cli_iva_remote_state_port
 
     profile = _active_taxpayer_profile_or_none()
     resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
     emit_live_auth_preflight()
     run = asyncio.run(
         pull_filed_history(
+            iva_remote_state_port=cli_iva_remote_state_port(),
             output_root=resolved_root,
             profile=profile,
             limit=limit,

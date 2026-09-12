@@ -33,6 +33,7 @@ from pydantic import BaseModel, Field
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.casilla_id import CasillaId
+from ...core.decimal.constants import ZERO
 from ...core.filing_year import FilingYear
 from ...core.i18n.translatable import Translatable as t
 from ...core.identity.transaction_ids import TransactionId
@@ -127,6 +128,27 @@ def _required_renta_ledger_declaration(entries: Mapping[str, str], key: str) -> 
     if value is None or not value.strip():
         raise ValueError(f"renta-ledger mapping is missing {key!r}")
     return value
+
+
+def _registry_renta_iva_ratio_declarations(*, filing_year: int) -> dict[str, str]:
+    """Resolve the dated IVA-ratio policy used by the Renta ledger."""
+    resolved = bundled_authority().resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="renta-iva-deduction-ratio-policy",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date(filing_year, 12, 31),
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise TypeError("Renta IVA ratio policy must resolve as a mapping fact")
+    entries: dict[str, str] = {}
+    for entry in resolved.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            raise TypeError("Renta IVA ratio policy entries must be string-to-string")
+        if entry.key in entries:
+            raise ValueError(f"duplicate Renta IVA ratio policy key {entry.key!r}")
+        entries[entry.key] = entry.value
+    return entries
 
 
 class RentaLedgerAggregationIssueReason(StrEnum):
@@ -296,25 +318,10 @@ def resolve_iva_deduction_ratio(
 ) -> Decimal | None:
     """Resolve the activity's IVA-deduction fraction for :attr:`RentaDeductibilityContext.iva_deduction_ratio`.
 
-    Two independent taxpayer facts feed this axis, checked in order:
-
-    1. A wholly ``EXENTO`` :attr:`~domain.deadlines.TaxpayerProfile.iva_regime`
-       (LIVA art. 20, no right to deduct under art. 94.Uno a contrario) resolves
-       to ``0`` outright. This is deliberately NOT a prorrata-register state: a
-       taxpayer performing ONLY sin-derecho operations never triggers LIVA
-       art. 102.Uno prorrata (which requires con-derecho and sin-derecho
-       operations "conjuntamente"), so the register legitimately carries no
-       entry for them.
-    2. Otherwise, the bucket's :class:`~domain.prorrata_register.ProrrataRegister`
-       whole-entity (``sector_id=None``) entry for ``ejercicio``: a ``GENERAL``
-       or ``ESPECIAL`` regime entry contributes its in-force provisional
-       percentage (LIVA art. 104.Uno + 105.Uno) as a ``0``-``1`` ratio, mirroring
-       the resolution :func:`~application.aggregation.iva_ledger._active_prorrata_apportionment`
-       already applies on the M303 side -- the SAME percentage that governed
-       what this ejercicio's ledger rows actually recovered through IVA, so the
-       two filings stay consistent for the same ejercicio. A ``NINGUNA`` regime,
-       an interrupted or absent entry, or an unresolved provisional percentage
-       all fall through to ``None``.
+    The selected registry ratio policy supplies the exempt-regime result and
+    percentage-unit conversion; the prorrata register supplies the period
+    value for all other regimes. An absent or unresolved register value falls
+    through to ``None``.
 
     Returns ``None`` -- the historic base-only fallback -- when neither fact
     resolves a ratio (no profile, an unparseable regime, no register entry, or
@@ -329,6 +336,14 @@ def resolve_iva_deduction_ratio(
             prorrata register. The caller owns its store selection so a
             non-active bucket cannot be shadowed by a process-global default.
     """
+    ratio_policy = _registry_renta_iva_ratio_declarations(filing_year=ejercicio)
+    exempt_ratio = Decimal(
+        _required_renta_ledger_declaration(ratio_policy, "exempt_regime.deduction_ratio"),
+    )
+    percentage_divisor = Decimal(
+        _required_renta_ledger_declaration(ratio_policy, "percentage.unit_divisor"),
+    )
+
     record = profile_record
     if record is None:
         try:
@@ -343,7 +358,7 @@ def resolve_iva_deduction_ratio(
             except ValueError:
                 regime = None
             if regime is IVARegime.EXENTO:
-                return Decimal("0")
+                return exempt_ratio
 
     register = require_prorrata_register_coordinates_current(prorrata_register_repository.load())
     entry = register.entry_for(ejercicio, sector_id=None)
@@ -352,7 +367,7 @@ def resolve_iva_deduction_ratio(
     resolution = register.resolve_provisional(ejercicio, sector_id=None)
     if resolution.percentage is None:
         return None
-    return resolution.percentage / Decimal("100")
+    return resolution.percentage / percentage_divisor
 
 
 def aggregate_renta_ledger_expenses_from_repositories(
@@ -814,7 +829,7 @@ def _business_fact_amount(amount: Decimal, proportion: Decimal) -> Decimal: ...
 def _business_fact_amount(amount: Decimal | None, proportion: Decimal) -> Decimal | None:
     if amount is None:
         return None
-    if amount < Decimal("0"):
+    if amount < ZERO:
         raise ValueError("ledger amount must be a non-negative magnitude")
     return amount * proportion
 

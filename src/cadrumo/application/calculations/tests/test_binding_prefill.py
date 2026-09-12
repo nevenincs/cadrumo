@@ -254,9 +254,9 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
         relation_vals = resolve_relations_from_local_store(snapshot, repository=repository)
         resolved_relation_ids = {rv.relation for rv in relation_vals.values if rv.value is not None}
         assert resolved_relation_ids == {
-            "modelo-390-rel-303-cuota-devengada-total",
-            "modelo-390-rel-303-cuota-deducible-total",
-            "modelo-390-rel-303-resultado-regimen-general",
+            "modelo-390-prev-303-cuota-devengada-total",
+            "modelo-390-prev-303-cuota-deducible-total",
+            "modelo-390-prev-303-resultado-regimen-general",
         }
         # Provenance: resolved entries carry local_filing provenance.
         assert all(rv.provenance == "local_filing" for rv in relation_vals.values if rv.value is not None)

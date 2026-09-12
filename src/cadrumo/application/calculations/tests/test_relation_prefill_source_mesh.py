@@ -24,7 +24,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.handoffs import relation_consumption_channels, relation_consumption_index
-from ....domain.calculations.registry.relations import RegistryFoldRequirement
+from ....domain.calculations.registry.relations import RegistryFoldRequirement, relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
@@ -119,19 +119,22 @@ def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: 
         assert source_resolution.owned_sources == (BindingSourceKind.RELATION_PREFILL,)
         assert source_resolution.provenance
         assert all(item.contributor_source_kind == "relation_prefill" for item in source_resolution.provenance)
-        relations_by_id = {relation.id: relation for relation in snapshot.revision.relations}
+        bindings_by_id = {
+            binding.id: (binding, provider)
+            for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
+        }
         for item in prefill.values:
-            relation = relations_by_id[item.relation]
-            assert item.source_modelo == relation.source_modelo
-            assert item.source_casilla_ids == (relation.source_casilla_id,)
-            assert item.legal_refs == tuple(relation.legal_refs)
-            assert item.source_refs == tuple(relation.source_refs)
+            binding, provider = bindings_by_id[item.relation]
+            assert item.source_modelo == provider.source_modelo
+            assert item.source_casilla_ids == provider.declared_source_casilla_ids
+            assert item.legal_refs == tuple(binding.legal_refs)
+            assert item.source_refs == tuple(binding.source_refs)
         # RET-1: the perceptores relation is retired (decl.total-perceptores is now
         # a distinct-NIF count from the retención store); only the monetary
         # base/retenciones relations remain on the relation_prefill source.
         assert {item.source_ref for item in source_resolution.provenance} == {
-            "modelo-180-rel-115-base-anual:115:2026:1T,2T,3T,4T:02",
-            "modelo-180-rel-115-retenciones-anual:115:2026:1T,2T,3T,4T:03",
+            "modelo-180-115-base-anual:115:2026:1T,2T,3T,4T:02",
+            "modelo-180-115-retenciones-anual:115:2026:1T,2T,3T,4T:03",
         }
         resolved_prefill = {item.relation: item for item in prefill.values if item.value is not None}
         provenance_by_relation = {item.relation_id: item for item in source_resolution.provenance}
@@ -251,16 +254,15 @@ def test_unresolved_bound_carry_the_taxpayer_files_is_advised(tmp_path: Path) ->
 
         declared_binding_ids = {binding.id for binding in snapshot.revision.bindings}
         consumption_index = relation_consumption_index(snapshot.revision)
+        active_bindings = relation_prefill_bindings_for_period(snapshot.revision, period="2P")
         non_formula = {
-            relation.id
-            for relation in snapshot.revision.relations
-            if not any(
-                channel.startswith("formula_") for channel in relation_consumption_channels(relation, consumption_index)
-            )
+            binding.id
+            for binding, _provider in active_bindings
+            if "formula_binding" not in relation_consumption_channels(binding.id, consumption_index)
         }
         assert non_formula, "M202 must declare at least one non-formula relation for this fixture"
         # Every M202 non-formula relation materialises a real binding slot.
-        assert all(r.target_binding in declared_binding_ids for r in snapshot.revision.relations if r.id in non_formula)
+        assert non_formula <= declared_binding_ids
 
         source_resolution = RelationPrefillSourceResolver(
             repository=repository,
@@ -281,7 +283,10 @@ def test_unresolved_bound_carry_the_taxpayer_files_is_advised(tmp_path: Path) ->
         for classification in snapshot.revision.dependency_classifications
         if classification.taxpayer_files_source
     }
-    relation_source = {relation.id: relation.source_modelo for relation in snapshot.revision.relations}
+    relation_source = {
+        binding.id: provider.source_modelo
+        for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period="2P")
+    }
     expected = {
         relation_id
         for relation_id in non_formula
@@ -308,14 +313,14 @@ def test_relation_consumption_index_traverses_committed_m100_settlement_expressi
     snapshot = _snapshot("100", 2024, "0A")
     index = relation_consumption_index(snapshot.revision)
     formula_relation_ids = {
-        relation.id
-        for relation in snapshot.revision.relations
-        if "formula_relation" in relation_consumption_channels(relation, index)
+        binding.id
+        for binding, _provider in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
+        if "formula_binding" in relation_consumption_channels(binding.id, index)
     }
 
     assert {
-        "renta-2024-rel-130-pagos-fraccionados",
-        "renta-2024-rel-131-pagos-fraccionados",
+        "renta-modelo-130-pagos-fraccionados",
+        "renta-modelo-131-pagos-fraccionados",
     }.issubset(formula_relation_ids)
 
 
@@ -416,16 +421,14 @@ def test_m202_2p_previous_payments_stays_unresolved_without_prior_filing(tmp_pat
     assert source_resolution.relation_values == {}
 
 
-def test_orphaned_non_formula_relation_surfaces_advisory_diagnostic(tmp_path: Path) -> None:
-    """An unresolved non-formula relation that reaches nothing is surfaced.
+def test_orphaned_non_formula_binding_surfaces_advisory_diagnostic(tmp_path: Path) -> None:
+    """An unresolved non-formula binding that reaches nothing is surfaced.
 
-    The narrow silent gap: a declared relation referenced by no formula whose
-    ``target_binding`` is NOT a declared binding on the revision materialises no
-    slot and previously _produced neither a value nor a diagnostic — its absence
-    reached nothing observable. The resolver MUST now emit a non-blocking advisory
-    for exactly that orphaned case.
+    The narrow silent gap is a declared relation-prefill binding referenced by no
+    formula or casilla. Its absence reaches nothing observable, so the resolver
+    MUST emit a non-blocking advisory for exactly that orphaned case.
 
-    The registry validator forbids an orphaned relation in shipped TOML, so the
+    The registry validator forbids an orphaned binding in shipped TOML, so the
     fixture builds the revision directly via ``model_copy`` (which does not
     re-run cross-section validation) to exercise the defensive guard.
     """
@@ -434,21 +437,21 @@ def test_orphaned_non_formula_relation_surfaces_advisory_diagnostic(tmp_path: Pa
         snapshot = _snapshot("202", 2025, "2P")
 
         consumption_index = relation_consumption_index(snapshot.revision)
-        seed_relation = next(
-            relation
-            for relation in snapshot.revision.relations
-            if not any(
-                channel.startswith("formula_") for channel in relation_consumption_channels(relation, consumption_index)
-            )
+        seed_binding, seed_provider = next(
+            (binding, provider)
+            for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period="2P")
+            if not relation_consumption_channels(binding.id, consumption_index)
         )
         declared_binding_ids = {binding.id for binding in snapshot.revision.bindings}
         orphan_target = "no-such-binding-orphan-xyz"
         assert orphan_target not in declared_binding_ids
-        orphan_relation = seed_relation.model_copy(
-            update={"id": "orphan-non-formula-relation-test", "target_binding": orphan_target},
+        orphan_binding_id = "orphan-non-formula-binding-test"
+        orphan_provider = seed_provider.model_copy(update={"source_casilla_id": "orphan-source-casilla"})
+        orphan_binding = seed_binding.model_copy(
+            update={"id": orphan_binding_id, "provider": orphan_provider},
         )
         orphaned_revision = snapshot.revision.model_copy(
-            update={"relations": (*snapshot.revision.relations, orphan_relation)},
+            update={"bindings": (*snapshot.revision.bindings, orphan_binding)},
         )
         orphaned_snapshot = snapshot.model_copy(update={"revision": orphaned_revision})
 
@@ -465,8 +468,8 @@ def test_orphaned_non_formula_relation_surfaces_advisory_diagnostic(tmp_path: Pa
             ),
         )
 
-    assert orphan_relation.id in _diagnosed_relation_ids(source_resolution), (
-        "an unresolved non-formula relation that materialises no binding slot _produced no "
+    assert orphan_binding_id in _diagnosed_relation_ids(source_resolution), (
+        "an unresolved non-formula binding that materialises no binding slot produced no "
         "diagnostic — the narrow silent gap this guard closes"
     )
 
@@ -581,7 +584,7 @@ def test_mid_year_start_folds_available_quarters_not_all_or_nothing(tmp_path: Pa
             repository=repository,
             activity_start_date=date(2024, 4, 1),
         )
-        m130 = next(v for v in prefill.values if v.relation == "renta-2024-rel-130-pagos-fraccionados")
+        m130 = next(v for v in prefill.values if v.relation == "renta-modelo-130-pagos-fraccionados")
         assert m130.value == q2_payment
 
 
@@ -604,5 +607,5 @@ def test_genuinely_missing_in_scope_quarter_still_unresolves(tmp_path: Path) -> 
             repository=repository,
             activity_start_date=date(2024, 4, 1),
         )
-        m130 = next(v for v in prefill.values if v.relation == "renta-2024-rel-130-pagos-fraccionados")
+        m130 = next(v for v in prefill.values if v.relation == "renta-modelo-130-pagos-fraccionados")
         assert m130.value is None

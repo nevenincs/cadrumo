@@ -159,14 +159,14 @@ def _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile: TestR
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "00500=140000.00",
-            "--binding", "modelo-200-2024-profile-legal-entity-form=sl",
+            "--binding", "modelo-200-profile-legal-entity-form=sl",
             "--binding", "modelo-200-profile-new-entity-flag=0",
             "--binding", "modelo-200-profile-incn-prior-12-months=500000",
             "--binding", "modelo-200-profile-tributacion-estado-porcentaje=100",
             "--binding", "modelo-200-bin-pendiente-ejercicios-anteriores=0",
             "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
             "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
-            "--relation", "modelo-200-2024-rel-202-pagos-fraccionados=0",
+            "--relation", "modelo-200-pagos-fraccionados-anuales=0",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output

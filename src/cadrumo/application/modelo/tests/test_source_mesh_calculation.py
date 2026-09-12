@@ -156,7 +156,7 @@ def _intracom_ledger_transaction(provider_id: str, *, booked_date: date = date(2
     ("modelo", "filing_year", "period", "revision_id", "binding_id"),
     [
         ("303", 2026, "1T", "2026-y-siguientes", "modelo-303-iva-repercutido-general-cuota"),
-        ("100", 2025, "0A", "2025", "renta-2025-ledger-expense-0199-deductible"),
+        ("100", 2025, "0A", "2025", "renta-ledger-expense-0199-deductible"),
     ],
 )
 def test_bucket_calculation_rejects_source_owned_binding_overrides(

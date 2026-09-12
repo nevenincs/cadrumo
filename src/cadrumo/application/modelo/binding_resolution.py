@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING
 from ...core.aggregation import BindingSourceKind as _BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.period import Period as _Period
+from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.runtime_graph import (
@@ -162,6 +163,7 @@ def reject_binding_channel_mismatch(
     revision: ModeloRevision,
     binding_values: Mapping[BindingId, Decimal],
     enum_binding_values: Mapping[BindingId, str],
+    boolean_binding_values: Mapping[BindingId, bool] | None = None,
 ) -> None:
     """Reject binding values supplied on the wrong engine channel.
 
@@ -169,7 +171,10 @@ def reject_binding_channel_mismatch(
     channel ownership from formula consumption: enum dispatch bindings must
     arrive through
     ``enum_binding_values``; decimal operands must arrive through
-    ``binding_values``. A mismatch raises
+    ``binding_values``. Channel ownership for the BOOLEAN channel comes from the
+    binding's own declared value contract rather than from consumption, and is
+    enforced for the profile-sourced bindings whose resolver owns that channel.
+    A mismatch raises
     :class:`~ModeloError` before the engine sees an
     apparently missing binding.
 
@@ -178,6 +183,7 @@ def reject_binding_channel_mismatch(
             Identifies bindings consumed by enum-dispatch formulas.
     """
     _reject_binding_channel_mismatch(revision, binding_values, enum_binding_values)
+    _reject_boolean_binding_channel_mismatch(revision, binding_values, boolean_binding_values or {})
 
 
 def lift_previous_filing_casilla_overrides_to_bindings(
@@ -272,6 +278,40 @@ def _reject_binding_channel_mismatch(
                 "supplied_input_channel": "enum",
             },
         )
+
+
+def _reject_boolean_binding_channel_mismatch(
+    revision: ModeloRevision,
+    binding_values: Mapping[BindingId, Decimal],
+    boolean_binding_values: Mapping[BindingId, bool],
+) -> None:
+    """Refuse a profile-sourced boolean contract whose value arrived as a Decimal.
+
+    Scoped to ``source = "profile"`` deliberately. The profile resolver is the
+    one route that owns a boolean channel end to end, so for its bindings a
+    truth value on the Decimal channel can only be a transport defect -- the
+    reading that made "this filer holds no right to the mínimo" and "zero euros"
+    the same bytes. Bindings fed by manual input or a caller override still
+    reach a bound boolean casilla through the Decimal channel by design, and
+    widening this refusal to them would reject a legal route rather than a
+    defect.
+    """
+    boolean_profile_binding_ids = {
+        binding.id
+        for binding in revision.bindings
+        if binding.value.channel is BindingValueChannel.BOOLEAN and binding.source is _BindingSourceKind.PROFILE
+    }
+    misrouted = sorted(boolean_profile_binding_ids & set(binding_values) - set(boolean_binding_values))
+    if not misrouted:
+        return
+    raise ModeloError(
+        translated_message="errors.error.error_modelos",
+        context={
+            "misrouted_binding_ids": ", ".join(str(binding_id) for binding_id in misrouted),
+            "expected_input_channel": "boolean",
+            "supplied_input_channel": "decimal",
+        },
+    )
 
 
 def _binding_is_formula_consumed(revision: ModeloRevision, binding_id: BindingId) -> bool:

@@ -1,11 +1,9 @@
 """Pure tax-record retention-floor assessment.
 
-A filed tax record may only be erased once the Administration's right to
-review it has prescribed. Ley 58/2003 (LGT) art. 66 sets that prescription at
-four years; art. 67 runs the period from the day after the voluntary
-self-assessment deadline; art. 70.2 ties the obligation to conserve the
-supporting documentation to the same window. The whole-year floor is the
-regulatory constant :data:`TAX_RECORD_RETENTION_FLOOR_YEARS`.
+A filed tax record may only be erased once the governed retention floor has
+elapsed. The floor is resolved from the dated registry at the assessment
+boundary; this module contains only the calendar arithmetic and the resulting
+assessment models.
 
 This module is pure: it derives, for a set of filed records and an ``as_of``
 instant, which records are still inside their retention window (and therefore
@@ -18,8 +16,8 @@ on the returned :class:`RetentionFloorAssessment`.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import datetime
-from typing import Final, Protocol, runtime_checkable
+from datetime import date, datetime
+from typing import TYPE_CHECKING, Protocol, cast, runtime_checkable
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
@@ -28,22 +26,43 @@ from ...core.filing_year import FilingYear
 from ...core.identity.hex_ids import FilingRecordId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import UtcInstant
+from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
+from ..calculations.registry.schema_base import DateAxis
 
-#: Legal retention floor (in whole years) for a filed tax record before it may
-#: be erased. Binding provision: Ley 58/2003 (Ley General Tributaria) art. 66 —
-#: "Prescribirán a los cuatro años" the Administration's right to determine and
-#: to demand the tax debt and the taxpayer's right to refunds; art. 67 runs that
-#: period from the day after the voluntary self-assessment deadline; art. 70.2
-#: ties the obligation to conserve the supporting documentation to the
-#: prescription period. BOE-A-2003-23186
-#: (https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a66). A filed record
-#: whose four-year prescription window has not yet elapsed is still reviewable by
-#: AEAT and MUST NOT be erased without an explicit operator override. This is the
-#: LGT tax-record floor; the Código de Comercio art. 30 six-year accounting-book
-#: obligation is a separate, longer regime and is out of scope here. This
-#: regulatory constant is the retention domain's authoritative home for the
-#: floor (the schema-central re-export surface may later mirror it).
-TAX_RECORD_RETENTION_FLOOR_YEARS: Final[int] = 4
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import ValidatedRegistryAuthority
+
+
+_RETENTION_FLOOR_FACT_ID = "lgt-tax-record-retention-floor-years"
+
+
+def _resolve_retention_floor_years(
+    *,
+    effective_date: date,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> int:
+    """Resolve the dated retention scalar through the registry authority."""
+    if authority is None:
+        from ..calculations.registry.authority import bundled_authority
+
+        authority = bundled_authority()
+    resolved = cast(
+        "ResolvedScalarFact",
+        authority.resolve_governed_fact(
+            ScalarFactQuery(
+                fact_id=_RETENTION_FLOOR_FACT_ID,
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=effective_date,
+            ),
+        ),
+    )
+    value = resolved.payload.value
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise RegistryValidationError(
+            f"retention floor fact {resolved.fact_id!r} resolved non-integer payload {value!r}",
+        )
+    return value
 
 
 @runtime_checkable
@@ -150,15 +169,15 @@ def assess_retention_floor(
     records: Iterable[RetainableFilingRecord],
     *,
     as_of: datetime,
-    floor_years: int = TAX_RECORD_RETENTION_FLOOR_YEARS,
+    authority: ValidatedRegistryAuthority | None = None,
 ) -> RetentionFloorAssessment:
-    """Assess ``records`` against the legal retention floor as of ``as_of``.
+    """Assess ``records`` against the registry-resolved retention floor.
 
     A record is retained (blocking) when ``as_of`` precedes its safe-erase
-    instant, which is ``filed_at`` shifted forward by ``floor_years`` whole
-    calendar years. The floor is anchored on ``filed_at`` rather than the
-    voluntary-deadline end (LGT art. 67) because the filing instant is the
-    durable evidence the record carries; anchoring on it is conservative for
+    instant, which is ``filed_at`` shifted forward by the dated registry
+    scalar's whole calendar years. The floor is anchored on ``filed_at``
+    rather than a deadline that is not carried by the record because the filing
+    instant is the durable evidence it carries; anchoring on it is conservative for
     the common case (filing occurs at or near the deadline) and errs toward
     keeping late-filed records longer. A record whose window has elapsed is
     safe to erase and is excluded from the assessment's ``retained`` set.
@@ -166,6 +185,10 @@ def assess_retention_floor(
     Returns:
         The :class:`RetentionFloorAssessment` for ``records``.
     """
+    floor_years = _resolve_retention_floor_years(
+        effective_date=as_of.date(),
+        authority=authority,
+    )
     retained: list[RetentionBlockingRecord] = []
     for record in records:
         safe_at = shift_by_calendar_years(record.filed_at, floor_years)

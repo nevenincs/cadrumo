@@ -424,7 +424,11 @@ def test_modelo_190_relation_prefill_aggregates_111_quarters(tmp_path: Path) -> 
         expected = _compute_year_111_totals(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo)
         snapshot_190 = bundled_authority().snapshot(_MODELO_190, filing_year=_YEAR_N, period="0A")
         prefill = resolve_relations_from_local_store(snapshot_190, repository=obs_repo)
-        relation_ids = {relation.id for relation in snapshot_190.revision.relations}
+        relation_ids = {
+            binding.id
+            for binding in snapshot_190.revision.bindings
+            if binding.source is BindingSourceKind.RELATION_PREFILL
+        }
         binding_ids = {binding.id for binding in snapshot_190.revision.bindings}
         construct_bindings = set(snapshot_190.revision.constructs[0].bindings)
 
@@ -437,11 +441,10 @@ def test_modelo_190_relation_prefill_aggregates_111_quarters(tmp_path: Path) -> 
     assert set(resolved).isdisjoint(_RETIRED_M190_M111_PERCEPCIONES_RELATIONS)
     # trabajo-dinerario importe (source: casilla 02)
     assert (
-        resolved["modelo-190-rel-111-trabajo-dinerario-importe-anual"]
-        == expected[_M111_TRABAJO_DINERARIO_IMPORTE_CASILLA]
+        resolved["modelo-190-111-trabajo-dinerario-importe-anual"] == expected[_M111_TRABAJO_DINERARIO_IMPORTE_CASILLA]
     )
     # total retenciones (source: casilla 28)
-    assert resolved["modelo-190-rel-111-retenciones-anual"] == expected[_M111_RETENCIONES_TOTAL_CASILLA]
+    assert resolved["modelo-190-111-retenciones-anual"] == expected[_M111_RETENCIONES_TOTAL_CASILLA]
 
 
 def test_modelo_190_year_isolation_ignores_prior_year_observations(tmp_path: Path) -> None:
@@ -463,10 +466,10 @@ def test_modelo_190_year_isolation_ignores_prior_year_observations(tmp_path: Pat
     }
     assert set(resolved).isdisjoint(_RETIRED_M190_M111_PERCEPCIONES_RELATIONS)
     assert (
-        resolved["modelo-190-rel-111-trabajo-dinerario-importe-anual"]
+        resolved["modelo-190-111-trabajo-dinerario-importe-anual"]
         == expected_n1[_M111_TRABAJO_DINERARIO_IMPORTE_CASILLA]
     )
-    assert resolved["modelo-190-rel-111-retenciones-anual"] == expected_n1[_M111_RETENCIONES_TOTAL_CASILLA]
+    assert resolved["modelo-190-111-retenciones-anual"] == expected_n1[_M111_RETENCIONES_TOTAL_CASILLA]
 
 
 def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -> None:

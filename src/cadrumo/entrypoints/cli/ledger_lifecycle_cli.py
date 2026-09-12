@@ -9,12 +9,13 @@ payloads inside :class:`SchemaEnvelope` through
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import typer
 from pydantic import ValidationError
 
-from ...adapters.outbound.llm.suggestions import LLMSplitApplyResult
+from ...application.ledger.llm_classification_ports import LLMSplitApplyResult
 from ...application.ledger.actions_lifecycle import (
     archive_manual_transaction,
     mark_transaction_reviewed_excluded,
@@ -27,6 +28,7 @@ from ...application.ledger.actions_split_merge import merge_transactions, split_
 from ...application.ledger.id_resolution import compute_display_id_width
 from ...application.ledger.models import SplitChildCommand
 from ...core.bucket_pointer import resolve_active_bucket_id
+from ...core.config import load_settings
 from ...core.external_constants import PDF_MIME_TYPE
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, strict_round_trip
@@ -41,10 +43,12 @@ from ._ledger_support import (
     ledger_validation_bad,
     resolve_id,
 )
+from ._ledger_llm_composition import compose_ledger_llm
+from ..ledger_action_composition import compose_ledger_action_ports
 from .common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.llm.suggestions import LLMSplitSuggestion
+    from ...application.ledger.llm_classification_ports import LLMSplitSuggestion
     from ...application.ledger.models import ManualLedgerTransactionResult, SplitTransactionResult
     from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
     from ._ledger_payloads import LedgerSplitChildIdPayload, LedgerSplitChildProposalPayload
@@ -61,6 +65,7 @@ def ledger_detach(
 
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
     resolved_id = resolve_id(transaction_repository, transaction_id)
     result = detach_manual_transaction_attachments(
         bucket_id=transaction_repository.bucket_id,
@@ -68,7 +73,7 @@ def ledger_detach(
         attachment_ids=tuple(attachment_ids),
         actor=actor or resolve_active_bucket_id() or "operator",
         source_command="aeat app ledger detach",
-        transaction_repository=transaction_repository,
+        ports=ports,
     )
     from ._ledger_payloads import LedgerDetachResult
 
@@ -95,6 +100,7 @@ def ledger_attach(
 
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
     resolved_id = resolve_id(transaction_repository, transaction_id)
     result = attach_manual_transaction_evidence(
         bucket_id=transaction_repository.bucket_id,
@@ -103,7 +109,7 @@ def ledger_attach(
         attachment_ids=tuple(attachment_ids),
         actor=actor or resolve_active_bucket_id() or "operator",
         source_command="aeat app ledger attach",
-        transaction_repository=transaction_repository,
+        ports=ports,
     )
     from ._ledger_payloads import LedgerAttachResult
 
@@ -219,6 +225,7 @@ def ledger_evidence_pull(
     attachment_source = source.to_attachment_source()
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
     resolved_id = resolve_id(transaction_repository, transaction_id)
 
     profile = resolve_active_profile()
@@ -251,8 +258,7 @@ def ledger_evidence_pull(
         attachment_ids=(attachment.attachment_id,),
         actor=actor or resolve_active_bucket_id() or "operator",
         source_command="aeat app ledger evidence pull",
-        transaction_repository=transaction_repository,
-        attachment_store=store,
+        ports=replace(ports, attachment_store=store),
     )
     from ._ledger_payloads import LedgerAttachResult
 
@@ -687,6 +693,9 @@ def _run_manual_split(
             source_command="aeat app ledger split",
             reason=reason,
             transaction_repository=transaction_repository,
+            bucket_event_repository=compose_ledger_action_ports(bucket_id=bucket_id).bucket_event_repository,
+            work_unit_repository=compose_ledger_action_ports(bucket_id=bucket_id).work_unit_repository,
+            calculation_repository=compose_ledger_action_ports(bucket_id=bucket_id).calculation_repository,
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
@@ -761,6 +770,7 @@ def ledger_split(
     )
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
     resolved_id = resolve_id(transaction_repository, transaction_id)
     result = _run_manual_split(
         transaction_repository=transaction_repository,
@@ -972,6 +982,7 @@ def _ledger_split_llm(
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
     bucket_id = transaction_repository.bucket_id
+    composition = compose_ledger_llm(bucket_id=bucket_id, settings=load_settings())
     resolved_id = resolve_id(transaction_repository, transaction_id)
     suggestion = suggest_evidence_split(
         bucket_id=bucket_id,
@@ -979,6 +990,8 @@ def _ledger_split_llm(
         transaction_repository=transaction_repository,
         read_evidence=read_evidence,
         vision_model=vision_model,
+        settings=load_settings(),
+        ports=composition.ports,
     )
 
     proposed_children = _build_split_child_proposals(suggestion)
@@ -1000,6 +1013,7 @@ def _ledger_split_llm(
             bucket_id=bucket_id,
             actor=actor or resolve_active_bucket_id() or "operator",
             transaction_repository=transaction_repository,
+            bucket_event_repository=composition.bucket_event_repository,
         )
     except TransactionValidationError as exc:
         raise ledger_transaction_validation_no_recovery(exc) from None
@@ -1033,6 +1047,7 @@ def ledger_merge(
         raise bad(tr("cli.ledger.merge.errors.min_two_children"))
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
     resolved_ids = tuple(resolve_id(transaction_repository, raw) for raw in child_id)
     result = merge_transactions(
         bucket_id=transaction_repository.bucket_id,
@@ -1041,6 +1056,9 @@ def ledger_merge(
         source_command="aeat app ledger merge",
         reason=reason,
         transaction_repository=transaction_repository,
+        bucket_event_repository=ports.bucket_event_repository,
+        work_unit_repository=ports.work_unit_repository,
+        calculation_repository=ports.calculation_repository,
     )
     from ._ledger_payloads import LedgerMergeResult
 

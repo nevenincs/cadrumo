@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
+from ...core.decimal.constants import ZERO
 from ..iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment
 from .enums import TransactionDirection
 from .errors import TransactionValidationError
@@ -62,13 +63,13 @@ def _validate_payment_totals(
     recargo_amount: Decimal | None,
 ) -> None:
     """Ensure settlement evidence cannot exceed the transaction substrate."""
-    total_base = sum((evidence.taxable_base for evidence in payment_evidence), Decimal("0"))
-    total_iva = sum((evidence.iva_amount for evidence in payment_evidence), Decimal("0"))
+    total_base = sum((evidence.taxable_base for evidence in payment_evidence), ZERO)
+    total_iva = sum((evidence.iva_amount for evidence in payment_evidence), ZERO)
     total_recargo = sum(
         (evidence.recargo_amount for evidence in payment_evidence),
-        Decimal("0"),
+        ZERO,
     )
-    recargo = recargo_amount or Decimal("0")
+    recargo = recargo_amount or ZERO
     if total_base > taxable_base or total_iva > iva_amount or total_recargo > recargo:
         raise TransactionValidationError(
             "cash_accounting_payment_evidence totals must not exceed taxable_base, iva_amount, or recargo_amount",

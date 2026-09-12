@@ -44,12 +44,11 @@ WORKFLOW_GATE_LEGAL_REFS: tuple[str, ...] = (
     "ley-58-2003:art-120",
     "ley-58-2003:art-122",
 )
-"""Legal anchors attached to workflow-gate refusal observations.
+"""Evidence identifiers attached to workflow-gate refusal observations.
 
-The cross-period clean-state finding tests assert these ids remain present in
-the workflow-gate provenance payload. They correspond to the Ley 58/2003
-articles that frame declaration, self-assessment, and complementary declaration
-flows.
+The cross-period clean-state finding keeps these centrally catalogued ids in
+the workflow-gate provenance payload. They are evidence coordinates, not
+branching rules or calculation inputs.
 """
 
 

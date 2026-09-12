@@ -351,11 +351,11 @@ def _approved_modelo_131_registry_draft():
         inputs={
             _M131_RENDIMIENTO_MODULOS_CASILLA: Decimal("1000"),
             _M131_VOLUME_AGRARIO_CASILLA: Decimal("500"),
-            "modelo-131.page1.110-113.actividad-1-epigrafe": "722",
-            "modelo-131.page1.114-130.actividad-1-rendimiento-neto": Decimal("1200.50"),
-            "modelo-131.dpa.013-016.epigrafe-iae": ["722"],
-            "modelo-131.dpa.031-032.vehiculos-afectos": {"1": "2"},
-            "modelo-131.did.012-045.iban": "ES9121000418450200051332",
+            "modelo-131.page1.actividad-1-epigrafe": "722",
+            "modelo-131.page1.actividad-1-rendimiento-neto": Decimal("1200.50"),
+            "modelo-131.dpa.epigrafe-iae": ["722"],
+            "modelo-131.dpa.vehiculos-afectos": {"1": "2"},
+            "modelo-131.did.iban": "ES9121000418450200051332",
         },
         schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     )
@@ -374,10 +374,10 @@ def _approved_modelo_131_registry_draft_without_direct_debit():
         inputs={
             _M131_RENDIMIENTO_MODULOS_CASILLA: Decimal("1000"),
             _M131_VOLUME_AGRARIO_CASILLA: Decimal("500"),
-            "modelo-131.page1.110-113.actividad-1-epigrafe": "722",
-            "modelo-131.page1.114-130.actividad-1-rendimiento-neto": Decimal("1200.50"),
-            "modelo-131.dpa.013-016.epigrafe-iae": ["722"],
-            "modelo-131.dpa.031-032.vehiculos-afectos": {"1": "2"},
+            "modelo-131.page1.actividad-1-epigrafe": "722",
+            "modelo-131.page1.actividad-1-rendimiento-neto": Decimal("1200.50"),
+            "modelo-131.dpa.epigrafe-iae": ["722"],
+            "modelo-131.dpa.vehiculos-afectos": {"1": "2"},
         },
         schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     )
@@ -396,7 +396,7 @@ def _approved_modelo_131_zero_payable_direct_debit_draft():
         inputs={
             _M131_RENDIMIENTO_MODULOS_CASILLA: Decimal("0"),
             _M131_VOLUME_AGRARIO_CASILLA: Decimal("0"),
-            "modelo-131.did.012-045.iban": "ES9121000418450200051332",
+            "modelo-131.did.iban": "ES9121000418450200051332",
         },
         schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     )

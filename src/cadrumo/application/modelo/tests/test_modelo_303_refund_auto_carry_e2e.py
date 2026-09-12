@@ -93,7 +93,7 @@ _FILE_AT = datetime(2026, 7, 15, 10, 0, 0, tzinfo=UTC)
 
 #: The carry chain casilla/relation: the prior period's end-of-period available
 #: compensación flows into the next period's casilla 110.
-_CARRY_RELATION: RelationId = "modelo-303-rel-self-compensacion-anteriores"
+_CARRY_RELATION: RelationId = "modelo-303-compensacion-pendiente-anteriores"
 
 
 _M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
@@ -311,7 +311,7 @@ def test_redeme_refund_period_auto_carries_zero_without_manual_flag(tmp_path: Pa
     filing path determines the devolución disposition from the REDEME profile
     and zeroes the cross-period carry — no ``refunded=True`` is passed anywhere.
 
-    The self-compensación carry relation (``modelo-303-rel-self-compensacion-anteriores``)
+    The self-compensación carry relation (``modelo-303-compensacion-pendiente-anteriores``)
     the registry declares targets only the quarterly periods (``target_periods =
     ["1T", "2T", "3T", "4T"]``, ``previous_quarter`` alignment); the registry
     models no monthly ``previous_month`` self-compensación carry. So a monthly

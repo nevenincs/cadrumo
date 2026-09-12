@@ -31,7 +31,7 @@ ActividadOrdenAnualId = Annotated[
         pattern=r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$",
     ),
 ]
-"""Canonical identifier for one annual-Orden activity row."""
+"""Identifier for one filing activity row."""
 
 IaeEpigrafe = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=32)]
 IndicadorAuxiliarActividad = Literal["1", "2"]

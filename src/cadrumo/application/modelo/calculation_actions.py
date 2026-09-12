@@ -50,6 +50,9 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.calculation_revision_override_migration import (
+    migrate_stored_relation_overrides_to_binding_ids,
+)
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -103,6 +106,7 @@ from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow, ModeloDeta
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..calculations.observations_repository import CalculationObservationRepository
 from ..filing.persistence_wiring import modelo_record_repository_for_application
 from ..inventory.service import inventory_ledger_repository_for_bucket
@@ -177,7 +181,6 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ..aggregation.foreign_assets import ForeignAssetIngestObservation
     from ..aggregation.source_mesh import (
-        CalculationSourceDiagnostic,
         CalculationSourceDiagnosticReason,
         CalculationSourceResolution,
     )
@@ -570,6 +573,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=unresolved_binding_ids,
         date_binding_values=prepared.channels.date_bindings,
+        boolean_binding_values=prepared.channels.boolean_bindings,
     )
 
     replay_payloads = _build_calculation_replay_payloads(
@@ -662,6 +666,7 @@ def _calculate_prepared_registry_snapshot(
     unresolved_relation_ids: tuple[RelationId, ...],
     unresolved_binding_ids: tuple[BindingId, ...],
     date_binding_values: Mapping[BindingId, date],
+    boolean_binding_values: Mapping[BindingId, bool],
 ) -> RegistryCalculationResult:
     """Evaluate the registry after application channels have been resolved."""
     return calculate_registry_snapshot(
@@ -675,10 +680,11 @@ def _calculate_prepared_registry_snapshot(
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=unresolved_binding_ids,
         date_binding_values=date_binding_values or None,
+        boolean_binding_values=boolean_binding_values or None,
     )
 
 
-def _resolve_bucket_source_mesh(
+def resolve_bucket_source_mesh(
     snapshot: RegistrySnapshot,
     work_unit: WorkUnit,
     *,
@@ -758,7 +764,19 @@ def _resolve_bucket_source_mesh(
     from ..invoices.source_resolver import InvoiceCatalogueSourceResolver
 
     resolved_work_unit_repository = work_unit_repository or WorkUnitCatalogueRepository()
-    resolved_calculation_repository = calculation_repository or CalculationRevisionCatalogueRepository()
+    if calculation_repository is None:
+        # Mirrors the bienes-inversion authority migration above: a repository
+        # this function constructs is migrated to the current override keying
+        # before any resolver reads it, while an injected repository is the
+        # caller's to migrate. The migration is a no-op once applied, so the
+        # extra revisioned read costs one load on an already-current store.
+        concrete_calculation_repository = CalculationRevisionCatalogueRepository()
+        migrate_stored_relation_overrides_to_binding_ids(concrete_calculation_repository)
+        resolved_calculation_repository: CalculationRevisionCatalogueRepositoryProtocol = (
+            concrete_calculation_repository
+        )
+    else:
+        resolved_calculation_repository = calculation_repository
     context = CalculationSourceContext(
         bucket_id=work_unit.bucket_id,
         work_unit_id=work_unit.work_unit_id,
@@ -1015,6 +1033,50 @@ def _caller_relation_values_from_bindings(
     }
 
 
+def _orphaned_override_diagnostics(
+    revision: ModeloRevision,
+    *,
+    caller_relation_values: Mapping[RelationId, Decimal],
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Advise on every relation override whose key no binding of this revision carries.
+
+    The fold slot IS the binding now, so the relation channel is keyed by
+    binding id. An override under any other key -- a retired pre-absorption
+    relation id above all, but equally a typo or a key inherited from a
+    different modelo -- is merged into the channel, matches nothing the engine
+    reads, and vanishes. Vanishes is the operative word: the operator entered a
+    figure, the result does not contain it, and nothing anywhere says so. That
+    is a silent under-declaration whenever the figure would have reduced the
+    amount owed, and it is undetectable from the output.
+
+    Advisory rather than blocking. The interactive ``--relation`` surface
+    already refuses an unknown key outright at the input boundary, so what
+    reaches here is a PERSISTED override replayed against a revision that no
+    longer declares its key -- a stored fact, not a fresh mistake, and refusing
+    it would make an old catalogue entry uncalculable rather than merely
+    explicable.
+    """
+    declared_binding_ids = {binding.id for binding in revision.bindings}
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="orphaned_override",
+            source_kind="relation_prefill",
+            binding_source=BindingSourceKind.RELATION_PREFILL,
+            relation_id=override_key,
+            message=(
+                f"override {override_key!r} names no binding this revision declares, so its value "
+                "reaches no casilla and does not appear in the result"
+            ),
+            remedy=(
+                "re-enter the figure against a binding this revision declares, or drop it if the "
+                "slot it belonged to no longer exists"
+            ),
+        )
+        for override_key in sorted(caller_relation_values)
+        if override_key not in declared_binding_ids
+    )
+
+
 def _caller_resolved_source_diagnostics(
     source_resolution: CalculationSourceResolution,
     *,
@@ -1094,6 +1156,9 @@ def _reconcile_caller_overrides(
         caller_resolved_relation_ids=caller_resolved_relation_ids,
         caller_binding_ids=caller_binding_ids,
         detail_row_binding_values=detail_row_binding_values,
+    ) + _orphaned_override_diagnostics(
+        revision,
+        caller_relation_values=caller_relation_values or {},
     )
     return _CallerOverrideReconciliation(
         merged_relation_values=merged_relation_values,
@@ -1220,7 +1285,7 @@ def _resolve_bucket_aggregation_source_resolution(
     filing_period_date: date | None,
 ) -> CalculationSourceResolution:
     """Resolve the mesh, then enforce its final exclusive ownership set."""
-    source_resolution = _resolve_bucket_source_mesh(
+    source_resolution = resolve_bucket_source_mesh(
         preparation.snapshot,
         preparation.work_unit,
         transaction_repository=transaction_repository,

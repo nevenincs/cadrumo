@@ -18,6 +18,7 @@ from collections.abc import Mapping
 from typing import Final
 
 from ....core.errors.hierarchy import CadrumoError
+from ....application.ledger.persistence_ports import LedgerPersistenceConflictError
 
 
 class SecureStorageError(CadrumoError):
@@ -47,7 +48,7 @@ class RepositorySetupError(RepositoryError):
     """
 
 
-class SecureObjectRevisionConflictError(RepositoryError):
+class SecureObjectRevisionConflictError(RepositoryError, LedgerPersistenceConflictError):
     """Raised when a revision-aware secure-object write sees a stale revision."""
 
 

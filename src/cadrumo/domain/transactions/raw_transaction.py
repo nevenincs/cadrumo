@@ -20,6 +20,7 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
+from ...core.decimal.constants import ZERO
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -186,7 +187,7 @@ class RawTransaction(BaseModel):
         manual construction paths because every transaction wraps one
         :class:`RawTransaction`.
         """
-        if value < Decimal("0"):
+        if value < ZERO:
             raise TransactionValidationError(
                 "amount must be a non-negative magnitude; flow is carried by direction, not by sign",
             )

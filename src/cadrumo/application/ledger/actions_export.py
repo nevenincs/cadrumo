@@ -22,10 +22,8 @@ if TYPE_CHECKING:
 
 from ...core.period import Period
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
-from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..export.tabular import serialize_tabular_rows
 from .actions_common import (
     build_ledger_bucket_event,
@@ -40,6 +38,7 @@ from .models import (
     LedgerExportResult,
     LedgerExportRow,
 )
+from .protocols import BucketEventHistoryCoCommitWriterProtocol, TransactionCatalogueCoCommitWriterProtocol
 
 _LEDGER_EXPORT_FIELDNAMES = (
     "bucket_id",
@@ -79,8 +78,8 @@ _LEDGER_EXPORT_FIELDNAMES = (
 def export_ledger_transactions(
     command: LedgerExportCommand,
     *,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol,
     occurred_at: datetime | None = None,
 ) -> LedgerExportResult:
     """Export rows for a :class:`~cadrumo.application.ledger.models.LedgerExportCommand`.

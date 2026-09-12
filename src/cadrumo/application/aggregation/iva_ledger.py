@@ -41,6 +41,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
+from functools import lru_cache
 from typing import Annotated, Final
 
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
@@ -61,7 +62,9 @@ from ...core.prorrata_register import (
 )
 from ...core.prose_elision import IssueDetail
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister, validate_investment_asset_reciprocity
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
+from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.ledger_binding_selector_support import LedgerIvaFact
 from ...domain.calculations.registry.ledger_iva_bindings import (
@@ -71,6 +74,7 @@ from ...domain.calculations.registry.ledger_iva_bindings import (
     unsupported_ledger_iva_observations,
 )
 from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.iva.classification import IvaTerritorialScope
 from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
 from ...domain.iva.errors import ProrrataInputError
@@ -1478,17 +1482,42 @@ def compute_annual_deducible_totals_by_regime(
     )
 
 
-#: The categories whose exemption rests on the operation LEAVING the Union.
-#:
-#: Named rather than spelled at each branch because the export rule now has two
-#: refusals reading one membership question, and a second inline literal is how
-#: the pair would drift apart.
-_EXPORT_CATEGORIES: Final[frozenset[IvaCategory]] = frozenset(
-    {
-        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
-        IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
-    },
-)
+#: The registry-declared categories whose exemption rests on the operation
+#: leaving the Union.  The category membership is filing law, not aggregation
+#: mechanics, so the ledger reads the dated classification catalogue rather
+#: than maintaining a second Python list beside the invoice classifier.
+@lru_cache(maxsize=1)
+def _registry_export_categories() -> frozenset[IvaCategory]:
+    resolved = bundled_authority().resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="iva-invoice-classification-catalogue",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date.today(),
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise TypeError("IVA classification catalogue must resolve as a mapping fact")
+    entries: dict[str, str] = {}
+    for entry in resolved.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            raise TypeError("IVA classification entries must be string-to-string")
+        if entry.key in entries:
+            raise ValueError(f"duplicate IVA classification entry {entry.key!r}")
+        entries[entry.key] = entry.value
+    raw_categories = entries.get("counterparty.export_categories")
+    if raw_categories is None:
+        raise ValueError("IVA classification catalogue is missing counterparty.export_categories")
+    try:
+        categories = frozenset(
+            IvaCategory(token.strip())
+            for token in raw_categories.split(",")
+            if token.strip()
+        )
+    except ValueError as exc:
+        raise ValueError("IVA classification catalogue contains an unknown export category") from exc
+    if not categories:
+        raise ValueError("IVA classification catalogue declares no export categories")
+    return categories
 
 
 def _export_establishment_is_answerable(counterparty_country: str | None) -> bool:
@@ -1569,7 +1598,7 @@ def validate_intracom_export_counterparty(
                     "aggregation.iva_ledger.errors.domestic_identification_on_intra_community_transaction",
                 ),
             )
-    if category in _EXPORT_CATEGORIES:
+    if category in _registry_export_categories():
         if eu_member_state is not None:
             return IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
@@ -1671,11 +1700,8 @@ def iva_ledger_missing_fact_reasons(transaction: Transaction) -> tuple[IvaLedger
 
 
 def missing_tax_fact_detail(reason: IvaLedgerAggregationIssueReason) -> str:
-    return {
-        IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: "transaction has no taxable_base fact",
-        IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT: "transaction has no iva_amount fact",
-        IvaLedgerAggregationIssueReason.MISSING_IVA_RATE: "transaction has no iva_rate fact",
-    }[reason]
+    field = reason.value.removeprefix("missing_")
+    return f"transaction has no {field} fact"
 
 
 def prorrata_reference_for(

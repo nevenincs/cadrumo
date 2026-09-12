@@ -72,7 +72,6 @@ from .actions_common import (
     optional_decimal,
     optional_patched,
     primary_lineage_event_id,
-    purchase_invoice_evidence_records,
     raise_finalized_modelo_blocked,
     replace_transaction,
     require_actor,
@@ -90,6 +89,8 @@ from .actions_common import (
     verify_usage_ratio_reference,
 )
 from .actions_import import apply_fx_conversion as _apply_fx_conversion
+from .action_ports import LedgerActionPorts
+from .evidence import PurchaseInvoiceEvidence
 from .models import (
     LedgerReviewQuery,
     LedgerReviewQueryResult,
@@ -117,11 +118,7 @@ _EVIDENCE_PATCH_FIELDS = frozenset({"purchase_invoice_evidence_id", "attachment_
 def create_manual_transaction(
     command: ManualLedgerTransactionCommand,
     *,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
-    attachment_store: _AttachmentStoreProtocol | None = None,
-    usage_ratio_profile: UsageRatioProfile | None = None,
+    ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
     currency_normalizer: CurrencyNormalizationService | None = None,
 ) -> ManualLedgerTransactionResult:
@@ -131,8 +128,8 @@ def create_manual_transaction(
     with the created transaction and associated bucket event.
     """
     now = normalise_timestamp(occurred_at)
-    repository = resolve_transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
-    event_repository = resolve_bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
+    repository = resolve_transaction_repository(bucket_id=command.bucket_id, repository=ports.transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=command.bucket_id, repository=ports.bucket_event_repository)
     catalogue = repository.load()
     if command.idempotency_key is not None:
         # The idempotency key is authoritative for row identity: a keyed row
@@ -159,14 +156,20 @@ def create_manual_transaction(
                 "movement, or omit --idempotency-key to append a deliberate duplicate",
                 translated_message="application.ledger.errors.idempotency_key_conflict",
             )
-    transaction_base = _transaction_from_command(command, occurred_at=now, currency_normalizer=currency_normalizer)
+    transaction_base = _transaction_from_command(
+        command,
+        occurred_at=now,
+        currency_normalizer=currency_normalizer,
+        evidence_records=ports.purchase_invoice_evidence_records,
+    )
     verify_evidence_references(
         command,
         transaction_id=transaction_base.transaction_id,
-        invoice_repository=invoice_repository,
-        attachment_store=attachment_store,
+        invoice_repository=ports.invoice_repository,
+        attachment_store=ports.attachment_store,
+        evidence_records=ports.purchase_invoice_evidence_records,
     )
-    verify_usage_ratio_reference(command, usage_ratio_profile=usage_ratio_profile)
+    verify_usage_ratio_reference(command, usage_ratio_profile=ports.usage_ratio_profile)
     event = build_ledger_bucket_event(
         bucket_id=command.bucket_id,
         event_type=BucketEventType.LEDGER_TRANSACTION_CREATED,
@@ -180,6 +183,7 @@ def create_manual_transaction(
         occurred_at=now,
         bucket_event_id=event.event_id,
         currency_normalizer=currency_normalizer,
+        evidence_records=ports.purchase_invoice_evidence_records,
     )
     save_transaction_catalogue_and_events(
         transaction_repository=repository,
@@ -187,7 +191,7 @@ def create_manual_transaction(
         catalogue=upsert_transaction(catalogue, transaction),
         events=(event,),
     )
-    _record_attachment_back_references(transaction, attachment_store=attachment_store)
+    _record_attachment_back_references(transaction, attachment_store=ports.attachment_store)
     return build_manual_ledger_result(command.bucket_id, transaction, (event.event_id,))
 
 
@@ -199,13 +203,7 @@ def attach_manual_transaction_evidence(
     purchase_invoice_evidence_id: str | None = None,
     attachment_ids: tuple[str, ...] = (),
     source_command: str = "aeat app ledger attach",
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
-    attachment_store: _AttachmentStoreProtocol | None = None,
-    usage_ratio_profile: UsageRatioProfile | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
     """Attach purchase evidence or supplementary attachments to one ledger transaction.
@@ -214,7 +212,7 @@ def attach_manual_transaction_evidence(
     """
     trimmed_actor = require_actor(actor, operation="ledger evidence attachment")
     trimmed_source_command = require_source_command(source_command, operation="ledger evidence attachment")
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
     catalogue = repository.load()
     current = require_transaction(catalogue, transaction_id)
     normalized_purchase_evidence_id = purchase_invoice_evidence_id.strip() if purchase_invoice_evidence_id else None
@@ -245,13 +243,7 @@ def attach_manual_transaction_evidence(
         patch=ManualLedgerTransactionPatch.model_validate(patch_values),
         actor=trimmed_actor,
         source_command=trimmed_source_command,
-        transaction_repository=repository,
-        bucket_event_repository=bucket_event_repository,
-        invoice_repository=invoice_repository,
-        attachment_store=attachment_store,
-        usage_ratio_profile=usage_ratio_profile,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
+        ports=ports,
         occurred_at=occurred_at,
         _preloaded_catalogue=catalogue,
         _evidence_authority=True,
@@ -265,13 +257,7 @@ def detach_manual_transaction_attachments(
     actor: str,
     attachment_ids: tuple[str, ...],
     source_command: str = "aeat app ledger detach",
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
-    attachment_store: _AttachmentStoreProtocol | None = None,
-    usage_ratio_profile: UsageRatioProfile | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
     """Detach named supplementary attachments from one ledger transaction.
@@ -303,7 +289,7 @@ def detach_manual_transaction_attachments(
     """
     trimmed_actor = require_actor(actor, operation="ledger evidence detachment")
     trimmed_source_command = require_source_command(source_command, operation="ledger evidence detachment")
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
     catalogue = repository.load()
     current = require_transaction(catalogue, transaction_id)
     requested = normalise_attachment_patch_ids(attachment_ids)
@@ -327,13 +313,7 @@ def detach_manual_transaction_attachments(
         patch=ManualLedgerTransactionPatch.model_validate({"attachment_ids": remaining}),
         actor=trimmed_actor,
         source_command=trimmed_source_command,
-        transaction_repository=repository,
-        bucket_event_repository=bucket_event_repository,
-        invoice_repository=invoice_repository,
-        attachment_store=attachment_store,
-        usage_ratio_profile=usage_ratio_profile,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
+        ports=ports,
         occurred_at=occurred_at,
         _preloaded_catalogue=catalogue,
         _evidence_authority=True,
@@ -347,9 +327,7 @@ def link_manual_transaction_invoice(
     invoice_id: str,
     actor: str = "operator",
     source_command: str = "aeat app ledger link",
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
 ) -> InvoiceTransactionLinkResult:
     """Establish an atomic invoice-only relationship for one ledger transaction.
@@ -375,9 +353,9 @@ def link_manual_transaction_invoice(
 
     trimmed_actor = require_actor(actor, operation="ledger invoice linkage")
     trimmed_source_command = require_source_command(source_command, operation="ledger invoice linkage")
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
     current = require_transaction(repository.load(), transaction_id)
-    invoices_repo = resolve_invoice_repository(bucket_id=bucket_id, repository=invoice_repository)
+    invoices_repo = resolve_invoice_repository(bucket_id=bucket_id, repository=ports.invoice_repository)
     invoice_record = invoices_repo.load().get(invoice_id)
     if invoice_record is None:
         raise InvoiceLinkError(
@@ -393,7 +371,7 @@ def link_manual_transaction_invoice(
                 "invoice_bucket_id": invoice_record.bucket_id or "",
             },
         )
-    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=ports.bucket_event_repository)
     event = build_ledger_bucket_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_TRANSACTION_INVOICE_LINKED,
@@ -424,10 +402,10 @@ def get_manual_transaction(
     *,
     bucket_id: str,
     transaction_id: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    ports: LedgerActionPorts,
 ) -> ManualLedgerTransactionResult:
     """Return one :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult` from a bucket catalogue."""
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
     transaction = require_transaction(repository.load(), transaction_id)
     return build_manual_ledger_result(bucket_id, transaction, ())
 
@@ -435,7 +413,7 @@ def get_manual_transaction(
 def list_manual_transactions(
     *,
     bucket_id: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    ports: LedgerActionPorts,
 ) -> tuple[ManualLedgerTransactionResult, ...]:
     """Return every transaction in a bucket, sorted by effective date and id.
 
@@ -443,7 +421,7 @@ def list_manual_transactions(
     :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult` for one
     stored transaction.
     """
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
     transactions = sorted(
         repository.load().values(),
         key=lambda transaction: (
@@ -457,19 +435,18 @@ def list_manual_transactions(
 def query_ledger_review_rows(
     query: LedgerReviewQuery,
     *,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    ports: LedgerActionPorts,
 ) -> LedgerReviewQueryResult:
     """Return review rows for bucket-local ledger transactions.
 
     Returns a :class:`~cadrumo.application.ledger.models.LedgerReviewQueryResult`.
     """
-    repository = resolve_transaction_repository(bucket_id=query.bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=query.bucket_id, repository=ports.transaction_repository)
     catalogue = repository.load()
     return project_ledger_review_query(
         query=query,
         catalogue=catalogue,
-        bucket_event_repository=bucket_event_repository,
+        bucket_event_repository=ports.bucket_event_repository,
         transaction_payload_builder=ledger_transaction_payload,
     )
 
@@ -698,7 +675,7 @@ def summarize_manual_transactions(
     *,
     bucket_id: str,
     period: Period | None = None,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    ports: LedgerActionPorts,
     catalogue: TransactionCatalogue | None = None,
 ) -> LedgerStatusReport:
     """Return a read-only :class:`~cadrumo.application.ledger.models.LedgerStatusReport` for one bucket.
@@ -710,14 +687,14 @@ def summarize_manual_transactions(
     """
     transactions = _manual_transaction_snapshot(
         bucket_id=bucket_id,
-        transaction_repository=transaction_repository,
+        transaction_repository=ports.transaction_repository,
         catalogue=catalogue,
     )
     status_counts = _review_status_counts(transactions)
     checked, issue_count, ready = _readiness_summary(
         bucket_id=bucket_id,
         period=period,
-        transaction_repository=transaction_repository,
+        transaction_repository=ports.transaction_repository,
     )
     # Money roll-up over active business/mixed rows (period-filtered when given):
     # the year-end / readiness money picture the personas asked for. Gross EUR
@@ -749,13 +726,7 @@ def update_manual_transaction(
     *,
     transaction_id: str,
     command: ManualLedgerTransactionCommand,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
-    attachment_store: _AttachmentStoreProtocol | None = None,
-    usage_ratio_profile: UsageRatioProfile | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
     _evidence_authority: bool = False,
 ) -> ManualLedgerTransactionResult:
@@ -775,8 +746,8 @@ def update_manual_transaction(
     Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`.
     """
     now = normalise_timestamp(occurred_at)
-    repository = resolve_transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
-    event_repository = resolve_bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
+    repository = resolve_transaction_repository(bucket_id=command.bucket_id, repository=ports.transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=command.bucket_id, repository=ports.bucket_event_repository)
     catalogue = repository.load()
     current = require_transaction(catalogue, transaction_id)
     if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
@@ -799,8 +770,8 @@ def update_manual_transaction(
     blockers = blocking_modelo_references(
         bucket_id=command.bucket_id,
         transaction_ids=transaction_modelo_source_ids(current),
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
+        work_unit_repository=ports.work_unit_repository,
+        calculation_repository=ports.calculation_repository,
     )
     # An evidence-only attachment cannot disturb a finalized revision (stable
     # transaction id, unchanged row fingerprint, frozen bundled evidence), so it
@@ -820,9 +791,7 @@ def update_manual_transaction(
         command=command,
         previous_transaction_id=transaction_id,
         now=now,
-        invoice_repository=invoice_repository,
-        attachment_store=attachment_store,
-        usage_ratio_profile=usage_ratio_profile,
+        ports=ports,
     )
     if prepared is None:
         raise TransactionValidationError(
@@ -838,7 +807,7 @@ def update_manual_transaction(
     )
     _record_attachment_back_references(
         replacement,
-        attachment_store=attachment_store,
+        attachment_store=ports.attachment_store,
     )
     return build_manual_ledger_result(
         command.bucket_id,
@@ -886,9 +855,7 @@ def _prepare_manual_transaction_update(
     previous_transaction_id: str,
     now: datetime,
     currency_normalizer: CurrencyNormalizationService | None = None,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
-    attachment_store: _AttachmentStoreProtocol | None = None,
-    usage_ratio_profile: UsageRatioProfile | None = None,
+    ports: LedgerActionPorts,
 ) -> tuple[Transaction, tuple[BucketEvent, ...]] | None:
     """Build a replacement transaction and bucket events for one in-memory edit.
 
@@ -915,6 +882,7 @@ def _prepare_manual_transaction_update(
         import_fingerprint=current.import_fingerprint,
         created_at=current.created_at,
         modified_at=now,
+        evidence_records=ports.purchase_invoice_evidence_records,
     )
     replacement = _carry_forward_fx(current, replacement)
     if mutation_signature(current) == mutation_signature(replacement):
@@ -922,10 +890,11 @@ def _prepare_manual_transaction_update(
     verify_evidence_references(
         command,
         transaction_id=replacement.transaction_id,
-        invoice_repository=invoice_repository,
-        attachment_store=attachment_store,
+        invoice_repository=ports.invoice_repository,
+        attachment_store=ports.attachment_store,
+        evidence_records=ports.purchase_invoice_evidence_records,
     )
-    verify_usage_ratio_reference(command, usage_ratio_profile=usage_ratio_profile)
+    verify_usage_ratio_reference(command, usage_ratio_profile=ports.usage_ratio_profile)
     event_specs = _update_event_specs(
         current=current,
         replacement=replacement,
@@ -970,6 +939,7 @@ def _prepare_manual_transaction_update(
         import_fingerprint=current.import_fingerprint,
         created_at=current.created_at,
         modified_at=now,
+        evidence_records=ports.purchase_invoice_evidence_records,
     )
     return _carry_forward_fx(current, replacement), events
 
@@ -983,13 +953,7 @@ def update_manual_transaction_fields(
     source_command: str,
     classified_by_override: str | None = None,
     reaffirm: bool = False,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
-    attachment_store: _AttachmentStoreProtocol | None = None,
-    usage_ratio_profile: UsageRatioProfile | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
     _preloaded_catalogue: TransactionCatalogue | None = None,
     _evidence_authority: bool = False,
@@ -1026,7 +990,7 @@ def update_manual_transaction_fields(
                 "evidence_fields": ",".join(sorted(patch.model_fields_set & _EVIDENCE_PATCH_FIELDS)),
             },
         )
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
     catalogue = _preloaded_catalogue if _preloaded_catalogue is not None else repository.load()
     current = require_transaction(catalogue, transaction_id)
     command = _command_from_patch(
@@ -1052,13 +1016,7 @@ def update_manual_transaction_fields(
     return update_manual_transaction(
         transaction_id=transaction_id,
         command=command,
-        transaction_repository=repository,
-        bucket_event_repository=bucket_event_repository,
-        invoice_repository=invoice_repository,
-        attachment_store=attachment_store,
-        usage_ratio_profile=usage_ratio_profile,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
+        ports=ports,
         occurred_at=occurred_at,
         _evidence_authority=_evidence_authority,
     )
@@ -1387,6 +1345,8 @@ def _evidence_event_specs(
 
 def _invoice_evidence_provenance(
     command: ManualLedgerTransactionCommand,
+    *,
+    evidence_records: tuple[PurchaseInvoiceEvidence, ...],
 ) -> IvaDeductionClassificationProvenance | None:
     """Derive the deduction's evidence pointer from its linked purchase invoice.
 
@@ -1413,7 +1373,7 @@ def _invoice_evidence_provenance(
     record = next(
         (
             candidate
-            for candidate in purchase_invoice_evidence_records(command.bucket_id)
+            for candidate in evidence_records
             if candidate.evidence_id == evidence_id
         ),
         None,
@@ -1446,6 +1406,7 @@ def _transaction_from_command(
     created_at: datetime | None = None,
     modified_at: datetime | None = None,
     currency_normalizer: CurrencyNormalizationService | None = None,
+    evidence_records: tuple[PurchaseInvoiceEvidence, ...] = (),
 ) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_transaction_id or _provider_transaction_id(command, occurred_at=occurred_at),
@@ -1511,7 +1472,7 @@ def _transaction_from_command(
         "notes": command.notes,
         "iva_category": command.iva_category,
         "deduction_fact_kind": command.deduction_fact_kind,
-        "deduction_provenance": _invoice_evidence_provenance(command),
+        "deduction_provenance": _invoice_evidence_provenance(command, evidence_records=evidence_records),
         "counterparty_country": command.counterparty_country,
         "counterparty_identification_state": command.counterparty_identification_state,
         "source_jurisdiction": command.source_jurisdiction,

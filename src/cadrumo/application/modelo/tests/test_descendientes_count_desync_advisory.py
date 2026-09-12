@@ -9,7 +9,7 @@ The profile manager can. The count is a declared schema field and renders
 as an ordinary editable row, while the rows it counts are an indexed fact
 namespace the manager does not render at all — so the operator edits a
 number with nothing beside it to contradict. The divergence then splits
-the filing: the ``renta-2024-profile-descendientes-count`` binding reads
+the filing: the ``renta-profile-descendientes-count`` binding reads
 the stored count, and casillas 0513/0514 are injected from the rows.
 
 These cases pin the advisory that says so, and — as the control — that a

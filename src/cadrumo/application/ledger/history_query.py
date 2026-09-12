@@ -25,8 +25,9 @@ from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEv
 from .actions_common import resolve_bucket_event_repository, resolve_transaction_repository
 
 if TYPE_CHECKING:
-    from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
     from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+
+from .protocols import BucketEventHistoryCoCommitWriterProtocol, TransactionCatalogueCoCommitWriterProtocol
 
 #: Events anchored on the transaction identity itself.
 LEDGER_HISTORY_EVENT_TYPES: Final[tuple[BucketEventType, ...]] = (
@@ -121,16 +122,16 @@ def read_ledger_history(
     query: LedgerHistoryQuery,
     *,
     bucket_id: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol,
 ) -> LedgerHistoryV1:
     """Assemble one transaction's chronological event chain.
 
     Args:
         query: The transaction and whether split siblings are included.
         bucket_id: The owning profile bucket.
-        transaction_repository: Injected catalogue; resolved when omitted.
-        bucket_event_repository: Injected event history; resolved when omitted.
+        transaction_repository: Explicit bucket-scoped catalogue port.
+        bucket_event_repository: Explicit bucket-scoped event-history port.
 
     Returns:
         The chain, ordered by occurrence, with the anchor ids it came from.

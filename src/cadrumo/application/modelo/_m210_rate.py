@@ -65,12 +65,17 @@ def _selected_rate_parameters(
         (row for row in report.rows if row.expression.get("op") == "irnr_resolve_tipo_gravamen"),
         None,
     )
-    if formula is None or len(formula.input_parameters) < 2:
+    if formula is None:
         raise LookupError("selected M210 registry has no complete rate formula declaration")
 
+    try:
+        baseline_id, tariff_id = formula.input_parameters
+    except ValueError as exc:
+        raise LookupError("selected M210 registry has no complete rate formula declaration") from exc
+
     parameters = {parameter.id: parameter for parameter in snapshot.revision.parameters}
-    baseline = parameters.get(formula.input_parameters[0])
-    tariff = parameters.get(formula.input_parameters[1])
+    baseline = parameters.get(baseline_id)
+    tariff = parameters.get(tariff_id)
     if baseline is None or tariff is None:
         raise LookupError("selected M210 rate formula references an unavailable parameter")
     return baseline, tariff

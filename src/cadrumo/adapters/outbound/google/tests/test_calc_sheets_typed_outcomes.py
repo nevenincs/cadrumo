@@ -76,7 +76,7 @@ def _synthetic_snapshot() -> RegistrySnapshot:
         id="999",
         title_localization_key="test.calc_sheets.synthetic.modelo.title",
         official_name_localization_key="test.calc_sheets.synthetic.modelo.official_name",
-        tax_domain=TaxDomain.IVA,
+        tax_domain=TaxDomain("iva"),
         cadence="annual",
         jurisdiction="ES-AEAT",
         legal_refs=("ley-58-2003:art-29",),

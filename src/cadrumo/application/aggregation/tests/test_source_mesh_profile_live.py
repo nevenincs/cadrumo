@@ -32,7 +32,7 @@ _PROFILE_ID = "10010010-0100-4100-8100-100100100100"
 _EXTERNAL = Settings.external_constants()
 WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
 _BUCKET_ID = _PROFILE_ID
-_CCAA_BINDING = "renta-2025-profile-tax-residence-ccaa"
+_CCAA_BINDING = "renta-profile-tax-residence-ccaa"
 # Derived-fact profile bindings that unconditionally resolve a grounded value
 # (zero/false for a childless, non-Madrid, non-anualidades profile) alongside
 # the CCAA binding: minimo por descendientes estatal + autonomico (Art. 58/61
@@ -220,12 +220,12 @@ def test_profile_source_resolver_respects_caller_owned_precedence() -> None:
     ("modelo", "filing_year", "period", "binding_id", "channel", "expected_value"),
     (
         ("036", 2026, "alta", "modelo-036-profile-censo-status", "enum", "alta"),
-        ("100", 2020, "0A", "renta-2020-profile-tax-residence-ccaa", "enum", "madrid"),
-        ("100", 2021, "0A", "renta-2021-profile-tax-residence-ccaa", "enum", "madrid"),
-        ("100", 2022, "0A", "renta-2022-profile-tax-residence-ccaa", "enum", "madrid"),
-        ("100", 2023, "0A", "renta-2023-profile-tax-residence-ccaa", "enum", "madrid"),
-        ("100", 2024, "0A", "renta-2024-profile-tax-residence-ccaa", "enum", "madrid"),
-        ("100", 2025, "0A", "renta-2025-profile-tax-residence-ccaa", "enum", "madrid"),
+        ("100", 2020, "0A", "renta-profile-tax-residence-ccaa", "enum", "madrid"),
+        ("100", 2021, "0A", "renta-profile-tax-residence-ccaa", "enum", "madrid"),
+        ("100", 2022, "0A", "renta-profile-tax-residence-ccaa", "enum", "madrid"),
+        ("100", 2023, "0A", "renta-profile-tax-residence-ccaa", "enum", "madrid"),
+        ("100", 2024, "0A", "renta-profile-tax-residence-ccaa", "enum", "madrid"),
+        ("100", 2025, "0A", "renta-profile-tax-residence-ccaa", "enum", "madrid"),
         (
             "200",
             2025,
@@ -242,7 +242,7 @@ def test_profile_source_resolver_respects_caller_owned_precedence() -> None:
             "decimal",
             Decimal("500000"),
         ),
-        ("210", 2025, "0A", "m210-2025-profile-country-of-fiscal-residence", "enum", "FR"),
+        ("210", 2025, "0A", "m210-profile-country-of-fiscal-residence", "enum", "FR"),
         ("303", 2026, "1T", "modelo-303-autoconsumo-promotor-base", "decimal", Decimal("123")),
     ),
 )

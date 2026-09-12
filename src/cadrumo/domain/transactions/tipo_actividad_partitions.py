@@ -11,7 +11,6 @@ from collections.abc import Iterable, Mapping
 from datetime import date
 from typing import TYPE_CHECKING
 
-from ...core.tipos_actividad import TipoActividad
 from ..calculations.registry.authority import bundled_authority
 from ..calculations.registry.facts.resolution import (
     EntitySetFactQuery,
@@ -19,7 +18,6 @@ from ..calculations.registry.facts.resolution import (
     ResolvedEntitySetFact,
     ResolvedMappingFact,
 )
-from ..calculations.registry.queries import RegistryQueryService
 from ..calculations.registry.schema_base import DateAxis
 from .errors import TransactionValidationError
 
@@ -39,7 +37,6 @@ def _registry_activity_selector_catalogue(
     authority: ValidatedRegistryAuthority,
 ) -> tuple[str, ...]:
     """Resolve the dated M036 selector catalogue before an entity-set lookup."""
-    RegistryQueryService(authority).describe_modelo("036", as_of=effective_date)
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="m036-activity-selector-catalogue",
@@ -98,18 +95,9 @@ def resolve_tipo_actividad_selector(
     return resolved
 
 
-def _typed_code_set(selector: ResolvedEntitySetFact) -> frozenset[TipoActividad]:
-    """Narrow a resolved entity-set payload to the closed activity-code type."""
-    codes: set[TipoActividad] = set()
-    for token in selector.payload.entities:
-        try:
-            codes.add(TipoActividad(token))
-        except ValueError as exc:
-            raise TransactionValidationError(
-                f"registry fact {selector.fact_id!r} names {token!r}, which is not a "
-                f"recognized activity code; accepted: {', '.join(sorted(t.value for t in TipoActividad))}",
-            ) from exc
-    return frozenset(codes)
+def _typed_code_set(selector: ResolvedEntitySetFact) -> frozenset[str]:
+    """Narrow a resolved entity-set payload to registry-owned activity tokens."""
+    return frozenset(str(token) for token in selector.payload.entities)
 
 
 def tipo_actividad_code_set(
@@ -117,8 +105,8 @@ def tipo_actividad_code_set(
     *,
     effective_date: date,
     authority: ValidatedRegistryAuthority | None = None,
-) -> frozenset[TipoActividad]:
-    """Return the typed code set declared by one registry selector fact."""
+) -> frozenset[str]:
+    """Return the registry-owned code set declared by one selector fact."""
     return _typed_code_set(
         resolve_tipo_actividad_selector(
             fact_id,
@@ -133,7 +121,7 @@ def load_tipo_actividad_selectors(
     *,
     effective_date: date,
     authority: ValidatedRegistryAuthority | None = None,
-) -> Mapping[str, frozenset[TipoActividad]]:
+) -> Mapping[str, frozenset[str]]:
     """Resolve a caller-supplied selector catalogue without embedding its facts."""
     fact_ids = tuple(dict.fromkeys(fact_id.strip() for fact_id in selector_fact_ids))
     if not fact_ids or any(not fact_id for fact_id in fact_ids):
@@ -150,7 +138,7 @@ def load_tipo_actividad_selectors(
         for fact_id in fact_ids
     }
 
-    seen: dict[TipoActividad, str] = {}
+    seen: dict[str, str] = {}
     for fact_id, codes in selectors.items():
         for code in codes:
             previous = seen.get(code)

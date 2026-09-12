@@ -90,8 +90,8 @@ _BIN_STOCK_BY_SOURCE_YEAR: dict[int, Decimal] = {
 #: The same-year M202 pagos relation the M200 cuota chain reads; zero here (no
 #: instalments) keeps the BIN-stock assertion focused. Supplied directly as a
 #: relation value rather than seeded, since pagos are not under test.
-_M200_PAGOS_RELATION = "modelo-200-2024-rel-202-pagos-fraccionados"
-_M200_PAGOS_RELATION_40_2 = "modelo-200-2024-rel-202-pagos-fraccionados-40-2"
+_M200_PAGOS_RELATION = "modelo-200-pagos-fraccionados-anuales"
+_M200_PAGOS_RELATION_40_2 = "modelo-200-pagos-fraccionados-anuales-40-2"
 
 #: Minimal SL-persona profile bindings the M200 cuota chain requires to compute.
 _PROFILE_DECIMAL_BINDINGS: dict[str, Decimal] = {
@@ -100,7 +100,7 @@ _PROFILE_DECIMAL_BINDINGS: dict[str, Decimal] = {
     "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
 }
 _PROFILE_ENUM_BINDINGS: dict[str, str] = {
-    "modelo-200-2024-profile-legal-entity-form": "sl",
+    "modelo-200-profile-legal-entity-form": "sl",
 }
 
 _CLOCK = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)

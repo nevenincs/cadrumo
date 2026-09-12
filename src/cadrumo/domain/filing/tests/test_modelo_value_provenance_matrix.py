@@ -68,7 +68,7 @@ def test_computed_kind_refuses_a_missing_formula_trace() -> None:
             casilla_id="0604",
             value=Decimal("1520.00"),
             kind=ModeloValueKind.COMPUTED,
-            source="registry formula renta-2024-pagos-fraccionados-ingresados",
+            source="registry formula renta-pagos-fraccionados-ingresados",
         )
 
 
@@ -107,7 +107,7 @@ def test_builder_shapes_still_construct() -> None:
         casilla_id="0604",
         value=Decimal("1520.00"),
         kind=ModeloValueKind.COMPUTED,
-        source="registry formula renta-2024-pagos-fraccionados-ingresados",
+        source="registry formula renta-pagos-fraccionados-ingresados",
         formula_trace_casilla_ids=("0601", "0602"),
     )
     inherited = ModeloValue(

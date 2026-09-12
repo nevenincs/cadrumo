@@ -85,7 +85,7 @@ _BASE_YEAR_N = Decimal("18000.00")  # 2025 rental income
 _BASE_YEAR_N_PLUS_1 = Decimal("19500.00")  # 2026 rental income (slightly higher)
 
 # Profile-binding id for country_of_fiscal_residence (enum/text channel).
-_COUNTRY_BINDING = "m210-2025-profile-country-of-fiscal-residence"
+_COUNTRY_BINDING = "m210-profile-country-of-fiscal-residence"
 _TIPO_RENTA_CASILLA: CasillaId = validated_casilla_id("tipo_renta", surface="_TIPO_RENTA_CASILLA")
 _RENDIMIENTOS_INTEGROS_CASILLA: CasillaId = validated_casilla_id(
     "rendimientos_integros",
@@ -149,7 +149,7 @@ def _calculate_210_result(
     Supplies:
     - rendimientos_integros (manual money casilla) = base
     - tipo_renta (manual text casilla) defaults to "general"
-    - m210-2025-profile-country-of-fiscal-residence (enum binding) defaults to "GB"
+    - m210-profile-country-of-fiscal-residence (enum binding) defaults to "GB"
     - gastos_deducibles / retencion_practicada = 0 unless supplied by the scenario
 
     Returns the real registry calculation result so tests can inspect value and
@@ -265,7 +265,7 @@ def test_pension_first_band_computes_art_25_1_b_tariff(tmp_path: Path) -> None:
     tipo_observation = observations[_TIPO_GRAVAMEN_CASILLA]
     cuota_observation = observations[_CUOTA_INTEGRA_CASILLA]
     assert "trlirnr-rdleg-5-2004:art-25.1.b" in tipo_observation.legal_refs
-    assert "m210-pension-tarifa-2025" in tipo_observation.operand_refs
+    assert "m210-pension-tarifa" in tipo_observation.operand_refs
     assert "trlirnr-rdleg-5-2004:art-25.1.b" in cuota_observation.legal_refs
 
 

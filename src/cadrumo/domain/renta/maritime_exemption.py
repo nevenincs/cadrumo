@@ -57,7 +57,7 @@ from .errors import RentaError, RentaValidationError
 # The selected registry revision supplies cap, fraction, target, and eligibility
 # through the explicit authority seam retained by this mechanics module.
 # Registry-owned cap, fraction, target, and eligibility declarations remain
-# in canonical versioned facts and Modelo 100 registry TOML.
+# in canonical versioned facts and the selected form registry data.
 # Day-count and input mechanics remain below; no fallback facts are retained.
 #
 #
@@ -261,12 +261,13 @@ def calculate_art_7p_exemption(
 
     Args:
         annual_salary: Gross annual employment salary in EUR (Decimal).
-        qualifying_days: Calendar days of work effectively performed outside
-            Spanish territory within the tax year. Must be in [1, 365].
+        qualifying_days: Calendar days supplied by the caller for the selected
+            qualifying pathway. Must be within the ordinary calendar-day input
+            range.
         facts: Resolved profile input passed to registry applicability.
         authority: Validated governed-fact authority. Defaults to the bundled
             authority when the public calculation is called directly.
-        filing_period: Filing-period coordinate for the selected cap.
+        filing_period: Filing-period coordinate for the selected declaration.
 
     Returns:
         :class:`CasillaObservation` carrying the resolved amount and provenance.
@@ -280,7 +281,7 @@ def calculate_art_7p_exemption(
     if not annual_salary.is_finite() or annual_salary <= Decimal("0"):
         raise RentaValidationError("annual_salary must be a positive finite Decimal")
     if not (1 <= qualifying_days <= 365):
-        raise RentaValidationError("qualifying_days must be in [1, 365]")
+        raise RentaValidationError("qualifying_days must be within the ordinary calendar-day input range")
     del authority, filing_period
     raise RegistryValidationError(
         "resolve the selected maritime exemption cap, target, and provenance from registry authority",

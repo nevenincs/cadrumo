@@ -23,6 +23,7 @@ from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ids import BindingId, RelationId
+from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos.calculation_revision import derive_calculation_revision_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -49,8 +50,8 @@ _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _YEAR = 2025
 _PERIOD = "0A"
 _DECIMAL_BINDING: BindingId = "renta-modelo-111-retenciones-periodicas"
-_ENUM_BINDING: BindingId = "renta-2025-profile-tax-residence-ccaa"
-_UNMARKED_BINDING: BindingId = "renta-2025-ledger-expense-0186-deductible"
+_ENUM_BINDING: BindingId = "renta-profile-tax-residence-ccaa"
+_UNMARKED_BINDING: BindingId = "renta-ledger-expense-0186-deductible"
 _R210_SIMULATOR_URL = aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_ajax"))
 _BORRADOR_IDENTITY_CASILLA: CasillaId = validated_casilla_id("0100", surface="_BORRADOR_IDENTITY_CASILLA")
 _M100_TEXT_CASILLA: CasillaId = validated_casilla_id("0001", surface="_M100_TEXT_CASILLA")
@@ -280,7 +281,10 @@ def _non_borrador_enum_binding_values() -> dict[BindingId, str]:
 
 
 def _zero_relation_values() -> dict[RelationId, Decimal]:
-    return {relation.id: Decimal("0") for relation in _modelo_100_registry_snapshot().revision.relations}
+    return {
+        binding.id: Decimal("0")
+        for binding, _ in relation_prefill_bindings_for_period(_modelo_100_registry_snapshot().revision)
+    }
 
 
 def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:

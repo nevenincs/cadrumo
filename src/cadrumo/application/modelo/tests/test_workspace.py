@@ -35,7 +35,6 @@ from ..workspace import (
     modelo_work_selector_request_for_target,
     paginate_modelo_workspace_facet,
     parameter_schema_records,
-    relation_schema_records,
     relation_source_endpoints_for_casilla,
     relation_target_endpoints_for_binding,
     resolve_static_inspection_baseline,
@@ -228,32 +227,32 @@ def test_formula_operand_references_answer_the_input_direction_not_the_output_di
 def test_relation_source_endpoint_matches_the_registrys_own_source_casilla_field() -> None:
     authority = bundled_authority()
     snapshot = authority.snapshot("303", filing_year=2026, period="1T")
-    relations = snapshot.revision.relations
-    assert relations  # sanity: this fixture coordinate carries a real relation
+    bindings = snapshot.revision.bindings
+    assert bindings  # sanity: this fixture coordinate carries a real fold slot
 
-    endpoints = relation_source_endpoints_for_casilla(relations, "iva.compensacion-disponible-fin-periodo")
+    endpoints = relation_source_endpoints_for_casilla(bindings, "iva.compensacion-disponible-fin-periodo")
 
     assert len(endpoints) == 1
-    assert endpoints[0].relation_id == "modelo-303-rel-self-compensacion-anteriores"
+    assert endpoints[0].relation_id == "modelo-303-compensacion-pendiente-anteriores"
     assert endpoints[0].casilla_id == "iva.compensacion-disponible-fin-periodo"
 
     # A different casilla id must never match.
-    assert relation_source_endpoints_for_casilla(relations, "not-the-source-casilla") == ()
+    assert relation_source_endpoints_for_casilla(bindings, "not-the-source-casilla") == ()
 
 
 def test_relation_target_endpoint_matches_the_registrys_own_target_binding_field() -> None:
     authority = bundled_authority()
     snapshot = authority.snapshot("303", filing_year=2026, period="1T")
-    relations = snapshot.revision.relations
+    bindings = snapshot.revision.bindings
 
-    endpoints = relation_target_endpoints_for_binding(relations, "modelo-303-compensacion-pendiente-anteriores")
+    endpoints = relation_target_endpoints_for_binding(bindings, "modelo-303-compensacion-pendiente-anteriores")
 
     assert len(endpoints) == 1
-    assert endpoints[0].relation_id == "modelo-303-rel-self-compensacion-anteriores"
+    assert endpoints[0].relation_id == "modelo-303-compensacion-pendiente-anteriores"
     assert endpoints[0].binding_id == "modelo-303-compensacion-pendiente-anteriores"
 
     # The relation's own SOURCE casilla id must never be accepted as a target binding.
-    assert relation_target_endpoints_for_binding(relations, "iva.compensacion-disponible-fin-periodo") == ()
+    assert relation_target_endpoints_for_binding(bindings, "iva.compensacion-disponible-fin-periodo") == ()
 
 
 def test_static_inspection_schema_identity_is_stable_and_uses_the_s278_manifest_digest() -> None:
@@ -549,9 +548,9 @@ def test_shared_schema_record_builders_are_identical_whether_fed_inspection_or_s
     snapshot = _real_303_snapshot()
     revision = snapshot.revision
 
-    inspection_bindings = binding_schema_records(inspection.binding_ids, inspection.bindings, inspection.relations)
+    inspection_bindings = binding_schema_records(inspection.binding_ids, inspection.bindings)
     snapshot_binding_ids = frozenset(binding.id for binding in revision.bindings)
-    snapshot_bindings = binding_schema_records(snapshot_binding_ids, revision.bindings, revision.relations)
+    snapshot_bindings = binding_schema_records(snapshot_binding_ids, revision.bindings)
     assert inspection_bindings == snapshot_bindings
     assert len(inspection_bindings) > 0
 
@@ -559,11 +558,6 @@ def test_shared_schema_record_builders_are_identical_whether_fed_inspection_or_s
     snapshot_formulas = formula_schema_records(revision.formulas)
     assert inspection_formulas == snapshot_formulas
     assert len(inspection_formulas) > 0
-
-    inspection_relations = relation_schema_records(inspection.relations)
-    snapshot_relations = relation_schema_records(revision.relations)
-    assert inspection_relations == snapshot_relations
-    assert len(inspection_relations) > 0
 
     inspection_parameters = parameter_schema_records(inspection.parameters, inspection.formulas)
     snapshot_parameters = parameter_schema_records(revision.parameters, revision.formulas)
@@ -575,7 +569,7 @@ def test_static_inspection_binding_schema_records_use_the_real_binding_definitio
     from ..workspace_models import ModeloWorkspaceBindingReferenceV1, ModeloWorkspaceTechnicalLabelV1
 
     inspection = _real_303_inspection()
-    records = binding_schema_records(inspection.binding_ids, inspection.bindings, inspection.relations)
+    records = binding_schema_records(inspection.binding_ids, inspection.bindings)
 
     assert len(records) == len(inspection.binding_ids)
     binding_ids = []
@@ -591,7 +585,7 @@ def test_static_inspection_binding_schema_records_use_the_real_binding_definitio
     by_id = dict(zip(binding_ids, records, strict=True))
     target_binding = "modelo-303-compensacion-pendiente-anteriores"
     assert any(
-        endpoint.relation_id == "modelo-303-rel-self-compensacion-anteriores"
+        endpoint.relation_id == "modelo-303-compensacion-pendiente-anteriores"
         for endpoint in by_id[target_binding].relation_endpoints
     )
 
@@ -608,27 +602,6 @@ def test_static_inspection_formula_schema_records_carry_their_own_full_operand_s
         assert isinstance(record.label, ModeloWorkspaceTechnicalLabelV1)
         assert record.label.identifier == record.reference.formula_id
         assert record.legal_refs is not None
-
-
-def test_static_inspection_relation_schema_records_state_both_of_their_own_endpoints() -> None:
-    from ..workspace_models import (
-        ModeloWorkspaceRelationReferenceV1,
-        ModeloWorkspaceRelationSourceEndpointReferenceV1,
-        ModeloWorkspaceRelationTargetEndpointReferenceV1,
-    )
-
-    inspection = _real_303_inspection()
-    records = relation_schema_records(inspection.relations)
-
-    assert len(records) == len(inspection.relations)
-    record = records[0]
-    assert isinstance(record.reference, ModeloWorkspaceRelationReferenceV1)
-    assert record.reference.relation_id == "modelo-303-rel-self-compensacion-anteriores"
-    endpoint_kinds = {type(endpoint) for endpoint in record.relation_endpoints}
-    assert endpoint_kinds == {
-        ModeloWorkspaceRelationSourceEndpointReferenceV1,
-        ModeloWorkspaceRelationTargetEndpointReferenceV1,
-    }
 
 
 def test_static_inspection_parameter_schema_records_key_off_dispatching_formulas() -> None:
