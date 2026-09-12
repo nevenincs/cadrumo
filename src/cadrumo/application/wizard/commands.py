@@ -251,24 +251,7 @@ def _help_key(flow: WizardFlow, question: WizardQuestion) -> str:
     return f"wizard.{flow.id}.flags.{question.id}.help"
 
 
-def _catalogue_option_info(question: WizardQuestion) -> typer.models.OptionInfo:
-    """Build an option for a catalogue question without a second ID table.
-
-    A few catalogue entries intentionally have no hand-authored command
-    declaration.  Their flag shape is derived from the descriptor itself so
-    the command layer does not become another home for question identifiers.
-    """
-    option_name = f"--{question.id}"
-    if question.widget is WizardWidget.CONFIRM:
-        option_name = f"{option_name}/--no-{question.id}"
-    kwargs: dict[str, object] = {"help": tr(_help_key(SETUP_FLOW, question))}
-    if question.widget is WizardWidget.SELECT and question.choices:
-        values = [choice.value for choice in question.choices]
-        kwargs.update(click_type=_choice(values), metavar=_choice_metavar(values))
-    return typer.Option(option_name, **kwargs)
-
-
-SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
+SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
     "tax-id": typer.Option("--tax-id", help=tr("wizard.setup.flags.tax-id.help")),
     "name": typer.Option("--name", help=tr("wizard.setup.flags.name.help")),
     "surnames": typer.Option("--surnames", help=tr("wizard.setup.flags.surnames.help")),
@@ -609,12 +592,13 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     ),
 }
 
-# Catalogue-described questions without a bespoke option record use the
-# descriptor as their source.  This keeps command flag mechanics aligned with
-# the registry-backed catalogue while avoiding a duplicate identifier list.
+# Registry-described questions without a bespoke option record are populated
+# as ``None`` placeholders.  The exact flag/help declaration is resolved from
+# the governed catalogue when the command is assembled, not during module
+# import before the authority is available.
 for _section in SETUP_FLOW.sections:
     for _question in _section.questions:
-        SETUP_OPTION_INFOS.setdefault(_question.id, _catalogue_option_info(_question))
+        SETUP_OPTION_INFOS.setdefault(_question.id, None)
 
 # This mapping is the operator-facing wizard vocabulary used by application
 # refusals to name flags the CLI can actually parse.
@@ -943,6 +927,15 @@ def _python_parameter(
         option = SETUP_OPTION_INFOS[question.id]
     except KeyError as exc:
         raise KeyError(_help_key(flow, question)) from exc
+    if option is None:
+        from ...domain.calculations.registry.setup_profile_bindings import wizard_option_declarations
+
+        declaration = wizard_option_declarations().get(question.id)
+        if declaration is None:
+            raise KeyError(f"registry wizard option declaration is missing for {question.id!r}")
+        flag, _kind, help_key = declaration
+        option = typer.Option(flag, help=tr(help_key))
+        SETUP_OPTION_INFOS[question.id] = option
     if section_title is not None:
         # `OptionInfo` carries `rich_help_panel`; setting it groups the
         # flag under the section's panel in Typer's `--help` output.

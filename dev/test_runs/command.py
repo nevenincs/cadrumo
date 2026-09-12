@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import re
@@ -25,6 +26,8 @@ _BINDING_SIGNAL: Final[str] = "binding-signal"
 _PYTEST_SUMMARY_SIGNAL: Final[str] = "pytest-summary"
 _AUDIT_DEAD_WEIGHT_SIGNAL: Final[str] = "audit-dead-weight"
 _LOCALES_STATUS_SIGNAL: Final[str] = "locales-status"
+_INTERRUPTED_EXIT_STATUS: Final[int] = 130
+_CHILD_STOP_TIMEOUT_SECONDS: Final[float] = 5.0
 _DIAGNOSTIC_RE: Final[re.Pattern[str]] = re.compile(r"^\[([A-Z][A-Z0-9_]*)\]")
 _DIAGNOSTIC_DETAIL_RE: Final[re.Pattern[str]] = re.compile(
     r"^\[(?P<code>[A-Z][A-Z0-9_]*)\] (?P<path>.+):(?P<line>\d+): (?P<message>.*)$"
@@ -1182,6 +1185,23 @@ def _compact_locale_summary(summary: dict[str, object]) -> dict[str, object]:
     return projected
 
 
+def _stop_interrupted_process(process: subprocess.Popen[str]) -> None:
+    """Bound cleanup of a child when the command wrapper receives Ctrl+C."""
+    if process.poll() is not None:
+        return
+    try:
+        process.terminate()
+        process.wait(timeout=_CHILD_STOP_TIMEOUT_SECONDS)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        with contextlib.suppress(subprocess.TimeoutExpired):
+            process.wait(timeout=_CHILD_STOP_TIMEOUT_SECONDS)
+    except OSError:
+        # The child can exit between poll() and terminate() after receiving the
+        # same console interrupt as this wrapper.
+        pass
+
+
 def run(
     command: tuple[str, ...],
     *,
@@ -1251,40 +1271,52 @@ def run(
         if start_envelope_text is not None:
             transcript.write(start_envelope_text + "\n")
         transcript.flush()
-        process = subprocess.Popen(  # noqa: S603 - argv is the explicit operator command; shell=False.
-            command,
-            cwd=repository,
-            env=environment,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            encoding=_UTF_8,
-            errors="replace",
-        )
-        assert process.stdout is not None
-        for line in process.stdout:
-            if processor is None:
-                print(line, end="", flush=True)
-            else:
-                progress = processor.consume(line)
-                if isinstance(progress, dict):
-                    progress_text = json.dumps(
-                        {
-                            "command": label,
-                            **progress,
-                            "run_id": run_dir.name,
-                            "schema_version": 1,
-                        },
-                        sort_keys=True,
-                        separators=(",", ":"),
-                    )
-                    print(progress_text, flush=True)
-                    transcript.write(progress_text + "\n")
-            transcript.write(line)
-            transcript.flush()
-        exit_status = process.wait()
-        if isinstance(processor, (_ImportBoundariesProcessor, _LocalesStatusSignalProcessor, _PytestSummaryProcessor)):
-            exit_status = processor.effective_exit_status(exit_status)
+        process: subprocess.Popen[str] | None = None
+        try:
+            process = subprocess.Popen(  # noqa: S603 - argv is the explicit operator command; shell=False.
+                command,
+                cwd=repository,
+                env=environment,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding=_UTF_8,
+                errors="replace",
+            )
+            assert process.stdout is not None
+            for line in process.stdout:
+                if processor is None:
+                    print(line, end="", flush=True)
+                else:
+                    progress = processor.consume(line)
+                    if isinstance(progress, dict):
+                        progress_text = json.dumps(
+                            {
+                                "command": label,
+                                **progress,
+                                "run_id": run_dir.name,
+                                "schema_version": 1,
+                            },
+                            sort_keys=True,
+                            separators=(",", ":"),
+                        )
+                        print(progress_text, flush=True)
+                        transcript.write(progress_text + "\n")
+                transcript.write(line)
+                transcript.flush()
+            exit_status = process.wait()
+            normalized_processors = (
+                _ImportBoundariesProcessor,
+                _LocalesStatusSignalProcessor,
+                _PytestSummaryProcessor,
+            )
+            if isinstance(processor, normalized_processors):
+                exit_status = processor.effective_exit_status(exit_status)
+        except KeyboardInterrupt:
+            exit_status = _INTERRUPTED_EXIT_STATUS
+            if process is not None:
+                _stop_interrupted_process(process)
+            transcript.write(f"INTERRUPTED exit={exit_status}\n")
         finished = datetime.now(tz=UTC)
         transcript.write(f"FINISH {finished.isoformat()} exit={exit_status}\n")
 

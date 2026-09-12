@@ -56,7 +56,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from decimal import Decimal
-from functools import partial
+from functools import cache, partial
 from typing import Final
 
 from cadrumo.application.aggregation.iva_ledger import (
@@ -152,20 +152,40 @@ M131_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
     "2025": Period.from_year_and_code(2025, "1T"),
 }
 
-_PRESENTER: Final = PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba")
+@cache
+def _presenter() -> PresenterIdentity:
+    """Build the example presenter on first use.
+
+    PresenterIdentity validates its tax_id through the published authority, so
+    constructing one at module scope makes importing this module — and every
+    module that imports it, the edition migration tool included — fail outright
+    whenever the published artifact is stale. Building it on demand keeps the
+    dependency where it belongs, at the scenario that actually renders.
+    """
+    return PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba")
 _TAXPAYER: Final = TaxpayerIdentityFacts(legal_name=None, given_name="Ana", surnames="Prueba", full_name="Ana Prueba")
 #: The Spanish IBAN published as a format example; it identifies no real account.
 _CHARGE_IBAN: Final = "ES9121000418450200051332"
-_M390_PRODUCT_SOFTWARE_IDENTITY: Final = AeatProductSoftwareIdentity(
-    program_identifier="C390",
-    developer_tax_id="Y0000001S",
-    evidence=(AeatProductSoftwareEvidence(reference="edition-round-trip:m390-software", digest="b" * 64),),
-)
-_PRODUCT_SOFTWARE_IDENTITY: Final = AeatProductSoftwareIdentity(
-    program_identifier="C303",
-    developer_tax_id="Y0000001S",
-    evidence=(AeatProductSoftwareEvidence(reference="aeat-software-registration:edition-round-trip", digest="a" * 64),),
-)
+@cache
+def _m390_product_software_identity() -> AeatProductSoftwareIdentity:
+    """Build Modelo 390's example software identity on first use; see :func:`_presenter`."""
+    return AeatProductSoftwareIdentity(
+        program_identifier="C390",
+        developer_tax_id="Y0000001S",
+        evidence=(AeatProductSoftwareEvidence(reference="edition-round-trip:m390-software", digest="b" * 64),),
+    )
+
+
+@cache
+def _product_software_identity() -> AeatProductSoftwareIdentity:
+    """Build Modelo 303's example software identity on first use; see :func:`_presenter`."""
+    return AeatProductSoftwareIdentity(
+        program_identifier="C303",
+        developer_tax_id="Y0000001S",
+        evidence=(
+            AeatProductSoftwareEvidence(reference="aeat-software-registration:edition-round-trip", digest="a" * 64),
+        ),
+    )
 _EVIDENCE: Final = FilingEvidenceReference(reference="edition-round-trip:m303-facts")
 _M303_EXONERADO_ENDPOINT: Final = validated_casilla_id("79", surface="edition round-trip scenario")
 _M303_EXONERADO_ACTIVITY_SLOTS: Final = range(1, 7)
@@ -200,7 +220,7 @@ def m303_export_scenario(period: Period) -> EditionExportScenario:
         },
         producer_snapshot=partial(_m303_producer_snapshot, period),
         prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-        product_software_identity=_PRODUCT_SOFTWARE_IDENTITY,
+        product_software_identity=_product_software_identity(),
     )
 
 
@@ -222,7 +242,7 @@ def _m303_producer_snapshot(period: Period) -> FilingProducerSnapshot:
         modelo=Modelo.M303,
         taxpayer_tax_id=SYNTHETIC_TAX_ID,
         taxpayer_identity=_TAXPAYER,
-        presenter=_PRESENTER,
+        presenter=_presenter(),
         model_profile=profile,
         elections=FilingElectionFacts(
             result_disposition=ResultDisposition.DOMICILIACION,
@@ -416,7 +436,7 @@ def m390_export_scenario(period: Period) -> EditionExportScenario:
         period=period,
         inputs={},
         producer_snapshot=_m390_producer_snapshot,
-        product_software_identity=_M390_PRODUCT_SOFTWARE_IDENTITY,
+        product_software_identity=_m390_product_software_identity(),
     )
 
 
@@ -425,7 +445,7 @@ def _m390_producer_snapshot() -> FilingProducerSnapshot:
         modelo=Modelo.M390,
         taxpayer_tax_id=SYNTHETIC_TAX_ID,
         taxpayer_identity=_TAXPAYER,
-        presenter=_PRESENTER,
+        presenter=_presenter(),
         model_profile=GeneralFilingProfileFacts(),
         elections=FilingElectionFacts(
             result_disposition=ResultDisposition.NEGATIVA,
@@ -465,7 +485,7 @@ def _m131_producer_snapshot() -> FilingProducerSnapshot:
         modelo=Modelo.M131,
         taxpayer_tax_id=SYNTHETIC_TAX_ID,
         taxpayer_identity=_TAXPAYER,
-        presenter=_PRESENTER,
+        presenter=_presenter(),
         model_profile=GeneralFilingProfileFacts(),
         elections=FilingElectionFacts(
             result_disposition=ResultDisposition.INGRESO,

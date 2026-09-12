@@ -28,6 +28,8 @@ the page set.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import os
 import re
 import subprocess
@@ -46,6 +48,9 @@ from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
 from .build import docs_build_jobs, ensure_isolated_storage_root
+
+SOURCE_MANIFEST_NAME: Final[str] = ".source-manifest.json"
+SOURCE_MANIFEST_SCHEMA_VERSION: Final[int] = 1
 
 _DOC_SUFFIXES: Final[frozenset[str]] = frozenset({".md", ".rst"})
 
@@ -438,6 +443,17 @@ def extract_pot(repo_root: Path, out_dir: Path | None = None) -> Path:
     result = _run_bounded(command, cwd=repo_root, env=env, what="gettext POT extraction")
     if result.returncode != 0:
         raise SystemExit(result.returncode)
+    manifest = {
+        "schema_version": SOURCE_MANIFEST_SCHEMA_VERSION,
+        "sources": {
+            page: hashlib.sha256((docs_root / page).read_bytes()).hexdigest()
+            for page in pages
+        },
+    }
+    (out_dir / SOURCE_MANIFEST_NAME).write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     return out_dir
 
 

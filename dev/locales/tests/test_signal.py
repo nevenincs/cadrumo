@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
+from pathlib import Path
+
 import pytest
 
 from .._signal import (
+    _documentation_source_inventory,
     _domain_summaries,
     _dynamic_key_families,
     _headline,
@@ -256,7 +261,7 @@ def test_parallel_toml_inventory_reports_missing_cells_not_authored_values(tmp_p
     inventory, findings = _parallel_localization_inventory(tmp_path)
 
     assert inventory["parallel_localization_declarations"] == 2
-    assert {finding["field"] for finding in findings} == {"name_ca", "name_hu"}
+    assert {finding["field"] for finding in findings if "field" in finding} == {"name_ca", "name_hu"}
 
 
 def test_parallel_inventory_enrols_toml_and_every_po_plural_form_for_spelling(tmp_path) -> None:
@@ -281,6 +286,119 @@ def test_parallel_inventory_enrols_toml_and_every_po_plural_form_for_spelling(tm
         "parallel:docs/locales/ca/LC_MESSAGES/guide.po:One return\x04Many returns:plural[0]": "Una declaració",
         "parallel:docs/locales/ca/LC_MESSAGES/guide.po:One return\x04Many returns:plural[1]": "Moltes declaracions",
     }
+
+
+def _write_docs_source_cache(docs, page: str, source_text: str, pot_text: str) -> None:
+    source = docs / page
+    source.parent.mkdir(parents=True, exist_ok=True)
+    source.write_text(source_text, encoding="utf-8")
+    templates = docs / "locales" / "pot"
+    template = templates / Path(page).with_suffix(".pot")
+    template.parent.mkdir(parents=True, exist_ok=True)
+    template.write_text(pot_text, encoding="utf-8")
+    (templates / ".source-manifest.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "sources": {page: hashlib.sha256(source.read_bytes()).hexdigest()},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_documentation_inventory_extracts_live_source_and_enrols_english_for_spelling(tmp_path) -> None:
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    _write_docs_source_cache(
+        docs,
+        "guide.md",
+        "# Filing guide\n\nReview the current return.\n",
+        'msgid ""\nmsgstr ""\n\nmsgid "Filing guide"\nmsgstr ""\n\n'
+        'msgid "Review the current return."\nmsgstr ""\n',
+    )
+    catalogue_messages = {
+        ("guide.po", "Filing guide"): {"ca": True, "es": True, "hu": True},
+        ("guide.po", "Review the current return."): {"ca": True, "es": True, "hu": True},
+    }
+    values: dict[str, dict[str, str]] = {}
+
+    inventory, findings = _documentation_source_inventory(
+        tmp_path,
+        catalogue_messages,
+        spelling_values=values,
+    )
+
+    assert findings == []
+    assert {key: inventory[key] for key in (
+        "docs_source_pages",
+        "docs_source_messages",
+        "docs_catalogue_files_expected",
+        "docs_catalogue_files_read",
+        "docs_source_drift_pages",
+        "docs_source_messages_missing",
+        "docs_catalogue_messages_stale",
+        "docs_extraction_failures",
+        "docs_orphan_catalogue_files",
+        "docs_orphan_source_templates",
+        "docs_generated_english_only_pages",
+    )} == {
+        "docs_source_pages": 1,
+        "docs_source_messages": 2,
+        "docs_catalogue_files_expected": 3,
+        "docs_catalogue_files_read": 3,
+        "docs_source_drift_pages": 0,
+        "docs_source_messages_missing": 0,
+        "docs_catalogue_messages_stale": 0,
+        "docs_extraction_failures": 0,
+        "docs_orphan_catalogue_files": 0,
+        "docs_orphan_source_templates": 0,
+        "docs_generated_english_only_pages": 0,
+    }
+    assert values["en"] == {
+        "parallel:docs/guide.md:Filing guide": "Filing guide",
+        "parallel:docs/guide.md:Review the current return.": "Review the current return.",
+    }
+
+
+def test_documentation_inventory_enumerates_source_to_catalogue_drift(tmp_path) -> None:
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    _write_docs_source_cache(
+        docs,
+        "guide.md",
+        "# Current source\n",
+        'msgid ""\nmsgstr ""\n\nmsgid "Current source"\nmsgstr ""\n',
+    )
+    inventory, findings = _documentation_source_inventory(
+        tmp_path,
+        {("guide.po", "Old source"): {"ca": True, "es": True, "hu": True}},
+    )
+
+    assert inventory["docs_source_drift_pages"] == 1
+    assert inventory["docs_source_messages_missing"] == 3
+    assert inventory["docs_catalogue_messages_stale"] == 3
+    assert len(findings) == 3
+    assert {finding["kind"] for finding in findings} == {"docs_source_catalogue_drift"}
+    assert all(finding["missing_message_ids"] == ["Current source"] for finding in findings)
+    assert all(finding["stale_message_ids"] == ["Old source"] for finding in findings)
+
+
+def test_documentation_inventory_fails_closed_when_source_manifest_is_absent(tmp_path) -> None:
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    (docs / "guide.md").write_text("# Filing guide\n", encoding="utf-8")
+
+    inventory, findings = _documentation_source_inventory(tmp_path, {})
+
+    assert inventory["docs_source_pages"] == 1
+    assert inventory["docs_extraction_failures"] == 1
+    extraction = [finding for finding in findings if finding["kind"] == "docs_source_extraction_failure"]
+    assert len(extraction) == 1
+    assert extraction[0]["classification"] == "blocking"
+    assert extraction[0]["domain"] == "docs"
+    assert extraction[0]["error_type"] == "FileNotFoundError"
+    assert sum(finding["kind"] == "docs_catalogue_missing" for finding in findings) == 3
 
 
 def test_spellcheck_fails_closed_when_pinned_dictionaries_are_absent(tmp_path) -> None:

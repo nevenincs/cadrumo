@@ -1,0 +1,20 @@
+[fact]
+fact_id = "lgt-tax-record-retention-floor-years"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "lgt-tax-record-retention-floor-years:2004-07-01"
+date_axis = "filing_period"
+valid_from = 2004-07-01
+legal_refs = [
+  "ley-58-2003:art-66",
+  "ley-58-2003:art-67",
+  "ley-58-2003:art-70.2",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "scalar"
+value = 4
+unit = "years"

@@ -272,6 +272,21 @@ _FAMILY_DEFAULT_KEYS: Final[Mapping[str, str]] = {
 }
 #: The migration tool's own wording for a root it declared for want of lineage.
 _ROOT_PENDING_LINEAGE_MARK: Final = "predecessor row without lineage"
+#: The causes that make a root TERMINAL. The tool writes one sentence with a
+#: varying parenthetical cause, and which cause it names is the whole question:
+#: a parallel scheme variant, a successor declaring a lower grade, and two
+#: editions overlapping in period are all facts about the forms, and no work of
+#: ours moves them. Every other cause is work. Reading only the lineage mark and
+#: calling the rest law filed two recoverable edges as terminal -- an unretired
+#: withdrawal, which a `retired` continuity evolution discharges, and a row
+#: order, which is the one cause this screen cannot decide from the raw tree
+#: because it needs the compiler's merge order.
+#: Matched case-insensitively, and as stems rather than whole phrases: the
+#: corpus writes "parallel scheme variants" while a hand-authored root writes
+#: "parallel scheme variant", and a classifier that read only one of those
+#: spellings would file a terminal root as work. The stem is the shortest form
+#: that cannot match a different cause.
+_ROOT_CAUSES_BY_LAW: Final = ("parallel scheme variant", "lower grade", "overlapping predecessor")
 #: Families whose members are per-edition claims rather than inheritable
 #: declarations: evidence pins to a specific official workbook, and generated
 #: export layouts owned by the generator. They are never counted as restated.
@@ -303,6 +318,7 @@ COVERAGE_CONDITIONS: Final[tuple[str, ...]] = (
     "promised_year_unserved",
     "promised_coordinate_unserved",
     "coordinate_served_twice",
+    "promised_year_projected",
 )
 
 #: Every condition this screen can report, declared once and used at each
@@ -334,6 +350,7 @@ MEASUREMENTS: Final[tuple[str, ...]] = (
     "row_identical_unchained",
     "row_missing_lineage_terminal",
     "row_missing_lineage_unedged",
+    "row_missing_lineage_on_projected_edge",
 )
 
 
@@ -553,6 +570,16 @@ class Edge:
         return self.state == "dispositioned" and self.root_kind == "root_pending_lineage"
 
     @property
+    def rooted_recoverable(self) -> bool:
+        """Whether this edge roots away for a cause that is work rather than law."""
+        return self.state == "dispositioned" and self.root_kind == "root_recoverable"
+
+    @property
+    def root_is_open(self) -> bool:
+        """Whether this root is recoverable at all, by either route."""
+        return self.rooted_pending_lineage or self.rooted_recoverable
+
+    @property
     def chain_reach(self) -> float:
         """The share of the predecessor's rows a chain already reaches, 0.0 to 1.0.
 
@@ -565,7 +592,21 @@ class Edge:
 
 
 def _root_kind(reason: str) -> str:
-    return "root_pending_lineage" if _ROOT_PENDING_LINEAGE_MARK in reason else "root_by_law"
+    """Classify an explicit no-predecessor root by the cause the tool named.
+
+    An unrecognised cause falls to ``root_recoverable`` rather than to law. A
+    root is a declaration that this edition states itself in full, and the only
+    reasons that make it permanent are facts about the forms; a wording this
+    screen has not seen is far more likely to be a new cause the tool learned to
+    report than a new way for the law to forbid inheritance. Defaulting the
+    other way is what hid the last two.
+    """
+    spelled = reason.casefold()
+    if _ROOT_PENDING_LINEAGE_MARK in spelled:
+        return "root_pending_lineage"
+    if any(cause in spelled for cause in _ROOT_CAUSES_BY_LAW):
+        return "root_by_law"
+    return "root_recoverable"
 
 
 def _comparable(member: Mapping[str, Any]) -> dict[str, Any]:
@@ -788,7 +829,7 @@ def edges(statuses: tuple[EditionStatus, ...]) -> tuple[Edge, ...]:
                 # the disposition hides nothing. A root the LAW gives -- a
                 # parallel scheme variant, a successor withholding by design --
                 # is left alone, because no cause of ours is what stops it.
-                if root_kind == "root_pending_lineage":
+                if root_kind in {"root_pending_lineage", "root_recoverable"}:
                     blockers = _blockers(predecessor, successor, predecessor_keys)
             else:
                 blockers = _blockers(predecessor, successor, predecessor_keys)
@@ -1068,7 +1109,107 @@ LINEAGE_SCOPES: Final[tuple[str, ...]] = (
 )
 
 
-def scope_lineage_findings(statuses: tuple[EditionStatus, ...], found_edges: tuple[Edge, ...]) -> None:
+#: The lineage seeder's ledger, read as raw TOML rather than through its loader.
+#: The loader imports the seeder, which imports the domain, and this screen must
+#: keep reporting when the domain does not import.
+_LEDGER_FILE: Final = Path(__file__).with_name("casilla_lineage_ledger.toml")
+
+
+@dataclass(frozen=True, slots=True)
+class LedgerScope:
+    """How much of the campaign's unchained population the seeder's ledger accounts for.
+
+    The ledger's contract is successor rows: for each adjacent pair the seeder
+    disposes of every row of the SUCCESSOR. So the two unnamed populations are
+    different things and are never pooled.
+
+    ``unclaimed_predecessor`` is a row in a modelo's FIRST edition, which is
+    never anyone's successor and therefore outside the ledger by construction.
+    It is not a ledger miss. It is a predecessor row that no successor continues
+    and no ``retired`` continuity evolution withdraws -- a retirement gap, owned
+    by the migration drop path, where the answer is to inherit it or retire it.
+
+    ``unnamed_successor`` is a row in a later edition that the ledger should
+    have named and did not. That one is a genuine miss.
+    """
+
+    unchained_on_edge: int
+    named: int
+    unclaimed_predecessor: int
+    unnamed_successor: int
+
+
+def ledger_scope(statuses: tuple[EditionStatus, ...], found_edges: tuple[Edge, ...]) -> LedgerScope | None:
+    """Measure the campaign's unchained rows against the seeder ledger's coverage.
+
+    Returns ``None`` when the ledger cannot be read, recording a limitation, so
+    an unreadable ledger never renders as a ledger that accounts for nothing.
+    """
+    try:
+        rows = tomllib.loads(_LEDGER_FILE.read_text(encoding="utf-8")).get("refusal", ())
+        named = {(row["modelo"], row["revision"], row["casilla"]) for row in rows}
+    except (OSError, tomllib.TOMLDecodeError, KeyError, TypeError) as exc:
+        _note_limitation(f"lineage_ledger_unreadable: {type(exc).__name__}; ledger coverage is unmeasured")
+        return None
+    predecessors = {(edge.modelo, edge.predecessor) for edge in found_edges}
+    successors = {(edge.modelo, edge.successor) for edge in found_edges}
+    counted = first_edition = later = 0
+    for status in statuses:
+        key = (status.modelo, status.edition)
+        if key not in predecessors:
+            continue
+        for finding in status.findings:
+            if finding.kind != "row_missing_lineage":
+                continue
+            counted += 1
+            if (status.modelo, status.edition, finding.locus) in named:
+                continue
+            if key in successors:
+                later += 1
+            else:
+                first_edition += 1
+    return LedgerScope(
+        unchained_on_edge=counted,
+        named=counted - first_edition - later,
+        unclaimed_predecessor=first_edition,
+        unnamed_successor=later,
+    )
+
+
+def projected_sources(
+    statuses: tuple[EditionStatus, ...], promised_years: tuple[int, ...]
+) -> frozenset[tuple[str, str]]:
+    """Every edition a projected year would be answered from.
+
+    The source is the revision admitting the greatest covered year strictly
+    below the projected one, which is what makes the projected edge's
+    PREDECESSOR side this edition. Its rows are the rows a projected resolution
+    would carry forward, so a chain missing here stops asserting nothing the
+    moment projection ships.
+    """
+    by_modelo: dict[str, list[EditionStatus]] = defaultdict(list)
+    for status in statuses:
+        by_modelo[status.modelo].append(status)
+    sources: set[tuple[str, str]] = set()
+    for modelo, editions in by_modelo.items():
+        for year in promised_years:
+            if any(_admits_year(status, year) for status in editions) or not _projects_year(editions, year):
+                continue
+            below = [
+                (found, status)
+                for status in editions
+                if (found := _earliest_admitted_year(status)) is not None and found < year
+            ]
+            if below:
+                sources.add((modelo, max(below, key=lambda pair: pair[0])[1].edition))
+    return frozenset(sources)
+
+
+def scope_lineage_findings(
+    statuses: tuple[EditionStatus, ...],
+    found_edges: tuple[Edge, ...],
+    sources: frozenset[tuple[str, str]] = frozenset(),
+) -> None:
     """Classify every missing chain by whether an edge is waiting on it.
 
     ``row_missing_lineage`` states a fact about a row and says nothing about
@@ -1102,8 +1243,12 @@ def scope_lineage_findings(statuses: tuple[EditionStatus, ...], found_edges: tup
             scope = "row_missing_lineage_terminal"
         else:
             scope = "row_missing_lineage_unedged"
-        for finding in [item for item in status.findings if item.kind == "row_missing_lineage"]:
+        missing = [item for item in status.findings if item.kind == "row_missing_lineage"]
+        for finding in missing:
             status._add(scope, finding.locus, finding.detail)
+        if key in sources:
+            for finding in missing:
+                status._add("row_missing_lineage_on_projected_edge", finding.locus, finding.detail)
 
 
 def _edges_awaiting_lineage(found_edges: tuple[Edge, ...]) -> int:
@@ -1141,7 +1286,7 @@ def build_report(registry_root: Path, *, modelo_ids: tuple[str, ...] = ()) -> Re
     statuses = scan_registry(registry_root, modelo_ids=modelo_ids)
     promised = supported_filing_years(registry_root)
     found_edges = edges(statuses)
-    scope_lineage_findings(statuses, found_edges)
+    scope_lineage_findings(statuses, found_edges, projected_sources(statuses, promised))
     return Report(
         statuses=statuses,
         promised_years=promised,
@@ -1187,6 +1332,33 @@ def supported_filing_years(registry_root: Path) -> tuple[int, ...]:
         _note_limitation(f"promise_bounds_inverted: horizon {horizon} precedes floor {floor}; coverage is unmeasured")
         return ()
     return tuple(range(floor, horizon + 1))
+
+
+def _earliest_admitted_year(status: EditionStatus) -> int | None:
+    """The first filing year this edition admits, or ``None`` when it admits none.
+
+    Used only to decide whether a modelo has coverage BELOW a year, which is the
+    clause that separates a trailing-edge gap a projection can answer from a
+    leading-edge gap it must refuse.
+    """
+    if status.selector_years:
+        return min(status.selector_years)
+    return status.selector_year_from
+
+
+def _projects_year(editions: list[EditionStatus], year: int) -> bool:
+    """Whether a modelo's declared reach projects forward into an unadmitted year.
+
+    The predicate, forward only: the year is inside the promised span, no
+    revision admits it, and at least one covered year lies STRICTLY BELOW it, so
+    the newest revision below can be carried forward. A gap with no coverage
+    beneath it is a leading-edge gap -- the modelo had not started -- and
+    applying a later design to an earlier period would be wrong as law, so
+    projection refuses it rather than reaching backwards. There is no backward
+    mode and ties cannot arise, because the source is a strict maximum below.
+    """
+    earliest = [found for status in editions if (found := _earliest_admitted_year(status)) is not None]
+    return bool(earliest) and min(earliest) < year
 
 
 def _admits_year(status: EditionStatus, year: int) -> bool:
@@ -1292,7 +1464,13 @@ def coverage_gaps(
         for year in promised_years:
             admitting = [edition for edition in editions if _admits_year(edition, year)]
             if not admitting:
-                kind = "promised_year_unserved"
+                # A year no revision admits is not automatically unserved. Where
+                # the modelo has coverage below it, the newest revision carries
+                # forward and the year is ANSWERABLE; counting that as a gap
+                # would report work nobody owes. The two are reported as
+                # separate conditions and never pooled, because one is a
+                # resolution mode and the other is a hole.
+                kind = "promised_year_projected" if _projects_year(editions, year) else "promised_year_unserved"
                 gaps.append(CoverageGap(modelo, kind, year, "*", (), *_disposition(modelo, kind, year, "*")))
                 continue
             for period in periods:
@@ -1356,6 +1534,7 @@ class ModeloSignal:
     edges_rooted_pending_lineage: int = 0
     restated_members: int = 0
     lineage_gap_on_edge: int = 0
+    edges_rooted_recoverable: int = 0
 
     @property
     def outstanding(self) -> int:
@@ -1377,6 +1556,7 @@ class ModeloSignal:
             + self.edges_rooted_pending_lineage
             + self.restated_members
             + self.lineage_gap_on_edge
+            + self.edges_rooted_recoverable
         )
 
 
@@ -1433,6 +1613,7 @@ def modelo_signals(report: Report) -> tuple[ModeloSignal, ...]:
         counts = Counter(finding.kind for edition in editions for finding in edition.findings)
         unlifted = counts["edition_default_undeclared"] + counts["family_default_undeclared"]
         rooted_pending = sum(1 for edge in edges_by_modelo[modelo] if edge.rooted_pending_lineage)
+        rooted_recoverable = sum(1 for edge in edges_by_modelo[modelo] if edge.rooted_recoverable)
         restated_members = counts["member_restated"]
         signals.append(
             ModeloSignal(
@@ -1462,6 +1643,7 @@ def modelo_signals(report: Report) -> tuple[ModeloSignal, ...]:
                 coverage_gaps_undisposed=undisposed_by_modelo[modelo],
                 edges_rooted_pending_lineage=rooted_pending,
                 restated_members=restated_members,
+                edges_rooted_recoverable=rooted_recoverable,
             )
         )
     return tuple(signals)
@@ -1590,6 +1772,7 @@ def _payload(report: Report) -> dict[str, Any]:
                 "coverage_gaps": signal.coverage_gaps,
                 "coverage_gaps_undisposed": signal.coverage_gaps_undisposed,
                 "edges_rooted_pending_lineage": signal.edges_rooted_pending_lineage,
+                "edges_rooted_recoverable": signal.edges_rooted_recoverable,
                 "restated_members": signal.restated_members,
                 "outstanding": signal.outstanding,
             }
@@ -1701,7 +1884,7 @@ def _signal_lines(report: Report) -> list[str]:
     blockers = Counter(
         blocker.split("=")[0]
         for edge in found_edges
-        if edge.state == "blocked" or edge.rooted_pending_lineage
+        if edge.state == "blocked" or edge.root_is_open
         for blocker in edge.blockers
     )
     lines = [
@@ -1730,6 +1913,9 @@ def _signal_lines(report: Report) -> list[str]:
                 *(f"{state}={edge_states.get(state, 0)}" for state in _EDGE_STATES),
                 f"rooted_pending_lineage={sum(1 for edge in found_edges if edge.rooted_pending_lineage)}",
                 f"total={len(found_edges)}",
+                # Appended: roots the tool gave a recoverable cause for, which
+                # `root_by_law` absorbed until it learned to read the cause.
+                f"rooted_recoverable={sum(1 for edge in found_edges if edge.rooted_recoverable)}",
             ]
         ),
         # The worklist, in the campaign's own ordering: restatement lifting is
@@ -1751,6 +1937,12 @@ def _signal_lines(report: Report) -> list[str]:
     ]
     lines += [f"condition {kind}={census[kind]}" for kind in CONDITIONS if census[kind]]
     lines += [f"measurement {kind}={census[kind]}" for kind in MEASUREMENTS]
+    scope = ledger_scope(statuses, found_edges)
+    if scope is not None:
+        lines.append(
+            f"ledger unchained_on_edge={scope.unchained_on_edge} named={scope.named} "
+            f"unclaimed_predecessor={scope.unclaimed_predecessor} unnamed_successor={scope.unnamed_successor}"
+        )
     lines += _family_lines(report)
     lines += [
         f"modelo {signal.modelo} state={signal.state} editions={signal.editions} rows={signal.rows} "
@@ -1762,7 +1954,8 @@ def _signal_lines(report: Report) -> list[str]:
         # Appended, never inserted: every field above holds the position it
         # held before these two existed.
         f"lineage_on_edge={signal.lineage_gap_on_edge} "
-        f"undisposed={signal.coverage_gaps_undisposed}"
+        f"undisposed={signal.coverage_gaps_undisposed} "
+        f"rooted_recoverable={signal.edges_rooted_recoverable}"
         for signal in signals
     ]
     lines += [
@@ -1791,8 +1984,18 @@ def _signal_lines(report: Report) -> list[str]:
         f"rooted {edge.modelo} {edge.predecessor} -> {edge.successor} "
         f"predecessor_rows={edge.predecessor_rows} unchained={edge.predecessor_rows_without_lineage} "
         f"shared_chains={edge.chained_both_sides} causes={','.join(edge.blockers) or 'none'}"
+        f" kind={edge.root_kind}"
         for edge in found_edges
         if edge.rooted_pending_lineage
+    ]
+    # Recoverable roots get their own record rather than joining `rooted`, whose
+    # population is pinned to the lineage kind by consumers already.
+    lines += [
+        f"rooted_recoverable {edge.modelo} {edge.predecessor} -> {edge.successor} "
+        f"predecessor_rows={edge.predecessor_rows} unchained={edge.predecessor_rows_without_lineage} "
+        f"shared_chains={edge.chained_both_sides} causes={','.join(edge.blockers) or 'none'}"
+        for edge in found_edges
+        if edge.rooted_recoverable
     ]
     return lines
 
@@ -1844,7 +2047,7 @@ def render_report(report: Report, *, totals_only: bool = False) -> str:
     blockers = Counter(
         blocker.split("=")[0]
         for edge in found_edges
-        if edge.state == "blocked" or edge.rooted_pending_lineage
+        if edge.state == "blocked" or edge.root_is_open
         for blocker in edge.blockers
     )
     excluded = {*COVERAGE_CONDITIONS, "row_missing_lineage"}
@@ -1865,7 +2068,8 @@ def render_report(report: Report, *, totals_only: bool = False) -> str:
         "EDGES",
         f"  migrated {edge_states.get('migrated', 0)}   ready {edge_states.get('ready', 0)}   "
         f"blocked {edge_states.get('blocked', 0)}   dispositioned {edge_states.get('dispositioned', 0)} "
-        f"(rooted pending lineage {rooted_pending})   total {len(found_edges)}",
+        f"(rooted pending lineage {rooted_pending}, rooted recoverable "
+        f"{sum(1 for edge in found_edges if edge.rooted_recoverable)})   total {len(found_edges)}",
         "",
         "ACTIONS",
         f"  lift restatement      {_fmt(unlifted_total):>8}   editions x families",
@@ -1892,6 +2096,17 @@ def render_report(report: Report, *, totals_only: bool = False) -> str:
         out.append("  clean: " + ", ".join(clean))
     out.append("")
 
+    scope = ledger_scope(statuses, found_edges)
+    if scope is not None:
+        out += [
+            "LEDGER  (what the lineage seeder's closed list accounts for)",
+            f"  {'unchained rows on an edge':<32} {_fmt(scope.unchained_on_edge):>8}",
+            f"  {'named by the ledger':<32} {_fmt(scope.named):>8}",
+            f"  {'unclaimed predecessor (retire/inherit)':<38} {_fmt(scope.unclaimed_predecessor):>8}",
+            f"  {'unnamed successor (ledger miss)':<38} {_fmt(scope.unnamed_successor):>8}",
+            "",
+        ]
+
     out.append("MEASUREMENTS")
     out += [f"  {kind:<32} {_fmt(census[kind]):>8}" for kind in (*MEASUREMENTS, "row_missing_lineage")]
     out.append("")
@@ -1912,6 +2127,10 @@ def render_report(report: Report, *, totals_only: bool = False) -> str:
     )
     out.append(f"  {'unclassified':<32} {_fmt(sum(1 for gap in report.gaps if not gap.classified)):>8}")
     out.append(f"  {'undisposed (still owed)':<32} {_fmt(sum(1 for gap in report.gaps if not gap.disposed)):>8}")
+    out.append(
+        f"  {'rows unchained at a projected source':<38} "
+        f"{_fmt(_census(statuses)['row_missing_lineage_on_projected_edge']):>8}"
+    )
     out.append("")
 
     out.append("FAMILIES  (union position per declaration family)")
@@ -1996,7 +2215,7 @@ def render_report(report: Report, *, totals_only: bool = False) -> str:
     )
     out.append("")
 
-    worklist = [edge for edge in found_edges if edge.state in {"ready", "blocked"} or edge.rooted_pending_lineage]
+    worklist = [edge for edge in found_edges if edge.state in {"ready", "blocked"} or edge.root_is_open]
     out.append("WORKLIST  (edges that are not yet unioned)")
     if worklist:
         out += _table(
@@ -2006,7 +2225,9 @@ def render_report(report: Report, *, totals_only: bool = False) -> str:
                     edge.modelo,
                     edge.predecessor,
                     edge.successor,
-                    "rooted" if edge.rooted_pending_lineage else edge.state,
+                    "rooted"
+                    if edge.rooted_pending_lineage
+                    else ("recoverable" if edge.rooted_recoverable else edge.state),
                     _fmt(edge.predecessor_rows),
                     _fmt(edge.predecessor_rows_without_lineage),
                     f"{edge.chain_reach:.0%}",

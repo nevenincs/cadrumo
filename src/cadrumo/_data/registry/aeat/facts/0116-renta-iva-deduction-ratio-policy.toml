@@ -1,0 +1,28 @@
+[fact]
+fact_id = "renta-iva-deduction-ratio-policy"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "renta-iva-deduction-ratio-policy:1993-01-01"
+date_axis = "filing_period"
+valid_from = 1993-01-01
+legal_refs = [
+  "ley-37-1992:art-94",
+  "ley-37-1992:art-103",
+  "ley-37-1992:art-104",
+]
+source_refs = [
+  "aeat-modelo-390-procedure",
+  "aeat-dr-390-2025",
+  "boe-modelo-390-2009-form",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "exempt_regime.deduction_ratio", value = "0" },
+  { key = "percentage.unit_divisor", value = "100" },
+  { key = "prorrata_especial_mandatory.legal_ref", value = "ley-37-1992:art-103" },
+]

@@ -15,12 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from ..adapters.inbound.justificante.parser import parse_justificante_bytes
 from ..adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
-from ..adapters.outbound.aeat.sede.declarations_observations import (
-    non_numeric_observed_casillas,
-    registry_observation_from_filed_declaration,
-)
 from ..adapters.outbound.aeat.sede.iva_compensation_wallet import (
     PRE303_PRESENTATION_SERVICE_URL,
     fetch_iva_compensation_wallet,
@@ -140,8 +135,8 @@ def compose_filed_observation_persistence_ports(
 
 
 def compose_live_state(
-    *,
     output_root: Path | None = None,
+    *,
     bucket_id: str | None = None,
     objects: SecureObjectRepository | None = None,
 ) -> LiveStateComposition:
@@ -233,7 +228,7 @@ class AppIvaRemoteStatePort:
         progress_context: dict[str, object] | None,
     ) -> IvaCompensationHistoryCaptureReport:
         """Capture and persist filed Modelo 303 history."""
-        store = FiledDeclaracionObservationStore(output_root, objects=self._objects)
+        store = self._filed_observation_ports.observation_persistence
         paths: list[str] = []
         artefacts: list[str] = []
         observations = []

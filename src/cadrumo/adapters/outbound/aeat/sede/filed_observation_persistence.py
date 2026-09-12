@@ -12,11 +12,10 @@ from __future__ import annotations
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from .....application.calculations.iva_compensation_history import (
     IvaCompensationHistoryRepository,
-    IvaCompensationStateProvenance,
     persist_observation_envelope_and_iva_history,
 )
 from .....application.calculations.observations_repository import (
@@ -42,6 +41,7 @@ from .....application.modelo.external_import_actions import (
     import_external_filing_source,
 )
 from .....core.observed_header_fact import ObservedHeaderFact
+from .....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from .....core.period import Period
 from .....domain.buckets.event import BucketEventHistoryCatalogue
 from .....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
@@ -63,12 +63,10 @@ from .declarations_observations import (
 )
 from .declarations_remote import extract_csv_from_url
 from .observation_store import FiledDeclaracionObservationStore
-from .schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 from ....inbound.justificante.parser import parse_justificante_bytes
 
 if TYPE_CHECKING:
     from .....core.secure_object_write import SecureObjectWrite
-    from .....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 
 
 _T = TypeVar("_T")
