@@ -21,7 +21,6 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.fx.ecb_provider import ECB_RATE_SOURCE_ID
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ..decomposition import decompose_invoice
@@ -29,6 +28,8 @@ from ..enums import IvaRate, PaymentStatus
 from ..models import Invoice, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_FX_RATE_SOURCE_ID = "test_reference"
 
 _BASE = Decimal("1000.00")
 _CUOTA = Decimal("210.00")
@@ -188,7 +189,7 @@ def test_the_suplido_converts_to_euro_with_the_rest_of_the_invoice() -> None:
         currency="USD",
         fx_rate=Decimal("0.90"),
         fx_rate_date=date(2026, 3, 15),
-        fx_rate_source=ECB_RATE_SOURCE_ID,
+        fx_rate_source=_FX_RATE_SOURCE_ID,
     )
 
     assert invoice.suplido_amount_eur == Decimal("54.00")

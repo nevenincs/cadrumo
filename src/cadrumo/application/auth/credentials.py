@@ -19,7 +19,7 @@ from ..auth_credentials import (
 from ..workflow.persistence import workflow_state_repository
 from ..workflow.profile_bucket_scan import resolve_profile_bucket
 from ..workflow.state_models import WorkflowState
-from .certificate_secret_backend import SecureStorageCertificateSecretBackend
+from .certificate_secret_backend import CertificateSecretBackendFactory
 from .certificate_sources import active_certificate_source
 from .operator_scope import active_profile_storage_span
 
@@ -28,17 +28,19 @@ def resolve_certificate_source_secret(
     *,
     name: str,
     bucket_id: str,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     settings: Settings | None = None,
 ) -> SecretStr | None:
     """Return the passphrase registered for certificate source ``name``."""
-    backend = SecureStorageCertificateSecretBackend(bucket_id=bucket_id, settings=settings)
-    return backend.get(name)
+    resolved_settings = settings or load_settings()
+    return certificate_secret_backend_factory(bucket_id=bucket_id, settings=resolved_settings).get(name)
 
 
 def _resolve_named_certificate_source_secret(
     *,
     name: str,
     bucket_id: str,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     settings: Settings,
 ) -> SecretStr | None:
     """Resolve one named secret through secure storage, failing closed on read errors."""
@@ -46,6 +48,7 @@ def _resolve_named_certificate_source_secret(
         return resolve_certificate_source_secret(
             name=name,
             bucket_id=bucket_id,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
             settings=settings,
         )
     except (OSError, CadrumoError):
@@ -77,6 +80,7 @@ def _resolve_witnessed_certificate_credentials(
     state: WorkflowState,
     *,
     bucket_id: str,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     settings: Settings,
 ) -> ActiveCertificateCredentials:
     """Bind a secret to certificate metadata loaded from the witnessed bucket."""
@@ -86,6 +90,7 @@ def _resolve_witnessed_certificate_credentials(
     password = _resolve_named_certificate_source_secret(
         name=credentials.source_name,
         bucket_id=bucket_id,
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
         settings=settings,
     )
     return credentials.model_copy(update={"password": password})
@@ -122,6 +127,7 @@ def _witnessed_auth_projection_snapshot(
     state: WorkflowState,
     *,
     bucket_id: str,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     requested_provider: str | None,
     fallback_provider: str | None,
     settings: Settings,
@@ -132,6 +138,7 @@ def _witnessed_auth_projection_snapshot(
         _resolve_witnessed_certificate_credentials(
             state,
             bucket_id=bucket_id,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
             settings=settings,
         )
         if provider is AuthProviderKind.CERTIFICATE
@@ -148,6 +155,7 @@ def _witnessed_auth_projection_snapshot(
 @contextmanager
 def active_auth_projection_span(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     settings: Settings | None = None,
     requested_provider: str | None = None,
     fallback_provider: str | None = None,
@@ -190,6 +198,7 @@ def active_auth_projection_span(
             yield _witnessed_auth_projection_snapshot(
                 state,
                 bucket_id=bucket_id,
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
                 requested_provider=requested_provider,
                 fallback_provider=fallback_provider,
                 settings=resolved,
@@ -198,6 +207,7 @@ def active_auth_projection_span(
 
 def resolve_active_provider_kind(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     settings: Settings | None = None,
     requested_provider: str | None = None,
     fallback_provider: str | None = None,
@@ -220,6 +230,7 @@ def resolve_active_provider_kind(
     """
     with active_auth_projection_span(
         settings=settings or load_settings(),
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
         requested_provider=requested_provider,
         fallback_provider=fallback_provider,
     ) as snapshot:
@@ -228,12 +239,14 @@ def resolve_active_provider_kind(
 
 def resolve_active_certificate_credentials(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     settings: Settings | None = None,
 ) -> ActiveCertificateCredentials:
     """Resolve the exact certificate credential selected for the active profile."""
     resolved = settings or load_settings()
     try:
         with active_auth_projection_span(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
             settings=resolved,
             requested_provider="certificate",
         ) as snapshot:

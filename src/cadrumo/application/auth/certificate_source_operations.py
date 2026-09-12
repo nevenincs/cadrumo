@@ -48,7 +48,7 @@ from ..auth_credentials import (
     ActiveCertificateCredentials,
 )
 from ._mutation import AuthBucketEventSpec, build_auth_bucket_events
-from .certificate_secret_backend import SecureStorageCertificateSecretBackend
+from .certificate_secret_backend import CertificateSecretBackend, CertificateSecretBackendFactory
 from .certificate_sources import (
     active_certificate_source,
     auth_state,
@@ -332,7 +332,11 @@ def remove_operator_certificate_source(*, name: str) -> CertificateSourceMutatio
     return CertificateSourceMutationResult(name=name.strip(), removed=removed)
 
 
-def check_operator_certificate_sources(*, settings: Settings | None = None) -> CertificateSourceCheckReport:
+def check_operator_certificate_sources(
+    *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    settings: Settings | None = None,
+) -> CertificateSourceCheckReport:
     """Classify expiry/rotation health for every registered certificate source.
 
     Reuses the same local PKCS#12 probe
@@ -382,6 +386,7 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
                 per_source_secret = resolve_certificate_source_secret(
                     name=record.name,
                     bucket_id=active_bucket_id,
+                    certificate_secret_backend_factory=certificate_secret_backend_factory,
                     settings=resolved_settings,
                 )
             except (OSError, CadrumoError):
@@ -417,6 +422,7 @@ def set_operator_certificate_source_secret(
     *,
     name: str,
     secret: SecretStr,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
 ) -> CertificateSourceSecretMutationResult:
     """Set (or rotate) the passphrase for a registered certificate source.
 
@@ -442,7 +448,7 @@ def set_operator_certificate_source_secret(
 
     normalized_name = name.strip()
     with _certificate_mutation_span(resume_certificate_secret=True) as active_bucket_id:
-        backend = SecureStorageCertificateSecretBackend(bucket_id=active_bucket_id)
+        backend = certificate_secret_backend_factory(bucket_id=active_bucket_id, settings=load_settings())
         repository = workflow_state_repository()
         intent = _prepare_certificate_secret_mutation(
             repository=repository,
@@ -468,7 +474,11 @@ def set_operator_certificate_source_secret(
     )
 
 
-def remove_operator_certificate_source_secret(*, name: str) -> CertificateSourceSecretMutationResult:
+def remove_operator_certificate_source_secret(
+    *,
+    name: str,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+) -> CertificateSourceSecretMutationResult:
     """Remove the persisted passphrase for a registered certificate source.
 
     A ``name`` with no registered secret is a no-op (``removed=False``),
@@ -490,7 +500,7 @@ def remove_operator_certificate_source_secret(*, name: str) -> CertificateSource
     with _certificate_mutation_span(resume_certificate_secret=True) as active_bucket_id:
         from ..workflow.persistence import workflow_state_repository
 
-        backend = SecureStorageCertificateSecretBackend(bucket_id=active_bucket_id)
+        backend = certificate_secret_backend_factory(bucket_id=active_bucket_id, settings=load_settings())
         repository = workflow_state_repository()
         intent = _prepare_certificate_secret_mutation(
             repository=repository,
@@ -522,7 +532,7 @@ def _auth_state_certificate_sources(state: WorkflowState) -> dict[str, object]:
 def _pending_intent_resumes(
     existing: CertificateSecretMutationIntent,
     *,
-    backend: SecureStorageCertificateSecretBackend,
+    backend: CertificateSecretBackend,
     source_name: str,
     removing: bool,
     secret: SecretStr | None,
@@ -552,7 +562,7 @@ def _pending_intent_resumes(
 
 def _new_certificate_secret_mutation_intent(
     *,
-    backend: SecureStorageCertificateSecretBackend,
+    backend: CertificateSecretBackend,
     active_bucket_id: str,
     source_name: str,
     removing: bool,
@@ -588,7 +598,7 @@ def _new_certificate_secret_mutation_intent(
 def _prepare_certificate_secret_mutation(
     *,
     repository: WorkflowStateRepository,
-    backend: SecureStorageCertificateSecretBackend,
+    backend: CertificateSecretBackend,
     active_bucket_id: str,
     source_name: str,
     removing: bool,
@@ -643,7 +653,7 @@ def _prepare_certificate_secret_mutation(
 def _complete_certificate_secret_mutation(
     *,
     repository: WorkflowStateRepository,
-    backend: SecureStorageCertificateSecretBackend,
+    backend: CertificateSecretBackend,
     intent: CertificateSecretMutationIntent,
     secret: SecretStr | None,
 ) -> None:

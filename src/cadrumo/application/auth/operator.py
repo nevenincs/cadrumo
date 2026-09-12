@@ -36,6 +36,7 @@ from ...core.auth_provider import AuthProviderKind
 from ...core.config import Settings, load_settings
 from ...core.time.clock import now
 from ..auth_credentials import ActiveCertificateCredentials
+from .certificate_secret_backend import CertificateSecretBackendFactory
 from ._mutation import AuthBucketEventSpec as _BucketEventSpec
 from ._mutation import build_auth_bucket_events as _build_bucket_events
 from .actions import update_auth
@@ -684,6 +685,7 @@ def _revocation_storage_span(
 
 def logout_operator_auth(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     provider: str | None = None,
     all_providers: bool = False,
     target_bucket_id: str | None = None,
@@ -693,6 +695,7 @@ def logout_operator_auth(
     if settings is not None:
         with _revocation_storage_span(settings, target_bucket_id=target_bucket_id):
             return logout_operator_auth(
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
                 provider=provider,
                 all_providers=all_providers,
                 target_bucket_id=target_bucket_id,
@@ -727,6 +730,7 @@ def logout_operator_auth(
                     all_providers=all_providers,
                 )
                 intent = build_auth_cleanup_intent(
+                    certificate_secret_backend_factory=certificate_secret_backend_factory,
                     settings=resolved_settings,
                     bucket_id=bucket_id,
                     auth=state.auth,
@@ -834,6 +838,7 @@ def logout_operator_auth(
 
 def reset_operator_auth(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     provider: str | None = None,
     all_providers: bool = False,
     target_bucket_id: str | None = None,
@@ -843,6 +848,7 @@ def reset_operator_auth(
     if settings is not None:
         with _revocation_storage_span(settings, target_bucket_id=target_bucket_id):
             return reset_operator_auth(
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
                 provider=provider,
                 all_providers=all_providers,
                 target_bucket_id=target_bucket_id,
@@ -877,6 +883,7 @@ def reset_operator_auth(
                     all_providers=all_providers,
                 )
                 intent = build_auth_cleanup_intent(
+                    certificate_secret_backend_factory=certificate_secret_backend_factory,
                     settings=resolved_settings,
                     bucket_id=bucket_id,
                     auth=state.auth,
@@ -928,8 +935,10 @@ def reset_operator_auth(
                 allow_held=True,
             )
             delete_certificate_source_secrets(
-                bucket_id,
-                intent.secret_source_names,
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
+                settings=resolved_settings,
+                bucket_id=bucket_id,
+                names=intent.secret_source_names,
             )
 
             final_effects: dict[str, tuple[str, ...]] = {}
