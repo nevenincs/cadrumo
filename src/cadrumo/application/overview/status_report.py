@@ -24,6 +24,7 @@ from .calendar_models import (
 
 if TYPE_CHECKING:
     from ..state_projection import OperatorStateProjection
+    from ..state_projection_ports import StateProjectionReadPorts
     from ..workflow.state_models import WorkflowState
 
 _log = _get_logger(__name__)
@@ -181,6 +182,7 @@ def overview_status_report_from_projection(
 
 def build_overview_status_report(
     *,
+    read_ports: StateProjectionReadPorts,
     state: WorkflowState | None = None,
     raw_values: Mapping[str, object] | None = None,
 ) -> OverviewStatusReport:
@@ -196,5 +198,5 @@ def build_overview_status_report(
     """
     from ..state_projection import build_operator_state_projection
 
-    projection = build_operator_state_projection(state=state)
+    projection = build_operator_state_projection(state=state, read_ports=read_ports)
     return overview_status_report_from_projection(projection, raw_values=raw_values)
