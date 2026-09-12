@@ -12,11 +12,11 @@ from pathlib import Path
 from typing import Final, cast
 
 from babel.messages.pofile import read_po
-from spylls.hunspell import Dictionary
 
 from cadrumo.core.i18n.render import extract_placeholders
 from dev._paths import REPO_ROOT, UTF_8
 
+from ._spelling import SpellingToolError, load_dictionaries
 from ._status import CatalogueLeafState, classify_catalogue_leaf
 from .manager import (
     LocaleManager,
@@ -114,6 +114,7 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
         + source_inventory["unread_or_invalid_sources"]
         + parallel_inventory["parallel_localization_declarations"]
         + parallel_inventory["invalid_data_files"]
+        + spelling_inventory["spelling_tool_failures"]
         + len(unresolved_families)
         + len(discovery_findings)
     )
@@ -294,37 +295,6 @@ def _spellcheck_catalogues(
     additional_values: dict[str, dict[str, str]] | None = None,
 ) -> tuple[dict[tuple[str, str], tuple[str, ...]], dict[str, int], list[dict[str, object]]]:
     """Check authored prose with pinned Hunspell dictionaries through spylls."""
-    dictionary_roots = {
-        locale: repository / "node_modules" / package / "index"
-        for locale, package in {
-            "ca": "dictionary-ca",
-            "en": "dictionary-en-gb",
-            "es": "dictionary-es",
-            "hu": "dictionary-hu",
-        }.items()
-    }
-    if any(
-        not root.with_suffix(".aff").is_file() or not root.with_suffix(".dic").is_file()
-        for root in dictionary_roots.values()
-    ):
-        return (
-            {},
-            {
-                "spellchecked_cells": 0,
-                "spelling_unknown_cells": 0,
-                "spelling_unknown_words": 0,
-                "spelling_tool_failures": 1,
-            },
-            [
-                {
-                    "classification": "blocking",
-                    "kind": "spelling_tool_unavailable",
-                    "detail": "one or more pinned Hunspell dictionaries are unavailable",
-                    "next_action": "run just setup-locale-spelling to restore the pinned dictionaries",
-                }
-            ],
-        )
-
     unknown_by_cell: dict[tuple[str, str], set[str]] = defaultdict(set)
     keys_by_word: dict[str, dict[str, set[str]]] = {}
     checked_cells = 0
@@ -341,15 +311,24 @@ def _spellcheck_catalogues(
             for word in words:
                 locale_words[word].add(key)
         keys_by_word[locale] = locale_words
+    unknown_words: set[tuple[str, str]] = set()
     try:
-        dictionaries = {locale: Dictionary.from_files(str(root)) for locale, root in dictionary_roots.items()}
-    except (OSError, UnicodeError, ValueError) as exc:
+        dictionaries = load_dictionaries(repository)
+        for locale, words in keys_by_word.items():
+            dictionary = dictionaries[locale]
+            for word, keys in words.items():
+                if dictionary.lookup(word):
+                    continue
+                unknown_words.add((locale, word.casefold()))
+                for key in keys:
+                    unknown_by_cell[(locale, key)].add(word)
+    except SpellingToolError as exc:
         failure = {
             "classification": "blocking",
-            "kind": "spelling_tool_failure",
+            "kind": exc.kind,
             "error_type": type(exc).__name__,
-            "detail": str(exc),
-            "next_action": "repair the pinned spylls invocation or Hunspell dictionary",
+            "detail": exc.detail,
+            "next_action": exc.next_action,
         }
         return (
             {},
@@ -361,15 +340,6 @@ def _spellcheck_catalogues(
             },
             [failure],
         )
-    unknown_words: set[tuple[str, str]] = set()
-    for locale, words in keys_by_word.items():
-        dictionary = dictionaries[locale]
-        for word, keys in words.items():
-            if dictionary.lookup(word):
-                continue
-            unknown_words.add((locale, word.casefold()))
-            for key in keys:
-                unknown_by_cell[(locale, key)].add(word)
     return (
         {cell: tuple(sorted(words, key=str.casefold)) for cell, words in unknown_by_cell.items()},
         {
@@ -461,17 +431,17 @@ def _translation_matrix(
 def _translation_tokens(value: str) -> tuple[frozenset[str], frozenset[str]]:
     """Return expansion placeholders and bracketed casilla references."""
     bracketed = re.findall(r"\[([^\[\]\r\n]+)\]", value)
-    references = frozenset(
-        token
-        for token in bracketed
-        if token.isdecimal()
-        or (
-            not any(character.isspace() for character in token)
-            and any(operator in token for operator in "=+-*/")
-            and re.fullmatch(r"[A-Za-z0-9_.+*/=-]+", token)
-        )
-    )
+    references = frozenset(token for token in bracketed if _is_bracket_reference(token))
     return extract_placeholders(value), references
+
+
+def _is_bracket_reference(token: str) -> bool:
+    """Whether a bracketed token is a casilla number or compact formula expression."""
+    return token.isdecimal() or bool(
+        not any(character.isspace() for character in token)
+        and any(operator in token for operator in "=+-*/")
+        and re.fullmatch(r"[A-Za-z0-9_.+*/=-]+", token)
+    )
 
 
 def _suspicious_translation_locales(
@@ -514,7 +484,12 @@ def _human_translation_text(value: str) -> str:
     placeholder parity and rendering checks.
     """
     without_placeholders = _TRANSLATION_PLACEHOLDER_RE.sub(" ", value)
-    without_code = _TRANSLATION_CODE_RE.sub(" ", without_placeholders)
+    without_references = re.sub(
+        r"\[([^\[\]\r\n]+)\]",
+        lambda match: " " if _is_bracket_reference(match.group(1)) else match.group(0),
+        without_placeholders,
+    )
+    without_code = _TRANSLATION_CODE_RE.sub(" ", without_references)
     return " ".join(without_code.casefold().split())
 
 
@@ -602,7 +577,8 @@ def _parallel_localization_inventory(
                 counts["parallel_localization_cells"] += 1
                 if spelling_values is not None:
                     locale = match.group(2)
-                    spelling_values.setdefault(locale, {})[f"parallel:{path.relative_to(repository)}:{dotted}"] = value
+                    relative = path.relative_to(repository).as_posix()
+                    spelling_values.setdefault(locale, {})[f"parallel:{relative}:{dotted}"] = value
         for base, present in sorted(suffix_groups.items()):
             for locale in sorted(set(_LOCALES) - present):
                 counts["parallel_localization_declarations"] += 1
@@ -624,9 +600,10 @@ def _parallel_localization_inventory(
                     counts["parallel_localization_cells"] += 1
                     if isinstance(value, str) and value.strip():
                         if spelling_values is not None:
-                            spelling_values.setdefault(locale, {})[
-                                f"parallel:{path.relative_to(repository)}:language.{locale}.{field}"
-                            ] = value
+                            relative = path.relative_to(repository).as_posix()
+                            spelling_values.setdefault(locale, {})[f"parallel:{relative}:language.{locale}.{field}"] = (
+                                value
+                            )
                         continue
                     counts["parallel_localization_declarations"] += 1
                     findings.append(
@@ -638,7 +615,7 @@ def _parallel_localization_inventory(
         try:
             with path.open(encoding=UTF_8) as handle:
                 messages = [message for message in read_po(handle) if message.id]
-        except (OSError, UnicodeError) as exc:
+        except (OSError, UnicodeError, ValueError) as exc:
             counts["invalid_data_files"] += 1
             findings.append(_data_finding("invalid_localization_data", path, "", type(exc).__name__))
             continue
@@ -647,13 +624,18 @@ def _parallel_localization_inventory(
         catalogue = str(Path(*relative.parts[2:]))
         for message in messages:
             message_id = message.id if isinstance(message.id, str) else "\x04".join(message.id)
-            translated = bool(message.string) and "fuzzy" not in message.flags
+            translations = _po_translation_strings(message.string)
+            translated = (
+                bool(translations) and all(value.strip() for value in translations) and "fuzzy" not in message.flags
+            )
             docs_messages[(catalogue, message_id)][locale] = translated
             counts["parallel_localization_cells"] += 1
-            if spelling_values is not None and translated and isinstance(message.string, str):
-                spelling_values.setdefault(locale, {})[f"parallel:{path.relative_to(repository)}:{message_id}"] = (
-                    message.string
-                )
+            if spelling_values is not None and translated:
+                for index, value in enumerate(translations):
+                    cell = f"parallel:{path.relative_to(repository).as_posix()}:{message_id}"
+                    if len(translations) > 1:
+                        cell = f"{cell}:plural[{index}]"
+                    spelling_values.setdefault(locale, {})[cell] = value
     for (catalogue, message_id), states in docs_messages.items():
         for locale in ("ca", "es", "hu"):
             if states.get(locale):
@@ -669,6 +651,15 @@ def _parallel_localization_inventory(
         "parallel_localization_cells": counts["parallel_localization_cells"],
         "invalid_data_files": counts["invalid_data_files"],
     }, findings
+
+
+def _po_translation_strings(value: object) -> tuple[str, ...]:
+    """Return every gettext translation form without treating an empty plural tuple as complete."""
+    if isinstance(value, str):
+        return (value,)
+    if isinstance(value, tuple) and all(isinstance(item, str) for item in value):
+        return value
+    return ()
 
 
 def _domain_summaries(

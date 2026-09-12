@@ -87,6 +87,7 @@ def build_import_health(
         ("expired", "expired debt occurrence(s)"),
         ("malformed", "malformed ratchet entry or occurrence(s)"),
         ("regressed_retired", "retired occurrence regression(s)"),
+        ("retirement_candidates", "disappeared occurrence(s) without verified composition evidence"),
     ):
         count = int(ratchet["counts"][key])
         if count:
@@ -94,9 +95,7 @@ def build_import_health(
     if graph["contracts_broken"] and not candidate["summary"]["contract_occurrences"]:
         failed_reasons.append("broken graph contracts have no attributable direct occurrence")
 
-    debt_total = int(ratchet["counts"]["approved_active"]) + int(
-        ratchet["counts"]["retirement_candidates"]
-    ) + int(ratchet["counts"]["retirement_ready"])
+    debt_total = int(ratchet["counts"]["approved_active"]) + int(ratchet["counts"]["retirement_ready"])
     if operational_reasons:
         verdict = "failed"
         classification = "tool_failure"
@@ -235,7 +234,10 @@ def unavailable_import_health(reason: str) -> dict[str, object]:
         "advisories": {"by_code": {}, "total": 0},
         "candidate_inventory": {
             "advisory_by_contract": {},
+            "advisory_by_lane_pair": {},
+            "advisory_non_test_scoped_occurrences": 0,
             "advisory_occurrences": 0,
+            "advisory_test_scoped_occurrences": 0,
             "advisory_unique_occurrences": 0,
             "artifact": None,
             "by_contract": {},
@@ -345,6 +347,12 @@ def _candidate_inventory(authority: Authority, occurrences: tuple[ImportOccurren
     advisory = tuple(occurrence for occurrence in occurrences if occurrence.contract.startswith("advisory:"))
     rows, summary = _occurrence_inventory(authority, hard)
     advisory_rows, advisory_summary = _occurrence_inventory(authority, advisory)
+    advisory_lane_pairs: Counter[str] = Counter()
+    for row in advisory_rows:
+        source_lane = _adapter_top_level(str(row["source_module"]))
+        target_lane = _adapter_top_level(str(row["target_module"]))
+        if source_lane is not None and target_lane is not None:
+            advisory_lane_pairs[f"{source_lane} -> {target_lane}"] += int(row["multiplicity"])
     return {
         "advisory_occurrences": advisory_rows,
         "generated_at": datetime.now(tz=UTC).isoformat(),
@@ -353,7 +361,10 @@ def _candidate_inventory(authority: Authority, occurrences: tuple[ImportOccurren
         "summary": {
             **summary,
             "advisory_by_contract": advisory_summary["by_contract"],
+            "advisory_by_lane_pair": dict(sorted(advisory_lane_pairs.items())),
+            "advisory_non_test_scoped_occurrences": advisory_summary["non_test_scoped_occurrences"],
             "advisory_occurrences": advisory_summary["contract_occurrences"],
+            "advisory_test_scoped_occurrences": advisory_summary["test_scoped_occurrences"],
             "advisory_unique_occurrences": advisory_summary["unique_contract_occurrences"],
         },
     }
@@ -516,7 +527,7 @@ def _reconcile_ratchet(repository: Path, candidate: dict[str, object]) -> dict[s
             if observed:
                 counts["regressed_retired"] += observed
                 details["regressed_retired"].append(fingerprint)
-            elif _valid_retirement(raw.get("retirement")):
+            elif _valid_retirement(raw.get("retirement"), repository, str(raw["capability"])):
                 counts["retired_verified"] += allowed
             else:
                 counts["malformed"] += allowed
@@ -531,7 +542,7 @@ def _reconcile_ratchet(repository: Path, candidate: dict[str, object]) -> dict[s
             details["expanded_existing"].append(fingerprint)
         elif observed < allowed:
             missing = allowed - observed
-            if _valid_retirement(raw.get("retirement")):
+            if _valid_retirement(raw.get("retirement"), repository, str(raw["capability"])):
                 counts["retirement_ready"] += missing
                 details["retirement_ready"].append(fingerprint)
             else:
@@ -601,7 +612,8 @@ def _validate_ratchet_entry(entry: dict[str, object]) -> str | None:
     return None
 
 
-def _valid_retirement(raw: object) -> bool:
+def _valid_retirement(raw: object, repository: Path, capability: str) -> bool:
+    """Verify a digest-bound clean report from the separate composition signal."""
     if not isinstance(raw, dict):
         return False
     required = ("composition_proof", "evidence_digest", "verified_at")
@@ -610,12 +622,63 @@ def _valid_retirement(raw: object) -> bool:
     matrix = raw.get("capability_matrix")
     if not isinstance(matrix, dict) or not matrix:
         return False
-    return all(value in {"required", "optional", "unsupported"} for value in matrix.values())
+    if not all(value in {"required", "optional", "unsupported"} for value in matrix.values()):
+        return False
+    try:
+        datetime.fromisoformat(str(raw["verified_at"]).replace("Z", "+00:00"))
+        proof = (repository / str(raw["composition_proof"])).resolve()
+        proof.relative_to(repository.resolve())
+        content = proof.read_bytes()
+        if hashlib.sha256(content).hexdigest() != raw["evidence_digest"]:
+            return False
+        report = json.loads(content)
+    except (OSError, ValueError, TypeError, json.JSONDecodeError):
+        return False
+    if not isinstance(report, dict):
+        return False
+    if (
+        report.get("schema_version") != 1
+        or report.get("event") != "composition_integrity"
+        or report.get("verdict") != "clean"
+        or report.get("capability") != capability
+        or report.get("capability_matrix") != matrix
+    ):
+        return False
+    entrypoints = report.get("entrypoints")
+    if not isinstance(entrypoints, dict) or set(entrypoints) != set(matrix):
+        return False
+    for entrypoint, applicability in matrix.items():
+        expected = "unsupported" if applicability == "unsupported" else "verified"
+        if entrypoints.get(entrypoint) != expected:
+            return False
+    checks = report.get("vertical_slice_checks")
+    required_checks = {
+        "application_has_no_concrete_adapter_import",
+        "capability_port_owned_inward",
+        "port_is_capability_level",
+        "dependency_required_at_use_case_boundary",
+        "dependency_propagates_internally",
+        "no_concrete_infrastructure_default",
+        "no_global_service_locator",
+        "applicable_entrypoints_bind_implementation",
+        "unsupported_entrypoints_declared",
+        "adapter_dtos_and_errors_stay_outward",
+        "integration_tests_live_at_outer_seam",
+        "real_binding_composition_proof",
+    }
+    return isinstance(checks, dict) and set(checks) == required_checks and all(checks.values())
 
 
 def _module_is_test_scoped(module: str) -> bool:
     parts = module.split(".")
     return "tests" in parts or any(part.startswith("test_") or part.endswith("_test") for part in parts)
+
+
+def _adapter_top_level(module: str) -> str | None:
+    prefix = "cadrumo.adapters."
+    if not module.startswith(prefix):
+        return None
+    return module.removeprefix(prefix).partition(".")[0] or None
 
 
 def _headline(

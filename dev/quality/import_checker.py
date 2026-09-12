@@ -668,8 +668,9 @@ class _OccurrenceVisitor(ast.NodeVisitor):
             )
             if target_node is not None:
                 targets = self.context.values_for(target_node, node.lineno)
+                exhaustive_census = False
                 if targets is None or not targets:
-                    targets = _metadata_target_set_targets(
+                    targets, exhaustive_census = _metadata_target_set_targets(
                         target_node,
                         node.lineno,
                         self.module,
@@ -683,7 +684,7 @@ class _OccurrenceVisitor(ast.NodeVisitor):
                         self.context,
                         self.closed_attribute_targets,
                     )
-                for target in sorted(targets or ()):
+                for target in sorted(() if exhaustive_census else targets or ()):
                     resolved = _dynamic_target(self.module, target, node, self.context)
                     if resolved and resolved in self.known and _is_first_party(resolved, self.authority.root_names):
                         self._record(resolved, (), node.lineno, "dynamic")
@@ -1181,8 +1182,11 @@ def _check_dynamic_imports(
                 continue
             targets = context.values_for(target_node, node.lineno)
             metadata_backed = False
+            exhaustive_census = False
             if targets is None or not targets:
-                targets = _metadata_target_set_targets(target_node, node.lineno, module, context, authority.repository)
+                targets, exhaustive_census = _metadata_target_set_targets(
+                    target_node, node.lineno, module, context, authority.repository
+                )
                 metadata_backed = targets is not None
             computed_projection = metadata_backed
             if targets is None or not targets:
@@ -1239,7 +1243,16 @@ def _check_dynamic_imports(
                             advisory=True,
                         )
                     )
-                _check_private(module, resolved, resolved.rsplit(".", 1)[-1], modules, authority, findings, node.lineno)
+                if not exhaustive_census:
+                    _check_private(
+                        module,
+                        resolved,
+                        resolved.rsplit(".", 1)[-1],
+                        modules,
+                        authority,
+                        findings,
+                        node.lineno,
+                    )
                 if resolved not in known:
                     findings.append(
                         Finding(
@@ -1384,7 +1397,7 @@ def _metadata_target_set_targets(
     module: _Module,
     context: _EvaluationContext,
     repository: Path,
-) -> frozenset[str] | None:
+) -> tuple[frozenset[str] | None, bool]:
     """Resolve a generic declared-metadata target-set loader call.
 
     The loader's checked-in JSON is the finite authority.  This deliberately
@@ -1393,6 +1406,7 @@ def _metadata_target_set_targets(
     """
     targets: set[str] = set()
     resolved_any = False
+    exhaustive = False
     for candidate in _metadata_target_set_candidate_nodes(target_node, lineno, context, set()):
         if not isinstance(candidate, ast.Call):
             continue
@@ -1402,24 +1416,25 @@ def _metadata_target_set_targets(
         path_node = _call_argument(candidate, "metadata_path", positional_index=0)
         paths = context.values_for(path_node, candidate.lineno)
         if paths is None:
-            return None
+            return None, False
         resolved_any = True
         try:
             for path in paths:
                 if loader == "all":
+                    exhaustive = True
                     targets.update(load_all_target_sets(path, repository=repository))
                 else:
                     set_node = _call_argument(candidate, "target_set", positional_index=1)
                     names = context.values_for(set_node, candidate.lineno)
                     if names is None:
-                        return None
+                        return None, False
                     for name in names:
                         targets.update(load_target_set(path, name, repository=repository))
         except MetadataTargetSetError:
-            return None
+            return None, False
         if len(targets) > _MAX_CLOSED_DYNAMIC_TARGETS:
-            return None
-    return frozenset(targets) if resolved_any and targets else None
+            return None, False
+    return (frozenset(targets) if resolved_any and targets else None), exhaustive
 
 
 def _metadata_target_set_candidate_nodes(

@@ -283,6 +283,11 @@ check-docstring-references:
 
 # ── Canonical code checks ────────────────────────────────────────────────────
 
+[doc('Regenerate the finite metadata authority used by the import loadability census.')]
+[group('generate')]
+generate-import-load-targets:
+    @uv run --no-sync python -m dev.quality.import_load_probe --compile-targets
+
 [doc('Verify import boundaries and import forms; read-only and blocking.')]
 [group('check')]
 [no-exit-message]

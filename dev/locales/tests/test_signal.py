@@ -8,8 +8,10 @@ from .._signal import (
     _domain_summaries,
     _dynamic_key_families,
     _headline,
+    _human_translation_text,
     _parallel_localization_inventory,
     _source_inventory,
+    _spellcheck_catalogues,
     _translation_matrix,
 )
 from ..manager import LocaleManager
@@ -98,6 +100,10 @@ def test_translation_matrix_refuses_dropped_expansion_and_casilla_tokens() -> No
             "next_action": "repair_translation",
         }
     ]
+
+
+def test_spelling_prose_excludes_long_casilla_and_formula_references() -> None:
+    assert _human_translation_text("Import de [00230] quan [base_total=casella1+casella2].") == "import de quan ."
 
 
 def test_domain_summary_enumerates_every_domain_and_unassigned_inventory() -> None:
@@ -251,3 +257,39 @@ def test_parallel_toml_inventory_reports_missing_cells_not_authored_values(tmp_p
 
     assert inventory["parallel_localization_declarations"] == 2
     assert {finding["field"] for finding in findings} == {"name_ca", "name_hu"}
+
+
+def test_parallel_inventory_enrols_toml_and_every_po_plural_form_for_spelling(tmp_path) -> None:
+    data = tmp_path / "src" / "cadrumo" / "_data"
+    data.mkdir(parents=True)
+    (data / "labels.toml").write_text("label_ca='Declaració tributària'\n", encoding="utf-8")
+    docs = tmp_path / "docs" / "locales" / "ca" / "LC_MESSAGES"
+    docs.mkdir(parents=True)
+    (docs / "guide.po").write_text(
+        'msgid ""\nmsgstr ""\n"Language: ca\\n"\n"Plural-Forms: nplurals=2; plural=(n != 1);\\n"\n\n'
+        'msgid "One return"\nmsgid_plural "Many returns"\n'
+        'msgstr[0] "Una declaració"\nmsgstr[1] "Moltes declaracions"\n',
+        encoding="utf-8",
+    )
+    values: dict[str, dict[str, str]] = {}
+
+    _parallel_localization_inventory(tmp_path, spelling_values=values)
+
+    assert values["ca"]["parallel:src/cadrumo/_data/labels.toml:label_ca"] == "Declaració tributària"
+    plural_values = {key: value for key, value in values["ca"].items() if "docs/locales/ca/LC_MESSAGES/guide.po" in key}
+    assert plural_values == {
+        "parallel:docs/locales/ca/LC_MESSAGES/guide.po:One return\x04Many returns:plural[0]": "Una declaració",
+        "parallel:docs/locales/ca/LC_MESSAGES/guide.po:One return\x04Many returns:plural[1]": "Moltes declaracions",
+    }
+
+
+def test_spellcheck_fails_closed_when_pinned_dictionaries_are_absent(tmp_path) -> None:
+    spelling, inventory, findings = _spellcheck_catalogues(
+        {"cli.title"},
+        {"ca": {"cli.title": "Declaració tributària"}},
+        tmp_path,
+    )
+
+    assert spelling == {}
+    assert inventory["spelling_tool_failures"] == 1
+    assert findings[0]["kind"] == "spelling_tool_unavailable"

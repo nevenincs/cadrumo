@@ -4,7 +4,8 @@ The driver has one fixed order:
 
 1. read and preflight the closed classification declared by Import Linter;
 2. run Import Linter's complete native graph/contracts;
-3. run the subordinate syntax/canonical/dynamic source checker.
+3. prove every governed non-test module loads;
+4. run the subordinate syntax/canonical/dynamic source checker.
 
 Import Linter remains the only dependency-direction authority.  The
 subordinate component is deliberately invoked here rather than exposed as a
@@ -315,8 +316,9 @@ def run_loadability(
         return ComponentResult("loadability", 0, output), payload
     if completed.returncode == FAILED:
         return ComponentResult("loadability", FAILED, output), payload
-    payload["operational_error"] = f"loadability probe exited unexpectedly with {completed.returncode}"
-    return ComponentResult("loadability", TOOL_BROKEN, output or str(payload["operational_error"])), payload
+    payload.setdefault("operational_error", f"loadability probe exited unexpectedly with {completed.returncode}")
+    diagnostic = str(payload["operational_error"])
+    return ComponentResult("loadability", TOOL_BROKEN, _combined_output(output, diagnostic)), payload
 
 
 def _read_checker_report(path: Path, authority: Authority) -> CheckResult:
@@ -399,6 +401,10 @@ def run_import_gate(
     linter = run_import_linter(authority, lint_executable, timeout)
     linter_seconds = time.perf_counter() - linter_started
     components.append(linter)
+    load_started = time.perf_counter()
+    load_component, loadability = run_loadability(authority, timeout=timeout)
+    load_seconds = time.perf_counter() - load_started
+    components.append(load_component)
     checker_started = time.perf_counter()
     subordinate, subordinate_result = run_subordinate(
         authority,
@@ -407,10 +413,6 @@ def run_import_gate(
     )
     checker_seconds = time.perf_counter() - checker_started
     components.append(subordinate)
-    load_started = time.perf_counter()
-    load_component, loadability = run_loadability(authority, timeout=timeout)
-    load_seconds = time.perf_counter() - load_started
-    components.append(load_component)
     source_snapshot_after = _source_snapshot(authority)
 
     health, exit_status = build_import_health(
@@ -448,6 +450,9 @@ def _source_snapshot(authority: Authority) -> str:
     ratchet = authority.repository / "dev" / "quality" / "metadata" / "import_boundary_ratchet.json"
     if ratchet.is_file():
         paths.add(ratchet)
+    quality_metadata = authority.repository / "dev" / "quality" / "metadata"
+    if quality_metadata.is_dir():
+        paths.update(quality_metadata.glob("*.json"))
     for path in sorted(paths, key=lambda item: item.as_posix()):
         try:
             stat = path.stat()
