@@ -90,7 +90,8 @@ def _judging[T](field: str, judge: Callable[[], T]) -> T:
     """Run a field validator, and name the field on the way out if it refuses.
 
     These validators judge a VALUE and say so: "country code must be an
-    ISO-3166 alpha-2 value", "tax identifier must be exactly 9 characters".
+    ISO-3166 alpha-2 value", "tax identifier must satisfy the
+    ``spanish-tax-identifier-format`` fact".
     None of them names the field, because none of them knows it -- the same
     country validator judges an issuer country elsewhere.
 

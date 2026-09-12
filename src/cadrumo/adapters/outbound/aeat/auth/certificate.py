@@ -42,7 +42,7 @@ from pydantic import BaseModel, Field, PrivateAttr, SecretStr
 
 from .....core.errors.hierarchy import AuthError
 from .....core.external_constants import UTF_8_ENCODING
-from .....core.identity.documents import IdentityError
+from .....core.identity.documents import IdentityDocument, IdentityError, validate_identity
 from .....core.identity.tax_id import validate_spanish_tax_id
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG
@@ -598,7 +598,6 @@ def health(
 _SERIAL_PREFIX_RE = re.compile(r"^IDCES-", re.IGNORECASE)
 _DNI_RE = re.compile(r"^[0-9]{7,8}[A-Z]$")
 _NIE_RE = re.compile(r"^[XYZ][0-9]{7}[A-Z]$")
-_CIF_RE = re.compile(r"^[ABCDEFGHJNPQRSUVW][0-9]{7}[0-9A-J]$")
 _TRAILING_NIF_RE = re.compile(r"([0-9]{7,8}[A-Z]|[XYZ][0-9]{7}[A-Z])\s*$", re.IGNORECASE)
 
 
@@ -674,7 +673,11 @@ def extract_nif_from_subject(cert: LoadedCertificate) -> str:
 
     for raw in _iter_rdn_values(subject, NameOID.SERIAL_NUMBER):
         candidate = _normalise_candidate(raw)
-        if _CIF_RE.match(candidate):
+        try:
+            identity_kind = validate_identity(candidate)
+        except IdentityError:
+            identity_kind = None
+        if identity_kind is IdentityDocument.CIF:
             raise CertificateNifParseError(
                 f"subject serialNumber {candidate!r} looks like a CIF "
                 "(legal-entity). This project supports individual taxpayer "
