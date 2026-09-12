@@ -459,7 +459,8 @@ class _PytestSummaryProcessor:
             )
         elif summaryless_load_failed:
             classification = "load_failure"
-            headline = f"{label} had {summaryless_load_failed} registry load lane(s) fail; inspect the typed load evidence."
+            headline = f"{label} had {summaryless_load_failed} registry load lane(s) fail;"
+            headline += " inspect the typed load evidence."
         elif self.lanes == 0:
             classification = "tool_failure"
             headline = f"{label} failed before any pytest invocation produced a terminal summary; inspect the run log."
