@@ -34,10 +34,12 @@ def profile_adapter_composition() -> Generator[None]:
         load_usage_ratios_with_censo_guard,
         save_usage_ratios,
     )
+    from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
     from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
     from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
     from cadrumo.adapters.persistence.workflow import build_workflow_persistence_port
     from cadrumo.application.auth.protocols import bind_session_store
+    from cadrumo.application.auth.certificate_secret_backend import bind_certificate_secret_backend_factory
     from cadrumo.application.auth.providers import bind_auth_provider_selector
     from cadrumo.application.bucket_event_repository import bind_bucket_event_history_repository_factory
     from cadrumo.application.ledger.column_roles import bind_column_role_mapping_resolver
@@ -62,6 +64,7 @@ def profile_adapter_composition() -> Generator[None]:
     from cadrumo.application.workflow.persistence import bind_workflow_persistence_port
 
     with ExitStack() as composition:
+        composition.enter_context(bind_certificate_secret_backend_factory(build_certificate_secret_backend))
         composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
         composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
         composition.enter_context(bind_workflow_persistence_port(build_workflow_persistence_port()))
