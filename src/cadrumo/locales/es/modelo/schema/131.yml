@@ -56,12 +56,12 @@ modelo:
               IAE de la actividad en estimación objetiva (módulos). Para los epígrafes
               659.4 y 691.9, que agrupan dos actividades distintas bajo un mismo código,
               use el sufijo "a" o "b" (p.ej. "659.4a", "691.9b") según la actividad
-              - consulte el parámetro de coeficientes m131-modulos-coeficientes-2024
-              para la asignación exacta.'
+              - consulte el parámetro de coeficientes m131-modulos-coeficientes para
+              la asignación exacta.'
             label: Epígrafe IAE de la actividad en estimación objetiva (módulos).
               Para los epígrafes 659.4 y 691.9, que agrupan dos actividades distintas
               bajo un mismo código, use el sufijo "a" o "b" (p.ej. "659.4a", "691.9b")
-              según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes-2024
+              según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes
               para la asignación exacta.
           irpf-pf-modulos-indice-inicio-actividad:
             help: 'Información de la casilla: Casilla modulos-indice-inicio-actividad:
@@ -228,7 +228,7 @@ modelo:
               label: Saldo negativo trasladable a periodos posteriores (max 0, -casilla
                 10)
           construct:
-            modelo-131-2019-2023-objective-estimation-instalment:
+            modelo-131-objective-estimation-instalment:
               field:
                 title: Modelo 131 objective-estimation instalment filing for 2019
                   to 2023
@@ -321,12 +321,12 @@ modelo:
               help: Epígrafe IAE de la actividad en estimación objetiva (módulos).
                 Para los epígrafes 659.4 y 691.9, que agrupan dos actividades distintas
                 bajo un mismo código, use el sufijo "a" o "b" (p.ej. "659.4a", "691.9b")
-                según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes-2024
+                según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes
                 para la asignación exacta.
               label: Epígrafe IAE de la actividad en estimación objetiva (módulos).
                 Para los epígrafes 659.4 y 691.9, que agrupan dos actividades distintas
                 bajo un mismo código, use el sufijo "a" o "b" (p.ej. "659.4a", "691.9b")
-                según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes-2024
+                según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes
                 para la asignación exacta.
             modulos-indice-inicio-actividad:
               help: 'Consulte la información correspondiente a la casilla: Índice
@@ -432,7 +432,7 @@ modelo:
               label: Saldo negativo trasladable a periodos posteriores (max 0, -casilla
                 10)
           construct:
-            modelo-131-2024-objective-estimation-instalment:
+            modelo-131-objective-estimation-instalment:
               field:
                 title: Modelo 131 objective-estimation instalment filing for 2024
           field:
@@ -524,12 +524,12 @@ modelo:
               help: Epígrafe IAE de la actividad en estimación objetiva (módulos).
                 Para los epígrafes 659.4 y 691.9, que agrupan dos actividades distintas
                 bajo un mismo código, use el sufijo "a" o "b" (p.ej. "659.4a", "691.9b")
-                según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes-2024
+                según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes
                 para la asignación exacta.
               label: Epígrafe IAE de la actividad en estimación objetiva (módulos).
                 Para los epígrafes 659.4 y 691.9, que agrupan dos actividades distintas
                 bajo un mismo código, use el sufijo "a" o "b" (p.ej. "659.4a", "691.9b")
-                según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes-2025
+                según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes
                 para la asignación exacta.
             modulos-indice-inicio-actividad:
               help: 'Consulte la información correspondiente a la casilla: Índice
@@ -635,7 +635,7 @@ modelo:
               label: Saldo negativo trasladable a periodos posteriores (max 0, -casilla
                 10)
           construct:
-            modelo-131-2025-objective-estimation-instalment:
+            modelo-131-objective-estimation-instalment:
               field:
                 title: Modelo 131 objective-estimation instalment filing for 2025
           field:
@@ -727,12 +727,12 @@ modelo:
               help: Epígrafe IAE de la actividad en estimación objetiva (módulos).
                 Para los epígrafes 659.4 y 691.9, que agrupan dos actividades distintas
                 bajo un mismo código, use el sufijo "a" o "b" (p.ej. "659.4a", "691.9b")
-                según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes-2024
+                según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes
                 para la asignación exacta.
               label: Epígrafe IAE de la actividad en estimación objetiva (módulos).
                 Para los epígrafes 659.4 y 691.9, que agrupan dos actividades distintas
                 bajo un mismo código, use el sufijo "a" o "b" (p.ej. "659.4a", "691.9b")
-                según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes-2026
+                según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes
                 para la asignación exacta.
             modulos-minoracion-inversion:
               help: 'Consulte la información correspondiente a la casilla: Minoración
@@ -774,7 +774,7 @@ modelo:
               label: Saldo negativo trasladable a periodos posteriores (max 0, -casilla
                 10)
           construct:
-            modelo-131-2026-objective-estimation-instalment:
+            modelo-131-objective-estimation-instalment:
               field:
                 title: Modelo 131 objective-estimation instalment filing for 2026
           field:

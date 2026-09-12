@@ -87,7 +87,7 @@ modelo:
                 a ingresar.'
               label: Resultado a ingresar
           construct:
-            modelo-123-2019-capital-withholding:
+            modelo-123-capital-withholding:
               field:
                 title: Modelo 123 historical quarterly capital-income withholding
                   filing

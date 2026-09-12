@@ -76,6 +76,9 @@ aggregation:
         has no prior-year especial register state for the affected sectors.
       prorrata_transition_contradictory_evidence: Prorrata especial transition entries
         contradict the declared transition.
+      prorrata_transition_declarations_unavailable: The selected Modelo 303 revision
+        declares no filing schedule or periodic carry binding, so the prorrata transition
+        period cannot be determined.
       prorrata_transition_entry_without_evidence: A prorrata especial transition entry
         carries no transition evidence.
       prorrata_transition_evidence_without_declared_transition: Prorrata especial

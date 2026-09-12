@@ -8896,38 +8896,38 @@ modelo:
                 2020” for this self-assessment.
               label: Non-exempt reduced capital gain imputable to 2020
           construct:
-            renta-2020-dependent-modelos:
-              field:
-                title: Modelo 100 2020 withholdings, instalment payments and withholding
-                  cross-modelo inputs
-            renta-2020-mini-model-actividades-economicas-directa:
-              field:
-                title: Model 100 2020 direct-assessment summary fields
-            renta-2020-mini-model-actividades-economicas-objetiva:
-              field:
-                title: Model 100 2020 objective-assessment summary fields
-            renta-2020-mini-model-base-y-cuota:
-              field:
-                title: Modelo 100 2020 base imponible / base net taxable / tax liability
-                  aggregators
-            renta-2020-mini-model-capital-inmobiliario:
-              field:
-                title: Model 100 2020 real-estate capital summary fields
-            renta-2020-mini-model-capital-mobiliario:
-              field:
-                title: Model 100 2020 movable-capital summary fields
-            renta-2020-mini-model-ganancias-patrimoniales:
-              field:
-                title: Modelo 100 2020 ganancias and perdidas patrimoniales aggregators
-            renta-2020-mini-model-regimenes-especiales:
-              field:
-                title: Modelo 100 2020 atribucion / imputacion of income aggregators
-            renta-2020-mini-model-trabajo:
-              field:
-                title: Modelo 100 2020 employment income aggregators
             renta-cuota-chain:
               field:
                 title: Modelo 100 tax liability-chain calculation
+            renta-dependent-modelos:
+              field:
+                title: Modelo 100 2020 withholdings, instalment payments and withholding
+                  cross-modelo inputs
+            renta-mini-model-actividades-economicas-directa:
+              field:
+                title: Model 100 2020 direct-assessment summary fields
+            renta-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Model 100 2020 objective-assessment summary fields
+            renta-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2020 base imponible / base net taxable / tax liability
+                  aggregators
+            renta-mini-model-capital-inmobiliario:
+              field:
+                title: Model 100 2020 real-estate capital summary fields
+            renta-mini-model-capital-mobiliario:
+              field:
+                title: Model 100 2020 movable-capital summary fields
+            renta-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2020 ganancias and perdidas patrimoniales aggregators
+            renta-mini-model-regimenes-especiales:
+              field:
+                title: Modelo 100 2020 atribucion / imputacion of income aggregators
+            renta-mini-model-trabajo:
+              field:
+                title: Modelo 100 2020 employment income aggregators
           field:
             label: Tax year 2020
         '2021':
@@ -16135,38 +16135,38 @@ modelo:
               help: Enter or review “Country code” for this self-assessment.
               label: Country code
           construct:
-            renta-2021-dependent-modelos:
-              field:
-                title: Modelo 100 2021 withholdings, instalment payments and withholding
-                  cross-modelo inputs
-            renta-2021-mini-model-actividades-economicas-directa:
-              field:
-                title: Model 100 2021 direct-assessment summary fields
-            renta-2021-mini-model-actividades-economicas-objetiva:
-              field:
-                title: Model 100 2021 objective-assessment summary fields
-            renta-2021-mini-model-base-y-cuota:
-              field:
-                title: Modelo 100 2021 base imponible / base net taxable / tax liability
-                  aggregators
-            renta-2021-mini-model-capital-inmobiliario:
-              field:
-                title: Model 100 2021 real-estate capital summary fields
-            renta-2021-mini-model-capital-mobiliario:
-              field:
-                title: Model 100 2021 movable-capital summary fields
-            renta-2021-mini-model-ganancias-patrimoniales:
-              field:
-                title: Modelo 100 2021 ganancias and perdidas patrimoniales aggregators
-            renta-2021-mini-model-regimenes-especiales:
-              field:
-                title: Modelo 100 2021 atribucion / imputacion of income aggregators
-            renta-2021-mini-model-trabajo:
-              field:
-                title: Modelo 100 2021 employment income aggregators
             renta-cuota-chain:
               field:
                 title: Modelo 100 tax liability-chain calculation
+            renta-dependent-modelos:
+              field:
+                title: Modelo 100 2021 withholdings, instalment payments and withholding
+                  cross-modelo inputs
+            renta-mini-model-actividades-economicas-directa:
+              field:
+                title: Model 100 2021 direct-assessment summary fields
+            renta-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Model 100 2021 objective-assessment summary fields
+            renta-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2021 base imponible / base net taxable / tax liability
+                  aggregators
+            renta-mini-model-capital-inmobiliario:
+              field:
+                title: Model 100 2021 real-estate capital summary fields
+            renta-mini-model-capital-mobiliario:
+              field:
+                title: Model 100 2021 movable-capital summary fields
+            renta-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2021 ganancias and perdidas patrimoniales aggregators
+            renta-mini-model-regimenes-especiales:
+              field:
+                title: Modelo 100 2021 atribucion / imputacion of income aggregators
+            renta-mini-model-trabajo:
+              field:
+                title: Modelo 100 2021 employment income aggregators
           field:
             label: Tax year 2021
         '2022':
@@ -24056,38 +24056,38 @@ modelo:
               label: Incremento for expenses in guarderías or centros of educación
                 infantil autorizados (amountis no aplicadas in the tax year 2021)
           construct:
-            renta-2022-dependent-modelos:
-              field:
-                title: Modelo 100 2022 withholdings, instalment payments and withholding
-                  cross-modelo inputs
-            renta-2022-mini-model-actividades-economicas-directa:
-              field:
-                title: Model 100 2022 direct-assessment summary fields
-            renta-2022-mini-model-actividades-economicas-objetiva:
-              field:
-                title: Model 100 2022 objective-assessment summary fields
-            renta-2022-mini-model-base-y-cuota:
-              field:
-                title: Modelo 100 2022 base imponible / base net taxable / tax liability
-                  aggregators
-            renta-2022-mini-model-capital-inmobiliario:
-              field:
-                title: Model 100 2022 real-estate capital summary fields
-            renta-2022-mini-model-capital-mobiliario:
-              field:
-                title: Model 100 2022 movable-capital summary fields
-            renta-2022-mini-model-ganancias-patrimoniales:
-              field:
-                title: Modelo 100 2022 ganancias and perdidas patrimoniales aggregators
-            renta-2022-mini-model-regimenes-especiales:
-              field:
-                title: Modelo 100 2022 atribucion / imputacion of income aggregators
-            renta-2022-mini-model-trabajo:
-              field:
-                title: Modelo 100 2022 employment income aggregators
             renta-cuota-chain:
               field:
                 title: Modelo 100 tax liability-chain calculation
+            renta-dependent-modelos:
+              field:
+                title: Modelo 100 2022 withholdings, instalment payments and withholding
+                  cross-modelo inputs
+            renta-mini-model-actividades-economicas-directa:
+              field:
+                title: Model 100 2022 direct-assessment summary fields
+            renta-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Model 100 2022 objective-assessment summary fields
+            renta-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2022 base imponible / base net taxable / tax liability
+                  aggregators
+            renta-mini-model-capital-inmobiliario:
+              field:
+                title: Model 100 2022 real-estate capital summary fields
+            renta-mini-model-capital-mobiliario:
+              field:
+                title: Model 100 2022 movable-capital summary fields
+            renta-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2022 ganancias and perdidas patrimoniales aggregators
+            renta-mini-model-regimenes-especiales:
+              field:
+                title: Modelo 100 2022 atribucion / imputacion of income aggregators
+            renta-mini-model-trabajo:
+              field:
+                title: Modelo 100 2022 employment income aggregators
           field:
             label: Tax year 2022
         '2023':
@@ -32343,38 +32343,38 @@ modelo:
                 by the taxpayer” for this self-assessment.'
               label: 'Adoption deduction: Amount pending to be claimed by the taxpayer'
           construct:
-            renta-2023-dependent-modelos:
-              field:
-                title: Modelo 100 2023 withholdings, instalment payments and withholding
-                  cross-modelo inputs
-            renta-2023-mini-model-actividades-economicas-directa:
-              field:
-                title: Model 100 2023 direct-assessment summary fields
-            renta-2023-mini-model-actividades-economicas-objetiva:
-              field:
-                title: Model 100 2023 objective-assessment summary fields
-            renta-2023-mini-model-base-y-cuota:
-              field:
-                title: Modelo 100 2023 base imponible / base net taxable / tax liability
-                  aggregators
-            renta-2023-mini-model-capital-inmobiliario:
-              field:
-                title: Model 100 2023 real-estate capital summary fields
-            renta-2023-mini-model-capital-mobiliario:
-              field:
-                title: Model 100 2023 movable-capital summary fields
-            renta-2023-mini-model-ganancias-patrimoniales:
-              field:
-                title: Modelo 100 2023 ganancias and perdidas patrimoniales aggregators
-            renta-2023-mini-model-regimenes-especiales:
-              field:
-                title: Modelo 100 2023 atribucion / imputacion of income aggregators
-            renta-2023-mini-model-trabajo:
-              field:
-                title: Modelo 100 2023 employment income aggregators
             renta-cuota-chain:
               field:
                 title: Modelo 100 tax liability-chain calculation
+            renta-dependent-modelos:
+              field:
+                title: Modelo 100 2023 withholdings, instalment payments and withholding
+                  cross-modelo inputs
+            renta-mini-model-actividades-economicas-directa:
+              field:
+                title: Model 100 2023 direct-assessment summary fields
+            renta-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Model 100 2023 objective-assessment summary fields
+            renta-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2023 base imponible / base net taxable / tax liability
+                  aggregators
+            renta-mini-model-capital-inmobiliario:
+              field:
+                title: Model 100 2023 real-estate capital summary fields
+            renta-mini-model-capital-mobiliario:
+              field:
+                title: Model 100 2023 movable-capital summary fields
+            renta-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2023 ganancias and perdidas patrimoniales aggregators
+            renta-mini-model-regimenes-especiales:
+              field:
+                title: Modelo 100 2023 atribucion / imputacion of income aggregators
+            renta-mini-model-trabajo:
+              field:
+                title: Modelo 100 2023 employment income aggregators
           field:
             label: Tax year 2023
         '2024':
@@ -40986,47 +40986,47 @@ modelo:
                 benefits” for this self-assessment.
               label: Tax-exempt INSS public maternity and paternity benefits
           construct:
-            renta-2024-anexo-c-base-liquidable-negativa-general:
+            renta-anexo-c-base-liquidable-negativa-general:
               field:
                 title: Modelo 100 Anexo C general net taxable base negativa carry-forward
-            renta-2024-dependent-modelos:
-              field:
-                title: Modelo 100 2024 withholdings, instalment payments and withholding
-                  cross-modelo inputs
-            renta-2024-final-settlement:
-              field:
-                title: Modelo 100 2024 end settlement result
-            renta-2024-mini-model-actividades-economicas-directa:
-              field:
-                title: Model 100 2024 direct-assessment summary fields
-            renta-2024-mini-model-actividades-economicas-objetiva:
-              field:
-                title: Model 100 2024 objective-assessment summary fields
-            renta-2024-mini-model-base-y-cuota:
-              field:
-                title: Modelo 100 2024 base imponible / base net taxable / tax liability
-                  aggregators
-            renta-2024-mini-model-capital-inmobiliario:
-              field:
-                title: Model 100 2024 real-estate capital summary fields
-            renta-2024-mini-model-capital-mobiliario:
-              field:
-                title: Model 100 2024 movable-capital summary fields
-            renta-2024-mini-model-ganancias-patrimoniales:
-              field:
-                title: Modelo 100 2024 ganancias and perdidas patrimoniales aggregators
-            renta-2024-mini-model-regimenes-especiales:
-              field:
-                title: Modelo 100 2024 atribucion / imputacion of income aggregators
-            renta-2024-mini-model-trabajo:
-              field:
-                title: Modelo 100 2024 employment income aggregators
-            renta-2024-personal-family:
-              field:
-                title: Model 100 2024 personal and family data
             renta-cuota-chain:
               field:
                 title: Modelo 100 tax liability-chain calculation
+            renta-dependent-modelos:
+              field:
+                title: Modelo 100 2024 withholdings, instalment payments and withholding
+                  cross-modelo inputs
+            renta-final-settlement:
+              field:
+                title: Modelo 100 2024 end settlement result
+            renta-mini-model-actividades-economicas-directa:
+              field:
+                title: Model 100 2024 direct-assessment summary fields
+            renta-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Model 100 2024 objective-assessment summary fields
+            renta-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2024 base imponible / base net taxable / tax liability
+                  aggregators
+            renta-mini-model-capital-inmobiliario:
+              field:
+                title: Model 100 2024 real-estate capital summary fields
+            renta-mini-model-capital-mobiliario:
+              field:
+                title: Model 100 2024 movable-capital summary fields
+            renta-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2024 ganancias and perdidas patrimoniales aggregators
+            renta-mini-model-regimenes-especiales:
+              field:
+                title: Modelo 100 2024 atribucion / imputacion of income aggregators
+            renta-mini-model-trabajo:
+              field:
+                title: Modelo 100 2024 employment income aggregators
+            renta-personal-family:
+              field:
+                title: Model 100 2024 personal and family data
           field:
             label: Tax year 2024
         '2025':
@@ -50444,29 +50444,6 @@ modelo:
                 benefits” for this self-assessment.
               label: Tax-exempt INSS public maternity and paternity benefits
           construct:
-            renta-2025-mini-model-actividades-economicas-objetiva:
-              field:
-                title: Model 100 2025 objective-assessment summary fields
-            renta-2025-mini-model-base-y-cuota:
-              field:
-                title: Modelo 100 2025 base imponible / base net taxable / tax liability
-                  aggregators
-            renta-2025-mini-model-capital-inmobiliario:
-              field:
-                title: Model 100 2025 real-estate capital summary fields
-            renta-2025-mini-model-capital-mobiliario:
-              field:
-                title: Model 100 2025 movable-capital summary fields
-            renta-2025-mini-model-deduccion-madrid-nacimiento-adopcion:
-              field:
-                title: Modelo 100 2025 Comunidad of Madrid nacimiento/adopción deduction
-                  (box 1039)
-            renta-2025-mini-model-ganancias-patrimoniales:
-              field:
-                title: Modelo 100 2025 ganancias and perdidas patrimoniales aggregators
-            renta-2025-mini-model-regimenes-especiales:
-              field:
-                title: Modelo 100 2025 atribucion / imputacion of income aggregators
             renta-anexo-c-base-liquidable-negativa-general:
               field:
                 title: Modelo 100 Anexo C general net taxable base negativa carry-forward
@@ -50482,6 +50459,29 @@ modelo:
             renta-final-settlement:
               field:
                 title: Modelo 100 end settlement result
+            renta-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Model 100 2025 objective-assessment summary fields
+            renta-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2025 base imponible / base net taxable / tax liability
+                  aggregators
+            renta-mini-model-capital-inmobiliario:
+              field:
+                title: Model 100 2025 real-estate capital summary fields
+            renta-mini-model-capital-mobiliario:
+              field:
+                title: Model 100 2025 movable-capital summary fields
+            renta-mini-model-deduccion-madrid-nacimiento-adopcion:
+              field:
+                title: Modelo 100 2025 Comunidad of Madrid nacimiento/adopción deduction
+                  (box 1039)
+            renta-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2025 ganancias and perdidas patrimoniales aggregators
+            renta-mini-model-regimenes-especiales:
+              field:
+                title: Modelo 100 2025 atribucion / imputacion of income aggregators
             renta-movable-capital:
               field:
                 title: Model 100 evidence of movable-capital dependencies

@@ -414,7 +414,7 @@ modelo:
               label: Additional information (5) - Amount corresponding to the Canary
                 Islands investment reserve
           construct:
-            modelo-202-2019-2022-foundation:
+            modelo-202-foundation:
               field:
                 title: Modelo 202— tax information
           field:
@@ -656,7 +656,7 @@ modelo:
               label: Additional information (5) - Amount corresponding to the Canary
                 Islands investment reserve
           construct:
-            modelo-202-2023-2024-foundation:
+            modelo-202-foundation:
               field:
                 title: Modelo 202— tax information
           field:

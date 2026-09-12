@@ -25,7 +25,7 @@ modelo:
               label: VAT output tax to destination DE - services supplied (Non-Union
                 scheme)
           construct:
-            modelo-369-esquema-exterior:
+            modelo-369:
               field:
                 title: Modelo 369 - Esquema Exterior (regime especial services prestados
                   by no establecidos)
@@ -47,7 +47,7 @@ modelo:
               label: IOSS VAT to destination DE - distance sales of imported goods
                 ≤ EUR 150 (LIVA art. 163 quinvicies)
           construct:
-            modelo-369-esquema-importacion:
+            modelo-369:
               field:
                 title: Modelo 369 - Esquema Importacion (regime especial IOSS)
           field:
@@ -78,7 +78,7 @@ modelo:
               label: OSS Union scheme VAT amount to destination FR - services supplied
                 (LIVA art. 163 unvicies)
           construct:
-            modelo-369-esquema-union:
+            modelo-369:
               field:
                 title: Modelo 369 - Esquema Union (regime especial OSS Union)
           field:

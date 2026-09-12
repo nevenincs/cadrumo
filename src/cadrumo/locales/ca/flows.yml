@@ -152,7 +152,6 @@ flows:
         relation_channel:
           alternate_binding: Vincle alternatiu
           formula_binding: Vincle de fórmula
-          formula_relation: Relació de fórmula
           primary_binding: Vincle principal
   modelo_select:
     column:

@@ -25,7 +25,7 @@ modelo:
               label: DE célországba áthárított HÉA - nyújtott szolgáltatások (nem
                 uniós szabályozás)
           construct:
-            modelo-369-esquema-exterior:
+            modelo-369:
               field:
                 title: Modelo 369 - Esquema Exterior (rendszer especial szolgáltatások
                   prestados szerinti no establecidos)
@@ -48,7 +48,7 @@ modelo:
               label: IOSS HÉA a DE célországba - behozott áruk távértékesítése ≤ 150
                 EUR (LIVA 163. quinvicies cikk)
           construct:
-            modelo-369-esquema-importacion:
+            modelo-369:
               field:
                 title: Modelo 369 - Esquema Importacion (rendszer especial IOSS)
           field:
@@ -79,7 +79,7 @@ modelo:
               label: OSS uniós rendszer IVA-összege FR célországba - nyújtott szolgáltatások
                 (LIVA 163. unvicies cikk)
           construct:
-            modelo-369-esquema-union:
+            modelo-369:
               field:
                 title: Modelo 369 - Esquema Union (rendszer especial OSS Union)
           field:

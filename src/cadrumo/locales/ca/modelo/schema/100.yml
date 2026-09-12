@@ -9486,37 +9486,37 @@ modelo:
                 a 2020» per completar aquesta autoliquidació.
               label: Guany patrimonial reduït no exempt imputable a 2020
           construct:
-            renta-2020-dependent-modelos:
-              field:
-                title: Modelo 100 2020 retencions, pagaments fraccionats and withholding
-                  cross-modelo inputs
-            renta-2020-mini-model-actividades-economicas-directa:
-              field:
-                title: Modelo 100 2020 estimació directa aggregators
-            renta-2020-mini-model-actividades-economicas-objetiva:
-              field:
-                title: Modelo 100 2020 estimació objetiva aggregators
-            renta-2020-mini-model-base-y-cuota:
-              field:
-                title: Modelo 100 2020 base imposable / base liquidable / quota aggregators
-            renta-2020-mini-model-capital-inmobiliario:
-              field:
-                title: Modelo 100 2020 capital immobiliari aggregators
-            renta-2020-mini-model-capital-mobiliario:
-              field:
-                title: Modelo 100 2020 capital mobiliari aggregators
-            renta-2020-mini-model-ganancias-patrimoniales:
-              field:
-                title: Modelo 100 2020 guanys i pèrdues patrimonials aggregators
-            renta-2020-mini-model-regimenes-especiales:
-              field:
-                title: Informació fiscal de la casella
-            renta-2020-mini-model-trabajo:
-              field:
-                title: Modelo 100 2020 rendiments del treball aggregators
             renta-cuota-chain:
               field:
                 title: Modelo 100 quota-chain calculation
+            renta-dependent-modelos:
+              field:
+                title: Modelo 100 2020 retencions, pagaments fraccionats and withholding
+                  cross-modelo inputs
+            renta-mini-model-actividades-economicas-directa:
+              field:
+                title: Modelo 100 2020 estimació directa aggregators
+            renta-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Modelo 100 2020 estimació objetiva aggregators
+            renta-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2020 base imposable / base liquidable / quota aggregators
+            renta-mini-model-capital-inmobiliario:
+              field:
+                title: Modelo 100 2020 capital immobiliari aggregators
+            renta-mini-model-capital-mobiliario:
+              field:
+                title: Modelo 100 2020 capital mobiliari aggregators
+            renta-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2020 guanys i pèrdues patrimonials aggregators
+            renta-mini-model-regimenes-especiales:
+              field:
+                title: Informació fiscal de la casella
+            renta-mini-model-trabajo:
+              field:
+                title: Modelo 100 2020 rendiments del treball aggregators
           field:
             label: Exercici 2020
         '2021':
@@ -17097,37 +17097,37 @@ modelo:
                 aquesta autoliquidació.
               label: Informació fiscal de la casella
           construct:
-            renta-2021-dependent-modelos:
-              field:
-                title: Modelo 100 2021 retencions, pagaments fraccionats and withholding
-                  cross-modelo inputs
-            renta-2021-mini-model-actividades-economicas-directa:
-              field:
-                title: Modelo 100 2021 estimació directa aggregators
-            renta-2021-mini-model-actividades-economicas-objetiva:
-              field:
-                title: Modelo 100 2021 estimació objetiva aggregators
-            renta-2021-mini-model-base-y-cuota:
-              field:
-                title: Modelo 100 2021 base imposable / base liquidable / quota aggregators
-            renta-2021-mini-model-capital-inmobiliario:
-              field:
-                title: Modelo 100 2021 capital immobiliari aggregators
-            renta-2021-mini-model-capital-mobiliario:
-              field:
-                title: Modelo 100 2021 capital mobiliari aggregators
-            renta-2021-mini-model-ganancias-patrimoniales:
-              field:
-                title: Modelo 100 2021 guanys i pèrdues patrimonials aggregators
-            renta-2021-mini-model-regimenes-especiales:
-              field:
-                title: Informació fiscal de la casella
-            renta-2021-mini-model-trabajo:
-              field:
-                title: Modelo 100 2021 rendiments del treball aggregators
             renta-cuota-chain:
               field:
                 title: Modelo 100 quota-chain calculation
+            renta-dependent-modelos:
+              field:
+                title: Modelo 100 2021 retencions, pagaments fraccionats and withholding
+                  cross-modelo inputs
+            renta-mini-model-actividades-economicas-directa:
+              field:
+                title: Modelo 100 2021 estimació directa aggregators
+            renta-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Modelo 100 2021 estimació objetiva aggregators
+            renta-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2021 base imposable / base liquidable / quota aggregators
+            renta-mini-model-capital-inmobiliario:
+              field:
+                title: Modelo 100 2021 capital immobiliari aggregators
+            renta-mini-model-capital-mobiliario:
+              field:
+                title: Modelo 100 2021 capital mobiliari aggregators
+            renta-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2021 guanys i pèrdues patrimonials aggregators
+            renta-mini-model-regimenes-especiales:
+              field:
+                title: Informació fiscal de la casella
+            renta-mini-model-trabajo:
+              field:
+                title: Modelo 100 2021 rendiments del treball aggregators
           field:
             label: Exercici 2021
         '2022':
@@ -25461,37 +25461,37 @@ modelo:
                 aquesta autoliquidació.
               label: Informació fiscal de la casella
           construct:
-            renta-2022-dependent-modelos:
-              field:
-                title: Modelo 100 2022 retencions, pagaments fraccionats and withholding
-                  cross-modelo inputs
-            renta-2022-mini-model-actividades-economicas-directa:
-              field:
-                title: Modelo 100 2022 estimació directa aggregators
-            renta-2022-mini-model-actividades-economicas-objetiva:
-              field:
-                title: Modelo 100 2022 estimació objetiva aggregators
-            renta-2022-mini-model-base-y-cuota:
-              field:
-                title: Modelo 100 2022 base imposable / base liquidable / quota aggregators
-            renta-2022-mini-model-capital-inmobiliario:
-              field:
-                title: Modelo 100 2022 capital immobiliari aggregators
-            renta-2022-mini-model-capital-mobiliario:
-              field:
-                title: Modelo 100 2022 capital mobiliari aggregators
-            renta-2022-mini-model-ganancias-patrimoniales:
-              field:
-                title: Modelo 100 2022 guanys i pèrdues patrimonials aggregators
-            renta-2022-mini-model-regimenes-especiales:
-              field:
-                title: Informació fiscal de la casella
-            renta-2022-mini-model-trabajo:
-              field:
-                title: Modelo 100 2022 rendiments del treball aggregators
             renta-cuota-chain:
               field:
                 title: Modelo 100 quota-chain calculation
+            renta-dependent-modelos:
+              field:
+                title: Modelo 100 2022 retencions, pagaments fraccionats and withholding
+                  cross-modelo inputs
+            renta-mini-model-actividades-economicas-directa:
+              field:
+                title: Modelo 100 2022 estimació directa aggregators
+            renta-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Modelo 100 2022 estimació objetiva aggregators
+            renta-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2022 base imposable / base liquidable / quota aggregators
+            renta-mini-model-capital-inmobiliario:
+              field:
+                title: Modelo 100 2022 capital immobiliari aggregators
+            renta-mini-model-capital-mobiliario:
+              field:
+                title: Modelo 100 2022 capital mobiliari aggregators
+            renta-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2022 guanys i pèrdues patrimonials aggregators
+            renta-mini-model-regimenes-especiales:
+              field:
+                title: Informació fiscal de la casella
+            renta-mini-model-trabajo:
+              field:
+                title: Modelo 100 2022 rendiments del treball aggregators
           field:
             label: Exercici 2022
         '2023':
@@ -34213,37 +34213,37 @@ modelo:
                 pel contribuent» per completar aquesta autoliquidació.'
               label: 'Deducció per adopció: Import pendent a sol·licitar pel contribuent'
           construct:
-            renta-2023-dependent-modelos:
-              field:
-                title: Modelo 100 2023 retencions, pagaments fraccionats and withholding
-                  cross-modelo inputs
-            renta-2023-mini-model-actividades-economicas-directa:
-              field:
-                title: Modelo 100 2023 estimació directa aggregators
-            renta-2023-mini-model-actividades-economicas-objetiva:
-              field:
-                title: Modelo 100 2023 estimació objetiva aggregators
-            renta-2023-mini-model-base-y-cuota:
-              field:
-                title: Modelo 100 2023 base imposable / base liquidable / quota aggregators
-            renta-2023-mini-model-capital-inmobiliario:
-              field:
-                title: Modelo 100 2023 capital immobiliari aggregators
-            renta-2023-mini-model-capital-mobiliario:
-              field:
-                title: Modelo 100 2023 capital mobiliari aggregators
-            renta-2023-mini-model-ganancias-patrimoniales:
-              field:
-                title: Modelo 100 2023 guanys i pèrdues patrimonials aggregators
-            renta-2023-mini-model-regimenes-especiales:
-              field:
-                title: Informació fiscal de la casella
-            renta-2023-mini-model-trabajo:
-              field:
-                title: Modelo 100 2023 rendiments del treball aggregators
             renta-cuota-chain:
               field:
                 title: Modelo 100 quota-chain calculation
+            renta-dependent-modelos:
+              field:
+                title: Modelo 100 2023 retencions, pagaments fraccionats and withholding
+                  cross-modelo inputs
+            renta-mini-model-actividades-economicas-directa:
+              field:
+                title: Modelo 100 2023 estimació directa aggregators
+            renta-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Modelo 100 2023 estimació objetiva aggregators
+            renta-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2023 base imposable / base liquidable / quota aggregators
+            renta-mini-model-capital-inmobiliario:
+              field:
+                title: Modelo 100 2023 capital immobiliari aggregators
+            renta-mini-model-capital-mobiliario:
+              field:
+                title: Modelo 100 2023 capital mobiliari aggregators
+            renta-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2023 guanys i pèrdues patrimonials aggregators
+            renta-mini-model-regimenes-especiales:
+              field:
+                title: Informació fiscal de la casella
+            renta-mini-model-trabajo:
+              field:
+                title: Modelo 100 2023 rendiments del treball aggregators
           field:
             label: Exercici 2023
         '2024':
@@ -43086,46 +43086,46 @@ modelo:
               label: Prestacions públiques per maternitat i paternitat exemptes percebudes
                 de l'INSS
           construct:
-            renta-2024-anexo-c-base-liquidable-negativa-general:
+            renta-anexo-c-base-liquidable-negativa-general:
               field:
                 title: Modelo 100 Annex C base liquidable general negativa carry-forward
-            renta-2024-dependent-modelos:
-              field:
-                title: Modelo 100 2024 retencions, pagaments fraccionats and withholding
-                  cross-modelo inputs
-            renta-2024-final-settlement:
-              field:
-                title: Modelo 100 2024 final settlement result
-            renta-2024-mini-model-actividades-economicas-directa:
-              field:
-                title: Modelo 100 2024 estimació directa aggregators
-            renta-2024-mini-model-actividades-economicas-objetiva:
-              field:
-                title: Modelo 100 2024 estimació objetiva aggregators
-            renta-2024-mini-model-base-y-cuota:
-              field:
-                title: Modelo 100 2024 base imposable / base liquidable / quota aggregators
-            renta-2024-mini-model-capital-inmobiliario:
-              field:
-                title: Modelo 100 2024 capital immobiliari aggregators
-            renta-2024-mini-model-capital-mobiliario:
-              field:
-                title: Modelo 100 2024 capital mobiliari aggregators
-            renta-2024-mini-model-ganancias-patrimoniales:
-              field:
-                title: Modelo 100 2024 guanys i pèrdues patrimonials aggregators
-            renta-2024-mini-model-regimenes-especiales:
-              field:
-                title: Informació fiscal de la casella
-            renta-2024-mini-model-trabajo:
-              field:
-                title: Modelo 100 2024 rendiments del treball aggregators
-            renta-2024-personal-family:
-              field:
-                title: Model 100 2024 dades del perfil personal i familiar
             renta-cuota-chain:
               field:
                 title: Modelo 100 quota-chain calculation
+            renta-dependent-modelos:
+              field:
+                title: Modelo 100 2024 retencions, pagaments fraccionats and withholding
+                  cross-modelo inputs
+            renta-final-settlement:
+              field:
+                title: Modelo 100 2024 final settlement result
+            renta-mini-model-actividades-economicas-directa:
+              field:
+                title: Modelo 100 2024 estimació directa aggregators
+            renta-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Modelo 100 2024 estimació objetiva aggregators
+            renta-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2024 base imposable / base liquidable / quota aggregators
+            renta-mini-model-capital-inmobiliario:
+              field:
+                title: Modelo 100 2024 capital immobiliari aggregators
+            renta-mini-model-capital-mobiliario:
+              field:
+                title: Modelo 100 2024 capital mobiliari aggregators
+            renta-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2024 guanys i pèrdues patrimonials aggregators
+            renta-mini-model-regimenes-especiales:
+              field:
+                title: Informació fiscal de la casella
+            renta-mini-model-trabajo:
+              field:
+                title: Modelo 100 2024 rendiments del treball aggregators
+            renta-personal-family:
+              field:
+                title: Model 100 2024 dades del perfil personal i familiar
           field:
             label: Exercici 2024
         '2025':
@@ -53351,28 +53351,6 @@ modelo:
               label: Prestacions públiques per maternitat i paternitat exemptes percebudes
                 de l'INSS
           construct:
-            renta-2025-mini-model-actividades-economicas-objetiva:
-              field:
-                title: Modelo 100 2025 estimació objetiva aggregators
-            renta-2025-mini-model-base-y-cuota:
-              field:
-                title: Modelo 100 2025 base imposable / base liquidable / quota aggregators
-            renta-2025-mini-model-capital-inmobiliario:
-              field:
-                title: Modelo 100 2025 capital immobiliari aggregators
-            renta-2025-mini-model-capital-mobiliario:
-              field:
-                title: Modelo 100 2025 capital mobiliari aggregators
-            renta-2025-mini-model-deduccion-madrid-nacimiento-adopcion:
-              field:
-                title: Modelo 100 2025 Comunidad de Madrid naixement/adopció deducció
-                  (casella 1039)
-            renta-2025-mini-model-ganancias-patrimoniales:
-              field:
-                title: Modelo 100 2025 guanys i pèrdues patrimonials aggregators
-            renta-2025-mini-model-regimenes-especiales:
-              field:
-                title: Informació fiscal de la casella
             renta-anexo-c-base-liquidable-negativa-general:
               field:
                 title: Modelo 100 Annex C base liquidable general negativa carry-forward
@@ -53388,6 +53366,28 @@ modelo:
             renta-final-settlement:
               field:
                 title: Modelo 100 final settlement result
+            renta-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Modelo 100 2025 estimació objetiva aggregators
+            renta-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2025 base imposable / base liquidable / quota aggregators
+            renta-mini-model-capital-inmobiliario:
+              field:
+                title: Modelo 100 2025 capital immobiliari aggregators
+            renta-mini-model-capital-mobiliario:
+              field:
+                title: Modelo 100 2025 capital mobiliari aggregators
+            renta-mini-model-deduccion-madrid-nacimiento-adopcion:
+              field:
+                title: Modelo 100 2025 Comunidad de Madrid naixement/adopció deducció
+                  (casella 1039)
+            renta-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2025 guanys i pèrdues patrimonials aggregators
+            renta-mini-model-regimenes-especiales:
+              field:
+                title: Informació fiscal de la casella
             renta-movable-capital:
               field:
                 title: Model 100 evidència de dependència del capital mobiliari

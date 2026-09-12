@@ -75,7 +75,7 @@ modelo:
               help: 'Tekintse át a casilla adatait: Eredmény a ingresar.'
               label: Befizetendő eredmény
           construct:
-            modelo-123-2019-capital-withholding:
+            modelo-123-capital-withholding:
               field:
                 title: Modelo 123 — adóügyi információ
           field:

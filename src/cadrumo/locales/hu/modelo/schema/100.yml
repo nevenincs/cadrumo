@@ -10145,38 +10145,38 @@ modelo:
               label: 2020-Ra hozzárendelhető, csökkentett, nem mentesített vagyoni
                 nyereség
           construct:
-            renta-2020-dependent-modelos:
-              field:
-                title: Modelo 100 2020 levonások, részletfizetések and withholding
-                  cross-modelo inputs
-            renta-2020-mini-model-actividades-economicas-directa:
-              field:
-                title: Modelo 100 2020 a közvetlen adózás összesítő mezői
-            renta-2020-mini-model-actividades-economicas-objetiva:
-              field:
-                title: Modelo 100 2020 az objektív adózás összesítő mezői
-            renta-2020-mini-model-base-y-cuota:
-              field:
-                title: Modelo 100 2020 base imponible / base nettó adóalap / adó aggregators
-            renta-2020-mini-model-capital-inmobiliario:
-              field:
-                title: Modelo 100 2020 az ingatlantőke összesítő mezői
-            renta-2020-mini-model-capital-mobiliario:
-              field:
-                title: Modelo 100 2020 az ingó tőke összesítő mezői
-            renta-2020-mini-model-ganancias-patrimoniales:
-              field:
-                title: Modelo 100 2020 ganancias és perdidas patrimoniales aggregators
-            renta-2020-mini-model-regimenes-especiales:
-              field:
-                title: Modelo 100 2020 atribucion / imputacion szerinti jövedelmek
-                  aggregators
-            renta-2020-mini-model-trabajo:
-              field:
-                title: Modelo 100 2020 munkajövedelem aggregators
             renta-cuota-chain:
               field:
                 title: Modelo 100 adó-chain calculation
+            renta-dependent-modelos:
+              field:
+                title: Modelo 100 2020 levonások, részletfizetések and withholding
+                  cross-modelo inputs
+            renta-mini-model-actividades-economicas-directa:
+              field:
+                title: Modelo 100 2020 a közvetlen adózás összesítő mezői
+            renta-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Modelo 100 2020 az objektív adózás összesítő mezői
+            renta-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2020 base imponible / base nettó adóalap / adó aggregators
+            renta-mini-model-capital-inmobiliario:
+              field:
+                title: Modelo 100 2020 az ingatlantőke összesítő mezői
+            renta-mini-model-capital-mobiliario:
+              field:
+                title: Modelo 100 2020 az ingó tőke összesítő mezői
+            renta-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2020 ganancias és perdidas patrimoniales aggregators
+            renta-mini-model-regimenes-especiales:
+              field:
+                title: Modelo 100 2020 atribucion / imputacion szerinti jövedelmek
+                  aggregators
+            renta-mini-model-trabajo:
+              field:
+                title: Modelo 100 2020 munkajövedelem aggregators
           field:
             label: Adóév 2020
         '2021':
@@ -18368,38 +18368,38 @@ modelo:
                 ehhez az önadózáshoz.
               label: Országkód/Country code
           construct:
-            renta-2021-dependent-modelos:
-              field:
-                title: Modelo 100 2021 levonások, részletfizetések and withholding
-                  cross-modelo inputs
-            renta-2021-mini-model-actividades-economicas-directa:
-              field:
-                title: Modelo 100 2021 a közvetlen adózás összesítő mezői
-            renta-2021-mini-model-actividades-economicas-objetiva:
-              field:
-                title: Modelo 100 2021 az objektív adózás összesítő mezői
-            renta-2021-mini-model-base-y-cuota:
-              field:
-                title: Modelo 100 2021 base imponible / base nettó adóalap / adó aggregators
-            renta-2021-mini-model-capital-inmobiliario:
-              field:
-                title: Modelo 100 2021 az ingatlantőke összesítő mezői
-            renta-2021-mini-model-capital-mobiliario:
-              field:
-                title: Modelo 100 2021 az ingó tőke összesítő mezői
-            renta-2021-mini-model-ganancias-patrimoniales:
-              field:
-                title: Modelo 100 2021 ganancias és perdidas patrimoniales aggregators
-            renta-2021-mini-model-regimenes-especiales:
-              field:
-                title: Modelo 100 2021 atribucion / imputacion szerinti jövedelmek
-                  aggregators
-            renta-2021-mini-model-trabajo:
-              field:
-                title: Modelo 100 2021 munkajövedelem aggregators
             renta-cuota-chain:
               field:
                 title: Modelo 100 adó-chain calculation
+            renta-dependent-modelos:
+              field:
+                title: Modelo 100 2021 levonások, részletfizetések and withholding
+                  cross-modelo inputs
+            renta-mini-model-actividades-economicas-directa:
+              field:
+                title: Modelo 100 2021 a közvetlen adózás összesítő mezői
+            renta-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Modelo 100 2021 az objektív adózás összesítő mezői
+            renta-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2021 base imponible / base nettó adóalap / adó aggregators
+            renta-mini-model-capital-inmobiliario:
+              field:
+                title: Modelo 100 2021 az ingatlantőke összesítő mezői
+            renta-mini-model-capital-mobiliario:
+              field:
+                title: Modelo 100 2021 az ingó tőke összesítő mezői
+            renta-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2021 ganancias és perdidas patrimoniales aggregators
+            renta-mini-model-regimenes-especiales:
+              field:
+                title: Modelo 100 2021 atribucion / imputacion szerinti jövedelmek
+                  aggregators
+            renta-mini-model-trabajo:
+              field:
+                title: Modelo 100 2021 munkajövedelem aggregators
           field:
             label: Adóév 2021
         '2022':
@@ -27386,38 +27386,38 @@ modelo:
                 educación infantil autorizados (összegvan no aplicadas -ban/-ben a
                 adóév 2021)
           construct:
-            renta-2022-dependent-modelos:
-              field:
-                title: Modelo 100 2022 levonások, részletfizetések and withholding
-                  cross-modelo inputs
-            renta-2022-mini-model-actividades-economicas-directa:
-              field:
-                title: Modelo 100 2022 a közvetlen adózás összesítő mezői
-            renta-2022-mini-model-actividades-economicas-objetiva:
-              field:
-                title: Modelo 100 2022 az objektív adózás összesítő mezői
-            renta-2022-mini-model-base-y-cuota:
-              field:
-                title: Modelo 100 2022 base imponible / base nettó adóalap / adó aggregators
-            renta-2022-mini-model-capital-inmobiliario:
-              field:
-                title: Modelo 100 2022 az ingatlantőke összesítő mezői
-            renta-2022-mini-model-capital-mobiliario:
-              field:
-                title: Modelo 100 2022 az ingó tőke összesítő mezői
-            renta-2022-mini-model-ganancias-patrimoniales:
-              field:
-                title: Modelo 100 2022 ganancias és perdidas patrimoniales aggregators
-            renta-2022-mini-model-regimenes-especiales:
-              field:
-                title: Modelo 100 2022 atribucion / imputacion szerinti jövedelmek
-                  aggregators
-            renta-2022-mini-model-trabajo:
-              field:
-                title: Modelo 100 2022 munkajövedelem aggregators
             renta-cuota-chain:
               field:
                 title: Modelo 100 adó-chain calculation
+            renta-dependent-modelos:
+              field:
+                title: Modelo 100 2022 levonások, részletfizetések and withholding
+                  cross-modelo inputs
+            renta-mini-model-actividades-economicas-directa:
+              field:
+                title: Modelo 100 2022 a közvetlen adózás összesítő mezői
+            renta-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Modelo 100 2022 az objektív adózás összesítő mezői
+            renta-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2022 base imponible / base nettó adóalap / adó aggregators
+            renta-mini-model-capital-inmobiliario:
+              field:
+                title: Modelo 100 2022 az ingatlantőke összesítő mezői
+            renta-mini-model-capital-mobiliario:
+              field:
+                title: Modelo 100 2022 az ingó tőke összesítő mezői
+            renta-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2022 ganancias és perdidas patrimoniales aggregators
+            renta-mini-model-regimenes-especiales:
+              field:
+                title: Modelo 100 2022 atribucion / imputacion szerinti jövedelmek
+                  aggregators
+            renta-mini-model-trabajo:
+              field:
+                title: Modelo 100 2022 munkajövedelem aggregators
           field:
             label: Adóév 2022
         '2023':
@@ -36768,38 +36768,38 @@ modelo:
               label: 'Örökbefogadási levonás: az adózó által igényelhető fennmaradó
                 összeg'
           construct:
-            renta-2023-dependent-modelos:
-              field:
-                title: Modelo 100 2023 levonások, részletfizetések and withholding
-                  cross-modelo inputs
-            renta-2023-mini-model-actividades-economicas-directa:
-              field:
-                title: Modelo 100 2023 a közvetlen adózás összesítő mezői
-            renta-2023-mini-model-actividades-economicas-objetiva:
-              field:
-                title: Modelo 100 2023 az objektív adózás összesítő mezői
-            renta-2023-mini-model-base-y-cuota:
-              field:
-                title: Modelo 100 2023 base imponible / base nettó adóalap / adó aggregators
-            renta-2023-mini-model-capital-inmobiliario:
-              field:
-                title: Modelo 100 2023 az ingatlantőke összesítő mezői
-            renta-2023-mini-model-capital-mobiliario:
-              field:
-                title: Modelo 100 2023 az ingó tőke összesítő mezői
-            renta-2023-mini-model-ganancias-patrimoniales:
-              field:
-                title: Modelo 100 2023 ganancias és perdidas patrimoniales aggregators
-            renta-2023-mini-model-regimenes-especiales:
-              field:
-                title: Modelo 100 2023 atribucion / imputacion szerinti jövedelmek
-                  aggregators
-            renta-2023-mini-model-trabajo:
-              field:
-                title: Modelo 100 2023 munkajövedelem aggregators
             renta-cuota-chain:
               field:
                 title: Modelo 100 adó-chain calculation
+            renta-dependent-modelos:
+              field:
+                title: Modelo 100 2023 levonások, részletfizetések and withholding
+                  cross-modelo inputs
+            renta-mini-model-actividades-economicas-directa:
+              field:
+                title: Modelo 100 2023 a közvetlen adózás összesítő mezői
+            renta-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Modelo 100 2023 az objektív adózás összesítő mezői
+            renta-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2023 base imponible / base nettó adóalap / adó aggregators
+            renta-mini-model-capital-inmobiliario:
+              field:
+                title: Modelo 100 2023 az ingatlantőke összesítő mezői
+            renta-mini-model-capital-mobiliario:
+              field:
+                title: Modelo 100 2023 az ingó tőke összesítő mezői
+            renta-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2023 ganancias és perdidas patrimoniales aggregators
+            renta-mini-model-regimenes-especiales:
+              field:
+                title: Modelo 100 2023 atribucion / imputacion szerinti jövedelmek
+                  aggregators
+            renta-mini-model-trabajo:
+              field:
+                title: Modelo 100 2023 munkajövedelem aggregators
           field:
             label: Adóév 2023
         '2024':
@@ -45646,47 +45646,47 @@ modelo:
                 anyasági és apasági ellátások” értékét ehhez az önadózáshoz.
               label: Az INSS által folyósított adómentes anyasági és apasági ellátások
           construct:
-            renta-2024-anexo-c-base-liquidable-negativa-general:
+            renta-anexo-c-base-liquidable-negativa-general:
               field:
                 title: Modelo 100 Anexo C általános nettó adóalap negativa carry-forward
-            renta-2024-dependent-modelos:
-              field:
-                title: Modelo 100 2024 levonások, részletfizetések and withholding
-                  cross-modelo inputs
-            renta-2024-final-settlement:
-              field:
-                title: Modelo 100 2024 vég settlement result
-            renta-2024-mini-model-actividades-economicas-directa:
-              field:
-                title: Modelo 100 2024 a közvetlen adózás összesítő mezői
-            renta-2024-mini-model-actividades-economicas-objetiva:
-              field:
-                title: Modelo 100 2024 az objektív adózás összesítő mezői
-            renta-2024-mini-model-base-y-cuota:
-              field:
-                title: Modelo 100 2024 base imponible / base nettó adóalap / adó aggregators
-            renta-2024-mini-model-capital-inmobiliario:
-              field:
-                title: Modelo 100 2024 az ingatlantőke összesítő mezői
-            renta-2024-mini-model-capital-mobiliario:
-              field:
-                title: Modelo 100 2024 az ingó tőke összesítő mezői
-            renta-2024-mini-model-ganancias-patrimoniales:
-              field:
-                title: Modelo 100 2024 ganancias és perdidas patrimoniales aggregators
-            renta-2024-mini-model-regimenes-especiales:
-              field:
-                title: Modelo 100 2024 atribucion / imputacion szerinti jövedelmek
-                  aggregators
-            renta-2024-mini-model-trabajo:
-              field:
-                title: Modelo 100 2024 munkajövedelem aggregators
-            renta-2024-personal-family:
-              field:
-                title: Modelo 100 2024 a személyi és családi profil adatai
             renta-cuota-chain:
               field:
                 title: Modelo 100 adó-chain calculation
+            renta-dependent-modelos:
+              field:
+                title: Modelo 100 2024 levonások, részletfizetések and withholding
+                  cross-modelo inputs
+            renta-final-settlement:
+              field:
+                title: Modelo 100 2024 vég settlement result
+            renta-mini-model-actividades-economicas-directa:
+              field:
+                title: Modelo 100 2024 a közvetlen adózás összesítő mezői
+            renta-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Modelo 100 2024 az objektív adózás összesítő mezői
+            renta-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2024 base imponible / base nettó adóalap / adó aggregators
+            renta-mini-model-capital-inmobiliario:
+              field:
+                title: Modelo 100 2024 az ingatlantőke összesítő mezői
+            renta-mini-model-capital-mobiliario:
+              field:
+                title: Modelo 100 2024 az ingó tőke összesítő mezői
+            renta-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2024 ganancias és perdidas patrimoniales aggregators
+            renta-mini-model-regimenes-especiales:
+              field:
+                title: Modelo 100 2024 atribucion / imputacion szerinti jövedelmek
+                  aggregators
+            renta-mini-model-trabajo:
+              field:
+                title: Modelo 100 2024 munkajövedelem aggregators
+            renta-personal-family:
+              field:
+                title: Modelo 100 2024 a személyi és családi profil adatai
           field:
             label: Adóév 2024
         '2025':
@@ -56268,29 +56268,6 @@ modelo:
                 anyasági és apasági ellátások” értékét ehhez az önadózáshoz.
               label: Az INSS által folyósított adómentes anyasági és apasági ellátások
           construct:
-            renta-2025-mini-model-actividades-economicas-objetiva:
-              field:
-                title: Modelo 100 2025 az objektív adózás összesítő mezői
-            renta-2025-mini-model-base-y-cuota:
-              field:
-                title: Modelo 100 2025 base imponible / base nettó adóalap / adó aggregators
-            renta-2025-mini-model-capital-inmobiliario:
-              field:
-                title: Modelo 100 2025 az ingatlantőke összesítő mezői
-            renta-2025-mini-model-capital-mobiliario:
-              field:
-                title: Modelo 100 2025 az ingó tőke összesítő mezői
-            renta-2025-mini-model-deduccion-madrid-nacimiento-adopcion:
-              field:
-                title: Modelo 100 2025 Comunidad szerinti Madrid nacimiento/adopción
-                  levonás (rovat 1039)
-            renta-2025-mini-model-ganancias-patrimoniales:
-              field:
-                title: Modelo 100 2025 ganancias és perdidas patrimoniales aggregators
-            renta-2025-mini-model-regimenes-especiales:
-              field:
-                title: Modelo 100 2025 atribucion / imputacion szerinti jövedelmek
-                  aggregators
             renta-anexo-c-base-liquidable-negativa-general:
               field:
                 title: Modelo 100 Anexo C általános nettó adóalap negativa carry-forward
@@ -56306,6 +56283,29 @@ modelo:
             renta-final-settlement:
               field:
                 title: Modelo 100 vég settlement result
+            renta-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Modelo 100 2025 az objektív adózás összesítő mezői
+            renta-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2025 base imponible / base nettó adóalap / adó aggregators
+            renta-mini-model-capital-inmobiliario:
+              field:
+                title: Modelo 100 2025 az ingatlantőke összesítő mezői
+            renta-mini-model-capital-mobiliario:
+              field:
+                title: Modelo 100 2025 az ingó tőke összesítő mezői
+            renta-mini-model-deduccion-madrid-nacimiento-adopcion:
+              field:
+                title: Modelo 100 2025 Comunidad szerinti Madrid nacimiento/adopción
+                  levonás (rovat 1039)
+            renta-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2025 ganancias és perdidas patrimoniales aggregators
+            renta-mini-model-regimenes-especiales:
+              field:
+                title: Modelo 100 2025 atribucion / imputacion szerinti jövedelmek
+                  aggregators
             renta-movable-capital:
               field:
                 title: Modelo 100 az ingó tőkétől való függőség bizonyítékai

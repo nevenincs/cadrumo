@@ -91,7 +91,7 @@ modelo:
               help: 'Consulteu la informació de la casella: Resultat a ingresar.'
               label: Resultat a ingressar
           construct:
-            modelo-123-2019-capital-withholding:
+            modelo-123-capital-withholding:
               field:
                 title: Modelo 123 — informació fiscal
           field:

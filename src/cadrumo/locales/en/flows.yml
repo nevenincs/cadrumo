@@ -151,7 +151,6 @@ flows:
         relation_channel:
           alternate_binding: Alternate binding
           formula_binding: Formula binding
-          formula_relation: Formula relation
           primary_binding: Primary binding
   modelo_select:
     column:

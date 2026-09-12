@@ -425,7 +425,7 @@ modelo:
               label: Kiegészítő információ (5) - A Kanári-szigeteki beruházási tartaléknak
                 megfelelő összeg
           construct:
-            modelo-202-2019-2022-foundation:
+            modelo-202-foundation:
               field:
                 title: Modelo 202— adóügyi információ
           field:
@@ -674,7 +674,7 @@ modelo:
               label: Kiegészítő információ (5) - A Kanári-szigeteki beruházási tartaléknak
                 megfelelő összeg
           construct:
-            modelo-202-2023-2024-foundation:
+            modelo-202-foundation:
               field:
                 title: Modelo 202— adóügyi információ
           field:

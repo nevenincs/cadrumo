@@ -411,7 +411,7 @@ modelo:
               label: Informació addicional (5) - Import corresponent a la reserva
                 per a inversions a Canàries
           construct:
-            modelo-202-2019-2022-foundation:
+            modelo-202-foundation:
               field:
                 title: Modelo 202— informació fiscal
           field:
@@ -638,7 +638,7 @@ modelo:
               label: Informació addicional (5) - Import corresponent a la reserva
                 per a inversions a Canàries
           construct:
-            modelo-202-2023-2024-foundation:
+            modelo-202-foundation:
               field:
                 title: Modelo 202— informació fiscal
           field:
