@@ -6,6 +6,7 @@ given a filing year, period, and optional date constraint.
 
 from __future__ import annotations
 
+from calendar import monthrange
 from datetime import date
 
 from .errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError
@@ -22,6 +23,15 @@ def _supported_filing_year(
     if support is None:
         return filing_year
     return support.projection_coordinate(filing_year)
+
+
+def _project_reference_date(on: date | None, *, requested_year: int, selection_year: int) -> date | None:
+    """Preserve a reference date's filing-year offset when support projects the year."""
+    if on is None or requested_year == selection_year:
+        return on
+    projected_year = on.year - (requested_year - selection_year)
+    projected_day = min(on.day, monthrange(projected_year, on.month)[1])
+    return on.replace(year=projected_year, day=projected_day)
 
 
 def _declared_filing_window_covers(
@@ -183,11 +193,16 @@ def select_revision_for_year(
             carries a year beyond its authored horizon back to that horizon.
     """
     selection_year = _supported_filing_year(filing_year, support)
+    selection_on = (
+        None
+        if selection_year is None
+        else _project_reference_date(on, requested_year=filing_year, selection_year=selection_year)
+    )
     return _select_single_year_revision(
         modelo,
         []
         if selection_year is None
-        else _year_revision_candidates(modelo, filing_year=selection_year, on=on),
+        else _year_revision_candidates(modelo, filing_year=selection_year, on=selection_on),
         filing_year=filing_year,
     )
 
@@ -228,7 +243,17 @@ def select_revision(
             revision_id=revision_id,
         )
     ]
-    candidates = _effective_candidates(matching, on=on, filing_year=filing_year, period=period)
+    selection_on = (
+        None
+        if selection_year is None
+        else _project_reference_date(on, requested_year=filing_year, selection_year=selection_year)
+    )
+    candidates = _effective_candidates(
+        matching,
+        on=selection_on,
+        filing_year=filing_year if selection_year is None else selection_year,
+        period=period,
+    )
     return _select_single_revision(
         modelo,
         candidates,
