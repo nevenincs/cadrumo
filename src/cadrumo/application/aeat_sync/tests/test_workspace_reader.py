@@ -13,10 +13,11 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
+from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ...operations.registry import OperationPublicContractSetV1
 from ...operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ...user_profile.censal_operation import (
-    CENSAL_OPERATION_DEFINITION,
+    build_censal_operation_definition,
     build_censal_operation_registration,
 )
 from ...user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
@@ -40,6 +41,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET = "00000000-0000-4000-8000-000000000001"
 _SUBJECT = "00000001R"
 _NOW = datetime(2026, 9, 4, 10, 0, tzinfo=UTC)
+_CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
 
 
 def _unrelated_contracts() -> OperationPublicContractSetV1:
@@ -50,7 +52,13 @@ def _unrelated_contracts() -> OperationPublicContractSetV1:
     populated yet contains nothing this workspace could act on.
     """
     return OperationPublicContractSetV1.build(
-        (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
+        (
+            build_censal_operation_registration(
+                build_censal_operation_definition(
+                    certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+                )
+            ).contract,
+        )
     )
 
 

@@ -49,7 +49,7 @@ from ...core.identity.profile import ProfileId
 from ...core.json_contract import Notice
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.redaction.rules import ALWAYS_REDACT_KEY_TERMS
-from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.user_profile.labels import profile_field_label, profile_section_title
 from ...domain.user_profile.loader import load_user_profile_schema
 

@@ -43,7 +43,7 @@ from cadrumo.domain.submission.models import ModeloDraftStatus
 from cadrumo.entrypoints.cli.common import resolve_notice_action
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices
-from cadrumo.tests.filing import build_registry_filing_draft
+from cadrumo.application.filing.tests.filing_support import build_registry_filing_draft
 
 from ..perf_measurement import CPU_CONTENTION_MARGIN
 

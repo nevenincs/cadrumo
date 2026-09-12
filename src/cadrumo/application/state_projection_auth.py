@@ -18,6 +18,7 @@ from ..core.errors.hierarchy import CadrumoError
 from ..core.logging import get_logger
 from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .auth.credentials import project_active_certificate_credentials
+from .auth.certificate_secret_backend import CertificateSecretBackendFactory
 from .auth.operator_probes import bind_profile_auth_settings, probe_provider_credentials
 from .auth.probes import ProviderProbeResult
 from .auth.providers import select_provider
@@ -147,6 +148,7 @@ class _BackendProbeOutcome(NamedTuple):
 
 def _describe_backend_health(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     provider_kind: AuthProviderKind,
     configured: bool,
     backend_settings: Settings | None,
@@ -163,6 +165,7 @@ def _describe_backend_health(
         backend = select_provider(
             provider_kind,
             settings=backend_settings,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
             certificate_credentials=certificate_credentials,
         )
         description = backend.describe()
@@ -189,6 +192,7 @@ def _describe_backend_health(
 
 def _probe_backend_readiness(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     provider_kind: AuthProviderKind | None,
     requested_provider: str | None,
     configured: bool,
@@ -212,6 +216,7 @@ def _probe_backend_readiness(
     if credential_bucket_id is None:
         return _BackendProbeOutcome(configured, False, "", "", backend_settings)
     return _describe_backend_health(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
         provider_kind=provider_kind,
         configured=configured,
         backend_settings=backend_settings,
@@ -239,6 +244,7 @@ def _probe_credentials(
 def build_auth_readiness(
     state: WorkflowState,
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     provider_kind: AuthProviderKind | None,
     provider_kind_is_authoritative: bool,
     requested_provider: str | None,
@@ -293,6 +299,7 @@ def build_auth_readiness(
     probe_summary = ""
     if probe_live_backend:
         probe = _probe_backend_readiness(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
             provider_kind=provider_kind,
             requested_provider=requested_provider,
             configured=configured,
@@ -333,6 +340,62 @@ def build_auth_readiness(
         certificate_path=(effective_certificate_path if provider_kind is AuthProviderKind.CERTIFICATE else ""),
         probe_result=probe_result,
         probe_summary=probe_summary,
+    )
+
+
+def build_auth_readiness_without_live_backend(
+    state: WorkflowState,
+    *,
+    provider_kind: AuthProviderKind | None,
+    provider_kind_is_authoritative: bool,
+    requested_provider: str | None,
+    credential_bucket_id: str | None,
+    certificate_credentials: ActiveCertificateCredentials | None,
+) -> ProjectionAuthReadiness:
+    """Project local readiness without acquiring a live backend capability.
+
+    Wizard status is a local workflow projection and deliberately does not
+    probe external or secure-storage backends. Keeping this path separate
+    means it has no hidden certificate-secret dependency while the live
+    projection above still requires its factory explicitly.
+    """
+    del credential_bucket_id
+    auth = state.auth
+    provider_kind, provider = _resolve_provider_selection(
+        state,
+        provider_kind=provider_kind,
+        provider_kind_is_authoritative=provider_kind_is_authoritative,
+        requested_provider=requested_provider,
+    )
+    certificate = _resolve_certificate_context(
+        state,
+        provider_kind=provider_kind,
+        certificate_credentials=certificate_credentials,
+    )
+    effective_certificate_path = certificate.effective_certificate_path
+    configured = _provider_configured(
+        state,
+        provider_kind=provider_kind,
+        effective_certificate_path=effective_certificate_path,
+    )
+    authenticated = configured and bool(auth.authenticated_at)
+    available = configured and bool(auth.authenticated_at)
+    return ProjectionAuthReadiness(
+        provider=provider,
+        configured=configured,
+        authenticated=authenticated,
+        available=available,
+        health_summary="",
+        health_severity=_resolve_health_severity(
+            "",
+            provider=provider,
+            configured=configured,
+            available=available,
+            authenticated=authenticated,
+        ),
+        certificate_path=(effective_certificate_path if provider_kind is AuthProviderKind.CERTIFICATE else ""),
+        probe_result=None,
+        probe_summary="",
     )
 
 

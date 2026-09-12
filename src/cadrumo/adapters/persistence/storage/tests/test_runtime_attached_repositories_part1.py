@@ -8,6 +8,7 @@ from typing import cast
 
 import pytest
 
+from .....adapters.persistence.profile.apoderado import build_apoderado_config_repository
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from .....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -17,7 +18,6 @@ from .....adapters.persistence.profile.modelos_filing import ModeloRecordCatalog
 from .....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from .....application.auth.apoderado_service import ApoderadoService
 from .....application.auth.diagnostics import list_auth_diagnostics
 from .....application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
 from .....application.calculations.observations_repository import (
@@ -32,7 +32,7 @@ from .....application.filing.history_repository import ModeloHistoryRepository
 from .....application.live.borrador_100 import Borrador100SnapshotRepository
 from .....application.modelo.review_package_recipient_registry import RecipientFingerprintRegistryRepository
 from .....application.workflow.persistence import WorkflowRunRepository, WorkflowStateRepository
-from .....core.config import override_settings
+from .....core.config import load_settings, override_settings
 from .....core.config_support import LLMProvider
 from .....core.period import Period
 from .....domain.attachments.errors import AttachmentNotFoundError
@@ -107,7 +107,10 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     ("workflow_runs", lambda: WorkflowRunRepository().list()),
     ("bucket_events", lambda: BucketEventHistoryRepository().load()),
     ("auth_diagnostics", list_auth_diagnostics),
-    ("auth_apoderado", lambda: ApoderadoService().status(bucket_id=_BUCKET_A_ID)),
+    (
+        "auth_apoderado",
+        lambda: build_apoderado_config_repository(bucket_id=_BUCKET_A_ID, settings=load_settings()),
+    ),
     ("auth_session", lambda: _session_store.load(Path("/profile/active/aeat-session"))),
     ("google_oauth_client", lambda: google_session_store.load_client("operator-google")),
     ("google_oauth_token", lambda: google_session_store.load_token("operator-google")),

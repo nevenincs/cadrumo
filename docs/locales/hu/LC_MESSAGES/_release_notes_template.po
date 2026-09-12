@@ -19,7 +19,7 @@ msgstr ""
 
 #: ../../_release_notes_template.md:15
 msgid "Cadrumo vX.Y.Z"
-msgstr "Cadrumo vX.Y.Z"
+msgstr "Cadrumo vX.Y.Z – kiadási jegyzetek"
 
 #: ../../_release_notes_template.md:17
 msgid ""
@@ -96,20 +96,19 @@ msgid "Verification"
 msgstr "Ellenőrzés"
 
 #: ../../_release_notes_template.md:57
-#, fuzzy
 msgid "`just test-packaging-smoke` green on Linux/WSL"
-msgstr "`just packaging-smoke` zöld Linuxon/WSL-en"
+msgstr "A `just test-packaging-smoke` sikeresen lefut Linuxon/WSL-en"
 
 #: ../../_release_notes_template.md:58
 msgid "`uvx --from cadrumo==X.Y.Z aeat --version` resolves on a clean machine"
 msgstr "`uvx --from cadrumo==X.Y.Z aeat --version` feloldódik tiszta gépen"
 
 #: ../../_release_notes_template.md:59
-#, fuzzy
 msgid ""
 "`pip install cadrumo==X.Y.Z` pulls both exact-version data distributions"
 "     and `aeat --format json config repair` runs clean"
 msgstr ""
-"a `pip install cadrumo==X.Y.Z` mindkét pontos verziójú adatcsomagot "
-"letölti, és az `aeat config repair integrity registry` hiba nélkül lefut"
+"A `pip install cadrumo==X.Y.Z` mindkét pontos verziójú adatdisztribúciót "
+"letölti, és az `aeat --format json config repair` parancs hiba nélkül "
+"lefut"
 

@@ -24,9 +24,9 @@ from __future__ import annotations
 
 import pytest
 
-from ....tests import user_profile as profile_test_support
 from ..loader import load_user_profile_schema
 from ..schema import ProfileFieldDefinition
+from .schema_value_support import REQUIRED_PROFILE_PLACEHOLDERS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -44,7 +44,7 @@ def test_every_filled_path_is_declared_by_the_schema() -> None:
     the one it thinks it made.
     """
     declared = _field_index()
-    required_placeholders = vars(profile_test_support)["_REQUIRED_PLACEHOLDERS"]
+    required_placeholders = REQUIRED_PROFILE_PLACEHOLDERS
 
     undeclared = sorted(path for path in required_placeholders if path not in declared)
 
@@ -60,7 +60,7 @@ def test_every_filled_value_is_admissible_for_its_field() -> None:
     """
     declared = _field_index()
     assert declared, "the profile field index is empty; no filled value can be judged against nothing"
-    required_placeholders = vars(profile_test_support)["_REQUIRED_PLACEHOLDERS"]
+    required_placeholders = REQUIRED_PROFILE_PLACEHOLDERS
     assert required_placeholders, "the required-placeholder table is empty; there is nothing to judge"
 
     refused = [
@@ -80,7 +80,7 @@ def test_the_table_constrains_something_so_the_sweep_is_not_vacuous() -> None:
     checked.
     """
     declared = _field_index()
-    required_placeholders = vars(profile_test_support)["_REQUIRED_PLACEHOLDERS"]
+    required_placeholders = REQUIRED_PROFILE_PLACEHOLDERS
 
     constrained = [
         path for path in required_placeholders if (field := declared.get(path)) is not None and field.enum_values

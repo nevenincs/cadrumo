@@ -7,6 +7,7 @@ from collections.abc import Callable
 import typer
 
 from ...application.auth.operator import build_live_auth_preflight_report
+from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ...application.auth.operator_results import LiveAuthPreflightReport
 from ...core.redaction.rules import redact_for_cli_output
 
@@ -27,8 +28,14 @@ def resolve_active_bucket(active_bucket_id: Callable[[], str] | None, *, family:
     return active_bucket_id()
 
 
-def emit_live_auth_preflight(provider: str | None = None) -> None:
-    report = build_live_auth_preflight_report(provider)
+def emit_live_auth_preflight(
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    provider: str | None = None,
+) -> None:
+    report = build_live_auth_preflight_report(
+        provider,
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+    )
     for line in _live_auth_preflight_lines(report):
         typer.echo(redact_for_cli_output(line), err=True)
 

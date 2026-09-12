@@ -16,6 +16,7 @@ from ...core.modelo import Modelo
 from ...core.period import Period, PeriodError
 from ._app_live_auth_preflight import emit_live_auth_preflight
 from .common import active_bucket_id_or_refuse, emit_envelope
+from .state_projection_support import certificate_secret_backend_factory
 
 
 def _period_option(period: str, *, year: int) -> Period:
@@ -48,7 +49,7 @@ def justificante_pull(
     from ._app_live_justificante_payloads import JustificanteCaptureResult
 
     bucket_id = active_bucket_id_or_refuse()
-    emit_live_auth_preflight()
+    emit_live_auth_preflight(certificate_secret_backend_factory(ctx))
     outcome = asyncio.run(
         capture_justificante_snapshot_outcome(
             bucket_id=bucket_id,
@@ -56,7 +57,7 @@ def justificante_pull(
             year=year,
             period=_period_option(period, year=year),
             service=build_justificante_capture_service(bucket_id),
-            read_port=build_justificante_live_read_port(),
+            read_port=build_justificante_live_read_port(certificate_secret_backend_factory(ctx)),
             registration_ports=build_justificante_registration_ports(),
             verifier=build_justificante_authenticity_verifier(),
         ),

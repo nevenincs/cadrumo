@@ -57,7 +57,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.filing_evidence import general_m303_filing_evidence
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ...aggregation.source_mesh import CalculationSourceProvenance, CalculationSourceResolution
 from ...aggregation.source_resolution_operations import merge_source_resolutions

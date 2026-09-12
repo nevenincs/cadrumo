@@ -38,8 +38,11 @@ from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodError, StandardPeriodCode
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
+from ...domain.calculations.registry.errors import RegistryError
+from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.irnr_ledger_bindings import (
     resolve_ledger_irnr_income_aggregation_binding_values,
@@ -70,6 +73,7 @@ from ...domain.calculations.registry.ledger_renta_income_bindings import (
     unsupported_ledger_renta_income_observations,
 )
 from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.schema import IvaCategory
@@ -643,6 +647,92 @@ def _m130_retenciones_backend_inputs(
     return {route.output_casilla: value}
 
 
+_IMPATRIADO_REGISTRY_FACT_ID = "impatriado-income-ledger-registry-mapping"
+_IMPATRIADO_REGISTRY_SOURCE_KIND = "ledger_impatriado_income_aggregation"
+
+
+def _resolve_impatriado_registry_declarations(
+    context: CalculationSourceContext,
+) -> tuple[str, CasillaId, frozenset[str], frozenset[str]] | None:
+    """Resolve the selected filing context's impatriado ledger declarations.
+
+    A missing, stale, or malformed mapping is an unavailable source declaration.
+    Returning ``None`` makes the caller return an empty source resolution rather
+    than silently selecting a Python default.
+    """
+    try:
+        resolved = bundled_authority().resolve_governed_fact(
+            MappingFactQuery(
+                fact_id=_IMPATRIADO_REGISTRY_FACT_ID,
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=context.period.end_date,
+                filing_year=context.filing_year,
+                period=context.period.registry_token,
+            ),
+        )
+    except (RegistryError, PeriodError, TypeError, ValueError):
+        return None
+    if not isinstance(resolved, ResolvedMappingFact):
+        return None
+
+    entries: dict[str, str] = {}
+    for entry in resolved.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            return None
+        key = entry.key.strip()
+        if not key or key in entries:
+            return None
+        value = entry.value.strip()
+        if not value:
+            return None
+        entries[key] = value
+
+    modelo = entries.get("applicability.modelos")
+    source_kind = entries.get("binding.source_kind")
+    target_value = entries.get("target.casilla_id")
+    jurisdiction_value = entries.get("source.jurisdictions")
+    category_value = entries.get("eligible.income_categories")
+    if (
+        modelo is None
+        or source_kind is None
+        or target_value is None
+        or jurisdiction_value is None
+        or category_value is None
+        or modelo != str(context.modelo)
+        or source_kind != _IMPATRIADO_REGISTRY_SOURCE_KIND
+    ):
+        return None
+
+    try:
+        target_casilla_id = validated_casilla_id(
+            target_value,
+            surface="impatriado registry target.casilla_id",
+        )
+    except (TypeError, ValueError):
+        return None
+
+    def csv_tokens(value: str, *, uppercase: bool = False) -> frozenset[str] | None:
+        raw_tokens = value.split(",")
+        if not raw_tokens or any(not token.strip() for token in raw_tokens):
+            return None
+        normalized = tuple(
+            token.strip().upper() if uppercase else token.strip().casefold() for token in raw_tokens
+        )
+        if len(set(normalized)) != len(normalized):
+            return None
+        if any(not token or any(not (char.isalnum() or char in "_-.") for char in token) for token in normalized):
+            return None
+        return frozenset(normalized)
+
+    source_jurisdictions = csv_tokens(jurisdiction_value, uppercase=True)
+    eligible_income_categories = csv_tokens(category_value)
+    if source_jurisdictions is None or eligible_income_categories is None:
+        return None
+    if any(len(value) != 2 or not value.isalpha() or value != value.upper() for value in source_jurisdictions):
+        return None
+    return modelo, target_casilla_id, source_jurisdictions, eligible_income_categories
+
+
 class LedgerImpatriadoIncomeAggregationSourceResolver:
     """Resolve ``ledger_impatriado_income_aggregation`` Modelo 151 base bindings.
 
@@ -670,10 +760,18 @@ class LedgerImpatriadoIncomeAggregationSourceResolver:
             filing_year=context.filing_year,
             code=context.period.registry_token,
         )
+        declarations = _resolve_impatriado_registry_declarations(context)
+        if declarations is None:
+            return empty_source_resolution(self.resolver_id, self.owned_sources)
+        modelo, target_casilla_id, source_jurisdictions, eligible_income_categories = declarations
         try:
             aggregation = aggregate_impatriado_income_ledger_from_repositories(
                 bucket_id=context.bucket_id,
                 period=aggregation_period,
+                modelo=modelo,
+                target_casilla_id=target_casilla_id,
+                source_jurisdictions=source_jurisdictions,
+                eligible_income_categories=eligible_income_categories,
                 transaction_repository=self._transaction_repository,
             )
         except STORAGE_DEGRADATION_ERRORS as exc:

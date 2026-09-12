@@ -1,4 +1,4 @@
-"""Pure projection of the wizard descriptor catalogue into the ``PROFILE_KEYS`` registry shape.
+"""Pure projection of the wizard descriptor catalogue into profile-key records.
 
 ``compile_profile_keys`` walks every :class:`WizardFlow` in the
 catalogue, emits one :class:`ProfileKey` per distinct
@@ -6,8 +6,8 @@ catalogue, emits one :class:`ProfileKey` per distinct
 the conditional `required_when_*` pair from the question's
 ``required`` and ``visible_when`` declarations. The function is
 import-time pure: it performs no file I/O, no environment lookups,
-and no side effects, so the compiled profile-key tuple can be assigned to its
-output at module-load time.
+and no side effects, so callers can safely cache the compiled profile-key
+tuple when an application projection needs it.
 """
 
 from __future__ import annotations
@@ -16,13 +16,13 @@ from collections.abc import Iterator, Sequence
 
 from ...core.i18n.translatable import Translatable as tr
 from ...core.requirement import Requirement
-from ...domain.contribuyente.keys import ProfileKey
+from ..user_profile.profile_key import ProfileKey
 from .errors import WizardCompileError
 from .models import WizardCondition, WizardFlow, WizardQuestion, WizardVisibility
 
 
 def compile_profile_keys(flows: Sequence[WizardFlow]) -> tuple[ProfileKey, ...]:
-    """Project the wizard catalogue into the ``PROFILE_KEYS`` shape.
+    """Project the wizard catalogue into application profile-key records.
 
     Args:
         flows: The wizard catalogue to walk.
@@ -93,7 +93,7 @@ def _resolve_condition(
 ) -> tuple[str | None, str | None]:
     """Resolve a ``visible_when`` gate into the ``required_when_*`` pair.
 
-    The ``ProfileKey`` registry expresses a conditional requirement as a
+    The ``ProfileKey`` catalogue expresses a conditional requirement as a
     single parent-key / parent-value pair. Only a single-clause
     ``equals`` :class:`WizardCondition` maps to that shape. A
     multi-clause :class:`WizardVisibility` disjunction and a
@@ -111,28 +111,4 @@ def _resolve_condition(
     return parent.profile_key, condition.equals
 
 
-def ensure_profile_keys_registered() -> None:
-    """Register compiled PROFILE_KEYS into the domain registry, idempotently.
-
-    Called once when this module is first imported, so importing the wizard
-    package is sufficient to seed the registry. It is also the public seam an
-    entrypoint calls at its own initialisation, because the domain registry is
-    process-global and the domain layer may not pull upward to seed itself:
-    a host that never imports this package would otherwise read an
-    empty registry and raise
-    :class:`~domain.contribuyente.errors.ProfileKeysRegistrationError`.
-
-    Repeat calls are no-ops:
-    :func:`~cadrumo.domain.contribuyente._keys.register_profile_keys` returns
-    early when the compiled tuple equals the registered one, so an entrypoint
-    may call this unconditionally without ordering knowledge.
-    """
-    from ...domain.contribuyente.keys import register_profile_keys
-    from .catalogue import WIZARD_FLOWS
-
-    register_profile_keys(compile_profile_keys(WIZARD_FLOWS))
-
-
-ensure_profile_keys_registered()
-
-__all__ = ["compile_profile_keys", "ensure_profile_keys_registered"]
+__all__ = ["compile_profile_keys"]

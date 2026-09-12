@@ -21,10 +21,10 @@ identify the exact rule set.
 
 ## Runtime authority artifact
 
-The runtime authority artifact is the versioned, digest-checked publication of
+The runtime authority artifact is the digest-checked publication of
 the validated AEAT registry intended for installed calculations and filing
 exports. It is generated output. `bundled_authority()` reads the packaged
-`registry/authority/authority.json` and checks its schema version and content
+`registry/authority/authority.json` and checks its content
 digest before reconstructing typed authority data.
 
 | Term | Meaning |
@@ -33,12 +33,10 @@ digest before reconstructing typed authority data.
 | Validation receipt | The digests captured for those inputs; a change before publication refuses the candidate. |
 | Identity digest | The content-addressed identity of the candidate, recorded in the artifact so a stale artifact can be detected. |
 | Authority artifact | The atomically written JSON publication containing the resolved authority. |
-| Schema version | The artifact format identifier. Runtime refuses an unsupported version. |
 
-The artifact is one canonical JSON object with exactly three members:
-`schema_version`, `payload`, and `payload_sha256`. `payload_sha256` is the
-SHA-256 digest of the canonical JSON of `schema_version` and `payload`
-together. The digest detects a truncated, corrupted, or hand-edited file.
+The artifact is one canonical JSON object with exactly two members: `payload`
+and `payload_sha256`. `payload_sha256` is the SHA-256 digest of the canonical
+JSON of `payload`. The digest detects a truncated, corrupted, or hand-edited file.
 
 The identity digest folds, for every registry file and every source-evidence
 file, its path relative to its root and the SHA-256 of its content. Registry
@@ -46,7 +44,7 @@ files are digested with CRLF line endings read as LF. Source evidence is
 digested byte for byte. Absolute paths, sizes, and timestamps never contribute,
 so an identical checkout anywhere derives the same identity.
 
-The current format is `cadrumo-authority-artifact-v4`. Its payload is a compact
+The payload is a compact
 projection of the complete typed authority. Required fields are always written;
 a field is omitted only when its typed value equals the default declared by its
 schema. Strict rehydration restores those defaults. Discriminators and authored
@@ -68,14 +66,13 @@ object with one tag that names its type:
 Runtime decodes the payload under the same strict schema the development
 compiler uses. It refuses an unknown tag, a malformed or non-canonical tagged
 value, and an untagged non-text fact value; it never infers a type from the
-shape of a string. It refuses every superseded v1, v2, or v3 artifact and names
-the v4 format to republish in.
+shape of a string.
 
 The compiler, not the product runtime, expands authoring deltas into complete
 canonical revisions. The artifact also carries typed runtime catalogues for IVA
 regulations, place-of-supply rules, country aliases, Spanish postal territories,
 territorial carve-outs, recargo bands, and apoderamiento scopes. These are
-frozen schema records, not embedded TOML bytes or an untyped JSON bag. A v4
+frozen schema records, not embedded TOML bytes or an untyped JSON bag. A
 write or read refuses an authority when any required runtime catalogue is empty.
 
 Modelo and tax-domain types validate stable identifier syntax without loading

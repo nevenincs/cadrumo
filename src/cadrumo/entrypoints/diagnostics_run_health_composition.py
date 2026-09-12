@@ -7,20 +7,29 @@ from ..application.diagnostics_run_health_ports import (
     DiagnosticAuthProbeResult,
     DiagnosticRunTelemetryPort,
 )
+from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..application.state_projection_ports import StateProjectionReadPorts
 
 
 class _DiagnosticsAuthProbeAdapter(DiagnosticAuthProbePort):
     """Adapt the canonical auth application result to diagnostics-safe facts."""
 
-    def __init__(self, read_ports: StateProjectionReadPorts) -> None:
+    def __init__(
+        self,
+        read_ports: StateProjectionReadPorts,
+        certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    ) -> None:
         self._read_ports = read_ports
+        self._certificate_secret_backend_factory = certificate_secret_backend_factory
 
     def probe(self) -> DiagnosticAuthProbeResult:
         """Read auth readiness through the root-composed state projection ports."""
         from ..application.auth.operator import test_operator_auth
 
-        result = test_operator_auth(read_ports=self._read_ports)
+        result = test_operator_auth(
+            certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+            read_ports=self._read_ports,
+        )
         return DiagnosticAuthProbeResult(
             provider=result.provider,
             configured=result.configured,
@@ -41,9 +50,13 @@ def compose_diagnostics_run_health_port() -> DiagnosticRunTelemetryPort:
     return LLMRunTelemetryDiagnosticsAdapter(LLMRunTelemetryRecorder())
 
 
-def compose_diagnostics_auth_probe_port(*, read_ports: StateProjectionReadPorts) -> DiagnosticAuthProbePort:
+def compose_diagnostics_auth_probe_port(
+    *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    read_ports: StateProjectionReadPorts,
+) -> DiagnosticAuthProbePort:
     """Bind the diagnostics auth probe to the root-composed state projection."""
-    return _DiagnosticsAuthProbeAdapter(read_ports)
+    return _DiagnosticsAuthProbeAdapter(read_ports, certificate_secret_backend_factory)
 
 
 __all__ = ["compose_diagnostics_auth_probe_port", "compose_diagnostics_run_health_port"]

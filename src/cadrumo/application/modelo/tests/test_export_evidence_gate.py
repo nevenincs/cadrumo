@@ -23,7 +23,7 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
 from ....domain.modelos.work_unit import derive_work_unit_id
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
-from ....tests.filing_evidence import general_m303_filing_evidence
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ..export import (
     ModeloExportCommand,
     ModeloExportEvidenceMissingError,

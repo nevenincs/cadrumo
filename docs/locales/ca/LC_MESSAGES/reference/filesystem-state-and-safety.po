@@ -45,35 +45,27 @@ msgstr ""
 "propietat de Cadrumo. El valor per defecte depèn de com s'executa "
 "Cadrumo:"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Platform"
 msgstr "Plataforma"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Default storage root"
 msgstr "Arrel d'emmagatzematge per defecte"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Windows"
 msgstr "Windows"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "`%LOCALAPPDATA%/cadrumo/storage`"
 msgstr "`%LOCALAPPDATA%/cadrumo/storage`"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Linux"
 msgstr "Linux"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "`$XDG_DATA_HOME/cadrumo/storage`, or `~/.local/share/cadrumo/storage`"
 msgstr "`$XDG_DATA_HOME/cadrumo/storage`, o `~/.local/share/cadrumo/storage`"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "macOS"
 msgstr "macOS"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "`~/Library/Application Support/cadrumo/storage`"
 msgstr "`~/Library/Application Support/cadrumo/storage`"
 
@@ -82,7 +74,11 @@ msgid ""
 "The root is the same whether Cadrumo runs from a source checkout or an "
 "installed distribution. Running from a checkout does not move it: set "
 "`CADRUMO_LOCAL_STORAGE_ROOT` to put the tree inside the checkout."
-msgstr "L'arrel és la mateixa tant si Cadrumo s'executa des d'un repositori de codi com des d'una distribució instal·lada. Executar-lo des d'un repositori no la mou: definiu `CADRUMO_LOCAL_STORAGE_ROOT` per situar l'arbre dins del repositori."
+msgstr ""
+"L'arrel és la mateixa tant si Cadrumo s'executa des d'un repositori de "
+"codi com des d'una distribució instal·lada. Executar-lo des d'un "
+"repositori no la mou: definiu `CADRUMO_LOCAL_STORAGE_ROOT` per situar "
+"l'arbre dins del repositori."
 
 #: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md:21
 msgid ""
@@ -90,7 +86,11 @@ msgid ""
 " uses them runs. The state-free surfaces (`--help`, `--version`, and a "
 "bare invocation) do not create anything, so browsing the command tree "
 "leaves no state behind."
-msgstr "Cadrumo crea l'arrel i els directoris que en depenen quan s'executa una ordre que els utilitza. Les superfícies sense estat (`--help`, `--version` i la invocació simple) no creen res, de manera que explorar l'arbre d'ordres no deixa cap estat."
+msgstr ""
+"Cadrumo crea l'arrel i els directoris que en depenen quan s'executa una "
+"ordre que els utilitza. Les superfícies sense estat (`--help`, "
+"`--version` i la invocació simple) no creen res, de manera que explorar "
+"l'arbre d'ordres no deixa cap estat."
 
 #: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md:26
 msgid ""
@@ -149,29 +149,23 @@ msgstr ""
 msgid "Safety and filing scope"
 msgstr "Seguretat i abast de la presentació"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Surface"
 msgstr "Superfície"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Cadrumo behavior"
 msgstr "Comportament de Cadrumo"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Calculation and verification"
 msgstr "Càlcul i verificació"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Local; evaluates saved records against bundled registry rules and evidence"
 msgstr ""
 "Local; avalua els registres desats contra les regles del registre "
 "incloses i l'evidència"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Export"
 msgstr "Exportació"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid ""
 "Writes an AEAT-compatible local file after verification and required "
 "evidence gates pass; portal acceptance is not guaranteed"
@@ -180,35 +174,27 @@ msgstr ""
 " les barreres d'evidència requerides passin; l'acceptació al portal no es"
 " garanteix"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Live AEAT access"
 msgstr "Accés en directe a l'AEAT"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Separately invoked, authenticated, and read-only"
 msgstr "Invocat per separat, autenticat i de només lectura"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Submission"
 msgstr "Tramesa"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Forbidden; no Cadrumo submission command exists"
 msgstr "Prohibida; no existeix cap ordre de tramesa de Cadrumo"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Official filing"
 msgstr "Presentació oficial"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Performed by a human through an official AEAT channel"
 msgstr "Duta a terme per una persona a través d'un canal oficial de l'AEAT"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Filing history"
 msgstr "Historial de presentacions"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid ""
 "Recorded locally after the human filing; reconciliation compares totals "
 "and, for enrolled modelos, captured per-casilla values"
@@ -217,11 +203,9 @@ msgstr ""
 "compara els totals i, per als models inscrits, els valors capturats per "
 "casella"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Responsibility"
 msgstr "Responsabilitat"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid ""
 "The taxpayer or authorized filer reviews figures, meets deadlines, "
 "uploads, and retains the justificante"
@@ -241,22 +225,4 @@ msgstr ""
 "restabliment. L'[explicació del límit de "
 "presentació](../explanation/recording-a-filing-and-the-boundary.md) "
 "explica per què la tramesa es manté fora de Cadrumo."
-
-#~ msgid "Run mode"
-#~ msgstr "Mode d'execució"
-
-#~ msgid "Source checkout"
-#~ msgstr "Còpia del codi font"
-
-#~ msgid "`<repository>/var/storage`"
-#~ msgstr "`<repository>/var/storage`"
-
-#~ msgid "Installed on Windows"
-#~ msgstr "Instal·lat a Windows"
-
-#~ msgid "Installed on Linux"
-#~ msgstr "Instal·lat a Linux"
-
-#~ msgid "Installed on macOS"
-#~ msgstr "Instal·lat a macOS"
 

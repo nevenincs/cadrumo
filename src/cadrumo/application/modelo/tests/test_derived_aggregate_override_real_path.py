@@ -30,7 +30,7 @@ Real adapters throughout: a real encrypted storage root, the real profile
 registration and write doors (:func:`register_minimal_profile`, the single
 seeding door for a real profile), the resident
 registry authority, and the real bucket-aggregation calculate action
-(:func:`calculate_modelo_revision_from_bucket_aggregation`) resolving its
+(:func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`) resolving its
 repositories from the active bucket exactly as production does. Nothing is
 monkeypatched -- in particular the source-resolver mesh is built as a tuple at
 call time, so a patched module attribute would not be observed by it anyway.
@@ -55,7 +55,7 @@ from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.user_profile.errors import ProfileSchemaValidationError
 from ....domain.user_profile.values import UserProfileFact
-from ....tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
+from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ....tests.profile_capsule import (
     load_test_profile_record,
     open_test_profile_session,
@@ -185,11 +185,11 @@ def _calculate_estatal_minimo() -> Decimal:
         revision_id=snapshot.revision.id,
         clock=_T0,
     )
-    revision = calculate_modelo_revision_from_bucket_aggregation(
+    revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         binding_values=_non_mesh_zero_bindings(),
         clock=_T0,
-    )
+    ).revision
     return Decimal(
         revision.casilla_values[
             validated_casilla_id(_ESTATAL_CASILLA, surface="test_derived_aggregate_override_real_path.casilla")

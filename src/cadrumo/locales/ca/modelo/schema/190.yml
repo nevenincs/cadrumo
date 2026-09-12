@@ -5,7 +5,7 @@ modelo:
         continuidad:
           devengo-year:
             help: Informació fiscal de la casella 148-151 del Modelo 190.
-            label: Casella 148-151 — informació fiscal
+            label: Exercici de meritació
           ingresos-a-cuenta-efectuados:
             help: Informació fiscal sobre informació fiscal de la casella 122-134
               del Modelo 190.
@@ -16,17 +16,17 @@ modelo:
             label: Casella 135-147 — informació fiscal
           m190-correo-electronico:
             help: Informació fiscal de la casella 176-225 del Modelo 190.
-            label: Casella 176-225 — informació fiscal
+            label: Correu electrònic de la persona amb qui relacionar-se
           m190-declaracion-complementaria:
             help: Informació fiscal sobre informació fiscal de la casella 121 del
               Modelo 190.
-            label: Casella 121 — informació fiscal
+            label: Declaració complementària
           m190-declaracion-sustitutiva:
             help: Informació fiscal de la casella 122 del Modelo 190.
-            label: Casella 122 — informació fiscal
+            label: Declaració substitutiva
           m190-numero-identificativo:
             help: Informació fiscal de la casella 108-120 del Modelo 190.
-            label: Casella 108-120 — informació fiscal
+            label: Número identificatiu de la declaració
           m190-numero-identificativo-anterior:
             help: Informació fiscal de la casella 123-135 del Modelo 190.
             label: Casella 123-135 — informació fiscal
@@ -41,7 +41,7 @@ modelo:
           payee-anualidades-alimentos:
             help: Informació fiscal sobre anualitats per aliments de la casella 210-222
               del Modelo 190.
-            label: Casella 210-222 — anualitats per aliments
+            label: Anualitats per aliments
           payee-ascendientes-75-mas-entero:
             help: Informació fiscal sobre informació fiscal de la casella 244 del
               Modelo 190.
@@ -84,19 +84,19 @@ modelo:
             label: Casella 241 — informació fiscal
           payee-birth-year:
             help: Informació fiscal de la casella 153-156 del Modelo 190.
-            label: Casella 153-156 — informació fiscal
+            label: Any de naixement
           payee-ceuta-melilla-clave:
             help: Informació fiscal sobre informació fiscal de la casella 152 del
               Modelo 190.
-            label: Casella 152 — informació fiscal
+            label: Ceuta o Melilla
           payee-clave-percepcion:
             help: Informació fiscal sobre informació fiscal de la casella 78 del Modelo
               190.
-            label: Casella 78 — informació fiscal
+            label: Clau de percepció
           payee-complemento-ayuda-infancia:
             help: Informació fiscal sobre informació fiscal de la casella 322 del
               Modelo 190.
-            label: Casella 322 — informació fiscal
+            label: Complement d'ajuda per a la infància
           payee-computo-hijo-1:
             help: Informació fiscal sobre informació fiscal de la casella 251 del
               Modelo 190.
@@ -112,7 +112,7 @@ modelo:
           payee-contract-relation-clave:
             help: Informació fiscal sobre informació fiscal de la casella 168 del
               Modelo 190.
-            label: Casella 168 — informació fiscal
+            label: Contracte o relació
           payee-descendientes-discapacidad-33-65-entero:
             help: Informació fiscal sobre informació fiscal de la casella 231-232
               del Modelo 190.
@@ -156,7 +156,7 @@ modelo:
           payee-disability-clave:
             help: Informació fiscal sobre informació fiscal de la casella 167 del
               Modelo 190.
-            label: Casella 167 — informació fiscal
+            label: Discapacitat
           payee-emerging-stock-excess-clave:
             help: Informació fiscal sobre informació fiscal de la casella 388 del
               Modelo 190.
@@ -164,15 +164,15 @@ modelo:
           payee-family-situation:
             help: Informació fiscal sobre situació familiar del perceptor de la casella
               157 del Modelo 190.
-            label: Casella 157 — situació familiar del perceptor
+            label: Situació familiar
           payee-gastos-deducibles:
             help: Informació fiscal sobre despeses deduïbles del perceptor de la casella
               184-196 del Modelo 190.
-            label: Casella 184-196 — despeses deduïbles del perceptor
+            label: Despeses deduïbles
           payee-geographic-mobility-clave:
             help: Informació fiscal sobre informació fiscal de la casella 170 del
               Modelo 190.
-            label: Casella 170 — informació fiscal
+            label: Mobilitat geogràfica
           payee-incapacidad-dineraria-percepcion:
             help: Informació fiscal sobre informació fiscal de la casella 256-268
               del Modelo 190.
@@ -200,11 +200,11 @@ modelo:
           payee-nif:
             help: Informació fiscal sobre NIF del perceptor de la casella 18-26 del
               Modelo 190.
-            label: Casella 18-26 — NIF del perceptor
+            label: NIF del perceptor
           payee-pension-compensatoria:
             help: Informació fiscal sobre pensió compensatòria de la casella 197-209
               del Modelo 190.
-            label: Casella 197-209 — pensió compensatòria
+            label: Pensions compensatòries
           payee-prestamos-vivienda-clave:
             help: Informació fiscal sobre informació fiscal de la casella 254 del
               Modelo 190.
@@ -264,7 +264,7 @@ modelo:
           representante-legal-nif:
             help: Informació fiscal sobre informació fiscal de la casella 27-35 del
               Modelo 190.
-            label: Casella 27-35 — informació fiscal
+            label: NIF del representant legal
           retenciones-ingresos-a-cuenta:
             help: Informació fiscal sobre informació fiscal de la casella 161-175
               del Modelo 190.

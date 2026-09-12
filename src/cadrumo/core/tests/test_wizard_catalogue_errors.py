@@ -4,7 +4,6 @@ import pytest
 
 from ..errors.error_codes import build_error_envelope, get_registered_error_code
 from ..errors.hierarchy import CadrumoError
-from ..setup_answers import ProjectAnswersNotRegisteredError
 from ..wizard_catalogue import WizardCatalogueAlreadyRegisteredError, WizardCatalogueNotRegisteredError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -12,7 +11,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _ERROR_CASES: tuple[tuple[type[CadrumoError], str], ...] = (
     (WizardCatalogueNotRegisteredError, "INTERNAL_WIZARD_CATALOGUE_NOT_REGISTERED"),
     (WizardCatalogueAlreadyRegisteredError, "INTERNAL_WIZARD_CATALOGUE_ALREADY_REGISTERED"),
-    (ProjectAnswersNotRegisteredError, "INTERNAL_PROFILE_PROJECT_ANSWERS_NOT_REGISTERED"),
 )
 
 

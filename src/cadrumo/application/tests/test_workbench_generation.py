@@ -17,6 +17,7 @@ from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .. import workbench_generation as generation_module
+from ..auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ..aeat_sync.workspace import AeatSyncWorkspaceProjectionError, AeatSyncWorkspaceProjectionV1
 from ..ledger.workspace import (
     LedgerWorkspaceArea,
@@ -40,7 +41,10 @@ from ..overview.home import (
 )
 from ..overview.tests.calendar_test_support import modelo_record
 from ..search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
-from ..user_profile.censal_operation import CENSAL_OPERATION_DEFINITION, build_censal_operation_registration
+from ..user_profile.censal_operation import (
+    build_censal_operation_definition,
+    build_censal_operation_registration,
+)
 from ..workbench_generation import (
     InstalledWorkbenchGenerationProviderV1,
     SecureProfileWorkbenchGenerationReadDoorV1,
@@ -55,6 +59,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 9, 3, 10, 30, tzinfo=UTC)
 _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
+
+
+def _test_censal_operation_definition():
+    return build_censal_operation_definition(
+        certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+    )
 
 
 @dataclass
@@ -281,7 +291,7 @@ def test_secure_profile_aeat_sync_reader_contains_a_validation_error() -> None:
     revisions = _Repository(CalculationRevisionCatalogue())
     filings = _Repository(ModeloRecordCatalogue())
     contracts = OperationPublicContractSetV1.build(
-        (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
+        (build_censal_operation_registration(_test_censal_operation_definition()).contract,)
     )
     with pytest.raises(ValidationError):
         read_local_aeat_sync_workspace_projection(
@@ -333,7 +343,7 @@ def test_secure_profile_aeat_sync_reader_contains_a_named_projection_error() -> 
     revisions = _Repository(CalculationRevisionCatalogue())
     filings = _Repository(ModeloRecordCatalogue())
     contracts = OperationPublicContractSetV1.build(
-        (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
+        (build_censal_operation_registration(_test_censal_operation_definition()).contract,)
     )
     with pytest.raises(AeatSyncWorkspaceProjectionError, match="subject key cannot be blank"):
         read_local_aeat_sync_workspace_projection(

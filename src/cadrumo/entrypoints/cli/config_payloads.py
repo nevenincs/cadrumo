@@ -245,7 +245,7 @@ class RepairConnectivityResult(OutputSchema):
     """Read-only connectivity probe result for ``aeat config repair connectivity``.
 
     Wraps the browser/Sede status produced by
-    :func:`probe_browser_connectivity` for the
+    :func:`adapters.outbound.aeat.browser.connectivity.probe_browser_connectivity` for the
     :class:`SchemaEnvelope` surface.  The
     command reports adapter health only; it does not authenticate, file, or
     mutate local configuration.

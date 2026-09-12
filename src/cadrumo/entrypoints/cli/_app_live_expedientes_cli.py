@@ -18,6 +18,7 @@ import typer
 from ...application.live.expedientes import capture_expedientes_bulk
 from ._app_live_auth_preflight import emit_live_auth_preflight, metric_line
 from .common import active_bucket_id_or_refuse, emit_envelope, resolve_pull_year_range
+from .state_projection_support import certificate_secret_backend_factory
 
 
 class _ExpedientesRowDict(TypedDict):
@@ -63,10 +64,17 @@ def expedientes_pull(
     from ._app_live_expedientes_payloads import ExpedientesCaptureFailurePayload, ExpedientesCaptureResult
 
     bucket_id = active_bucket_id_or_refuse()
-    emit_live_auth_preflight()
+    emit_live_auth_preflight(certificate_secret_backend_factory(ctx))
     selected_modelos = tuple(modelos or ())
     if len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None:
-        persisted = asyncio.run(capture_expedientes(bucket_id=bucket_id, modelo=selected_modelos[0], year=year))
+        persisted = asyncio.run(
+            capture_expedientes(
+                bucket_id=bucket_id,
+                modelo=selected_modelos[0],
+                year=year,
+                certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+            )
+        )
         result = ExpedientesCaptureResult(
             bucket_id=bucket_id,
             snapshot_id=persisted.snapshot_id,
@@ -92,6 +100,7 @@ def expedientes_pull(
             year_from=resolved_from,
             year_to=resolved_to,
             modelos=selected_modelos or None,
+            certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
         ),
     )
     lines = [

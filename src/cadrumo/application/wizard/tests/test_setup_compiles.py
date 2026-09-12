@@ -3,7 +3,7 @@
 The tests verify every wiring invariant the runtime depends on: unique
 question ids inside the flow, every ``WizardCondition.question_id``
 resolves to an earlier question, every profile-bound question shows
-up in the registered profile keys, and every choice value passes
+up in the application profile-key catalogue, and every choice value passes
 ``validate_widget_answer`` so the descriptor is internally consistent
 before the runtime ever runs.
 """
@@ -12,11 +12,11 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.contribuyente.keys import profile_keys as registered_profile_keys
 from ..catalogue import SETUP_FLOW, WIZARD_FLOWS
 from ..compiler import compile_profile_keys
 from ..models import WizardQuestion, iter_conditions
 from ..widgets import validate_widget_answer
+from ...user_profile.profile_keys import profile_keys as catalogue_profile_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -39,10 +39,10 @@ def test_every_visible_when_resolves_to_an_earlier_question() -> None:
 
 
 def test_every_profile_key_appears_in_profile_keys() -> None:
-    registered = {entry.key for entry in registered_profile_keys()}
+    catalogue = {entry.key for entry in catalogue_profile_keys()}
     for question in _setup_questions():
         if question.profile_key is not None:
-            assert question.profile_key in registered
+            assert question.profile_key in catalogue
 
 
 def test_every_choice_value_passes_its_widget_validator() -> None:
@@ -65,8 +65,8 @@ def test_compile_profile_keys_returns_one_entry_per_profile_bound_question() -> 
 def test_tax_residence_ccaa_is_a_descriptor_bound_profile_key() -> None:
     profile_keys = {question.profile_key for question in _setup_questions()}
     assert "tax_residence.ccaa" in profile_keys
-    registered = {entry.key for entry in registered_profile_keys()}
-    assert "tax_residence.ccaa" in registered
+    catalogue = {entry.key for entry in catalogue_profile_keys()}
+    assert "tax_residence.ccaa" in catalogue
 
 
 def test_pays_capital_income_and_irpf_estimation_regime_are_descriptor_questions() -> None:

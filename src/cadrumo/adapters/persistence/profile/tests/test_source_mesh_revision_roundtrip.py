@@ -53,7 +53,7 @@ from .....domain.modelos.calculation_revision import (
     derive_calculation_revision_id_from_revision,
 )
 from .....domain.modelos.work_unit import derive_work_unit_id
-from .....tests.secure_objects_fixture import secure_objects
+from .secure_objects_fixture import secure_objects
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.sql.orm import SecureObjectRow
 from ...storage.sql.secure_objects import SecureObjectRepository

@@ -1,16 +1,15 @@
 """Domain errors for the contribuyente tax-residence profile.
 
-Defines :class:`TaxResidenceProfileError` and its concrete failures
-surfaced to RENTA verification, plus :class:`ProfileKeysRegistrationError`
-for the profile-key registry. The inventory ledger error hierarchy lives with
-its records in :mod:`domain.contribuyente.inventory`. Every
-class derives from :class:`core.errors.CadrumoError` so the shared
-error-code registration hook applies.
+Defines :class:`TaxResidenceProfileError` and its concrete failures surfaced
+to RENTA verification. The inventory ledger error hierarchy lives with its
+records in :mod:`domain.contribuyente.inventory`. Every class derives from
+:class:`core.errors.CadrumoError` so the shared error-code registration hook
+applies.
 """
 
 from __future__ import annotations
 
-from ...core.errors.hierarchy import CadrumoError, CoreError
+from ...core.errors.hierarchy import CadrumoError
 
 
 class TaxResidenceProfileError(CadrumoError):
@@ -59,30 +58,8 @@ class ProfileValidationError(TaxResidenceProfileError, ValueError):
     """
 
 
-class ProfileKeysRegistrationError(CoreError):
-    """Raised on a profile-key registry invariant violation.
-
-    Two cases share this typed exception (registered once centrally): a second
-    registration with a conflicting tuple (the registry is single-writer, first
-    registration wins), or an access before any registration — a programming /
-    import-order error meaning the wizard catalogue
-    (:mod:`application.wizard`) was not imported at startup to push the
-    compiled keys via :func:`register_profile_keys`. Replaces a bare
-    ``RuntimeError`` so callers can catch it precisely and the failure surfaces
-    in the central registry.
-    """
-
-    def __init__(self, message: str = "profile keys already registered with a different tuple") -> None:
-        """Build the profile-keys registry-invariant error."""
-        super().__init__(
-            message,
-            context={"registry": "profile._keys"},
-        )
-
-
 __all__ = [
     "ForalRegimeError",
-    "ProfileKeysRegistrationError",
     "ProfileNotConfiguredError",
     "ProfileValidationError",
     "TaxResidenceProfileError",

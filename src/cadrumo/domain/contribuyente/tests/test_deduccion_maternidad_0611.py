@@ -679,25 +679,12 @@ class TestArt811PopulationGate:
 
 
 class TestMesesMaternidadPorDescendienteHasAProductionConsumer:
-    """The pairing must be REACHED by production, not merely correct in isolation.
+    """The sparse pairing shape is a domain contract.
 
-    It had zero production callers while the calculate-path resolver recomposed
-    the same pairing inline -- two authorities for one answer, which is the shape
-    that let the guardería half drift from its own record for a release. These
-    assert the delegation exists rather than the arithmetic, which the sibling
-    class already covers.
+    Application reachability of this pairing is owned by the focused application
+    test. The domain assertion below keeps the sparse shape explicit: withheld
+    descendants are absent rather than represented by zero.
     """
-
-    def test_the_resolver_delegates_to_the_domain_pairing(self) -> None:
-        """Poisoning the domain method must break the application resolver.
-
-        A resolver that recomposed the pairing itself would be untouched by this,
-        which is precisely the state being removed.
-        """
-        from ....application.modelo.profile_binding import resolve_maternidad_meses
-
-        assert callable(resolve_maternidad_meses)
-        assert hasattr(RentaFamilyProfile, "meses_maternidad_por_descendiente")
 
     def test_a_withheld_descendant_is_absent_from_the_pairing_not_zero(self) -> None:
         """The pairing is SPARSE, which the resolver's withheld set depends on.

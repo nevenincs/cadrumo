@@ -41,10 +41,12 @@ from ..adapters.persistence.profile.modelos_calculation import CalculationRevisi
 from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ..adapters.persistence.storage.errors import StorageValidationError
+from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from ..adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ..application.auth.session_types import AeatSession
+from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..application.auth.sessions import AuthenticatedAeatSessionResult, ensure_authenticated_aeat_session
 from ..application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
 from ..application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
@@ -97,6 +99,7 @@ class LiveStateComposition:
     objects: SecureObjectRepository
     ports: FiledObservationPersistencePorts
     iva_remote_state_port: IvaRemoteStatePort
+    certificate_secret_backend_factory: CertificateSecretBackendFactory
 
 
 def compose_filed_observation_persistence_ports(
@@ -152,13 +155,19 @@ def compose_live_state(
         output_root=resolved_root,
         objects=secure_objects,
     )
-    remote_port = AppIvaRemoteStatePort(objects=secure_objects, filed_observation_ports=filed_ports)
+    certificate_secret_backend_factory = build_certificate_secret_backend
+    remote_port = AppIvaRemoteStatePort(
+        objects=secure_objects,
+        filed_observation_ports=filed_ports,
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+    )
     return LiveStateComposition(
         bucket_id=resolved_bucket_id,
         output_root=resolved_root,
         objects=secure_objects,
         ports=filed_ports,
         iva_remote_state_port=remote_port,
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
     )
 
 
@@ -166,11 +175,16 @@ class AppIvaRemoteStatePort:
     """Outer implementation of the live IVA application port."""
 
     def __init__(
-        self, *, objects: SecureObjectRepository, filed_observation_ports: FiledObservationPersistencePorts
+        self,
+        *,
+        objects: SecureObjectRepository,
+        filed_observation_ports: FiledObservationPersistencePorts,
+        certificate_secret_backend_factory: CertificateSecretBackendFactory,
     ) -> None:
         """Bind the port to one secure backend and filed-observation bundle."""
         self._objects = objects
         self._filed_observation_ports = filed_observation_ports
+        self._certificate_secret_backend_factory = certificate_secret_backend_factory
 
     @property
     def wallet_target_url(self) -> str:
@@ -191,7 +205,11 @@ class AppIvaRemoteStatePort:
 
     async def active_verified_session(self, *, operation: str, target_url: str | None) -> tuple[AeatSession, Settings]:
         """Resolve the active authenticated AEAT session."""
-        return await active_verified_session(operation=operation, target_url=target_url)
+        return await active_verified_session(
+            certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+            operation=operation,
+            target_url=target_url,
+        )
 
     def ensure_authenticated_session(
         self,
@@ -201,7 +219,12 @@ class AppIvaRemoteStatePort:
         target_url: str | None,
     ) -> Awaitable[AuthenticatedAeatSessionResult]:
         """Start the configured authentication flow."""
-        return ensure_authenticated_aeat_session(settings, operation=operation, target_url=target_url)
+        return ensure_authenticated_aeat_session(
+            settings,
+            certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+            operation=operation,
+            target_url=target_url,
+        )
 
     def list_history(self, *, as_of_year: int | None) -> IvaCompensationHistoryReport:
         """List persisted IVA history and authority decisions."""
@@ -444,11 +467,13 @@ async def pull_filed_history_with_shared_composition(
     events: object,
     ports: FiledObservationPersistencePorts,
     iva_remote_state_port: IvaRemoteStatePort,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
 ):
     """Invoke the filed-history service with the explicitly composed bundle."""
     from ..application.live.filed_data_capture import pull_filed_history
 
     return await pull_filed_history(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
         iva_remote_state_port=iva_remote_state_port,
         ports=ports,
         output_root=payload.output_root,

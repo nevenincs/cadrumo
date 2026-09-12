@@ -72,10 +72,6 @@ _SETTINGS_PREAMBLE = dedent(
         cadrumo_output_language="en",
     )
     token = config_module.settings_override.set(settings)
-    from cadrumo.application.wizard.compiler import ensure_profile_keys_registered
-
-    ensure_profile_keys_registered()
-
     from contextlib import ExitStack
 
     from cadrumo.adapters.persistence.storage import (

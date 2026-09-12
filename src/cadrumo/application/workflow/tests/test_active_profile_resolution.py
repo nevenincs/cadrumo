@@ -20,7 +20,6 @@ from pathlib import Path
 
 import pytest
 
-from .....application.wizard import compiler as _wizard  # noqa: F401
 from .....application.workflow.active_profile import resolve_active_profile_record
 from .....application.workflow.state_models import WorkflowState
 from .....core.bucket_pointer import BucketPointer, resolve_active_bucket_id, write_pointer

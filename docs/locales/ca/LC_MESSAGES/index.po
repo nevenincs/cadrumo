@@ -127,11 +127,11 @@ msgstr "El flux de treball de presentació"
 
 #: ../../index.md:164
 msgid "Modelo 036 (censo)"
-msgstr "Modelo 036 (censo)"
+msgstr "Modelo 036 (cens)"
 
 #: ../../index.md:164
 msgid "Modelo 100 (Renta)"
-msgstr "Modelo 100 (Renta)"
+msgstr "Modelo 100 (Renda)"
 
 #: ../../index.md:164
 msgid "Modelo 130 (IRPF instalment)"

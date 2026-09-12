@@ -18,7 +18,7 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ....tests.filing_evidence import general_m303_filing_evidence
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from .._registry_helpers import assert_revision_content_integrity
 from ..action_errors import StoredCalculationDriftError
 

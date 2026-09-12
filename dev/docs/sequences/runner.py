@@ -348,7 +348,7 @@ def _seed_m303_filing_evidence(fixtures_dir: Path) -> None:
     and keeps a six-figure-byte blob out of the tree.
     """
     from cadrumo.core.period import Period
-    from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+    from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 
     fixtures_dir.mkdir(parents=True, exist_ok=True)
     for filing_year, code in _M303_EVIDENCE_PERIODS:

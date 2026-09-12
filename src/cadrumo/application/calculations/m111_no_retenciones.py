@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import ModeloRevision
 
@@ -17,12 +18,44 @@ def _registry_no_retenciones_periods(
     filing_year: int | None = None,
     period_token: str | None = None,
 ) -> frozenset[tuple[int, str]]:
-    """Resolve a declared filing period through the generic registry query."""
-    del revision
+    """Resolve a declared filing period through selected registry declarations.
+
+    The public describe query selects the revision for the full filing scope;
+    its isolated snapshot then supplies the schedule and applicability
+    declarations. Missing, malformed, or divergent declarations return an
+    empty set, so no no-retenciones period is inferred from profile input.
+    """
     if modelo is None or filing_year is None or period_token is None:
         return frozenset()
-    report = RegistryQueryService(bundled_authority()).describe_modelo(modelo, period=period_token)
-    if report.period != period_token:
+    authority = bundled_authority()
+    query_service = RegistryQueryService(authority)
+    try:
+        report = query_service.describe_modelo_for_scope(
+            modelo,
+            filing_year=filing_year,
+            period=period_token,
+        )
+        if (
+            report.filing_year is None
+            or int(report.filing_year) != filing_year
+            or report.period is None
+            or str(report.period) != period_token
+            or (revision is not None and str(report.revision) != str(revision.id))
+        ):
+            return frozenset()
+        snapshot = authority.snapshot(
+            report.code,
+            filing_year=filing_year,
+            period=period_token,
+        )
+    except (RegistrySnapshotError, RegistryValidationError):
+        return frozenset()
+    if str(snapshot.revision.id) != str(report.revision):
+        return frozenset()
+    schedules = tuple(snapshot.filing_schedules.values())
+    if not schedules or not any(period_token in schedule.periods for schedule in schedules):
+        return frozenset()
+    if not snapshot.revision.applicability:
         return frozenset()
     return frozenset({(filing_year, period_token)})
 
@@ -66,14 +99,21 @@ def m111_no_retenciones_periods_from_profile_values(
 def m111_no_retenciones_periods_for_bucket(
     bucket_id: str,
     *,
+    modelo: str | None = None,
     filing_year: int | None = None,
     period_token: str | None = None,
     revision: ModeloRevision | None = None,
 ) -> frozenset[tuple[int, str]]:
-    """Resolve a bucket's declared periods through registry authority."""
+    """Resolve a bucket's periods only when its modelo scope is explicit.
+
+    A bucket identifier is storage identity, not a modelo selector. Callers
+    that do not provide the selected modelo therefore receive no periods
+    rather than having the bucket value interpreted as a registry identity.
+    """
+    del bucket_id
     return _registry_no_retenciones_periods(
         revision,
-        modelo=bucket_id,
+        modelo=modelo,
         filing_year=filing_year,
         period_token=period_token,
     )
@@ -87,7 +127,8 @@ def is_m111_no_retenciones_period(
     attested_periods: frozenset[tuple[int, str]],
 ) -> bool:
     """Resolve whether a source period is covered by registry schedule data."""
-    del attested_periods
+    if (filing_year, period_token) not in attested_periods:
+        return False
     return (filing_year, period_token) in _registry_no_retenciones_periods(
         modelo=source_modelo,
         filing_year=filing_year,

@@ -126,7 +126,12 @@ def _compose_diagnostics_auth_probe_port(ctx: typer.Context):
     from ...entrypoints.diagnostics_run_health_composition import compose_diagnostics_auth_probe_port
     from .state_projection_support import state_projection_read_ports
 
-    return compose_diagnostics_auth_probe_port(read_ports=state_projection_read_ports(ctx))
+    from .state_projection_support import certificate_secret_backend_factory
+
+    return compose_diagnostics_auth_probe_port(
+        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+        read_ports=state_projection_read_ports(ctx),
+    )
 
 
 def _run_health_result(

@@ -42,7 +42,7 @@ from ....domain.modelos.calculation_revision_m303_evidence import (
 from ....domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.submission.models import ModeloDraftStatus
-from ....tests.filing_evidence import regimen_simplificado_filing_evidence
+from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ...aggregation.m303_arrivals import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
 from ..draft_construction import build_draft
 from ..export import export_draft

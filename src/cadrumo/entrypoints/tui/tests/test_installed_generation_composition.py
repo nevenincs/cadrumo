@@ -11,6 +11,7 @@ from typing import cast
 import pytest
 
 from ....application.aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
+from ....application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ....application.ledger.models import LedgerReviewQueryResult, LedgerStatusReport
 from ....application.ledger.workspace import LedgerWorkspaceProjectionV1, project_ledger_workspace
 from ....application.modelo.declarations_calendar import (
@@ -45,7 +46,7 @@ from ....application.search.workbench import (
     WorkbenchDestinationAdmissionState,
 )
 from ....application.user_profile.censal_operation import (
-    CENSAL_OPERATION_DEFINITION,
+    build_censal_operation_definition,
     build_censal_operation_registration,
 )
 from ....application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
@@ -88,6 +89,7 @@ class _GenerationReadDoor:
 
 _BUCKET = "11111111-1111-4111-8111-111111111111"
 _NOW = datetime(2026, 9, 3, 10, tzinfo=UTC)
+_CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
 
 
 def _zone(name: str) -> HomeZoneState:
@@ -269,7 +271,13 @@ def _dependencies() -> InstalledWorkbenchFactoryDependenciesV1:
 
 def _operation_runtime() -> TuiOperationCompositionV1:
     contracts = OperationPublicContractSetV1.build(
-        (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
+        (
+            build_censal_operation_registration(
+                build_censal_operation_definition(
+                    certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+                )
+            ).contract,
+        )
     )
     services = cast("OperationComposedServices", SimpleNamespace(public_contracts=contracts))
     return TuiOperationCompositionV1(services=services, public_contracts=contracts)

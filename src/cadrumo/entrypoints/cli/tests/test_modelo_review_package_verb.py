@@ -29,7 +29,7 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.profile_capsule import set_active_test_profile_facts
-from ....tests.registry_revision import active_registry_revision_id
+from ....application.modelo.tests.registry_revision import active_registry_revision_id
 from ._modelo_review_package_support import build_review_package_via_cli, seed_exportable_modelo_revision
 from ._strict_cli_fixture_support import binding_isolated_backend
 from .cli_runner import invoke_cached_cli

@@ -40,7 +40,7 @@ from .common import (
     filing_taxpayer_or_refuse,
     no_active_profile_refusal,
 )
-from .state_projection_support import state_projection_read_ports
+from .state_projection_support import certificate_secret_backend_factory, state_projection_read_ports
 
 
 def _require_active_profile() -> str:
@@ -134,6 +134,7 @@ def quickfile(
             prior_domiciliation_election=prior_domiciliation_election,
             filing_instance_evidence=filing_instance_evidence,
         ),
+        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
         read_ports=state_projection_read_ports(ctx),
         workflow_profile=workflow_profile,
         build_calculation_inputs=_build_inputs,

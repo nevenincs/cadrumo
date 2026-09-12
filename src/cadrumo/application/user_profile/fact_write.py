@@ -14,8 +14,8 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.buckets.event import BucketEventType
+from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 

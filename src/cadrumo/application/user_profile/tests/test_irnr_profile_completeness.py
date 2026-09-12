@@ -7,7 +7,6 @@ import pytest
 from ....core.period import Period
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ...wizard import compiler as _wizard  # noqa: F401 - registers compiled profile keys
 from ..completeness import conditional_profile_missing_required
 from ..keys_validation import validate_profile_values
 from ..preflight import ProfilePreflightService

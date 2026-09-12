@@ -59,7 +59,7 @@ from ....domain.deadlines.models import (
     TaxpayerProfile,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.filing_evidence import general_m303_filing_evidence
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations.binding_prefill import BindingPrefillReport
 from ...calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation

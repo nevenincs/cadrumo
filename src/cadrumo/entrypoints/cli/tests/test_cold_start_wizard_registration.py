@@ -56,7 +56,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _REGISTRATION_LEAKS: tuple[str, ...] = (
     "Wizard catalogue has not been registered",
     "project_answers has not been registered",
-    "profile keys are not registered",
 )
 _SECRET_STORE_FILES: tuple[str, ...] = (
     "master.key",
@@ -133,13 +132,13 @@ def _register_profile_for_cold_run(storage_root: Path, label: str, **facts: str)
         return register_cli_profile(label=label, facts=facts)
 
 
-def test_cold_process_overview_status_without_profile_registers_profile_keys(tmp_path: Path) -> None:
+def test_cold_process_overview_status_without_profile_resolves_profile_keys(tmp_path: Path) -> None:
     """A cold no-profile overview status renders a normal status report.
 
     `overview status` builds the shared state projection even before a
     profile exists. In a fresh interpreter no prior test has imported the
-    wizard package, so the projection itself must ensure the profile-key
-    registry is populated before any profile-key read.
+    wizard package, so the application profile-key catalogue must resolve on
+    demand before any profile-key read.
     """
 
     result = _run_cli_cold(tmp_path, ["app", "overview", "status"])

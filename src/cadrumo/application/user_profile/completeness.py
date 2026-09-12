@@ -43,7 +43,7 @@ def conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[st
     """Return profile paths conditionally required by declared taxpayer facts.
 
     Static schema-required fields are handled by the schema validator and the
-    compiled profile-key registry. This helper owns cross-field completeness:
+    compiled application profile-key catalogue. This helper owns cross-field completeness:
     IRNR non-residents must declare their fiscal residence country, and
     non-EU/EEA IRNR residents must also declare both fiscal representative
     fields before any filing/modelo work can treat the profile as ready.

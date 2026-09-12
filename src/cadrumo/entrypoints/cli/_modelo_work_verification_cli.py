@@ -68,6 +68,7 @@ from ._modelo_rendering import (
     verification_report_payload,
 )
 from .common import activate_subcommand_output_language, emit_envelope, filing_taxpayer_or_refuse
+from .state_projection_support import certificate_secret_backend_factory
 
 
 def _profile_expected_member_sets(profile: object) -> tuple[CrossPeriodExpectedMemberSet, ...]:
@@ -228,6 +229,7 @@ def work_verify(
     already_verified = selected_revision.state is not CalculationRevisionState.BORRADOR
     verification = verify_modelo_revision_with_preconditions(
         selected_revision.calculation_revision_id,
+        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
         actor=actor or resolve_default_actor(),
         workflow_profile=workflow_profile,
     )
@@ -356,6 +358,7 @@ def work_file(
     already_filed = selected_revision.state is CalculationRevisionState.PRESENTADO
     record = file_modelo_revision(
         selected_revision.calculation_revision_id,
+        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
         actor=actor or resolve_default_actor(),
         workflow_profile=workflow_profile,
         notes=notes,

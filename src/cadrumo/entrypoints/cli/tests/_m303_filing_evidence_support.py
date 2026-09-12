@@ -29,7 +29,7 @@ from ....domain.modelos.calculation_revision_m303_evidence import (
     M303InsolvencyFilingSubtype,
 )
 from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence, M303FilingInstanceEvidence
-from ....tests.filing_evidence import regimen_simplificado_filing_evidence
+from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 
 __all__ = ["build_m303_filing_evidence", "default_insolvency_fact", "write_m303_filing_evidence"]
 

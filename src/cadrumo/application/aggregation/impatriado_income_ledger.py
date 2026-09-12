@@ -6,8 +6,6 @@ model/revision applicability, source-jurisdiction membership, eligible income
 categories, and binding/legal declarations belong to the selected registry
 revision.
 
-TODO(fact-relocation): resolve impatriado ledger targets and jurisdiction applicability from selected registry revisions
-
 No target, jurisdiction, category, applicability, or binding identifier is
 declared as a Python fallback.
 """
@@ -394,6 +392,8 @@ def _impatriado_income_proportion(
     rows are admitted only through their business proportion, so a genuinely
     personal transfer contributes nothing.
     """
+    if not eligible_income_categories:
+        return None
     normalized_category = (
         transaction.irpf_category.strip().casefold() if transaction.irpf_category is not None else None
     )

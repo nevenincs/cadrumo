@@ -44,9 +44,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 _EMPTY_CLI: dict[str, tuple[()]] = {"cli_command_records": (), "cli_option_records": ()}
 
 
-from cadrumo.tests.registry_authority_fixture import bundled_registry_authority_fixture
-
-authority = bundled_registry_authority_fixture(name="authority")
+from ...tests.registry_authority_fixture import authority
 
 __all__ = ["authority"]
 

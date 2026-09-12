@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from ..application.auth.apoderado_repository import ApoderadoConfigurationRepositoryFactory
     from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..application.state_projection_ports import StateProjectionReadPorts
 
@@ -29,6 +30,7 @@ class ProfileAdapterComposition:
 
     state_projection_read_ports: StateProjectionReadPorts
     certificate_secret_backend_factory: CertificateSecretBackendFactory
+    apoderado_config_repository_factory: ApoderadoConfigurationRepositoryFactory
 
 
 __all__ = ["ProfileAdapterComposition", "profile_adapter_composition"]
@@ -46,6 +48,7 @@ def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
     from ..adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
     from ..adapters.outbound.aeat.auth.session_store import build_session_store
     from ..adapters.outbound.llm.column_role_mapping import resolve_column_roles as resolve_outbound_column_roles
+    from ..adapters.persistence.profile.apoderado import build_apoderado_config_repository
     from ..adapters.persistence.profile.buckets import build_bucket_event_history_repository
     from ..adapters.persistence.profile.confirmation_records import ConfirmationRecordRepository
     from ..adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
@@ -133,4 +136,5 @@ def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
         yield ProfileAdapterComposition(
             state_projection_read_ports=projection_ports,
             certificate_secret_backend_factory=build_certificate_secret_backend,
+            apoderado_config_repository_factory=build_apoderado_config_repository,
         )

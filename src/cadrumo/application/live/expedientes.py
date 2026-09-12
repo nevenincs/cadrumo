@@ -39,6 +39,7 @@ from ...core.identity.hex_ids import SnapshotId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_authority
+from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from .errors import LiveApplicationInputError
 from .remote_state_models import ExpedientesBulkCaptureFailureRow, ExpedientesBulkCaptureReport
 from .remote_state_outcomes import bounded_context_text
@@ -192,9 +193,18 @@ class ExpedientesService(StatelessSnapshotService[PersistedExpedientesSnapshot, 
 LIVE_EXPEDIENTES_READ_OPERATION = "live-expedientes-read"
 
 
-async def capture_expedientes(*, bucket_id: str, modelo: str, year: int) -> PersistedExpedientesSnapshot:
+async def capture_expedientes(
+    *,
+    bucket_id: str,
+    modelo: str,
+    year: int,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+) -> PersistedExpedientesSnapshot:
     """Capture the selected declaration-register view as encrypted local evidence."""
-    session, settings = await active_verified_session(operation=LIVE_EXPEDIENTES_READ_OPERATION)
+    session, settings = await active_verified_session(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operation=LIVE_EXPEDIENTES_READ_OPERATION,
+    )
     async with (
         shared_playwright(session) as playwright,
         open_declarations_register(session, settings=settings, playwright=playwright) as register,
@@ -215,6 +225,7 @@ async def capture_expedientes_bulk(
     year_from: int,
     year_to: int,
     modelos: tuple[str, ...] | None = None,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
 ) -> ExpedientesBulkCaptureReport:
     """Capture each requested declaration-register view while reporting isolated failures."""
     if year_from > year_to:
@@ -225,7 +236,10 @@ async def capture_expedientes_bulk(
     resolved_modelos = (
         modelos if modelos is not None else tuple(str(modelo.id) for modelo in bundled_authority().modelos)
     )
-    session, settings = await active_verified_session(operation=LIVE_EXPEDIENTES_READ_OPERATION)
+    session, settings = await active_verified_session(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operation=LIVE_EXPEDIENTES_READ_OPERATION,
+    )
     service = ExpedientesService(settings=settings)
     snapshot_ids: list[str] = []
     failures: list[ExpedientesBulkCaptureFailureRow] = []

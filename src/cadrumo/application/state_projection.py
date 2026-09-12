@@ -109,6 +109,7 @@ from .workflow.profile_health import ActiveProfileHealth, assess_active_profile_
 from .workflow.state_models import WorkflowState
 
 if TYPE_CHECKING:
+    from .auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
     from ..domain.user_profile.values import UserProfileRecord
 
@@ -1005,6 +1006,7 @@ def _missing_calculation_bindings_for_readiness(
         for binding_id in relation_prefill_period_zero_default_binding_ids(
             revision,
             modelo=modelo,
+            filing_year=int(snapshot.filing_year),
             period=period.registry_token,
         )
     }
@@ -1080,6 +1082,7 @@ def _ledger_period_for_modelo_readiness(request: ModeloReadinessRequest) -> Peri
 
 def build_operator_state_projection(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     read_ports: StateProjectionReadPorts,
     state: WorkflowState | None = None,
     auth_snapshot: ActiveAuthProjectionSnapshot | None = None,
@@ -1137,13 +1140,13 @@ def build_operator_state_projection(
         The fully-populated :class:`OperatorStateProjection`. Building
         it mutates no store.
     """
-    _ensure_profile_key_registry_registered()
     reference_today = today or today_madrid()
     if state is not None and auth_snapshot is not None:
         raise ValueError("state and auth_snapshot are mutually exclusive")
     if auth_snapshot is not None:
         return _assemble_operator_state_projection(
             auth_snapshot.state or WorkflowState(),
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
             read_ports=read_ports,
             active_bucket_id=auth_snapshot.bucket_id,
             credential_bucket_id=(auth_snapshot.bucket_id if auth_snapshot.state is not None else None),
@@ -1160,6 +1163,7 @@ def build_operator_state_projection(
     if state is not None:
         return _assemble_operator_state_projection(
             state,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
             read_ports=read_ports,
             active_bucket_id=resolve_active_bucket_id(),
             credential_bucket_id=None,
@@ -1173,9 +1177,13 @@ def build_operator_state_projection(
             modelo_readiness_requests=modelo_readiness_requests,
             reference_today=reference_today,
         )
-    with active_auth_projection_span(requested_provider=requested_provider) as snapshot:
+    with active_auth_projection_span(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        requested_provider=requested_provider,
+    ) as snapshot:
         return _assemble_operator_state_projection(
             snapshot.state or WorkflowState(),
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
             read_ports=read_ports,
             active_bucket_id=snapshot.bucket_id,
             credential_bucket_id=(snapshot.bucket_id if snapshot.state is not None else None),
@@ -1194,6 +1202,7 @@ def build_operator_state_projection(
 def _assemble_operator_state_projection(
     resolved_state: WorkflowState,
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     read_ports: StateProjectionReadPorts,
     active_bucket_id: str | None,
     credential_bucket_id: str | None,
@@ -1221,6 +1230,7 @@ def _assemble_operator_state_projection(
     )
     auth = build_auth_readiness(
         resolved_state,
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
         provider_kind=provider_kind,
         provider_kind_is_authoritative=provider_kind_is_authoritative,
         requested_provider=requested_provider,
@@ -1251,13 +1261,6 @@ def _assemble_operator_state_projection(
         modelo_readiness=modelo_readiness,
         pending_obligations=pending_obligations,
     )
-
-
-def _ensure_profile_key_registry_registered() -> None:
-    """Import the wizard package before projection code reads profile-key metadata."""
-    from .wizard.compiler import ensure_profile_keys_registered
-
-    ensure_profile_keys_registered()
 
 
 __all__ = [

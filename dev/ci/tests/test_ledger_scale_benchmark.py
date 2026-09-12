@@ -19,7 +19,7 @@ contract names:
    :func:`aggregate_iva_ledger_observations_from_repositories`, the
    partitioned period-scoped path covered by the latency decision.
 4. **Modelo calculate diagnostic** —
-   :func:`~cadrumo.tests.bucket_aggregation_calculate.calculate_modelo_revision_from_bucket_aggregation`
+   :func:`~cadrumo.application.modelo.calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`
    for a real M130 quarter, exercising the full registry engine over the
    ledger-backed income resolver.
 
@@ -91,6 +91,9 @@ from cadrumo.application.aggregation.renta_ledger import (
 )
 from cadrumo.application.aggregation.tests.iva_authority_support import aggregate_iva_ledger_observations
 from cadrumo.application.calculations.observations_repository import CalculationObservationRepository
+from cadrumo.application.modelo.calculation_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -108,7 +111,6 @@ from cadrumo.domain.transactions.enums import (
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
 from cadrumo.tests.profile_capsule import seed_test_profile_record
 
 from ..perf_measurement import wall_advisory_message
@@ -770,8 +772,8 @@ def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
 ) -> None:
     """Enforce real M130 quarterly CPU cost and prove a full scan breaks it.
 
-    Exercises :func:`calculate_modelo_revision_from_bucket_aggregation` end to
-    end: work-unit creation/lookup, the enrolled ledger income resolver
+    Exercises :func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`
+    end to end: work-unit creation/lookup, the enrolled ledger income resolver
     reading the 30k-row catalogue, the ``previous_filing`` minoración carry,
     and the full registry formula chain for M130 (RD 439/2007 art. 110).
 
@@ -810,7 +812,7 @@ def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
                 )
                 wall_started = time.perf_counter()
                 cpu_started = time.process_time()
-                revision = calculate_modelo_revision_from_bucket_aggregation(
+                revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                     work_unit.work_unit_id,
                     casilla_inputs=_M130_MANUAL_INPUTS,
                     work_unit_repository=wu_repo,
@@ -818,7 +820,7 @@ def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
                     transaction_repository=tx_repo,
                     invoice_repository=invoice_repo,
                     clock=filed_at,
-                )
+                ).revision
                 quarter_cpu = time.process_time() - cpu_started
                 quarter_wall = time.perf_counter() - wall_started
                 cpu_samples.append(quarter_cpu)

@@ -7,6 +7,9 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from ....adapters.outbound.aeat.browser.connectivity import (
+    probe_browser_connectivity as _probe_browser_connectivity,
+)
 from ....application.diagnostics import (
     build_config_repair_report as _build_config_repair_report,
 )
@@ -14,13 +17,7 @@ from ....application.diagnostics import (
     preview_quarantine_unreadable_secure_objects as _preview_quarantine_unreadable_secure_objects,
 )
 from ....application.diagnostics import (
-    probe_browser_connectivity as _probe_browser_connectivity,
-)
-from ....application.diagnostics import (
     quarantine_unreadable_secure_objects as _quarantine_unreadable_secure_objects,
-)
-from ....application.diagnostics import (
-    render_browser_connectivity_text as _render_browser_connectivity_text,
 )
 from ....application.diagnostics import (
     render_config_repair_text as _render_config_repair_text,
@@ -30,6 +27,7 @@ from ....core.json_contract import strict_round_trip
 from ....core.logging import default_log_file_path as _default_log_file_path
 from ..common import emit_envelope, resolve_cli_precondition_action
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from .connectivity_rendering import render_browser_connectivity_text as _render_browser_connectivity_text
 
 if TYPE_CHECKING:
     from ....application.diagnostic_models import (

@@ -74,9 +74,9 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
+from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ....tests.env_scope import ready_clave_settings
-from ....tests.filing_evidence import general_m303_filing_evidence
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 from ...invoices.catalogue_creation import build_catalogue_invoice
@@ -523,7 +523,7 @@ def _calculate_m303_quarter_revision(
         period=period, filing_year=filing_year, taxpayer_nif=taxpayer_nif, decided_at=calculated_at
     )
     IvaWalletDecisionRepository(objects=secure_objects).save_decision(decision)
-    revision = calculate_modelo_revision_from_bucket_aggregation(
+    revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         actor="system",
         # Manual, formula-operand "resultado" casillas (58/68/70/76/77/109/18)
@@ -546,7 +546,7 @@ def _calculate_m303_quarter_revision(
         bucket_event_repository=event_repo,
         transaction_repository=tx_repo,
         clock=calculated_at,
-    )
+    ).revision
     return work_unit, revision
 
 
@@ -642,7 +642,7 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository, *, filing_yea
         repository=wu_repo,
         clock=_T0,
     )
-    return calculate_modelo_revision_from_bucket_aggregation(
+    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         binding_values={},
         work_unit_repository=wu_repo,
@@ -650,7 +650,7 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository, *, filing_yea
         transaction_repository=tx_repo,
         invoice_repository=invoice_repo,
         clock=_FILE_AT,
-    )
+    ).revision
 
 
 def _non_official_local_chain_advisory_periods(report: VerificationReport) -> set[str]:

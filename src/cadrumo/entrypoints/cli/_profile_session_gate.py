@@ -185,12 +185,6 @@ def activate_profile_session(
         return
     if _posture_skips_session(posture):
         return
-    # Profile-key readers are registered by wizard module side effects.  The
-    # parsed gate now runs before deferred handler imports, so establish that
-    # catalogue explicitly before any resumed/root-authenticated dispatch.
-    from ...application.wizard.compiler import ensure_profile_keys_registered
-
-    ensure_profile_keys_registered()
     if _activate_existing_profile_session(
         ctx,
         bucket_id=bucket_id,

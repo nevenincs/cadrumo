@@ -97,9 +97,8 @@ msgid "Verification"
 msgstr "Verificación"
 
 #: ../../_release_notes_template.md:57
-#, fuzzy
 msgid "`just test-packaging-smoke` green on Linux/WSL"
-msgstr "`just packaging-smoke` en verde en Linux/WSL"
+msgstr "`just test-packaging-smoke` correcto en Linux/WSL"
 
 #: ../../_release_notes_template.md:58
 msgid "`uvx --from cadrumo==X.Y.Z aeat --version` resolves on a clean machine"
@@ -108,12 +107,11 @@ msgstr ""
 "limpia"
 
 #: ../../_release_notes_template.md:59
-#, fuzzy
 msgid ""
 "`pip install cadrumo==X.Y.Z` pulls both exact-version data distributions"
 "     and `aeat --format json config repair` runs clean"
 msgstr ""
-"`pip install cadrumo==X.Y.Z` descarga ambas distribuciones de datos de "
-"versión exacta     y `aeat config repair integrity registry` se ejecuta "
-"sin errores"
+"`pip install cadrumo==X.Y.Z` instala las dos distribuciones de datos con "
+"versión exacta y `aeat --format json config repair` se ejecuta "
+"correctamente"
 

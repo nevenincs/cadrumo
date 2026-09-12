@@ -50,7 +50,7 @@ from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
-from ....tests.filing_evidence import general_m303_filing_evidence
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations.cross_period_clean_state import cross_period_dependency_requirements
 from ...calculations.cross_period_models import (

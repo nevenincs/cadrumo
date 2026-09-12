@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.setup_answers import (
+from ....domain.user_profile.setup_answers import (
     PROFILE_OUTPUT_LANGUAGE_PATH,
     SetupAnswers,
 )

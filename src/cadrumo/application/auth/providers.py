@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from ...core.auth_provider import AuthProviderDescription, AuthProviderKind
 from ..auth_credentials import ActiveCertificateCredentials
+from .certificate_secret_backend import CertificateSecretBackendFactory
 from .credentials import resolve_active_certificate_credentials
 from .protocols import BrowserSessionFactoryPort
 from .session_types import AeatLoginAssertion, AeatSession
@@ -81,6 +82,7 @@ def select_provider(
     kind: AuthProviderKind,
     *,
     settings: Settings,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     browser_session_factory: BrowserSessionFactoryPort | None = None,
     certificate_credentials: ActiveCertificateCredentials | None = None,
 ) -> AuthProvider:
@@ -92,7 +94,10 @@ def select_provider(
     """
     credentials = certificate_credentials
     if kind is AuthProviderKind.CERTIFICATE and credentials is None:
-        credentials = resolve_active_certificate_credentials(settings=settings)
+        credentials = resolve_active_certificate_credentials(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            settings=settings,
+        )
     return _auth_provider_selector()(
         kind,
         settings=settings,

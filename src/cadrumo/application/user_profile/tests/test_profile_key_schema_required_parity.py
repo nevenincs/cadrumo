@@ -28,7 +28,7 @@ from enum import StrEnum
 import pytest
 
 from ....domain.user_profile.loader import load_user_profile_schema
-from ...wizard.compiler import ensure_profile_keys_registered
+from ..profile_keys import profile_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -108,13 +108,10 @@ def _schema_facts() -> tuple[set[str], set[str], dict[str, bool]]:
 def _key_facts() -> tuple[set[str], set[str]]:
     """Return every wizard key path and the subset the wizard marks REQUIRED.
 
-    ``profile_keys()`` is a lazily-resolved registry that refuses to be read before
-    the wizard catalogue has pushed the compiled keys, so it is imported here
-    rather than at module scope — after the registration call, never before.
+    ``profile_keys()`` compiles the wizard-owned catalogue on first use and
+    returns its deterministic application projection.
     """
-    ensure_profile_keys_registered()
     from ....core.requirement import Requirement
-    from ....domain.contribuyente.keys import profile_keys
 
     paths = {entry.key for entry in profile_keys()}
     required = {entry.key for entry in profile_keys() if entry.requirement is Requirement.REQUIRED}

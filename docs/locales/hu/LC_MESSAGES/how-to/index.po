@@ -349,7 +349,7 @@ msgstr ""
 
 #: ../../how-to/index.md:218
 msgid "Modelo 036"
-msgstr "Modelo 036"
+msgstr "Modelo 036-os űrlap"
 
 #: ../../how-to/index.md:222
 msgid "Record an alta, modificacion, or baja you filed at AEAT's sede."
@@ -357,7 +357,7 @@ msgstr "Rögzítsen egy AEAT sedéjén benyújtott altát, modificaciont vagy ba
 
 #: ../../how-to/index.md:225
 msgid "Modelo 100 (Renta)"
-msgstr "Modelo 100 (Renta)"
+msgstr "Modelo 100-as (Renta) űrlap"
 
 #: ../../how-to/index.md:229
 msgid "Prepare the annual Renta declaration that gathers the whole year."
@@ -365,7 +365,7 @@ msgstr "Készítse el az éves Renta-bevallást, amely az egész évet összegy�
 
 #: ../../how-to/index.md:232
 msgid "Modelo 130"
-msgstr "Modelo 130"
+msgstr "Modelo 130-as űrlap"
 
 #: ../../how-to/index.md:236
 msgid "Prepare the quarterly IRPF instalment, cumulative across the year."
@@ -373,7 +373,7 @@ msgstr "Készítse el a negyedéves IRPF-előleget, az év során halmozottan."
 
 #: ../../how-to/index.md:239
 msgid "Modelo 303"
-msgstr "Modelo 303"
+msgstr "Modelo 303-as űrlap"
 
 #: ../../how-to/index.md:243
 msgid "Prepare, verify, and export a quarterly IVA return."
@@ -381,7 +381,7 @@ msgstr "Készítsen elő, ellenőrizzen és exportáljon egy negyedéves IVA-bev
 
 #: ../../how-to/index.md:246
 msgid "Modelo 349"
-msgstr "Modelo 349"
+msgstr "Modelo 349-es űrlap"
 
 #: ../../how-to/index.md:250
 msgid "Declare intra-community operations from your invoice records."
@@ -389,7 +389,7 @@ msgstr "Vallja be a közösségen belüli ügyleteket a számlanyilvántartásai
 
 #: ../../how-to/index.md:253
 msgid "Modelo 390"
-msgstr "Modelo 390"
+msgstr "Modelo 390-es űrlap"
 
 #: ../../how-to/index.md:257
 msgid "Prepare the annual IVA summary."
@@ -481,18 +481,11 @@ msgstr ""
 
 #: ../../how-to/index.md:317
 msgid "Publish runtime authority"
-msgstr ""
+msgstr "Futásidejű hatóság közzététele"
 
 #: ../../how-to/index.md:321
 msgid "Publish and verify a signed registry authority as a release operator."
 msgstr ""
-
-#~ msgid ""
-#~ "Set up a recovery key, change or"
-#~ " recover your passphrase, log out, or"
-#~ " reset."
-#~ msgstr ""
-#~ "Állítson be helyreállítási kulcsot, módosítsa"
-#~ " vagy állítsa helyre a jelmondatát, "
-#~ "zárolja vagy állítsa vissza."
+"Kiadáskezelőként tegyen közzé és ellenőrizzen egy aláírt nyilvántartási "
+"hatóságot."
 

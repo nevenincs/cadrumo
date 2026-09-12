@@ -58,7 +58,7 @@ msgstr ""
 
 #: ../../how-to/troubleshooting.md:15
 msgid "\"This operation requires an active profile\""
-msgstr "«This operation requires an active profile»"
+msgstr "«Esta operación requiere un perfil activo»"
 
 #: ../../how-to/troubleshooting.md:17
 msgid ""
@@ -93,8 +93,7 @@ msgstr ""
 "después de que la inspección informe de un puntero activo ilegible. "
 "Después, el inicio de sesión pide la frase de contraseña de ese perfil; "
 "quien llame sin interfaz debe usar un canal explícito de secreto de "
-"máquina en lugar de poner la frase de contraseña en la línea de "
-"comandos."
+"máquina en lugar de poner la frase de contraseña en la línea de comandos."
 
 #: ../../how-to/troubleshooting.md:38
 msgid ""

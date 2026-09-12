@@ -5,7 +5,7 @@ each migrated raise site through the public production boundary, the tests call
 ``SetupAnswers.model_validate(...)`` and assert the wrapped validation message
 identifies the rejected field/type contract.
 
-Since :class:`SetupAnswers` is now canonical in :mod:`cadrumo.core.setup_answers`, its
+Since :class:`SetupAnswers` is canonical in :mod:`cadrumo.domain.user_profile.setup_answers`, its
 validators raise :class:`~cadrumo.core.errors.ProfileAnswerTypeError` directly.
 :class:`~cadrumo.application.wizard.errors.WizardAnswerTypeError` is a subclass
 of ``ProfileAnswerTypeError`` — the registry / envelope tests below verify that
@@ -18,7 +18,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.errors.error_codes import build_error_envelope
-from ....core.setup_answers import SetupAnswers
+from ....domain.user_profile.setup_answers import SetupAnswers
 from ..errors import WizardAnswerTypeError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

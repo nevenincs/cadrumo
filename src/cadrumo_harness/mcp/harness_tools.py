@@ -31,7 +31,6 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.application.wizard.compiler import ensure_profile_keys_registered
 from cadrumo.application.workflow.profile_health import ProfileHealthStatus, assess_active_profile_health
 from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
 from cadrumo.core.i18n.render import tr
@@ -282,15 +281,10 @@ def build_whoami_identity() -> WhoamiIdentity:
     resolution is guarded, so this read-only identity probe is safe to call on
     every session and before every mutation.
 
-    The health assessment counts the process-global profile-key registry, which
-    the domain layer cannot seed for itself, so this function seeds it through
-    :func:`~application.wizard.compiler.ensure_profile_keys_registered` before reading.
-    The call is idempotent and deliberately made here rather than left to the
-    caller: this probe is reached both through the server handlers and directly,
-    so depending on an initialisation order the caller must remember is what
-    made a real server answer every identity call with a registration error.
+    The health assessment reads the application-owned profile-key catalogue,
+    which compiles the wizard source on demand and therefore has no bootstrap
+    import-order precondition.
     """
-    ensure_profile_keys_registered()
     health = assess_active_profile_health()
     tax_id_present = health.profile_record_present and _TAX_ID_FACT_PATH not in health.missing_required
     from .command_surface import resolve_precondition_action

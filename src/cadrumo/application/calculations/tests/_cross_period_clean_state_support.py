@@ -52,7 +52,7 @@ from ....domain.modelos.filing_record import (
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
-from ....tests.filing_evidence import general_m303_filing_evidence
+from .filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_snapshot import build_snapshot
 from ...modelo.external_import_actions import import_external_filing_evidence

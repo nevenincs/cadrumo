@@ -21,7 +21,7 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.transactions.enums import TransactionDirection
-from ....tests.filing_evidence import general_m303_filing_evidence
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ..actions_manual import create_manual_transaction
 from ..models import ManualLedgerTransactionCommand
 from .action_fixtures import (

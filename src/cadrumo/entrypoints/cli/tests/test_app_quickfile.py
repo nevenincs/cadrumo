@@ -54,7 +54,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ....tests.filing_evidence import regimen_simplificado_filing_evidence
+from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_cli_profile
 from .cli_runner import invoke_cached_cli

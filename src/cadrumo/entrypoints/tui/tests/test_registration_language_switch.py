@@ -27,7 +27,7 @@ from ....application.user_profile.login_session import login_profile
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.credentials import assess_profile_password
 from ....core.i18n.render import output_language, tr
-from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.secret.registration import RecoveryWordsScreen, RegistrationScreen
 from ....tests.profile_capsule import load_test_profile_record

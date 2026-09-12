@@ -49,7 +49,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from cadrumo.adapters.persistence.storage.master_key.live_sessions import close_all_live_bucket_sessions
-from cadrumo.application.wizard.compiler import ensure_profile_keys_registered
 from cadrumo.core.config_state_root import FormerProductStateError
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 
@@ -659,18 +658,9 @@ def build_server(
     refusal per D1; the meta-tools and the floor tool are always advertised and
     ``execute`` applies the persona gate internally.
 
-    Seeds the process-global profile-key registry through
-    :func:`~application.wizard.compiler.ensure_profile_keys_registered` before any
-    handler is registered. This is the server's initialisation point, the
-    counterpart of the CLI root callback's own registration step: the domain
-    registry cannot seed itself and every production reader of it sits
-    behind a handler built here, so a host that never seeded it answered every
-    identity call with a registration error.
-
     Returns:
         The configured :class:`mcp.server.Server`.
     """
-    ensure_profile_keys_registered()
     _ensure_adapter_composition()
 
     from mcp.server import Server

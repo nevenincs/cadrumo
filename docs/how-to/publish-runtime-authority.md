@@ -18,7 +18,7 @@ For an ordinary installed-command failure, use [Diagnose and repair](troubleshoo
 
 ## Publish
 
-1. Start from a registry that passes the registry validation suite.
+1. Start from structurally valid registry and source-evidence inputs.
 2. From the repository root, run:
 
    ```powershell
@@ -26,11 +26,13 @@ For an ordinary installed-command failure, use [Diagnose and repair](troubleshoo
    ```
 
    The command materializes authoring deltas into complete typed revisions,
-   validates the bundled registry and its source evidence, then
+   runs the compilation and publication checks, then
    atomically replaces `src/cadrumo/_data/registry/authority/authority.json`.
    It prints the artifact path and the identity digest it recorded.
    `--registry-root`, `--source-root`, and `--artifact` select other trees or
    another destination.
+   Whole-registry conformance is a separate, broader review gate and is not a
+   prerequisite for compiling a structurally valid publication candidate.
 3. Commit the regenerated `authority.json` together with the registry change
    that required it.
 
@@ -56,7 +58,7 @@ just check-registry
 
 Its first step, `python -m dev.registry.conformance integrity`, exits 1 with a
 refusal on standard error when the artifact is stale, unreadable, or in an
-earlier format. The refusal names the recorded and the expected identity
+malformed format. The refusal names the recorded and the expected identity
 digests and the command that republishes the artifact.
 
 The identity depends only on file content and on paths relative to the
@@ -68,7 +70,7 @@ round-trip test covers the compiler itself.
 ## Recover from an invalid authority
 
 When an installed workflow refuses an unavailable, malformed, altered, or
-unsupported-version artifact, stop the workflow. The `bundled_authority()`
+unreadable artifact, stop the workflow. The `bundled_authority()`
 load doesn't compile authoring sources, parse raw TOML, repair an artifact, or
 fall back to a separately cached runtime table.
 

@@ -49,6 +49,7 @@ from pathlib import Path
 from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ...adapters.persistence.profile.submission import SubmissionRepository
 from ...application.auth.providers import select_provider
+from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import Settings, load_settings
 from ...core.period import Period
@@ -293,6 +294,7 @@ def build_revision_deadline_window_checker(
 
 def build_revision_workflow_engine(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     revision: CalculationRevision,
     work_unit: WorkUnit,
     profile: TaxpayerProfile,
@@ -329,7 +331,11 @@ def build_revision_workflow_engine(
     deadline_engine = DeadlineEngine()
     provider_kind = cfg.cadrumo_auth_provider if cfg.cadrumo_auth_provider is not None else AuthProviderKind.CERTIFICATE
     submission_engine = SubmissionEngine(
-        auth_provider=select_provider(provider_kind, settings=cfg),
+        auth_provider=select_provider(
+            provider_kind,
+            settings=cfg,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+        ),
         deadline_checker=build_revision_deadline_window_checker(profile=profile, engine=deadline_engine),
         settings=cfg,
         repository=SubmissionRepository(),

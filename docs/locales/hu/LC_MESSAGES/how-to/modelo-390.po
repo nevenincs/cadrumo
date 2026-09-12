@@ -420,19 +420,19 @@ msgstr ""
 
 #: ../../how-to/modelo-390.md:161
 msgid "`iva.cuota-devengada-total`"
-msgstr "`iva.cuota-devengada-total`"
+msgstr "Az `iva.cuota-devengada-total` mező"
 
 #: ../../how-to/modelo-390.md:162
 msgid "`iva.cuota-deducible-total`"
-msgstr "`iva.cuota-deducible-total`"
+msgstr "Az `iva.cuota-deducible-total` mező"
 
 #: ../../how-to/modelo-390.md:163
 msgid "`iva.resultado-regimen-general`"
-msgstr "`iva.resultado-regimen-general`"
+msgstr "Az `iva.resultado-regimen-general` mező"
 
 #: ../../how-to/modelo-390.md:164
 msgid "`iva.compensacion-generada-periodo`"
-msgstr "`iva.compensacion-generada-periodo`"
+msgstr "Az `iva.compensacion-generada-periodo` mező"
 
 #: ../../how-to/modelo-390.md:166
 msgid ""
@@ -446,14 +446,14 @@ msgid ""
 "prerequisite for calculation."
 msgstr ""
 "Ha egy 303-as bevallást a Cadrumón kívül nyújtottak be, rögzítse vagy "
-"egyeztesse a hivatalos bizonyítékot, mielőtt a helyi értékekre hagyatkozna, "
-"a fenti [Mire van szüksége minden Modelo 303 "
-"negyedévnek](#what-each-modelo-303-quarter-needs-before-you-verify) alatt "
-"bemutatott `live filed pull-sources` vagy `reconcile import` paranccsal. Az "
-"élő benyújtás rögzítése csak olvasható; az egyeztetés az Ön által megadott "
-"justificante- vagy bevallásfájlt olvassa. A jelenlegi Modelo 390 számítási "
-"út nem teszi egy friss AEAT-távállapot-ellenőrzést a számítás általános "
-"előfeltételévé."
+"egyeztesse a hivatalos bizonyítékot, mielőtt a helyi értékekre "
+"hagyatkozna, a fenti [Mire van szüksége minden Modelo 303 negyedévnek"
+"](#what-each-modelo-303-quarter-needs-before-you-verify) alatt bemutatott"
+" `live filed pull-sources` vagy `reconcile import` paranccsal. Az élő "
+"benyújtás rögzítése csak olvasható; az egyeztetés az Ön által megadott "
+"justificante- vagy bevallásfájlt olvassa. A jelenlegi Modelo 390 "
+"számítási út nem teszi egy friss AEAT-távállapot-ellenőrzést a számítás "
+"általános előfeltételévé."
 
 #: ../../how-to/modelo-390.md:174
 msgid ""

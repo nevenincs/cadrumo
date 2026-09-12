@@ -728,16 +728,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.contribuyente.errors.ProfileKeysRegistrationError",
-        ErrorCode(
-            code="INTERNAL_PROFILE_KEYS_REGISTRATION",
-            category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.internal_profile_keys_registration",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.domain.filing.errors.FilingExportError",
         ErrorCode(
             code="ERROR_FILING_EXPORT",

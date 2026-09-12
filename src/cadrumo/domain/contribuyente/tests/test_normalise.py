@@ -2,8 +2,7 @@
 
 `normalise_key` is the SOLE canonical-form rule for profile-key
 lookups. The docstring of `_normalise.py` is explicit: callers
-import this function (or `ProfileKey.normalise`, which forwards
-here) and never re-implement the rule. Every profile-key lookup
+import this function and never re-implement the rule. Every profile-key lookup
 across the codebase (user-CLI store, deadline engine, profile
 validators) consumes this normaliser.
 
@@ -11,7 +10,7 @@ The rule:
 1. Strip surrounding whitespace.
 2. Lowercase everything.
 3. Replace ``-`` with ``.``.
-4. Preserve underscores verbatim — registry-canonical keys
+4. Preserve underscores verbatim — catalogue-canonical keys
    like ``does_intracomunitario`` and ``iva.roi_enrolled`` must
    survive the round-trip through the user-CLI store and reach
    the deadline engine, which looks values up by exact key.
@@ -50,7 +49,7 @@ def test_normalise_key_folds_dashes_into_dots() -> None:
 
 
 def test_normalise_key_preserves_underscores_verbatim() -> None:
-    """Documented load-bearing invariant: registry-canonical keys
+    """Documented load-bearing invariant: catalogue-canonical keys
     with underscores must survive the round-trip. Folding underscores
     into dots would silently break the deadline engine's exact-key
     lookups for these specific profile fields."""

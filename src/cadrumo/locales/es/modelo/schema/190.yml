@@ -6,7 +6,7 @@ modelo:
           devengo-year:
             help: 'Consulte la información correspondiente a la casilla: Ejercicio
               de devengo.'
-            label: Casilla 148-151 — ejercicio de devengo
+            label: Ejercicio de devengo
           ingresos-a-cuenta-efectuados:
             help: 'Información de la casilla: Casilla 122-134: ingresos a cuenta efectuados.'
             label: 'Casilla 122-134: ingresos a cuenta efectuados'
@@ -16,19 +16,19 @@ modelo:
           m190-correo-electronico:
             help: Información fiscal sobre información fiscal de la casilla 176-225
               del Modelo 190.
-            label: Casilla 176-225 — información fiscal
+            label: Correo electrónico de la persona con quien relacionarse
           m190-declaracion-complementaria:
             help: Información fiscal sobre información fiscal de la casilla 121 del
               Modelo 190.
-            label: Casilla 121 — información fiscal
+            label: Declaración complementaria
           m190-declaracion-sustitutiva:
             help: Información fiscal sobre información fiscal de la casilla 122 del
               Modelo 190.
-            label: Casilla 122 — información fiscal
+            label: Declaración sustitutiva
           m190-numero-identificativo:
             help: Información fiscal sobre información fiscal de la casilla 108-120
               del Modelo 190.
-            label: Casilla 108-120 — información fiscal
+            label: Número identificativo de la declaración
           m190-numero-identificativo-anterior:
             help: Información fiscal sobre información fiscal de la casilla 123-135
               del Modelo 190.
@@ -44,7 +44,7 @@ modelo:
           payee-anualidades-alimentos:
             help: Información fiscal sobre anualidades por alimentos de la casilla
               210-222 del Modelo 190.
-            label: Casilla 210-222 — anualidades por alimentos
+            label: Anualidades por alimentos
           payee-ascendientes-75-mas-entero:
             help: Información fiscal sobre información fiscal de la casilla 244 del
               Modelo 190.
@@ -88,19 +88,19 @@ modelo:
           payee-birth-year:
             help: Información fiscal sobre año de nacimiento del perceptor de la casilla
               153-156 del Modelo 190.
-            label: Casilla 153-156 — año de nacimiento del perceptor
+            label: Año de nacimiento
           payee-ceuta-melilla-clave:
             help: Información fiscal sobre información fiscal de la casilla 152 del
               Modelo 190.
-            label: Casilla 152 — información fiscal
+            label: Ceuta o Melilla
           payee-clave-percepcion:
             help: Información fiscal sobre información fiscal de la casilla 78 del
               Modelo 190.
-            label: Casilla 78 — información fiscal
+            label: Clave de percepción
           payee-complemento-ayuda-infancia:
             help: Información fiscal sobre información fiscal de la casilla 322 del
               Modelo 190.
-            label: Casilla 322 — información fiscal
+            label: Complemento de ayuda para la infancia
           payee-computo-hijo-1:
             help: Información fiscal sobre información fiscal de la casilla 251 del
               Modelo 190.
@@ -116,7 +116,7 @@ modelo:
           payee-contract-relation-clave:
             help: Información fiscal sobre información fiscal de la casilla 168 del
               Modelo 190.
-            label: Casilla 168 — información fiscal
+            label: Contrato o relación
           payee-descendientes-discapacidad-33-65-entero:
             help: Información fiscal sobre información fiscal de la casilla 231-232
               del Modelo 190.
@@ -160,7 +160,7 @@ modelo:
           payee-disability-clave:
             help: Información fiscal sobre información fiscal de la casilla 167 del
               Modelo 190.
-            label: Casilla 167 — información fiscal
+            label: Discapacidad
           payee-emerging-stock-excess-clave:
             help: Información fiscal sobre información fiscal de la casilla 388 del
               Modelo 190.
@@ -168,15 +168,15 @@ modelo:
           payee-family-situation:
             help: Información fiscal sobre situación familiar del perceptor de la
               casilla 157 del Modelo 190.
-            label: Casilla 157 — situación familiar del perceptor
+            label: Situación familiar
           payee-gastos-deducibles:
             help: Información fiscal sobre gastos deducibles del perceptor de la casilla
               184-196 del Modelo 190.
-            label: Casilla 184-196 — gastos deducibles del perceptor
+            label: Gastos deducibles
           payee-geographic-mobility-clave:
             help: Información fiscal sobre información fiscal de la casilla 170 del
               Modelo 190.
-            label: Casilla 170 — información fiscal
+            label: Movilidad geográfica
           payee-incapacidad-dineraria-percepcion:
             help: Información fiscal sobre información fiscal de la casilla 256-268
               del Modelo 190.
@@ -203,11 +203,11 @@ modelo:
             label: Casilla 36-75 — nombre del perceptor
           payee-nif:
             help: 'Consulte la información correspondiente a la casilla: NIF del perceptor.'
-            label: Casilla 18-26 — NIF del perceptor
+            label: NIF del perceptor
           payee-pension-compensatoria:
             help: Información fiscal sobre pensión compensatoria de la casilla 197-209
               del Modelo 190.
-            label: Casilla 197-209 — pensión compensatoria
+            label: Pensiones compensatorias
           payee-prestamos-vivienda-clave:
             help: Información fiscal sobre información fiscal de la casilla 254 del
               Modelo 190.
@@ -266,7 +266,7 @@ modelo:
             label: Casilla 109-121 — información fiscal
           representante-legal-nif:
             help: 'Información de la casilla: Casilla 27-35: representante legal nif.'
-            label: 'Casilla 27-35: representante legal nif'
+            label: NIF del representante legal
           retenciones-ingresos-a-cuenta:
             help: Información fiscal sobre información fiscal de la casilla 161-175
               del Modelo 190.

@@ -26,7 +26,7 @@ from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.filing import empty_prior_filing_observations_fingerprint, empty_profile_activity_fingerprint
+from .filing_support import empty_prior_filing_observations_fingerprint, empty_profile_activity_fingerprint
 from ....tests.profile_capsule import seed_test_profile_record
 from ..conftest import _BUCKET_ID
 from ..draft_construction import binding_provenance, build_draft

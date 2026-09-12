@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-12 13:59+0200\n"
+"POT-Creation-Date: 2026-09-12 16:11+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -72,10 +72,10 @@ msgid "Publish"
 msgstr "Közzététel"
 
 #: ../../how-to/publish-runtime-authority.md:21
-msgid "Start from a registry that passes the registry validation suite."
+msgid "Start from structurally valid registry and source-evidence inputs."
 msgstr ""
-"Kezdjen olyan nyilvántartással, amely sikeresen teljesítette a "
-"nyilvántartás-érvényesítési tesztcsomagot."
+"Kezdje szerkezetileg érvényes nyilvántartási és forrásbizonyíték-"
+"bemenetekkel."
 
 #: ../../how-to/publish-runtime-authority.md:22
 msgid "From the repository root, run:"
@@ -84,21 +84,25 @@ msgstr "A tároló gyökeréből futtassa:"
 #: ../../how-to/publish-runtime-authority.md:28
 msgid ""
 "The command materializes authoring deltas into complete typed revisions, "
-"validates the bundled registry and its source evidence, then atomically "
-"replaces `src/cadrumo/_data/registry/authority/authority.json`. It prints"
-" the artifact path and the identity digest it recorded. `--registry-"
-"root`, `--source-root`, and `--artifact` select other trees or another "
-"destination."
+"runs the compilation and publication checks, then atomically replaces "
+"`src/cadrumo/_data/registry/authority/authority.json`. It prints the "
+"artifact path and the identity digest it recorded. `--registry-root`, "
+"`--source-root`, and `--artifact` select other trees or another "
+"destination. Whole-registry conformance is a separate, broader review "
+"gate and is not a prerequisite for compiling a structurally valid "
+"publication candidate."
 msgstr ""
 "A parancs a szerzői módosításokat teljes, típusos revíziókká alakítja, "
-"érvényesíti a csomagolt nyilvántartást és annak forrásbizonyítékait, majd"
-" atomikusan lecseréli a "
+"elvégzi a csomagolt nyilvántartás és a forrásbizonyítékok fordítási és "
+"közzétételi ellenőrzéseit, majd atomikusan lecseréli a "
 "`src/cadrumo/_data/registry/authority/authority.json` fájlt. Kiírja az "
 "artefaktum elérési útját és a benne rögzített identitáskivonatot. A "
-"`--registry-root`, `--source-root` és `--artifact` kapcsolók más fákat, "
-"illetve másik célhelyet választanak ki."
+"`--registry-root`, `--source-root` és `--artifact` kapcsolók más fákat "
+"vagy másik célhelyet választanak. A teljes nyilvántartási megfelelőség "
+"különálló, szélesebb körű felülvizsgálati kapu, és nem előfeltétele egy "
+"szerkezetileg érvényes közzétételi jelölt fordításának."
 
-#: ../../how-to/publish-runtime-authority.md:34
+#: ../../how-to/publish-runtime-authority.md:36
 msgid ""
 "Commit the regenerated `authority.json` together with the registry change"
 " that required it."
@@ -106,7 +110,7 @@ msgstr ""
 "Véglegesítse az újragenerált `authority.json` fájlt az azt szükségessé "
 "tevő nyilvántartási módosítással együtt."
 
-#: ../../how-to/publish-runtime-authority.md:37
+#: ../../how-to/publish-runtime-authority.md:39
 msgid ""
 "If validation is refused, or the registry changes while it is being "
 "validated, publication fails and leaves the previous artifact byte-for-"
@@ -118,7 +122,7 @@ msgstr ""
 "bájtról bájtra változatlanul hagyja. Ne szerkessze kézzel az "
 "artefaktumot. Javítsa a nyilvántartást, majd tegye közzé újra."
 
-#: ../../how-to/publish-runtime-authority.md:41
+#: ../../how-to/publish-runtime-authority.md:43
 msgid ""
 "Publication also projects the shared `floor`, `horizon`, and optional "
 "`hard_ceiling` support envelope and the typed runtime catalogues for IVA "
@@ -137,28 +141,28 @@ msgstr ""
 "érvényesített hatósághoz tartozik; a közzétett szókészletből hiányzó "
 "azonosító nem kerül be csendben."
 
-#: ../../how-to/publish-runtime-authority.md:49
+#: ../../how-to/publish-runtime-authority.md:51
 msgid "Check that the artifact is current"
 msgstr "Ellenőrizze, hogy az artefaktum naprakész"
 
-#: ../../how-to/publish-runtime-authority.md:51
+#: ../../how-to/publish-runtime-authority.md:53
 msgid "Run the registry gate:"
 msgstr "Futtassa a nyilvántartási ellenőrzést:"
 
-#: ../../how-to/publish-runtime-authority.md:57
+#: ../../how-to/publish-runtime-authority.md:59
 msgid ""
 "Its first step, `python -m dev.registry.conformance integrity`, exits 1 "
 "with a refusal on standard error when the artifact is stale, unreadable, "
-"or in an earlier format. The refusal names the recorded and the expected "
-"identity digests and the command that republishes the artifact."
+"or in an malformed format. The refusal names the recorded and the "
+"expected identity digests and the command that republishes the artifact."
 msgstr ""
-"Az első lépése, a `python -m dev.registry.conformance integrity`, 1-es "
-"kóddal lép ki, és elutasítást ír a standard hibakimenetre, ha az "
-"artefaktum elavult, olvashatatlan vagy korábbi formátumú. Az elutasítás "
-"megnevezi a rögzített és a várt identitáskivonatot, valamint az "
-"artefaktumot újra közzétevő parancsot."
+"Az első lépés, `python -m dev.registry.conformance integrity` parancs "
+"1-es kilépési kóddal elutasítást ír a standard hibakimenetre, ha az "
+"artefaktum elavult, olvashatatlan vagy hibás, illetve korábbi formátumú. "
+"Az elutasítás megnevezi a rögzített és a várt identitáskivonatot, "
+"valamint az artefaktumot újra közzétevő parancsot."
 
-#: ../../how-to/publish-runtime-authority.md:62
+#: ../../how-to/publish-runtime-authority.md:64
 msgid ""
 "The identity depends only on file content and on paths relative to the "
 "registry and source roots. A fresh clone on any platform therefore agrees"
@@ -173,25 +177,24 @@ msgstr ""
 " annak bizonyítékait, nem teszi elavulttá az artefaktumot. A teljes "
 "nyilvántartási közzétételi oda-vissza teszt magát a fordítót ellenőrzi."
 
-#: ../../how-to/publish-runtime-authority.md:68
+#: ../../how-to/publish-runtime-authority.md:70
 msgid "Recover from an invalid authority"
 msgstr "Érvénytelen hatóság helyreállítása"
 
-#: ../../how-to/publish-runtime-authority.md:70
+#: ../../how-to/publish-runtime-authority.md:72
 msgid ""
 "When an installed workflow refuses an unavailable, malformed, altered, or"
-" unsupported-version artifact, stop the workflow. The "
-"`bundled_authority()` load doesn't compile authoring sources, parse raw "
-"TOML, repair an artifact, or fall back to a separately cached runtime "
-"table."
+" unreadable artifact, stop the workflow. The `bundled_authority()` load "
+"doesn't compile authoring sources, parse raw TOML, repair an artifact, or"
+" fall back to a separately cached runtime table."
 msgstr ""
-"Ha egy telepített munkafolyamat elérhetetlen, hibás, módosított vagy nem "
-"támogatott verziójú artefaktumot utasít el, állítsa le a munkafolyamatot."
-" A `bundled_authority()` betöltése nem fordítja le a szerzői forrásokat, "
-"nem elemzi a nyers TOML-t, nem javítja az artefaktumot, és nem vált át "
-"külön gyorsítótárban tárolt futásidejű táblázatra."
+"Ha egy telepített munkafolyamat elérhetetlen, hibás, módosított vagy "
+"olvashatatlan artefaktumot utasít el, állítsa le a munkafolyamatot. A "
+"`bundled_authority()` betöltése nem fordítja le a szerzői forrásokat, nem"
+" elemzi a nyers TOML-t, nem javítja az artefaktumot, és nem vált át külön"
+" gyorsítótárban tárolt futásidejű táblázatra."
 
-#: ../../how-to/publish-runtime-authority.md:75
+#: ../../how-to/publish-runtime-authority.md:77
 msgid ""
 "Preserve the failed artifact when it is present, plus the package "
 "version, artifact digest, error class, and redacted logs."
@@ -200,7 +203,7 @@ msgstr ""
 "csomagverziót, az artefaktum kivonatát, a hibaosztályt és a személyes "
 "adatokat eltávolított naplókat."
 
-#: ../../how-to/publish-runtime-authority.md:77
+#: ../../how-to/publish-runtime-authority.md:79
 msgid ""
 "Republish from a validated registry, and confirm that `just check-"
 "registry` passes."
@@ -208,11 +211,11 @@ msgstr ""
 "Tegye közzé újra egy érvényesített nyilvántartásból, majd erősítse meg, "
 "hogy a `just check-registry` sikeresen lefut."
 
-#: ../../how-to/publish-runtime-authority.md:79
+#: ../../how-to/publish-runtime-authority.md:81
 msgid "Rebuild the package so it contains the replacement artifact."
 msgstr "Építse újra a csomagot, hogy tartalmazza a lecserélt artefaktumot."
 
-#: ../../how-to/publish-runtime-authority.md:81
+#: ../../how-to/publish-runtime-authority.md:83
 msgid ""
 "Escalate through the [project issue "
 "tracker](https://github.com/nevenincs/cadrumo/issues) with the release "

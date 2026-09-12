@@ -23,6 +23,7 @@ from .calendar_models import (
 )
 
 if TYPE_CHECKING:
+    from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..state_projection import OperatorStateProjection
     from ..state_projection_ports import StateProjectionReadPorts
     from ..workflow.state_models import WorkflowState
@@ -182,6 +183,7 @@ def overview_status_report_from_projection(
 
 def build_overview_status_report(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     read_ports: StateProjectionReadPorts,
     state: WorkflowState | None = None,
     raw_values: Mapping[str, object] | None = None,
@@ -198,5 +200,9 @@ def build_overview_status_report(
     """
     from ..state_projection import build_operator_state_projection
 
-    projection = build_operator_state_projection(state=state, read_ports=read_ports)
+    projection = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        state=state,
+        read_ports=read_ports,
+    )
     return overview_status_report_from_projection(projection, raw_values=raw_values)

@@ -5,6 +5,7 @@ from __future__ import annotations
 import typer
 
 from ...application.modelo.export import modelo_export_readiness_refusal
+from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ...application.state_projection import (
     ModeloReadinessRequest,
     ProjectionModeloReadiness,
@@ -24,7 +25,7 @@ from ._modelo_payloads import (
 )
 from .common import emit_envelope, no_active_profile_refusal, resolve_cli_precondition_action
 from .errors import CliRefusedBoundaryError
-from .state_projection_support import state_projection_read_ports
+from .state_projection_support import certificate_secret_backend_factory, state_projection_read_ports
 
 
 def modelo_readiness(
@@ -58,7 +59,11 @@ def modelo_readiness(
         filing_year=filing_year,
         period=resolved_period,
     )
-    report = _readiness_report(request, read_ports=state_projection_read_ports(ctx))
+    report = _readiness_report(
+        request,
+        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+        read_ports=state_projection_read_ports(ctx),
+    )
     readiness_result = _readiness_result(
         report,
         modelo=modelo,
@@ -111,6 +116,7 @@ def _resolve_readiness_period(*, modelo: str, filing_year: int, period: str | No
 def _readiness_report(
     request: ModeloReadinessRequest,
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     read_ports: StateProjectionReadPorts,
 ) -> ProjectionModeloReadiness:
     from ...core.bucket_pointer import resolve_active_bucket_id
@@ -120,6 +126,7 @@ def _readiness_report(
         raise no_active_profile_refusal()
     try:
         projection = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
             read_ports=read_ports,
             modelo_readiness_requests=(request,),
         )

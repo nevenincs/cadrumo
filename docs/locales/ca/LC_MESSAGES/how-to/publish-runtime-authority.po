@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-12 13:59+0200\n"
+"POT-Creation-Date: 2026-09-12 16:11+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ca\n"
@@ -71,10 +71,10 @@ msgid "Publish"
 msgstr "Publica"
 
 #: ../../how-to/publish-runtime-authority.md:21
-msgid "Start from a registry that passes the registry validation suite."
+msgid "Start from structurally valid registry and source-evidence inputs."
 msgstr ""
-"Comenceu amb un registre que superi el conjunt de proves de validació del"
-" registre."
+"Comenceu amb un registre estructuralment vàlid i entrades d'evidència "
+"d'origen."
 
 #: ../../how-to/publish-runtime-authority.md:22
 msgid "From the repository root, run:"
@@ -83,20 +83,25 @@ msgstr "Des de l'arrel del repositori, executeu:"
 #: ../../how-to/publish-runtime-authority.md:28
 msgid ""
 "The command materializes authoring deltas into complete typed revisions, "
-"validates the bundled registry and its source evidence, then atomically "
-"replaces `src/cadrumo/_data/registry/authority/authority.json`. It prints"
-" the artifact path and the identity digest it recorded. `--registry-"
-"root`, `--source-root`, and `--artifact` select other trees or another "
-"destination."
+"runs the compilation and publication checks, then atomically replaces "
+"`src/cadrumo/_data/registry/authority/authority.json`. It prints the "
+"artifact path and the identity digest it recorded. `--registry-root`, "
+"`--source-root`, and `--artifact` select other trees or another "
+"destination. Whole-registry conformance is a separate, broader review "
+"gate and is not a prerequisite for compiling a structurally valid "
+"publication candidate."
 msgstr ""
 "L'ordre materialitza els canvis d'autoria en revisions tipades completes,"
-" valida el registre inclòs i les proves d'origen, i després substitueix "
-"atòmicament `src/cadrumo/_data/registry/authority/authority.json`. "
-"Imprimeix la ruta de l'artefacte i el resum d'identitat que hi ha "
-"registrat. `--registry-root`, `--source-root` i `--artifact` permeten "
-"seleccionar altres arbres o una altra destinació."
+" executa les comprovacions de compilació i publicació i després "
+"substitueix atòmicament "
+"`src/cadrumo/_data/registry/authority/authority.json`. Mostra la ruta de "
+"l'artefacte i el resum d'identitat que hi ha registrat. `--registry-"
+"root`, `--source-root` i `--artifact` permeten seleccionar altres arbres "
+"o una altra destinació. La conformitat de tot el registre és una "
+"comprovació de revisió més àmplia i independent, i no és un requisit "
+"previ per compilar un candidat de publicació estructuralment vàlid."
 
-#: ../../how-to/publish-runtime-authority.md:34
+#: ../../how-to/publish-runtime-authority.md:36
 msgid ""
 "Commit the regenerated `authority.json` together with the registry change"
 " that required it."
@@ -104,7 +109,7 @@ msgstr ""
 "Confirmeu l'`authority.json` regenerat juntament amb el canvi del "
 "registre que l'ha requerit."
 
-#: ../../how-to/publish-runtime-authority.md:37
+#: ../../how-to/publish-runtime-authority.md:39
 msgid ""
 "If validation is refused, or the registry changes while it is being "
 "validated, publication fails and leaves the previous artifact byte-for-"
@@ -116,7 +121,7 @@ msgstr ""
 "byte. No editeu l'artefacte manualment. Corregiu el registre i torneu-lo "
 "a publicar."
 
-#: ../../how-to/publish-runtime-authority.md:41
+#: ../../how-to/publish-runtime-authority.md:43
 msgid ""
 "Publication also projects the shared `floor`, `horizon`, and optional "
 "`hard_ceiling` support envelope and the typed runtime catalogues for IVA "
@@ -136,28 +141,28 @@ msgstr ""
 " identificador absent del seu vocabulari publicat no s'hi admet "
 "silenciosament."
 
-#: ../../how-to/publish-runtime-authority.md:49
+#: ../../how-to/publish-runtime-authority.md:51
 msgid "Check that the artifact is current"
 msgstr "Comproveu que l'artefacte està actualitzat"
 
-#: ../../how-to/publish-runtime-authority.md:51
+#: ../../how-to/publish-runtime-authority.md:53
 msgid "Run the registry gate:"
 msgstr "Executeu el control del registre:"
 
-#: ../../how-to/publish-runtime-authority.md:57
+#: ../../how-to/publish-runtime-authority.md:59
 msgid ""
 "Its first step, `python -m dev.registry.conformance integrity`, exits 1 "
 "with a refusal on standard error when the artifact is stale, unreadable, "
-"or in an earlier format. The refusal names the recorded and the expected "
-"identity digests and the command that republishes the artifact."
+"or in an malformed format. The refusal names the recorded and the "
+"expected identity digests and the command that republishes the artifact."
 msgstr ""
 "El primer pas, `python -m dev.registry.conformance integrity`, acaba amb "
 "el codi 1 i rebutja l'operació per l'error estàndard quan l'artefacte "
-"està desactualitzat, no es pot llegir o té un format anterior. El rebuig "
-"indica els resums d'identitat registrat i esperat, i l'ordre que torna a "
-"publicar l'artefacte."
+"està desactualitzat, no es pot llegir o té un format mal format. El "
+"rebuig indica el resum d'identitat registrat, el que s'espera i l'ordre "
+"que torna a publicar l'artefacte."
 
-#: ../../how-to/publish-runtime-authority.md:62
+#: ../../how-to/publish-runtime-authority.md:64
 msgid ""
 "The identity depends only on file content and on paths relative to the "
 "registry and source roots. A fresh clone on any platform therefore agrees"
@@ -172,26 +177,24 @@ msgstr ""
 "l'artefacte quedi desactualitzat. La prova de recorregut complet de "
 "publicació del registre cobreix el mateix compilador."
 
-#: ../../how-to/publish-runtime-authority.md:68
+#: ../../how-to/publish-runtime-authority.md:70
 msgid "Recover from an invalid authority"
 msgstr "Recupereu-vos d'una autoritat no vàlida"
 
-#: ../../how-to/publish-runtime-authority.md:70
+#: ../../how-to/publish-runtime-authority.md:72
 msgid ""
 "When an installed workflow refuses an unavailable, malformed, altered, or"
-" unsupported-version artifact, stop the workflow. The "
-"`bundled_authority()` load doesn't compile authoring sources, parse raw "
-"TOML, repair an artifact, or fall back to a separately cached runtime "
-"table."
+" unreadable artifact, stop the workflow. The `bundled_authority()` load "
+"doesn't compile authoring sources, parse raw TOML, repair an artifact, or"
+" fall back to a separately cached runtime table."
 msgstr ""
 "Quan un flux de treball instal·lat rebutja un artefacte no disponible, "
-"mal format, alterat o d'una versió no compatible, atureu el flux de "
-"treball. La càrrega de `bundled_authority()` no compila les fonts "
-"d'autoria, no analitza el TOML en brut, no repara cap artefacte ni "
-"recorre a una taula de temps d'execució desada en una memòria cau "
-"separada."
+"mal format, alterat o il·legible, atureu el flux de treball. La càrrega "
+"de `bundled_authority()` no compila les fonts d'autoria, no analitza el "
+"TOML en brut, no repara cap artefacte ni recorre a una taula d'execució "
+"emmagatzemada per separat."
 
-#: ../../how-to/publish-runtime-authority.md:75
+#: ../../how-to/publish-runtime-authority.md:77
 msgid ""
 "Preserve the failed artifact when it is present, plus the package "
 "version, artifact digest, error class, and redacted logs."
@@ -200,7 +203,7 @@ msgstr ""
 "versió del paquet, el resum de l'artefacte, la classe d'error i els "
 "registres redactats."
 
-#: ../../how-to/publish-runtime-authority.md:77
+#: ../../how-to/publish-runtime-authority.md:79
 msgid ""
 "Republish from a validated registry, and confirm that `just check-"
 "registry` passes."
@@ -208,11 +211,11 @@ msgstr ""
 "Torneu a publicar des d'un registre validat i confirmeu que `just check-"
 "registry` passa."
 
-#: ../../how-to/publish-runtime-authority.md:79
+#: ../../how-to/publish-runtime-authority.md:81
 msgid "Rebuild the package so it contains the replacement artifact."
 msgstr "Reconstruïu el paquet perquè contingui l'artefacte substitutori."
 
-#: ../../how-to/publish-runtime-authority.md:81
+#: ../../how-to/publish-runtime-authority.md:83
 msgid ""
 "Escalate through the [project issue "
 "tracker](https://github.com/nevenincs/cadrumo/issues) with the release "

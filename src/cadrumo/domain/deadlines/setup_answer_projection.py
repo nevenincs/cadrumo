@@ -1,6 +1,6 @@
 """Registry-aware projection of persisted profile values into setup answers.
 
-The generic typed answer model lives in core.  This domain module owns the
+The typed answer model lives in the user-profile domain.  This domain module owns the
 projection-specific field specification and composes registry declarations
 into the projection consumed by deadline profile construction.  Core therefore
 remains independent of registry authority while the registry catalogue remains
@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from ...core.setup_answers import SetupAnswers
+from ..user_profile.setup_answers import SetupAnswers
 
 
 @dataclass(frozen=True, slots=True)

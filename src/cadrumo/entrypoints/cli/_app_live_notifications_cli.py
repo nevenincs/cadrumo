@@ -63,6 +63,7 @@ from ._app_live_notifications_payloads import (
     SancionReadingPayload,
 )
 from .common import active_bucket_id_or_refuse, emit_envelope, notice_lines
+from .state_projection_support import certificate_secret_backend_factory
 
 if TYPE_CHECKING:
     from ...domain.notifications.sancion import SancionLiquidacion
@@ -92,8 +93,13 @@ def notifications_pull(ctx: typer.Context) -> None:
     :class:`NotificationsCaptureResult`.
     """
     bucket_id = active_bucket_id_or_refuse()
-    emit_live_auth_preflight()
-    persisted = asyncio.run(capture_notifications(bucket_id=bucket_id))
+    emit_live_auth_preflight(certificate_secret_backend_factory(ctx))
+    persisted = asyncio.run(
+        capture_notifications(
+            bucket_id=bucket_id,
+            certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+        )
+    )
     result = NotificationsCaptureResult(
         bucket_id=bucket_id,
         snapshot_id=persisted.snapshot_id,
@@ -382,13 +388,14 @@ def notifications_document_pull(
     refused before any request crosses the wire.
     """
     bucket_id = active_bucket_id_or_refuse()
-    emit_live_auth_preflight()
+    emit_live_auth_preflight(certificate_secret_backend_factory(ctx))
     service = _notification_document_service(load_settings())
     custody = asyncio.run(
         pull_notification_document(
             bucket_id=bucket_id,
             certificado_id=certificado_id,
             service=service,
+            certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
         )
     )
     record = custody.record

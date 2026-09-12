@@ -5,7 +5,7 @@ modelo:
         continuidad:
           devengo-year:
             help: Tax information for casilla 148-151 of Modelo 190.
-            label: Casilla 148-151 — tax field
+            label: Accrual year
           ingresos-a-cuenta-efectuados:
             help: 'Casilla information: Casilla 122-134: payments on account efectuados.'
             label: 'Casilla 122-134: payments on account efectuados'
@@ -15,16 +15,16 @@ modelo:
             label: Casilla 135-147 — tax information
           m190-correo-electronico:
             help: Tax information for casilla 176-225 of Modelo 190.
-            label: Casilla 176-225 — tax field
+            label: Contact person's email address
           m190-declaracion-complementaria:
             help: Tax information about tax information in casilla 121 of Modelo 190.
-            label: Casilla 121 — tax information
+            label: Supplementary declaration
           m190-declaracion-sustitutiva:
             help: Tax information for casilla 122 of Modelo 190.
-            label: Casilla 122 — tax field
+            label: Replacement declaration
           m190-numero-identificativo:
             help: Tax information for casilla 108-120 of Modelo 190.
-            label: Casilla 108-120 — tax field
+            label: Declaration identifying number
           m190-numero-identificativo-anterior:
             help: Tax information for casilla 123-135 of Modelo 190.
             label: Casilla 123-135 — tax field
@@ -39,7 +39,7 @@ modelo:
           payee-anualidades-alimentos:
             help: Tax information about maintenance annuities in casilla 210-222 of
               Modelo 190.
-            label: Casilla 210-222 — maintenance annuities
+            label: Maintenance annuities
           payee-ascendientes-75-mas-entero:
             help: Tax information about tax information in casilla 244 of Modelo 190.
             label: Casilla 244 — tax information
@@ -72,16 +72,16 @@ modelo:
             label: Casilla 241 — tax information
           payee-birth-year:
             help: Tax information for casilla 153-156 of Modelo 190.
-            label: Casilla 153-156 — tax field
+            label: Year of birth
           payee-ceuta-melilla-clave:
             help: 'Casilla information: Casilla 152: payee ceuta melilla clave.'
-            label: 'Casilla 152: payee ceuta melilla clave'
+            label: Ceuta or Melilla
           payee-clave-percepcion:
             help: Tax information about tax information in casilla 78 of Modelo 190.
-            label: Casilla 78 — tax information
+            label: Income key
           payee-complemento-ayuda-infancia:
             help: 'Casilla information: Casilla 322: payee complemento ayuda infancia.'
-            label: 'Casilla 322: payee complemento ayuda infancia'
+            label: Child support supplement
           payee-computo-hijo-1:
             help: 'Casilla information: Casilla 251: payee computo hijo 1.'
             label: 'Casilla 251: payee computo hijo 1'
@@ -93,7 +93,7 @@ modelo:
             label: 'Casilla 253: payee computo hijo 3'
           payee-contract-relation-clave:
             help: 'Casilla information: Casilla 168: payee contract relation clave.'
-            label: 'Casilla 168: payee contract relation clave'
+            label: Contract or relationship
           payee-descendientes-discapacidad-33-65-entero:
             help: Tax information about tax information in casilla 231-232 of Modelo
               190.
@@ -134,20 +134,20 @@ modelo:
             label: Casilla 225-226 — tax information
           payee-disability-clave:
             help: 'Casilla information: Casilla 167: payee disability clave.'
-            label: 'Casilla 167: payee disability clave'
+            label: Disability
           payee-emerging-stock-excess-clave:
             help: 'Casilla information: Casilla 388: payee emerging stock excess clave.'
             label: 'Casilla 388: payee emerging stock excess clave'
           payee-family-situation:
             help: 'Casilla information: Casilla 157: payee family situation.'
-            label: 'Casilla 157: payee family situation'
+            label: Family situation
           payee-gastos-deducibles:
             help: Tax information about payee deductible expenses in casilla 184-196
               of Modelo 190.
-            label: Casilla 184-196 — payee deductible expenses
+            label: Deductible expenses
           payee-geographic-mobility-clave:
             help: 'Casilla information: Casilla 170: payee geographic mobility clave.'
-            label: 'Casilla 170: payee geographic mobility clave'
+            label: Geographic mobility
           payee-incapacidad-dineraria-percepcion:
             help: Tax information about tax information in casilla 256-268 of Modelo
               190.
@@ -173,10 +173,10 @@ modelo:
             label: 'Casilla 36-75: payee name'
           payee-nif:
             help: 'Casilla information: Casilla 18-26: payee nif.'
-            label: 'Casilla 18-26: payee nif'
+            label: Recipient's tax ID (NIF)
           payee-pension-compensatoria:
             help: 'Casilla information: Casilla 197-209: payee pension compensatoria.'
-            label: 'Casilla 197-209: payee pension compensatoria'
+            label: Compensatory pensions
           payee-prestamos-vivienda-clave:
             help: Tax information about tax information in casilla 254 of Modelo 190.
             label: Casilla 254 — tax information
@@ -232,7 +232,7 @@ modelo:
           representante-legal-nif:
             help: Tax information about tax information in casilla 27-35 of Modelo
               190.
-            label: Casilla 27-35 — tax information
+            label: NIF of the legal representative
           retenciones-ingresos-a-cuenta:
             help: 'Casilla information: Casilla 161-175: withholdings payments on
               account.'

@@ -45,44 +45,40 @@ msgstr ""
 "helyi állapot gyökerét. Az alapértelmezés attól függ, hogyan fut a "
 "Cadrumo:"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Platform"
-msgstr "Platform"
+msgstr "Platformok"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Default storage root"
 msgstr "Alapértelmezett tárolási gyökér"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Windows"
-msgstr "Windows"
+msgstr "Windows-rendszer"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "`%LOCALAPPDATA%/cadrumo/storage`"
-msgstr "`%LOCALAPPDATA%/cadrumo/storage`"
+msgstr "A `%LOCALAPPDATA%/cadrumo/storage` Windows-tárolási útvonal"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Linux"
-msgstr "Linux"
+msgstr "Linux-rendszer"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "`$XDG_DATA_HOME/cadrumo/storage`, or `~/.local/share/cadrumo/storage`"
 msgstr "`$XDG_DATA_HOME/cadrumo/storage`, vagy `~/.local/share/cadrumo/storage`"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "macOS"
-msgstr "macOS"
+msgstr "macOS-rendszer"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "`~/Library/Application Support/cadrumo/storage`"
-msgstr "`~/Library/Application Support/cadrumo/storage`"
+msgstr "A `~/Library/Application Support/cadrumo/storage` macOS-tárolási útvonal"
 
 #: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md:17
 msgid ""
 "The root is the same whether Cadrumo runs from a source checkout or an "
 "installed distribution. Running from a checkout does not move it: set "
 "`CADRUMO_LOCAL_STORAGE_ROOT` to put the tree inside the checkout."
-msgstr "A gyökér ugyanaz, akár forráskódból, akár telepített csomagból fut a Cadrumo. A forráskódból való futtatás nem mozdítja el: állítsa be a `CADRUMO_LOCAL_STORAGE_ROOT` változót, hogy a fát a forráskönyvtárba helyezze."
+msgstr ""
+"A gyökér ugyanaz, akár forráskódból, akár telepített csomagból fut a "
+"Cadrumo. A forráskódból való futtatás nem mozdítja el: állítsa be a "
+"`CADRUMO_LOCAL_STORAGE_ROOT` változót, hogy a fát a forráskönyvtárba "
+"helyezze."
 
 #: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md:21
 msgid ""
@@ -90,7 +86,11 @@ msgid ""
 " uses them runs. The state-free surfaces (`--help`, `--version`, and a "
 "bare invocation) do not create anything, so browsing the command tree "
 "leaves no state behind."
-msgstr "A Cadrumo akkor hozza létre a gyökeret és az alatta lévő könyvtárakat, amikor egy azokat használó parancs lefut. Az állapotmentes felületek (`--help`, `--version` és a paraméter nélküli hívás) semmit sem hoznak létre, így a parancsfa böngészése nem hagy maga után állapotot."
+msgstr ""
+"A Cadrumo akkor hozza létre a gyökeret és az alatta lévő könyvtárakat, "
+"amikor egy azokat használó parancs lefut. Az állapotmentes felületek "
+"(`--help`, `--version` és a paraméter nélküli hívás) semmit sem hoznak "
+"létre, így a parancsfa böngészése nem hagy maga után állapotot."
 
 #: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md:26
 msgid ""
@@ -150,29 +150,23 @@ msgstr ""
 msgid "Safety and filing scope"
 msgstr "Biztonság és bevallási hatókör"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Surface"
 msgstr "Felület"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Cadrumo behavior"
 msgstr "Cadrumo viselkedése"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Calculation and verification"
 msgstr "Számítás és verifikálás"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Local; evaluates saved records against bundled registry rules and evidence"
 msgstr ""
 "Helyi; a mentett nyilvántartásokat a beépített registry-szabályokkal és "
 "bizonyítékokkal szemben értékeli ki"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Export"
 msgstr "Exportálás"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid ""
 "Writes an AEAT-compatible local file after verification and required "
 "evidence gates pass; portal acceptance is not guaranteed"
@@ -180,35 +174,27 @@ msgstr ""
 "Egy AEAT-kompatibilis helyi fájlt ír, miután a verifikálás és a kötelező "
 "bizonyítékkapuk átmentek; a portál általi elfogadás nem garantált"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Live AEAT access"
 msgstr "Élő AEAT-hozzáférés"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Separately invoked, authenticated, and read-only"
 msgstr "Külön indított, hitelesített és csak olvasható"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Submission"
 msgstr "Beküldés"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Forbidden; no Cadrumo submission command exists"
 msgstr "Tiltott; nem létezik Cadrumo beküldési parancs"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Official filing"
 msgstr "Hivatalos benyújtás"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Performed by a human through an official AEAT channel"
 msgstr "Egy ember végzi egy hivatalos AEAT-csatornán keresztül"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Filing history"
 msgstr "Bevallási előzmény"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid ""
 "Recorded locally after the human filing; reconciliation compares totals "
 "and, for enrolled modelos, captured per-casilla values"
@@ -217,11 +203,9 @@ msgstr ""
 "az összegeket, és a bejegyzett modelók esetében a rögzített casillánkénti"
 " értékeket"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid "Responsibility"
 msgstr "Felelősség"
 
-#: Y:/code/aeat-worktrees/main/docs/reference/filesystem-state-and-safety.md
 msgid ""
 "The taxpayer or authorized filer reviews figures, meets deadlines, "
 "uploads, and retains the justificante"
@@ -241,22 +225,4 @@ msgstr ""
 "access.md). A [bevallási határ magyarázata](../explanation/recording-a"
 "-filing-and-the-boundary.md) elmagyarázza, miért marad a beküldés a "
 "Cadrumón kívül."
-
-#~ msgid "Run mode"
-#~ msgstr "Futtatási mód"
-
-#~ msgid "Source checkout"
-#~ msgstr "Forráskód-kicsekkolás"
-
-#~ msgid "`<repository>/var/storage`"
-#~ msgstr "`<repository>/var/storage`"
-
-#~ msgid "Installed on Windows"
-#~ msgstr "Windowsra telepítve"
-
-#~ msgid "Installed on Linux"
-#~ msgstr "Linuxra telepítve"
-
-#~ msgid "Installed on macOS"
-#~ msgstr "macOS-re telepítve"
 

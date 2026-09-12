@@ -27,7 +27,7 @@ from ...core.modelo import Modelo
 from ...core.parsing.dates import parse_date as _parse_date_canonical
 from ...core.parsing.utils import parse_bool as _parse_bool
 from ...core.period import Period
-from ...core.setup_answers import SetupAnswers
+from ..user_profile.setup_answers import SetupAnswers
 from ..contribuyente.entity_type import EntityType, LegalEntityForm
 from ..contribuyente.renta_codes import FiscalResidency
 from .errors import ProfileError

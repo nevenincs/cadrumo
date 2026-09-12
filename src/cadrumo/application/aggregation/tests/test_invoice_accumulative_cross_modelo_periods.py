@@ -71,8 +71,8 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
-from ....tests.filing_evidence import general_m303_filing_evidence
+from ...modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 from ...invoices.catalogue_creation import build_catalogue_invoice
@@ -369,7 +369,7 @@ def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, 
     )
     decision = _wallet_decision(period=period)
     IvaWalletDecisionRepository(objects=secure_objects).save_decision(decision)
-    revision = calculate_modelo_revision_from_bucket_aggregation(
+    revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         casilla_inputs=dict(_M303_MANUAL_RESULTADO_CASILLA_ZEROS),
         binding_values={
@@ -385,7 +385,7 @@ def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, 
         filing_instance_evidence=general_m303_filing_evidence(
             work_unit.period, reference="test:invoice-accumulative-cross-modelo"
         ),
-    )
+    ).revision
     # A Modelo 303 filing carries a resolved result disposition. Resolve it
     # through the production boundary against the seeded profile rather than
     # asserting one here: the disposition is a regulated determination and a
@@ -420,7 +420,7 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository) -> Calculatio
         repository=wu_repo,
         clock=_T0,
     )
-    return calculate_modelo_revision_from_bucket_aggregation(
+    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         binding_values={},
         work_unit_repository=wu_repo,
@@ -428,7 +428,7 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository) -> Calculatio
         transaction_repository=tx_repo,
         invoice_repository=invoice_repo,
         clock=_FILE_AT,
-    )
+    ).revision
 
 
 def _calculate_and_file_m130_quarter(secure_objects: SecureObjectRepository, *, period: str) -> CalculationRevision:
@@ -446,7 +446,7 @@ def _calculate_and_file_m130_quarter(secure_objects: SecureObjectRepository, *, 
         repository=wu_repo,
         clock=_T0,
     )
-    revision = calculate_modelo_revision_from_bucket_aggregation(
+    revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         casilla_inputs=_M130_MANUAL_INPUTS,
         work_unit_repository=wu_repo,
@@ -454,7 +454,7 @@ def _calculate_and_file_m130_quarter(secure_objects: SecureObjectRepository, *, 
         transaction_repository=tx_repo,
         invoice_repository=invoice_repo,
         clock=_T0,
-    )
+    ).revision
     persist_filed_revision_observation(
         revision=revision,
         work_unit=work_unit,
@@ -502,7 +502,7 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> Calculatio
         repository=wu_repo,
         clock=_T0,
     )
-    return calculate_modelo_revision_from_bucket_aggregation(
+    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         binding_values=_m100_non_relation_zero_bindings(secure_objects),
         work_unit_repository=wu_repo,
@@ -510,7 +510,7 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> Calculatio
         transaction_repository=tx_repo,
         invoice_repository=invoice_repo,
         clock=_T0,
-    )
+    ).revision
 
 
 def test_one_invoice_life_lands_in_one_period_on_both_modelo_pairs(

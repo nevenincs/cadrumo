@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-12 13:59+0200\n"
+"POT-Creation-Date: 2026-09-12 16:11+0200\n"
 "PO-Revision-Date: 2026-07-18 13:20+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -76,7 +76,7 @@ msgstr "Determinisztikus útvonal a forrásértékektől egy casilláig"
 
 #: ../../reference/registry-legal-api.md
 msgid "`legal_refs`"
-msgstr "`legal_refs`"
+msgstr "A `legal_refs` mező"
 
 #: ../../reference/registry-legal-api.md
 msgid "Legal provisions grounding a rule or finding"
@@ -84,7 +84,7 @@ msgstr "Egy szabályt vagy megállapítást megalapozó jogszabályi rendelkezé
 
 #: ../../reference/registry-legal-api.md
 msgid "`source_refs`"
-msgstr "`source_refs`"
+msgstr "A `source_refs` mező"
 
 #: ../../reference/registry-legal-api.md
 msgid "Official manual or source material supporting the implementation"
@@ -104,78 +104,84 @@ msgstr ""
 
 #: ../../reference/registry-legal-api.md:22
 msgid "Runtime authority artifact"
-msgstr ""
+msgstr "Futásidejű hatósági artefaktum"
 
 #: ../../reference/registry-legal-api.md:24
 msgid ""
-"The runtime authority artifact is the versioned, digest-checked "
-"publication of the validated AEAT registry intended for installed "
-"calculations and filing exports. It is generated output. "
-"`bundled_authority()` reads the packaged "
-"`registry/authority/authority.json` and checks its schema version and "
-"content digest before reconstructing typed authority data."
+"The runtime authority artifact is the digest-checked publication of the "
+"validated AEAT registry intended for installed calculations and filing "
+"exports. It is generated output. `bundled_authority()` reads the packaged"
+" `registry/authority/authority.json` and checks its content digest before"
+" reconstructing typed authority data."
 msgstr ""
+"A futásidejű hatósági artefaktum a telepített számításokhoz és bevallási "
+"exportokhoz szánt, verziózott, kivonattal ellenőrzött közzététele az "
+"érvényesített AEAT-nyilvántartásnak. Generált kimenet. A "
+"`bundled_authority()` a csomagolt `registry/authority/authority.json` "
+"fájlt olvassa be, és a típusos hatósági adatok újjáépítése előtt "
+"ellenőrzi a séma verzióját és a tartalom kivonatát."
 
 #: ../../reference/registry-legal-api.md
 msgid "Term"
-msgstr ""
+msgstr "Fogalom"
 
 #: ../../reference/registry-legal-api.md
 msgid "Validated candidate"
-msgstr ""
+msgstr "Érvényesített jelölt"
 
 #: ../../reference/registry-legal-api.md
 msgid ""
 "The registry and source-evidence inputs accepted by the development "
 "compiler."
 msgstr ""
+"A fejlesztési fordító által elfogadott nyilvántartási és "
+"forrásbizonyíték-bemenetek."
 
 #: ../../reference/registry-legal-api.md
 msgid "Validation receipt"
-msgstr ""
+msgstr "Érvényesítési bizonylat"
 
 #: ../../reference/registry-legal-api.md
 msgid ""
 "The digests captured for those inputs; a change before publication "
 "refuses the candidate."
 msgstr ""
+"Az ezekhez a bemenetekhez rögzített kivonatok; a közzététel előtti "
+"módosítás elutasítja a jelöltet."
 
 #: ../../reference/registry-legal-api.md
 msgid "Identity digest"
-msgstr ""
+msgstr "Identitáskivonat"
 
 #: ../../reference/registry-legal-api.md
 msgid ""
 "The content-addressed identity of the candidate, recorded in the artifact"
 " so a stale artifact can be detected."
 msgstr ""
+"A jelölt tartalomcímzésű identitása, amelyet az artefaktum rögzít, hogy "
+"felismerhető legyen az elavult artefaktum."
 
 #: ../../reference/registry-legal-api.md
 msgid "Authority artifact"
-msgstr ""
+msgstr "Hatósági artefaktum"
 
 #: ../../reference/registry-legal-api.md
 msgid "The atomically written JSON publication containing the resolved authority."
-msgstr ""
+msgstr "A feloldott hatóságot tartalmazó, atomikusan kiírt JSON-közzététel."
 
-#: ../../reference/registry-legal-api.md
-msgid "Schema version"
-msgstr ""
-
-#: ../../reference/registry-legal-api.md
-msgid "The artifact format identifier. Runtime refuses an unsupported version."
-msgstr ""
-
-#: ../../reference/registry-legal-api.md:38
+#: ../../reference/registry-legal-api.md:37
 msgid ""
-"The artifact is one canonical JSON object with exactly three members: "
-"`schema_version`, `payload`, and `payload_sha256`. `payload_sha256` is "
-"the SHA-256 digest of the canonical JSON of `schema_version` and "
-"`payload` together. The digest detects a truncated, corrupted, or hand-"
-"edited file."
+"The artifact is one canonical JSON object with exactly two members: "
+"`payload` and `payload_sha256`. `payload_sha256` is the SHA-256 digest of"
+" the canonical JSON of `payload`. The digest detects a truncated, "
+"corrupted, or hand-edited file."
 msgstr ""
+"Az artefaktum egyetlen kanonikus JSON-objektum, pontosan két taggal: "
+"`payload` és `payload_sha256`. A `payload_sha256` a `payload` kanonikus "
+"JSON-jának SHA-256 kivonata. A kivonat észleli a csonkolt, sérült vagy "
+"kézzel módosított fájlt."
 
-#: ../../reference/registry-legal-api.md:43
+#: ../../reference/registry-legal-api.md:41
 msgid ""
 "The identity digest folds, for every registry file and every source-"
 "evidence file, its path relative to its root and the SHA-256 of its "
@@ -184,95 +190,126 @@ msgid ""
 "timestamps never contribute, so an identical checkout anywhere derives "
 "the same identity."
 msgstr ""
+"Az identitáskivonat minden nyilvántartási és forrásbizonyíték-fájlhoz "
+"magában foglalja a gyökeréhez viszonyított elérési utat és a tartalom "
+"SHA-256 kivonatát. A nyilvántartási fájlok kivonata úgy készül, hogy a "
+"CRLF sorvégződéseket LF-ként olvassuk. A forrásbizonyítékokat bájtról "
+"bájtra kivonatoljuk. Az abszolút elérési utak, a méretek és az "
+"időbélyegek soha nem számítanak bele, ezért egy azonos munkapéldány "
+"helyétől függetlenül ugyanazt az identitást adja."
 
-#: ../../reference/registry-legal-api.md:49
+#: ../../reference/registry-legal-api.md:47
 msgid ""
-"The current format is `cadrumo-authority-artifact-v4`. Its payload is a "
-"compact projection of the complete typed authority. Required fields are "
-"always written; a field is omitted only when its typed value equals the "
-"default declared by its schema. Strict rehydration restores those "
-"defaults. Discriminators and authored union spellings remain on the wire,"
-" so compaction never guesses which typed variant to construct. Decimals "
-"and dates are JSON strings where the schema types a field as a decimal or"
-" a date. A governed-fact value can be text, an integer, a decimal, a "
-"boolean, or a date, and JSON cannot tell those apart by value alone. "
-"Every non-text fact value is therefore written as an object with one tag "
-"that names its type:"
+"The payload is a compact projection of the complete typed authority. "
+"Required fields are always written; a field is omitted only when its "
+"typed value equals the default declared by its schema. Strict rehydration"
+" restores those defaults. Discriminators and authored union spellings "
+"remain on the wire, so compaction never guesses which typed variant to "
+"construct. Decimals and dates are JSON strings where the schema types a "
+"field as a decimal or a date. A governed-fact value can be text, an "
+"integer, a decimal, a boolean, or a date, and JSON cannot tell those "
+"apart by value alone. Every non-text fact value is therefore written as "
+"an object with one tag that names its type:"
 msgstr ""
+"A payload a teljes típusos hatóság tömör vetülete. A kötelező mezőket "
+"mindig kiírjuk; egy mező csak akkor marad el, ha típusos értéke "
+"megegyezik a sémában deklarált alapértelmezéssel. A szigorú "
+"visszaalakítás visszaállítja ezeket az alapértelmezéseket. A "
+"diszkriminátorok és a szerzői uniók megnevezései a vezetékes ábrázolásban"
+" maradnak, így a tömörítés soha nem találgatja, melyik típusos változatot"
+" kell létrehozni. A tizedesek és a dátumok JSON-karakterláncok, amikor a "
+"séma egy mezőt tizedesként vagy dátumként típusosít. Egy szabályozott "
+"tényérték lehet szöveg, egész szám, tizedes, logikai érték vagy dátum, a "
+"JSON pedig önmagában az érték alapján nem tud különbséget tenni közöttük."
+" Ezért minden nem szöveges tényértéket a típusát megnevező címkével "
+"ellátott objektumként írunk ki:"
 
 #: ../../reference/registry-legal-api.md
 msgid "Fact value"
-msgstr ""
+msgstr "Tényérték"
 
 #: ../../reference/registry-legal-api.md
 msgid "Written as"
-msgstr ""
+msgstr "Így jelenik meg"
 
 #: ../../reference/registry-legal-api.md
 msgid "Decimal"
-msgstr ""
+msgstr "Tizedes"
 
 #: ../../reference/registry-legal-api.md
 #, python-brace-format
 msgid "`{\"$decimal\": \"0.40\"}`"
-msgstr ""
+msgstr "A `{\"$decimal\": \"0.40\"}` objektum"
 
 #: ../../reference/registry-legal-api.md
 msgid "Date"
-msgstr ""
+msgstr "Dátum"
 
 #: ../../reference/registry-legal-api.md
 #, python-brace-format
 msgid "`{\"$date\": \"2025-01-01\"}`"
-msgstr ""
+msgstr "A `{\"$date\": \"2025-01-01\"}` objektum"
 
 #: ../../reference/registry-legal-api.md
 msgid "Integer"
-msgstr ""
+msgstr "Egész szám"
 
 #: ../../reference/registry-legal-api.md
 #, python-brace-format
 msgid "`{\"$int\": 5}`"
-msgstr ""
+msgstr "A `{\"$int\": 5}` objektum"
 
 #: ../../reference/registry-legal-api.md
 msgid "Boolean"
-msgstr ""
+msgstr "Logikai érték"
 
 #: ../../reference/registry-legal-api.md
 #, python-brace-format
 msgid "`{\"$bool\": true}`"
-msgstr ""
+msgstr "A `{\"$bool\": true}` objektum"
 
 #: ../../reference/registry-legal-api.md
 msgid "Text"
-msgstr ""
+msgstr "Szöveg"
 
 #: ../../reference/registry-legal-api.md
 msgid "The bare JSON string, for example `\"0.40\"`"
-msgstr ""
+msgstr "A címke nélküli JSON-karakterlánc, például a `\"0.40\"`"
 
-#: ../../reference/registry-legal-api.md:68
+#: ../../reference/registry-legal-api.md:66
 msgid ""
 "Runtime decodes the payload under the same strict schema the development "
 "compiler uses. It refuses an unknown tag, a malformed or non-canonical "
 "tagged value, and an untagged non-text fact value; it never infers a type"
-" from the shape of a string. It refuses every superseded v1, v2, or v3 "
-"artifact and names the v4 format to republish in."
+" from the shape of a string."
 msgstr ""
+"A futtatókörnyezet ugyanazon szigorú séma szerint dekódolja a payloadot, "
+"amelyet a fejlesztési fordító használ. Elutasítja az ismeretlen címkét, a"
+" hibás vagy nem kanonikus címkézett értéket és a címke nélküli, nem "
+"szöveges tényértéket; soha nem következtet a típusra egy karakterlánc "
+"alakjából. Elutasít minden kiváltott v1, v2 vagy v3 artefaktumot, és "
+"megnevezi, hogy v4 formátumban kell újra közzétenni."
 
-#: ../../reference/registry-legal-api.md:74
+#: ../../reference/registry-legal-api.md:71
 msgid ""
 "The compiler, not the product runtime, expands authoring deltas into "
 "complete canonical revisions. The artifact also carries typed runtime "
 "catalogues for IVA regulations, place-of-supply rules, country aliases, "
 "Spanish postal territories, territorial carve-outs, recargo bands, and "
 "apoderamiento scopes. These are frozen schema records, not embedded TOML "
-"bytes or an untyped JSON bag. A v4 write or read refuses an authority "
-"when any required runtime catalogue is empty."
+"bytes or an untyped JSON bag. A write or read refuses an authority when "
+"any required runtime catalogue is empty."
 msgstr ""
+"A fordító, nem pedig a termék futtatókörnyezete, bontja ki a szerzői "
+"módosításokat teljes kanonikus revíziókká. Az artefaktum emellett típusos"
+" futásidejű katalógusokat tartalmaz az IVA-előírásokhoz, a teljesítési "
+"hely szabályaihoz, az országaliasokhoz, a spanyol postai területekhez, a "
+"területi kivételekhez, a recargo-sávokhoz és az apoderamiento-"
+"hatókörökhöz. Ezek befagyasztott sémarekordok, nem beágyazott TOML-bájtok"
+" és nem típus nélküli JSON-tároló. A v4-es írás vagy olvasás elutasítja a"
+" hatóságot, ha bármely kötelező futásidejű katalógus üres."
 
-#: ../../reference/registry-legal-api.md:81
+#: ../../reference/registry-legal-api.md:78
 msgid ""
 "Modelo and tax-domain types validate stable identifier syntax without "
 "loading the authored tree. The compiled authority owns membership and "
@@ -281,8 +318,14 @@ msgid ""
 "`horizon`, and optional `hard_ceiling`—used to admit supported "
 "coordinates."
 msgstr ""
+"A Modelo- és adótartománytípusok a szerzői fa betöltése nélkül ellenőrzik"
+" az azonosítók stabil szintaxisát. A lefordított hatóság birtokolja a "
+"tagságot, és az azonosítókat a közzétett szókészletei alapján "
+"érvényesíti. Ugyanez a hatóság vetíti ki a támogatás közös időbeli burkát"
+" —`floor`, `horizon` és az opcionális `hard_ceiling`—, amelyet a "
+"támogatott koordináták elfogadásához használunk."
 
-#: ../../reference/registry-legal-api.md:87
+#: ../../reference/registry-legal-api.md:84
 msgid ""
 "The `bundled_authority()` artifact-loading path has no source "
 "compilation, raw authored-tree loader, repair path, or parallel runtime-"
@@ -292,28 +335,45 @@ msgid ""
 " failures occur before authority-dependent calculation or filing "
 "proceeds."
 msgstr ""
+"A `bundled_authority()` artefaktum-betöltési útvonalán nincs "
+"forrásfordítás, nyers szerzőifa-betöltő, javítási útvonal vagy párhuzamos"
+" futásidejűtábla-gyorsítótár. A hiányzó artefaktum elérhetetlenségi hibát"
+" vált ki. A hibás keret, a váratlan tag, a hiányos típusos katalógus vagy"
+" az érvénytelen payload formátumhibát vált ki. A nem egyező kivonat "
+"integritási hibát vált ki. Ezek a hibák még a hatóságtól függő számítás "
+"vagy bevallás folytatása előtt bekövetkeznek."
 
-#: ../../reference/registry-legal-api.md:94
+#: ../../reference/registry-legal-api.md:91
 msgid ""
 "Development tooling publishes with `uv run --no-sync python -m "
 "dev.registry.pipeline publish-authority`, or programmatically through the"
 " development-only "
 "`dev.registry.pipeline.cli.publish_authority_candidate_workflow` API:"
 msgstr ""
+"A fejlesztői eszközök a `uv run --no-sync python -m dev.registry.pipeline"
+" publish-authority` paranccsal, illetve programozottan, a csak "
+"fejlesztéshez használható "
+"`dev.registry.pipeline.cli.publish_authority_candidate_workflow` API-n "
+"keresztül tesznek közzé:"
 
-#: ../../reference/registry-legal-api.md:107
+#: ../../reference/registry-legal-api.md:104
 msgid ""
 "`python -m dev.registry.conformance integrity` refuses an artifact whose "
 "recorded identity digest differs from the identity of the live registry "
 "and source evidence. See [Publish a validated runtime authority](../how-"
 "to/publish-runtime-authority.md) for the workflow and recovery path."
 msgstr ""
+"A `python -m dev.registry.conformance integrity` elutasítja azt az "
+"artefaktumot, amelynek rögzített identitáskivonata eltér az élő "
+"nyilvántartás és a forrásbizonyítékok identitásától. A munkafolyamatot és"
+" a helyreállítási utat a [Érvényesített futásidejű hatóság közzététele"
+"](../how-to/publish-runtime-authority.md) oldalon ismertetjük."
 
-#: ../../reference/registry-legal-api.md:112
+#: ../../reference/registry-legal-api.md:109
 msgid "Filing-input contract shapes"
 msgstr "A bevallási bemeneti szerződés alakzatai"
 
-#: ../../reference/registry-legal-api.md:114
+#: ../../reference/registry-legal-api.md:111
 msgid ""
 "The validated registry snapshot is the read-model authority for one "
 "modelo, filing year, and period. It defines the casillas, formulas, "
@@ -383,7 +443,7 @@ msgstr ""
 msgid "A calculated casilla observation"
 msgstr "Egy kiszámított casilla-megfigyelés"
 
-#: ../../reference/registry-legal-api.md:125
+#: ../../reference/registry-legal-api.md:122
 msgid ""
 "A binding is not an attachable data blob. It is the contract by which an "
 "enrolled source resolver projects an owned source record into one of "
@@ -399,24 +459,24 @@ msgstr ""
 "nincs készlettag. A titkosított `InventoryLedger` számára nincs "
 "bejegyzett számítási feloldó, ezért önálló üzleti nyilvántartás marad."
 
-#: ../../reference/registry-legal-api.md:132
-#, fuzzy, python-brace-format
+#: ../../reference/registry-legal-api.md:129
+#, python-brace-format
 msgid ""
 "Use the generated [application command reference](../cli/app.rst) to look"
 " up modelo calculation, description, verification-report, and audit "
 "surfaces. Use the {doc}`glossary </_generated/glossary>` for taxpayer-"
 "facing definitions."
 msgstr ""
-"Használja a generált [alkalmazásparancs-referenciát](../cli/app.rst) a "
-"registry-vizsgálat, a modelo-leírás, a formula, a verifikációs jelentés "
-"és az auditfelületek kikeresésére. Használja a {doc}`szójegyzéket "
-"</_generated/glossary>` az adózónak szóló definíciókhoz."
+"A generált [alkalmazásparancs-referenciát](../cli/app.rst) használja a "
+"modelo-számítás, a leírás, az ellenőrzési jelentés és az auditfelületek "
+"kikereséséhez. Az adózóknak szóló definíciókhoz használja a "
+"{doc}`glossary </_generated/glossary>` oldalt."
 
-#: ../../reference/registry-legal-api.md:136
+#: ../../reference/registry-legal-api.md:133
 msgid "Python public API lookup"
 msgstr "Python nyilvános API kikeresése"
 
-#: ../../reference/registry-legal-api.md:138
+#: ../../reference/registry-legal-api.md:135
 msgid ""
 "The generated [Cadrumo package API](../api/cadrumo.rst) is the entry "
 "point for Python lookup. Public consumers import from `cadrumo` and its "
@@ -429,7 +489,7 @@ msgstr ""
 "felsorolja a támogatott adapter-, alkalmazás-, core-, domain-, "
 "entrypoint- és locale-felületeket."
 
-#: ../../reference/registry-legal-api.md:143
+#: ../../reference/registry-legal-api.md:140
 msgid ""
 "There is no `aeat` Python import compatibility package. Names containing "
 "`aeat` inside the `cadrumo` package identify the external authority "

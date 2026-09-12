@@ -22,7 +22,7 @@ from typing import Any
 
 import pytest
 
-from ....tests.consent_profile_fixture import consent_profile
+from ....adapters.persistence.storage.tests.consent_profile_fixture import consent_profile
 
 __all__ = ["consent_profile"]
 

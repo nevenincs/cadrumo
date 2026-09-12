@@ -18,15 +18,13 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...domain.deadlines.models import TaxpayerProfile
 from ..operator_actions.models import DeclaredNextAction
-from ..state_projection_auth import build_auth_readiness
+from ..state_projection_auth import build_auth_readiness_without_live_backend
 from ..user_profile.completeness import iva_regime_required
-from ..user_profile.keys_validation import list_profile_key_records, validate_profile_values
+from ..user_profile.keys_validation import validate_profile_values
+from ..user_profile.profile_keys import profile_keys
 from ..user_profile.projections import projection_for_taxpayer, record_to_path_values
 from ..workflow.state_models import WorkflowState
-from .compiler import ensure_profile_keys_registered
 from .errors import WizardError, WizardPreconditionCondition, wizard_no_action_verdict
-
-ensure_profile_keys_registered()
 
 _ENROLMENT_KEY = "iva.regime"
 """Profile key whose presence flips an IVA-liable operator profile into
@@ -80,7 +78,7 @@ def build_wizard_status(state: WorkflowState) -> WizardStatusReport:
     identity_ready = False
     missing_required: tuple[str, ...] = ()
     profile_present_keys = 0
-    profile_total_keys = len(list_profile_key_records())
+    profile_total_keys = len(profile_keys())
     enrolment_ready = False
     missing_enrolment: tuple[str, ...] = ()
     if record is not None:
@@ -106,7 +104,7 @@ def build_wizard_status(state: WorkflowState) -> WizardStatusReport:
     # whose certificate is gone reads as "session ready". The canonical
     # projection fails closed on both counts and does not expose the raw
     # invalid selector.
-    auth_readiness = build_auth_readiness(
+    auth_readiness = build_auth_readiness_without_live_backend(
         state,
         provider_kind=None,
         provider_kind_is_authoritative=False,

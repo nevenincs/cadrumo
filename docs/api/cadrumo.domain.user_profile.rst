@@ -19,4 +19,5 @@ Submodules
    cadrumo.domain.user_profile.portable_export
    cadrumo.domain.user_profile.registry_contract
    cadrumo.domain.user_profile.schema
+   cadrumo.domain.user_profile.setup_answers
    cadrumo.domain.user_profile.values

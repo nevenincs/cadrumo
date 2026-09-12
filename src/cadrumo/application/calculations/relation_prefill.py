@@ -518,6 +518,8 @@ def _default_activity_start_date(activity_start_date: date | None) -> date | Non
 
 def _default_m111_no_retenciones_periods(
     m111_no_retenciones_periods: frozenset[tuple[int, str]] | None,
+    *,
+    snapshot: RegistrySnapshot,
 ) -> frozenset[tuple[int, str]]:
     if m111_no_retenciones_periods is not None:
         return m111_no_retenciones_periods
@@ -526,7 +528,13 @@ def _default_m111_no_retenciones_periods(
     active_bucket_id = resolve_active_bucket_id()
     if active_bucket_id is None:
         return frozenset[tuple[int, str]]()
-    return m111_no_retenciones_periods_for_bucket(active_bucket_id)
+    return m111_no_retenciones_periods_for_bucket(
+        active_bucket_id,
+        modelo=str(snapshot.modelo.id),
+        filing_year=int(snapshot.filing_year),
+        period_token=str(snapshot.period),
+        revision=snapshot.revision,
+    )
 
 
 def _default_not_applicable_source_modelos(
@@ -706,7 +714,10 @@ def resolve_relations_from_local_store(
     repo = repository if repository is not None else CalculationObservationRepository()
     when = captured_at if captured_at is not None else now()
     activity_start_date = _default_activity_start_date(activity_start_date)
-    m111_no_retenciones_periods = _default_m111_no_retenciones_periods(m111_no_retenciones_periods)
+    m111_no_retenciones_periods = _default_m111_no_retenciones_periods(
+        m111_no_retenciones_periods,
+        snapshot=snapshot,
+    )
     not_applicable_source_modelos = _default_not_applicable_source_modelos(
         snapshot,
         not_applicable_source_modelos,
@@ -1145,7 +1156,13 @@ def _relation_prefill_context_inputs(
     bucket_id = str(context.bucket_id)
     return _RelationPrefillContextInputs(
         activity_start_date=activity_start_date_for_bucket(bucket_id),
-        m111_no_retenciones_periods=m111_no_retenciones_periods_for_bucket(bucket_id),
+        m111_no_retenciones_periods=m111_no_retenciones_periods_for_bucket(
+            bucket_id,
+            modelo=str(snapshot.modelo.id),
+            filing_year=int(snapshot.filing_year),
+            period_token=str(snapshot.period),
+            revision=snapshot.revision,
+        ),
         not_applicable_source_modelos=_not_applicable_source_modelos_for_bucket(snapshot, bucket_id),
         modelo_202_first_year_cuota=(
             str(context.modelo) == str(Modelo("200"))
@@ -1207,6 +1224,7 @@ def _relation_prefill_resolution(
         **_modelo_202_first_period_previous_payment_defaults(
             snapshot.revision,
             modelo=str(context.modelo),
+            filing_year=int(snapshot.filing_year),
             period=context.period.registry_token,
         ),
         **resolved_relation_values,

@@ -13,8 +13,6 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from ....adapters.persistence.storage.blob_store.materialisation import get_secret_store
-from ....adapters.persistence.storage.secret_store.store import SecretStore
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.certificates import CERTIFICATE_BUNDLE_PASSPHRASE, build_pkcs12_bundle
 from ....tests.profile_capsule import open_test_profile_session
@@ -26,6 +24,7 @@ from ..certificate_source_operations import (
 )
 from ..operator_results import CertificateSourceCheckEntry
 from ..probes import ProviderProbeResult
+from .certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -50,9 +49,9 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 @pytest.fixture
-def _isolated_secret_store() -> SecretStore:
-    """Return the test-isolated canonical store for source passphrases."""
-    return get_secret_store()
+def certificate_secret_backend_factory() -> InMemoryCertificateSecretBackendFactory:
+    """Inject the application contract without importing a persistence adapter."""
+    return InMemoryCertificateSecretBackendFactory()
 
 
 @pytest.mark.parametrize("invalid_result", ("", "ok", "OK", "not-a-verdict"))
@@ -81,7 +80,7 @@ def test_certificate_source_check_entry_preserves_probe_verdict_json_value() -> 
 
 
 def test_check_reports_ok_for_a_certificate_far_from_expiry(
-    _isolated_secret_store: SecretStore,
+    certificate_secret_backend_factory: InMemoryCertificateSecretBackendFactory,
     tmp_path: Path,
 ) -> None:
     """A certificate with hundreds of days remaining is classified ``ok``."""
@@ -94,9 +93,15 @@ def test_check_reports_ok_for_a_certificate_far_from_expiry(
         subject_cn="gestor-personal",
     )
     register_operator_certificate_source(name="personal", certificate_path=cert_path)
-    set_operator_certificate_source_secret(name="personal", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
+    set_operator_certificate_source_secret(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        name="personal",
+        secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+    )
 
-    report = check_operator_certificate_sources()
+    report = check_operator_certificate_sources(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+    )
 
     assert len(report.entries) == 1
     entry = report.entries[0]
@@ -108,7 +113,7 @@ def test_check_reports_ok_for_a_certificate_far_from_expiry(
 
 
 def test_check_reports_expiring_within_the_warning_window(
-    _isolated_secret_store: SecretStore,
+    certificate_secret_backend_factory: InMemoryCertificateSecretBackendFactory,
     tmp_path: Path,
 ) -> None:
     """A certificate inside the 60-day warning window is classified ``expiring``."""
@@ -122,9 +127,15 @@ def test_check_reports_expiring_within_the_warning_window(
         subject_cn="apoderado-acme",
     )
     register_operator_certificate_source(name="apoderado-acme", certificate_path=cert_path)
-    set_operator_certificate_source_secret(name="apoderado-acme", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
+    set_operator_certificate_source_secret(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        name="apoderado-acme",
+        secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+    )
 
-    report = check_operator_certificate_sources()
+    report = check_operator_certificate_sources(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+    )
 
     assert len(report.entries) == 1
     entry = report.entries[0]
@@ -135,7 +146,7 @@ def test_check_reports_expiring_within_the_warning_window(
 
 
 def test_check_reports_expired_for_a_lapsed_certificate(
-    _isolated_secret_store: SecretStore,
+    certificate_secret_backend_factory: InMemoryCertificateSecretBackendFactory,
     tmp_path: Path,
 ) -> None:
     """A certificate whose validity has already elapsed is classified ``expired``."""
@@ -149,9 +160,15 @@ def test_check_reports_expired_for_a_lapsed_certificate(
         subject_cn="expired-cert",
     )
     register_operator_certificate_source(name="expired-cert", certificate_path=cert_path)
-    set_operator_certificate_source_secret(name="expired-cert", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
+    set_operator_certificate_source_secret(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        name="expired-cert",
+        secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+    )
 
-    report = check_operator_certificate_sources()
+    report = check_operator_certificate_sources(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+    )
 
     assert len(report.entries) == 1
     entry = report.entries[0]
@@ -162,7 +179,7 @@ def test_check_reports_expired_for_a_lapsed_certificate(
 
 
 def test_check_covers_every_registered_source_independently(
-    _isolated_secret_store: SecretStore,
+    certificate_secret_backend_factory: InMemoryCertificateSecretBackendFactory,
     tmp_path: Path,
 ) -> None:
     """Every registered source is classified, not only the active source."""
@@ -184,10 +201,20 @@ def test_check_covers_every_registered_source_independently(
     )
     register_operator_certificate_source(name="personal", certificate_path=valid_cert)
     register_operator_certificate_source(name="apoderado-acme", certificate_path=expiring_cert, friendly_name="ACME SL")
-    set_operator_certificate_source_secret(name="personal", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
-    set_operator_certificate_source_secret(name="apoderado-acme", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
+    set_operator_certificate_source_secret(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        name="personal",
+        secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+    )
+    set_operator_certificate_source_secret(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        name="apoderado-acme",
+        secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+    )
 
-    report = check_operator_certificate_sources()
+    report = check_operator_certificate_sources(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+    )
 
     by_name = {entry.name: entry for entry in report.entries}
     assert set(by_name) == {"personal", "apoderado-acme"}
@@ -197,7 +224,10 @@ def test_check_covers_every_registered_source_independently(
     assert report.has_warnings is True
 
 
-def test_check_classifies_a_missing_certificate_file_distinctly(tmp_path: Path) -> None:
+def test_check_classifies_a_missing_certificate_file_distinctly(
+    certificate_secret_backend_factory: InMemoryCertificateSecretBackendFactory,
+    tmp_path: Path,
+) -> None:
     """A deleted registered file surfaces ``file_missing``, never ``ok``."""
     _register_operator_profile()
     ghost_path = tmp_path / "deleted.p12"
@@ -205,7 +235,9 @@ def test_check_classifies_a_missing_certificate_file_distinctly(tmp_path: Path) 
     register_operator_certificate_source(name="deleted", certificate_path=ghost_path)
     ghost_path.unlink()
 
-    report = check_operator_certificate_sources()
+    report = check_operator_certificate_sources(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+    )
 
     assert len(report.entries) == 1
     entry = report.entries[0]
@@ -214,11 +246,15 @@ def test_check_classifies_a_missing_certificate_file_distinctly(tmp_path: Path) 
     assert report.has_warnings is False
 
 
-def test_check_with_no_registered_sources_is_empty_and_has_no_warnings() -> None:
+def test_check_with_no_registered_sources_is_empty_and_has_no_warnings(
+    certificate_secret_backend_factory: InMemoryCertificateSecretBackendFactory,
+) -> None:
     """No registered sources yields an empty report, not an error."""
     _register_operator_profile()
 
-    report = check_operator_certificate_sources()
+    report = check_operator_certificate_sources(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+    )
 
     assert report.entries == ()
     assert report.has_warnings is False

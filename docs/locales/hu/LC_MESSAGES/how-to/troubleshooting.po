@@ -58,7 +58,7 @@ msgstr ""
 
 #: ../../how-to/troubleshooting.md:15
 msgid "\"This operation requires an active profile\""
-msgstr "„This operation requires an active profile”"
+msgstr "\"A művelethez aktív profil szükséges\""
 
 #: ../../how-to/troubleshooting.md:17
 msgid ""

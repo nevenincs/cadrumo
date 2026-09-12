@@ -47,6 +47,7 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
     operation_public_schema_reference,
 )
+from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from .capsule_record import ProfileRecordConflictError
 from .censal_observation import CensalObservation
 from .censo_sync import (
@@ -349,12 +350,17 @@ class CensalOperationExecutor:
     def __init__(
         self,
         *,
+        certificate_secret_backend_factory: CertificateSecretBackendFactory,
         acquire: Callable[[], Awaitable[CensalObservation | CensalOperationAcquisition]] | None = None,
         apply: Callable[[CensalReviewedOperand], None] | None = None,
         before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
     ) -> None:
         """Initialize the executor with its acquisition, apply, and boundary hooks."""
-        self._acquire = acquire or _pull_censal_datos
+        self._acquire = acquire or (
+            lambda: _pull_censal_datos(
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
+            )
+        )
         self._apply = apply or _apply_reviewed_cotejo
         self._before_irreversible_section = before_irreversible_section or _ready_for_irreversible_section
 
@@ -467,11 +473,16 @@ class CensalOperationExecutor:
         return f"censo-review:{proposal_digest}:{CensalOperationOutcome.APPLIED.value}"
 
 
-async def _pull_censal_datos() -> CensalObservation:
+async def _pull_censal_datos(
+    *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+) -> CensalObservation:
     """Acquire through the sole public live application door."""
     from ..live.censo import pull_censal_datos
 
-    return await pull_censal_datos()
+    return await pull_censal_datos(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+    )
 
 
 def _require_current_operand_baseline(operand: CensalReviewedOperand) -> None:
@@ -499,6 +510,7 @@ async def _ready_for_irreversible_section() -> None:
 
 def build_censal_operation_definition(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     acquire: Callable[[], Awaitable[CensalObservation | CensalOperationAcquisition]] | None = None,
     apply: Callable[[CensalReviewedOperand], None] | None = None,
     before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
@@ -507,6 +519,7 @@ def build_censal_operation_definition(
 
     def build() -> CensalOperationExecutor:
         return CensalOperationExecutor(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
             acquire=acquire,
             apply=apply,
             before_irreversible_section=before_irreversible_section,
@@ -543,11 +556,7 @@ def build_censal_operation_definition(
     )
 
 
-CENSAL_OPERATION_DEFINITION = build_censal_operation_definition()
-
-
 __all__ = [
-    "CENSAL_OPERATION_DEFINITION",
     "CENSAL_OPERATION_DEFINITION_ID",
     "CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING",
     "CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING",

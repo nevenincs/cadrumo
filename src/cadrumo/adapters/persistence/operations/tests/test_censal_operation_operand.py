@@ -16,6 +16,7 @@ from cadrumo.adapters.persistence.operations.secure_references import (
 from cadrumo.adapters.persistence.storage.errors import RepositoryError
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import OPERATION_SECURE_REFERENCE_NAMESPACE
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
+from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.user_profile.censal_observation import (
     CensalObservation,
@@ -23,13 +24,13 @@ from cadrumo.application.user_profile.censal_observation import (
     CensalObservationIdentity,
 )
 from cadrumo.application.user_profile.censal_operation import (
-    CENSAL_OPERATION_DEFINITION,
     CensalFieldIntent,
     CensalOperationExecutor,
     CensalOperationRequest,
     CensalProfileBaseline,
     CensalReviewedFieldIntent,
     CensalReviewedOperand,
+    build_censal_operation_definition,
 )
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -38,6 +39,12 @@ from cadrumo.tests.aeat_literal_fixtures import aeat_url
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 8, 24, 12, tzinfo=UTC)
+
+
+def _test_censal_operation_definition():
+    return build_censal_operation_definition(
+        certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+    )
 
 
 def _domicilio(*, notification: bool) -> CensalObservationAddress:
@@ -172,20 +179,21 @@ def test_reviewed_operand_real_secure_reference_round_trip_and_digest_corruption
 
 def test_censal_operation_definition_binds_complete_resumable_request() -> None:
     operand = _operand()
+    definition = _test_censal_operation_definition()
     payload = CensalOperationRequest(
         baseline=operand.baseline,
         field_intents=operand.field_intents,
     )
     request = OperationRequest(
-        definition_id=CENSAL_OPERATION_DEFINITION.definition_id,
+        definition_id=definition.definition_id,
         subject_ref=str(operand.baseline.profile_id),
         payload=payload,
     )
 
     assert request.payload == payload
-    assert CENSAL_OPERATION_DEFINITION.request_type is CensalOperationRequest
-    assert CENSAL_OPERATION_DEFINITION.executor_factory.executor_type is CensalOperationExecutor
-    assert CENSAL_OPERATION_DEFINITION.executor_factory.create().__class__ is CensalOperationExecutor
+    assert definition.request_type is CensalOperationRequest
+    assert definition.executor_factory.executor_type is CensalOperationExecutor
+    assert definition.executor_factory.create().__class__ is CensalOperationExecutor
 
     with pytest.raises(ValidationError, match="every adoptable path"):
         CensalOperationRequest(

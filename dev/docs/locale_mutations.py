@@ -17,9 +17,10 @@ publishing bytes.
 
 Fuzzy replacements must opt into their current fuzzy state with
 ``expected_fuzzy: true``.  A replacement clears that state only when it also
-sets ``clear_fuzzy: true``.  Stale catalogue entries can be removed only by an
-exact identity in the update's ``remove_stale`` list; every other source/PO
-drift remains a refusal.
+sets ``clear_fuzzy: true``.  Active stale catalogue entries can be removed
+only by an exact identity in the update's ``remove_stale`` list; Babel
+obsolete entries use the separate ``remove_obsolete`` list, including when an
+obsolete identity is also active in the current POT.
 """
 
 from __future__ import annotations
@@ -44,6 +45,10 @@ _TARGET_LOCALES: Final[frozenset[str]] = frozenset({"ca", "es", "hu"})
 _SHA256: Final[re.Pattern[str]] = re.compile(r"[0-9a-f]{64}\Z")
 _INLINE_LITERAL: Final[re.Pattern[str]] = re.compile(r"`([^`\r\n]+)`")
 _RST_ROLE: Final[re.Pattern[str]] = re.compile(r":[A-Za-z][A-Za-z0-9_-]*:")
+_MYST_ROLE_PREFIX: Final[re.Pattern[str]] = re.compile(r"\{(?P<role>[A-Za-z][A-Za-z0-9_-]*)\}\Z")
+_MYST_ROLE_TARGET: Final[re.Pattern[str]] = re.compile(
+    r"\s*[^<>\r\n]*?\s*<(?P<target>[^<>\r\n]+)>\s*\Z"
+)
 _PYTHON_PERCENT: Final[re.Pattern[str]] = re.compile(
     r"%(?:\([A-Za-z_][A-Za-z0-9_]*\))?[#0\- +]?(?:\d+|\*)?(?:\.\d+|\.\*)?(?:[hlL])?[diouxXeEfFgGcrsa%]"
 )
@@ -84,6 +89,7 @@ class _ManifestUpdate:
     catalogue_sha256: str
     messages: tuple[_ManifestMessage, ...]
     remove_stale: tuple[_ManifestStale, ...]
+    remove_obsolete: tuple[_ManifestStale, ...]
 
 
 @dataclass
@@ -96,6 +102,7 @@ class _PreparedCatalogue:
     changed_messages: int
     cleared_fuzzy_messages: int
     removed_stale_messages: int
+    removed_obsolete_messages: int
 
 
 def apply_manifest(
@@ -160,12 +167,20 @@ def apply_manifest(
             catalogue = _parse_catalogue(catalogue_text, update.locale, catalogue_path)
             pot = _parse_catalogue(pot_path.read_text(encoding=UTF_8), "en", pot_path)
             allowed_stale = _validate_stale_targets(catalogue, pot, update.remove_stale, catalogue_path)
-            _validate_msgids(catalogue, pot, catalogue_path, allowed_stale=allowed_stale)
+            allowed_obsolete = _validate_obsolete_targets(catalogue, update.remove_obsolete, catalogue_path)
+            _validate_msgids(
+                catalogue,
+                pot,
+                catalogue_path,
+                allowed_stale=allowed_stale,
+                allowed_obsolete=allowed_obsolete,
+            )
             _validate_unlisted_fuzzy(catalogue, update, catalogue_path)
             changed_messages, cleared_fuzzy_messages = _apply_messages(
                 catalogue, update.messages, catalogue_path
             )
             removed_stale_messages = _remove_stale(catalogue, update.remove_stale, catalogue_path)
+            removed_obsolete_messages = _remove_obsolete(catalogue, update.remove_obsolete, catalogue_path)
             rendered = _render_catalogue(catalogue)
             prepared.append(
                 _PreparedCatalogue(
@@ -175,6 +190,7 @@ def apply_manifest(
                     changed_messages=changed_messages,
                     cleared_fuzzy_messages=cleared_fuzzy_messages,
                     removed_stale_messages=removed_stale_messages,
+                    removed_obsolete_messages=removed_obsolete_messages,
                 )
             )
 
@@ -194,6 +210,7 @@ def apply_manifest(
         "unchanged_messages": requested_messages - changed_messages,
         "cleared_fuzzy_messages": sum(item.cleared_fuzzy_messages for item in prepared),
         "removed_stale_messages": sum(item.removed_stale_messages for item in prepared),
+        "removed_obsolete_messages": sum(item.removed_obsolete_messages for item in prepared),
         "written_catalogues": 0 if dry_run else changed_catalogues,
     }
 
@@ -239,9 +256,12 @@ def _parse_updates(payload: dict[str, object]) -> tuple[_ManifestUpdate, ...]:
         raw_remove_stale = raw_update.get("remove_stale", [])
         if not isinstance(raw_remove_stale, list):
             raise DocumentationLocaleMutationError(f"updates[{update_index}].remove_stale must be a list")
-        if not raw_messages and not raw_remove_stale:
+        raw_remove_obsolete = raw_update.get("remove_obsolete", [])
+        if not isinstance(raw_remove_obsolete, list):
+            raise DocumentationLocaleMutationError(f"updates[{update_index}].remove_obsolete must be a list")
+        if not raw_messages and not raw_remove_stale and not raw_remove_obsolete:
             raise DocumentationLocaleMutationError(
-                f"updates[{update_index}] must contain messages or remove_stale entries"
+                f"updates[{update_index}] must contain messages, remove_stale, or remove_obsolete entries"
             )
         catalogue_key = (locale, catalogue)
         if catalogue_key in seen_catalogues:
@@ -279,38 +299,25 @@ def _parse_updates(payload: dict[str, object]) -> tuple[_ManifestUpdate, ...]:
                     clear_fuzzy=clear_fuzzy,
                 )
             )
-        remove_stale: list[_ManifestStale] = []
-        seen_stale: set[tuple[str, str, str | None]] = set()
-        for stale_index, raw_stale in enumerate(raw_remove_stale):
-            if not isinstance(raw_stale, dict):
-                raise DocumentationLocaleMutationError(
-                    f"updates[{update_index}].remove_stale[{stale_index}] must contain an object"
-                )
-            prefix = f"updates[{update_index}].remove_stale[{stale_index}]"
-            stale_context = raw_stale.get("msgctxt")
-            if stale_context is not None and not isinstance(stale_context, str):
-                raise DocumentationLocaleMutationError(f"{prefix}.msgctxt must be a string or null")
-            stale_msgid = _required_string(raw_stale, "msgid", prefix)
-            stale_plural = raw_stale.get("msgid_plural")
-            if stale_plural is not None and not isinstance(stale_plural, str):
-                raise DocumentationLocaleMutationError(f"{prefix}.msgid_plural must be a string or null")
-            if stale_plural == "":
-                raise DocumentationLocaleMutationError(f"{prefix}.msgid_plural must not be blank")
-            stale_key = _manifest_stale_key(stale_context, stale_msgid, stale_plural)
-            if stale_key in seen_stale:
-                raise DocumentationLocaleMutationError(
-                    f"duplicate stale target in {locale}/{catalogue}: {stale_key!r}"
-                )
-            seen_stale.add(stale_key)
-            remove_stale.append(
-                _ManifestStale(
-                    context=stale_context,
-                    msgid=stale_msgid,
-                    msgid_plural=stale_plural,
-                )
-            )
+        remove_stale = _parse_stale_targets(
+            raw_remove_stale,
+            field="remove_stale",
+            update_index=update_index,
+            locale=locale,
+            catalogue=catalogue,
+        )
+        remove_obsolete = _parse_stale_targets(
+            raw_remove_obsolete,
+            field="remove_obsolete",
+            update_index=update_index,
+            locale=locale,
+            catalogue=catalogue,
+        )
         message_keys = {(message.context or "", message.msgid, None) for message in messages}
-        stale_keys = set(seen_stale)
+        stale_keys = {
+            (stale.context or "", stale.msgid, stale.msgid_plural)
+            for stale in remove_stale
+        }
         if message_keys & stale_keys:
             overlap = sorted(message_keys & stale_keys)
             raise DocumentationLocaleMutationError(
@@ -323,10 +330,47 @@ def _parse_updates(payload: dict[str, object]) -> tuple[_ManifestUpdate, ...]:
                 source_sha256=source_sha256,
                 catalogue_sha256=catalogue_sha256,
                 messages=tuple(messages),
-                remove_stale=tuple(remove_stale),
+                remove_stale=remove_stale,
+                remove_obsolete=remove_obsolete,
             )
         )
     return tuple(updates)
+
+
+def _parse_stale_targets(
+    raw_targets: list[object],
+    *,
+    field: str,
+    update_index: int,
+    locale: str,
+    catalogue: str,
+) -> tuple[_ManifestStale, ...]:
+    """Parse one exact active-stale or obsolete-target list."""
+    targets: list[_ManifestStale] = []
+    seen: set[tuple[str, str, str | None]] = set()
+    for target_index, raw_target in enumerate(raw_targets):
+        if not isinstance(raw_target, dict):
+            raise DocumentationLocaleMutationError(
+                f"updates[{update_index}].{field}[{target_index}] must contain an object"
+            )
+        prefix = f"updates[{update_index}].{field}[{target_index}]"
+        context = raw_target.get("msgctxt")
+        if context is not None and not isinstance(context, str):
+            raise DocumentationLocaleMutationError(f"{prefix}.msgctxt must be a string or null")
+        msgid = _required_string(raw_target, "msgid", prefix)
+        msgid_plural = raw_target.get("msgid_plural")
+        if msgid_plural is not None and not isinstance(msgid_plural, str):
+            raise DocumentationLocaleMutationError(f"{prefix}.msgid_plural must be a string or null")
+        if msgid_plural == "":
+            raise DocumentationLocaleMutationError(f"{prefix}.msgid_plural must not be blank")
+        target_key = (context or "", msgid, msgid_plural)
+        if target_key in seen:
+            raise DocumentationLocaleMutationError(
+                f"duplicate {field} target in {locale}/{catalogue}: {target_key!r}"
+            )
+        seen.add(target_key)
+        targets.append(_ManifestStale(context=context, msgid=msgid, msgid_plural=msgid_plural))
+    return tuple(targets)
 
 
 def _required_string(record: dict[str, object], key: str, prefix: str) -> str:
@@ -450,19 +494,51 @@ def _validate_stale_targets(
     targets: tuple[_ManifestStale, ...],
     path: Path,
 ) -> set[tuple[str, str]]:
-    """Validate every explicitly authorized stale identity before mutation."""
-    catalogue_keys = _all_message_keys(catalogue)
-    source_keys = _all_message_keys(pot)
+    """Validate explicitly authorized active identities absent from the POT."""
+    active_keys = set(_catalogue_messages(catalogue))
+    obsolete_keys = {
+        _message_key(message)
+        for message in catalogue.obsolete.values()
+        if message.id
+    }
+    source_keys = set(_catalogue_messages(pot))
     allowed: set[tuple[str, str]] = set()
     for target in targets:
         identity = _manifest_stale_key(target.context, target.msgid, target.msgid_plural)
-        if identity not in catalogue_keys:
+        if identity not in active_keys:
+            if identity in obsolete_keys:
+                raise DocumentationLocaleMutationError(
+                    f"remove_stale gettext msgid is obsolete in {path}: {identity!r}; "
+                    "use remove_obsolete"
+                )
             raise DocumentationLocaleMutationError(
-                f"remove_stale gettext msgid is not present in {path}: {identity!r}"
+                f"remove_stale gettext msgid is not active in {path}: {identity!r}"
             )
         if identity in source_keys:
             raise DocumentationLocaleMutationError(
                 f"remove_stale gettext msgid is still present in the POT for {path}: {identity!r}"
+            )
+        allowed.add(identity)
+    return allowed
+
+
+def _validate_obsolete_targets(
+    catalogue: Catalog,
+    targets: tuple[_ManifestStale, ...],
+    path: Path,
+) -> set[tuple[str, str]]:
+    """Validate exact identities in Babel's obsolete mapping."""
+    obsolete_keys = {
+        _message_key(message)
+        for message in catalogue.obsolete.values()
+        if message.id
+    }
+    allowed: set[tuple[str, str]] = set()
+    for target in targets:
+        identity = _manifest_stale_key(target.context, target.msgid, target.msgid_plural)
+        if identity not in obsolete_keys:
+            raise DocumentationLocaleMutationError(
+                f"remove_obsolete gettext msgid is not present in the obsolete catalogue for {path}: {identity!r}"
             )
         allowed.add(identity)
     return allowed
@@ -474,11 +550,13 @@ def _validate_msgids(
     path: Path,
     *,
     allowed_stale: set[tuple[str, str]] | None = None,
+    allowed_obsolete: set[tuple[str, str]] | None = None,
 ) -> None:
-    """Refuse unlisted stale, obsolete, or source-drifted catalogue entries."""
+    """Refuse unlisted active-stale, obsolete, or source-drifted entries."""
     allowed_stale = set() if allowed_stale is None else allowed_stale
-    catalogue_keys = _all_message_keys(catalogue)
-    source_keys = _all_message_keys(pot)
+    allowed_obsolete = set() if allowed_obsolete is None else allowed_obsolete
+    catalogue_keys = set(_catalogue_messages(catalogue))
+    source_keys = set(_catalogue_messages(pot))
     missing = sorted(source_keys - catalogue_keys)
     stale = catalogue_keys - source_keys
     unlisted_stale = sorted(stale - allowed_stale)
@@ -488,14 +566,18 @@ def _validate_msgids(
             f"stale gettext msgids for {path}: missing={missing!r} "
             f"stale={unlisted_stale!r} unexpected_remove_stale={unexpected_allowed!r}"
         )
-    obsolete = getattr(catalogue, "obsolete", {})
-    if isinstance(obsolete, dict):
-        obsolete_keys = sorted(_message_key(message) for message in obsolete.values() if message.id)
-        unlisted_obsolete = sorted(set(obsolete_keys) - allowed_stale)
-        if unlisted_obsolete:
-            raise DocumentationLocaleMutationError(
-                f"obsolete gettext msgids for {path}: {unlisted_obsolete!r}"
-            )
+    obsolete_keys = {
+        _message_key(message)
+        for message in catalogue.obsolete.values()
+        if message.id
+    }
+    unlisted_obsolete = sorted(obsolete_keys - allowed_obsolete)
+    unexpected_obsolete = sorted(allowed_obsolete - obsolete_keys)
+    if unlisted_obsolete or unexpected_obsolete:
+        raise DocumentationLocaleMutationError(
+            f"obsolete gettext msgids for {path}: {unlisted_obsolete!r} "
+            f"unexpected_remove_obsolete={unexpected_obsolete!r}"
+        )
 
 
 def _validate_unlisted_fuzzy(catalogue: Catalog, update: _ManifestUpdate, path: Path) -> None:
@@ -521,18 +603,10 @@ def _apply_messages(
 ) -> tuple[int, int]:
     """Validate identities, conflicts, and formatting before mutating messages."""
     active = _catalogue_messages(catalogue)
-    obsolete = getattr(catalogue, "obsolete", {})
-    obsolete_keys = (
-        {_message_key(message) for message in obsolete.values() if isinstance(obsolete, dict) and message.id}
-        if isinstance(obsolete, dict)
-        else set()
-    )
     changed = 0
     cleared_fuzzy = 0
     for update in updates:
         identity = (update.context or "", update.msgid)
-        if identity in obsolete_keys:
-            raise DocumentationLocaleMutationError(f"obsolete gettext msgid in {path}: {identity!r}")
         message = active.get(identity)
         if message is None:
             raise DocumentationLocaleMutationError(f"missing gettext msgid in {path}: {identity!r}")
@@ -561,25 +635,36 @@ def _apply_messages(
 
 
 def _remove_stale(catalogue: Catalog, targets: tuple[_ManifestStale, ...], path: Path) -> int:
-    """Delete explicitly authorized stale active or obsolete messages."""
+    """Delete explicitly authorized active messages absent from the POT."""
     if not targets:
         return 0
     active = _catalogue_messages(catalogue)
-    obsolete = getattr(catalogue, "obsolete", {})
     for target in targets:
         identity = _manifest_stale_key(target.context, target.msgid, target.msgid_plural)
         message = active.get(identity)
-        if message is not None:
-            catalogue.delete(message.id, context=message.context)
-            continue
-        if not isinstance(obsolete, dict):
-            raise DocumentationLocaleMutationError(f"remove_stale gettext msgid disappeared from {path}: {identity!r}")
+        if message is None:
+            raise DocumentationLocaleMutationError(
+                f"remove_stale gettext msgid disappeared from active catalogue {path}: {identity!r}"
+            )
+        catalogue.delete(message.id, context=message.context)
+    return len(targets)
+
+
+def _remove_obsolete(catalogue: Catalog, targets: tuple[_ManifestStale, ...], path: Path) -> int:
+    """Delete only the exact Babel obsolete mappings named by the manifest."""
+    if not targets:
+        return 0
+    obsolete = catalogue.obsolete
+    for target in targets:
+        identity = _manifest_stale_key(target.context, target.msgid, target.msgid_plural)
         obsolete_key = next(
             (key for key, candidate in obsolete.items() if candidate.id and _message_key(candidate) == identity),
             None,
         )
         if obsolete_key is None:
-            raise DocumentationLocaleMutationError(f"remove_stale gettext msgid disappeared from {path}: {identity!r}")
+            raise DocumentationLocaleMutationError(
+                f"remove_obsolete gettext msgid disappeared from {path}: {identity!r}"
+            )
         del obsolete[obsolete_key]
     return len(targets)
 
@@ -625,13 +710,86 @@ def _percent_placeholders(value: str) -> frozenset[str]:
     return frozenset(candidate for candidate in _PYTHON_PERCENT.findall(value) if candidate != "%%")
 
 
-def _inline_tokens(value: str) -> tuple[tuple[str, ...], tuple[str, ...], int]:
-    """Return exact inline literals, roles, and backtick count."""
+def _inline_tokens(
+    value: str,
+) -> tuple[
+    tuple[str, ...],
+    tuple[str, ...],
+    tuple[tuple[str, bool, str], ...],
+    tuple[str, ...],
+    int,
+]:
+    """Return literal text, RST roles, MyST role contracts, and link targets.
+
+    Backtick literals remain exact unless they are the body of a MyST role.
+    For a role body in the form ``label <target>``, only the role name and
+    target are contract tokens; the display label is translated prose. Markdown
+    links follow the same rule: their labels may translate, while their target
+    remains exact.
+    """
+    literals: list[str] = []
+    myst_roles: list[tuple[str, bool, str]] = []
+    for match in _INLINE_LITERAL.finditer(value):
+        prefix = value[: match.start()]
+        role_match = _MYST_ROLE_PREFIX.search(prefix)
+        if role_match is None:
+            literals.append(match.group(1))
+            continue
+        body = match.group(1)
+        target_match = _MYST_ROLE_TARGET.fullmatch(body)
+        if target_match is None:
+            myst_roles.append((role_match.group("role"), False, body))
+        else:
+            myst_roles.append((role_match.group("role"), True, target_match.group("target")))
     return (
-        tuple(sorted(_INLINE_LITERAL.findall(value))),
+        tuple(sorted(literals)),
         tuple(sorted(_RST_ROLE.findall(value))),
+        tuple(sorted(myst_roles)),
+        _markdown_link_targets(value),
         value.count("`"),
     )
+
+
+def _markdown_link_targets(value: str) -> tuple[str, ...]:
+    """Return exact destinations from Markdown links, allowing label changes."""
+    targets: list[str] = []
+    index = 0
+    while index < len(value):
+        if value[index] != "[":
+            index += 1
+            continue
+        label_end = _balanced_delimiter_end(value, index, "[", "]")
+        if label_end is None or label_end + 1 >= len(value) or value[label_end + 1] != "(":
+            index += 1
+            continue
+        target_end = _balanced_delimiter_end(value, label_end + 1, "(", ")")
+        if target_end is None:
+            index += 1
+            continue
+        targets.append(value[label_end + 2 : target_end])
+        index = target_end + 1
+    return tuple(sorted(targets))
+
+
+def _balanced_delimiter_end(value: str, start: int, opening: str, closing: str) -> int | None:
+    """Find a balanced delimiter while honoring backslash escapes."""
+    depth = 0
+    escaped = False
+    for index in range(start, len(value)):
+        character = value[index]
+        if escaped:
+            escaped = False
+            continue
+        if character == "\\":
+            escaped = True
+            continue
+        if character == opening:
+            depth += 1
+        elif character == closing:
+            depth -= 1
+            if depth == 0:
+                return index
+    return None
 
 
 def _render_catalogue(catalogue: Catalog) -> str:

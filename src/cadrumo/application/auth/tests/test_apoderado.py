@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from io import StringIO
 from pathlib import Path
 
@@ -10,16 +9,9 @@ import pytest
 from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output.plain_text import PlainTextOutput
 
-from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
-from ....adapters.persistence.storage.tests.secure_sql import (
-    TestRuntimeProfile,
-    isolated_runtime_profile,
-    isolated_two_bucket_runtime,
-)
 from ....core.config import Settings, override_settings
 from ....core.flows import FlowMode
 from ....core.identity.bucket import canonical_bucket_id
-from ....core.time.clock import now
 from ....domain.auth.apoderamientos.catalogue import UnknownScopeError
 from ...flows.definition import FlowPage
 from ...flows.errors import FlowRunAbandonedError
@@ -31,13 +23,11 @@ from ..apoderado_flow import (
     run_apoderado_flow,
 )
 from ..apoderado_service import (
-    ApoderadoConfigRepository,
-    ApoderadoConfiguration,
-    ApoderadoConfigurationIdentityError,
     ApoderadoLiveCheckUnavailableError,
     ApoderadoRepresentedNifInvalidError,
     ApoderadoService,
 )
+from .apoderado_fakes import InMemoryApoderadoConfigurationRepositoryFactory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -47,16 +37,23 @@ _SECONDARY_PROFILE_BUCKET_ID = "27272727-2727-4272-8272-272727272727"
 
 
 @pytest.fixture
-def isolated_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    """Run apoderado tests against a per-test active-profile runtime."""
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_BUCKET_ID) as profile:
-        yield profile
+def isolated_settings(tmp_path: Path) -> Settings:
+    """Provide explicit settings while the service uses an in-memory port fake."""
+    return Settings(cadrumo_local_storage_root=tmp_path)
 
 
 @pytest.fixture
-def isolated_settings(isolated_profile: TestRuntimeProfile) -> Settings:
-    return isolated_profile.settings
+def repository_factory() -> InMemoryApoderadoConfigurationRepositoryFactory:
+    """Provide one explicit in-memory factory for a test's service graph."""
+    return InMemoryApoderadoConfigurationRepositoryFactory()
+
+
+def _service(settings: Settings) -> ApoderadoService:
+    """Construct the application service with its required test capability."""
+    return ApoderadoService(
+        repository_factory=InMemoryApoderadoConfigurationRepositoryFactory(),
+        settings=settings,
+    )
 
 
 class TestStatus:
@@ -64,7 +61,7 @@ class TestStatus:
         self,
         isolated_settings: Settings,
     ) -> None:
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
         status = svc.status(bucket_id=_APODERADO_BUCKET_ID)
         assert status.configured is False
         assert status.represented_nif is None
@@ -73,7 +70,7 @@ class TestStatus:
 
 class TestConfigure:
     def test_configure_persists_canonical_scopes(self, isolated_settings: Settings) -> None:
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
         config = svc.configure(
             bucket_id=_APODERADO_BUCKET_ID,
             represented_nif="12345678Z",
@@ -84,7 +81,7 @@ class TestConfigure:
         assert config.catalogue_version.startswith("2026")
 
     def test_configure_dedupes_repeated_scopes(self, isolated_settings: Settings) -> None:
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
         config = svc.configure(
             bucket_id=_APODERADO_BUCKET_ID,
             represented_nif="12345678Z",
@@ -93,7 +90,7 @@ class TestConfigure:
         assert config.granted_scopes == ("IVA", "RENT")
 
     def test_configure_expands_all_token(self, isolated_settings: Settings) -> None:
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
         config = svc.configure(
             bucket_id=_APODERADO_BUCKET_ID,
             represented_nif="12345678Z",
@@ -118,7 +115,7 @@ class TestConfigure:
         """
         from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
 
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
         with pytest.raises(ApoderadoRepresentedNifInvalidError) as excinfo:
             svc.configure(
                 bucket_id=_APODERADO_BUCKET_ID,
@@ -136,7 +133,7 @@ class TestConfigure:
         assert "NOTANIF" not in resolved
 
     def test_configure_rejects_unknown_scope(self, isolated_settings: Settings) -> None:
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
         with pytest.raises(UnknownScopeError):
             svc.configure(
                 bucket_id=_APODERADO_BUCKET_ID,
@@ -153,7 +150,7 @@ class TestConfigure:
         ``validation_rule`` fact, so matching on prose here would assert a
         rendering that no longer exists rather than the contract that does.
         """
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
         with pytest.raises(UnknownScopeError) as excinfo:
             svc.configure(
                 bucket_id=_APODERADO_BUCKET_ID,
@@ -169,7 +166,7 @@ class TestConfigure:
         assert str(error) == error.translated_message, f"the raise site carries an authored sentence: {str(error)!r}"
 
     def test_configure_overwrites_existing_record(self, isolated_settings: Settings) -> None:
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
         svc.configure(
             bucket_id=_APODERADO_BUCKET_ID,
             represented_nif="12345678Z",
@@ -188,7 +185,7 @@ class TestConfigure:
 
 class TestStatusAfterConfigure:
     def test_status_reads_configured_record(self, isolated_settings: Settings) -> None:
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
         svc.configure(
             bucket_id=_APODERADO_BUCKET_ID,
             represented_nif="12345678Z",
@@ -202,7 +199,7 @@ class TestStatusAfterConfigure:
 
 class TestClear:
     def test_clear_retires_configuration(self, isolated_settings: Settings) -> None:
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
         svc.configure(
             bucket_id=_APODERADO_BUCKET_ID,
             represented_nif="12345678Z",
@@ -214,7 +211,7 @@ class TestClear:
         assert status.configured is False
 
     def test_clear_on_unconfigured_is_idempotent(self, isolated_settings: Settings) -> None:
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
         assert svc.clear(bucket_id=_APODERADO_BUCKET_ID) is False
 
 
@@ -229,7 +226,7 @@ class TestCheck:
         as a live result — that is the silent mislabelling this contract
         forbids. ``status`` is the offline read.
         """
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
         svc.configure(
             bucket_id=_APODERADO_BUCKET_ID,
             represented_nif="12345678Z",
@@ -242,40 +239,33 @@ class TestCheck:
         self,
         isolated_settings: Settings,
     ) -> None:
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
         with pytest.raises(ApoderadoLiveCheckUnavailableError):
             svc.check(bucket_id=_APODERADO_BUCKET_ID)
 
 
 class TestBucketIsolation:
-    def test_configurations_are_bucket_scoped(self, tmp_path: Path) -> None:
-        with isolated_two_bucket_runtime(
-            tmp_path=tmp_path,
-            primary_bucket_id=_PROFILE_BUCKET_ID,
-            secondary_bucket_id=_SECONDARY_PROFILE_BUCKET_ID,
-        ) as runtime:
-            primary_svc = ApoderadoService(settings=runtime.primary.settings)
-            primary_svc.configure(
-                bucket_id=runtime.primary.bucket_id, represented_nif="12345678Z", scope_tokens=("IVA",)
-            )
+    def test_configurations_are_bucket_scoped(
+        self,
+        isolated_settings: Settings,
+        repository_factory: InMemoryApoderadoConfigurationRepositoryFactory,
+    ) -> None:
+        primary_svc = ApoderadoService(repository_factory=repository_factory, settings=isolated_settings)
+        primary_svc.configure(bucket_id=_PROFILE_BUCKET_ID, represented_nif="12345678Z", scope_tokens=("IVA",))
 
-            with runtime.switch_to_secondary():
-                secondary_svc = ApoderadoService()
-                secondary_svc.configure(
-                    bucket_id=runtime.secondary.bucket_id,
-                    represented_nif="87654321X",
-                    scope_tokens=("RENT",),
-                )
-                b = secondary_svc.status(bucket_id=runtime.secondary.bucket_id)
-
-            a = primary_svc.status(bucket_id=runtime.primary.bucket_id)
+        secondary_svc = ApoderadoService(repository_factory=repository_factory, settings=isolated_settings)
+        secondary_svc.configure(
+            bucket_id=_SECONDARY_PROFILE_BUCKET_ID,
+            represented_nif="87654321X",
+            scope_tokens=("RENT",),
+        )
+        b = secondary_svc.status(bucket_id=_SECONDARY_PROFILE_BUCKET_ID)
+        a = primary_svc.status(bucket_id=_PROFILE_BUCKET_ID)
 
         assert a.represented_nif == "12345678Z"
         assert a.granted_scopes == ("IVA",)
         assert b.represented_nif == "87654321X"
         assert b.granted_scopes == ("RENT",)
-        assert (bucket_paths(runtime.primary.storage_root, runtime.primary.bucket_id).database_file).is_file()
-        assert (bucket_paths(runtime.primary.storage_root, runtime.secondary.bucket_id).database_file).is_file()
 
 
 class TestApoderadoFlowDoor:
@@ -289,7 +279,7 @@ class TestApoderadoFlowDoor:
         assertion then reads through the service's status boundary rather than
         trusting the transient flow state.
         """
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
         output = StringIO()
         # Catalogue order is GENERALNT, RENT, IVA.  Move to RENT, select it,
         # move to IVA, select it, finish the checkbox, then submit review.
@@ -313,7 +303,7 @@ class TestApoderadoFlowDoor:
 
     def test_ctrl_c_refuses_before_the_production_door_writes(self, isolated_settings: Settings) -> None:
         """Cancellation is typed and cannot manufacture an apoderado record."""
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
         output = StringIO()
         with create_pipe_input() as pipe:
             pipe.send_text("\x03")
@@ -330,7 +320,7 @@ class TestApoderadoFlowDoor:
 
     def test_answer_pages_bind_no_profile_domain_key(self, isolated_settings: Settings) -> None:
         """Every answer page is domain_key-free: no apoderado answer is a profile fact."""
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
         definition = build_apoderado_flow_definition(svc.catalogue)
         pages = {page.id: page for section in definition.sections for page in section.items}
         represented_page = pages[REPRESENTED_NIF_PAGE_ID]
@@ -344,7 +334,7 @@ class TestApoderadoFlowDoor:
         """A bad represented-party tax id fails the identity validator, so the scripted walk refuses."""
         from ...flows.errors import FlowAnswerError
 
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
         definition = build_apoderado_flow_definition(svc.catalogue)
         with pytest.raises(FlowAnswerError):
             run_scripted_flow(
@@ -357,24 +347,25 @@ class TestApoderadoFlowDoor:
 class TestSettingsRouting:
     def test_service_explicit_settings_route_survives_context_override(
         self,
-        isolated_profile: TestRuntimeProfile,
+        isolated_settings: Settings,
+        repository_factory: InMemoryApoderadoConfigurationRepositoryFactory,
         tmp_path: Path,
     ) -> None:
-        svc = ApoderadoService(settings=isolated_profile.settings)
+        svc = ApoderadoService(repository_factory=repository_factory, settings=isolated_settings)
         wrong_root = tmp_path / "wrong-storage-root"
 
         with override_settings(
-            cadrumo_local_storage_root=wrong_root, cadrumo_active_profile=isolated_profile.bucket_id
+            cadrumo_local_storage_root=wrong_root, cadrumo_active_profile=_PROFILE_BUCKET_ID
         ):
             config = svc.configure(
-                bucket_id=isolated_profile.bucket_id,
+                bucket_id=_PROFILE_BUCKET_ID,
                 represented_nif="12345678Z",
                 scope_tokens=("IVA",),
             )
 
-        assert config.bucket_id == isolated_profile.bucket_id
-        assert svc.status(bucket_id=isolated_profile.bucket_id).represented_nif == "12345678Z"
-        assert not (bucket_paths(wrong_root, isolated_profile.bucket_id).database_file).exists()
+        assert config.bucket_id == _PROFILE_BUCKET_ID
+        assert svc.status(bucket_id=_PROFILE_BUCKET_ID).represented_nif == "12345678Z"
+        assert repository_factory.settings_by_bucket[_PROFILE_BUCKET_ID] is isolated_settings
 
 
 class TestCanonicalBucketEquivalence:
@@ -393,7 +384,7 @@ class TestCanonicalBucketEquivalence:
         self,
         isolated_settings: Settings,
     ) -> None:
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
         svc.configure(bucket_id=self._WRAPPED, represented_nif="12345678Z", scope_tokens=("IVA",))
 
         assert svc.status(bucket_id=_PROFILE_BUCKET_ID).configured is True
@@ -401,7 +392,7 @@ class TestCanonicalBucketEquivalence:
 
     def test_status_projects_the_canonical_identity(self, isolated_settings: Settings) -> None:
         """The returned status names the stored bucket, not the caller's spelling."""
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
         svc.configure(bucket_id=_PROFILE_BUCKET_ID, represented_nif="12345678Z", scope_tokens=("IVA",))
 
         assert svc.status(bucket_id=self._WRAPPED).bucket_id == _PROFILE_BUCKET_ID
@@ -411,7 +402,7 @@ class TestCanonicalBucketEquivalence:
         self,
         isolated_settings: Settings,
     ) -> None:
-        status = ApoderadoService(settings=isolated_settings).status(bucket_id=self._WRAPPED)
+        status = _service(isolated_settings).status(bucket_id=self._WRAPPED)
 
         assert status.configured is False
         assert status.bucket_id == _PROFILE_BUCKET_ID
@@ -420,7 +411,7 @@ class TestCanonicalBucketEquivalence:
         self,
         isolated_settings: Settings,
     ) -> None:
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
         svc.configure(bucket_id=_PROFILE_BUCKET_ID, represented_nif="12345678Z", scope_tokens=("IVA",))
 
         assert svc.clear(bucket_id=self._WRAPPED) is True
@@ -429,7 +420,7 @@ class TestCanonicalBucketEquivalence:
 
     def test_repository_cache_is_keyed_canonically(self, isolated_settings: Settings) -> None:
         """Two spellings must not open two repositories over one bucket's storage."""
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
 
         first = svc._repository_for(_PROFILE_BUCKET_ID)
         second = svc._repository_for(self._WRAPPED)
@@ -451,7 +442,7 @@ class TestCanonicalBucketEquivalence:
         class on every other. ``ValidationError`` subclasses ``ValueError``, so
         this still holds whichever the boundary raises.
         """
-        svc = ApoderadoService(settings=isolated_settings)
+        svc = _service(isolated_settings)
 
         with pytest.raises(ValueError):
             svc.status(bucket_id=bad)
@@ -467,113 +458,3 @@ class TestCanonicalBucketEquivalence:
         """
         assert canonical_bucket_id(self._WRAPPED) == canonical_bucket_id(_PROFILE_BUCKET_ID)
         assert canonical_bucket_id(_SECONDARY_PROFILE_BUCKET_ID) != canonical_bucket_id(_PROFILE_BUCKET_ID)
-
-
-class TestStoredConfigurationOwnership:
-    """The object key is the only durable statement of which bucket owns a record.
-
-    ``ApoderadoConfigRepository`` derives its key from
-    ``ApoderadoConfiguration.bucket_id``, but the inherited load path validated
-    only the envelope class and version. A configuration for bucket B rekeyed
-    under bucket A therefore loaded cleanly, and ``status(bucket_id=A)``
-    reported it as configured while projecting B's represented tax identifier.
-    """
-
-    def _foreign_configuration(self) -> ApoderadoConfiguration:
-        return ApoderadoConfiguration(
-            bucket_id=_SECONDARY_PROFILE_BUCKET_ID,
-            represented_nif="12345678Z",
-            granted_scopes=(),
-            catalogue_version="v1",
-            configured_at=now(),
-            notes="",
-        )
-
-    def _rekey_under(self, repo: ApoderadoConfigRepository, key: str, config: ApoderadoConfiguration) -> None:
-        """Write ``config``'s genuine encrypted envelope under a foreign ``key``."""
-        envelope = repo._identified_envelope(config)[1]
-        repo._objects.save(
-            namespace=repo.namespace,
-            object_key=key,
-            classification=repo.sensitivity,
-            schema_version=repo.schema_version,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
-        )
-
-    def test_load_refuses_a_configuration_keyed_under_a_foreign_bucket(
-        self,
-        isolated_profile: TestRuntimeProfile,
-    ) -> None:
-        repo = ApoderadoConfigRepository(bucket_id=_PROFILE_BUCKET_ID, settings=isolated_profile.settings)
-        self._rekey_under(repo, _PROFILE_BUCKET_ID, self._foreign_configuration())
-
-        with pytest.raises(ApoderadoConfigurationIdentityError):
-            repo.load(_PROFILE_BUCKET_ID)
-
-    def test_status_refuses_rather_than_projecting_a_foreign_represented_identity(
-        self,
-        isolated_profile: TestRuntimeProfile,
-    ) -> None:
-        """The leak this closes is identity-bearing, so refusal must reach the service."""
-        repo = ApoderadoConfigRepository(bucket_id=_PROFILE_BUCKET_ID, settings=isolated_profile.settings)
-        self._rekey_under(repo, _PROFILE_BUCKET_ID, self._foreign_configuration())
-
-        with pytest.raises(ApoderadoConfigurationIdentityError):
-            ApoderadoService(settings=isolated_profile.settings).status(bucket_id=_PROFILE_BUCKET_ID)
-
-    def test_save_refuses_a_configuration_for_another_bucket(
-        self,
-        isolated_profile: TestRuntimeProfile,
-    ) -> None:
-        """A bound repository writes only its own bucket's encrypted storage.
-
-        The refusal names both buckets as machine facts and renders from the
-        registered integrity key. Pinning ``str(exc)`` to that key is what
-        fails a re-introduced positional sentence, which resolution would hide
-        while tracebacks and logs still carried it in English.
-        """
-        from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
-
-        repo = ApoderadoConfigRepository(bucket_id=_PROFILE_BUCKET_ID, settings=isolated_profile.settings)
-        foreign = self._foreign_configuration()
-
-        with pytest.raises(ApoderadoConfigurationIdentityError) as excinfo:
-            repo.save(foreign)
-
-        error = excinfo.value
-        assert error.translated_message == "errors.integrity.integrity_apoderado_configuration_identity"
-        assert error.context == {
-            "bucket_id": foreign.bucket_id,
-            "repository_bucket_id": canonical_bucket_id(_PROFILE_BUCKET_ID),
-        }
-        assert get_registered_error_code(error).code == "INTEGRITY_APODERADO_CONFIGURATION_IDENTITY"
-        assert str(error) == error.translated_message, f"the raise site carries an authored sentence: {str(error)!r}"
-        resolved = resolve_error_message(error)
-        assert resolved and resolved != error.translated_message
-        assert foreign.represented_nif not in resolved
-
-    def test_same_bucket_round_trip_still_succeeds(
-        self,
-        isolated_profile: TestRuntimeProfile,
-    ) -> None:
-        """The guard must not refuse the legitimate write-then-read path."""
-        repo = ApoderadoConfigRepository(bucket_id=_PROFILE_BUCKET_ID, settings=isolated_profile.settings)
-        config = ApoderadoConfiguration(
-            bucket_id=_PROFILE_BUCKET_ID,
-            represented_nif="12345678Z",
-            granted_scopes=(),
-            catalogue_version="v1",
-            configured_at=now(),
-            notes="own bucket",
-        )
-
-        repo.save(config)
-
-        assert repo.load(_PROFILE_BUCKET_ID) == config
-
-    def test_absent_record_still_reads_as_none(self, isolated_profile: TestRuntimeProfile) -> None:
-        """An unconfigured bucket is not an identity violation."""
-        repo = ApoderadoConfigRepository(bucket_id=_PROFILE_BUCKET_ID, settings=isolated_profile.settings)
-
-        assert repo.load(_PROFILE_BUCKET_ID) is None

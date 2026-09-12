@@ -33,7 +33,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.filing.schema import APPROVAL_BASIS_VERSION, ModeloApprovalBasis, ModeloDraft
 from ....domain.submission.models import ModeloDraftStatus
-from ....tests.filing import (
+from .filing_support import (
     build_registry_filing_draft_from_decimals,
     empty_prior_filing_observations_fingerprint,
     empty_profile_activity_fingerprint,

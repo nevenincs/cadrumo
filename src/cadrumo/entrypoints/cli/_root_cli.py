@@ -59,6 +59,7 @@ def root_command(
     composed = ctx.with_resource(profile_adapter_composition())
     state["state_projection_read_ports"] = composed.state_projection_read_ports
     state["certificate_secret_backend_factory"] = composed.certificate_secret_backend_factory
+    state["apoderado_config_repository_factory"] = composed.apoderado_config_repository_factory
     preserve_requested_cli_leaf(ctx)
     state["profile_override"] = profile
     if ctx.invoked_subcommand is None:

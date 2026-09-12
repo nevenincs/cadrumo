@@ -17,6 +17,7 @@ from ...adapters.persistence.storage.envelope.contract import Envelope
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.secure_object_namespaces import LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE
 from ...application.live.errors import LiveApplicationInputError
+from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ...application.live.justificante import (
     JustificanteCaptureSnapshot,
     JustificanteCaptureSnapshotNotFoundError,
@@ -100,7 +101,8 @@ class _RegistrationEvents:
 
 
 class _LiveRead:
-    def __init__(self) -> None:
+    def __init__(self, certificate_secret_backend_factory: CertificateSecretBackendFactory) -> None:
+        self._certificate_secret_backend_factory = certificate_secret_backend_factory
         self._session: object | None = None
         self._settings: object | None = None
         self._expedientes: dict[str, object] = {}
@@ -108,7 +110,10 @@ class _LiveRead:
     async def declarations_and_expedientes(
         self, *, modelo: str, year: int
     ) -> tuple[Sequence[JustificanteDeclaration], Sequence[JustificanteExpediente]]:
-        session, settings = await active_verified_session(operation="live-justificante-read")
+        session, settings = await active_verified_session(
+            certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+            operation="live-justificante-read",
+        )
         async with (
             shared_playwright(session) as playwright,
             open_declarations_register(session, settings=settings, playwright=playwright) as register,
@@ -177,8 +182,10 @@ def build_justificante_registration_ports() -> JustificanteRegistrationPorts:
     )
 
 
-def build_justificante_live_read_port() -> JustificanteLiveReadPort:
-    return _LiveRead()
+def build_justificante_live_read_port(
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+) -> JustificanteLiveReadPort:
+    return _LiveRead(certificate_secret_backend_factory)
 
 
 def build_justificante_authenticity_verifier() -> JustificanteAuthenticityVerifierPort:

@@ -29,6 +29,7 @@ from uuid import UUID
 import pytest
 from pydantic import SecretStr
 
+from ...adapters.persistence.profile.state_projection import StateProjectionPersistenceAdapter
 from ...adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from ...adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
 from ...adapters.persistence.storage.master_key.active_session import close_active_bucket_session
@@ -40,8 +41,9 @@ from ...core.period import Period
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...tests.bucket_layout import provision_bucket_directory
-from ...tests.registry_revision import active_registry_revision_id
+from ..modelo.tests.registry_revision import active_registry_revision_id
 from ...tests.user_profile import register_minimal_profile
+from ..auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ..auth.operator import inspect_operator_auth
 from ..auth.operator import test_operator_auth as probe_operator_auth
 from ..ledger.actions_manual import create_manual_transaction
@@ -57,6 +59,7 @@ from ..state_projection import (
     _registry_readiness_revision_mismatch_refusal,
     build_operator_state_projection,
 )
+from ..state_projection_ports import StateProjectionReadPorts
 from ..user_profile.login_session_port import profile_login_session_port
 from ..user_profile.profile_record_repository import close_active_profile_record_session
 from ..user_profile.registration import register_profile_with_credentials
@@ -114,6 +117,17 @@ def isolated_storage(tmp_path: Path) -> Iterator[None]:
             _ACTIVE_PROFILE_ID = None
             _PROFILE_SPAN_OPEN = False
             _ACTIVE_STORAGE_STACK = None
+
+
+@pytest.fixture
+def state_projection_dependencies() -> tuple[InMemoryCertificateSecretBackendFactory, StateProjectionReadPorts]:
+    """Compose the application read ports and test certificate capability per test."""
+
+    adapter = StateProjectionPersistenceAdapter()
+    return (
+        InMemoryCertificateSecretBackendFactory(),
+        StateProjectionReadPorts(workspace=adapter, profile=adapter),
+    )
 
 
 def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> str:
@@ -182,7 +196,7 @@ def _stage_profile_bucket(root: Path, bucket_id: str) -> None:
     provision_bucket_directory(root, bucket_id)
 
 
-def test_overview_status_reports_modelo_work_units(tmp_path: Path) -> None:
+def test_overview_status_reports_modelo_work_units(tmp_path: Path, state_projection_dependencies) -> None:
     """The concrete bug this regression closes: with ``modelo work`` work units
     present, ``overview status`` must report them.
 
@@ -192,6 +206,7 @@ def test_overview_status_reports_modelo_work_units(tmp_path: Path) -> None:
     create`` saw a silently-zero count. The projection carries
     ``work_units`` as a distinct counter."""
 
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
     bucket_id = _register_active_profile()
 
     create_work_unit(
@@ -202,16 +217,20 @@ def test_overview_status_reports_modelo_work_units(tmp_path: Path) -> None:
         revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
     )
 
-    report = build_overview_status_report()
+    report = build_overview_status_report(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
+    )
 
     assert report.work_units == 1, "overview status must surface modelo work units, not zero"
     assert report.drafts == 0, "the ModeloDraft store is separate and stays at zero"
 
 
-def test_overview_status_distinguishes_drafts_from_work_units() -> None:
+def test_overview_status_distinguishes_drafts_from_work_units(state_projection_dependencies) -> None:
     """``drafts`` and ``work_units`` are distinct counters; neither is
     silently folded into the other."""
 
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
     bucket_id = _register_active_profile()
     for period_token in ("1T", "2T"):
         create_work_unit(
@@ -222,7 +241,10 @@ def test_overview_status_distinguishes_drafts_from_work_units() -> None:
             revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period=period_token),
         )
 
-    projection = build_operator_state_projection()
+    projection = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
+    )
 
     assert projection.workspace.work_units == 2
     assert projection.workspace.drafts == 0
@@ -230,11 +252,12 @@ def test_overview_status_distinguishes_drafts_from_work_units() -> None:
     assert projection.workspace.invoices == 0
 
 
-def test_work_units_counter_excludes_discarded_units() -> None:
+def test_work_units_counter_excludes_discarded_units(state_projection_dependencies) -> None:
     """A discarded work unit must not inflate the active ``work_units``
     counter; it is carried separately in ``discarded_work_units`` so the
     operator is never shown a misleading total."""
 
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
     bucket_id = _register_active_profile()
     for period_token in ("1T", "2T", "3T"):
         create_work_unit(
@@ -253,17 +276,23 @@ def test_work_units_counter_excludes_discarded_units() -> None:
     )
     discard_work_unit(discarded.work_unit_id, actor="operator", reason="superseded")
 
-    projection = build_operator_state_projection()
+    projection = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
+    )
 
     assert projection.workspace.work_units == 3, "discarded units must not inflate the active counter"
     assert projection.workspace.discarded_work_units == 1
 
-    report = build_overview_status_report()
+    report = build_overview_status_report(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
+    )
     assert report.work_units == 3
     assert report.discarded_work_units == 1
 
 
-def test_surfaces_agree_on_one_projection() -> None:
+def test_surfaces_agree_on_one_projection(state_projection_dependencies) -> None:
     """Every operator-facing surface draws from one projection, so they
     cannot disagree.
 
@@ -275,6 +304,7 @@ def test_surfaces_agree_on_one_projection() -> None:
     ``configured``, closing the historical two-readers-two-answers
     disagreement."""
 
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
     bucket_id = _register_active_profile()
     for period_token in ("1T", "2T"):
         create_work_unit(
@@ -286,6 +316,8 @@ def test_surfaces_agree_on_one_projection() -> None:
         )
 
     projection = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
         modelo_readiness_requests=(
             ModeloReadinessRequest(
                 modelo="303",
@@ -297,9 +329,18 @@ def test_surfaces_agree_on_one_projection() -> None:
         probe_live_backend=True,
     )
 
-    overview = build_overview_status_report()
-    auth_status = inspect_operator_auth()
-    auth_test = probe_operator_auth()
+    overview = build_overview_status_report(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
+    )
+    auth_status = inspect_operator_auth(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
+    )
+    auth_test = probe_operator_auth(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
+    )
 
     # auth status and auth test report the SAME configured — the
     # historical disagreement is closed structurally.
@@ -324,7 +365,8 @@ def test_surfaces_agree_on_one_projection() -> None:
     assert readiness.profile_id == bucket_id
 
 
-def test_modelo_303_readiness_includes_ledger_preflight_blockers() -> None:
+def test_modelo_303_readiness_includes_ledger_preflight_blockers(state_projection_dependencies) -> None:
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
     bucket_id = _register_active_profile()
     create_manual_transaction(
         ManualLedgerTransactionCommand(
@@ -342,6 +384,8 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers() -> None:
     )
 
     projection = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
         modelo_readiness_requests=(
             ModeloReadinessRequest(
                 modelo="303",
@@ -362,10 +406,13 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers() -> None:
     assert [issue.reason.value for issue in readiness.ledger_issues] == ["missing_category"]
 
 
-def test_modelo_303_readiness_reports_pre_activity_period_refusal() -> None:
+def test_modelo_303_readiness_reports_pre_activity_period_refusal(state_projection_dependencies) -> None:
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
     bucket_id = _register_active_profile(overrides={"censo.activity_start_date": "2026-05-01"})
 
     projection = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
         modelo_readiness_requests=(
             ModeloReadinessRequest(
                 modelo="303",
@@ -387,7 +434,7 @@ def test_modelo_303_readiness_reports_pre_activity_period_refusal() -> None:
     assert projection.workspace.work_units == 0
 
 
-def test_modelo_349_readiness_uses_applicability_for_attribution_entity() -> None:
+def test_modelo_349_readiness_uses_applicability_for_attribution_entity(state_projection_dependencies) -> None:
     """An attribution entity that trades intracommunity is APPLICABLE for Modelo 349.
 
     RD 1624/1992 art. 79 obliges the entity itself (a comunidad de bienes /
@@ -398,6 +445,7 @@ def test_modelo_349_readiness_uses_applicability_for_attribution_entity() -> Non
     ``ready is False`` here because the minimal fixture has no ledger-sourced
     binding values, a separate axis from applicability.
     """
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
     bucket_id = _register_active_profile(
         overrides={
             "identity.tax_id": "E12345674",
@@ -409,6 +457,8 @@ def test_modelo_349_readiness_uses_applicability_for_attribution_entity() -> Non
     )
 
     projection = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
         modelo_readiness_requests=(
             ModeloReadinessRequest(
                 modelo="349",
@@ -430,7 +480,10 @@ def test_modelo_349_readiness_uses_applicability_for_attribution_entity() -> Non
     assert projection.workspace.work_units == 0
 
 
-def test_modelo_303_readiness_does_not_report_ledger_bindings_missing_after_clean_preflight() -> None:
+def test_modelo_303_readiness_does_not_report_ledger_bindings_missing_after_clean_preflight(
+    state_projection_dependencies,
+) -> None:
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
     bucket_id = _register_active_profile()
     create_manual_transaction(
         ManualLedgerTransactionCommand(
@@ -463,6 +516,8 @@ def test_modelo_303_readiness_does_not_report_ledger_bindings_missing_after_clea
     )
 
     projection = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
         modelo_readiness_requests=(
             ModeloReadinessRequest(
                 modelo="303",
@@ -480,10 +535,15 @@ def test_modelo_303_readiness_does_not_report_ledger_bindings_missing_after_clea
     assert "ledger_iva_aggregation" not in {binding.source for binding in readiness.missing_bindings}
 
 
-def test_modelo_309_ad_hoc_readiness_fails_closed_for_non_span_ledger_period() -> None:
+def test_modelo_309_ad_hoc_readiness_fails_closed_for_non_span_ledger_period(
+    state_projection_dependencies,
+) -> None:
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
     bucket_id = _register_active_profile()
 
     projection = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
         modelo_readiness_requests=(
             ModeloReadinessRequest(
                 modelo="309",
@@ -505,7 +565,7 @@ def test_modelo_309_ad_hoc_readiness_fails_closed_for_non_span_ledger_period() -
     assert [issue.reason.value for issue in readiness.ledger_issues] == ["unsupported_period"]
 
 
-def test_modelo_readiness_without_period_uses_annual_period() -> None:
+def test_modelo_readiness_without_period_uses_annual_period(state_projection_dependencies) -> None:
     """A periodless request derives its readiness period, not its revision.
 
     The subject here is the ``0A`` fallback alone. ``revision_id`` is
@@ -517,9 +577,12 @@ def test_modelo_readiness_without_period_uses_annual_period() -> None:
     resolves, and the period assertion is reached through the registry
     refusal path on purpose.
     """
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
     bucket_id = _register_active_profile()
 
     projection = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
         modelo_readiness_requests=(
             ModeloReadinessRequest(
                 modelo="303",
@@ -534,10 +597,11 @@ def test_modelo_readiness_without_period_uses_annual_period() -> None:
     assert readiness.period == Period.from_year_and_code(2026, "0A")
 
 
-def test_projection_is_pure_read() -> None:
+def test_projection_is_pure_read(state_projection_dependencies) -> None:
     """Building the projection mutates no store: two consecutive builds
     over an unchanged workspace return equal projections."""
 
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
     bucket_id = _register_active_profile()
     create_work_unit(
         bucket_id=bucket_id,
@@ -547,17 +611,27 @@ def test_projection_is_pure_read() -> None:
         revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
     )
 
-    first = build_operator_state_projection()
-    second = build_operator_state_projection()
+    first = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
+    )
+    second = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
+    )
 
     assert first == second
 
 
-def test_projection_without_active_profile_is_empty() -> None:
+def test_projection_without_active_profile_is_empty(state_projection_dependencies) -> None:
     """With no active profile the projection reports zeroed counters and
     no encrypted store is opened."""
 
-    projection = build_operator_state_projection()
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
+    projection = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
+    )
 
     assert projection.active_profile.profile_id is None
     assert projection.workspace.work_units == 0
@@ -566,7 +640,11 @@ def test_projection_without_active_profile_is_empty() -> None:
     assert projection.pending_obligations == ()
 
 
-def test_projection_profile_read_refuses_explicit_database_route(tmp_path: Path) -> None:
+def test_projection_profile_read_refuses_explicit_database_route(
+    tmp_path: Path,
+    state_projection_dependencies,
+) -> None:
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
     profile_id = "00000000-0000-4000-8000-000000000001"
     _stage_profile_bucket(tmp_path, profile_id)
 
@@ -576,6 +654,8 @@ def test_projection_profile_read_refuses_explicit_database_route(tmp_path: Path)
         cadrumo_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
     ):
         projection = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            read_ports=read_ports,
             state=WorkflowState(),
             include_workspace_summary=False,
             include_pending_obligations=False,
@@ -588,7 +668,7 @@ def test_projection_profile_read_refuses_explicit_database_route(tmp_path: Path)
     assert not (tmp_path / "explicit.db").exists()
 
 
-def test_auth_readiness_no_provider_matches_with_and_without_probe() -> None:
+def test_auth_readiness_no_provider_matches_with_and_without_probe(state_projection_dependencies) -> None:
     """The auth readiness sub-record reports the same "no provider
     configured" state whether or not the live backend is probed.
 
@@ -598,10 +678,19 @@ def test_auth_readiness_no_provider_matches_with_and_without_probe() -> None:
     provider, ``available: False``, and an empty health summary.
     """
 
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
     _register_active_profile()
 
-    unprobed = build_operator_state_projection(probe_live_backend=False)
-    probed = build_operator_state_projection(probe_live_backend=True)
+    unprobed = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
+        probe_live_backend=False,
+    )
+    probed = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
+        probe_live_backend=True,
+    )
 
     assert unprobed.auth.provider == ""
     assert probed.auth.provider == unprobed.auth.provider
@@ -612,11 +701,15 @@ def test_auth_readiness_no_provider_matches_with_and_without_probe() -> None:
 
 def test_auth_probe_unknown_requested_provider_log_omits_raw_selector(
     caplog: pytest.LogCaptureFixture,
+    state_projection_dependencies,
 ) -> None:
     sensitive_provider = "client-tax-id-12345678Z-private-note"
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
 
     with caplog.at_level(logging.WARNING, logger="cadrumo.application.state_projection"):
         projection = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            read_ports=read_ports,
             requested_provider=sensitive_provider,
             probe_live_backend=True,
             include_workspace_summary=False,
@@ -628,7 +721,7 @@ def test_auth_probe_unknown_requested_provider_log_omits_raw_selector(
     assert sensitive_provider not in caplog.text
 
 
-def test_auth_readiness_configured_is_coherent_with_health_summary() -> None:
+def test_auth_readiness_configured_is_coherent_with_health_summary(state_projection_dependencies) -> None:
     """``configured`` must never be ``True`` while ``health_summary``
     reports the certificate path is not configured.
 
@@ -641,10 +734,15 @@ def test_auth_readiness_configured_is_coherent_with_health_summary() -> None:
 
     from ..auth.operator import configure_operator_auth
 
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
     _register_active_profile()
     configure_operator_auth("certificate")
 
-    projection = build_operator_state_projection(probe_live_backend=True)
+    projection = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
+        probe_live_backend=True,
+    )
 
     auth = projection.auth
     assert auth.configured is False, (
@@ -664,7 +762,10 @@ def test_auth_readiness_configured_is_coherent_with_health_summary() -> None:
     )
 
 
-def test_auth_readiness_drops_certificate_path_after_switching_provider(tmp_path: Path) -> None:
+def test_auth_readiness_drops_certificate_path_after_switching_provider(
+    tmp_path: Path,
+    state_projection_dependencies,
+) -> None:
     """A non-certificate provider must not carry a stale ``certificate_path``.
 
     After ``configure --provider certificate --file PATH`` then
@@ -676,16 +777,25 @@ def test_auth_readiness_drops_certificate_path_after_switching_provider(tmp_path
 
     from ..auth.operator import configure_operator_auth
 
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
     _register_active_profile()
     cert_file = tmp_path / "operator-cert.pfx"
     cert_file.write_bytes(b"placeholder pkcs12 bytes")
 
     configure_operator_auth("certificate", certificate_path=cert_file)
-    after_cert = build_operator_state_projection(probe_live_backend=False)
+    after_cert = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
+        probe_live_backend=False,
+    )
     assert after_cert.auth.certificate_path == str(cert_file)
 
     configure_operator_auth("clave_movil")
-    after_switch = build_operator_state_projection(probe_live_backend=False)
+    after_switch = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
+        probe_live_backend=False,
+    )
 
     assert after_switch.auth.provider == "clave_movil"
     assert after_switch.auth.certificate_path == "", (
@@ -693,7 +803,9 @@ def test_auth_readiness_drops_certificate_path_after_switching_provider(tmp_path
     )
 
 
-def test_auth_readiness_health_severity_is_populated_for_a_configured_provider() -> None:
+def test_auth_readiness_health_severity_is_populated_for_a_configured_provider(
+    state_projection_dependencies,
+) -> None:
     """``health_severity`` must carry a meaningful, non-empty token.
 
     The Cl@ve backend reports a ``health_summary`` but no severity; the
@@ -703,22 +815,32 @@ def test_auth_readiness_health_severity_is_populated_for_a_configured_provider()
 
     from ..auth.operator import configure_operator_auth
 
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
     _register_active_profile()
     configure_operator_auth("clave_movil")
 
-    auth = build_operator_state_projection(probe_live_backend=True).auth
+    auth = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
+        probe_live_backend=True,
+    ).auth
 
     # Round-5 M5: ``info`` is now a valid severity for benign undeclared
     # or pending states. ``error`` is reserved for genuine faults.
     assert auth.health_severity in {"", "ok", "info", "warning", "error"}
 
 
-def test_auth_readiness_health_severity_empty_only_when_no_provider() -> None:
+def test_auth_readiness_health_severity_empty_only_when_no_provider(state_projection_dependencies) -> None:
     """With no provider selected there is nothing to classify; severity stays empty."""
 
+    certificate_secret_backend_factory, read_ports = state_projection_dependencies
     _register_active_profile()
 
-    auth = build_operator_state_projection(probe_live_backend=True).auth
+    auth = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        read_ports=read_ports,
+        probe_live_backend=True,
+    ).auth
 
     assert auth.provider == ""
     assert auth.health_severity == ""

@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import typer
 
 if TYPE_CHECKING:
-    pass
+    from ....application.auth.apoderado_repository import ApoderadoConfigurationRepositoryFactory
+    from ....application.auth.apoderado_service import ApoderadoService
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
@@ -17,16 +18,31 @@ from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._profile_support import require_active_profile_pointer as _active_profile_pointer
 
 
+def _service(ctx: typer.Context) -> ApoderadoService:
+    """Construct the apoderado service from the root's explicit composition."""
+    from ....application.auth.apoderado_service import ApoderadoService
+    from ....core.config import load_settings
+
+    state = cast("dict[str, object]", ctx.ensure_object(dict))
+    try:
+        repository_factory = cast(
+            "ApoderadoConfigurationRepositoryFactory",
+            state["apoderado_config_repository_factory"],
+        )
+    except KeyError as error:
+        raise RuntimeError("apoderado configuration persistence has not been composed") from error
+    return ApoderadoService(repository_factory=repository_factory, settings=load_settings())
+
+
 def apoderado_scopes_list(
     ctx: typer.Context,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """List all available representative scopes in the vocabulary."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth.apoderado_service import ApoderadoService
     from ..config_payloads import ApoderadoScopesListResult
 
-    svc = ApoderadoService()
+    svc = _service(ctx)
     payload = svc.catalogue.model_dump(mode="json")
     lines = [f"{s.code}\t{tr(f'cli.config.auth.apoderado.scope.{s.code.lower()}')}" for s in svc.catalogue.scopes]
     scopes_result = ApoderadoScopesListResult.model_validate(payload)
@@ -38,11 +54,10 @@ def apoderado_status(
     output_language: OutputLanguage | None = None,
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth.apoderado_service import ApoderadoService
     from ..config_payloads import ApoderadoStatusResult
 
     pointer = _active_profile_pointer()
-    svc = ApoderadoService()
+    svc = _service(ctx)
     result = svc.status(bucket_id=pointer.bucket_id)
 
     lines = [
@@ -87,12 +102,12 @@ def apoderado_configure(
     """
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.apoderado_flow import run_apoderado_flow
-    from ....application.auth.apoderado_service import ApoderadoRepresentedNifInvalidError, ApoderadoService
+    from ....application.auth.apoderado_service import ApoderadoRepresentedNifInvalidError
     from ....application.workflow.persistence import workflow_state_repository
 
     workflow_state_repository().load()
     pointer = _active_profile_pointer()
-    svc = ApoderadoService()
+    svc = _service(ctx)
 
     scope_tokens = tuple(scope or ())
     if represented_nif is None:
@@ -154,13 +169,12 @@ def apoderado_clear(
     output_language: OutputLanguage | None = None,
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth.apoderado_service import ApoderadoService
     from ....application.workflow.persistence import workflow_state_repository
     from ..config_payloads import ApoderadoClearResult
 
     workflow_state_repository().load()
     pointer = _active_profile_pointer()
-    svc = ApoderadoService()
+    svc = _service(ctx)
     cleared = svc.clear(bucket_id=pointer.bucket_id)
 
     clear_result = ApoderadoClearResult(bucket_id=pointer.bucket_id, cleared=cleared)
@@ -176,12 +190,11 @@ def apoderado_check(
     output_language: OutputLanguage | None = None,
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth.apoderado_service import ApoderadoService
     from ....application.workflow.persistence import workflow_state_repository
 
     workflow_state_repository().load()
     pointer = _active_profile_pointer()
-    svc = ApoderadoService()
+    svc = _service(ctx)
 
     # ``check`` is the live-verification verb. The live AEAT-read path is not
     # wired (live reads are refused at this boundary per the safety gate), so

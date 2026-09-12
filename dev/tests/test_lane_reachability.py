@@ -677,7 +677,8 @@ def test_a_marker_only_exclusion_also_reds_the_gate(tmp_path: Path) -> None:
 def test_one_excluded_test_does_not_condemn_its_reachable_siblings(tmp_path: Path) -> None:
     """The false positive that motivated per-test granularity, pinned.
 
-    This is the exact shape of ``src/cadrumo/tests/test_secure_sql.py``: module
+    This is the exact shape of
+    ``src/cadrumo/adapters/persistence/storage/tests/test_secure_sql.py``: module
     marked ``unit``, one test additionally marked ``os_keychain``, and every
     lane excluding that marker. Flattening the file's markers into one set makes
     the WHOLE file read as unreachable while its unit siblings run daily.

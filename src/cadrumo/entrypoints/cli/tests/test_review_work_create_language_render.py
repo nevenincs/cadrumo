@@ -20,8 +20,8 @@ import pytest
 
 from ....application.review.operator import ReviewQueueReport
 from ....core.config import override_settings
-from ....tests.clean_install_fixtures import clean_install
 from .._review import _queue_lines
+from .clean_install_fixtures import clean_install
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

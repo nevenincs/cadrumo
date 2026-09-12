@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING
 
 from ....application.user_profile.login_session import logout_active_profile
 from ....core.config import load_settings
-from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
 if TYPE_CHECKING:
     from collections.abc import Callable

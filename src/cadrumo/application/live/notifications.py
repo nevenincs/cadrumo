@@ -52,6 +52,7 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import SnapshotId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
+from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from .errors import LiveApplicationInputError
 from .notification_documents import NotificationDocumentService
 from .session import active_verified_session
@@ -244,9 +245,15 @@ class NotificationsService(
         )
 
 
-async def capture_notifications(*, bucket_id: str) -> PersistedNotificationsSnapshot:
+async def capture_notifications(
+    *,
+    bucket_id: str,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+) -> PersistedNotificationsSnapshot:
     """Capture the authenticated taxpayer's notifications as encrypted local evidence."""
-    session, settings = await active_verified_session()
+    session, settings = await active_verified_session(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+    )
     snapshot = await fetch_notifications_query(session, settings=settings)
     return NotificationsService(settings=settings).capture(
         bucket_id=bucket_id,
@@ -278,10 +285,13 @@ async def pull_notification_document(
     bucket_id: str,
     certificado_id: str,
     service: NotificationDocumentService,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
 ):
     """Fetch encrypted custody for a notification that AEAT already records as read."""
     row = resolve_notification_row(bucket_id=bucket_id, certificado_id=certificado_id)
-    session, _settings = await active_verified_session()
+    session, _settings = await active_verified_session(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+    )
     return await service.pull_document(bucket_id=bucket_id, session=session, row=row)
 
 
