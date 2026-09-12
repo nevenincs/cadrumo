@@ -22,7 +22,6 @@ from cadrumo.domain.calculations.registry.runtime_graph import (
     expression_binding_refs,
     expression_casilla_refs,
     expression_parameter_refs,
-    expression_relation_refs,
     formula_evaluation_order,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
@@ -146,16 +145,16 @@ def test_expression_parameter_refs_walks_dispatch_table_inside_nested_args() -> 
     }
 
 
-def test_expression_relation_refs_walks_nested_args() -> None:
+def test_expression_binding_refs_walks_nested_prefill_args() -> None:
     expression = _operator(
         "add",
-        _leaf(relation="modelo-130-rel-base-1t"),
-        _leaf(relation="modelo-130-rel-base-2t"),
+        _leaf(binding="modelo-130-prefill-base-1t"),
+        _leaf(binding="modelo-130-prefill-base-2t"),
     )
 
-    assert expression_relation_refs(expression) == (
-        "modelo-130-rel-base-1t",
-        "modelo-130-rel-base-2t",
+    assert expression_binding_refs(expression) == (
+        "modelo-130-prefill-base-1t",
+        "modelo-130-prefill-base-2t",
     )
 
 
@@ -240,4 +239,3 @@ def test_walkers_return_empty_for_unrelated_leaf_kinds() -> None:
     assert expression_casilla_refs(literal_leaf) == ()
     assert expression_binding_refs(literal_leaf) == ()
     assert expression_parameter_refs(literal_leaf) == ()
-    assert expression_relation_refs(literal_leaf) == ()

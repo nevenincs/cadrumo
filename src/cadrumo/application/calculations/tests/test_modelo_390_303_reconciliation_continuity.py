@@ -15,7 +15,7 @@ casilla across the four quarters of the same filing year:
   ``iva.anual.reconciliacion.resultado-303``
 
 These bindings resolve through :func:`resolve_relations_from_local_store`
-and :func:`materialize_relation_binding_values` (the relation path), not
+and :func:`relation_prefill_values_as_binding_values` (the relation-prefill path), not
 the ``previous_filing`` path.
 
 This module is the cross-year behavior coverage for Modelo
@@ -63,7 +63,7 @@ from ....domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from ....domain.calculations.registry.relations import materialize_relation_binding_values
+from ....domain.calculations.registry.relations import relation_prefill_values_as_binding_values
 from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
@@ -259,7 +259,7 @@ def _calculate_390_annual(
     snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period="0A")
     relation_vals = resolve_relations_from_local_store(snapshot, repository=repository)
     relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
-    relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values_map, period="0A")
+    relation_binding_values = relation_prefill_values_as_binding_values(snapshot.revision, relation_values_map, period="0A")
     annual_partition = IvaCompensationAnnualPartitionSourceResolver(
         repository=repository,
         registry_snapshot=snapshot,

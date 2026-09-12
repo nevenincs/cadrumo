@@ -76,7 +76,7 @@ class BindingGroundingPayload(OutputSchema):
     Non-empty only for ``source = "relation_prefill"`` bindings, where the
     operator supplies each value through ``--relation RELATION_ID=VALUE``
     rather than ``--binding``. Derived from the resolved revision's
-    relations (:class:`~domain.calculations.registry.RelationDefinition`
+    fold slots (:class:`~domain.calculations.registry.RelationPrefillProvider`
     ``target_binding``), so a relation-fed binding's source is discoverable
     before a calculation is attempted, for any modelo.
     """

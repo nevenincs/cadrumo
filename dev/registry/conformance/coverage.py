@@ -77,7 +77,6 @@ from cadrumo.domain.calculations.registry.schema_family_coverage import (
 )
 from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
 from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
 from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_review_tier
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
@@ -790,10 +789,6 @@ def _build_construct_evidence_ledger(
         _declared_construct_evidence_row(declaration, kind="binding", authority_proof=authority_proof)
         for declaration in revision.bindings
     )
-    rows.extend(
-        _declared_construct_evidence_row(declaration, kind="relation", authority_proof=authority_proof)
-        for declaration in revision.relations
-    )
 
     for binding in revision.bindings:
         declared_status = _status_for_declared_refs(binding.legal_refs, binding.source_refs)
@@ -831,7 +826,7 @@ def _build_construct_evidence_ledger(
 
 
 def _declared_construct_evidence_row(
-    declaration: FormulaDefinition | ParameterDefinition | BindingDefinition | RelationDefinition,
+    declaration: FormulaDefinition | ParameterDefinition | BindingDefinition,
     *,
     kind: ConstructEvidenceKind,
     authority_proof: _AuthorityCheckProof | None,

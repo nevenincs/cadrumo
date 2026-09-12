@@ -42,6 +42,7 @@ legal_refs = [
     "orden-eha-3127-2009:art-1",
     "orden-eha-3377-2011:art-1",
     "orden-hac-1431-2025:art-2",
+    "orden-eha-672-2007:art-1",
 ]
 source_refs = [
     "aeat-dr-100-2025-dictionary",

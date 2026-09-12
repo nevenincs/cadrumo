@@ -57,7 +57,7 @@ source_refs = ["aeat-modelo-151-procedure", "aeat-dr-151-2023"]
 
 [revisions."2025-y-siguientes".family_dispositions.dependency_classifications]
 reason = """
-A dependency classification names another modelo whose filed value is FOLDED IN here, and it does that by pointing at the relations and target constructs that carry the fold-in. This revision declares no relations -- see the relations disposition on this same revision -- so there is no fold-in to classify and an entry here could reference nothing. The retenciones and ingresos a cuenta an impatriado suffers are real and do reduce the resultado de la declaracion, but they reach this modelo as its \
+A dependency classification names another modelo whose filed value is FOLDED IN here, and it does that by pointing at the relation-prefill bindings and target constructs that carry the fold-in. This revision declares no relation-prefill binding, so there is no fold-in to classify and an entry here could reference nothing. The retenciones and ingresos a cuenta an impatriado suffers are real and do reduce the resultado de la declaracion, but they reach this modelo as its \
 own declared casilla inputs rather than as a cross-modelo carry from the retenedor's return. Declaring a relation from the retenedor's modelo is what would make this family apply, and that change reaches this declaration through the same revision."""
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-2"]
 source_refs = ["aeat-modelo-151-procedure", "aeat-dr-151-2023"]

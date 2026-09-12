@@ -152,7 +152,7 @@ def _relation_input_guidance_lines(rows: tuple[ModeloBindingQueryRow, ...]) -> t
     relations (``relation_inputs`` is non-empty) is supplied through
     ``--relation RELATION_ID=VALUE`` rather than ``--binding``. The feeding
     relation ids come from the resolved revision (each
-    :class:`RelationDefinition` declares
+    the relation-prefill provider declares
     its ``target_binding``), so this guidance generalises to any modelo
     instead of enumerating a per-form channel table.
     """

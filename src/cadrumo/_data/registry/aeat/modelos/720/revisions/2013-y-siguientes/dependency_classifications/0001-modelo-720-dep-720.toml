@@ -3,5 +3,19 @@ id = "modelo-720-dep-720"
 source_modelo = "720"
 treatment = "factual_evidence"
 target_constructs = ["modelo-720-informative"]
-legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "rd-1065-2007:art-54-bis", "orden-hap-72-2013:art-2"]
-source_refs = ["aeat-modelo-720-procedure"]
+binding_refs = [
+    "modelo-720-prior-year-cuentas-valoracion-baseline",
+    "modelo-720-prior-year-valores-valoracion-baseline",
+    "modelo-720-prior-year-inmuebles-valoracion-baseline",
+]
+legal_refs = [
+    "ley-58-2003:da-18",
+    "rd-1065-2007:art-42-bis",
+    "rd-1065-2007:art-42-ter",
+    "rd-1065-2007:art-54-bis",
+    "orden-hap-72-2013:art-2",
+]
+source_refs = [
+    "aeat-modelo-720-procedure",
+    "aeat-dr-720",
+]

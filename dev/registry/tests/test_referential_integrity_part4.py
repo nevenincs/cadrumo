@@ -31,8 +31,6 @@ from cadrumo.domain.calculations.registry.schema_revision_members import (
     ConstructDefinition,
     DependencyClassificationDefinition,
 )
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
-
 from ..compiler.validator import RegistryValidator
 from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
@@ -356,28 +354,3 @@ def test_informative_modelo_with_formula_fails_validation() -> None:
     with pytest.raises(RegistryValidationError, match="informative modelo must not declare calculation formulas"):
         validator.validate_modelo(informative_modelo)
 
-
-def test_informative_modelo_with_relation_fails_validation() -> None:
-    """An informative modelo that declares a cross-model relation raises RegistryValidationError."""
-    relation = RelationDefinition.model_validate(
-        {
-            "id": "test.relation",
-            "kind": "cross_model_output",
-            "dependency_role": "factual_evidence",
-            "source_modelo": "100",
-            "source_revision_selector": {"year_from": 2024},
-            "source_casilla_id": _NUMERIC_CASILLA_01,
-            "target_binding": "test.binding",
-            "period_alignment": {"source_period": "0A", "target_period": "0A", "filing_year_delta": 0},
-            "source_periods": ("0A",),
-            "target_periods": ("0A",),
-            "legal_refs": (REFERENCE_LEGAL_ID,),
-            "source_refs": (REFERENCE_SOURCE_ID,),
-        },
-    )
-    revision = minimal_revision(relations=(relation,))
-    catalogues = minimal_catalogues()
-    informative_modelo = minimal_modelo(revision).model_copy(update={"calculation_class": "informative"})
-    validator = RegistryValidator(catalogues)
-    with pytest.raises(RegistryValidationError, match="informative modelo must not declare cross-model relations"):
-        validator.validate_modelo(informative_modelo)

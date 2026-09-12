@@ -39,6 +39,7 @@ from ...domain.calculations.registry.ids import (
     RelationId,
 )
 from ...domain.calculations.registry.manual_input_selector import ManualInputProvider
+from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -367,7 +368,7 @@ def _not_applicable_relation_zero_inputs(
         for relation_id in _not_applicable_relation_zero_ids(
             conditional_on_economic_activity=classification.conditional_on_economic_activity,
             source_modelo=classification.source_modelo,
-            relation_refs=classification.relation_refs,
+            relation_refs=classification.binding_refs,
             workflow_profile=workflow_profile,
             active_relation_ids=active_relation_ids,
             existing_relation_ids=existing_relation_ids,
@@ -378,9 +379,8 @@ def _not_applicable_relation_zero_inputs(
 
 def _active_relation_ids(snapshot: RegistrySnapshot) -> frozenset[RelationId]:
     return frozenset(
-        relation.id
-        for relation in snapshot.revision.relations
-        if not relation.target_periods or snapshot.period in relation.target_periods
+        binding.id
+        for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
     )
 
 

@@ -54,7 +54,6 @@ _CONSTRUCT_APPEND_ARRAYS: frozenset[str] = frozenset(
         "formulas",
         "parameters",
         "bindings",
-        "relations",
         "export_layouts",
         "extraction_profiles",
         "live_cross_references",

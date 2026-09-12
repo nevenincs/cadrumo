@@ -49,7 +49,7 @@ from ....domain.calculations.registry.bindings import (
 )
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....domain.calculations.registry.ids import RelationId
-from ....domain.calculations.registry.relations import materialize_relation_binding_values
+from ....domain.calculations.registry.relations import relation_prefill_values_as_binding_values
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
@@ -157,7 +157,7 @@ def _calculate_200(
     snapshot = bundled_authority().snapshot(
         _MODELO_200, filing_year=filing_year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
     )
-    relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
+    relation_binding_values = relation_prefill_values_as_binding_values(snapshot.revision, relation_values, period="0A")
     # Resolve every previous_filing carry binding (BIN-stock 00670 AND the art.13
     # dotaciones-deterioro 01494/01495) from the local observation store; any the
     # store cannot satisfy default to zero (present-or-zero-carry), so the

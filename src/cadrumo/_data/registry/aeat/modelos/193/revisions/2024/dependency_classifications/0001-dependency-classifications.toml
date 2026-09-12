@@ -4,8 +4,20 @@ source_modelo = "123"
 treatment = "direct_annual_settlement"
 target_constructs = ["modelo-193-annual-summary"]
 binding_refs = ["modelo-193-123-base-anual", "modelo-193-123-retenciones-anual"]
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]
+legal_refs = [
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-99",
+    "orden-eha-3377-2011:art-1",
+    "rd-439-2007:art-108",
+    "rd-439-2007:art-90",
+    "ley-35-2006:art-101",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-modelo-193-296-note-2025",
+    "boe-modelo-193-2011-form",
+    "aeat-dr-193-2024",
+]
 
 # Calculation-completeness manifest for revision 2024-y-siguientes: the
 # casillas in this revision's calculation closure (formula targets,

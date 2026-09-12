@@ -86,6 +86,7 @@ from ....domain.calculations.registry.ids import (
     RelationId,
     SourceRefId,
 )
+from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -1199,18 +1200,15 @@ def _collect_relation_values(
 ) -> dict[RelationId, Decimal]:
     edits_by_relation = {edit.relation: edit for edit in edits}
     relation_values: dict[RelationId, Decimal] = {}
-    for relation in snapshot.revision.relations:
-        # Skip relations that are not active for the snapshot's period.
-        # The runtime's `_reject_unknown_external_values` rejects any
-        # relation_value that does not appear in the active-relations
-        # set; supplying inactive values here would crash the compute.
-        if relation.target_periods and snapshot.period not in relation.target_periods:
-            continue
-        edit = edits_by_relation.get(relation.id)
+    # Only the fold slots applicable to the snapshot's period are supplied.
+    # The runtime's `_reject_unknown_external_values` rejects any value whose
+    # key is not in that set, so an inactive one would crash the compute.
+    for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period):
+        edit = edits_by_relation.get(binding.id)
         if edit is None or edit.value is None:
-            relation_values[relation.id] = Decimal("0")
+            relation_values[binding.id] = Decimal("0")
         else:
-            relation_values[relation.id] = edit.value
+            relation_values[binding.id] = edit.value
     return relation_values
 
 

@@ -50,7 +50,6 @@ from ..schema_surfaces import (
     CalculationCompletenessCasilla,
     CalculationCompletenessManifest,
     CasillaDefinition,
-    RelationDefinition,
 )
 from ..schema_verification import LiveCrossReferenceDecision, VerificationExpectationDefinition, WorkbookParityReference
 from ..snapshot import build_validated_snapshot as build_snapshot_at_grade
@@ -240,7 +239,6 @@ def _minimal_revision(
     formulas: tuple[FormulaDefinition, ...] = (),
     parameters: tuple[ParameterDefinition, ...] = (),
     bindings: tuple[BindingDefinition, ...] = (),
-    relations: tuple[RelationDefinition, ...] = (),
     extraction_profiles: tuple[ExtractionProfileDefinition, ...] = (),
     live_cross_references: tuple[LiveCrossReferenceDecision, ...] = (),
     verification_expectations: tuple[VerificationExpectationDefinition, ...] = (),
@@ -281,7 +279,6 @@ def _minimal_revision(
         formulas=formulas,
         parameters=parameters,
         bindings=bindings,
-        relations=relations,
         extraction_profiles=extraction_profiles,
         live_cross_references=live_cross_references,
         verification_expectations=verification_expectations,

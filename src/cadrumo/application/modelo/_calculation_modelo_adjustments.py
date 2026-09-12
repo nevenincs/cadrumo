@@ -43,7 +43,10 @@ from ...domain.calculations.registry.ids import (
     RelationId,
 )
 from ...domain.calculations.registry.invoice_bindings import CollectibleInvoiceProvider
-from ...domain.calculations.registry.relations import relation_source_requirements
+from ...domain.calculations.registry.relations import (
+    relation_prefill_bindings_for_period,
+    relation_source_requirements,
+)
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
@@ -342,12 +345,14 @@ def reconciliation_relation_targets(
     """Return selected annual-relation targets from the registry revision."""
     target_casillas_by_binding = casillas_by_binding(snapshot.revision)
     targets: list[tuple[RelationId, BindingId, tuple[CasillaId, ...], CasillaId, CasillaId]] = []
-    for relation in snapshot.revision.relations:
-        target_casillas = target_casillas_by_binding.get(relation.target_binding, ())
+    for binding, provider in relation_prefill_bindings_for_period(snapshot.revision):
+        target_casillas = target_casillas_by_binding.get(binding.id, ())
         if not target_casillas:
             continue
-        target = relation.id, relation.target_binding, target_casillas, relation.source_casilla_id, target_casillas[0]
-        targets.append(target)
+        source_casillas = provider.declared_source_casilla_ids
+        if len(source_casillas) != 1:
+            continue
+        targets.append((binding.id, binding.id, target_casillas, source_casillas[0], target_casillas[0]))
     return tuple(targets)
 
 
@@ -358,7 +363,7 @@ def _required_relation_periods(snapshot: RegistrySnapshot, relation_ids: frozens
         filing_year=snapshot.filing_year,
         period=snapshot.period,
     ):
-        if relation_ids.intersection(requirement.relation_ids):
+        if relation_ids.intersection(requirement.target_bindings):
             periods.update(requirement.periods)
     return tuple(sorted(periods))
 

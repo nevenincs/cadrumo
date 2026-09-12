@@ -982,9 +982,8 @@ def main(argv: list[str] | None = None) -> int:
 
     mode = "dry-run" if args.dry_run else "applied"
     print(f"Modelos: {', '.join(summary['modelos']) or '(none)'} [{mode}]")
-    print(
-        f"Relations absorbed: {summary['relations_absorbed_total']} across {len(summary['revisions_absorbed'])} revisions"
-    )
+    absorbed = summary["relations_absorbed_total"]
+    print(f"Relations absorbed: {absorbed} across {len(summary['revisions_absorbed'])} revisions")
     for shape, count in summary["merge_shape_counts"].items():
         print(f"  merge shape {shape}: {count}")
     print(f"  previous_filing deletions: {summary['previous_filing_deletions']}")

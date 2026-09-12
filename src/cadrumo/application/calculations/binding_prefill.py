@@ -14,7 +14,7 @@ different mechanism.
 
 Sister module to :mod:`~.relation_prefill`. The runtime distinguishes
 ``relation`` leaves (cross-revision aggregations declared as
-:class:`~domain.calculations.registry.RelationDefinition` records) from
+``relation_prefill`` binding providers) from
 ``previous_filing`` bindings (declared as
 :class:`~domain.calculations.registry.BindingDefinition` with
 ``source = "previous_filing"``).

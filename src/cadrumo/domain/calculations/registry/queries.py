@@ -49,6 +49,7 @@ from .query_reports import (
     RegistrySourceSite,
 )
 from .relation_prefill_bindings import RelationPrefillProvider
+from .relations import relation_prefill_bindings_for_period
 from .runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
@@ -726,6 +727,7 @@ def _build_modelo_formulas_report(context: ResolvedRegistryQueryContext) -> Mode
     """Assemble a :class:`ModeloFormulasReport` from a resolved query context."""
     definition = context.definition
     revision = context.revision
+    fold_binding_ids = frozenset(binding.id for binding, _ in relation_prefill_bindings_for_period(revision))
     rows = tuple(
         ModeloFormulaRow(
             formula_id=str(formula.id),
@@ -733,6 +735,11 @@ def _build_modelo_formulas_report(context: ResolvedRegistryQueryContext) -> Mode
             input_casilla_ids=tuple(dict.fromkeys(expression_casilla_refs(formula.expression))),
             input_bindings=tuple(dict.fromkeys(expression_binding_refs(formula.expression))),
             input_parameters=tuple(dict.fromkeys(expression_parameter_refs(formula.expression))),
+            input_relations=tuple(
+                binding_id
+                for binding_id in dict.fromkeys(expression_binding_refs(formula.expression))
+                if binding_id in fold_binding_ids
+            ),
             expression=_public_mapping(formula.expression.model_dump(mode="json")),
             legal_refs=tuple(str(ref) for ref in formula.legal_refs),
             source_refs=tuple(str(ref) for ref in formula.source_refs),
@@ -776,6 +783,9 @@ def _binding_rows(
     as a string enum key, ``decimal`` for every other binding.
     """
     enum_consumed = enum_consumed_binding_ids(revision)
+    fold_binding_ids = frozenset(
+        binding.id for binding, _ in relation_prefill_bindings_for_period(revision, period=period)
+    )
     operator_required = _operator_input_required_by_binding(revision, modelo=modelo, period=period)
     return tuple(
         ModeloBindingQueryRow(
@@ -787,6 +797,7 @@ def _binding_rows(
             legal_refs=tuple(binding.legal_refs),
             source_refs=tuple(binding.source_refs),
             borrador_capable=binding.aeat_prefilled is True,
+            relation_inputs=(binding.id,) if binding.id in fold_binding_ids else (),
             encoded_options=boolean_binding_encoded_values(binding),
             operator_input_required=operator_required.get(binding.id, True),
         )

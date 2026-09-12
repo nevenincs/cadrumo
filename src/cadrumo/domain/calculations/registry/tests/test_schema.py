@@ -19,12 +19,14 @@ from pydantic import TypeAdapter, ValidationError
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ...export_field_kind import CasillaFieldKind
 from ..ids import LegalRefId, SourceRefId
+from ..binding_temporal import FilingYearOffset
+from ..relation_prefill_bindings import RelationPrefillProvider
 from ..schema import FormulaDefinition
 from ..schema_exports import ExportFieldDefinition
 from ..schema_formula import FormulaExpression
 from ..schema_input_kind import InputKind
 from ..schema_revision_members import ConstructDefinition
-from ..schema_surfaces import CasillaDefinition, RelationDefinition
+from ..schema_surfaces import CasillaDefinition
 from ..schema_verification import (
     DiscrepancyCause,
     RegistryVerificationPolicy,
@@ -55,25 +57,6 @@ def test_source_ref_id_rejects_generic_registry_and_legal_ref_shapes() -> None:
     for source_ref in ("aeat.src.1", "ley-37-1992:art-1", "source"):
         with pytest.raises(ValidationError):
             adapter.validate_python(source_ref)
-
-
-def _relation_payload(**overrides: object) -> dict[str, object]:
-    payload: dict[str, object] = {
-        "id": "test-rel",
-        "kind": "cross_model_output",
-        "dependency_role": "factual_evidence",
-        "source_modelo": "303",
-        "source_revision_selector": {"year_from": 2024},
-        "source_casilla_id": _SCHEMA_CASILLA_ID,
-        "target_binding": "test.binding",
-        "period_alignment": {"source_periods": "quarters", "target_period": "0A"},
-        "source_periods": ("1T", "2T", "3T", "4T"),
-        "target_periods": ("0A",),
-        "legal_refs": (_SCHEMA_LEGAL_ID,),
-        "source_refs": (_SCHEMA_SOURCE_ID,),
-    }
-    payload.update(overrides)
-    return payload
 
 
 # ---------------------------------------------------------------------------
@@ -246,61 +229,53 @@ def test_formula_definition_rejects_legacy_target_key() -> None:
     assert "target" in message
 
 
-def test_relation_definition_rejects_legacy_source_output_key() -> None:
+def test_relation_prefill_provider_is_self_describing_and_relative() -> None:
+    provider = RelationPrefillProvider.model_validate(
+        {
+            "kind": "relation_prefill",
+            "relation_kind": "cross_model_output",
+            "dependency_role": "direct_calculation",
+            "source_modelo": "303",
+            "source_casilla_id": _SCHEMA_CASILLA_ID,
+            "temporal": {"kind": "filing_year_offset", "years": -1, "source_periods": ["0A"]},
+        },
+    )
+
+    assert provider.kind == "relation_prefill"
+    assert provider.required_period_anchors_for_target("0A") == ((-1, "0A"),)
+
+
+def test_relation_prefill_provider_rejects_absolute_source_coordinates() -> None:
     with pytest.raises(ValidationError) as exc_info:
-        RelationDefinition.model_validate(
+        RelationPrefillProvider.model_validate(
             {
-                "id": "test-rel",
-                "kind": "cross_model_output",
+                "kind": "relation_prefill",
+                "relation_kind": "cross_model_output",
                 "dependency_role": "direct_calculation",
                 "source_modelo": "303",
-                "source_revision_selector": {"filing_year_delta": 0},
-                "source_output": _SCHEMA_CASILLA_ID,
-                "target_binding": "test.binding",
-                "period_alignment": {"mode": "previous_quarter"},
-                "legal_refs": (_SCHEMA_LEGAL_ID,),
-                "source_refs": (_SCHEMA_SOURCE_ID,),
+                "source_casilla_id": _SCHEMA_CASILLA_ID,
+                "temporal": {
+                    "kind": "filing_year_offset",
+                    "years": -1,
+                    "source_periods": ["0A"],
+                    "year": 2024,
+                },
             },
         )
 
     message = str(exc_info.value)
-    assert "source_casilla_id" in message
-    assert "source_output" in message
+    assert "year" in message
 
 
-def test_relation_definition_rejects_invalid_source_revision_selector() -> None:
-    cases = (
-        ({}, "must declare year, year_from, or filing_year_delta"),
-        ({"revision": "2025"}, "revision"),
-        ({"revision_id": "2025"}, "revision_id"),
-        ({"year": 2025, "filing_year_delta": 0}, "absolute year bounds or filing_year_delta"),
-        ({"year": 2025, "year_from": 2024}, "year or year_from/year_to"),
-        ({"year_to": 2025}, "year_to requires year_from"),
-        ({"year_from": 2025, "year_to": 2024}, "year_to must be on or after year_from"),
+def test_relation_prefill_provider_uses_typed_temporal_member() -> None:
+    provider = RelationPrefillProvider(
+        relation_kind="cross_model_output",
+        dependency_role="direct_calculation",
+        source_modelo="303",
+        source_casilla_id=_SCHEMA_CASILLA_ID,
+        temporal=FilingYearOffset(years=-1, source_periods=("0A",)),
     )
-
-    for selector, expected in cases:
-        with pytest.raises(ValidationError) as exc_info:
-            RelationDefinition.model_validate(_relation_payload(source_revision_selector=selector))
-
-        assert expected in str(exc_info.value), selector
-
-
-def test_relation_definition_rejects_invalid_period_alignment() -> None:
-    cases = (
-        ({}, "must declare a current alignment shape"),
-        ({"mode": "same_period"}, "same_period"),
-        ({"source_periods": "quarters"}, "source_periods requires target_period"),
-        ({"source_period_kind": "quarterly"}, "source_period_kind requires target_period"),
-        ({"source_period": "0A", "target_period": "0A"}, "requires target_period and filing_year_delta"),
-        ({"target_period": "0A"}, "declares target/delta fields without source alignment"),
-    )
-
-    for period_alignment, expected in cases:
-        with pytest.raises(ValidationError) as exc_info:
-            RelationDefinition.model_validate(_relation_payload(period_alignment=period_alignment))
-
-        assert expected in str(exc_info.value), period_alignment
+    assert provider.temporal.kind == "filing_year_offset"
 
 
 def test_verification_expectation_definition_rejects_legacy_computed_casillas_key() -> None:

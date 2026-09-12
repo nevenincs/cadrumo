@@ -86,8 +86,11 @@ _LEDGER_IVA_PROVIDER = LedgerIvaProvider(
 
 
 _RELATION_PREFILL_PROVIDER = RelationPrefillProvider(
+    relation_kind="cross_model_output",
+    dependency_role="direct_calculation",
     source_modelo="303",
     source_casilla_id="iva.cuota-devengada",
+    temporal=FilingYearOffset(years=-1, source_periods=("0A",)),
 )
 
 _WITHHOLDING_ROW_PROVIDER = WithholdingProvider(

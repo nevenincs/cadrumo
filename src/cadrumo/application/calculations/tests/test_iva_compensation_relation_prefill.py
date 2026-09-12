@@ -18,7 +18,7 @@ from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.errors import RegistryValidationError
-from ....domain.calculations.registry.relations import materialize_relation_binding_values
+from ....domain.calculations.registry.relations import relation_prefill_values_as_binding_values
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     registry_grounded_observations,
@@ -256,7 +256,7 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
         )
 
     relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
-    resolved = materialize_relation_binding_values(snapshot.revision, relation_values_map, period="0A")
+    resolved = relation_prefill_values_as_binding_values(snapshot.revision, relation_values_map, period="0A")
 
     assert resolved["modelo-390-prev-303-cuota-devengada-total"] == Decimal("390.00")
     assert resolved["modelo-390-prev-303-cuota-deducible-total"] == Decimal("180.00")

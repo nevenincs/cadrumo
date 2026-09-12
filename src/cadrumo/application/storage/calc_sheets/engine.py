@@ -31,8 +31,10 @@ from ....domain.calculations.registry.binding_selector_utils import (
 from ....domain.calculations.registry.casilla_membership import casillas_by_id
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
+from ....domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
 from ....domain.calculations.registry.relations import (
     RegistryFoldRequirement,
+    relation_prefill_bindings_for_period,
     relation_requirement_index,
     relation_source_requirements,
 )
@@ -45,7 +47,7 @@ from ....domain.calculations.registry.schema import (
 from ....domain.calculations.registry.schema_formula import LegalParameterDataType
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_rounding import RegistryRoundingCode
-from ....domain.calculations.registry.schema_surfaces import CasillaDefinition, RelationDefinition
+from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.modelos.ledger_filing_snapshot import LedgerFilingEvidence
 from ....domain.period import calculation_filing_date
 from ._styling import compute_styling
@@ -730,7 +732,9 @@ def _relation_values_with_registry_grounding(
 ) -> RelationValues:
     """Attach registry-owned source identity and grounding to relation scalar rows."""
     supplied_by_relation = relation_values.by_relation()
-    relations_by_id = {relation.id: relation for relation in snapshot.revision.relations}
+    folds_by_id = {
+        binding.id: (binding, provider) for binding, provider in relation_prefill_bindings_for_period(snapshot.revision)
+    }
     requirements_by_relation = relation_requirement_index(
         relation_source_requirements(
             snapshot.revision,
@@ -741,7 +745,8 @@ def _relation_values_with_registry_grounding(
     values = tuple(
         _relation_value_with_registry_grounding(
             relation_id=relation_id,
-            relation=relations_by_id[relation_id],
+            provider=folds_by_id[relation_id][1],
+            binding=folds_by_id[relation_id][0],
             supplied=supplied_by_relation.get(relation_id),
             requirement=requirements_by_relation.get(relation_id),
         )
@@ -753,15 +758,18 @@ def _relation_values_with_registry_grounding(
 def _relation_value_with_registry_grounding(
     *,
     relation_id: str,
-    relation: RelationDefinition,
+    provider: RelationPrefillProvider,
+    binding: BindingDefinition,
     supplied: RelationValue | None,
     requirement: RegistryFoldRequirement | None,
 ) -> RelationValue:
-    source_modelo = requirement.source_modelo if requirement is not None else relation.source_modelo
-    source_periods = requirement.periods if requirement is not None else relation.source_periods
-    source_casilla_ids = requirement.source_casilla_ids if requirement is not None else (relation.source_casilla_id,)
-    legal_refs = requirement.legal_refs if requirement is not None else relation.legal_refs
-    source_refs = requirement.source_refs if requirement is not None else relation.source_refs
+    source_modelo = requirement.source_modelo if requirement is not None else provider.source_modelo
+    source_periods = requirement.periods if requirement is not None else provider.required_source_periods
+    source_casilla_ids = (
+        requirement.source_casilla_ids if requirement is not None else provider.declared_source_casilla_ids
+    )
+    legal_refs = requirement.legal_refs if requirement is not None else tuple(binding.legal_refs)
+    source_refs = requirement.source_refs if requirement is not None else tuple(binding.source_refs)
     return RelationValue(
         relation=relation_id,
         value=supplied.value if supplied is not None else None,

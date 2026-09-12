@@ -38,7 +38,7 @@ class BindingAggregationOp(StrEnum):
     source values into the bound casilla value. The members below are the
     complete set declared on a ``BindingDefinition.aggregation`` across the
     registry authoring tree; relation aggregation (``copy``/``sum`` on a
-    ``RelationDefinition``) and formula-expression operators are a separate,
+    ``relation_prefill`` provider) and formula-expression operators are a separate,
     unrelated axis and are not modelled here.
 
     Members:
@@ -99,7 +99,7 @@ class BindingAggregation(BaseModel):
 
 
 class RelationAggregationOp(StrEnum):
-    """Closed set of aggregation operators a registry ``RelationDefinition`` may declare.
+    """Closed set of aggregation operators a cross-filing fold may declare.
 
     A relation's ``aggregation.op`` selects how a cross-modelo fold-in folds its
     matched source filings: :attr:`COPY` carries a single source value through
@@ -117,7 +117,7 @@ class RelationAggregationOp(StrEnum):
 
 
 class RelationAggregation(BaseModel):
-    """Typed aggregation rule carried by a registry ``RelationDefinition``.
+    """Typed aggregation rule carried by a registry cross-filing fold.
 
     Placed in :mod:`core` (cross-layer home) because the domain registry
     schema declares the field and the application/adapter layers read it. The

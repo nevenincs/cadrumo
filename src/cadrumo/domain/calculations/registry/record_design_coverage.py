@@ -171,10 +171,10 @@ def calculation_closure_casilla_ids(revision: ModeloRevision, modelo_id: str) ->
       (``computed_casilla_ids`` and the ``reconciliation_total_casilla_ids`` targets);
     - every *within-modelo* binding ``source_casilla_ids`` / ``source_casilla_id``
       selector casilla, and every *within-modelo*
-      ``RelationDefinition.source_casilla_id``.
+      the relation-prefill provider's ``source_casilla_id``.
 
     A binding ``source_casilla_ids`` / ``source_casilla_id`` selector � and a
-    ``RelationDefinition.source_casilla_id`` � is excluded from this closure
+    the relation-prefill provider's ``source_casilla_id`` � is excluded from this closure
     **only when it is genuinely cross-modelo**: when the selector
     explicitly names a ``source_modelo`` that differs from ``modelo_id``.
     A cross-modelo selector's ``source_casilla_ids`` / ``source_casilla_id``

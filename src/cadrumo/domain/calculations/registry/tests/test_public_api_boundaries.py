@@ -45,7 +45,6 @@ from ..runtime_graph import (
     expression_casilla_refs,
     expression_date_binding_refs,
     expression_parameter_refs,
-    expression_relation_refs,
 )
 from ..schema_surfaces import CasillaContinuidadEvolutionDefinition
 
@@ -123,7 +122,6 @@ def test_registry_formula_reference_walkers_live_in_their_defining_module() -> N
         expression_casilla_refs,
         expression_date_binding_refs,
         expression_parameter_refs,
-        expression_relation_refs,
     )
 
     assert tuple(walker.__name__ for walker in walkers) == (
@@ -131,7 +129,6 @@ def test_registry_formula_reference_walkers_live_in_their_defining_module() -> N
         "expression_casilla_refs",
         "expression_date_binding_refs",
         "expression_parameter_refs",
-        "expression_relation_refs",
     )
     assert {walker.__module__ for walker in walkers} == {"cadrumo.domain.calculations.registry.runtime_graph"}
 

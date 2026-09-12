@@ -32,7 +32,7 @@ def apply_period_offset(offset: int, *, target_period: str) -> tuple[int, str]:
     number of calendar years by which the derived period precedes or follows
     the target year (negative = prior year, positive = following year). The
     tuple is consumed by previous-filing and
-    :class:`~cadrumo.domain.calculations.registry.RelationDefinition`
+    :class:`~cadrumo.domain.calculations.registry.RelationPrefillProvider`
     ``source_period_offset_from_target`` resolution.
 
     Raises:

@@ -8,7 +8,7 @@ elements) but catch:
 
   - top-level chain casillas (cuota chain, base imponible/liquidable,
     income aggregators) missing from any year
-  - external references (binding, parameter, relation) declared but
+  - external references (binding, parameter) declared but
     unreferenced
   - external references referenced but undeclared
   - revisions with formulas but no calculation application_link
@@ -26,7 +26,6 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.calculations.registry.runtime_graph import (
     expression_binding_refs,
     expression_parameter_refs,
-    expression_relation_refs,
 )
 from cadrumo.tests.inventory import REPO_ROOT
 
@@ -121,7 +120,7 @@ def test_no_orphan_formula_feeding_bindings_in_any_revision() -> None:
     (declaration filling, observation capture) and are not expected to be
     consumed by formulas; they are excluded from the orphan check.
     Manual_input and previous_filing bindings are formula-feeding and must
-    be referenced by at least one formula, relation, or casilla binding.
+    be referenced by at least one formula or casilla binding.
     """
     modelo, _ = _modelo_100()
     offences: list[str] = []
@@ -130,10 +129,6 @@ def test_no_orphan_formula_feeding_bindings_in_any_revision() -> None:
         referenced: set[str] = set()
         for formula in revision.formulas:
             referenced.update(expression_binding_refs(formula.expression))
-        for relation in revision.relations:
-            target_binding = getattr(relation, "target_binding", None)
-            if target_binding:
-                referenced.add(target_binding)
         for casilla in revision.casillas:
             if casilla.binding:
                 referenced.add(casilla.binding)
@@ -400,45 +395,22 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
 )
 
 
-def test_every_relation_references_an_existing_target_binding() -> None:
-    """Each relation's target_binding must be a binding declared in the same revision."""
+def test_every_relation_prefill_binding_has_a_typed_source_coordinate() -> None:
+    """Every cross-model fold slot carries its source coordinate on its provider."""
     modelo, _ = _modelo_100()
     offences: list[str] = []
     for revision_id, revision in modelo.revisions.items():
-        declared_bindings = {b.id for b in revision.bindings}
-        for relation in revision.relations:
-            target_binding = getattr(relation, "target_binding", None)
-            if target_binding and target_binding not in declared_bindings:
-                offences.append(
-                    f"{revision_id}: relation {relation.id!r} target_binding {target_binding!r} not declared",
-                )
-    assert not offences, "relations with undeclared target_bindings:\n  " + "\n  ".join(offences)
-
-
-def test_relation_target_bindings_are_consumed_or_relation_is_formula_operand() -> None:
-    """Relation targets must either feed a casilla binding or be used directly by a formula."""
-    modelo, _ = _modelo_100()
-    offences: list[str] = []
-    for revision_id, revision in modelo.revisions.items():
-        formula_relation_refs: set[str] = set()
-        for formula in revision.formulas:
-            formula_relation_refs.update(expression_relation_refs(formula.expression))
-
-        consumed_bindings: set[str] = set()
-        for casilla in revision.casillas:
-            if casilla.binding:
-                consumed_bindings.add(casilla.binding)
-            consumed_bindings.update(casilla.alternate_bindings)
-
-        for relation in revision.relations:
-            target_binding = getattr(relation, "target_binding", None)
-            if not target_binding:
+        for binding in revision.bindings:
+            if binding.source != "relation_prefill":
                 continue
-            if target_binding not in consumed_bindings and relation.id not in formula_relation_refs:
+            provider = binding.provider
+            source_modelo = getattr(provider, "source_modelo", None)
+            source_casillas = getattr(provider, "declared_source_casilla_ids", ())
+            if not source_modelo or len(source_casillas) != 1:
                 offences.append(
-                    f"{revision_id}: relation {relation.id!r} targets unused binding {target_binding!r}",
+                    f"{revision_id}: relation-prefill binding {binding.id!r} has no singular typed source",
                 )
-    assert not offences, "relations with unused target_bindings:\n  " + "\n  ".join(offences)
+    assert not offences, "relation-prefill bindings with incomplete source coordinates:\n  " + "\n  ".join(offences)
 
 
 def test_every_formula_binding_reference_resolves_to_a_declared_binding() -> None:

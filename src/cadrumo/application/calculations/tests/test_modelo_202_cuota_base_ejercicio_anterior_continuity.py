@@ -52,7 +52,7 @@ from ....domain.calculations.registry.bindings import (
 )
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....domain.calculations.registry.ids import RelationId
-from ....domain.calculations.registry.relations import materialize_relation_binding_values
+from ....domain.calculations.registry.relations import relation_prefill_values_as_binding_values
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     registry_grounded_observations,
@@ -215,7 +215,7 @@ def _calculate_202_2p(
     snapshot = bundled_authority().snapshot(
         _MODELO_202, filing_year=filing_year, period="2P", grade=RegistryAuthorityGrade.CALCULATION
     )
-    relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="2P")
+    relation_binding_values = relation_prefill_values_as_binding_values(snapshot.revision, relation_values, period="2P")
     binding_values = {**relation_binding_values}
     inputs = {
         **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),

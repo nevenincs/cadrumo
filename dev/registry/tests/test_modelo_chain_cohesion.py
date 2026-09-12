@@ -25,10 +25,10 @@ from collections.abc import Mapping
 import pytest
 
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
+from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
 
-from ..compiler.validate_relation_periods import select_relation_source_revisions
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -58,17 +58,12 @@ def _registry() -> dict[str, ModeloDefinition]:
 
 
 def _summary_relation_source_modelos(modelo: ModeloDefinition) -> set[str]:
-    """Return the set of source-modelo ids declared by the modelo's relations.
-
-    Aggregates across every revision; returns only the source modelo ids
-    of relations of kind ``cross_model_output`` or ``annual_summary``.
-    """
-
+    """Return source-modelo ids declared by relation-prefill providers."""
     seen: set[str] = set()
     for revision in modelo.revisions.values():
-        for relation in revision.relations:
-            if relation.kind in {"cross_model_output", "annual_summary"}:
-                seen.add(relation.source_modelo)
+        for binding, provider in relation_prefill_bindings_for_period(revision):
+            if provider.relation_kind in {"cross_model_output", "annual_summary"}:
+                seen.add(str(provider.source_modelo))
     return seen
 
 
@@ -177,85 +172,46 @@ def _chain_role_offences(
     """
     offences: list[str] = []
     for revision in summary.revisions.values():
-        chain_relations = [
-            relation
-            for relation in revision.relations
-            if relation.source_modelo == feeder_id and relation.kind in _CROSS_MODEL_RELATION_KINDS
+        chain_bindings = [
+            (binding, provider)
+            for binding, provider in relation_prefill_bindings_for_period(revision)
+            if str(provider.source_modelo) == feeder_id and provider.relation_kind in _CROSS_MODEL_RELATION_KINDS
         ]
-        if not chain_relations:
+        if not chain_bindings:
             continue
-        if not any(relation.dependency_role in _ACCEPTED_CHAIN_DEPENDENCY_ROLES for relation in chain_relations):
-            roles_present = sorted({relation.dependency_role for relation in chain_relations})
+        if not any(provider.dependency_role in _ACCEPTED_CHAIN_DEPENDENCY_ROLES for _, provider in chain_bindings):
+            roles_present = sorted({provider.dependency_role for _, provider in chain_bindings})
             offences.append(
                 f"summary modelo {summary_id!r} revision {revision.id!r} declares "
-                f"relations from feeder {feeder_id!r} but none carry a contract-shaped "
+                f"relation-prefill bindings from feeder {feeder_id!r} but none carry a contract-shaped "
                 f"dependency_role; roles present: {roles_present!r}; expected at least one of "
                 f"{sorted(_ACCEPTED_CHAIN_DEPENDENCY_ROLES)!r}",
             )
     return tuple(offences)
 
 
-def test_every_declared_relation_resolves_to_a_real_source_casilla() -> None:
-    """For every cross_model_output / annual_summary relation, the source modelo's
-    revision must declare the named ``source_casilla_id`` as a casilla. The registry
-    validator already asserts this; this test makes the cohesion contract visible
-    at the chain level so a regression is named in chain-cohesion terms.
-    """
-
+def test_every_declared_relation_prefill_resolves_to_a_real_source_casilla() -> None:
+    """Every relation-prefill provider names a casilla on its source modelo."""
     registry = _registry()
     failures: list[str] = []
     for modelo in registry.values():
         for revision in modelo.revisions.values():
-            for relation in revision.relations:
-                offence = _relation_source_offence(relation, modelo_id=modelo.id, registry=registry)
-                if offence is not None:
-                    failures.append(offence)
+            for binding, provider in relation_prefill_bindings_for_period(revision):
+                source_modelo = registry.get(str(provider.source_modelo))
+                if source_modelo is None:
+                    failures.append(
+                        f"modelo {modelo.id} binding {binding.id!r} cites unknown source modelo {provider.source_modelo!r}"
+                    )
+                    continue
+                source_casillas = set(provider.declared_source_casilla_ids)
+                declared = {casilla.id for source_revision in source_modelo.revisions.values() for casilla in source_revision.casillas}
+                missing = sorted(source_casillas.difference(declared))
+                if missing:
+                    failures.append(
+                        f"modelo {modelo.id} binding {binding.id!r} expects source casillas {missing!r} "
+                        f"on modelo {provider.source_modelo!r}"
+                    )
     assert not failures, "\n".join(failures)
 
 
 _CROSS_MODEL_RELATION_KINDS = frozenset({"cross_model_output", "annual_summary"})
-
-
-def _relation_source_offence(
-    relation: RelationDefinition,
-    *,
-    modelo_id: str,
-    registry: Mapping[str, ModeloDefinition],
-) -> str | None:
-    """Return a chain-cohesion offence message for one relation, or ``None`` when it resolves.
-
-    Only ``cross_model_output`` and ``annual_summary`` relations
-    participate in this gate; other relation kinds are noise here
-    and short-circuit to ``None``. Two failure modes are reported:
-    a relation citing a non-existent source modelo, a selector that matches no
-    source revision, and a relation whose declared ``source_casilla_id`` is not
-    declared as a casilla on every selected source revision.
-    """
-    if relation.kind not in _CROSS_MODEL_RELATION_KINDS:
-        return None
-    source_modelo = registry.get(relation.source_modelo)
-    if source_modelo is None:
-        return f"modelo {modelo_id} relation {relation.id!r} cites unknown source modelo {relation.source_modelo!r}"
-    source_revisions, selector_failures = select_relation_source_revisions(
-        source_modelo,
-        relation.source_revision_selector,
-    )
-    if selector_failures:
-        return f"modelo {modelo_id} relation {relation.id!r} source selector errors: {selector_failures!r}"
-    if not source_revisions:
-        selector = relation.source_revision_selector.model_dump(exclude_none=True)
-        return (
-            f"modelo {modelo_id} relation {relation.id!r} selector "
-            f"{selector!r} matches no source revisions on modelo {relation.source_modelo!r}"
-        )
-    for source_revision in source_revisions:
-        source_casilla_ids = {casilla.id for casilla in source_revision.casillas}
-        if relation.source_casilla_id in source_casilla_ids:
-            continue
-        return (
-            f"modelo {modelo_id} relation {relation.id!r} expects "
-            f"source casilla {relation.source_casilla_id!r} on modelo "
-            f"{relation.source_modelo!r} revision {source_revision.id!r}, but that revision "
-            f"does not declare it"
-        )
-    return None

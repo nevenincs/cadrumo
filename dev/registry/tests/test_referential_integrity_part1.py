@@ -28,7 +28,7 @@ from cadrumo.domain.calculations.registry.schema_extraction import (
 )
 from cadrumo.domain.calculations.registry.schema_formula import DatedValue, FormulaExpression, ParameterDefinition
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaAlias, CasillaConstraints, RelationDefinition
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaAlias, CasillaConstraints
 from cadrumo.domain.calculations.registry.schema_verification import (
     LiveCrossReferenceDecision,
     ProfilePredicateDefinition,
@@ -404,29 +404,6 @@ def test_dangling_binding_source_refs() -> None:
     snapshot = build_snapshot_with_missing_source(revision, _extra)
     with pytest.raises(RegistryValidationError, match=r"binding test.binding.source_refs"):
         check_all_id_references(snapshot)
-
-
-def test_dangling_relation_target_binding() -> None:
-    """relation.target_binding pointing at nonexistent BindingId raises."""
-    relation = RelationDefinition.model_validate(
-        {
-            "id": "test.relation",
-            "kind": "cross_model_output",
-            "dependency_role": "factual_evidence",
-            "source_modelo": "100",
-            "source_revision_selector": {"year_from": 2024},
-            "source_casilla_id": _NUMERIC_CASILLA_01,
-            "target_binding": "nonexistent.binding",
-            "period_alignment": {"source_period": "0A", "target_period": "0A", "filing_year_delta": 0},
-            "source_periods": ("0A",),
-            "target_periods": ("0A",),
-            "legal_refs": (REFERENCE_LEGAL_ID,),
-            "source_refs": (REFERENCE_SOURCE_ID,),
-        },
-    )
-    revision = minimal_revision(relations=(relation,))
-    with pytest.raises(RegistryValidationError, match=r"relation test.relation.target_binding"):
-        build_minimal_snapshot(revision)
 
 
 def test_dangling_extraction_profile_target_casilla() -> None:

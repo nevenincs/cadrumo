@@ -59,7 +59,7 @@ from cadrumo.domain.calculations.registry.bindings_previous_filing import resolv
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.relations import (
     RegistryFoldRequirement,
-    materialize_relation_binding_values,
+    relation_prefill_values_as_binding_values,
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
@@ -774,7 +774,7 @@ def test_modelo_184_attribution_income_folds_into_modelo_100_casilla_1577(
     # ``relation_prefill`` target binding. The retencion relations (111/123/...)
     # feed other casillas and are out of scope for this fold-in; restricting the
     # materialisation isolates the M184 -> 1577 path under test.
-    materialized = materialize_relation_binding_values(
+    materialized = relation_prefill_values_as_binding_values(
         snapshot.revision,
         {m184_relation: relation_values[m184_relation]},
         period="0A",

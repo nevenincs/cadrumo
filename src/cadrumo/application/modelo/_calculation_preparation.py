@@ -33,6 +33,7 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
+from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
@@ -239,9 +240,9 @@ def _resolved_binding_ids_for_required_binding_gate(
     resolved = set(channels.bindings) | set(channels.enum_bindings) | set(channels.date_bindings)
     caller_ids = set(caller_binding_ids)
     unresolved_relation_targets = {
-        relation.target_binding
-        for relation in revision.relations
-        if relation.id in unresolved_relation_ids and relation.target_binding not in caller_ids
+        binding.id
+        for binding, _ in relation_prefill_bindings_for_period(revision)
+        if binding.id in unresolved_relation_ids and binding.id not in caller_ids
     }
     unresolved_bindings = set(unresolved_binding_ids).difference(caller_ids)
     return tuple(sorted(resolved.difference(unresolved_relation_targets).difference(unresolved_bindings)))

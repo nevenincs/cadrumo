@@ -57,7 +57,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.ids import RelationId
-from ....domain.calculations.registry.relations import materialize_relation_binding_values
+from ....domain.calculations.registry.relations import relation_prefill_values_as_binding_values
 from ....domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
 from ....tests.secure_sql import isolated_runtime_profile
 from ..retenciones import (
@@ -124,7 +124,7 @@ def _calculate_193(
 ):
     """Run the REAL 193 annual calculation from relations + the per-perceptor retención store."""
     snapshot = bundled_authority().snapshot(_MODELO_193, filing_year=_FILING_YEAR, period="0A")
-    relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
+    relation_binding_values = relation_prefill_values_as_binding_values(snapshot.revision, relation_values, period="0A")
     aggregation = aggregate_retenciones_193(
         retencion_observations,
         period=Period.from_year_and_code(_FILING_YEAR, "0A"),
