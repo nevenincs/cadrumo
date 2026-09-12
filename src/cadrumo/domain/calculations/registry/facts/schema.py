@@ -13,9 +13,14 @@ from pydantic import BeforeValidator, Field, ValidationInfo, field_validator, mo
 
 from .....core.frozen_mapping import FROZEN_MAPPING
 from ..errors import RegistryValidationError
-from ..ids import LegalRefId, SourceRefId
-from ..revision_contracts import DeclaredPredecessor, DeclaredPredecessorField, NoPredecessor, validate_predecessor_forest
+from ..ids import LegalRefId, RevisionId, SourceRefId
+from ..revision_contracts import (
+    RegistryTemporalDeltaDeclaration,
+    RevisionWindow,
+    validate_revision_predecessors,
+)
 from ..schema_base import (
+    DateAxis,
     DateAxisField,
     RegistryModel,
     RevisionReviewStatusField,
@@ -25,11 +30,9 @@ from ..schema_base import (
 from ..schema_scalars import DecimalValue
 from ..schema_references import (
     DateSupportEnvelope,
-    PeriodSelector,
-    RegistryTemporalBounds,
     RegistryValidityWindow,
+    TemporalProjectionDirection,
     materialize_date_window_series,
-    resolve_supported_validity_window,
 )
 
 __all__ = [
@@ -164,12 +167,8 @@ class FactOwnership(StrEnum):
 FactOwnershipField = Annotated[FactOwnership, BeforeValidator(coerce_enum_member(FactOwnership))]
 
 
-class FactProjectionDirection(StrEnum):
-    """How a fact result relates to the declaration that supplied its value."""
-
-    AUTHORED = "authored"
-    BACKWARD = "backward"
-    FORWARD = "forward"
+FactProjectionDirection = TemporalProjectionDirection
+"""Public FACTS name for the registry-wide temporal projection direction."""
 
 
 class FactSelector(RegistryModel):
@@ -403,7 +402,7 @@ FactPayload = Annotated[
 ]
 
 
-class GovernedFactVariant(RegistryTemporalBounds):
+class GovernedFactVariant(RegistryTemporalDeltaDeclaration):
     """One evidence-bearing fact revision on an exact semantic track.
 
     ``variant_id`` is the stable revision identity. Bounds are delta-authored:
@@ -414,14 +413,13 @@ class GovernedFactVariant(RegistryTemporalBounds):
     variant_id: FactVariantId
     selectors: tuple[FactSelector, ...] = ()
     date_axis: DateAxisField
-    period_selector: PeriodSelector | None = None
-    predecessor: DeclaredPredecessorField | None = None
     payload: FactPayload
     legal_refs: tuple[LegalRefId, ...] = ()
     source_refs: tuple[SourceRefId, ...] = ()
     source_citations: tuple[SourceCitation, ...] = ()
     review_status: RevisionReviewStatusField
     ownership: FactOwnershipField
+    source_revision_id: RevisionId | None = Field(default=None, exclude_if=lambda value: value is None)
     precedence_over: tuple[FactVariantId, ...] = ()
 
     @model_validator(mode="after")
@@ -433,14 +431,22 @@ class GovernedFactVariant(RegistryTemporalBounds):
             raise RegistryValidationError("governed fact variant cannot take precedence over itself")
         if len(set(self.precedence_over)) != len(self.precedence_over):
             raise RegistryValidationError("governed fact precedence targets must be unique")
-        if isinstance(self.predecessor, DeclaredPredecessor) and self.predecessor.revision_id == self.variant_id:
-            raise RegistryValidationError("governed fact variant cannot declare itself as predecessor")
+        if self.period_selector is not None and self.date_axis is not DateAxis.FILING_PERIOD:
+            raise RegistryValidationError("governed fact period_selector requires the filing_period date axis")
         cited = {citation.source_ref for citation in self.source_citations}
         if not cited.issubset(set(self.source_refs)):
             raise RegistryValidationError("governed fact citations must name a declared source_ref")
         if not self.legal_refs and not self.source_refs:
             raise RegistryValidationError("governed fact variant must declare legal or source evidence")
+        if self.ownership is FactOwnership.GENERATED and self.source_revision_id is None:
+            raise RegistryValidationError("generated governed fact variant must retain its source revision id")
+        if self.ownership is FactOwnership.AUTHORED and self.source_revision_id is not None:
+            raise RegistryValidationError("authored governed fact variant cannot claim a generated source revision id")
         return self
+
+    def revision_identity(self) -> str:
+        """Return the stable fact revision identity used by shared predecessor mechanics."""
+        return self.variant_id
 
 
 class GovernedFact(RegistryModel):
@@ -448,7 +454,12 @@ class GovernedFact(RegistryModel):
 
     fact_id: FactId
     family: GovernedFactFamilyField
-    support: DateSupportEnvelope | None = None
+    provider_id: str | None = Field(
+        default=None,
+        pattern=r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$",
+        exclude_if=lambda value: value is None,
+    )
+    support: DateSupportEnvelope | None = Field(default=None, exclude_if=lambda value: value is None)
     variants: tuple[GovernedFactVariant, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
@@ -467,6 +478,12 @@ class GovernedFact(RegistryModel):
                 raise RegistryValidationError(
                     f"governed fact {self.fact_id!r} precedence names unknown variants {sorted(unknown)!r}"
                 )
+            for target_id in variant.precedence_over:
+                target = next(item for item in self.variants if item.variant_id == target_id)
+                if self.track_key(variant) != self.track_key(target):
+                    raise RegistryValidationError(
+                        f"governed fact {self.fact_id!r} precedence cannot cross temporal tracks"
+                    )
             if variant.valid_from is None and self.support is None:
                 raise RegistryValidationError(
                     f"governed fact {self.fact_id!r} variant {variant.variant_id!r} omits valid_from "
@@ -479,23 +496,114 @@ class GovernedFact(RegistryModel):
                             f"governed fact {self.fact_id!r} variant {variant.variant_id!r} {bound_name} "
                             "falls outside the fact support envelope"
                         )
+                    if bound is not None and bound > self.support.horizon:
+                        raise RegistryValidationError(
+                            f"governed fact {self.fact_id!r} variant {variant.variant_id!r} {bound_name} "
+                            "extends beyond the explicitly authored support horizon"
+                        )
+        precedence = {variant.variant_id: variant.precedence_over for variant in self.variants}
+        for variant_id in variant_ids:
+            if _graph_reaches(variant_id, variant_id, precedence):
+                raise RegistryValidationError(
+                    f"governed fact {self.fact_id!r} precedence graph contains a cycle at {variant_id!r}"
+                )
+        materialized = self.materialized_windows()
+        for index, left in enumerate(self.variants):
+            for right in self.variants[index + 1 :]:
+                if self.track_key(left) != self.track_key(right):
+                    continue
+                left_window = materialized[left.variant_id]
+                right_window = materialized[right.variant_id]
+                overlaps = left_window.valid_from <= (right_window.valid_to or date.max) and right_window.valid_from <= (
+                    left_window.valid_to or date.max
+                )
+                ordered = _graph_reaches(left.variant_id, right.variant_id, precedence) or _graph_reaches(
+                    right.variant_id,
+                    left.variant_id,
+                    precedence,
+                )
+                directly_ordered = (
+                    right.variant_id in left.precedence_over or left.variant_id in right.precedence_over
+                )
+                if overlaps and not ordered:
+                    raise RegistryValidationError(
+                        f"governed fact {self.fact_id!r} variants {left.variant_id!r} and "
+                        f"{right.variant_id!r} overlap without explicit precedence"
+                    )
+                if directly_ordered and not overlaps:
+                    raise RegistryValidationError(
+                        f"governed fact {self.fact_id!r} variants {left.variant_id!r} and "
+                        f"{right.variant_id!r} declare precedence across non-overlapping coordinates"
+                    )
+        tracks: dict[tuple[object, ...], list[GovernedFactVariant]] = {}
+        for variant in self.variants:
+            tracks.setdefault(self.track_key(variant), []).append(variant)
+        for track, variants in tracks.items():
+            validate_revision_predecessors(
+                f"{self.fact_id}:{track!r}",
+                {variant.variant_id: variant for variant in variants},
+                windows={
+                    variant.variant_id: RevisionWindow(
+                        valid_from=materialized[variant.variant_id].valid_from,
+                        valid_to=materialized[variant.variant_id].valid_to,
+                        period_selector=variant.period_selector,
+                    )
+                    for variant in variants
+                },
+                subject_kind="governed fact track",
+                overlap_allows_parallel=False,
+            )
+            if self.support is not None:
+                ordered = sorted(variants, key=lambda item: materialized[item.variant_id].valid_from)
+                for current, successor in pairwise(ordered):
+                    current_window = materialized[current.variant_id]
+                    successor_window = materialized[successor.variant_id]
+                    if current.valid_to is not None and current_window.valid_to != successor_window.valid_from - date.resolution:
+                        raise RegistryValidationError(
+                            f"governed fact {self.fact_id!r} track {track!r} has an explicit internal gap"
+                        )
+                if not materialized[ordered[-1].variant_id].contains_date(self.support.horizon):
+                    raise RegistryValidationError(
+                        f"governed fact {self.fact_id!r} track {track!r} does not reach its authored horizon"
+                    )
         return self
 
     def validity_window(self, variant: GovernedFactVariant) -> RegistryValidityWindow:
         """Materialise one variant's authored or support-propagated endpoints."""
-        if variant.valid_from is not None and (variant.valid_to is not None or self.support is None):
-            return RegistryValidityWindow(valid_from=variant.valid_from, valid_to=variant.valid_to)
+        return self.materialized_windows()[variant.variant_id]
+
+    @staticmethod
+    def track_key(variant: GovernedFactVariant) -> tuple[object, ...]:
+        """Return the exact axis, selector, and typed-period identity of a revision track."""
+        selectors = tuple(sorted((item.name, type(item.value).__name__, repr(item.value)) for item in variant.selectors))
+        period = variant.period_selector
+        period_key = None if period is None else (period.years, period.year_from, period.year_to, period.periods)
+        return variant.date_axis, selectors, period_key
+
+    def materialized_windows(self) -> Mapping[FactVariantId, RegistryValidityWindow]:
+        """Resolve delta-authored bounds independently per exact temporal track."""
         if self.support is None:
-            # The model validator guarantees the lower endpoint in this lane.
-            return RegistryValidityWindow(valid_from=variant.valid_from, valid_to=None)  # type: ignore[arg-type]
-        fallback = RegistryValidityWindow(valid_from=self.support.floor, valid_to=self.support.hard_ceiling)
-        return resolve_supported_validity_window(
-            variant,
-            fallback=fallback,
-            support=self.support,
-            propagate_backward=variant.valid_from is None,
-            propagate_forward=variant.valid_to is None,
-        )
+            return {
+                variant.variant_id: RegistryValidityWindow(valid_from=variant.valid_from, valid_to=variant.valid_to)
+                for variant in self.variants
+                if variant.valid_from is not None
+            }
+        materialized: dict[FactVariantId, RegistryValidityWindow] = {}
+        tracks: dict[tuple[object, ...], list[GovernedFactVariant]] = {}
+        for variant in self.variants:
+            tracks.setdefault(self.track_key(variant), []).append(variant)
+        for variants in tracks.values():
+            ordered = sorted(
+                variants,
+                key=lambda item: (item.valid_from is not None, item.valid_from or self.support.floor, item.variant_id),
+            )
+            materialized.update(
+                materialize_date_window_series(
+                    tuple((variant.variant_id, variant) for variant in ordered),
+                    support=self.support,
+                )
+            )
+        return materialized
 
 
 class GovernedFactCatalogue(RegistryModel):
@@ -511,3 +619,16 @@ class GovernedFactCatalogue(RegistryModel):
                     f"governed fact catalogue key {fact_id!r} does not match fact_id {fact.fact_id!r}",
                 )
         return self
+
+
+def _graph_reaches(start: str, target: str, edges: Mapping[str, tuple[str, ...]]) -> bool:
+    pending = list(edges.get(start, ()))
+    seen: set[str] = set()
+    while pending:
+        current = pending.pop()
+        if current == target:
+            return True
+        if current not in seen:
+            seen.add(current)
+            pending.extend(edges.get(current, ()))
+    return False

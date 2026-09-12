@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from ...core.descendant_relacion import DescendantRelacion
+from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.schema_base import DateAxis
 from .descendant_record import DescendantRecordBase
 from .family_fact_context import FamilyFactResolutionContext
 from .family_types import (
@@ -11,33 +14,43 @@ from .family_types import (
 )
 
 
-ART_81_1_MATERNIDAD_RELACIONES: frozenset[DescendantRelacion] = frozenset(
-    {
-        DescendantRelacion.DESCENDIENTE,
-        DescendantRelacion.ADOPTADO,
-        DescendantRelacion.ACOGIMIENTO_PREADOPTIVO_O_PERMANENTE,
-        DescendantRelacion.TUTELA,
-    },
-)
-"""The relaciones the Art. 81.1 deducción por maternidad reaches.
-
-Art. 58.1 assimilates the widest group, Art. 58.2 narrows to the entry-event
-limb, and Art. 81.1 draws its own population again. This set belongs to the
-maternity domain because it is the Art. 81.1 rule consumed by the maternity and
-guardería behaviours; it is not a property of the generic relación axis.
-
-The authority excludes simple, emergency, and temporal acogimientos and
-judicial guarda y custodia, while positively including tutela and permanent or
-preadoptive acogimiento. ``DESCENDIENTE`` remains the default for an ordinary
-hijo. The set is deliberately separate from
-:data:`~cadrumo.core.descendant_relacion.ART_58_2_ENTITLING_RELACIONES` so a
-relationship assimilated for Art. 58.1 or eligible under Art. 58.2 cannot be
-silently granted the Art. 81.1 deduction.
-"""
-
-
 class DescendantMaternityMixin(DescendantRecordBase):
     """The maternity deduction facts a descendant carries."""
+
+    @staticmethod
+    def _art_81_1_maternity_relations(
+        *,
+        context: FamilyFactResolutionContext,
+    ) -> frozenset[DescendantRelacion]:
+        """Resolve the dated Art. 81.1 relationship catalogue.
+
+        The relationship population is registry-owned. An absent, malformed,
+        or wrong-family fact is a refusal rather than permission to fall back to
+        a local set, because a local set would become a second legal authority.
+        """
+        resolved = context.authority.resolve_governed_fact(
+            MappingFactQuery(
+                fact_id="lirpf-art-81-maternity-descendant-relations",
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=context.filing_period,
+            ),
+        )
+        if not isinstance(resolved, ResolvedMappingFact):
+            raise RegistryValidationError("Art. 81.1 maternity relations must resolve as a mapping fact")
+        declarations = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
+        raw_relations = declarations.get("catalogue.ids", "")
+        relation_tokens = tuple(token.strip() for token in raw_relations.split(",") if token.strip())
+        if not relation_tokens:
+            raise RegistryValidationError("Art. 81.1 maternity relations catalogue is empty")
+        try:
+            relations = tuple(DescendantRelacion(token) for token in relation_tokens)
+        except ValueError as exc:
+            raise RegistryValidationError(
+                "Art. 81.1 maternity relations catalogue contains an unknown relation",
+            ) from exc
+        if len(set(relations)) != len(relations):
+            raise RegistryValidationError("Art. 81.1 maternity relations catalogue contains duplicates")
+        return frozenset(relations)
 
     def maternidad_eligible_meses(self, filing_year: int, *, context: FamilyFactResolutionContext) -> int:
         """Months of *filing_year* the Art. 81.1 deducción may reach for this descendant.
@@ -211,12 +224,12 @@ class DescendantMaternityMixin(DescendantRecordBase):
         are necessary and neither implies the other: Art. 58.1 assimilates
         temporal acogimiento while Art. 81.1 excludes it outright, so gating only
         on entitlement to the mínimo granted a temporal carer a full twelve
-        months the authority refuses. Reading
-        :data:`ART_81_1_MATERNIDAD_RELACIONES` rather than
-        restating the membership keeps the three populations on this axis
-        distinct, which is the property whose loss produced that defect.
+        months the authority refuses. Reading the dated registry relationship
+        catalogue rather than restating membership keeps the three populations
+        on this axis distinct, which is the property whose loss produced that
+        defect.
         """
-        if self.relacion not in ART_81_1_MATERNIDAD_RELACIONES:
+        if self.relacion not in self._art_81_1_maternity_relations(context=context):
             return 0
         if not self.is_eligible_ordinary(
             filing_year,
@@ -244,12 +257,11 @@ def relacion_is_ambiguous_for_maternidad(relacion: DescendantRelacion) -> bool:
     Both sites used to name a SECOND population here -- a minor held under
     guarda y custodia by judicial resolución -- and both were out of date.
     :attr:`~core.DescendantRelacion.GUARDA_Y_CUSTODIA_JUDICIAL` was added for
-    exactly that carer and is excluded from
-    :data:`ART_81_1_MATERNIDAD_RELACIONES`, so they can state their
-    relationship truthfully and the deducción already does not reach them. The
-    behaviour was right; the reasoning beside it was written twice and neither
-    copy followed the axis when it gained the member. Stating it once is what
-    surfaced that.
+    exactly that carer and is excluded by the dated Art. 81.1 registry
+    catalogue, so they can state their relationship truthfully and the
+    deducción already does not reach them. The behaviour was right; the
+    reasoning beside it was written twice and neither copy followed the axis
+    when it gained the member. Stating it once is what surfaced that.
 
     Asked in two places, at two different moments: the declaration surface warns
     the operator as they type, and the calculate path catches an already-stored

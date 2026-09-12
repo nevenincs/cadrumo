@@ -618,7 +618,12 @@ class RegistryQueryService:
         as_of: date | None,
     ) -> ResolvedRegistryQueryContext:
         definition = self._authority.validate_modelo(modelo.strip())
-        revision = select_revision_for_year(definition, filing_year=filing_year, on=as_of)
+        revision = select_revision_for_year(
+            definition,
+            filing_year=filing_year,
+            on=as_of,
+            support=self._authority.catalogues.supported_filing_years,
+        )
         if not revision.period_selector.periods:
             raise RegistryValidationError(
                 f"modelo {definition.id} revision {revision.id!r} has no period token for filing year {filing_year}",

@@ -2,10 +2,17 @@
 
 from __future__ import annotations
 
-from typing import Literal, NamedTuple
+from datetime import date
+from typing import TYPE_CHECKING, Literal, NamedTuple, cast
 
 from ....core.i18n.translatable import Translatable as tr
 from ....core.text_fold import fold_diacritics
+from .errors import RegistryValidationError
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .schema_base import DateAxis
+
+if TYPE_CHECKING:
+    from .authority import ValidatedRegistryAuthority
 
 CitationSource = Literal[
     "ley",
@@ -49,95 +56,83 @@ class KnownBadCitation(NamedTuple):
     reason: str
 
 
-_KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
-    KnownBadCitation(
+_CITATION_FACT_ID = "registry-known-bad-citation-catalogue"
+_CITATION_SOURCE_VALUES: frozenset[str] = frozenset(
+    {
         "ley",
-        "103",
-        tr("cuota diferencial"),
-        "LIRPF art. 103 is 'Liquidaciones provisionales'; cuota diferencial lives in art. 79.",
-    ),
-    KnownBadCitation(
-        "ley",
-        "77",
-        tr("cuota íntegra autonómica"),
-        "LIRPF art. 77 is 'Cuota líquida autonómica total'; cuota íntegra autonómica is art. 73.",
-    ),
-    KnownBadCitation(
-        "ley",
-        "67",
-        tr("cuota íntegra estatal"),
-        "LIRPF art. 67 is 'Cuota líquida estatal'; cuota íntegra estatal is art. 62.",
-    ),
-    KnownBadCitation(
-        "ley",
-        "79",
-        tr("cuota líquida"),
-        "LIRPF art. 79 is 'Cuota diferencial'; cuota líquida is art. 67 plus art. 77.",
-    ),
-    KnownBadCitation(
-        "ley",
-        "125",
-        tr("cuota líquida"),
-        "LIS art. 125 is procedural; cuota líquida definition lives in LIS art. 30.",
-    ),
-    KnownBadCitation(
-        "ley",
-        "125",
-        tr("líquido a ingresar"),
-        "LIS art. 125 is procedural; Modelo 200 final amount arithmetic needs LIS arts. 30 and 39.2.",
-    ),
-    KnownBadCitation(
-        "ley",
-        "71",
-        tr("resumen anual"),
-        "LIVA art. 71 is place-of-supply; Modelo 390 annual-summary obligation is RIVA art. 71.7.",
-    ),
-    KnownBadCitation(
+        "real_decreto",
+        "real_decreto_legislativo",
+        "orden",
         "reglamento",
-        "100.3.a",
-        tr("arrendamientos"),
-        "RIRPF art. 100 has no sub-letter structure; the 19% rate is in art. 100.1.",
-    ),
-    KnownBadCitation(
-        "reglamento",
-        "100.3.c",
-        tr("ganancias"),
-        "RIRPF art. 100 has no sub-letter structure; pagos-a-cuenta obligation hook is art. 99.",
-    ),
-    KnownBadCitation(
-        "reglamento",
-        "105.1",
-        tr("premios"),
-        "RIRPF art. 105 covers IIC transfers, not cash prizes.",
-    ),
-    KnownBadCitation(
-        "reglamento",
-        "110.2",
-        tr("agrícolas"),
-        "RIRPF art. 110.2 is the reduction clause; agricultural rates live in art. 110.1.c.",
-    ),
-    KnownBadCitation(
-        "reglamento",
-        "110.4",
-        tr("módulos"),
-        "RIRPF art. 110.4 is the low-income reduction clause; module rates live in art. 110.1.b.",
-    ),
-    KnownBadCitation(
-        "reglamento",
-        "100",
-        tr("capital mobiliario"),
-        "RIRPF art. 100 covers urban rentals; capital income withholding is RIRPF art. 90.",
-    ),
-    KnownBadCitation(
-        "ley",
-        "66",
-        tr("cuota íntegra general"),
-        "LIRPF art. 66 is the savings-base tariff; general cuota íntegra starts at arts. 62 and 73.",
-    ),
+        "manual",
+        "instruction",
+    },
 )
 
 
-def find_known_bad(source: CitationSource, article: str, role_text: str) -> KnownBadCitation | None:
+def _known_bad_citations(
+    *,
+    authority: ValidatedRegistryAuthority,
+    effective_date: date,
+) -> tuple[KnownBadCitation, ...]:
+    """Resolve and type the dated known-bad citation catalogue.
+
+    The mapping payload is intentionally narrowed here, at the validation
+    boundary. Missing or malformed declarations raise instead of returning an
+    empty tuple, so a missing authority cannot silently permit a bad citation.
+    """
+    resolved = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id=_CITATION_FACT_ID,
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise RegistryValidationError("known-bad citation catalogue must resolve as a mapping fact")
+    declarations = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
+    raw_ids = declarations.get("catalogue.ids", "")
+    identifiers = tuple(identifier.strip() for identifier in raw_ids.split(",") if identifier.strip())
+    if not identifiers:
+        raise RegistryValidationError("known-bad citation catalogue is empty")
+    if len(set(identifiers)) != len(identifiers):
+        raise RegistryValidationError("known-bad citation catalogue contains duplicate identifiers")
+
+    citations: list[KnownBadCitation] = []
+    for identifier in identifiers:
+        prefix = f"citation.{identifier}"
+        try:
+            source = declarations[f"{prefix}.source"]
+            article = declarations[f"{prefix}.article"]
+            role_substring = declarations[f"{prefix}.role_substring"]
+            reason = declarations[f"{prefix}.reason"]
+        except KeyError as exc:
+            raise RegistryValidationError(
+                f"known-bad citation catalogue is missing declaration {exc.args[0]!r}",
+            ) from exc
+        if source not in _CITATION_SOURCE_VALUES:
+            raise RegistryValidationError(f"known-bad citation catalogue has unknown source {source!r}")
+        if not article or not role_substring or not reason:
+            raise RegistryValidationError(f"known-bad citation catalogue has an empty field for {identifier!r}")
+        citations.append(
+            KnownBadCitation(
+                cast(CitationSource, source),
+                article,
+                tr(role_substring),
+                reason,
+            ),
+        )
+    return tuple(citations)
+
+
+def find_known_bad(
+    source: CitationSource,
+    article: str,
+    role_text: str,
+    *,
+    effective_date: date,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> KnownBadCitation | None:
     """Return the first blocklist entry that matches the supplied citation, or ``None``.
 
     Matching is performed after diacritic folding: ``role_text`` and every
@@ -149,13 +144,21 @@ def find_known_bad(source: CitationSource, article: str, role_text: str) -> Know
         source: The ``CitationSource`` category of the citation being validated.
         article: The article number string as written in registry TOML.
         role_text: The free-text ``role`` field of the casilla being validated.
+        effective_date: The legal reference's effective date, used on the
+            catalogue's filing-period date axis.
+        authority: Optional validated authority; omitted callers use the
+            bundled published authority.
 
     Returns:
         The matching :class:`KnownBadCitation` entry, or ``None`` if the citation
         is not on the blocklist.
     """
+    if authority is None:
+        from .authority import bundled_authority
+
+        authority = bundled_authority()
     folded = _fold_diacritics(role_text)
-    for entry in _KNOWN_BAD_CITATIONS:
+    for entry in _known_bad_citations(authority=authority, effective_date=effective_date):
         if entry.source == source and entry.article == article and _fold_diacritics(entry.role_substring) in folded:
             return entry
     return None

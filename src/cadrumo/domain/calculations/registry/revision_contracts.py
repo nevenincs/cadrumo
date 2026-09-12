@@ -9,6 +9,7 @@ their payloads by subclassing :class:`RegistryRevisionDeclaration`.
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
@@ -29,13 +30,15 @@ from .errors import RegistryValidationError
 from .ids import RevisionId
 from .period_selector_overlap import period_selectors_overlap
 from .schema_base import MANIFEST_ONLY, LegalRefs, RegistryModel, SourceRefs
-from .schema_references import PeriodScopedValidityWindow
+from .schema_references import PeriodScopedValidityWindow, PeriodSelector, RegistryTemporalBounds
 
 __all__ = (
     "DeclaredPredecessor",
     "DeclaredPredecessorField",
     "NoPredecessor",
     "RegistryRevisionDeclaration",
+    "RegistryRevisionNode",
+    "RegistryTemporalDeltaDeclaration",
     "RevisionPredecessorProjection",
     "RevisionWindow",
     "project_predecessor_declarations",
@@ -113,30 +116,55 @@ DeclaredPredecessorField = Annotated[
 """Authored predecessor token shared by every revisioned registry schema."""
 
 
-class RegistryRevisionDeclaration(PeriodScopedValidityWindow):
-    """Common envelope for a period-scoped full-copy or delta revision."""
+class RegistryRevisionNode(RegistryModel, ABC):
+    """Common predecessor-bearing node independent of identity/window spelling.
 
-    id: RevisionId
-    valid_to: Annotated[date | None, MANIFEST_ONLY] = None
+    Concrete registries implement :meth:`revision_identity`; this keeps the
+    self-edge invariant in the base even when one schema spells the identity
+    ``id`` and another spells it ``variant_id``.
+    """
+
     predecessor: Annotated[DeclaredPredecessorField | None, MANIFEST_ONLY] = Field(
         default=None,
         exclude_if=lambda value: value is None,
     )
 
+    @abstractmethod
+    def revision_identity(self) -> str:
+        """Return the schema-specific identity of this revision node."""
+        raise NotImplementedError
+
     @model_validator(mode="after")
-    def _predecessor_is_another_revision(self) -> RegistryRevisionDeclaration:
-        if isinstance(self.predecessor, DeclaredPredecessor) and self.predecessor.revision_id == self.id:
-            raise RegistryValidationError(f"revision {self.id!r} declares itself as its own predecessor")
+    def _predecessor_is_another_revision(self) -> RegistryRevisionNode:
+        identity = self.revision_identity()
+        if isinstance(self.predecessor, DeclaredPredecessor) and self.predecessor.revision_id == identity:
+            raise RegistryValidationError(f"revision {identity!r} declares itself as its own predecessor")
         return self
+
+
+class RegistryRevisionDeclaration(RegistryRevisionNode, PeriodScopedValidityWindow):
+    """Common envelope for a period-scoped full-copy or delta revision."""
+
+    id: RevisionId
+    valid_to: Annotated[date | None, MANIFEST_ONLY] = None
+
+    def revision_identity(self) -> str:
+        return self.id
+
+
+class RegistryTemporalDeltaDeclaration(RegistryRevisionNode, RegistryTemporalBounds):
+    """A predecessor-bearing delta with optional bounds and optional period scope."""
+
+    period_selector: PeriodSelector | None = Field(default=None, exclude_if=lambda value: value is None)
 
 
 @dataclass(frozen=True, slots=True)
 class RevisionWindow:
     """The validity dates and period coordinate of one revision."""
 
-    valid_from: object
-    valid_to: object | None
-    period_selector: object
+    valid_from: date
+    valid_to: date | None
+    period_selector: PeriodSelector | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -149,7 +177,7 @@ class RevisionPredecessorProjection:
 
 
 def project_predecessor_declarations(
-    revisions: Mapping[str, RegistryRevisionDeclaration],
+    revisions: Mapping[str, RegistryRevisionNode],
 ) -> RevisionPredecessorProjection:
     """Project typed declarations once for forest validation and delta loading."""
     declarations = {key: revision.predecessor for key, revision in revisions.items()}
@@ -168,11 +196,18 @@ def project_predecessor_declarations(
 
 def validate_revision_predecessors(
     subject_id: str,
-    revisions: Mapping[str, RegistryRevisionDeclaration],
+    revisions: Mapping[str, RegistryRevisionNode],
     *,
+    windows: Mapping[str, RevisionWindow] | None = None,
     subject_kind: str = "modelo",
+    overlap_allows_parallel: bool = True,
 ) -> RevisionPredecessorProjection:
-    """Validate one revision map's forest and date direction through shared code."""
+    """Validate one revision map's forest and materialized date direction.
+
+    Period-scoped concrete revisions need not pass ``windows``. Delta schemas
+    pass the windows produced by their shared materializer, keeping forest and
+    date checks independent of how their optional bounds were authored.
+    """
     projection = project_predecessor_declarations(revisions)
     validate_predecessor_forest(
         subject_id,
@@ -181,18 +216,28 @@ def validate_revision_predecessors(
         keyless=projection.keyless,
         subject_kind=subject_kind,
     )
-    validate_predecessor_date_agreement(
-        subject_id,
-        named=projection.named,
-        windows={
+    effective_windows = windows
+    if effective_windows is None:
+        if any(not isinstance(revision, RegistryRevisionDeclaration) for revision in revisions.values()):
+            raise RegistryValidationError(
+                f"{subject_kind} {subject_id!r} uses delta-authored revision windows; "
+                "materialized windows are required for predecessor date validation"
+            )
+        effective_windows = {
             key: RevisionWindow(
                 valid_from=revision.valid_from,
                 valid_to=revision.valid_to,
                 period_selector=revision.period_selector,
             )
             for key, revision in revisions.items()
-        },
+            if isinstance(revision, RegistryRevisionDeclaration)
+        }
+    validate_predecessor_date_agreement(
+        subject_id,
+        named=projection.named,
+        windows=effective_windows,
         subject_kind=subject_kind,
+        overlap_allows_parallel=overlap_allows_parallel,
     )
     return projection
 
@@ -261,6 +306,7 @@ def validate_predecessor_date_agreement(
     named: Mapping[str, str],
     windows: Mapping[str, RevisionWindow],
     subject_kind: str = "modelo",
+    overlap_allows_parallel: bool = True,
 ) -> None:
     """Refuse a predecessor that is not earlier when revision scopes do not overlap."""
     for edition, target in sorted(named.items()):
@@ -272,7 +318,10 @@ def validate_predecessor_date_agreement(
                 f"{subject_kind} {subject_id!r} revision {missing!r} has no declared validity window "
                 f"to check the predecessor edge {edition!r} -> {target!r} against",
             )
-        if period_selectors_overlap(successor.period_selector, predecessor.period_selector):  # type: ignore[arg-type]
+        if overlap_allows_parallel and _period_scopes_overlap(
+            successor.period_selector,
+            predecessor.period_selector,
+        ):
             continue
         if predecessor.valid_from < successor.valid_from:  # type: ignore[operator]
             continue
@@ -288,11 +337,23 @@ def _describe(window: RevisionWindow) -> str:
     valid_to = window.valid_to
     selector = window.period_selector
     end = valid_to.isoformat() if valid_to is not None else "open"  # type: ignore[union-attr]
-    if selector.years:  # type: ignore[union-attr]
-        years = ", ".join(str(year) for year in selector.years)  # type: ignore[union-attr]
+    if selector is None:
+        years = "any year"
+        periods = "any period"
+    elif selector.years:
+        years = ", ".join(str(year) for year in selector.years)
+        periods = ", ".join(str(period) for period in selector.periods)
     elif selector.year_from is None:  # type: ignore[union-attr]
         years = "any year"
+        periods = ", ".join(str(period) for period in selector.periods)
     else:
-        years = f"{selector.year_from} to {selector.year_to if selector.year_to is not None else 'open'}"  # type: ignore[union-attr]
-    periods = ", ".join(str(period) for period in selector.periods)  # type: ignore[union-attr]
+        years = f"{selector.year_from} to {selector.year_to if selector.year_to is not None else 'open'}"
+        periods = ", ".join(str(period) for period in selector.periods)
     return f"(valid {valid_from.isoformat()} to {end}; years {years}; periods {periods})"  # type: ignore[union-attr]
+
+
+def _period_scopes_overlap(left: PeriodSelector | None, right: PeriodSelector | None) -> bool:
+    """Treat an omitted selector as the universal scope on either side."""
+    if left is None or right is None:
+        return True
+    return period_selectors_overlap(left, right)

@@ -11,7 +11,17 @@ from datetime import date
 from .errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError
 from .ids import RevisionId
 from .period_selector_match import selector_token_for_request
-from .schema import ModeloDefinition, ModeloRevision
+from .schema import ModeloDefinition, ModeloRevision, SupportedFilingYearsCatalogue
+
+
+def _supported_filing_year(
+    filing_year: int,
+    support: SupportedFilingYearsCatalogue | None,
+) -> int | None:
+    """Project an admitted year through the shared support-envelope mechanics."""
+    if support is None:
+        return filing_year
+    return support.projection_coordinate(filing_year)
 
 
 def _declared_filing_window_covers(
@@ -40,7 +50,7 @@ def _declared_filing_window_covers(
 
 def _revision_governs_period_on(revision: ModeloRevision, on: date) -> bool:
     """Return whether ``on`` falls inside the tax periods a revision governs."""
-    return revision.valid_from <= on and (revision.valid_to is None or on <= revision.valid_to)
+    return revision.contains_date(on)
 
 
 def _effective_candidates(
@@ -152,6 +162,7 @@ def select_revision_for_year(
     *,
     filing_year: int,
     on: date | None = None,
+    support: SupportedFilingYearsCatalogue | None = None,
 ) -> ModeloRevision:
     """Select exactly one revision for a filing year and effective date.
 
@@ -168,10 +179,15 @@ def select_revision_for_year(
         on: Optional reference date at which the revision must be the
             applicable design: inside the tax periods it governs, or inside a
             filing window it declares for this coordinate.
+        support: Optional registry envelope that hard-gates the request and
+            carries a year beyond its authored horizon back to that horizon.
     """
+    selection_year = _supported_filing_year(filing_year, support)
     return _select_single_year_revision(
         modelo,
-        _year_revision_candidates(modelo, filing_year=filing_year, on=on),
+        []
+        if selection_year is None
+        else _year_revision_candidates(modelo, filing_year=selection_year, on=on),
         filing_year=filing_year,
     )
 
@@ -183,6 +199,7 @@ def select_revision(
     period: str,
     on: date | None = None,
     revision_id: RevisionId | None = None,
+    support: SupportedFilingYearsCatalogue | None = None,
 ) -> ModeloRevision:
     """Select exactly one :class:`ModeloRevision` for a filing period.
 
@@ -197,13 +214,16 @@ def select_revision(
             filing window it declares for this coordinate.
         revision_id: Optional explicit revision id; restricts candidates to
             the matching revision when supplied.
+        support: Optional registry envelope that hard-gates the request and
+            carries a year beyond its authored horizon back to that horizon.
     """
-    matching = [
+    selection_year = _supported_filing_year(filing_year, support)
+    matching = [] if selection_year is None else [
         revision
         for revision in modelo.revisions.values()
         if _revision_matches_request(
             revision,
-            filing_year=filing_year,
+            filing_year=selection_year,
             period=period,
             revision_id=revision_id,
         )

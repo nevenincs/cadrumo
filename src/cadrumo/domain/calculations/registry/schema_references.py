@@ -41,6 +41,7 @@ from .schema_base import (
 __all__ = [
     "LegalReference",
     "DateSupportEnvelope",
+    "OrderedSupportEnvelope",
     "PeriodSelector",
     "PeriodScopedValidityWindow",
     "RegistryExternalLink",
@@ -49,6 +50,7 @@ __all__ = [
     "RegistryValidityWindow",
     "SourceReference",
     "TemporalApplicability",
+    "TemporalProjectionDirection",
     "TemporalSupportEnvelope",
     "resolve_validity_window",
     "resolve_supported_validity_window",
@@ -363,6 +365,14 @@ class TemporalApplicability(RegistryValidityWindow):
     period_selector: PeriodSelector | None = None
 
 
+class TemporalProjectionDirection(StrEnum):
+    """How a resolved coordinate relates to the declaration supplying it."""
+
+    AUTHORED = "authored"
+    BACKWARD = "backward"
+    FORWARD = "forward"
+
+
 def _validate_support_bounds[T](floor: T, horizon: T, hard_ceiling: T | None) -> None:
     if horizon < floor:  # type: ignore[operator]
         raise RegistryValidationError("temporal support horizon must be on or after floor")
@@ -373,25 +383,25 @@ def _validate_support_bounds[T](floor: T, horizon: T, hard_ceiling: T | None) ->
         )
 
 
-class _SupportEnvelopeMechanics:
+class OrderedSupportEnvelope[CoordinateT]:
     """One implementation of hard-gate admission and newest-authority projection."""
 
-    floor: object
-    horizon: object
-    hard_ceiling: object | None
+    floor: CoordinateT
+    horizon: CoordinateT
+    hard_ceiling: CoordinateT | None
 
-    def admits_coordinate(self, coordinate: object) -> bool:
+    def admits_coordinate(self, coordinate: CoordinateT) -> bool:
         if coordinate < self.floor:  # type: ignore[operator]
             return False
         return self.hard_ceiling is None or coordinate <= self.hard_ceiling  # type: ignore[operator]
 
-    def projection_coordinate(self, coordinate: object) -> object | None:
+    def projection_coordinate(self, coordinate: CoordinateT) -> CoordinateT | None:
         if not self.admits_coordinate(coordinate):
             return None
         return min(coordinate, self.horizon)  # type: ignore[type-var]
 
 
-class DateSupportEnvelope(_SupportEnvelopeMechanics, RegistryModel):
+class DateSupportEnvelope(OrderedSupportEnvelope[date], RegistryModel):
     """Hard gates and authored horizon on an effective-date axis."""
 
     floor: date
@@ -404,7 +414,7 @@ class DateSupportEnvelope(_SupportEnvelopeMechanics, RegistryModel):
         return self
 
 
-class TemporalSupportEnvelope(_SupportEnvelopeMechanics, RegistryModel):
+class TemporalSupportEnvelope(OrderedSupportEnvelope[int], RegistryModel):
     """Hard gates and authored horizon shared by forward-projecting registries.
 
     ``floor`` and ``hard_ceiling`` are refusal boundaries. ``horizon`` is the

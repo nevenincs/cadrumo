@@ -37,7 +37,14 @@ def _validate_known_bad_citation(reference: LegalReference) -> None:
     if source is None:
         return
     role_text = " ".join(part for part in (reference.section, reference.notes) if part)
-    if role_text and (known_bad := find_known_bad(source, reference.article, role_text)):
+    if role_text and (
+        known_bad := find_known_bad(
+            source,
+            reference.article,
+            role_text,
+            effective_date=reference.effective_from,
+        )
+    ):
         raise RegistryValidationError(
             f"legal reference {reference.id!r} matches known-bad citation: {known_bad.reason}",
         )

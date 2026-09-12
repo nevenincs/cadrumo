@@ -135,7 +135,7 @@ def _project_variant(
     value: DatedValue,
 ) -> GovernedFactVariant:
     return GovernedFactVariant(
-        variant_id=f"m{modelo_id}:{parameter.id}:{value.valid_from.isoformat()}",
+        variant_id=f"m{modelo_id}:{revision.id}:{parameter.id}:{value.valid_from.isoformat()}",
         selectors=(
             FactSelector(name="modelo", value=modelo_id),
             FactSelector(name="parameter_id", value=parameter.id),
@@ -149,4 +149,5 @@ def _project_variant(
         source_citations=parameter.source_citations,
         review_status=revision.review_status,
         ownership=FactOwnership.GENERATED,
+        source_revision_id=revision.id,
     )

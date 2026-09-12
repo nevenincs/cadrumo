@@ -581,111 +581,7 @@ class SchemaFamilyDispositionDeclaration(RegistryModel):
     source_refs: SourceRefs
 
 
-class DeclaredPredecessor(RegistryModel):
-    """A revision's explicit claim that it is authored relative to a sibling edition.
-
-    Authored as a bare revision id, ``predecessor = "2024"``, and serialised back
-    to exactly that string. The wrapper exists so the declaration is a type
-    rather than a string: the revision id vocabulary admits any lowercase token,
-    so no reserved string could later mean "no predecessor exists" without
-    colliding with a legal revision id. :class:`NoPredecessor` is the distinct
-    declaration kind sharing the field, and a consumer matching on the
-    declaration's type reads an absent key, a predecessor, and an explicit
-    no-predecessor apart.
-    """
-
-    revision_id: RevisionId
-
-    @model_serializer(mode="plain")
-    def _serialise_as_authored(self) -> str:
-        return self.revision_id
-
-
-_NO_PREDECESSOR_KEY: Final = "none"
-_DECLARED_PREDECESSOR_TAG: Final = "revision"
-_PREDECESSOR_KIND_REFUSAL: Final = (
-    "predecessor must be the revision id of a sibling edition, or a single 'none' table "
-    "grounding why no earlier sibling edition exists"
-)
-
-
-class NoPredecessor(RegistryModel):
-    """A revision's explicit, grounded claim that no earlier sibling edition exists.
-
-    Distinct from the key being absent: an absent key is a full-copy revision
-    that says nothing about its siblings, and is shape-identical to a successor
-    whose author forgot the key. This declaration is the positive statement that
-    the revision chains to nothing, so it carries the same burden as any other
-    substantive claim — a reason somebody wrote and the references it stands on.
-
-    Authored as a ``none`` table under the key::
-
-        [revisions."esquema-union".predecessor.none]
-        reason = "..."
-        legal_refs = ["..."]
-        source_refs = ["..."]
-
-    and serialised back to exactly that nesting.
-    """
-
-    reason: str = Field(min_length=1, max_length=1024)
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-    @model_serializer(mode="wrap")
-    def _serialise_as_authored(self, handler: SerializerFunctionWrapHandler) -> dict[str, object]:
-        return {_NO_PREDECESSOR_KEY: handler(self)}
-
-
-def _predecessor_declaration_kind(value: object) -> str | None:
-    """Name the declaration kind an authored ``predecessor`` value spells, if any.
-
-    Dispatch reads the raw authored shape, so a table is the no-predecessor kind
-    only when its single key is ``none``. Every other shape — including a table
-    spelling of a revision id — names no kind and is refused.
-    """
-    if isinstance(value, DeclaredPredecessor | str):
-        return _DECLARED_PREDECESSOR_TAG
-    if isinstance(value, NoPredecessor):
-        return _NO_PREDECESSOR_KEY
-    if isinstance(value, Mapping) and set(value) == {_NO_PREDECESSOR_KEY}:
-        return _NO_PREDECESSOR_KEY
-    return None
-
-
-def _hydrate_declared_predecessor(value: object) -> object:
-    """Hydrate the one authored spelling of a predecessor: a revision id string."""
-    if isinstance(value, str):
-        return {"revision_id": value}
-    return value
-
-
-def _hydrate_no_predecessor(value: object) -> object:
-    """Unwrap the authored ``none`` table into the declaration it carries."""
-    if isinstance(value, Mapping):
-        # Unwrapped in Python mode, so a declaration decoded from JSON is frozen
-        # to the tuple shape the registry loader hands over.
-        return freeze_toml_value(value[_NO_PREDECESSOR_KEY])
-    return value
-
-
-DeclaredPredecessorField = Annotated[
-    Annotated[
-        DeclaredPredecessor,
-        BeforeValidator(_hydrate_declared_predecessor),
-        Tag(_DECLARED_PREDECESSOR_TAG),
-    ]
-    | Annotated[NoPredecessor, BeforeValidator(_hydrate_no_predecessor), Tag(_NO_PREDECESSOR_KEY)],
-    Discriminator(
-        _predecessor_declaration_kind,
-        custom_error_type="predecessor_kind",
-        custom_error_message=_PREDECESSOR_KIND_REFUSAL,
-    ),
-]
-"""Registry token hydrated into a :class:`DeclaredPredecessor` or a :class:`NoPredecessor`."""
-
-
-class ModeloRevision(RegistryModel):
+class ModeloRevision(RegistryRevisionDeclaration):
     """A single versioned form layout and calculation ruleset for one modelo.
 
     The ``orden_aplicabilidad`` field names the legal-catalogue
@@ -790,17 +686,9 @@ class ModeloRevision(RegistryModel):
     keys existed.
     """
 
-    id: RevisionId
     localization_key: str = Field(min_length=1, exclude=True, repr=False)
-    valid_from: date
-    valid_to: Annotated[date | None, MANIFEST_ONLY] = None
-    period_selector: PeriodSelector
     legal_refs: Annotated[LegalRefs, MANIFEST_ONLY]
     source_refs: SourceRefs
-    predecessor: Annotated[DeclaredPredecessorField | None, MANIFEST_ONLY] = Field(
-        default=None,
-        exclude_if=lambda value: value is None,
-    )
     # Required by validate_orden_aplicabilidad; kept default-empty so the
     # validator can report a grounded registry failure instead of a parse error.
     orden_aplicabilidad: Annotated[tuple[LegalRefId, ...], MANIFEST_ONLY] = ()
@@ -861,19 +749,6 @@ class ModeloRevision(RegistryModel):
     def _reviewed_at_is_within_the_signoff_horizon(cls, value: date | None) -> date | None:
         """Refuse a signoff date no auditor could ever check."""
         return validate_reviewed_at_within_horizon(value)
-
-    @model_validator(mode="after")
-    def _validate_window(self) -> ModeloRevision:
-        if self.valid_to is not None and self.valid_to < self.valid_from:
-            raise RegistryValidationError("revision valid_to must be on or after valid_from")
-        return self
-
-    @model_validator(mode="after")
-    def _validate_predecessor_is_another_edition(self) -> ModeloRevision:
-        """Refuse a revision declaring itself as the edition it is authored relative to."""
-        if isinstance(self.predecessor, DeclaredPredecessor) and self.predecessor.revision_id == self.id:
-            raise RegistryValidationError(f"revision {self.id!r} declares itself as its own predecessor")
-        return self
 
     @property
     def is_graded(self) -> bool:
@@ -1109,32 +984,7 @@ class ModeloDefinition(RegistryModel):
         for key, revision in self.revisions.items():
             if key != revision.id:
                 raise RegistryValidationError(f"revision key {key!r} does not match revision id {revision.id!r}")
-        declarations = {key: revision.predecessor for key, revision in self.revisions.items()}
-        named = {
-            key: declaration.revision_id
-            for key, declaration in declarations.items()
-            if isinstance(declaration, DeclaredPredecessor)
-        }
-        validate_predecessor_forest(
-            self.id,
-            named=named,
-            declared_roots=frozenset(
-                key for key, declaration in declarations.items() if isinstance(declaration, NoPredecessor)
-            ),
-            keyless=frozenset(key for key, declaration in declarations.items() if declaration is None),
-        )
-        validate_predecessor_date_agreement(
-            self.id,
-            named=named,
-            windows={
-                key: EditionWindow(
-                    valid_from=revision.valid_from,
-                    valid_to=revision.valid_to,
-                    period_selector=revision.period_selector,
-                )
-                for key, revision in self.revisions.items()
-            },
-        )
+        validate_revision_predecessors(self.id, self.revisions)
         return self
 
 
@@ -1151,7 +1001,7 @@ def _union_across_expectations[T](
     return frozenset(value for expectation in expectations for value in select(expectation))
 
 
-class SupportedFilingYearsCatalogue(RegistryModel):
+class SupportedFilingYearsCatalogue(TemporalSupportEnvelope):
     """The registry's sole declaration of the filing years the product supports.
 
     Authored as bounds rather than an enumeration, because the two ends of the
@@ -1175,26 +1025,6 @@ class SupportedFilingYearsCatalogue(RegistryModel):
     derivation would be refused there as an unexpected member.
     """
 
-    floor: FilingYear
-    horizon: FilingYear
-    hard_ceiling: FilingYear | None = None
-
-    @model_validator(mode="after")
-    def _bounds_are_ordered(self) -> SupportedFilingYearsCatalogue:
-        if self.horizon < self.floor:
-            raise RegistryValidationError("supported filing years horizon must be on or after floor")
-        if self.hard_ceiling is not None and self.hard_ceiling <= self.horizon:
-            raise RegistryValidationError(
-                "supported filing years hard_ceiling must be after horizon; a ceiling at or below "
-                "the horizon would close a span the corpus already declares coverage for"
-            )
-        return self
-
-    @property
-    def years(self) -> tuple[int, ...]:
-        """Enumerate the supported span, both bounds inclusive."""
-        return tuple(range(self.floor, self.horizon + 1))
-
     def admits_filing_year(self, filing_year: int) -> bool:
         """Return whether a filing year is inside the product's hard gates.
 
@@ -1202,9 +1032,7 @@ class SupportedFilingYearsCatalogue(RegistryModel):
         the newest revision carries forward, so the year is answerable even
         though no revision names it. Below :attr:`floor` is never admitted.
         """
-        if filing_year < self.floor:
-            return False
-        return self.hard_ceiling is None or filing_year <= self.hard_ceiling
+        return self.admits_coordinate(filing_year)
 
 
 class SociedadesAnnualManualCoverageStatus(StrEnum):

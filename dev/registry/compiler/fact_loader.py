@@ -45,6 +45,10 @@ def load_governed_fact_file(path: Path) -> GovernedFact:
     table = data["fact"]
     if not isinstance(table, Mapping):
         raise RegistryLoadError(f"{source_path}: [fact] must be a table")
+    if "provider_id" in table:
+        raise RegistryLoadError(
+            f"{source_path}: governed fact provider_id is compiler-owned provenance and cannot be authored",
+        )
     try:
         return GovernedFact.model_validate(table)
     except ValidationError as exc:
