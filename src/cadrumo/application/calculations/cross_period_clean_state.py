@@ -771,7 +771,7 @@ def _requirements_from_relation(
             period=Period.from_year_and_code(requirement.filing_year, period),
             source_casilla_ids=(source_casilla_id,),
             origin=CrossPeriodDependencyOrigin.REGISTRY_RELATION,
-            origin_ids=requirement.relation_ids,
+            origin_ids=requirement.target_bindings,
             legal_refs=requirement.legal_refs,
             source_refs=requirement.source_refs,
         )

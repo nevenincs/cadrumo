@@ -63,7 +63,7 @@ from ....domain.calculations.registry.bindings import (
 )
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....domain.calculations.registry.ids import RelationId
-from ....domain.calculations.registry.relations import materialize_relation_binding_values
+from ....domain.calculations.registry.relations import relation_prefill_values_as_binding_values
 from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..observations_repository import CalculationObservationRepository, observation_key
@@ -183,7 +183,7 @@ def _calculate_303(
 
     Mirrors the production calculate path's relation materialisation: a
     resolved relation value is copied into its target binding (casilla 110)
-    via :func:`materialize_relation_binding_values`, merged with the profile-gap
+    via :func:`relation_prefill_values_as_binding_values`, merged with the profile-gap
     workaround bindings, layered under per-rate cuota binding overrides
     supplied by the caller, resolved into bound casilla inputs, and evaluated
     by the engine. Cuota bindings are the only input path into the régimen-
@@ -192,7 +192,7 @@ def _calculate_303(
     longer read and the engine refuses computed-casilla inputs.
     """
     snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=period)
-    relation_binding_values = materialize_relation_binding_values(
+    relation_binding_values = relation_prefill_values_as_binding_values(
         snapshot.revision,
         dict(relation_values),
         period=period,
@@ -312,7 +312,7 @@ def test_2024_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_pa
         relation_values = resolve_relations_from_local_store(target_snapshot, repository=observation_repository)
         carry_relation = next(item for item in relation_values.values if item.relation == _CARRY_RELATION)
         resolved = {item.relation: item.value for item in relation_values.values if item.value is not None}
-        target_binding_values = materialize_relation_binding_values(
+        target_binding_values = relation_prefill_values_as_binding_values(
             target_snapshot.revision,
             resolved,
             period=_LATE_2024_PERIOD,

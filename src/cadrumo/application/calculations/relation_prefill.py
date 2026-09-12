@@ -2,7 +2,7 @@
 
 One of three distinct prefill tiers, NOT to be merged: this is the
 RELATION tier (cross-revision aggregations declared as
-``RelationDefinition`` records). The other two are the previous-filing
+``relation_prefill`` providers). The other two are the previous-filing
 direct-carry tier (:mod:`application.calculations._binding_prefill`)
 and the AEAT borrador pre-fill tier (the registry ``aeat_prefilled`` flag,
 an AEAT-live source). Each names a different mechanism and source; they
@@ -48,7 +48,7 @@ See Also:
     :func:`domain.calculations.registry.relation_source_requirements`
         Registry authority that derives the source filings required by a
         relation.
-    :func:`domain.calculations.registry.materialize_relation_binding_values`
+    :func:`domain.calculations.registry.relation_prefill_bindings_for_period`
         Bridge from resolved relation values to declared ``relation_prefill``
         binding slots.
 """
@@ -72,6 +72,7 @@ from ...core.parsing.dates import parse_iso8601_date
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.handoffs import (
@@ -86,16 +87,16 @@ from ...domain.calculations.registry.ids import (
     RevisionId,
     SourceRefId,
 )
-from ...domain.calculations.registry.iva_wallet_carry_targets import is_iva_wallet_owned_relation_target
+from ...domain.calculations.registry.iva_wallet_carry_targets import is_iva_wallet_owned_carry_target
 from ...domain.calculations.registry.observation_fold import resolve_observed_requirement_value
+from ...domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
 from ...domain.calculations.registry.relations import (
     RegistryFoldRequirement,
-    materialize_relation_binding_values,
+    relation_prefill_bindings_for_period,
     relation_requirement_index,
     relation_source_requirements,
 )
-from ...domain.calculations.registry.schema import RegistrySnapshot
-from ...domain.calculations.registry.schema_surfaces import RelationDefinition
+from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from ..aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -197,20 +198,21 @@ class _RelationGrounding(TypedDict):
 
 
 def _relation_value_grounding(
-    relation: RelationDefinition,
+    binding: BindingDefinition,
+    provider: RelationPrefillProvider,
     requirement: RegistryFoldRequirement | None,
 ) -> _RelationGrounding:
-    """Project registry relation source identity and grounding onto a scalar relation value."""
+    """Project the fold slot's source identity and grounding onto a scalar value."""
     return {
-        "source_modelo": requirement.source_modelo if requirement is not None else relation.source_modelo,
+        "source_modelo": requirement.source_modelo if requirement is not None else provider.source_modelo,
         "source_casilla_ids": (
-            requirement.source_casilla_ids if requirement is not None else (relation.source_casilla_id,)
+            requirement.source_casilla_ids if requirement is not None else provider.declared_source_casilla_ids
         ),
         # Carried from the requirement, which already holds the registry's declared
         # treatment. Empty when no requirement resolved it, which is not a treatment.
         "dependency_treatment": (requirement.dependency_treatment or "") if requirement is not None else "",
-        "legal_refs": tuple(relation.legal_refs),
-        "source_refs": tuple(relation.source_refs),
+        "legal_refs": tuple(binding.legal_refs),
+        "source_refs": tuple(binding.source_refs),
     }
 
 
@@ -221,12 +223,6 @@ def _relation_provenance_ref(item: RelationValue) -> str:
     source_casillas = ",".join(item.source_casilla_ids) if item.source_casilla_ids else "unknown-casilla"
     return f"{item.relation}:{source_modelo}:{source_year}:{source_periods}:{source_casillas}"
 
-
-def _relation_source_filing_year(relation: RelationDefinition, *, filing_year: int) -> int:
-    selector = relation.source_revision_selector
-    if selector.year is not None:
-        return selector.year
-    return filing_year + (selector.filing_year_delta or 0)
 
 
 def _contains_profile_token(raw: str | None, token: str) -> bool | None:
@@ -549,7 +545,7 @@ def _default_not_applicable_source_modelos(
 
 
 def _unresolved_relation_value(
-    relation: RelationDefinition,
+    binding: BindingDefinition,
     *,
     requirement: RegistryFoldRequirement | None,
     grounding: _RelationGrounding,
@@ -561,7 +557,7 @@ def _unresolved_relation_value(
 ) -> RelationValue:
     if modelo_202_first_year_cuota and requirement is not None and requirement.source_modelo == str(Modelo.M202):
         return RelationValue(
-            relation=relation.id,
+            relation=binding.id,
             value=Decimal("0"),
             provenance=SheetRelationProvenance.OPERATOR_MANUAL,
             source_filing_year=target_year,
@@ -575,7 +571,7 @@ def _unresolved_relation_value(
         )
     if requirement is not None and requirement.source_modelo in not_applicable_source_modelos:
         return RelationValue(
-            relation=relation.id,
+            relation=binding.id,
             value=Decimal("0"),
             provenance=SheetRelationProvenance.OPERATOR_MANUAL,
             source_filing_year=target_year,
@@ -587,31 +583,28 @@ def _unresolved_relation_value(
                 "profile; relation resolved to 0 without a synthetic filing"
             ),
         )
-    return RelationValue(relation=relation.id, value=None, **grounding)
+    return RelationValue(relation=binding.id, value=None, **grounding)
 
 
 def _relation_value_for_relation(
-    relation: RelationDefinition,
+    binding: BindingDefinition,
+    provider: RelationPrefillProvider,
     *,
-    requirements_by_relation: Mapping[RelationId, RegistryFoldRequirement],
-    resolved_map: Mapping[RelationId, Decimal],
+    requirements_by_relation: Mapping[BindingId, RegistryFoldRequirement],
+    resolved_map: Mapping[BindingId, Decimal],
     resolved_at: datetime,
     modelo_202_first_year_cuota: bool,
     not_applicable_source_modelos: frozenset[str],
     filing_year: int,
 ) -> RelationValue:
-    requirement = requirements_by_relation.get(relation.id)
-    target_year = (
-        requirement.filing_year
-        if requirement is not None
-        else _relation_source_filing_year(relation, filing_year=filing_year)
-    )
-    source_periods = requirement.periods if requirement is not None else tuple(relation.source_periods)
-    grounding = _relation_value_grounding(relation, requirement)
-    resolved = resolved_map.get(relation.id)
+    requirement = requirements_by_relation.get(binding.id)
+    target_year = requirement.filing_year if requirement is not None else filing_year
+    source_periods = requirement.periods if requirement is not None else provider.required_source_periods
+    grounding = _relation_value_grounding(binding, provider, requirement)
+    resolved = resolved_map.get(binding.id)
     if resolved is None:
         return _unresolved_relation_value(
-            relation,
+            binding,
             requirement=requirement,
             grounding=grounding,
             target_year=target_year,
@@ -621,7 +614,7 @@ def _relation_value_for_relation(
             not_applicable_source_modelos=not_applicable_source_modelos,
         )
     return RelationValue(
-        relation=relation.id,
+        relation=binding.id,
         value=Decimal(resolved),
         provenance=SheetRelationProvenance.LOCAL_FILING,
         source_filing_year=target_year,
@@ -629,8 +622,8 @@ def _relation_value_for_relation(
         **grounding,
         resolved_at=resolved_at,
         note=_provenance_note(
-            relation.id,
-            relation.source_modelo,
+            binding.id,
+            provider.source_modelo,
             source_periods,
             target_year,
             resolved_at,
@@ -649,7 +642,8 @@ def _relation_values_for_snapshot(
 ) -> tuple[RelationValue, ...]:
     return tuple(
         _relation_value_for_relation(
-            relation,
+            binding,
+            provider,
             requirements_by_relation=requirements_by_relation,
             resolved_map=resolved_map,
             resolved_at=resolved_at,
@@ -657,7 +651,7 @@ def _relation_values_for_snapshot(
             not_applicable_source_modelos=not_applicable_source_modelos,
             filing_year=snapshot.filing_year,
         )
-        for relation in snapshot.revision.relations
+        for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
     )
 
 
@@ -768,11 +762,11 @@ def _resolve_available_relation_values(
             # under another), making replay goldens unportable.
             _log.debug(
                 "relation prefill: relation requirement %s remains operator-manual: %s",
-                requirement.relation_ids,
+                requirement.target_bindings,
                 exc,
             )
             continue
-        for relation_id in requirement.relation_ids:
+        for relation_id in requirement.target_bindings:
             resolved[relation_id] = value
     return resolved
 
@@ -807,7 +801,6 @@ def _absent_bound_carry_diagnostics(
     *,
     unresolved_relation_ids: frozenset[RelationId],
     requirements_by_relation: Mapping[RelationId, RegistryFoldRequirement],
-    relation_target_binding: Mapping[RelationId, BindingId],
     resolver_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Advise on a bound carry whose source filing is absent, so the slot threads a zero.
@@ -835,7 +828,7 @@ def _absent_bound_carry_diagnostics(
     diagnostics: list[CalculationSourceDiagnostic] = []
     for relation_id in sorted(unresolved_relation_ids):
         requirement = requirements_by_relation.get(relation_id)
-        binding_id = relation_target_binding.get(relation_id)
+        binding_id = relation_id
         if requirement is None:
             diagnostics.append(
                 CalculationSourceDiagnostic(
@@ -918,7 +911,6 @@ class _RelationConsumption(NamedTuple):
     formula_fed: frozenset[RelationId]
     bound: frozenset[RelationId]
     consumed: frozenset[RelationId]
-    target_bindings: dict[RelationId, BindingId]
 
 
 def _unresolved_relation_ids(
@@ -971,16 +963,15 @@ def _unresolved_relation_ids(
 
 
 def _relation_consumption(snapshot: RegistrySnapshot) -> _RelationConsumption:
-    """Derive only the registry's four declared relation consumption channels."""
+    """Derive only the registry's declared fold consumption channels."""
     consumption_index = relation_consumption_index(snapshot.revision)
     channels_by_relation = {
-        relation.id: relation_consumption_channels(relation, consumption_index)
-        for relation in snapshot.revision.relations
+        binding.id: relation_consumption_channels(binding.id, consumption_index)
+        for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
     }
     return _RelationConsumption(
         formula_fed=_relation_ids_for_channels(
             channels_by_relation,
-            "formula_relation",
             "formula_binding",
         ),
         bound=_relation_ids_for_channels(
@@ -989,7 +980,6 @@ def _relation_consumption(snapshot: RegistrySnapshot) -> _RelationConsumption:
             "alternate_binding",
         ),
         consumed=_consumed_relation_ids(channels_by_relation),
-        target_bindings=_relation_target_bindings(snapshot),
     )
 
 
@@ -1007,10 +997,6 @@ def _consumed_relation_ids(
     channels_by_relation: Mapping[RelationId, tuple[str, ...]],
 ) -> frozenset[RelationId]:
     return frozenset(relation_id for relation_id, channels in channels_by_relation.items() if channels)
-
-
-def _relation_target_bindings(snapshot: RegistrySnapshot) -> dict[RelationId, BindingId]:
-    return {relation.id: relation.target_binding for relation in snapshot.revision.relations}
 
 
 def _unresolved_bound_relation_ids(
@@ -1053,11 +1039,10 @@ def _is_actionable_unresolved_bound_relation(
         return False
     if not _requirement_periods_are_datable(requirement) or relation_id not in consumption.bound:
         return False
-    return not is_iva_wallet_owned_relation_target(
+    return not is_iva_wallet_owned_carry_target(
         modelo_id=modelo_id,
         revision_id=revision_id,
-        relation_id=str(relation_id),
-        target_binding=str(consumption.target_bindings.get(relation_id)),
+        binding_id=str(relation_id),
     )
 
 
@@ -1216,20 +1201,16 @@ def _relation_prefill_resolution(
         requirements_by_relation=requirements_by_relation,
         modelo_id=str(context.modelo),
     )
-    relation_target_binding = _relation_target_bindings(snapshot)
+    # The fold slot IS the binding now, so the resolved map is already the
+    # binding-value map: no second materialisation step can disagree with it.
     resolved_relation_values = {item.relation: item.value for item in resolved if item.value is not None}
-    binding_values = materialize_relation_binding_values(
-        snapshot.revision,
-        resolved_relation_values,
-        period=context.period.registry_token,
-    )
     binding_values = {
         **_modelo_202_first_period_previous_payment_defaults(
             snapshot.revision,
             modelo=str(context.modelo),
             period=context.period.registry_token,
         ),
-        **binding_values,
+        **resolved_relation_values,
     }
     return CalculationSourceResolution(
         resolver_id=resolver_id,
@@ -1250,7 +1231,6 @@ def _relation_prefill_resolution(
         + _absent_bound_carry_diagnostics(
             unresolved_relation_ids=unresolved.bound,
             requirements_by_relation=requirements_by_relation,
-            relation_target_binding=relation_target_binding,
             resolver_id=resolver_id,
         ),
         provenance=tuple(
@@ -1260,6 +1240,11 @@ def _relation_prefill_resolution(
                 contributor_source_kind="relation_prefill",
                 contributor_binding_source=BindingSourceKind.RELATION_PREFILL,
                 lineage_role=CalculationSourceLineageRole.PRIMARY,
+                # Every value this resolver produces is read off a filed
+                # modelo casilla observation; naming that origin class lets the
+                # terminal-origin audit compare it against the binding's
+                # authored expectation instead of inferring it.
+                terminal_origin=TerminalOriginClass.FILED_MODELO_CASILLA,
                 source_ref=_relation_provenance_ref(item),
                 parent_source_ref=None,
                 relation_id=item.relation,

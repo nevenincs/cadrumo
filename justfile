@@ -685,10 +685,43 @@ registry-binding-rename:
     @uv run --no-sync python -m dev.registry.rename_formula_binding_identifiers --apply
     @echo "next_currentness=check-registry-valid-and-report-registry-status next_publication=registry-publish-authority-then-registry-publish-target"
 
+[doc('Convert authored registry binding rows to the provider shape through the owning CLI.')]
+[group('maintenance')]
+registry-binding-convert MODELO="--all" REPORT="":
+    @uv run --no-sync python -m dev.registry.convert_binding_provider_shape {{ if MODELO == "--all" { "--all" } else { "--modelo " + MODELO } }} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
+    @echo "next_currentness=check-registry-valid-and-report-registry-status next_publication=registry-publish-authority-then-registry-publish-target"
+
+[doc('Report registry binding provider-shape conversion without writing any file.')]
+[group('report')]
+report-registry-binding-convert MODELO="--all" REPORT="":
+    @uv run --no-sync python -m dev.registry.convert_binding_provider_shape --dry-run {{ if MODELO == "--all" { "--all" } else { "--modelo " + MODELO } }} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
+
+[doc('Normalise row-producing registry binding value contracts onto the row_set shape.')]
+[group('maintenance')]
+registry-binding-row-set-fix MODELO="--all" REPORT="":
+    @uv run --no-sync python -m dev.registry.fix_binding_row_set_contracts {{ if MODELO == "--all" { "--all" } else { "--modelo " + MODELO } }} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
+    @echo "next_currentness=check-registry-valid-and-report-registry-status next_publication=registry-publish-authority-then-registry-publish-target"
+
+[doc('Report row-producing registry binding value-contract normalisation without writing any file.')]
+[group('report')]
+report-registry-binding-row-set-fix MODELO="--all" REPORT="":
+    @uv run --no-sync python -m dev.registry.fix_binding_row_set_contracts --dry-run {{ if MODELO == "--all" { "--all" } else { "--modelo " + MODELO } }} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
+
 [doc('Report registry formula and binding identifier rename measurements without applying them.')]
 [group('report')]
 report-registry-binding-renames:
     @uv run --no-sync python -m dev.registry.rename_formula_binding_identifiers
+
+[doc('Collapse one modelo edition-keyed identifier year through the owning CLI.')]
+[group('maintenance')]
+registry-binding-rename-modelo MODELO REPORT="":
+    @uv run --no-sync python -m dev.registry.rename_formula_binding_identifiers --apply --modelo {{MODELO}} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
+    @echo "next_currentness=check-registry-valid-and-report-registry-status next_publication=registry-publish-authority-then-registry-publish-target"
+
+[doc('Report one modelo edition-keyed identifier collapse and its refusals without writing any file.')]
+[group('report')]
+report-registry-binding-rename-modelo MODELO REPORT="":
+    @uv run --no-sync python -m dev.registry.rename_formula_binding_identifiers --modelo {{MODELO}} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
 
 [doc('Generate registry result-disposition fragments through the owning CLI.')]
 [group('maintenance')]

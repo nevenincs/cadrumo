@@ -64,7 +64,7 @@ source_refs = ["aeat-modelo-210-procedure"]
 [revisions."2026-y-siguientes".family_dispositions.dependency_classifications]
 reason = """
 A dependency classification declares that this modelo's calculation depends on ANOTHER modelo the taxpayer files in an earlier or enclosing period, so the clean-state gate knows whether that source is present, suppressed or missing. Modelo 210 declares no such source. Its base and cuota are self-contained per renta (TRLIRNR arts. 24 and 25), and the one value arriving from outside -- casilla 29 retenciones e ingresos a cuenta -- is withholding SUFFERED by the non-resident and evidenced by the \
-payer's certificate. The payer, not this taxpayer, files the corresponding Modelo 216, so it is not a source in this taxpayer's own filing chain and there is no cross-period dependency for the gate to reason about. Verified against the revision itself: no casilla, construct or verification expectation references another modelo. Consistent with the relations disposition on this same revision, which records the same absence from the fold-in side."""
+payer's certificate. The payer, not this taxpayer, files the corresponding Modelo 216, so it is not a source in this taxpayer's own filing chain and there is no cross-period dependency for the gate to reason about. Verified against the revision itself: no casilla, construct or verification expectation references another modelo. The bindings this revision declares resolve profile and ledger sources, never another modelo's filed casilla, so the same absence holds from the fold-in side."""
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "orden-eha-3316-2010:art-1"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2026"]
 

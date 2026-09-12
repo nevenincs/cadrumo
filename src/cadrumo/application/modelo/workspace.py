@@ -36,13 +36,13 @@ from ...domain.calculations.registry.modelo_localization import (
     casilla_occurrence_locale_key,
     revision_locale_key,
 )
+from ...domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
 from ...domain.calculations.registry.schema import (
     BindingDefinition,
     FormulaDefinition,
     SchemaFamilyDispositionDeclaration,
 )
 from ...domain.calculations.registry.schema_formula import FormulaExpression, ParameterDefinition
-from ...domain.calculations.registry.schema_surfaces import RelationDefinition
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
@@ -78,13 +78,11 @@ from .workspace_models import (
     ModeloWorkspaceFormulaOperandReferenceV1,
     ModeloWorkspaceFormulaParameterOperandReferenceV1,
     ModeloWorkspaceFormulaReferenceV1,
-    ModeloWorkspaceFormulaRelationOperandReferenceV1,
     ModeloWorkspaceLocaleDisposition,
     ModeloWorkspaceLocaleSummaryV1,
     ModeloWorkspaceLocalizedTextV1,
     ModeloWorkspaceParameterReferenceV1,
     ModeloWorkspaceProjectionV1,
-    ModeloWorkspaceRelationReferenceV1,
     ModeloWorkspaceRelationSourceEndpointReferenceV1,
     ModeloWorkspaceRelationTargetEndpointReferenceV1,
     ModeloWorkspaceResolvedTargetV1,
@@ -506,10 +504,6 @@ def formula_expression_operand_references(
         return (
             ModeloWorkspaceFormulaParameterOperandReferenceV1(formula_id=formula_id, parameter_id=expression.parameter),
         )
-    if expression.relation is not None:
-        return (
-            ModeloWorkspaceFormulaRelationOperandReferenceV1(formula_id=formula_id, relation_id=expression.relation),
-        )
     if expression.literal is not None:
         return (ModeloWorkspaceFormulaLiteralOperandReferenceV1(formula_id=formula_id),)
     if expression.dispatch_table is not None:
@@ -545,35 +539,41 @@ def formula_operand_references_for_casilla(
     return tuple(matches)
 
 
-def relation_source_endpoints_for_casilla(
-    relations: tuple[RelationDefinition, ...],
-    casilla_id: str,
-) -> tuple[ModeloWorkspaceRelationSourceEndpointReferenceV1, ...]:
-    """Return the relation-source-endpoint rows whose declared source casilla matches.
+def fold_slots(bindings: tuple[BindingDefinition, ...]) -> tuple[tuple[BindingId, RelationPrefillProvider], ...]:
+    """Return every relation-prefill slot among a revision's bindings.
 
-    ``RelationDefinition.source_casilla_id`` names the source side
-    explicitly; no inference is needed.
+    The fold is declared by the binding itself now, so the slot identity and
+    the fold identity are the same id; both workspace endpoint rows are built
+    from this one pairing rather than from a second family that could name a
+    binding this revision does not declare.
     """
     return tuple(
-        ModeloWorkspaceRelationSourceEndpointReferenceV1(relation_id=relation.id, casilla_id=relation.source_casilla_id)
-        for relation in relations
-        if relation.source_casilla_id == casilla_id
+        (binding.id, binding.provider) for binding in bindings if isinstance(binding.provider, RelationPrefillProvider)
+    )
+
+
+def relation_source_endpoints_for_casilla(
+    bindings: tuple[BindingDefinition, ...],
+    casilla_id: str,
+) -> tuple[ModeloWorkspaceRelationSourceEndpointReferenceV1, ...]:
+    """Return the fold-source-endpoint rows whose declared source casilla matches."""
+    return tuple(
+        ModeloWorkspaceRelationSourceEndpointReferenceV1(relation_id=binding_id, casilla_id=source_casilla_id)
+        for binding_id, provider in fold_slots(bindings)
+        for source_casilla_id in provider.declared_source_casilla_ids
+        if source_casilla_id == casilla_id
     )
 
 
 def relation_target_endpoints_for_binding(
-    relations: tuple[RelationDefinition, ...],
+    bindings: tuple[BindingDefinition, ...],
     binding_id: str,
 ) -> tuple[ModeloWorkspaceRelationTargetEndpointReferenceV1, ...]:
-    """Return the relation-target-endpoint rows whose declared target binding matches.
-
-    ``RelationDefinition.target_binding`` names the target side explicitly;
-    no inference is needed.
-    """
+    """Return the fold-target-endpoint row for a binding that is itself a fold slot."""
     return tuple(
-        ModeloWorkspaceRelationTargetEndpointReferenceV1(relation_id=relation.id, binding_id=relation.target_binding)
-        for relation in relations
-        if relation.target_binding == binding_id
+        ModeloWorkspaceRelationTargetEndpointReferenceV1(relation_id=slot_id, binding_id=slot_id)
+        for slot_id, _ in fold_slots(bindings)
+        if slot_id == binding_id
     )
 
 
@@ -720,7 +720,6 @@ def static_inspection_casilla_schema_records(
     edge here.
     """
     formulas = inspection.formulas
-    relations = inspection.relations
     records: list[ModeloWorkspaceSchemaRecordV1] = []
     for casilla_id in sorted(inspection.casilla_ids):
         key = casilla_occurrence_locale_key(
@@ -743,7 +742,7 @@ def static_inspection_casilla_schema_records(
                 legal_refs=None,
                 constraints=None,
                 formula_operands=formula_operand_references_for_casilla(formulas, casilla_id),
-                relation_endpoints=relation_source_endpoints_for_casilla(relations, casilla_id),
+                relation_endpoints=relation_source_endpoints_for_casilla(inspection.bindings, casilla_id),
             )
         )
     return tuple(records)
@@ -752,14 +751,12 @@ def static_inspection_casilla_schema_records(
 def binding_schema_records(
     binding_ids: frozenset[BindingId],
     bindings: tuple[BindingDefinition, ...],
-    relations: tuple[RelationDefinition, ...],
 ) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
     """Build one schema record per binding identity, sorted for stable pagination.
 
     Narrowed from ``inspection: RegistryRevisionInspection`` to the raw
-    tuples it read internally -- ``BindingDefinition`` and
-    ``RelationDefinition`` are the identical type on both
-    ``RegistryRevisionInspection`` and ``RegistrySnapshot.revision``, so this
+    tuples it read internally -- ``BindingDefinition`` is the identical type
+    on both ``RegistryRevisionInspection`` and ``RegistrySnapshot.revision``, so this
     is ONE shared implementation both admissions call, never two copies that
     could drift. Unlike a casilla, ``BindingDefinition`` IS retained
     whole by both admissions, so ``legal_refs`` is the binding's own real
@@ -783,7 +780,7 @@ def binding_schema_records(
                 family_disposition=RegistrySchemaFamilyDisposition.POPULATED,
                 legal_refs=legal_refs,
                 constraints=(),
-                relation_endpoints=relation_target_endpoints_for_binding(relations, binding_id),
+                relation_endpoints=relation_target_endpoints_for_binding(bindings, binding_id),
             )
         )
     return tuple(records)
@@ -816,46 +813,6 @@ def formula_schema_records(
                 legal_refs=tuple(formula.legal_refs),
                 constraints=(),
                 formula_operands=formula_expression_operand_references(formula.id, formula.expression),
-            )
-        )
-    return tuple(records)
-
-
-def relation_schema_records(
-    relations: tuple[RelationDefinition, ...],
-) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
-    """Build one schema record per relation, carrying both of its own endpoints.
-
-    Narrowed from ``inspection: RegistryRevisionInspection`` to the raw
-    ``relations`` tuple -- ``RelationDefinition`` is the identical type on
-    both admissions, so this is ONE shared implementation. A RELATION row
-    states its own two endpoints directly from the registry-declared fields
-    (``source_casilla_id``, ``target_binding``) -- it is the one reference
-    kind that is never ambiguous about which side it claims, since it names
-    both.
-    """
-    records: list[ModeloWorkspaceSchemaRecordV1] = []
-    for relation in sorted(relations, key=lambda item: item.id):
-        records.append(
-            ModeloWorkspaceSchemaRecordV1(
-                reference=ModeloWorkspaceRelationReferenceV1(relation_id=relation.id),
-                record_family=("relations",),
-                data_type="relation_id",
-                label=ModeloWorkspaceTechnicalLabelV1(identifier=relation.id),
-                classification=ModeloWorkspaceSchemaClassification.PROJECTED,
-                family_disposition=RegistrySchemaFamilyDisposition.POPULATED,
-                legal_refs=tuple(relation.legal_refs),
-                constraints=(),
-                relation_endpoints=(
-                    ModeloWorkspaceRelationSourceEndpointReferenceV1(
-                        relation_id=relation.id,
-                        casilla_id=relation.source_casilla_id,
-                    ),
-                    ModeloWorkspaceRelationTargetEndpointReferenceV1(
-                        relation_id=relation.id,
-                        binding_id=relation.target_binding,
-                    ),
-                ),
             )
         )
     return tuple(records)
@@ -918,9 +875,8 @@ def static_inspection_schema_records(
     """
     records = (
         static_inspection_casilla_schema_records(inspection, target, output_language=output_language)
-        + binding_schema_records(inspection.binding_ids, inspection.bindings, inspection.relations)
+        + binding_schema_records(inspection.binding_ids, inspection.bindings)
         + formula_schema_records(inspection.formulas)
-        + relation_schema_records(inspection.relations)
         + parameter_schema_records(inspection.parameters, inspection.formulas)
     )
     return tuple(sorted(records, key=lambda record: (record.reference.kind, str(record.reference))))

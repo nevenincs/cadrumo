@@ -18,6 +18,10 @@ from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_temporal import (
     BindingTemporalSelector,
+    FiledCurrentPeriod,
+    FilingYearOffset,
+    FilingYearOffsetByTargetPeriod,
+    SameFilingYearPeriods,
     temporal_max_year_delta,
     temporal_period_anchors,
 )
@@ -71,6 +75,19 @@ class RelationPrefillProvider(BaseModel):
         period at all, which is a scope-out and never a zero.
         """
         return temporal_period_anchors(self.temporal, target_period=target_period)
+
+    @property
+    def required_source_periods(self) -> tuple[str, ...]:
+        """Return the fixed source periods the temporal member names, if any.
+
+        The members whose periods depend on the target period name none here;
+        their windows come from :meth:`required_period_anchors_for_target`.
+        """
+        if isinstance(self.temporal, SameFilingYearPeriods | FilingYearOffset | FilingYearOffsetByTargetPeriod):
+            return self.temporal.source_periods
+        if isinstance(self.temporal, FiledCurrentPeriod):
+            return (self.temporal.source_period,)
+        return ()
 
     @property
     def declared_source_casilla_ids(self) -> tuple[CasillaId, ...]:

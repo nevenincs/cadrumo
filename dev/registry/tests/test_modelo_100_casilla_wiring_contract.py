@@ -6,8 +6,6 @@ import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
-
 from ._modelo_100_registry_support import _loaded_registry, _registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -78,28 +76,24 @@ def test_revision_producer_inventory_keeps_formula_and_non_formula_paths_visible
                 elif producer_kind == "manual":
                     assert len(traces) == 1
                     trace = traces[0]
-                    assert trace.formula is None and trace.binding is None and trace.relation is None
+                    assert trace.formula is None and trace.binding is None
                     assert trace.producer_legal_refs == casilla.legal_refs
                     assert trace.producer_source_refs == casilla.source_refs
                 elif producer_kind == "upstream":
                     assert len(traces) == 1
                     trace = traces[0]
                     assert trace.binding is not None and trace.binding.id == casilla.binding
-                    assert trace.formula is None and trace.relation is None
+                    assert trace.formula is None
                     assert trace.producer_legal_refs == trace.binding.legal_refs
                     assert trace.producer_source_refs == trace.binding.source_refs
                 elif producer_kind == "relation":
                     assert all(trace.binding is not None and trace.binding.id == casilla.binding for trace in traces)
                     assert all(trace.formula is None for trace in traces)
-                    relation_ids = {trace.relation.id for trace in traces if trace.relation is not None}
-                    expected_relation_ids = {
-                        relation.id for relation in revision.relations if relation.target_binding == casilla.binding
-                    }
-                    assert relation_ids == expected_relation_ids
                     assert all(
-                        trace.relation is not None
-                        and trace.producer_legal_refs == trace.relation.legal_refs
-                        and trace.producer_source_refs == trace.relation.source_refs
+                        trace.binding is not None
+                        and trace.binding.source == "relation_prefill"
+                        and trace.producer_legal_refs == trace.binding.legal_refs
+                        and trace.producer_source_refs == trace.binding.source_refs
                         for trace in traces
                     )
                 else:
@@ -111,7 +105,7 @@ def test_revision_producer_inventory_keeps_formula_and_non_formula_paths_visible
                     assert producer_kind in {"informational", "projection_only"}, producer_kind
                     assert len(traces) == 1
                     trace = traces[0]
-                    assert trace.formula is None and trace.binding is None and trace.relation is None
+                    assert trace.formula is None and trace.binding is None
                     assert trace.producer_legal_refs == casilla.legal_refs
                     assert trace.producer_source_refs == casilla.source_refs
             observed_kinds.update(inventory.producer_kind_by_casilla.values())
@@ -119,35 +113,31 @@ def test_revision_producer_inventory_keeps_formula_and_non_formula_paths_visible
     assert observed_kinds >= {"formula", "manual", "upstream", "relation", "informational"}
 
 
-def test_revision_producer_inventory_does_not_flatten_relation_provenance() -> None:
-    """Each real relation declaration retains its own refs in the producer trace."""
+def test_revision_producer_inventory_keeps_relation_prefill_binding_provenance() -> None:
+    """A relation-prefill trace retains the binding's own grounding."""
     modelos_by_id, _catalogues = _loaded_registry()
 
     for modelo in modelos_by_id.values():
         for revision in modelo.revisions.values():
-            relations_by_binding: dict[str, list[RelationDefinition]] = {}
-            for relation in revision.relations:
-                relations_by_binding.setdefault(relation.target_binding, []).append(relation)
-            for binding_id, relations in relations_by_binding.items():
-                if len(relations) < 2:
+            bindings_by_id = {binding.id: binding for binding in revision.bindings}
+            inventory = revision.producer_inventory()
+            for casilla in revision.casillas:
+                if casilla.binding is None:
                     continue
-                casilla = next(
-                    (casilla for casilla in revision.casillas if casilla.binding == binding_id),
-                    None,
-                )
-                if casilla is None:
+                binding = bindings_by_id.get(casilla.binding)
+                if binding is None or binding.source != "relation_prefill":
                     continue
-                inventory = revision.producer_inventory()
                 traces = inventory.producer_provenance_by_casilla[casilla.id]
-                relation_traces = tuple(trace for trace in traces if trace.relation is not None)
-                relation_ids = {
-                    relation.id for trace in relation_traces for relation in (trace.relation,) if relation is not None
-                }
-                assert relation_ids == {relation.id for relation in relations}
-                assert all(trace.binding is not None and trace.binding.id == binding_id for trace in relation_traces)
+                assert any(
+                    trace.binding is not None
+                    and trace.binding.id == binding.id
+                    and trace.producer_legal_refs == binding.legal_refs
+                    and trace.producer_source_refs == binding.source_refs
+                    for trace in traces
+                )
                 return
 
-    raise AssertionError("bundled registry has no casilla with multiple relation declarations")
+    raise AssertionError("bundled registry has no relation-prefill binding trace")
 
 
 def test_registry_validator_rejects_a_manual_formula_target() -> None:

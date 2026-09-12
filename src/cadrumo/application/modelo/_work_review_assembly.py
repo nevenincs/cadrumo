@@ -27,20 +27,18 @@ from ...domain.calculations.registry.handoffs import (
 from ...domain.calculations.registry.ids import (
     BindingId,
     FormulaId,
-    RelationId,
     RevisionId,
 )
-from ...domain.calculations.registry.queries import relations_by_target_binding
+from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
     expression_casilla_refs,
-    expression_relation_refs,
     revision_date_binding_ids,
 )
 from ...domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind
-from ...domain.calculations.registry.schema_surfaces import CasillaDefinition, RelationDefinition
+from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.filing.schema import ModeloScalar, ModeloValueKind
 from ...domain.modelos.calculation_revision import CalculationRevision
@@ -84,9 +82,8 @@ class _ReviewRowContext:
     bindings_by_id: Mapping[BindingId, BindingDefinition]
     formulas_by_id: Mapping[FormulaId, FormulaDefinition]
     binding_to_casillas: Mapping[BindingId, tuple[CasillaId, ...]]
-    relations_by_binding: Mapping[BindingId, tuple[RelationDefinition, ...]]
-    relations: tuple[RelationDefinition, ...]
-    relation_channels: Mapping[RelationId, tuple[RelationConsumptionChannel, ...]]
+    fold_binding_ids: frozenset[BindingId]
+    relation_channels: Mapping[BindingId, tuple[RelationConsumptionChannel, ...]]
     persisted_decimal_bindings: Mapping[BindingId, Decimal]
     persisted_binding_ids: frozenset[BindingId]
     estados_casillas_oficiales: Mapping[CasillaId, EstadoCasillaOficial]
@@ -310,7 +307,6 @@ def _formula_origin(formula: FormulaDefinition | None) -> ModeloWorkFormulaOrigi
                 (
                     *expression_casilla_refs(formula.expression),
                     *expression_binding_refs(formula.expression),
-                    *expression_relation_refs(formula.expression),
                 ),
             ),
         ),
@@ -323,23 +319,17 @@ def _relation_consumptions(
     formula: FormulaDefinition | None,
     context: _ReviewRowContext,
 ) -> tuple[ModeloWorkRelationConsumption, ...]:
-    formula_relation_ids: set[RelationId] = (
-        set() if formula is None else set(expression_relation_refs(formula.expression))
-    )
     formula_binding_ids: set[BindingId] = set() if formula is None else set(expression_binding_refs(formula.expression))
     candidate_ids = {
-        relation.id
-        for binding_id in (*binding_ids, *formula_binding_ids)
-        for relation in context.relations_by_binding.get(binding_id, ())
+        binding_id for binding_id in (*binding_ids, *formula_binding_ids) if binding_id in context.fold_binding_ids
     }
-    candidate_ids.update(relation.id for relation in context.relations if relation.id in formula_relation_ids)
     return tuple(
         ModeloWorkRelationConsumption(
-            relation_id=relation.id,
-            channels=context.relation_channels[relation.id],
+            relation_id=binding_id,
+            channels=context.relation_channels[binding_id],
         )
-        for relation in context.relations
-        if relation.id in candidate_ids
+        for binding_id in sorted(context.fold_binding_ids)
+        if binding_id in candidate_ids
     )
 
 
@@ -419,11 +409,12 @@ def _review_row_context(
         bindings_by_id={binding.id: binding for binding in snapshot.revision.bindings},
         formulas_by_id={formula.id: formula for formula in snapshot.revision.formulas},
         binding_to_casillas=casillas_by_binding(snapshot.revision),
-        relations_by_binding=relations_by_target_binding(snapshot.revision),
-        relations=snapshot.revision.relations,
+        fold_binding_ids=frozenset(
+            binding.id for binding, _ in relation_prefill_bindings_for_period(snapshot.revision)
+        ),
         relation_channels={
-            relation.id: relation_consumption_channels(relation, consumption_index)
-            for relation in snapshot.revision.relations
+            binding.id: relation_consumption_channels(binding.id, consumption_index)
+            for binding, _ in relation_prefill_bindings_for_period(snapshot.revision)
         },
         persisted_decimal_bindings=_persisted_decimal_bindings(snapshot=snapshot, revision=revision),
         persisted_binding_ids=frozenset(() if revision is None else revision.binding_overrides),

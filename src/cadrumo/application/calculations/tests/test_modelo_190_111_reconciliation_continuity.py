@@ -62,7 +62,7 @@ from ....domain.calculations.registry.bindings import (
 )
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....domain.calculations.registry.ids import RelationId
-from ....domain.calculations.registry.relations import materialize_relation_binding_values
+from ....domain.calculations.registry.relations import relation_prefill_values_as_binding_values
 from ....domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
@@ -342,7 +342,7 @@ def _calculate_190(
 ) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL 190 annual calculation from relations + withholding detail."""
     snapshot = bundled_authority().snapshot(_MODELO_190, filing_year=filing_year, period="0A")
-    relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
+    relation_binding_values = relation_prefill_values_as_binding_values(snapshot.revision, relation_values, period="0A")
     withholding_binding_values = resolve_withholding_binding_values(snapshot.revision, withholding_observations)
     binding_values = {**relation_binding_values, **withholding_binding_values}
     inputs = {

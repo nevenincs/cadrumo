@@ -4,5 +4,13 @@ source_modelo = "131"
 treatment = "direct_annual_settlement"
 conditional_on_economic_activity = true
 target_constructs = ["modelo-131-2024-objective-estimation-instalment"]
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions"]
+binding_refs = [
+    "modelo-131-resultados-negativos-anteriores",
+]
+legal_refs = [
+    "rd-439-2007:art-110",
+    "rd-439-2007:art-95",
+]
+source_refs = [
+    "aeat-modelo-131-instructions",
+]

@@ -46,7 +46,7 @@ def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_c
         resolve_previous_filing_binding_values,
     )
     from ..relations import (
-        materialize_relation_binding_values,
+        relation_prefill_values_as_binding_values,
         relation_source_requirements,
         resolve_relation_values_from_observations,
     )
@@ -84,7 +84,7 @@ def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_c
         filing_year=2025,
         period="2T",
     ) == {"modelo-303-rel-self-compensacion-anteriores": Decimal("1200.00")}
-    assert materialize_relation_binding_values(
+    assert relation_prefill_values_as_binding_values(
         revision,
         {"modelo-303-rel-self-compensacion-anteriores": Decimal("1200.00")},
         period="2T",
@@ -97,7 +97,7 @@ def test_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourt
         resolve_previous_filing_binding_values,
     )
     from ..relations import (
-        materialize_relation_binding_values,
+        relation_prefill_values_as_binding_values,
         relation_source_requirements,
         resolve_relation_values_from_observations,
     )
@@ -135,7 +135,7 @@ def test_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourt
         filing_year=2026,
         period="1T",
     ) == {"modelo-303-rel-self-compensacion-anteriores": Decimal("450.00")}
-    assert materialize_relation_binding_values(
+    assert relation_prefill_values_as_binding_values(
         revision,
         {"modelo-303-rel-self-compensacion-anteriores": Decimal("450.00")},
         period="1T",

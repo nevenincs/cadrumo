@@ -31,7 +31,6 @@ CONSTRUCT_MEMBER_ATTRIBUTES = {
     "formula": "formulas",
     "parameter": "parameters",
     "binding": "bindings",
-    "relation": "relations",
     "export layout": "export_layouts",
     "extraction profile": "extraction_profiles",
     "cross-reference": "live_cross_references",

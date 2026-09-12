@@ -706,7 +706,7 @@ class RevisionConstructEvidence(ConformanceModel):
 
     @property
     def rows(self) -> tuple[_ConstructEvidenceRow, ...]:
-        """Return the exact formula/parameter/binding/relation/selector rows."""
+        """Return the exact formula/parameter/binding/selector rows."""
         return self.ledger.rows
 
     @property
@@ -1321,7 +1321,15 @@ def _casilla_producer_traces(revision: _ModeloRevision) -> tuple[RevisionCasilla
                     reason=trace.reason,
                     formula_id=None if trace.formula is None else trace.formula.id,
                     binding_id=None if trace.binding is None else trace.binding.id,
-                    relation_id=None if trace.relation is None else trace.relation.id,
+                    # Relation-prefill is now a provider on the binding itself;
+                    # retain this report column as the binding id only for the
+                    # relation producer kind, without reaching for a deleted
+                    # relation declaration.
+                    relation_id=(
+                        None
+                        if trace.producer_kind.value != "relation" or trace.binding is None
+                        else trace.binding.id
+                    ),
                     casilla_legal_refs=trace.casilla.legal_refs,
                     casilla_source_refs=trace.casilla.source_refs,
                     producer_legal_refs=trace.producer_legal_refs,

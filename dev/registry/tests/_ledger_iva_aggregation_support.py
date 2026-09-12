@@ -38,7 +38,7 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     resolve_ledger_iva_aggregation_binding_values,
 )
 from cadrumo.domain.calculations.registry.relations import (
-    materialize_relation_binding_values,
+    relation_prefill_values_as_binding_values,
     resolve_relation_values_from_observations,
 )
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
@@ -333,7 +333,7 @@ def _calculate_390_from_observations_and_303_filings(
         filing_year=filing_year,
         period="0A",
     )
-    relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
+    relation_binding_values = relation_prefill_values_as_binding_values(snapshot.revision, relation_values, period="0A")
     annual_partition_values = resolve_iva_compensation_annual_partition_binding_values(
         snapshot.revision,
         normalized_m303_envelopes,

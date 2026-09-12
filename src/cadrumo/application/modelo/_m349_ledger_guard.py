@@ -8,7 +8,7 @@ declarations.
 
 from __future__ import annotations
 
-from ...domain.calculations.registry.queries import relations_by_target_binding
+from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
@@ -20,12 +20,12 @@ def _selected_registry_ledger_declarations(work_unit: WorkUnit) -> tuple[object,
 
     snapshot = resolve_registry_snapshot_for_work_unit(work_unit)
     revision = snapshot.revision
-    relation_index = relations_by_target_binding(revision)
+    fold_slots = relation_prefill_bindings_for_period(revision)
     return (
         tuple(revision.bindings),
         tuple(revision.verification_expectations),
         tuple(revision.export_layouts),
-        tuple(relation_index.items()),
+        tuple(binding.id for binding, _ in fold_slots),
     )
 
 

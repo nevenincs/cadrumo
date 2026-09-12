@@ -57,13 +57,13 @@ def gather_observed_requirement_values(
         )
         if len(matches) != 1:
             raise RegistryValidationError(
-                f"relation requirement {requirement.relation_ids!r} expected one observed filing "
+                f"relation requirement {_requirement_ids(requirement)!r} expected one observed filing "
                 f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}, found {len(matches)}",
             )
         value = matches[0].casilla_values.get(source_casilla_id)
         if value is None:
             raise RegistryValidationError(
-                f"relation requirement {requirement.relation_ids!r} requires observed source casilla id "
+                f"relation requirement {_requirement_ids(requirement)!r} requires observed source casilla id "
                 f"{source_casilla_id!r} from "
                 f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}",
             )
@@ -116,14 +116,19 @@ def fold_observed_requirement_values(
     # fold is the one both RELATION paths apply, per the docstring above.
     if aggregation_op is None:
         raise RegistryValidationError(
-            f"relation requirement {requirement.relation_ids!r} declares no aggregation op to fold with",
+            f"relation requirement {_requirement_ids(requirement)!r} declares no aggregation op to fold with",
         )
     return fold_sum_or_copy(
         aggregation_op,
         values,
-        subject=f"relation requirement {requirement.relation_ids!r}",
+        subject=f"relation requirement {_requirement_ids(requirement)!r}",
         copy_unit="observation",
     )
+
+
+def _requirement_ids(requirement: RegistryFoldRequirement) -> tuple[str, ...]:
+    """Return the binding ids carried by either kind of fold requirement."""
+    return requirement.target_bindings or requirement.binding_ids
 
 
 def resolve_observed_requirement_value(

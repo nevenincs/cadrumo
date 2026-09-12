@@ -234,7 +234,6 @@ def modelo_dependency_ids(modelo: ModeloDefinition) -> frozenset[str]:
     sources: set[str] = set()
     for revision in modelo.revisions.values():
         sources.update(str(classification.source_modelo) for classification in revision.dependency_classifications)
-        sources.update(str(relation.source_modelo) for relation in revision.relations)
         for binding in revision.bindings:
             source = binding_source_modelo(binding)
             if source is not None:

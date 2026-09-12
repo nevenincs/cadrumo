@@ -28,7 +28,7 @@ from ....domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from ....domain.calculations.registry.relations import materialize_relation_binding_values
+from ....domain.calculations.registry.relations import relation_prefill_values_as_binding_values
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
@@ -261,7 +261,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
         # Provenance: resolved entries carry local_filing provenance.
         assert all(rv.provenance == "local_filing" for rv in relation_vals.values if rv.value is not None)
         relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
-        relation_binding_values = materialize_relation_binding_values(
+        relation_binding_values = relation_prefill_values_as_binding_values(
             snapshot.revision,
             relation_values_map,
             period="0A",

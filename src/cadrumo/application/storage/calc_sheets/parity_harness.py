@@ -67,10 +67,14 @@ from ....domain.calculations.registry.ids import (
     RelationId,
     RevisionId,
 )
-from ....domain.calculations.registry.relations import RegistryFoldRequirement, relation_source_requirements
-from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
+from ....domain.calculations.registry.relations import (
+    RegistryFoldRequirement,
+    relation_prefill_bindings_for_period,
+    relation_source_requirements,
+)
+from ....domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind
-from ....domain.calculations.registry.schema_surfaces import RelationDefinition
 from ....domain.period import calculation_filing_date
 from ._parity_comparison import collect_parity_rows, resolve_parity_verdict
 from .casilla_parity import CasillaParity
@@ -187,27 +191,28 @@ def _relation_requirements_by_id(
             filing_year=snapshot.filing_year,
             period=snapshot.period,
         )
-        for relation_id in requirement.relation_ids
+        for relation_id in requirement.target_bindings
     }
 
 
 def _build_relation_value(
     relation_id: RelationId,
     value: Decimal,
-    definition: RelationDefinition,
+    binding: BindingDefinition,
+    provider: RelationPrefillProvider,
     requirement: RegistryFoldRequirement | None,
 ) -> RelationValue:
-    """Build one parity relation value from the registry relation or its requirement."""
+    """Build one parity fold value from the slot declaration or its requirement."""
     if requirement is None:
         return RelationValue(
             relation=relation_id,
             value=value,
-            source_modelo=definition.source_modelo,
+            source_modelo=provider.source_modelo,
             source_filing_year=None,
-            source_periods=definition.source_periods,
-            source_casilla_ids=(definition.source_casilla_id,),
-            legal_refs=definition.legal_refs,
-            source_refs=definition.source_refs,
+            source_periods=provider.required_source_periods,
+            source_casilla_ids=provider.declared_source_casilla_ids,
+            legal_refs=tuple(binding.legal_refs),
+            source_refs=tuple(binding.source_refs),
         )
     return RelationValue(
         relation=relation_id,
@@ -222,9 +227,12 @@ def _build_relation_value(
 
 
 def _build_relation_values(snapshot: RegistrySnapshot, scenario: OperatorInputScenario) -> RelationValues:
-    relations_by_id = {relation.id: relation for relation in snapshot.revision.relations}
+    folds_by_id = {
+        binding.id: (binding, provider)
+        for binding, provider in relation_prefill_bindings_for_period(snapshot.revision)
+    }
     requirements_by_relation = _relation_requirements_by_id(snapshot)
-    unknown_relation_ids = sorted(set(scenario.relation_values).difference(relations_by_id))
+    unknown_relation_ids = sorted(set(scenario.relation_values).difference(folds_by_id))
     if unknown_relation_ids:
         raise CalcSheetsParityError(
             "scenario references unknown relation ids",
@@ -235,7 +243,8 @@ def _build_relation_values(snapshot: RegistrySnapshot, scenario: OperatorInputSc
             _build_relation_value(
                 relation_id=relation_id,
                 value=value,
-                definition=relations_by_id[relation_id],
+                binding=folds_by_id[relation_id][0],
+                provider=folds_by_id[relation_id][1],
                 requirement=requirements_by_relation.get(relation_id),
             )
             for relation_id, value in scenario.relation_values.items()
@@ -375,7 +384,8 @@ def _compute_local(
         full_inputs[casilla.id] = inputs_by_id.get(casilla.id, Decimal("0"))
     binding_defaults = {binding.id: scenario.bindings.get(binding.id, Decimal("0")) for binding in revision.bindings}
     relation_defaults = {
-        relation.id: scenario.relation_values.get(relation.id, Decimal("0")) for relation in revision.relations
+        binding.id: scenario.relation_values.get(binding.id, Decimal("0"))
+        for binding, _ in relation_prefill_bindings_for_period(revision)
     }
     result = calculate_registry_snapshot(
         snapshot,

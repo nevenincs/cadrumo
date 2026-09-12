@@ -219,6 +219,10 @@ class ModeloBindingQueryRow(BaseModel):
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
     borrador_capable: bool = False
+    #: The fold slots feeding this row. A relation-prefill binding names
+    #: ITSELF here, because the fold and the slot are one declaration; every
+    #: other binding names none.
+    relation_inputs: tuple[BindingId, ...] = ()
     encoded_options: tuple[BooleanBindingEncodedValue, ...] = ()
     operator_input_required: bool = True
 
@@ -246,6 +250,8 @@ class ModeloFormulaRow(BaseModel):
     input_casilla_ids: tuple[CasillaId, ...]
     input_bindings: tuple[BindingId, ...]
     input_parameters: tuple[ParameterId, ...]
+    #: The subset of ``input_bindings`` that are relation-prefill fold slots.
+    input_relations: tuple[BindingId, ...]
     expression: Mapping[str, object]
     legal_refs: tuple[LegalRefId, ...]
     source_refs: tuple[SourceRefId, ...]

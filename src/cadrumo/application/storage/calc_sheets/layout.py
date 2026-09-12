@@ -50,11 +50,11 @@ from ....domain.calculations.registry.ids import (
     RelationId,
     RevisionId,
 )
+from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.runtime_graph import (
     expression_binding_refs,
     expression_date_binding_refs,
     expression_parameter_refs,
-    expression_relation_refs,
 )
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_formula import BracketEntry, ParameterDefinition
@@ -207,15 +207,28 @@ def _referenced_date_bindings(revision: ModeloRevision) -> tuple[BindingId, ...]
     return tuple(seen)
 
 
-def _referenced_relations(revision: ModeloRevision) -> tuple[RelationId, ...]:
-    seen: dict[RelationId, None] = {}
+def _fold_binding_ids(revision: ModeloRevision) -> frozenset[BindingId]:
+    """Return every relation-prefill slot this revision declares."""
+    return frozenset(binding.id for binding, _ in relation_prefill_bindings_for_period(revision))
+
+
+def _referenced_relations(revision: ModeloRevision) -> tuple[BindingId, ...]:
+    """Return the relation-prefill slots a formula of this revision reads.
+
+    These get their own pre-resolved cell rather than an ordinary binding cell:
+    the value is a cross-filing fold the caller supplies already aggregated,
+    not an operator input of this filing.
+    """
+    fold_ids = _fold_binding_ids(revision)
+    seen: dict[BindingId, None] = {}
     formulas = {formula.id: formula for formula in revision.formulas}
     for casilla in revision.casillas:
         if casilla.formula is None:
             continue
         formula = formulas[casilla.formula]
-        for relation in expression_relation_refs(formula.expression):
-            seen.setdefault(relation, None)
+        for binding in expression_binding_refs(formula.expression):
+            if binding in fold_ids:
+                seen.setdefault(binding, None)
     return tuple(seen)
 
 
@@ -232,6 +245,13 @@ def _referenced_parameters(revision: ModeloRevision) -> tuple[ParameterId, ...]:
 
 
 def _referenced_bindings(revision: ModeloRevision) -> tuple[BindingId, ...]:
+    """Return ordinary binding operands, excluding the relation-prefill slots.
+
+    A fold slot is laid out by :func:`_referenced_relations` on its own cell;
+    admitting it here too would give one identifier two cells that could
+    disagree.
+    """
+    fold_ids = _fold_binding_ids(revision)
     seen: dict[BindingId, None] = {}
     formulas = {formula.id: formula for formula in revision.formulas}
     for casilla in revision.casillas:
@@ -239,7 +259,8 @@ def _referenced_bindings(revision: ModeloRevision) -> tuple[BindingId, ...]:
             continue
         formula = formulas[casilla.formula]
         for binding in expression_binding_refs(formula.expression):
-            seen.setdefault(binding, None)
+            if binding not in fold_ids:
+                seen.setdefault(binding, None)
     return tuple(seen)
 
 
@@ -586,11 +607,11 @@ def _layout_relations(
     the revision are silently skipped — registry validation already
     refused those.
     """
-    relation_cells: dict[RelationId, SheetCellAddress] = {}
-    relations_by_id = {rel.id: rel for rel in revision.relations}
+    relation_cells: dict[BindingId, SheetCellAddress] = {}
+    fold_ids = _fold_binding_ids(revision)
     tariffs_row = tariffs_row_start
     for relation_id in _referenced_relations(revision):
-        if relation_id not in relations_by_id:
+        if relation_id not in fold_ids:
             raise _undeclared_layout_reference("relation")
         relation_cells[relation_id] = SheetCellAddress.at(TabName.TARIFFS, tariffs_row, anchor_column)
         tariffs_row += 2

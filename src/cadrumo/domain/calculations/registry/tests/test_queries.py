@@ -14,12 +14,13 @@ from ..authority import bundled_authority
 from ..binding_temporal import TargetPeriodOffset
 from ..bindings_previous_filing import PreviousFilingProvider
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
-from ..queries import RegistryQueryService, ResolvedRegistryQueryContext, relations_by_target_binding
+from ..queries import RegistryQueryService, ResolvedRegistryQueryContext
 from ..query_reports import (
     ModeloBindingsReport,
     ModeloCasillaDetailReport,
     ModeloFormulaRow,
 )
+from ..relations import relation_prefill_bindings_for_period
 from ..schema_input_kind import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -32,18 +33,37 @@ def _service() -> RegistryQueryService:
     return RegistryQueryService(bundled_authority())
 
 
-def test_relations_by_target_binding_preserves_real_registry_declaration_order() -> None:
+def test_relation_prefill_bindings_preserve_real_registry_declaration_order() -> None:
     snapshot = bundled_authority().snapshot(Modelo.M202.value, filing_year=2025, period="2P")
 
-    grouped = relations_by_target_binding(snapshot.revision)
+    folds = relation_prefill_bindings_for_period(snapshot.revision, period="2P")
 
-    assert tuple(relation.id for relation in grouped["modelo-202-pagos-fraccionados-anteriores"]) == (
-        "modelo-202-2025-y-siguientes-rel-self-pagos-2p",
-        "modelo-202-2025-y-siguientes-rel-self-pagos-3p",
+    assert tuple(binding.id for binding, _ in folds) == (
+        "modelo-202-pagos-fraccionados-anteriores",
+        "modelo-202-cuota-base-ejercicio-anterior",
     )
-    assert tuple(relation.id for relation in grouped["modelo-202-cuota-base-ejercicio-anterior"]) == (
-        "modelo-202-2025-y-siguientes-rel-cuota-base-1p",
-        "modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p",
+
+
+@pytest.mark.parametrize(("period", "expected_anchors"), (("1P", ((-2, "0A"),)), ("2P", ((-1, "0A"),))))
+def test_relation_prefill_binding_carries_its_per_target_period_source_window(
+    period: str,
+    expected_anchors: tuple[tuple[int, str], ...],
+) -> None:
+    """The instalment base reads a filing year whose distance varies by target period.
+
+    The registry once spelled this as two separately identified relation rows
+    per target binding. The distance is now declared once, per target period,
+    on the binding's own provider, so the window is asserted through the
+    provider rather than through a relation identifier.
+    """
+    snapshot = bundled_authority().snapshot(Modelo.M202.value, filing_year=2025, period=period)
+
+    providers = {
+        binding.id: provider for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period=period)
+    }
+
+    assert providers["modelo-202-cuota-base-ejercicio-anterior"].required_period_anchors_for_target(period) == (
+        expected_anchors
     )
 
 

@@ -55,6 +55,7 @@ __all__ = [
     "relation_prefill_bindings_for_period",
     "relation_requirement_index",
     "relation_source_requirements",
+    "relation_prefill_values_as_binding_values",
     "resolve_relation_values",
     "resolve_relation_values_from_observations",
     "source_presence_gaps",
@@ -460,3 +461,24 @@ def resolve_relation_values_from_observations(
         for binding_id in requirement.target_bindings:
             external_outputs[binding_id] = raw_value
     return resolve_relation_values(revision, external_outputs, period=period)
+
+
+def relation_prefill_values_as_binding_values(
+    revision: ModeloRevision,
+    values: Mapping[BindingId, Decimal],
+    *,
+    period: str | None = None,
+) -> dict[BindingId, Decimal]:
+    """Project resolved relation-prefill values onto their binding ids.
+
+    Relation absorption makes the fold slot and its former target binding one
+    declaration.  This small projection remains useful at boundaries that
+    receive a pre-resolved map and need to merge it with ordinary binding
+    inputs; it deliberately accepts only the active provider binding ids and
+    never translates a retired relation id.
+    """
+    active_ids = {binding.id for binding, _ in relation_prefill_bindings_for_period(revision, period=period)}
+    unknown = sorted(set(values).difference(active_ids))
+    if unknown:
+        raise RegistryValidationError(f"unknown relation-prefill binding ids: {unknown!r}")
+    return {binding_id: value for binding_id, value in values.items() if binding_id in active_ids}
