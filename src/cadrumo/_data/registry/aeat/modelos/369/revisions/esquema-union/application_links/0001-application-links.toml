@@ -42,7 +42,7 @@ legal_refs = [
     "ley-37-1992:art-163-tervicies",
     "ley-37-1992:art-163-quatervicies",
 ]
-source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+additional_source_refs = ["boe-modelo-369-2021-form"]
 
 [[revisions."esquema-union".application_links]]
 id = "modelo-369-union-review"
@@ -50,7 +50,7 @@ surface = "review"
 consumer = "cadrumo.application.filing.review"
 requires_snapshot = true
 legal_refs = ["orden-hac-610-2021:art-1"]
-source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+additional_source_refs = ["boe-modelo-369-2021-form"]
 
 [[revisions."esquema-union".application_links]]
 id = "modelo-369-union-approval"
@@ -58,7 +58,7 @@ surface = "approval"
 consumer = "cadrumo.application.workflow.approval"
 requires_snapshot = true
 legal_refs = ["orden-hac-610-2021:art-1"]
-source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+additional_source_refs = ["boe-modelo-369-2021-form"]
 
 [[revisions."esquema-union".application_links]]
 id = "modelo-369-union-reconciliation"
@@ -66,7 +66,7 @@ surface = "reconciliation"
 consumer = "cadrumo.application.reconciliation"
 requires_snapshot = true
 legal_refs = ["orden-hac-610-2021:art-1"]
-source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+additional_source_refs = ["boe-modelo-369-2021-form"]
 
 [[revisions."esquema-union".application_links]]
 id = "modelo-369-union-workflow"
@@ -74,7 +74,7 @@ surface = "workflow"
 consumer = "cadrumo.application.workflow"
 requires_snapshot = true
 legal_refs = ["orden-hac-610-2021:art-1"]
-source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+additional_source_refs = ["boe-modelo-369-2021-form"]
 
 [[revisions."esquema-union".application_links]]
 id = "modelo-369-union-export"
@@ -82,4 +82,3 @@ surface = "export"
 consumer = "cadrumo.application.filing.export_draft"
 requires_snapshot = true
 legal_refs = ["orden-hac-610-2021:art-3"]
-source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure"]

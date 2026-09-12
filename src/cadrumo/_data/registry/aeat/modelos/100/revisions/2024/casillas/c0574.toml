@@ -1,7 +1,10 @@
 [[revisions."2024".casillas]]
 id = "0574"
+continuidad_id = "irpf-perdida-derecho-deduccion-transitoria-estatal"
+continuidad_origin = "grounded"
+continuidad_evidence = "Official AEAT Renta manuals ground the same Chapter 18 regularization field in both exercises: Manual práctico de Renta 2024, Parte 1, chapter 18, section 'Incremento de las cuotas líquidas, estatal y autonómica, por pérdida del derecho a deducciones de ejercicios anteriores' (p. 1465), identifies box 0574 for deductions lost in 2024 and box 0576 for their interest; the 2025 Parte 1 manual, same chapter and section (p. 1354), identifies box 0574 for deductions lost in 2025 and box 0576 for their interest. AEAT dictionaries aeat-dr-100-2024-dictionary:915 and aeat-dr-100-2025-dictionary:941 map DED97E at /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/DED97E [P102] to box 0574 in both revisions. The exercise year is the only label change; section, semantic_role, legal_refs, and box number remain stable, with no representation or renumbering change. Continuity is grounded in the official field and manual context, not the number alone."
 number = "0574"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_perdida_derecho_deduccion_transitoria_estatal"
 legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-77", "rd-439-2007:art-59"]
-additional_source_refs = ["aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]
+additional_source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1"]

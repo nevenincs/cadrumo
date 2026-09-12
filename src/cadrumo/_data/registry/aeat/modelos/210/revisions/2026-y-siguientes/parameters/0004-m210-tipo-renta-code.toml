@@ -36,7 +36,7 @@
 # would fabricate it.
 
 [[revisions."2026-y-siguientes".parameters]]
-id = "m210-tipo-renta-code-2025"
+id = "m210-tipo-renta-code"
 data_type = "keyed_bracket_table"
 unit = "code"
 legal_refs = [

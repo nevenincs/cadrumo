@@ -1,6 +1,7 @@
 [revisions."2011-2024"]
 binding_source_refs = ["aeat-dr-347-2011", "aeat-modelo-347-procedure"]
 casilla_source_refs = ["aeat-dr-347-2011"]
+live_cross_reference_source_refs = ["aeat-modelo-347-procedure"]
 authority_grade = "filing"
 # valid_from is canonicalised to the ejercicio-start convention (January 1 of
 # period_selector.year_from), not the orden's own effective date -- that fact

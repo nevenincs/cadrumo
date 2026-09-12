@@ -1,7 +1,10 @@
 [[revisions."2025".casillas]]
 id = "0576"
+continuidad_id = "irpf-intereses-demora-perdida-transitoria-estatal"
+continuidad_origin = "grounded"
+continuidad_evidence = "Official AEAT Renta manuals ground the same Chapter 18 regularization field in both exercises: Manual práctico de Renta 2024, Parte 1, chapter 18, section 'Incremento de las cuotas líquidas, estatal y autonómica, por pérdida del derecho a deducciones de ejercicios anteriores' (p. 1465), identifies box 0576 for interest on deductions lost in 2024 and box 0574 for the deduction amount; the 2025 Parte 1 manual, same chapter and section (p. 1354), identifies box 0576 for interest on deductions lost in 2025 and box 0574 for the deduction amount. AEAT dictionaries aeat-dr-100-2024-dictionary:917 and aeat-dr-100-2025-dictionary:943 map INT97E at /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/INT97E [P102] to box 0576 in both revisions. The label, section, semantic_role, legal_refs, and box number remain stable, with no representation or renumbering change. Continuity is grounded in the official field and manual context, not the number alone."
 number = "0576"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_intereses_demora_perdida_transitoria_estatal"
 legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-77", "rd-439-2007:art-59", "ley-58-2003:art-26"]
-additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+additional_source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

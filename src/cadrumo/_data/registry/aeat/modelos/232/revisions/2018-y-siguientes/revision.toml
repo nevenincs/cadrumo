@@ -2,6 +2,9 @@
 binding_source_refs = ["aeat-dr-232-2018"]
 predecessor = "2016-2017"
 casilla_source_refs = ["aeat-dr-232-2018"]
+# live_cross_reference_source_refs: carried from predecessor edition "2016-2017"; not re-grounded on this edition's own design
+live_cross_reference_source_refs = ["aeat-modelo-232-procedure"]
+application_link_source_refs = ["aeat-dr-232-2018"]
 reviewed_against = "2016-2017"
 # Prepared and reviewed by an agent against the bundled diseno de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and

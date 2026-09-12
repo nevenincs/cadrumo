@@ -53,7 +53,6 @@ id = "m131-modulos-coeficientes"
 data_type = "keyed_bracket_table"
 unit = "euro_per_unit"
 legal_refs = ["orden-hac-1425-2025:art-4"]
-source_refs = ["aeat-modelo-131-instructions"]
 
 keyed_brackets = [
     # Epígrafe IAE 721.2 — Transporte por autotaxis.
@@ -825,7 +824,6 @@ id = "m131-modulos-reduccion-general"
 data_type = "ratio"
 unit = "percent"
 legal_refs = ["orden-hac-1425-2025:da-1"]
-source_refs = ["aeat-modelo-131-instructions"]
 [[revisions."2026".parameters.source_citations]]
 source_ref = "aeat-modelo-131-instructions"
 required_text = [
@@ -850,7 +848,6 @@ id = "m131-modulos-coeficiente-incremento-asalariados"
 data_type = "ratio"
 unit = "coefficient"
 legal_refs = ["orden-hac-1425-2025:instruccion-2-2-a"]
-source_refs = ["aeat-modelo-131-instructions"]
 [[revisions."2026".parameters.source_citations]]
 source_ref = "aeat-modelo-131-instructions"
 required_text = [
@@ -879,7 +876,6 @@ data_type = "bracket_table"
 unit = "coefficient"
 bracket_axis = "filing_period"
 legal_refs = ["orden-hac-1425-2025:instruccion-2-2-a"]
-source_refs = ["aeat-modelo-131-instructions"]
 [[revisions."2026".parameters.source_citations]]
 source_ref = "aeat-modelo-131-instructions"
 required_text = [
@@ -936,7 +932,6 @@ id = "m131-modulos-indice-exceso"
 data_type = "ratio"
 unit = "coefficient"
 legal_refs = ["orden-hac-1425-2025:instruccion-2-3-b-3"]
-source_refs = ["aeat-modelo-131-instructions"]
 [[revisions."2026".parameters.source_citations]]
 source_ref = "aeat-modelo-131-instructions"
 required_text = [
@@ -970,7 +965,6 @@ id = "m131-modulos-cuantia-exceso"
 data_type = "keyed_bracket_table"
 unit = "euro"
 legal_refs = ["orden-hac-1425-2025:instruccion-2-3-b-3"]
-source_refs = ["aeat-modelo-131-instructions"]
 [[revisions."2026".parameters.source_citations]]
 source_ref = "aeat-modelo-131-instructions"
 required_text = [

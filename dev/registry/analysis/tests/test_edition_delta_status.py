@@ -24,6 +24,7 @@ from ..edition_delta_status import (
     MEASUREMENTS,
     Edge,
     _artifacts_dir,
+    _schema_families,
     _signal_lines,
     _write_detail,
     build_report,
@@ -500,7 +501,7 @@ class TestEdges:
         export.mkdir()
         (export / "0001-layout.toml").write_text('[[revisions."2025".export_layouts]]\nid = "x"\n', encoding="utf-8")
         (edge,) = edges(scan_registry(tmp_path))
-        assert edge.blockers == ("export_scenario_missing",)
+        assert edge.blockers == ("export_scenario_missing=999",)
 
     def test_a_migrated_predecessor_is_walked_to_its_inherited_rows(self, tmp_path: Path) -> None:
         """A delta edition states only its delta; as a predecessor it holds the whole chain.
@@ -665,7 +666,16 @@ class TestUnionFamilies:
             encoding="utf-8",
         )
         findings = [f for s in scan_registry(tmp_path) for f in s.findings if f.kind == "family_without_identity"]
-        assert [(f.locus, f.detail.split(" ")[0]) for f in findings] == [("projection_endpoints", "2")]
+        # projection_endpoints gained an `id` when the schema was extended, so
+        # this condition is vacuous on today's corpus rather than wrong. The
+        # assertion is kept as a guard in the other direction: a family added
+        # WITHOUT an identity must be named, and the test fails loudly if the
+        # schema ever regains one. Checking the schema directly rather than
+        # asserting a count keeps the detector honest as families are added.
+        assert findings == [], "no shipped family lacks an identity today"
+        assert all(key is not None for _family, key in _schema_families()), (
+            "a family without an identity field cannot join the union and must be named"
+        )
 
     def test_casillas_under_a_root_are_measured_and_under_a_predecessor_are_not(self, tmp_path: Path) -> None:
         """Inheritance is what removes restatement; a root inherits nothing, so its copies count."""
@@ -1498,7 +1508,7 @@ class TestRootKindReadsTheCause:
         return edge
 
     @pytest.mark.parametrize(
-        "cause", ["parallel scheme variants", "Parallel Scheme Variant", "lower grade", "overlapping predecessor"]
+        "cause", ["parallel scheme variants", "Parallel Scheme Variant", "overlapping predecessor"]
     )
     def test_a_cause_that_is_a_fact_about_the_forms_is_terminal(self, tmp_path: Path, cause: str) -> None:
         edge = self._rooted(tmp_path, cause)
@@ -1506,7 +1516,7 @@ class TestRootKindReadsTheCause:
         assert not edge.root_is_open
         assert edge.blockers == (), "no cause of ours stops a root the law gives"
 
-    @pytest.mark.parametrize("cause", ["unretired withdrawal", "row order"])
+    @pytest.mark.parametrize("cause", ["unretired withdrawal", "row order", "lower grade"])
     def test_a_cause_that_is_work_is_recoverable(self, tmp_path: Path, cause: str) -> None:
         edge = self._rooted(tmp_path, cause)
         assert edge.root_kind == "root_recoverable"
@@ -2016,3 +2026,320 @@ class TestPerYearPeriodOverrides:
             if gap.kind == "promised_coordinate_unserved"
         ]
         assert unserved == [(2026, "01")]
+
+
+class TestRestatementBuckets:
+    """Restatement is four different things and only one of them is droppable.
+
+    The census presented 10,440 members as a merge-supplied backlog; the drop
+    path found zero droppable on eleven modelos, because the comparison set
+    references aside and a successor re-grounding a member on its own design
+    counted as restated. Each bucket here is a reason a member is NOT work.
+    """
+
+    _PRED = 'valid_from = 2024-01-01\nauthority_grade = "filing"'
+
+    def _pair(self, root: Path, *, successor_manifest: str, member: str, inherited: str) -> None:
+        _write_edition(
+            root,
+            "999",
+            "2024",
+            manifest=self._PRED,
+            casillas='[[revisions."2024".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+            formulas=inherited,
+        )
+        _write_edition(
+            root,
+            "999",
+            "2025",
+            manifest=successor_manifest,
+            casillas='[[revisions."2025".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+            formulas=member,
+        )
+
+    def test_an_identical_member_on_a_declared_edge_is_droppable(self, tmp_path: Path) -> None:
+        row = '[[revisions."{e}".formulas]]\nid = "f1"\nsource_refs = ["src-a"]\n'
+        self._pair(
+            tmp_path,
+            successor_manifest='valid_from = 2025-01-01\nauthority_grade = "filing"\npredecessor = "2024"',
+            member=row.replace("{e}", "2025"),
+            inherited=row.replace("{e}", "2024"),
+        )
+        kinds = _kinds_of(build_report(tmp_path))
+        assert "member_restated_payload_equal" in kinds
+        assert "member_restated_grounding" not in kinds
+
+    def test_a_member_regrounded_on_its_own_design_is_not_droppable(self, tmp_path: Path) -> None:
+        """A merge cannot supply a reference the predecessor never stated."""
+        self._pair(
+            tmp_path,
+            successor_manifest='valid_from = 2025-01-01\nauthority_grade = "filing"\npredecessor = "2024"',
+            member='[[revisions."2025".formulas]]\nid = "f1"\nsource_refs = ["src-2025"]\n',
+            inherited='[[revisions."2024".formulas]]\nid = "f1"\nsource_refs = ["src-2024"]\n',
+        )
+        kinds = _kinds_of(build_report(tmp_path))
+        assert "member_restated_grounding" in kinds
+        assert "member_restated_payload_equal" not in kinds
+
+    def test_a_member_behind_an_undeclared_edge_is_not_drop_path_work(self, tmp_path: Path) -> None:
+        row = '[[revisions."{e}".formulas]]\nid = "f1"\nsource_refs = ["src-a"]\n'
+        self._pair(
+            tmp_path,
+            successor_manifest='valid_from = 2025-01-01\nauthority_grade = "filing"',
+            member=row.replace("{e}", "2025"),
+            inherited=row.replace("{e}", "2024"),
+        )
+        kinds = _kinds_of(build_report(tmp_path))
+        assert "member_restated_unedged" in kinds
+        assert "member_restated_payload_equal" not in kinds
+
+    def test_the_buckets_partition_the_old_total(self, tmp_path: Path) -> None:
+        """Nothing may fall outside the split: a member in no bucket is a member nobody owns."""
+        row = '[[revisions."{e}".formulas]]\nid = "f1"\nsource_refs = ["src-a"]\n'
+        self._pair(
+            tmp_path,
+            successor_manifest='valid_from = 2025-01-01\nauthority_grade = "filing"\npredecessor = "2024"',
+            member=row.replace("{e}", "2025"),
+            inherited=row.replace("{e}", "2024"),
+        )
+        kinds = _kinds_of(build_report(tmp_path))
+        buckets = (
+            "member_restated_payload_equal",
+            "member_restated_grounding",
+            "member_restated_pinned",
+            "member_restated_unedged",
+        )
+        assert kinds.count("member_restated") == sum(kinds.count(bucket) for bucket in buckets)
+
+
+class TestDeclaredEdgesAreStillChecked:
+    """Declaring a predecessor silences no cause the tool would still refuse."""
+
+    def test_a_declared_edge_that_still_fails_a_blocker_is_named_apart(self, tmp_path: Path) -> None:
+        _write_edition(
+            tmp_path,
+            "999",
+            "2024",
+            manifest='valid_from = 2024-01-01\nauthority_grade = "filing"',
+            casillas='[[revisions."2024".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+        _write_edition(
+            tmp_path,
+            "999",
+            "2025",
+            manifest=('valid_from = 2025-01-01\nauthority_grade = "filing"\npredecessor = "2024"'),
+            casillas='[[revisions."2025".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+        export = tmp_path / "modelos" / "999" / "revisions" / "2025" / "export"
+        export.mkdir()
+        (export / "0001-layout.toml").write_text('[[revisions."2025".export_layouts]]\nid = "x"\n', encoding="utf-8")
+        (edge,) = edges(scan_registry(tmp_path))
+        # An export surface with no declared scenario: a cause that survives on
+        # a declared edge, unlike unretired_withdrawal, which is meaningless
+        # once the successor states only its delta.
+        assert edge.state == "migrated_unverified"
+        assert any(blocker.startswith("export_scenario_missing") for blocker in edge.blockers)
+
+    def test_a_clean_declared_edge_is_plain_migrated(self, tmp_path: Path) -> None:
+        _write_edition(
+            tmp_path,
+            "999",
+            "2024",
+            manifest='valid_from = 2024-01-01\nauthority_grade = "filing"',
+            casillas='[[revisions."2024".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+        _write_edition(
+            tmp_path,
+            "999",
+            "2025",
+            manifest='valid_from = 2025-01-01\nauthority_grade = "filing"\npredecessor = "2024"',
+            casillas='[[revisions."2025".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+        (edge,) = edges(scan_registry(tmp_path))
+        assert edge.state == "migrated"
+        assert edge.blockers == ()
+
+
+class TestForestRule:
+    """A modelo asserting a chain may not leave silent holes in it."""
+
+    def _modelo(self, root: Path, manifests: dict[str, str]) -> None:
+        for edition, manifest in manifests.items():
+            _write_edition(
+                root,
+                "999",
+                edition,
+                manifest=manifest,
+                casillas=f'[[revisions."{edition}".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+            )
+
+    def test_two_silent_editions_beside_a_declared_one_are_named(self, tmp_path: Path) -> None:
+        self._modelo(
+            tmp_path,
+            {
+                "2023": 'valid_from = 2023-01-01\nauthority_grade = "filing"',
+                "2024": 'valid_from = 2024-01-01\nauthority_grade = "filing"',
+                "2025": 'valid_from = 2025-01-01\nauthority_grade = "filing"\npredecessor = "2024"',
+            },
+        )
+        assert "predecessor_forest_violation" in _kinds_of(build_report(tmp_path))
+
+    def test_a_modelo_where_nothing_claims_a_chain_is_silent(self, tmp_path: Path) -> None:
+        """Nothing has asserted a chain, so there is no chain to be inconsistent with."""
+        self._modelo(
+            tmp_path,
+            {
+                "2023": 'valid_from = 2023-01-01\nauthority_grade = "filing"',
+                "2024": 'valid_from = 2024-01-01\nauthority_grade = "filing"',
+            },
+        )
+        assert "predecessor_forest_violation" not in _kinds_of(build_report(tmp_path))
+
+
+class TestWithdrawalOnlyBitesAFullCopy:
+    """A delta successor omits inherited rows BY DESIGN; that is not a withdrawal.
+
+    The cause compared the predecessor's materialised lineages against the
+    successor's STATED keys, which is right only while every successor restates
+    everything. Once a successor declares a predecessor it states just its
+    delta, so every inherited lineage it does not repeat read as withdrawn --
+    all eight live cases were false, with ~1,601 boxes present in the compiled
+    successors.
+    """
+
+    def _pair(self, root: Path, *, successor_manifest: str) -> None:
+        _write_edition(
+            root,
+            "999",
+            "2024",
+            manifest='valid_from = 2024-01-01\nauthority_grade = "filing"',
+            casillas=(
+                '[[revisions."2024".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n'
+                '[[revisions."2024".casillas]]\nid = "02"\ncontinuidad_id = "c2"\n'
+            ),
+        )
+        # The successor restates only c1. c2 is inherited, not withdrawn.
+        _write_edition(
+            root,
+            "999",
+            "2025",
+            manifest=successor_manifest,
+            casillas='[[revisions."2025".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+
+    def test_a_delta_successor_omitting_an_inherited_lineage_raises_nothing(self, tmp_path: Path) -> None:
+        self._pair(
+            tmp_path, successor_manifest='valid_from = 2025-01-01\nauthority_grade = "filing"\npredecessor = "2024"'
+        )
+        (edge,) = edges(scan_registry(tmp_path))
+        assert not [b for b in edge.blockers if b.startswith("unretired_withdrawal")], (
+            "a declared successor states only its delta"
+        )
+
+    def test_a_root_omitting_a_lineage_still_raises_it(self, tmp_path: Path) -> None:
+        """A root states everything, so a lineage it does not carry really is gone."""
+        reason = "Stated in full: cannot be materialised from the edition before it (row order)."
+        self._pair(
+            tmp_path,
+            successor_manifest=(
+                'valid_from = 2025-01-01\nauthority_grade = "filing"\n'
+                f'predecessor = {{ none = {{ reason = "{reason}" }} }}'
+            ),
+        )
+        (edge,) = edges(scan_registry(tmp_path))
+        assert any(b.startswith("unretired_withdrawal") for b in edge.blockers)
+
+
+class TestRootCauseBeatsWording:
+    """A declared cause code is the authority; matching prose is a self-reported guess.
+
+    Substring matching misfiled two roots in OPPOSITE directions in one pass: a
+    root citing a norm that forbids a manufactured chain read as recoverable
+    work, and an evidence deficit spelled "lower grade" read as law.
+    """
+
+    def _rooted(self, root: Path, *, reason: str, cause: str = "") -> object:
+        _write_edition(
+            root,
+            "999",
+            "2024",
+            manifest='valid_from = 2024-01-01\nauthority_grade = "filing"',
+            casillas='[[revisions."2024".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+        none = f'reason = "{reason}"' + (f'\ncause = "{cause}"' if cause else "")
+        _write_edition(
+            root,
+            "999",
+            "2025",
+            manifest=(
+                f'valid_from = 2025-01-01\nauthority_grade = "filing"\n[revisions."2025".predecessor.none]\n{none}'
+            ),
+            casillas='[[revisions."2025".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+        (edge,) = edges(scan_registry(root))
+        return edge
+
+    def test_a_declared_cause_overrides_wording_that_would_say_otherwise(self, tmp_path: Path) -> None:
+        """The live case: a reason citing a norm, whose wording matches nothing."""
+        edge = self._rooted(
+            tmp_path,
+            reason="orden-hac-529-2026:art-6-3 forbids a manufactured chain here.",
+            cause="forbidden_by_norm",
+        )
+        assert edge.root_kind == "root_by_law"
+
+    def test_lower_grade_is_recoverable_when_declared(self, tmp_path: Path) -> None:
+        """An evidence deficit is work, however the prose reads."""
+        edge = self._rooted(tmp_path, reason="Stated in full (lower grade).", cause="lower_grade")
+        assert edge.root_kind == "root_recoverable"
+
+    def test_an_unknown_cause_code_falls_to_recoverable(self, tmp_path: Path) -> None:
+        edge = self._rooted(tmp_path, reason="whatever", cause="a_code_nobody_has_defined")
+        assert edge.root_kind == "root_recoverable"
+
+    def test_a_root_with_no_cause_reports_that_it_was_guessed(self, tmp_path: Path) -> None:
+        """A wording-classified root is a guess and must say so."""
+        self._rooted(tmp_path, reason="Stated in full (row order).")
+        assert "root_kind_by_wording" in _kinds_of(build_report(tmp_path))
+
+    def test_a_root_with_a_cause_reports_no_guess(self, tmp_path: Path) -> None:
+        self._rooted(tmp_path, reason="Stated in full (row order).", cause="row_order")
+        assert "root_kind_by_wording" not in _kinds_of(build_report(tmp_path))
+
+
+class TestCarriedDefaults:
+    """A default repeated from the predecessor still grounds the successor on an older design."""
+
+    def _pair(self, root: Path, *, successor_default: str) -> None:
+        links = '[[revisions."{e}".application_links]]\nid = "a1"\n'
+        _write_edition(
+            root,
+            "999",
+            "2024",
+            manifest=(
+                'valid_from = 2024-01-01\nauthority_grade = "filing"\napplication_link_source_refs = ["aeat-x-2022"]'
+            ),
+            casillas='[[revisions."2024".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+        (root / "modelos" / "999" / "revisions" / "2024" / "links").mkdir(parents=True, exist_ok=True)
+        (root / "modelos" / "999" / "revisions" / "2024" / "links" / "0001.toml").write_text(
+            links.replace("{e}", "2024"), encoding="utf-8"
+        )
+        _write_edition(
+            root,
+            "999",
+            "2025",
+            manifest=(
+                'valid_from = 2025-01-01\nauthority_grade = "filing"\npredecessor = "2024"\n'
+                f"application_link_source_refs = [{successor_default}]"
+            ),
+            casillas='[[revisions."2025".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+
+    def test_the_same_default_as_the_predecessor_is_counted(self, tmp_path: Path) -> None:
+        self._pair(tmp_path, successor_default='"aeat-x-2022"')
+        assert "default_carried_from_predecessor" in _kinds_of(build_report(tmp_path))
+
+    def test_a_default_regrounded_on_this_editions_design_is_not(self, tmp_path: Path) -> None:
+        self._pair(tmp_path, successor_default='"aeat-x-2023"')
+        assert "default_carried_from_predecessor" not in _kinds_of(build_report(tmp_path))

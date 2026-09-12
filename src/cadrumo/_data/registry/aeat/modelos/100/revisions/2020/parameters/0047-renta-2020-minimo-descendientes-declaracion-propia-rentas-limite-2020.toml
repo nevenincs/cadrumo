@@ -9,7 +9,6 @@ id = "renta-minimo-descendientes-declaracion-propia-rentas-limite"
 data_type = "money"
 unit = "EUR"
 legal_refs = ["ley-35-2006:art-61", "ley-35-2006:art-61-norma-2"]
-source_refs = ["aeat-renta-2020-manual-parte1"]
 
 [[revisions."2020".parameters.source_citations]]
 source_ref = "aeat-renta-2020-manual-parte1"

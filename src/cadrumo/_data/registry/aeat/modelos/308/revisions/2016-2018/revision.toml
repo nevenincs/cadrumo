@@ -1,6 +1,7 @@
 [revisions."2016-2018"]
 predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["ley-37-1992:art-21"], source_refs = ["aeat-dr-308-2016"] } }
 casilla_source_refs = ["aeat-dr-308-2016"]
+application_link_source_refs = ["aeat-modelo-308-procedure"]
 authority_grade = "applicability"
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"

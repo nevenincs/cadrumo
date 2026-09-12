@@ -1,6 +1,9 @@
 [revisions."2013-y-siguientes"]
 binding_source_refs = ["aeat-dr-720"]
 casilla_source_refs = ["aeat-dr-720"]
+parameter_source_refs = ["aeat-modelo-720-procedure"]
+live_cross_reference_source_refs = ["aeat-modelo-720-procedure"]
+application_link_source_refs = ["boe-modelo-720-2013-form", "aeat-modelo-720-procedure"]
 # Prepared and reviewed by an agent against the bundled diseño de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather

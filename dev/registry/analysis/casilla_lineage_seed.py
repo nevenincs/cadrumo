@@ -28,6 +28,36 @@ carries lineage nor declares a kind of none is still refused in the ledger, one
 row at a time, under the category its exclusion names, so the ledger stays the
 closed list of every unresolved row in the corpus.
 
+Modelos are compiled one directory at a time rather than through the
+whole-corpus authority, which refuses the whole corpus when any single modelo
+fails and so let one modelo's defect stop seeding for every other -- including
+modelos it shares nothing with, and modelos this seeder is excluded from
+writing at all. A modelo that cannot be compiled is recorded for that run as a
+``[[load_failed]]`` entry carrying the first message its loader raised, and
+every other modelo is seeded as before.
+
+A modelo whose corpus already stamps a casilla identifier on some editions and
+neither stamps nor excuses it on the others is held back the same way. The
+registry refuses such an identifier, so no chain may be written into it and the
+seeder must not try; but that is one modelo's half-finished stamping, and it is
+not a reason to stop seeding the rest of the corpus. The modelo is recorded for
+that run as a ``[[stamping_in_progress]]`` entry naming the chain, the editions
+that carry it and the editions that do not, is skipped entirely, and every other
+modelo is planned as before. The refusal to write into such a chain is unchanged:
+the modelo is skipped, never seeded on weaker evidence. The run prints both kinds
+of skip so a reader sees it without opening the ledger. Nor does the record make
+a half-stamped chain tolerable: the registry's own partial-stamping gate pins
+such chains at zero as a defect rather than a backlog, and reads the authored
+corpus directly, so it stays red for exactly as long as an entry stands here.
+
+Neither kind of skip is allowed to shrink the ledger. A skipped modelo's rows
+were not judged this run, so they cannot be rejudged -- but they were judged
+before, and dropping their entries would silently remove that modelo from the
+closed list. Every previous ``[[refusal]]`` of a skipped modelo is therefore
+carried forward verbatim, marked ``carried_from_previous_run``, naming why it
+could not be rejudged and the run identifier of the last run that actually
+judged it; see :func:`render_ledger`.
+
 Coverage is a different question from identity: whether a row has a printed box
 at all is read from ``form_number`` OR a plain-integer ``number`` (that is the
 shipped printed-number contract); whether two rows are the same box is read
@@ -43,9 +73,9 @@ Usage::
     python -m dev.registry.analysis.casilla_lineage_seed            # report only
     python -m dev.registry.analysis.casilla_lineage_seed --apply    # write rows and ledger
 
-Reads the registry through the validated authority. Writes insert keys into the
-casilla declaration files as text, never reformatting them, and refuse to
-overwrite a differing value already present.
+Reads each modelo through the registry loader and the shared source catalogue.
+Writes insert keys into the casilla declaration files as text, never
+reformatting them, and refuse to overwrite a differing value already present.
 """
 
 from __future__ import annotations
@@ -59,35 +89,48 @@ import sys
 import tomllib
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from enum import StrEnum
 from itertools import pairwise
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
 from cadrumo.domain.calculations.registry.casilla_lineage_totality import unresolved_successor_rows
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from ..compiler.authority import compiled_bundled_authority
+from ..compiler.loader import load_modelo_directory, load_shared_catalogues
+from ..compiler.loader_cache import ModeloSource, discover_modelo_sources
 from ..compiler.registry_scope import validate_registry_scope
 from .casilla_id_grammar import classify_casilla_id
-from .corpus import bundled_modelo_ids
 
 __all__ = [
     "EXCLUDED_MODELOS",
+    "CarriedRefusal",
     "DesignInventory",
     "ExcludedModelo",
     "LineagePlan",
     "LineageRefusalCategory",
+    "ModeloLoadFailure",
+    "PartialStamping",
+    "PartialStampingError",
+    "PreviousLedger",
     "admit_bare_chain",
+    "carried_refusals",
     "contradictions",
     "gate_regressions",
     "insert_lineage_keys",
+    "load_corpus",
+    "load_previous_ledger",
     "parse_design_inventory",
+    "plan_corpus",
     "plan_modelo",
+    "render_ledger",
     "residual_plan",
+    "run_identifier",
 ]
 
 
@@ -121,7 +164,8 @@ _UTF_8 = "utf-8"
 _ANALYSIS_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _ANALYSIS_DIR.parents[2]
 _DATA_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data"
-_MODELOS_ROOT = _DATA_ROOT / "registry" / "aeat" / "modelos"
+_REGISTRY_ROOT = _DATA_ROOT / "registry" / "aeat"
+_MODELOS_ROOT = _REGISTRY_ROOT / "modelos"
 RULINGS_PATH = _ANALYSIS_DIR / "casilla_lineage_rulings.toml"
 LEDGER_PATH = _ANALYSIS_DIR / "casilla_lineage_ledger.toml"
 
@@ -292,10 +336,18 @@ def identity_box(casilla: CasillaDefinition) -> str | None:
 
 
 class DesignOracle:
-    """Resolve and cache each edition's pinned official record design."""
+    """Resolve and cache each edition's pinned official record design.
 
-    def __init__(self, authority: ValidatedRegistryAuthority) -> None:
-        self._sources = authority.catalogues.sources
+    The oracle reads the shared source catalogue and nothing else of the
+    corpus: a revision names its designs by source ref, and the catalogue says
+    where each one lives and what it hashes to. That catalogue is corpus-wide
+    but compiles on its own -- :func:`load_shared_catalogues` builds it without
+    compiling a single modelo -- so the oracle needs no whole-corpus authority
+    and a modelo that fails to load cannot take it down.
+    """
+
+    def __init__(self, sources: Mapping[str, SourceReference]) -> None:
+        self._sources = sources
         self._cache: dict[str, DesignInventory | str] = {}
 
     def for_revision(self, revision: ModeloRevision) -> DesignInventory | str:
@@ -760,6 +812,40 @@ class _ModeloPlanner:
             self.plan.set_keys(revision, casilla_id, continuidad_id=chain)
             self.plan.counts["chain_start"] += 1
         return frozenset[str]()
+
+    def partial_stamp_records(self, unsettled: frozenset[str]) -> tuple[PartialStamping, ...]:
+        """Name what is half-stamped about each identifier :meth:`settle_partial_stamps` could not settle.
+
+        Read after a pass that forbade chains on these identifiers, so what is
+        left is the corpus's own state rather than anything this run planned:
+        the chain the stamped editions already carry, and the editions that
+        carry neither it nor an examined absence.
+        """
+        records: list[PartialStamping] = []
+        for casilla_id in sorted(unsettled):
+            stamped: list[str] = []
+            unstamped: list[str] = []
+            chains: list[str] = []
+            for revision in ordered_revisions(self.modelo):
+                if all(casilla.id != casilla_id for casilla in revision.casillas):
+                    continue
+                chain = self.state.ids.get((revision.id, casilla_id))
+                if chain is None:
+                    unstamped.append(revision.id)
+                    continue
+                stamped.append(revision.id)
+                if chain not in chains:
+                    chains.append(chain)
+            records.append(
+                PartialStamping(
+                    modelo=self.modelo_id,
+                    casilla=casilla_id,
+                    chain=" + ".join(chains),
+                    stamped=tuple(stamped),
+                    unstamped=tuple(unstamped),
+                )
+            )
+        return tuple(records)
 
     def _may_start_chain(self, revision: str, casilla_id: str, first: str, ruled_first: set[str]) -> bool:
         planned = self.plan.edits.get((revision, casilla_id), {}).get("continuidad_origin")
@@ -1312,7 +1398,116 @@ def apply_plan(plan: LineagePlan) -> int:
     return edited
 
 
+# --------------------------------------------------------------------------- corpus loading
+
+
+@dataclass(frozen=True, slots=True)
+class ModeloLoadFailure:
+    """A modelo that could not be compiled at all, and the first message its loader raised.
+
+    Recorded at modelo level because a modelo that does not load has no rows to
+    record: its editions are never materialised, so its casillas cannot be
+    enumerated and none of them can be named. The record is therefore not a
+    per-row refusal, and :func:`render_ledger` keeps it out of the ``[[refusal]]``
+    array the lineage totality gate reads.
+    """
+
+    modelo: str
+    reason: str
+
+
+def load_corpus(
+    sources: Iterable[ModeloSource],
+) -> tuple[dict[str, ModeloDefinition], tuple[ModeloLoadFailure, ...]]:
+    """Compile each modelo on its own, so one that cannot load stops only itself.
+
+    The whole-corpus authority refuses the entire corpus when any single modelo
+    fails, which would stop seeding all fifty-eight modelos for a defect in one
+    -- including a modelo this seeder is excluded from writing and never reads
+    a chain from. Loading per directory keeps the blast radius at the modelo:
+    the one that fails is returned as a :class:`ModeloLoadFailure` and every
+    other modelo is planned exactly as before.
+
+    Only :class:`RegistryLoadError` is caught. It is the loader's own boundary
+    type: a malformed manifest, an unreadable fragment, a schema violation and
+    an ambiguous delta-edition merge all arrive as one. Anything else is a
+    defect in this tooling and must not be recorded as a data failure.
+    """
+    loaded: dict[str, ModeloDefinition] = {}
+    failures: list[ModeloLoadFailure] = []
+    for source in sources:
+        try:
+            loaded[source.modelo_id] = load_modelo_directory(source.path)
+        except RegistryLoadError as error:
+            failures.append(ModeloLoadFailure(source.modelo_id, _recorded_reason(str(error))))
+    return loaded, tuple(failures)
+
+
+def _recorded_reason(message: str) -> str:
+    """The first line of a loader message, made fit to commit in the ledger.
+
+    The loader names the directory it refused by resolved absolute path, which
+    would put one machine's checkout location into a shared artifact and make
+    the ledger differ per machine. The repository prefix is dropped and the
+    remaining separators are written the one way, so two checkouts of the same
+    tree record the same reason. The result is bounded like any other recorded
+    reason.
+    """
+    text = next((line.strip() for line in message.splitlines() if line.strip()), "")
+    root = str(_REPO_ROOT.resolve())
+    for prefix in (f"{root}\\", f"{root}/", root):
+        text = text.replace(prefix, "")
+    text = text.replace("\\", "/")
+    return text if len(text) <= _EVIDENCE_LIMIT else text[: _EVIDENCE_LIMIT - 3] + "..."
+
+
 # --------------------------------------------------------------------------- driver
+
+
+@dataclass(frozen=True, slots=True)
+class PartialStamping:
+    """An identifier the corpus stamps on some editions of a modelo and not on others.
+
+    Recorded at modelo level for the same reason a load failure is: the modelo
+    is skipped whole, so none of its rows is dispositioned and none can be
+    named. :func:`render_ledger` keeps it out of the ``[[refusal]]`` array the
+    lineage totality gate reads.
+
+    The state is a half-finished stamping pass, whoever is or is not conducting
+    it: the stamped editions carry ``chain``, and each edition in ``unstamped``
+    carries neither it nor a recorded absence excusing its start. The registry
+    refuses that identifier, so this seeder writes nothing into the modelo until
+    the pass finishes.
+    """
+
+    modelo: str
+    casilla: str
+    chain: str
+    stamped: tuple[str, ...]
+    unstamped: tuple[str, ...]
+
+    def describe(self) -> str:
+        """One line naming the chain and the editions, for the ledger and the run's output."""
+        chain = self.chain or "(no chain id)"
+        return (
+            f"chain {chain} on {self.casilla}: stamped in {', '.join(self.stamped)}; "
+            f"unstamped in {', '.join(self.unstamped)}"
+        )
+
+
+class PartialStampingError(Exception):
+    """Raised by :func:`plan_modelo` when a modelo's identifiers stay partly stamped.
+
+    The boundary type :func:`plan_corpus` catches, so one modelo's half-finished
+    stamping skips that modelo alone. It carries the records rather than only a
+    message, so the caller can render them without reparsing prose.
+    """
+
+    def __init__(self, modelo_id: str, records: tuple[PartialStamping, ...]) -> None:
+        """Carry the modelo and one record per identifier it left partly stamped."""
+        self.modelo_id = modelo_id
+        self.records = records
+        super().__init__(f"modelo {modelo_id}: identifiers stay partly stamped: {[r.casilla for r in records][:5]}")
 
 
 def plan_modelo(
@@ -1324,7 +1519,10 @@ def plan_modelo(
     """Plan every lineage disposition for one modelo.
 
     Planning repeats until no identifier would be left partly stamped: each pass
-    forbids chains on the identifiers the previous pass could not settle.
+    forbids chains on the identifiers the previous pass could not settle. An
+    identifier still partly stamped once its chains are forbidden is the
+    corpus's own half-finished state, not this plan's doing, and raises
+    :class:`PartialStampingError` rather than being seeded on weaker evidence.
     """
     forbidden: frozenset[str] = frozenset[str]()
     while True:
@@ -1334,8 +1532,32 @@ def plan_modelo(
         if not unsettled:
             return plan
         if unsettled <= forbidden:
-            raise ValueError(f"modelo {modelo_id}: identifiers stay partly stamped: {sorted(unsettled)[:5]}")
+            raise PartialStampingError(modelo_id, planner.partial_stamp_records(unsettled))
         forbidden |= unsettled
+
+
+def plan_corpus(
+    modelo_ids: Iterable[str],
+    loaded: Mapping[str, ModeloDefinition],
+    oracle: DesignOracle,
+    rulings: Mapping[str, list[Ruling]],
+) -> tuple[list[LineagePlan], tuple[PartialStamping, ...]]:
+    """Plan each modelo on its own, so one left partly stamped stops only itself.
+
+    Mirrors :func:`load_corpus` at the next stage: the blast radius of a defect
+    stays at the modelo that carries it. Only :class:`PartialStampingError` is
+    caught -- it is this planner's own boundary type for a corpus state it
+    refuses to write into. Anything else is a defect in this tooling and must
+    not be recorded as a data state.
+    """
+    plans: list[LineagePlan] = []
+    partial: list[PartialStamping] = []
+    for modelo_id in modelo_ids:
+        try:
+            plans.append(plan_modelo(modelo_id, loaded[modelo_id], oracle, rulings))
+        except PartialStampingError as error:
+            partial.extend(error.records)
+    return plans, tuple(partial)
 
 
 def residual_plan(modelo_id: str, modelo: ModeloDefinition, rulings: Iterable[Ruling]) -> LineagePlan:
@@ -1380,7 +1602,146 @@ def residual_plan(modelo_id: str, modelo: ModeloDefinition, rulings: Iterable[Ru
     return plan
 
 
-def _ledger(plans: list[LineagePlan], checks: Mapping[str, list[str]]) -> str:
+@dataclass(frozen=True, slots=True)
+class CarriedRefusal:
+    """A previous run's refusal, carried forward because its modelo could not be rejudged.
+
+    Carried verbatim: the row it names and the category and reason it stopped
+    are the previous run's words, not a fresh judgement. ``carried_reason`` says
+    why this run could not rejudge it. ``last_judged`` is the identifier of the
+    run that did judge it, propagated unchanged across repeated carries, and
+    ``carried_runs`` counts the consecutive runs that have carried it since.
+    Those two are what make staleness visible rather than implied: an entry
+    judged in this morning's run and one carried twenty times since a run weeks
+    ago read differently in the ledger.
+    """
+
+    modelo: str
+    revision: str
+    casilla: str
+    category: str
+    reason: str
+    predecessor: str | None
+    carried_reason: str
+    last_judged: str
+    carried_runs: int
+
+    @property
+    def key(self) -> tuple[str, str, str]:
+        """The row this entry names, in the ledger's own key order."""
+        return (self.modelo, self.revision, self.casilla)
+
+
+@dataclass(frozen=True, slots=True)
+class PreviousLedger:
+    """The ledger as the previous run left it: when it judged, and what it refused per modelo."""
+
+    judged_at: str
+    refusals: Mapping[str, tuple[Mapping[str, object], ...]]
+
+
+def run_identifier(moment: datetime | None = None) -> str:
+    """The identifier a run stamps on what it judges: a UTC instant, to the second."""
+    return (moment or datetime.now(UTC)).astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def load_previous_ledger(path: Path = LEDGER_PATH) -> PreviousLedger:
+    """Read the committed ledger, so a modelo this run cannot rejudge keeps its entries.
+
+    A missing ledger is a first run and carries nothing. Refusals are kept as
+    their raw tables rather than parsed into :class:`Refusal`, because carrying
+    forward must be verbatim: whatever the previous run wrote is the previous
+    run's judgement, and reshaping it here would quietly restate it.
+    """
+    if not path.is_file():
+        return PreviousLedger(judged_at="", refusals={})
+    document = tomllib.loads(path.read_text(encoding=_UTF_8))
+    run = document.get("run")
+    judged_at = run.get("judged_at", "") if isinstance(run, Mapping) else ""
+    by_modelo: dict[str, list[Mapping[str, object]]] = collections.defaultdict(list)
+    for entry in document.get("refusal", ()):
+        modelo = entry.get("modelo")
+        if isinstance(modelo, str):
+            by_modelo[modelo].append(entry)
+    return PreviousLedger(
+        judged_at=str(judged_at),
+        refusals={modelo: tuple(entries) for modelo, entries in by_modelo.items()},
+    )
+
+
+def carried_refusals(previous: PreviousLedger, skipped: Mapping[str, str]) -> tuple[CarriedRefusal, ...]:
+    """Carry every previous refusal of a skipped modelo forward, dated by its last real judgement.
+
+    ``skipped`` maps each modelo this run could neither load nor plan to the
+    reason it was skipped. An entry the previous run itself carried keeps its
+    original ``last_judged`` and increments its carry count; an entry the
+    previous run judged takes that run's identifier. A previous ledger naming no
+    run cannot date what it judged, so its entries carry the only honest value
+    available -- ``unknown`` -- rather than being backdated to a run that never
+    judged them.
+    """
+    carried: list[CarriedRefusal] = []
+    for modelo in sorted(skipped):
+        for entry in previous.refusals.get(modelo, ()):
+            was_carried = entry.get("carried_from_previous_run") is True
+            last_judged = entry.get("last_judged") if was_carried else previous.judged_at
+            runs = entry.get("carried_runs", 0) if was_carried else 0
+            predecessor = entry.get("predecessor")
+            carried.append(
+                CarriedRefusal(
+                    modelo=modelo,
+                    revision=str(entry["revision"]),
+                    casilla=str(entry["casilla"]),
+                    category=str(entry["category"]),
+                    reason=str(entry["reason"]),
+                    predecessor=None if predecessor is None else str(predecessor),
+                    carried_reason=skipped[modelo],
+                    last_judged=str(last_judged) if isinstance(last_judged, str) and last_judged else "unknown",
+                    carried_runs=(runs if isinstance(runs, int) and not isinstance(runs, bool) else 0) + 1,
+                )
+            )
+    return tuple(carried)
+
+
+def render_ledger(
+    plans: list[LineagePlan],
+    checks: Mapping[str, list[str]],
+    load_failures: Iterable[ModeloLoadFailure],
+    partial_stampings: Iterable[PartialStamping],
+    *,
+    carried: Iterable[CarriedRefusal] = (),
+    judged_at: str = "",
+) -> str:
+    """Render the ledger: one refusal per unresolved row, plus the run's modelo-level records.
+
+    A load failure is rendered as its own ``[[load_failed]]`` entry, and a
+    modelo skipped for a partly stamped identifier as its own
+    ``[[stamping_in_progress]]`` entry. Both are modelo-level because a modelo
+    skipped whole dispositions no row and so can name none: neither record
+    invents a row key, and neither is read by the lineage totality gate.
+
+    Skipping a modelo does not drop its rows. It means this run did not rejudge
+    them, not that they stopped needing an entry, so every ``[[refusal]]`` the
+    previous run wrote for a skipped modelo is carried forward verbatim as a
+    ``[[refusal]]`` again, marked ``carried_from_previous_run``, naming in
+    ``carried_reason`` why it could not be rejudged and in ``last_judged`` the
+    identifier of the run that did judge it. The ledger therefore stays the
+    closed list over the whole corpus whatever fails, and nothing is quietly
+    covered either: a carried entry states in the ledger that it asserts
+    something about an older corpus state, and ``carried_runs`` says how long it
+    has been asserting it.
+
+    That is what keeps the gate honest once it stops compiling the whole corpus
+    at once. A gate partitioned by modelo judges only the modelos it could load,
+    reports the rest as ``unjudged``, and is never green while that list is
+    non-empty. It withholds a carried entry from both the uncovered and the
+    stale side rather than reading a record of an older judgement as a claim
+    about a corpus it never saw. When the modelo loads again it is judged again,
+    its carried entries with it, and any that no longer fit are reported stale
+    until the seeder runs and replaces them with fresh ones.
+
+    ``judged_at`` identifies this run and dates every entry not marked carried.
+    """
     out = [
         "# Casilla lineage ledger, written by casilla_lineage_seed.py --apply. Do not edit by hand.",
         "#",
@@ -1388,10 +1749,51 @@ def _ledger(plans: list[LineagePlan], checks: Mapping[str, list[str]]) -> str:
         "# here, one refusal per row, with the category and reason it stopped. That includes every",
         "# such row of an excluded modelo, whether examined or not. The list is closed: a row missing",
         "# from it, or an entry whose row no longer needs it, fails the lineage totality gate.",
+        "#",
+        "# [run].judged_at identifies the run that wrote this file. Every [[refusal]] that does not",
+        "# say otherwise was judged in that run, against the corpus as it then stood.",
+        "#",
+        "# A [[load_failed]] modelo is recorded at modelo level and names no row, because a modelo",
+        "# that does not compile has no rows to name. It is deliberately not a [[refusal]]: the",
+        "# totality gate reads rows, and a modelo-level entry must neither cover one nor go stale.",
+        "# Nothing is lost by that, because skipping a modelo never shrinks this list: each previous",
+        "# [[refusal]] of a skipped modelo is carried forward verbatim with carried_from_previous_run",
+        "# = true, the carried_reason it could not be rejudged, the last_judged run that did judge it,",
+        "# and carried_runs counting the carries since. The gate is partitioned by modelo: it judges",
+        "# only what it could load, reports the rest as unjudged, and is never green while one is",
+        "# listed here. An entry whose carried_runs keeps climbing is a repair nobody finished.",
+        "#",
+        "# A [[stamping_in_progress]] modelo was skipped whole because the corpus stamps one of its",
+        "# casilla identifiers on some editions and neither stamps nor excuses it on the others. It is",
+        "# modelo-level and not a [[refusal]] for the same reason, and it closes no hole either. The",
+        "# closing is not this seeder's: the registry's own partial-stamping gate already pins half-",
+        "# stamped chains at zero and calls them a defect rather than a backlog, and it scans the",
+        "# authored corpus, so it is red for exactly as long as an entry stands here. This record",
+        "# keeps one modelo's half-finished pass from stopping the other fifty-seven; it does not",
+        "# make the half-finished pass tolerable, and no entry here is ever a resting state.",
         "",
     ]
+    if judged_at:
+        out += ["[run]", f"judged_at = {json.dumps(judged_at)}", ""]
     for modelo_id, excluded in sorted(EXCLUDED_MODELOS.items()):
         out += ["[[excluded]]", f"modelo = {json.dumps(modelo_id)}", f"reason = {json.dumps(excluded.reason)}", ""]
+    for failure in sorted(load_failures, key=lambda entry: entry.modelo):
+        out += [
+            "[[load_failed]]",
+            f"modelo = {json.dumps(failure.modelo)}",
+            f"reason = {json.dumps(failure.reason, ensure_ascii=False)}",
+            "",
+        ]
+    for record in sorted(partial_stampings, key=lambda entry: (entry.modelo, entry.casilla)):
+        out += [
+            "[[stamping_in_progress]]",
+            f"modelo = {json.dumps(record.modelo)}",
+            f"casilla = {json.dumps(record.casilla, ensure_ascii=False)}",
+            f"chain = {json.dumps(record.chain, ensure_ascii=False)}",
+            f"stamped = {json.dumps(list(record.stamped), ensure_ascii=False)}",
+            f"unstamped = {json.dumps(list(record.unstamped), ensure_ascii=False)}",
+            "",
+        ]
     for plan in plans:
         out.append(f"[summary.{json.dumps(plan.modelo)}]")
         # Chain starts are an artefact of one write, not a disposition; the rows carry them.
@@ -1402,8 +1804,10 @@ def _ledger(plans: list[LineagePlan], checks: Mapping[str, list[str]]) -> str:
             out += [f"  {json.dumps(note, ensure_ascii=False)}," for note in plan.notes]
             out.append("]")
         out.append("")
+    judged: set[tuple[str, str, str]] = set()
     for plan in plans:
         for refusal in plan.refusals:
+            judged.add((refusal.modelo, refusal.revision, refusal.casilla_id))
             out += [
                 "[[refusal]]",
                 f"modelo = {json.dumps(refusal.modelo)}",
@@ -1417,6 +1821,29 @@ def _ledger(plans: list[LineagePlan], checks: Mapping[str, list[str]]) -> str:
                 f"reason = {json.dumps(refusal.reason, ensure_ascii=False)}",
                 "",
             ]
+    for entry in sorted(carried, key=lambda record: record.key):
+        # A modelo is either judged this run or carried, never both, so a collision is this
+        # tooling contradicting itself rather than a data state, and the reader would refuse
+        # the doubly-named row anyway. Fail here, where the cause is still visible.
+        if entry.key in judged:
+            raise ValueError(f"carried refusal {entry.key} is also judged in this run")
+        out += [
+            "[[refusal]]",
+            f"modelo = {json.dumps(entry.modelo)}",
+            f"revision = {json.dumps(entry.revision)}",
+            f"casilla = {json.dumps(entry.casilla, ensure_ascii=False)}",
+        ]
+        if entry.predecessor is not None:
+            out.append(f"predecessor = {json.dumps(entry.predecessor, ensure_ascii=False)}")
+        out += [
+            f"category = {json.dumps(entry.category)}",
+            f"reason = {json.dumps(entry.reason, ensure_ascii=False)}",
+            "carried_from_previous_run = true",
+            f"carried_reason = {json.dumps(entry.carried_reason, ensure_ascii=False)}",
+            f"last_judged = {json.dumps(entry.last_judged)}",
+            f"carried_runs = {entry.carried_runs}",
+            "",
+        ]
     return "\n".join(out)
 
 
@@ -1426,34 +1853,40 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--modelo", action="append", help="limit to these modelos (repeatable)")
     args = parser.parse_args(argv)
 
-    authority = compiled_bundled_authority()
-    oracle = DesignOracle(authority)
+    loaded, load_failures = load_corpus(discover_modelo_sources(_MODELOS_ROOT))
+    oracle = DesignOracle(load_shared_catalogues(_REGISTRY_ROOT).sources)
     rulings = load_rulings()
+    modelo_ids = sorted(loaded)
     selected = [
         modelo_id
-        for modelo_id in bundled_modelo_ids()
+        for modelo_id in modelo_ids
         if modelo_id not in EXCLUDED_MODELOS
-        and len(authority.modelo(modelo_id).revisions) > 1
+        and len(loaded[modelo_id].revisions) > 1
         and (not args.modelo or modelo_id in args.modelo)
     ]
-    unknown = set(rulings) - set(selected) - set(EXCLUDED_MODELOS)
+    failed = {failure.modelo for failure in load_failures}
+    unknown = set(rulings) - set(selected) - set(EXCLUDED_MODELOS) - failed
     if unknown and not args.modelo:
         raise SystemExit(f"rulings name modelos outside scope: {sorted(unknown)}")
-    plans = [plan_modelo(modelo_id, authority.modelo(modelo_id), oracle, rulings) for modelo_id in selected]
+    plans, partial_stampings = plan_corpus(selected, loaded, oracle, rulings)
     plans += [
-        residual_plan(modelo_id, authority.modelo(modelo_id), rulings.get(modelo_id, ()))
-        for modelo_id in bundled_modelo_ids()
+        residual_plan(modelo_id, loaded[modelo_id], rulings.get(modelo_id, ()))
+        for modelo_id in modelo_ids
         if modelo_id in EXCLUDED_MODELOS and (not args.modelo or modelo_id in args.modelo)
     ]
     plans.sort(key=lambda plan: plan.modelo)
     checks = {
         plan.modelo: [
-            *contradictions(authority.modelo(plan.modelo), plan),
-            *(f"gate: {failure}" for failure in gate_regressions(authority.modelo(plan.modelo), plan)),
+            *contradictions(loaded[plan.modelo], plan),
+            *(f"gate: {failure}" for failure in gate_regressions(loaded[plan.modelo], plan)),
         ]
         for plan in plans
     }
 
+    for failure in sorted(load_failures, key=lambda entry: entry.modelo):
+        print(f"{failure.modelo}: load_failed; {failure.reason}")
+    for record in sorted(partial_stampings, key=lambda entry: (entry.modelo, entry.casilla)):
+        print(f"{record.modelo}: stamping_in_progress; {record.describe()}")
     totals: collections.Counter[str] = collections.Counter()
     for plan in plans:
         totals.update(plan.counts)
@@ -1462,13 +1895,50 @@ def main(argv: list[str] | None = None) -> int:
         for problem in checks[plan.modelo][:5]:
             print(f"    CONTRADICTION {problem}")
     print("total:", ", ".join(f"{key}={value}" for key, value in sorted(totals.items())))
+    # Repeated after the per-modelo lines: a skip scrolls past among fifty-eight of them, and a
+    # reader must not have to open the ledger to learn that a modelo was left unseeded.
+    if partial_stampings:
+        skipped = sorted({record.modelo for record in partial_stampings})
+        print(f"skipped {len(skipped)} modelo(s) for partly stamped chains: {', '.join(skipped)}")
+        for record in sorted(partial_stampings, key=lambda entry: (entry.modelo, entry.casilla)):
+            print(f"    SKIPPED {record.modelo} {record.describe()}")
+    skipped = {
+        **{failure.modelo: f"modelo could not be compiled this run: {failure.reason}" for failure in load_failures},
+        **{
+            record.modelo: f"modelo was skipped this run for a partly stamped identifier: {record.describe()}"
+            for record in partial_stampings
+        },
+    }
+    carried = carried_refusals(load_previous_ledger(), skipped)
+    if carried:
+        by_modelo = collections.Counter(entry.modelo for entry in carried)
+        print(f"carried {len(carried)} previous refusal(s) forward for {len(by_modelo)} unjudged modelo(s):")
+        for modelo_id, count in sorted(by_modelo.items()):
+            oldest = min(entry.last_judged for entry in carried if entry.modelo == modelo_id)
+            runs = max(entry.carried_runs for entry in carried if entry.modelo == modelo_id)
+            print(f"    CARRIED {modelo_id} {count} row(s), last judged {oldest}, carried {runs} run(s)")
+    for modelo_id in sorted(skipped):
+        if modelo_id not in {entry.modelo for entry in carried}:
+            print(f"    CARRIED {modelo_id} no previous refusal to carry; the ledger names none of its rows")
     if any(checks.values()):
         print("refusing to write: the plan contains contradictions", file=sys.stderr)
         return 1
     if args.apply:
         edited = sum(apply_plan(plan) for plan in plans)
         if not args.modelo:
-            LEDGER_PATH.write_text(_ledger(plans, checks) + "\n", encoding=_UTF_8, newline="\n")
+            LEDGER_PATH.write_text(
+                render_ledger(
+                    plans,
+                    checks,
+                    load_failures,
+                    partial_stampings,
+                    carried=carried,
+                    judged_at=run_identifier(),
+                )
+                + "\n",
+                encoding=_UTF_8,
+                newline="\n",
+            )
         print(f"edited {edited} rows")
     return 0
 

@@ -1,9 +1,12 @@
 [[revisions."2024".casillas]]
 id = "0571"
+continuidad_id = "irpf-cuota-liquida-autonomica"
+continuidad_origin = "grounded"
+continuidad_evidence = "Official AEAT dictionaries establish the same computed autonomous-liquid-quota field in both exercises: aeat-dr-100-2024-dictionary:908 and aeat-dr-100-2025-dictionary:934 map CLIQAUT at /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/CLIQAUT [P102] to box 0571 as 'Cuota líquida autonómica'. The official IRPF authority for article 77 defines this autonomous liquid quota, and the 2024 and 2025 Renta Parte 1 manuals place the field in Chapter 18's Cuota líquida calculation alongside the subsequent loss-of-deduction increments. Section, semantic_role, input_kind, formula, box number, and representation are stable; the 2025 legal reference addition is recorded as an evolution, with no renumbering or repurpose. Continuity is grounded in the official field path, legal authority, and identical computation, not the number alone."
 number = "0571"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_cuota_liquida_autonomica"
 input_kind = "computed"
 formula = "renta-cuota-liquida-autonomica"
 legal_refs = ["ley-35-2006:art-77"]
-additional_source_refs = ["aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]
+additional_source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1"]

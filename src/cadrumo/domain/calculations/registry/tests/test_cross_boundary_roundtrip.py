@@ -10,6 +10,10 @@ calls, no mocks, no tautological re-derivations.
 A test that fails today is a measurement that the structural work it
 describes has not landed yet. A test that passes today is a measurement
 that the typed schema preserves identity across the boundary.
+
+Workflow-step detail round-tripping is an application workflow contract and is
+covered in ``application/workflow/tests``; the tests here stay focused on the
+domain-owned filing and calculation models.
 """
 
 from __future__ import annotations
@@ -54,7 +58,6 @@ _IVA_DEDUCIBLE_CASILLA: CasillaId = validated_casilla_id("iva.deducible")
 _IVA_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
 _IVA_RESULTADO_OPERANDS: tuple[CasillaId, CasillaId] = (_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA)
 _DRAFT_TIMESTAMP = datetime(2026, 5, 28, 10, 0, 0, tzinfo=UTC)
-_WORKFLOW_STEP_STARTED_AT = datetime(2026, 5, 28, 10, 5, 0, tzinfo=UTC)
 _CALCULATION_REVISION_TIMESTAMP = datetime(2026, 5, 28, 10, 10, 0, tzinfo=UTC)
 
 
@@ -512,49 +515,6 @@ def test_workbook_parity_reference_rejects_malformed_output_identifier() -> None
             legal_refs=("ley-35-2006:art-99",),
             source_refs=("boe-modelo-130-workbook",),
         )
-
-
-def test_workflow_step_details_typed_envelope_roundtrip() -> None:
-    """``WorkflowStep.details`` preserves the concrete closed-union detail type.
-
-    A skipped auth-provider check carries typed facts rather than a free-form
-    mapping, and the canonical preflight summary key remains valid across the
-    JSON boundary.
-    """
-
-    from datetime import timedelta
-
-    from .....application.workflow.run_models import (
-        WorkflowAuthCheckDetails,
-        WorkflowDiagnosticSkipReason,
-        WorkflowStage,
-        WorkflowStep,
-    )
-
-    original = WorkflowStep(
-        stage=WorkflowStage.RUNNING_PREFLIGHT,
-        started_at=_WORKFLOW_STEP_STARTED_AT,
-        ended_at=_WORKFLOW_STEP_STARTED_AT + timedelta(seconds=2),
-        success=True,
-        summary_locale_key="application.workflow.steps.preflight_completed",
-        details=WorkflowAuthCheckDetails(
-            kind="auth_check",
-            provider_check_skipped=True,
-            skip_reason=WorkflowDiagnosticSkipReason.NOT_WIRED,
-        ),
-    )
-
-    assert isinstance(original.details, WorkflowAuthCheckDetails)
-    assert original.details.kind == "auth_check"
-    assert original.details.provider_check_skipped is True
-    assert original.details.skip_reason is WorkflowDiagnosticSkipReason.NOT_WIRED
-
-    roundtripped = WorkflowStep.model_validate_json(original.model_dump_json())
-    assert isinstance(roundtripped.details, WorkflowAuthCheckDetails)
-    assert roundtripped == original
-    assert roundtripped.details.kind == "auth_check"
-    assert roundtripped.details.provider_check_skipped is True
-    assert roundtripped.details.skip_reason is WorkflowDiagnosticSkipReason.NOT_WIRED
 
 
 def test_calculation_revision_carries_typed_observations() -> None:

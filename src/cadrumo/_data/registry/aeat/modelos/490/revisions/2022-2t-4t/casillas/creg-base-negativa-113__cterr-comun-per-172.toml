@@ -11,6 +11,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-base-negativa-134"
+continuidad_id = "regularizacion-negativa-base-territorio-comun-2t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:220 (sha256 9a4c8d8cd2e6) prints DR49002 row 101, position 1066, width 17, type N, Regularización negativa (base imponible) (c). 2T [134]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [134], so this is a legitimate 2022-2t-4t 2T root."
 number = "134"
 section = ["490_02"]
 data_type = "money"
@@ -20,6 +23,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-base-negativa-155"
+continuidad_id = "regularizacion-negativa-base-territorio-comun-3t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:221 (sha256 9a4c8d8cd2e6) prints DR49002 row 102, position 1083, width 17, type N, Regularización negativa (base imponible) (c). 3T [155]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [155], so this is a legitimate 2022-2t-4t 3T root."
 number = "155"
 section = ["490_02"]
 data_type = "money"
@@ -29,6 +35,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-base-negativa-176"
+continuidad_id = "regularizacion-negativa-base-territorio-comun-4t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:222 (sha256 9a4c8d8cd2e6) prints DR49002 row 103, position 1100, width 17, type N, Regularización negativa (base imponible) (c). 4T [176]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [176], so this is a legitimate 2022-2t-4t 4T root."
 number = "176"
 section = ["490_02"]
 data_type = "money"
@@ -47,6 +56,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-base-total-135"
+continuidad_id = "regularizacion-total-base-territorio-comun-2t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:224 (sha256 9a4c8d8cd2e6) prints DR49002 row 105, position 1134, width 17, type N, Total Regularización (base imponible) (d=b+c). 2T [135]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [135], so this is a legitimate 2022-2t-4t 2T root."
 number = "135"
 section = ["490_02"]
 data_type = "money"
@@ -56,6 +68,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-base-total-156"
+continuidad_id = "regularizacion-total-base-territorio-comun-3t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:225 (sha256 9a4c8d8cd2e6) prints DR49002 row 106, position 1151, width 17, type N, Total Regularización (base imponible) (d=b+c). 3T [156]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [156], so this is a legitimate 2022-2t-4t 3T root."
 number = "156"
 section = ["490_02"]
 data_type = "money"
@@ -65,6 +80,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-base-total-177"
+continuidad_id = "regularizacion-total-base-territorio-comun-4t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:226 (sha256 9a4c8d8cd2e6) prints DR49002 row 107, position 1168, width 17, type N, Total Regularización (base imponible) (d=b+c). 4T [177]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [177], so this is a legitimate 2022-2t-4t 4T root."
 number = "177"
 section = ["490_02"]
 data_type = "money"
@@ -83,6 +101,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-tipo-136"
+continuidad_id = "regularizacion-tipo-impositivo-territorio-comun-2t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:228 (sha256 9a4c8d8cd2e6) prints DR49002 row 109, position 1188, width 3, type Num, Tipo impositivo (e).2T [136], default 3,00; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [136], so this is a legitimate 2022-2t-4t 2T root."
 number = "136"
 section = ["490_02"]
 data_type = "ratio"
@@ -92,6 +113,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-tipo-157"
+continuidad_id = "regularizacion-tipo-impositivo-territorio-comun-3t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:229 (sha256 9a4c8d8cd2e6) prints DR49002 row 110, position 1191, width 3, type Num, Tipo impositivo (e).3T [157], default 3,00; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [157], so this is a legitimate 2022-2t-4t 3T root."
 number = "157"
 section = ["490_02"]
 data_type = "ratio"
@@ -101,6 +125,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-tipo-178"
+continuidad_id = "regularizacion-tipo-impositivo-territorio-comun-4t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:230 (sha256 9a4c8d8cd2e6) prints DR49002 row 111, position 1194, width 3, type Num, Tipo impositivo (e).4T [178], default 3,00; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [178], so this is a legitimate 2022-2t-4t 4T root."
 number = "178"
 section = ["490_02"]
 data_type = "ratio"
@@ -119,6 +146,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-positiva-137"
+continuidad_id = "regularizacion-cuota-positiva-territorio-comun-2t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:232 (sha256 9a4c8d8cd2e6) prints DR49002 row 113, position 1214, width 17, type Num, Regularización positiva (cuota íntegra) (f) = (b) x (e). 2T [137]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [137], so this is a legitimate 2022-2t-4t 2T root."
 number = "137"
 section = ["490_02"]
 data_type = "money"
@@ -128,6 +158,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-positiva-158"
+continuidad_id = "regularizacion-cuota-positiva-territorio-comun-3t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:233 (sha256 9a4c8d8cd2e6) prints DR49002 row 114, position 1231, width 17, type Num, Regularización positiva (cuota íntegra) (f) = (b) x (e). 3T [158]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [158], so this is a legitimate 2022-2t-4t 3T root."
 number = "158"
 section = ["490_02"]
 data_type = "money"
@@ -137,6 +170,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-positiva-179"
+continuidad_id = "regularizacion-cuota-positiva-territorio-comun-4t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:234 (sha256 9a4c8d8cd2e6) prints DR49002 row 115, position 1248, width 17, type Num, Regularización positiva (cuota íntegra) (f) = (b) x (e). 4T [179]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [179], so this is a legitimate 2022-2t-4t 4T root."
 number = "179"
 section = ["490_02"]
 data_type = "money"
@@ -155,6 +191,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-negativa-138"
+continuidad_id = "regularizacion-cuota-negativa-territorio-comun-2t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:236 (sha256 9a4c8d8cd2e6) prints DR49002 row 117, position 1282, width 17, type N, Regularización negativa (cuota íntegra) (g) = (c) x (e). 2T [138]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [138], so this is a legitimate 2022-2t-4t 2T root."
 number = "138"
 section = ["490_02"]
 data_type = "money"
@@ -164,6 +203,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-negativa-159"
+continuidad_id = "regularizacion-cuota-negativa-territorio-comun-3t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:237 (sha256 9a4c8d8cd2e6) prints DR49002 row 118, position 1299, width 17, type N, Regularización negativa (cuota íntegra) (g) = (c) x (e). 3T [159]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [159], so this is a legitimate 2022-2t-4t 3T root."
 number = "159"
 section = ["490_02"]
 data_type = "money"
@@ -173,6 +215,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-negativa-180"
+continuidad_id = "regularizacion-cuota-negativa-territorio-comun-4t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:238 (sha256 9a4c8d8cd2e6) prints DR49002 row 119, position 1316, width 17, type N, Regularización negativa (cuota íntegra) (g) = (c) x (e). 4T [180]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [180], so this is a legitimate 2022-2t-4t 4T root."
 number = "180"
 section = ["490_02"]
 data_type = "money"
@@ -191,6 +236,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-total-139"
+continuidad_id = "regularizacion-cuota-total-territorio-comun-2t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:240 (sha256 9a4c8d8cd2e6) prints DR49002 row 121, position 1350, width 17, type N, Total regularización (cuota íntegra) (h) = (f) + (g) 2T [139]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [139], so this is a legitimate 2022-2t-4t 2T root."
 number = "139"
 section = ["490_02"]
 data_type = "money"
@@ -200,6 +248,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-total-160"
+continuidad_id = "regularizacion-cuota-total-territorio-comun-3t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:241 (sha256 9a4c8d8cd2e6) prints DR49002 row 122, position 1367, width 17, type N, Total regularización (cuota íntegra) (h) = (f) + (g) 3T [160]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [160], so this is a legitimate 2022-2t-4t 3T root."
 number = "160"
 section = ["490_02"]
 data_type = "money"
@@ -209,6 +260,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-total-181"
+continuidad_id = "regularizacion-cuota-total-territorio-comun-4t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:242 (sha256 9a4c8d8cd2e6) prints DR49002 row 123, position 1384, width 17, type N, Total regularización (cuota íntegra) (h) = (f) + (g) 4T [181]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [181], so this is a legitimate 2022-2t-4t 4T root."
 number = "181"
 section = ["490_02"]
 data_type = "money"
@@ -229,8 +283,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-estado-140"
+continuidad_id = "regularizacion-cuota-estado-territorio-comun-2t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:244 (sha256 9a4c8d8cd2e6) box [140] (125 1418 17 N Regularización cuota atribuible al Estado (i) = (h) x...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [140]."
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:244 (sha256 9a4c8d8cd2e6) prints DR49002 row 125, position 1418, width 17, type N, Regularización cuota atribuible al Estado (i) = (h) x (m) 2T [140]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [140], so this is a legitimate 2022-2t-4t 2T root."
 number = "140"
 section = ["490_02"]
 data_type = "money"
@@ -240,8 +295,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-estado-161"
+continuidad_id = "regularizacion-cuota-estado-territorio-comun-3t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:245 (sha256 9a4c8d8cd2e6) box [161] (126 1435 17 N Regularización cuota atribuible al Estado (i) = (h) x...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [161]."
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:245 (sha256 9a4c8d8cd2e6) prints DR49002 row 126, position 1435, width 17, type N, Regularización cuota atribuible al Estado (i) = (h) x (m) 3T [161]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [161], so this is a legitimate 2022-2t-4t 3T root."
 number = "161"
 section = ["490_02"]
 data_type = "money"
@@ -251,8 +307,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-estado-182"
+continuidad_id = "regularizacion-cuota-estado-territorio-comun-4t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:246 (sha256 9a4c8d8cd2e6) box [182] (127 1452 17 N Regularización cuota atribuible al Estado (i) = (h) x...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [182]."
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:246 (sha256 9a4c8d8cd2e6) prints DR49002 row 127, position 1452, width 17, type N, Regularización cuota atribuible al Estado (i) = (h) x (m) 4T [182]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [182], so this is a legitimate 2022-2t-4t 4T root."
 number = "182"
 section = ["490_02"]
 data_type = "money"
@@ -274,7 +331,8 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-ajuste-distribucion-141"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:248 (sha256 9a4c8d8cd2e6) box [141] (129 1486 17 N Ajuste en regularización cuota atribuible al Estado p...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [141]."
+continuidad_id = "regularizacion-ajuste-distribucion-estado-territorio-comun-2t"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:248 (sha256 9a4c8d8cd2e6) imprime en DR49002, sección 490_02, fila 129, Ajuste en regularización cuota atribuible al Estado por cambio en la distribución territorio (j) = (a) x (e) x [(m) - (l)] 2T [141], posición 1486, ancho 17, tipo N (15 enteros + 2 decimales). El diseño anterior 2021/2022 hasta 1T no imprime la casilla [141]; alta del formulario 2022-2T-4T."
 number = "141"
 section = ["490_02"]
 data_type = "money"
@@ -285,7 +343,8 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-ajuste-distribucion-162"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:249 (sha256 9a4c8d8cd2e6) box [162] (130 1503 17 N Ajuste en regularización cuota atribuible al Estado p...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [162]."
+continuidad_id = "regularizacion-ajuste-distribucion-estado-territorio-comun-3t"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:249 (sha256 9a4c8d8cd2e6) imprime en DR49002, sección 490_02, fila 130, Ajuste en regularización cuota atribuible al Estado por cambio en la distribución territorio (j) = (a) x (e) x [(m) - (l)] 3T [162], posición 1503, ancho 17, tipo N (15 enteros + 2 decimales). El diseño anterior 2021/2022 hasta 1T no imprime la casilla [162]; alta del formulario 2022-2T-4T."
 number = "162"
 section = ["490_02"]
 data_type = "money"

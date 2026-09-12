@@ -3,7 +3,6 @@ id = "modelo-720-asset-declaration-threshold-eur"
 data_type = "money"
 unit = "EUR"
 legal_refs = ["rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter"]
-source_refs = ["aeat-modelo-720-procedure"]
 
 [[revisions."2013-y-siguientes".parameters.source_citations]]
 source_ref = "aeat-modelo-720-procedure"
@@ -19,7 +18,6 @@ id = "modelo-720-redeclaration-increment-threshold-eur"
 data_type = "money"
 unit = "EUR"
 legal_refs = ["rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "rd-1065-2007:art-54-bis"]
-source_refs = ["aeat-modelo-720-procedure"]
 
 [[revisions."2013-y-siguientes".parameters.source_citations]]
 source_ref = "aeat-modelo-720-procedure"

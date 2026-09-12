@@ -12,7 +12,6 @@ surface = "filing"
 consumer = "cadrumo.application.filing"
 requires_snapshot = true
 legal_refs = ["orden-hac-529-2026:art-6-3"]
-source_refs = ["aeat-modelo-200-manual-2025", "boe-modelo-220-2025-form"]
 
 [[revisions."2025".application_links]]
 id = "modelo-220-workflow"
@@ -20,7 +19,6 @@ surface = "workflow"
 consumer = "cadrumo.application.workflow"
 requires_snapshot = true
 legal_refs = ["orden-hac-529-2026:art-6-3"]
-source_refs = ["aeat-modelo-200-manual-2025", "boe-modelo-220-2025-form"]
 
 [[revisions."2025".application_links]]
 id = "modelo-220-export"

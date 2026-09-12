@@ -1,6 +1,7 @@
 [revisions."2011-julio-2015"]
 predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (overlapping predecessor).", legal_refs = ["ley-37-1992:art-21"], source_refs = ["aeat-dr-308-2011-july"] } }
 casilla_source_refs = ["aeat-dr-308-2011-july"]
+application_link_source_refs = ["aeat-modelo-308-procedure"]
 authority_grade = "applicability"
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"

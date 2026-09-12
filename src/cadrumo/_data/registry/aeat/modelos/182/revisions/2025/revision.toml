@@ -1,6 +1,7 @@
 [revisions."2025"]
 binding_source_refs = ["enrolled-modelo-182-procedure"]
 casilla_source_refs = ["enrolled-modelo-182-procedure"]
+application_link_source_refs = ["enrolled-modelo-182-procedure"]
 authority_grade = "applicability"
 # valid_to is open. Orden HAC/1430/2025 disposicion final unica reads, verbatim
 # in the bundled corpus, "sera aplicable, POR PRIMERA VEZ, a las declaraciones

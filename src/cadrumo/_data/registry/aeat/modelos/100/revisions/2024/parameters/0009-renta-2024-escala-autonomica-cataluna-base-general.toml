@@ -4,7 +4,6 @@ data_type = "bracket_table"
 unit = "EUR"
 bracket_axis = "filing_period"
 legal_refs = ["ley-35-2006:art-74"]
-source_refs = ["aeat-renta-2024-manual-parte1"]
 
 [[revisions."2024".parameters.source_citations]]
 source_ref = "aeat-renta-2024-manual-parte1"

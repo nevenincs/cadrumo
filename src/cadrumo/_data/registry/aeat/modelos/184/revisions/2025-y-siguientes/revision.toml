@@ -2,6 +2,9 @@
 binding_source_refs = ["aeat-dr-184-2025", "aeat-modelo-184-procedure"]
 predecessor = "2023-2024"
 casilla_source_refs = ["aeat-dr-184-2025"]
+# live_cross_reference_source_refs: carried from predecessor edition "2023-2024"; not re-grounded on this edition's own design
+live_cross_reference_source_refs = ["aeat-modelo-184-procedure"]
+application_link_source_refs = ["aeat-dr-184-2025"]
 reviewed_against = "2023-2024"
 authority_grade = "filing"
 # valid_from is canonicalised to the ejercicio-start convention (January 1 of

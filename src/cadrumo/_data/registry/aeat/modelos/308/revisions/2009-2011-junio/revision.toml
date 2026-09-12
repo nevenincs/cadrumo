@@ -1,5 +1,6 @@
 [revisions."2009-2011-junio"]
 casilla_source_refs = ["aeat-dr-308-2009"]
+application_link_source_refs = ["aeat-modelo-308-procedure"]
 authority_grade = "applicability"
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"

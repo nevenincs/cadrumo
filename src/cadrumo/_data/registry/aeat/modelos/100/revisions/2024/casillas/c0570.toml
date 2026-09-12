@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "0570"
+continuidad_id = "irpf-cuota-liquida-estatal"
+continuidad_origin = "grounded"
+continuidad_evidence = "Official AEAT dictionaries establish the same computed state-liquid-quota field in both exercises: aeat-dr-100-2024-dictionary:907 and aeat-dr-100-2025-dictionary:933 map CLIQEST at /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/CLIQEST [P102] to box 0570 as 'Cuota líquida estatal'. The official IRPF authority for article 67 defines this state liquid quota, and the 2024 and 2025 Renta Parte 1 manuals place the field in Chapter 18's Cuota líquida calculation alongside the subsequent loss-of-deduction increments. Section, semantic_role, input_kind, formula, box number, and representation are stable; the 2025 legal reference addition is recorded as an evolution, with no renumbering or repurpose. Continuity is grounded in the official field path, legal authority, and identical computation, not the number alone."
 number = "0570"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_cuota_liquida_estatal"

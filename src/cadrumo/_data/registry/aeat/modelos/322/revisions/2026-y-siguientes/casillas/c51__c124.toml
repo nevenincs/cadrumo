@@ -11,8 +11,12 @@
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "51"
+continuidad_id = "m322-liquidacion-iva-deducible-importaciones-bienes-de-inversion-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:100 (sha256 be029175f11e), campo 67 posicion 909 len 17 Num box [51]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:115 (sha256 540805f09ca3), campo 82 posicion 1104 len 17 Num; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:120 (sha256 a70f3a2ca7dd), campo 82 posicion 1104 len 17 Num; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:151 (sha256 f014cec44d49), campo 95 posicion 1225 len 17 Num. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. Por cuotas soportadas en las importaciones de bienes de inversion. Base imponible, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 909 -> 1104 -> 1104 -> 1225."
 number = "51"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_importaciones_bienes_de_inversion_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -20,8 +24,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "52"
+continuidad_id = "m322-liquidacion-iva-deducible-importaciones-bienes-de-inversion-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:101 (sha256 be029175f11e), campo 68 posicion 926 len 17 Num box [52]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:116 (sha256 540805f09ca3), campo 83 posicion 1121 len 17 Num; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:121 (sha256 a70f3a2ca7dd), campo 83 posicion 1121 len 17 Num; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:152 (sha256 f014cec44d49), campo 96 posicion 1242 len 17 Num. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. Por cuotas soportadas en las importaciones de bienes de inversion. Cuota, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 926 -> 1121 -> 1121 -> 1242."
 number = "52"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_importaciones_bienes_de_inversion_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -29,8 +37,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "53"
+continuidad_id = "m322-liquidacion-iva-deducible-adquisiciones-intracomunitarias-de-bienes-y-servicios-corrientes-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:102 (sha256 be029175f11e), campo 69 posicion 943 len 17 Num box [53]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:117 (sha256 540805f09ca3), campo 84 posicion 1138 len 17 Num; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:122 (sha256 a70f3a2ca7dd), campo 84 posicion 1138 len 17 Num; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:153 (sha256 f014cec44d49), campo 97 posicion 1259 len 17 Num. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. En adquisiciones intracomunitarias de bienes y servicios corrientes. Base imponible, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 943 -> 1138 -> 1138 -> 1259."
 number = "53"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_adquisiciones_intracomunitarias_de_bienes_y_servicios_corrientes_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -38,8 +50,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "54"
+continuidad_id = "m322-liquidacion-iva-deducible-adquisiciones-intracomunitarias-de-bienes-y-servicios-corrientes-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:103 (sha256 be029175f11e), campo 70 posicion 960 len 17 Num box [54]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:118 (sha256 540805f09ca3), campo 85 posicion 1155 len 17 Num; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:123 (sha256 a70f3a2ca7dd), campo 85 posicion 1155 len 17 Num; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:154 (sha256 f014cec44d49), campo 98 posicion 1276 len 17 Num. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. En adquisiciones intracomunitarias de bienes y servicios corrientes. Cuota, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 960 -> 1155 -> 1155 -> 1276."
 number = "54"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_adquisiciones_intracomunitarias_de_bienes_y_servicios_corrientes_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -47,8 +63,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "55"
+continuidad_id = "m322-liquidacion-iva-deducible-adquisiciones-intracomunitarias-de-bienes-de-inversion-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:104 (sha256 be029175f11e), campo 71 posicion 977 len 17 Num box [55]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:119 (sha256 540805f09ca3), campo 86 posicion 1172 len 17 Num; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:124 (sha256 a70f3a2ca7dd), campo 86 posicion 1172 len 17 Num; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:155 (sha256 f014cec44d49), campo 99 posicion 1293 len 17 Num. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. En adquisiciones intracomunitarias de bienes de inversion. Base imponible, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 977 -> 1172 -> 1172 -> 1293."
 number = "55"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_adquisiciones_intracomunitarias_de_bienes_de_inversion_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -56,8 +76,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "56"
+continuidad_id = "m322-liquidacion-iva-deducible-adquisiciones-intracomunitarias-de-bienes-de-inversion-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:105 (sha256 be029175f11e), campo 72 posicion 994 len 17 Num box [56]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:120 (sha256 540805f09ca3), campo 87 posicion 1189 len 17 Num; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:125 (sha256 a70f3a2ca7dd), campo 87 posicion 1189 len 17 Num; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:156 (sha256 f014cec44d49), campo 100 posicion 1310 len 17 Num. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. En adquisiciones intracomunitarias de bienes de inversion. Cuota, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 994 -> 1189 -> 1189 -> 1310."
 number = "56"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_adquisiciones_intracomunitarias_de_bienes_de_inversion_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -65,8 +89,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "57"
+continuidad_id = "m322-liquidacion-iva-deducible-rectificacion-deducciones-resto-de-operaciones-no-intragrupo-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:106 (sha256 be029175f11e), campo 73 posicion 1011 len 17 N box [57]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:121 (sha256 540805f09ca3), campo 88 posicion 1206 len 17 N; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:126 (sha256 a70f3a2ca7dd), campo 88 posicion 1206 len 17 N; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:157 (sha256 f014cec44d49), campo 101 posicion 1327 len 17 N. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. Rectificacion de deducciones en resto de operaciones (no intragrupo). Base imponible, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 1011 -> 1206 -> 1206 -> 1327."
 number = "57"
-section = ["iva", "regimen_general", "intragrupo", "deducible"]
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_rectificacion_deducciones_resto_de_operaciones_no_intragrupo_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -74,8 +102,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "58"
+continuidad_id = "m322-liquidacion-iva-deducible-rectificacion-deducciones-resto-de-operaciones-no-intragrupo-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:107 (sha256 be029175f11e), campo 74 posicion 1028 len 17 N box [58]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:122 (sha256 540805f09ca3), campo 89 posicion 1223 len 17 N; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:127 (sha256 a70f3a2ca7dd), campo 89 posicion 1223 len 17 N; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:158 (sha256 f014cec44d49), campo 102 posicion 1344 len 17 N. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. Rectificacion de deducciones en resto de operaciones (no intragrupo). Cuota, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 1028 -> 1223 -> 1223 -> 1344."
 number = "58"
-section = ["iva", "regimen_general", "intragrupo", "deducible"]
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_rectificacion_deducciones_resto_de_operaciones_no_intragrupo_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -83,8 +115,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "59"
+continuidad_id = "m322-liquidacion-iva-deducible-compensacion-regimen-especial-agricultura-ganaderia-pesca-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:108 (sha256 be029175f11e), campo 75 posicion 1045 len 17 N box [59]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:123 (sha256 540805f09ca3), campo 90 posicion 1240 len 17 N; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:128 (sha256 a70f3a2ca7dd), campo 90 posicion 1240 len 17 N; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:159 (sha256 f014cec44d49), campo 103 posicion 1361 len 17 N. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. Compensacion regimen especial A.G. y P. Cuota, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 1045 -> 1240 -> 1240 -> 1361."
 number = "59"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_compensacion_regimen_especial_agricultura_ganaderia_pesca_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -92,8 +128,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "60"
+continuidad_id = "m322-liquidacion-iva-deducible-regularizacion-bienes-de-inversion-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:109 (sha256 be029175f11e), campo 76 posicion 1062 len 17 N box [60]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:124 (sha256 540805f09ca3), campo 91 posicion 1257 len 17 N; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:129 (sha256 a70f3a2ca7dd), campo 91 posicion 1257 len 17 N; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:160 (sha256 f014cec44d49), campo 104 posicion 1378 len 17 N. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. Regularizacion bienes de inversion. Cuota, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 1062 -> 1257 -> 1257 -> 1378."
 number = "60"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_regularizacion_bienes_de_inversion_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -101,8 +141,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "61"
+continuidad_id = "m322-liquidacion-iva-deducible-regularizacion-por-aplicacion-del-porcentaje-definitivo-de-prorrata-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:110 (sha256 be029175f11e), campo 77 posicion 1079 len 17 N box [61]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:125 (sha256 540805f09ca3), campo 92 posicion 1274 len 17 N; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:130 (sha256 a70f3a2ca7dd), campo 92 posicion 1274 len 17 N; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:161 (sha256 f014cec44d49), campo 105 posicion 1395 len 17 N. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. Regularizacion por aplicacion del porcentaje definitivo de prorrata. Cuota, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 1079 -> 1274 -> 1274 -> 1395."
 number = "61"
 section = ["iva", "prorratas"]
+semantic_role = "m322_liquidacion_iva_deducible_regularizacion_por_aplicacion_del_porcentaje_definitivo_de_prorrata_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -110,8 +154,12 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "62"
+continuidad_id = "m322-liquidacion-iva-deducible-total-a-deducir"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:111 (sha256 be029175f11e), campo 78 posicion 1096 len 17 N box [62]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:126 (sha256 540805f09ca3), campo 93 posicion 1291 len 17 N; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:131 (sha256 a70f3a2ca7dd), campo 93 posicion 1291 len 17 N; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:162 (sha256 f014cec44d49), campo 106 posicion 1412 len 17 N. Las cuatro descripciones son Total a deducir, registro principal, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 1096 -> 1291 -> 1291 -> 1412."
 number = "62"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_total_a_deducir"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -119,8 +167,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "63"
+continuidad_id = "m322-liquidacion-continuacion-diferencia-total-cuota-devengada-menos-total-a-deducir"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:145 (sha256 be029175f11e), campo 4 posicion 30 len 17 N box [63]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:160 (sha256 540805f09ca3), campo 4 posicion 30 len 17 N; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:194 (sha256 a70f3a2ca7dd), campo 4 posicion 30 len 17 N; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:211 (sha256 f014cec44d49), campo 4 posicion 30 len 17 N. Las cuatro descripciones son Liquidacion (continuacion). Diferencia ([38] - [62]), registro complementario, formula y representacion 15 enteros + 2 decimales estables; posicion 30."
 number = "63"
 section = ["iva", "regimen_general", "resultado"]
+semantic_role = "m322_liquidacion_continuacion_diferencia_total_cuota_devengada_menos_total_a_deducir"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -128,8 +180,12 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "64"
+continuidad_id = "m322-liquidacion-atribuible-administracion-del-estado-porcentaje"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:167 (sha256 be029175f11e), campo 21 posicion 271 len 5 Num box [64]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:180 (sha256 540805f09ca3), campo 20 posicion 254 len 5 Num; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:214 (sha256 a70f3a2ca7dd), campo 20 posicion 254 len 5 Num; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:236 (sha256 f014cec44d49), campo 25 posicion 339 len 5 Num. Las cuatro descripciones son Liquidacion (continuacion). Atribuible a la Administracion del Estado (%), registro complementario, validacion vacia y contenido 3 enteros + 2 decimales; posiciones 271 -> 254 -> 254 -> 339."
 number = "64"
 section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_atribuible_administracion_del_estado_porcentaje"
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -137,8 +193,12 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "65"
+continuidad_id = "m322-liquidacion-atribuible-administracion-del-estado-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:147 (sha256 be029175f11e), campo 6 posicion 52 len 17 N box [65]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:162 (sha256 540805f09ca3), campo 6 posicion 52 len 17 N; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:196 (sha256 a70f3a2ca7dd), campo 6 posicion 52 len 17 N; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:213 (sha256 f014cec44d49), campo 6 posicion 52 len 17 N. Las cuatro descripciones son Liquidacion (continuacion). Atribuible a la Administracion del Estado, registro complementario, validacion vacia y contenido 15 enteros + 2 decimales; posicion 52."
 number = "65"
 section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_atribuible_administracion_del_estado_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -146,8 +206,12 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "66"
+continuidad_id = "m322-liquidacion-continuacion-cuotas-compensar-periodos-anteriores-incorporacion-grupo"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:149 (sha256 be029175f11e), campo 8 posicion 86 len 17 Num box [66]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:164 (sha256 540805f09ca3), campo 8 posicion 86 len 17 Num; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:198 (sha256 a70f3a2ca7dd), campo 8 posicion 86 len 17 Num; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:215 (sha256 f014cec44d49), campo 8 posicion 86 len 17 Num. Las cuatro descripciones son Liquidacion (continuacion). Cuotas a compensar de periodos anteriores a la incorporacion al grupo; validacion vacia y contenido 15 enteros + 2 decimales; posicion 86 estable."
 number = "66"
 section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_continuacion_cuotas_compensar_periodos_anteriores_incorporacion_grupo"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -155,8 +219,12 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "67"
+continuidad_id = "m322-liquidacion-continuacion-resultado-regularizacion-anual-administraciones-forales"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:150-151 (sha256 be029175f11e), campo 9 posicion 103 len 17 N box [67]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:165-166 (sha256 540805f09ca3), campo 9 posicion 103 len 17 N; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:199-200 (sha256 a70f3a2ca7dd), campo 9 posicion 103 len 17 N; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:216-217 (sha256 f014cec44d49), campo 9 posicion 103 len 17 N. Las cuatro descripciones son Liquidacion (continuacion). Resultado de la regularizacion anual para sujetos pasivos que tributan conjuntamente a la Administracion del Estado y a las Haciendas Forales; validacion vacia y contenido 15 enteros + 2 decimales; posicion 103 estable."
 number = "67"
 section = ["iva", "regimen_general", "resultado"]
+semantic_role = "m322_liquidacion_continuacion_resultado_regularizacion_anual_administraciones_forales"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -164,8 +232,12 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "68"
+continuidad_id = "m322-liquidacion-continuacion-resultado"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:152 (sha256 be029175f11e), campo 10 posicion 120 len 17 N box [68], formula [65] - [66] + [67]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:167 (sha256 540805f09ca3), campo 10 posicion 120 len 17 N, same formula; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:201 (sha256 a70f3a2ca7dd), campo 10 posicion 120 len 17 N, same formula; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:218 (sha256 f014cec44d49), campo 10 posicion 120 len 17 N, formula [65] + [77] - [66] + [67]. Las cuatro descripciones conservan el resultado de la liquidacion y el formato 15 enteros + 2 decimales en posicion 120; en 2026 se incorpora exclusivamente el nuevo operando [77]."
 number = "68"
 section = ["iva", "regimen_general", "resultado"]
+semantic_role = "m322_liquidacion_continuacion_resultado"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -173,8 +245,12 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "69"
+continuidad_id = "m322-liquidacion-continuacion-a-deducir-resultado-autoliquidaciones-anteriores"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:153-154 (sha256 be029175f11e), campo 11 posicion 137 len 17 N box [69]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:168-169 (sha256 540805f09ca3), campo 11 posicion 137 len 17 N; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:202-203 (sha256 a70f3a2ca7dd), campo 11 posicion 137 len 17 N; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:219-220 (sha256 f014cec44d49), campo 11 posicion 137 len 17 N. Las cuatro descripciones son A deducir exclusivamente en caso de autoliquidacion complementaria: resultado de las autoliquidaciones anteriores presentadas por el mismo concepto, ejercicio y periodo; validacion vacia y contenido 15 enteros + 2 decimales; posicion 137 estable."
 number = "69"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_continuacion_a_deducir_resultado_autoliquidaciones_anteriores"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -182,8 +258,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "70"
+continuidad_id = "m322-resultado-autoliquidacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:155 (sha256 be029175f11e), campo 12 posicion 154 len 17 N box [70], formula [68] - [69]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:170 (sha256 540805f09ca3), campo 12 posicion 154 len 17 N, same formula; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:204 (sha256 a70f3a2ca7dd), campo 12 posicion 154 len 17 N, same formula; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:222 (sha256 f014cec44d49), campo 13 posicion 171 len 17 N, formula [68] - [69] - [112]. Las cuatro descripciones conservan el resultado de la autoliquidacion y el formato 15 enteros + 2 decimales; en 2026 se incorpora exclusivamente el nuevo operando [112]."
 number = "70"
 section = ["iva", "regimen_general", "resultado"]
+semantic_role = "m322_resultado_autoliquidacion"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -191,8 +271,12 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "71"
+continuidad_id = "m322-informacion-adicional-entregas-intracomunitarias-bienes-servicios"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:156 (sha256 be029175f11e), campo 13 posicion 171 len 17 N box [71]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:171 (sha256 540805f09ca3), campo 13 posicion 171 len 17 N; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:205 (sha256 a70f3a2ca7dd), campo 13 posicion 171 len 17 N; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:223 (sha256 f014cec44d49), campo 14 posicion 188 len 17 N. Las cuatro descripciones son Informacion adicional. Entregas intracomunitarias de bienes y servicios; validacion vacia y contenido 15 enteros + 2 decimales; posiciones 171 -> 171 -> 171 -> 188."
 number = "71"
 section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_informacion_adicional_entregas_intracomunitarias_bienes_servicios"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -200,8 +284,12 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "72"
+continuidad_id = "m322-informacion-adicional-exportaciones-operaciones-asimiladas"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:157 (sha256 be029175f11e), campo 14 posicion 188 len 17 N box [72]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:172 (sha256 540805f09ca3), campo 14 posicion 188 len 17 N; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:206 (sha256 a70f3a2ca7dd), campo 14 posicion 188 len 17 N; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:224 (sha256 f014cec44d49), campo 15 posicion 205 len 17 N. Las cuatro descripciones son Informacion adicional. Exportaciones y operaciones asimiladas; validacion vacia y contenido 15 enteros + 2 decimales; posiciones 188 -> 188 -> 188 -> 205."
 number = "72"
 section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_informacion_adicional_exportaciones_operaciones_asimiladas"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -209,42 +297,52 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "74"
-continuidad_id = "m322-informacion-adicional-exclusivamente-para-aquellos-sujetos-pasivos-que-sean-destinatarios-de-operaciones-afectadas"
-continuidad_origin = "seeded"
+continuidad_id = "m322-informacion-adicional-criterio-caja-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:160-161 (sha256 be029175f11e), campo 16 posicion 222 len 17 N box [74]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:173-174 (sha256 540805f09ca3), campo 15 posicion 205 len 17 N; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:207-208 (sha256 a70f3a2ca7dd), campo 15 posicion 205 len 17 N; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:229-230 (sha256 f014cec44d49), campo 20 posicion 290 len 17 N. Las cuatro descripciones conservan la informacion adicional para destinatarios de operaciones afectadas por el regimen especial del criterio de caja y la base imponible; validacion vacia y contenido 15 enteros + 2 decimales; posiciones 222 -> 205 -> 205 -> 290."
 number = "74"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
-semantic_role = "m322_informacion_adicional_exclusivamente_para_aquellos_sujetos_pasivos_que_sean_destinatarios_de_operaciones_afectadas"
+semantic_role = "m322_informacion_adicional_criterio_caja_base_imponible"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "75"
-continuidad_id = "75"
-continuidad_origin = "seeded"
+continuidad_id = "m322-informacion-adicional-criterio-caja-cuota-soportada"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:162-163 (sha256 be029175f11e), campo 17 posicion 239 len 17 N box [75]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:175-176 (sha256 540805f09ca3), campo 16 posicion 222 len 17 N; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:209-210 (sha256 a70f3a2ca7dd), campo 16 posicion 222 len 17 N; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:231-232 (sha256 f014cec44d49), campo 21 posicion 307 len 17 N. Las cuatro descripciones conservan la informacion adicional para destinatarios de operaciones afectadas por el regimen especial del criterio de caja y la cuota soportada; validacion vacia y contenido 15 enteros + 2 decimales; posiciones 239 -> 222 -> 222 -> 307."
 number = "75"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
-semantic_role = "m322_informacion_adicional_exclusivamente_para_aquellos_sujetos_pasivos_que_sean_destinatarios_de_operaciones_afectadas"
+semantic_role = "m322_informacion_adicional_criterio_caja_cuota_soportada"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "76"
+continuidad_id = "m322-regularizacion-cuotas-art-80-cinco-5-liva"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:144 (sha256 be029175f11e), campo 3 posicion 13 len 17 N box [76]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:159 (sha256 540805f09ca3), campo 3 posicion 13 len 17 N; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:193 (sha256 a70f3a2ca7dd), campo 3 posicion 13 len 17 N; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:210 (sha256 f014cec44d49), campo 3 posicion 13 len 17 N. Las cuatro descripciones son Regularizacion cuotas art. 80.Cinco.5a LIVA; validacion vacia y contenido 15 enteros + 2 decimales; posicion 13 estable."
 number = "76"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
+semantic_role = "m322_regularizacion_cuotas_art_80_cinco_5_liva"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "77"
+continuidad_id = "m322-iva-importacion-aduana-pendiente-ingreso"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:148 (sha256 be029175f11e), campo 7 posicion 69 len 17 Num box [77]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:163 (sha256 540805f09ca3), campo 7 posicion 69 len 17 Num; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:197 (sha256 a70f3a2ca7dd), campo 7 posicion 69 len 17 Num; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:214 (sha256 f014cec44d49), campo 7 posicion 69 len 17 Num. Las cuatro descripciones conservan el concepto IVA a la importacion liquidado por la Aduana pendiente de ingreso; en 2026 se antepone la leyenda Liquidacion (continuacion) y un punto, sin cambio de contenido ni representacion; validacion vacia y contenido 15 enteros + 2 decimales; posicion 69 estable."
 number = "77"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
+semantic_role = "m322_iva_importacion_aduana_pendiente_ingreso"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]

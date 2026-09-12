@@ -1,6 +1,9 @@
 [revisions."2025"]
 predecessor = "2024"
 casilla_source_refs = ["aeat-renta-2025-manual-parte1"]
+parameter_source_refs = ["aeat-renta-2025-manual-parte1"]
+application_link_source_refs = ["aeat-dr-131-2025"]
+extraction_profile_source_refs = ["aeat-dr-131-2025"]
 binding_source_refs = ["aeat-dr-131-2025"]
 formula_source_refs = ["aeat-modelo-131-instructions"]
 reviewed_against = "2024"

@@ -112,8 +112,10 @@ legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:
 
 [[revisions."2008-2022".casillas]]
 id = "38"
+continuidad_id = "m322-liquidacion-iva-devengado-total-cuota"
 number = "38"
 section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_total_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -121,8 +123,10 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2008-2022".casillas]]
 id = "39"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-intragrupo-corrientes-base-imponible"
 number = "39"
 section = ["iva", "regimen_general", "intragrupo", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_intragrupo_corrientes_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -130,8 +134,10 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "40"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-intragrupo-corrientes-cuota"
 number = "40"
 section = ["iva", "regimen_general", "intragrupo", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_intragrupo_corrientes_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -139,8 +145,10 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "41"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-intragrupo-bienes-de-inversion-base-imponible"
 number = "41"
 section = ["iva", "regimen_general", "intragrupo", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_intragrupo_bienes_de_inversion_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -148,8 +156,10 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "42"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-intragrupo-bienes-de-inversion-cuota"
 number = "42"
 section = ["iva", "regimen_general", "intragrupo", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_intragrupo_bienes_de_inversion_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -157,8 +167,10 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "43"
+continuidad_id = "m322-liquidacion-iva-deducible-rectificacion-deducciones-operaciones-intragrupo-base-imponible"
 number = "43"
 section = ["iva", "regimen_general", "intragrupo", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_rectificacion_deducciones_operaciones_intragrupo_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -166,8 +178,10 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "44"
+continuidad_id = "m322-liquidacion-iva-deducible-rectificacion-deducciones-operaciones-intragrupo-cuota"
 number = "44"
 section = ["iva", "regimen_general", "intragrupo", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_rectificacion_deducciones_operaciones_intragrupo_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -175,8 +189,10 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "45"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-interiores-corrientes-base-imponible"
 number = "45"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_interiores_corrientes_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -184,8 +200,10 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "46"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-interiores-corrientes-cuota"
 number = "46"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_interiores_corrientes_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -193,8 +211,10 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "47"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-interiores-bienes-de-inversion-base-imponible"
 number = "47"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_interiores_bienes_de_inversion_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -202,8 +222,10 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "48"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-interiores-bienes-de-inversion-cuota"
 number = "48"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_interiores_bienes_de_inversion_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -211,8 +233,10 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "49"
+continuidad_id = "m322-liquidacion-iva-deducible-importaciones-bienes-corrientes-base-imponible"
 number = "49"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_importaciones_bienes_corrientes_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -220,8 +244,10 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "50"
+continuidad_id = "m322-liquidacion-iva-deducible-importaciones-bienes-corrientes-cuota"
 number = "50"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_importaciones_bienes_corrientes_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -319,8 +345,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "51"
+continuidad_id = "m322-liquidacion-iva-deducible-importaciones-bienes-de-inversion-base-imponible"
 number = "51"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_importaciones_bienes_de_inversion_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -418,8 +446,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "52"
+continuidad_id = "m322-liquidacion-iva-deducible-importaciones-bienes-de-inversion-cuota"
 number = "52"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_importaciones_bienes_de_inversion_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -472,8 +502,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "53"
+continuidad_id = "m322-liquidacion-iva-deducible-adquisiciones-intracomunitarias-de-bienes-y-servicios-corrientes-base-imponible"
 number = "53"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_adquisiciones_intracomunitarias_de_bienes_y_servicios_corrientes_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -481,8 +513,10 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "54"
+continuidad_id = "m322-liquidacion-iva-deducible-adquisiciones-intracomunitarias-de-bienes-y-servicios-corrientes-cuota"
 number = "54"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_adquisiciones_intracomunitarias_de_bienes_y_servicios_corrientes_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -490,8 +524,10 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "55"
+continuidad_id = "m322-liquidacion-iva-deducible-adquisiciones-intracomunitarias-de-bienes-de-inversion-base-imponible"
 number = "55"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_adquisiciones_intracomunitarias_de_bienes_de_inversion_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -499,8 +535,10 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "56"
+continuidad_id = "m322-liquidacion-iva-deducible-adquisiciones-intracomunitarias-de-bienes-de-inversion-cuota"
 number = "56"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_adquisiciones_intracomunitarias_de_bienes_de_inversion_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -508,8 +546,10 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "57"
+continuidad_id = "m322-liquidacion-iva-deducible-rectificacion-deducciones-resto-de-operaciones-no-intragrupo-base-imponible"
 number = "57"
-section = ["iva", "regimen_general", "intragrupo", "deducible"]
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_rectificacion_deducciones_resto_de_operaciones_no_intragrupo_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -517,8 +557,10 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "58"
+continuidad_id = "m322-liquidacion-iva-deducible-rectificacion-deducciones-resto-de-operaciones-no-intragrupo-cuota"
 number = "58"
-section = ["iva", "regimen_general", "intragrupo", "deducible"]
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_rectificacion_deducciones_resto_de_operaciones_no_intragrupo_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -526,8 +568,10 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "59"
+continuidad_id = "m322-liquidacion-iva-deducible-compensacion-regimen-especial-agricultura-ganaderia-pesca-cuota"
 number = "59"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_compensacion_regimen_especial_agricultura_ganaderia_pesca_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -535,8 +579,10 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "60"
+continuidad_id = "m322-liquidacion-iva-deducible-regularizacion-bienes-de-inversion-cuota"
 number = "60"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_regularizacion_bienes_de_inversion_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -544,8 +590,10 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "61"
+continuidad_id = "m322-liquidacion-iva-deducible-regularizacion-por-aplicacion-del-porcentaje-definitivo-de-prorrata-cuota"
 number = "61"
 section = ["iva", "prorratas"]
+semantic_role = "m322_liquidacion_iva_deducible_regularizacion_por_aplicacion_del_porcentaje_definitivo_de_prorrata_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -553,8 +601,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "62"
+continuidad_id = "m322-liquidacion-iva-deducible-total-a-deducir"
 number = "62"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_total_a_deducir"
 data_type = "money"
 required = false
 input_kind = "manual"

@@ -1,5 +1,6 @@
 [revisions."2003-y-siguientes"]
 casilla_source_refs = ["enrolled-modelo-156-layout"]
+application_link_source_refs = ["enrolled-modelo-156-procedure"]
 authority_grade = "applicability"
 # Modelo 156 declaración informativa. Approved by orden-hac-3580-2003 art 1
 # and its filing plazo grounded verbatim in orden-hac-3580-2003 art 4

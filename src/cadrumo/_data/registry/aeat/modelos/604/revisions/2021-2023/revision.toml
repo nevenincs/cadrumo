@@ -1,5 +1,6 @@
 [revisions."2021-2023"]
 casilla_source_refs = ["aeat-dr-604-2021"]
+application_link_source_refs = ["enrolled-modelo-604-procedure"]
 authority_grade = "applicability"
 # Modelo 604 autoliquidacion del Impuesto sobre las Transacciones Financieras,
 # approved by orden-hac-510-2021 art 1, plazo grounded in orden-hac-510-2021 art 3.

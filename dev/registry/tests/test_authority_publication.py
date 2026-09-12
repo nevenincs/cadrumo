@@ -25,6 +25,7 @@ from cadrumo.domain.calculations.registry.runtime_catalogues import (
     TerritoryCarveOut,
 )
 
+from ..compiler import authority as compiler_authority
 from ..compiler import fact_providers
 from ..conformance.loader_directory_mode_support import (
     write_extracted_corpus_sidecar,
@@ -294,6 +295,28 @@ def test_staged_candidate_publishes_and_the_reader_consumes_it_as_current(
     assert consumed.modelos[0].id == "999"
     assert currency.status is AuthorityArtifactCurrencyStatus.CURRENT
     assert currency.recorded_identity_digest == published.identity_digest
+
+
+def test_structural_publication_does_not_run_registry_conformance(
+    tmp_path: Path,
+    isolated_provider_registration: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An unrelated whole-registry validator failure does not block publication."""
+    candidate_root = tmp_path / "candidate"
+    _stage_valid_candidate(candidate_root)
+
+    def refuse_conformance(*_args: object, **_kwargs: object) -> None:
+        raise RegistryValidationError("unrelated semantic conformance failure")
+
+    monkeypatch.setattr(compiler_authority.RegistryValidator, "validate_registry", refuse_conformance)
+
+    candidate = validate_authority_candidate(
+        registry_root=candidate_root / "registry" / "aeat",
+        source_root=candidate_root,
+    )
+
+    assert candidate.artifact.modelos[0].id == "999"
 
 
 def test_published_legal_evidence_answers_citation_queries_after_its_source_is_gone(

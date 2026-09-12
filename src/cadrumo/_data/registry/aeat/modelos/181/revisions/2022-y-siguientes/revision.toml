@@ -1,5 +1,6 @@
 [revisions."2022-y-siguientes"]
 casilla_source_refs = ["aeat-dr-181-2022"]
+application_link_source_refs = ["enrolled-modelo-181-procedure"]
 authority_grade = "applicability"
 # Modelo 181 declaración informativa, approved by orden-eha-3514-2009 art 1
 # with its plazo grounded verbatim in orden-eha-3514-2009 art 6.

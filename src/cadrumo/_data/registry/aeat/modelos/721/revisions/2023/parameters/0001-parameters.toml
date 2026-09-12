@@ -6,7 +6,6 @@ id = "modelo-721-asset-declaration-threshold-eur"
 data_type = "money"
 unit = "EUR"
 legal_refs = ["rd-1065-2007:art-42-quater", "ley-58-2003:da-18"]
-source_refs = ["aeat-modelo-721-procedure"]
 
 [[revisions."2023".parameters.source_citations]]
 source_ref = "aeat-modelo-721-procedure"
@@ -25,7 +24,6 @@ id = "modelo-721-redeclaration-increment-threshold-eur"
 data_type = "money"
 unit = "EUR"
 legal_refs = ["rd-1065-2007:art-42-quater", "ley-58-2003:da-18"]
-source_refs = ["aeat-modelo-721-procedure"]
 
 [[revisions."2023".parameters.source_citations]]
 source_ref = "aeat-modelo-721-procedure"

@@ -26,7 +26,7 @@ from cadrumo.domain.calculations.registry.schema_revision_members import Applica
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from cadrumo.domain.contribuyente.family_profile import RentaFamilyProfile
 from cadrumo.domain.contribuyente.family_types import RentaAscendantProfile, RentaDescendantProfile
-from cadrumo.domain.contribuyente.keys import profile_keys as registered_profile_keys
+from cadrumo.application.user_profile.profile_keys import profile_keys as catalogue_profile_keys
 from cadrumo.domain.contribuyente.tax_residence import TaxResidenceProfile
 from cadrumo.tests.registry_snapshot import build_snapshot
 
@@ -349,7 +349,7 @@ _FAMILY_ROW_BINDINGS: Mapping[str, tuple[str, str]] = {
 
 def test_modelo_100_personal_family_profile_bindings_target_profile_schema() -> None:
     snapshot = _modelo_100_snapshot()
-    profile_keys = {entry.key for entry in registered_profile_keys()}
+    profile_keys = {entry.key for entry in catalogue_profile_keys()}
     bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings if binding.source == "profile"}
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
 

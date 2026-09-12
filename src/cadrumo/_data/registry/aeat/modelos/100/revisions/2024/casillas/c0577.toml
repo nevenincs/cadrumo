@@ -1,7 +1,10 @@
 [[revisions."2024".casillas]]
 id = "0577"
+continuidad_id = "irpf-perdida-derecho-deduccion-general-autonomica"
+continuidad_origin = "grounded"
+continuidad_evidence = "Official AEAT Renta manuals ground the same autonomous regularization bucket in both exercises: Manual práctico de Renta 2024, Parte 1, chapter 18, section 'Incremento de las cuotas líquidas, estatal y autonómica, por pérdida del derecho a deducciones de ejercicios anteriores' (p. 1465), states that improper autonomous deductions and their delay interest increase the autonomous liquid quota; the 2025 Parte 1 manual, same chapter and section (p. 1354), applies the same treatment for deductions lost in 2025. AEAT dictionaries aeat-dr-100-2024-dictionary:916 and aeat-dr-100-2025-dictionary:942 map DED97A at /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/DED97A [P102] to box 0577 in both revisions as the autonomous part. The exercise year is the only label change; section, semantic_role, legal_refs, box number, and representation remain stable, with the 2025 legal reference addition recorded as an evolution. Continuity is grounded in the official field and manual context, not the number alone."
 number = "0577"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_perdida_derecho_deduccion_autonomica"
 legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "rd-439-2007:art-59"]
-additional_source_refs = ["aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]
+additional_source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1"]

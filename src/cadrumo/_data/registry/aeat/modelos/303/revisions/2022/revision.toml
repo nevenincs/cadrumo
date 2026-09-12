@@ -2,6 +2,7 @@
 binding_source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 formula_source_refs = ["aeat-dr-303-2022"]
 casilla_source_refs = ["aeat-dr-303-2022"]
+live_cross_reference_source_refs = ["aeat-modelo-303-procedure"]
 # Prepared and reviewed by an agent against the bundled diseño de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather

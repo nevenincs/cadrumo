@@ -267,7 +267,17 @@ sha256 = "f879a2cf8d81cafa3070447fb3b088a10414269564f2515548c32707fce418fc"
 bytes = 140036
 retrieved_at = 2026-07-01
 published_at = 2022-08-30
-applies_from = 2023-01-01
+# THE WINDOW IS THE EJERCICIO, NOT THE PRESENTATION. This read 2023-01-01, the
+# January in which the ejercicio-2022 declaracion is presented. A source window
+# is overlap-checked against a revision's own period span, so declaring the
+# presentation month excluded the 2022 revision from the very orden that
+# approves its form: source_window_applies_across returned False for
+# span 2022-01-01..2022-12-31, while five files of that revision -- its
+# casillas, deadline_windows, filing_schedules and revision.toml -- cite it.
+# Orden HFP/823/2022 approves the Modelo 345 for ejercicio 2022; the window is
+# that ejercicio. Left open-ended because the 2023, 2024 and 2025 revisions
+# still cite it as their base order.
+applies_from = 2022-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-14168"
 review_status = "pending_review"
 
@@ -293,7 +303,12 @@ sha256 = "e0d6ab7b1c067894d756b8d1d6d72b9f13634e5b8fe2e8434e69c3ea8cad39da"
 bytes = 65344
 retrieved_at = 2026-07-01
 published_at = 2023-12-29
-applies_from = 2024-01-01
+# THE WINDOW IS THE EJERCICIO, NOT THE PRESENTATION, as on the base order above.
+# This read 2024-01-01, the January of presentation, which excluded the 2023
+# revision that cites it in its own revision.toml. Orden HFP/1397/2023, published
+# two days before the ejercicio closes, governs ejercicio 2023. Left open-ended:
+# the 2024 revision and the 2025 export layout cite it too.
+applies_from = 2023-01-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-26632"
 review_status = "pending_review"
 

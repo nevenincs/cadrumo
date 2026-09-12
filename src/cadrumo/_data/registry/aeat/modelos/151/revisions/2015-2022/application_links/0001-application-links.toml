@@ -4,7 +4,7 @@ surface = "filing"
 consumer = "cadrumo.application.filing"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113"]
-source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
+additional_source_refs = ["boe-modelo-151-layout"]
 
 [[revisions."2015-2022".application_links]]
 id = "modelo-151-calculation"
@@ -12,7 +12,7 @@ surface = "calculation"
 consumer = "cadrumo.domain.calculations.registry"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
+additional_source_refs = ["boe-modelo-151-layout"]
 
 [[revisions."2015-2022".application_links]]
 id = "modelo-151-deadline"
@@ -20,7 +20,6 @@ surface = "deadline"
 consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-modelo-151-procedure"]
 
 [[revisions."2015-2022".application_links]]
 id = "modelo-151-review"
@@ -28,7 +27,6 @@ surface = "review"
 consumer = "cadrumo.application.review"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-modelo-151-procedure"]
 
 [[revisions."2015-2022".application_links]]
 id = "modelo-151-approval"
@@ -36,7 +34,6 @@ surface = "approval"
 consumer = "cadrumo.application.workflow.approval"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-modelo-151-procedure"]
 
 [[revisions."2015-2022".application_links]]
 id = "modelo-151-reconciliation"
@@ -44,7 +41,6 @@ surface = "reconciliation"
 consumer = "cadrumo.application.reconciliation"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-modelo-151-procedure"]
 
 [[revisions."2015-2022".application_links]]
 id = "modelo-151-workflow"
@@ -52,4 +48,3 @@ surface = "workflow"
 consumer = "cadrumo.application.workflow"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-modelo-151-procedure"]

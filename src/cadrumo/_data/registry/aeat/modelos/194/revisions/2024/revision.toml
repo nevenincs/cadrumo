@@ -1,6 +1,8 @@
 [revisions."2024"]
 predecessor = "2023"
 casilla_source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
+# application_link_source_refs: carried from predecessor edition "2019"; not re-grounded on this edition's own design
+application_link_source_refs = ["aeat-modelo-194-procedure"]
 reviewed_against = "2023"
 # Applicability-grade Modelo 194 record-design era. This revision models only
 # the five manual hoja-resumen fields grounded in the approving Orden; it does

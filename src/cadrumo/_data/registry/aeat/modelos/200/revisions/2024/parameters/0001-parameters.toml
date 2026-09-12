@@ -39,7 +39,6 @@ data_type = "bracket_table"
 unit = "EUR"
 bracket_axis = "filing_period"
 legal_refs = ["ley-27-2014:art-29"]
-source_refs = ["aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -96,7 +95,6 @@ id = "is.modelo-200.tipo-gravamen-pyme-display"
 data_type = "ratio"
 unit = "percent"
 legal_refs = ["ley-27-2014:art-29", "ley-31-2022:art-39"]
-source_refs = ["aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -128,7 +126,6 @@ id = "is.modelo-200.tipo-gravamen-new-entity-first-2-years"
 data_type = "ratio"
 unit = "percent"
 legal_refs = ["ley-27-2014:art-29"]
-source_refs = ["aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -144,7 +141,6 @@ id = "is.modelo-200.tipo-gravamen-cooperative-protected"
 data_type = "ratio"
 unit = "percent"
 legal_refs = ["ley-27-2014:art-29"]
-source_refs = ["aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -171,7 +167,6 @@ data_type = "bracket_table"
 unit = "EUR"
 bracket_axis = "filing_period"
 legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30"]
-source_refs = ["aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -189,7 +184,6 @@ data_type = "bracket_table"
 unit = "EUR"
 bracket_axis = "filing_period"
 legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30"]
-source_refs = ["aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -207,7 +201,6 @@ data_type = "bracket_table"
 unit = "EUR"
 bracket_axis = "filing_period"
 legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-49-2002:art-10"]
-source_refs = ["aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -225,7 +218,6 @@ data_type = "bracket_table"
 unit = "EUR"
 bracket_axis = "filing_period"
 legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-101"]
-source_refs = ["aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -288,7 +280,6 @@ data_type = "bracket_table"
 unit = "EUR"
 bracket_axis = "filing_period"
 legal_refs = ["ley-27-2014:art-29"]
-source_refs = ["aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -311,7 +302,6 @@ id = "is.modelo-200.tipo-gravamen-erd"
 data_type = "ratio"
 unit = "percent"
 legal_refs = ["ley-27-2014:art-29", "ley-31-2022:art-39"]
-source_refs = ["aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -327,7 +317,6 @@ id = "is.modelo-200.tipo-gravamen-erd-art101"
 data_type = "ratio"
 unit = "percent"
 legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-101"]
-source_refs = ["aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -373,7 +362,6 @@ id = "is.modelo-200.tipo-gravamen-non-profit-special-regime"
 data_type = "ratio"
 unit = "percent"
 legal_refs = ["ley-27-2014:art-29", "ley-49-2002:art-10"]
-source_refs = ["aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -400,7 +388,6 @@ unit = "EUR"
 # revision's 2024 effective window, which the registry refuses. The sibling
 # tipo-gravamen parameters of this revision cite the same pair.
 legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-101"]
-source_refs = ["aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
@@ -417,7 +404,6 @@ id = "is.modelo-200.incn-umbral-erd-art101"
 data_type = "money"
 unit = "EUR"
 legal_refs = ["ley-27-2014:art-101", "ley-27-2014:art-29"]
-source_refs = ["aeat-modelo-200-manual-2024"]
 
 [[revisions."2024".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"

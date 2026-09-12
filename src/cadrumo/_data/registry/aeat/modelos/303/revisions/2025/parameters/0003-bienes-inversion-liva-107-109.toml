@@ -16,7 +16,7 @@ id = "m303-bien-inversion-ventana-anos-mueble"
 data_type = "integer"
 unit = "years"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+additional_source_refs = ["boe-modelo-303-2008-form"]
 
 [[revisions.2025.parameters.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -35,7 +35,7 @@ id = "m303-bien-inversion-ventana-anos-inmueble"
 data_type = "integer"
 unit = "years"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+additional_source_refs = ["boe-modelo-303-2008-form"]
 
 [[revisions.2025.parameters.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -54,7 +54,7 @@ id = "m303-bien-inversion-divisor-mueble"
 data_type = "integer"
 unit = "divisor"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+additional_source_refs = ["boe-modelo-303-2008-form"]
 
 [[revisions.2025.parameters.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -73,7 +73,7 @@ id = "m303-bien-inversion-divisor-inmueble"
 data_type = "integer"
 unit = "divisor"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+additional_source_refs = ["boe-modelo-303-2008-form"]
 
 [[revisions.2025.parameters.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -92,7 +92,7 @@ id = "m303-bien-inversion-regularizacion-umbral-puntos"
 data_type = "integer"
 unit = "percentage_points"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+additional_source_refs = ["boe-modelo-303-2008-form"]
 
 [[revisions.2025.parameters.source_citations]]
 source_ref = "aeat-modelo-303-procedure"

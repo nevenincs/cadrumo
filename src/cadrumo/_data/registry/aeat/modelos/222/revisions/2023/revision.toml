@@ -1,5 +1,6 @@
 [revisions."2023"]
 casilla_source_refs = ["aeat-dr-222-2023-2024"]
+application_link_source_refs = ["boe-modelo-202-base-order"]
 # Applicability-grade historical edition for modelo 222, filing year 2023.
 #
 # The gap this closes was authoring debt, not a legal absence: Orden

@@ -42,7 +42,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-74"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-descripcion-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-74", offset = 74, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -126,7 +126,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-290"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-290", offset = 290, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -357,7 +357,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-843"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-isin-7"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-843", offset = 843, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -644,7 +644,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1551"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-nie-entidad-emisora-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1551", offset = 1551, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]

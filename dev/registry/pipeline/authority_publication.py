@@ -31,7 +31,6 @@ from pathlib import Path, PurePosixPath
 from typing import Final
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
-from cadrumo.core.export_layout_format import ExportLayoutFormat
 from cadrumo.core.hashing import content_hash_hex, hash_file, sha256_hex
 from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.domain.calculations.registry.authority_artifact import (
@@ -44,14 +43,18 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     write_authority_artifact,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
-from ..compiler.authority import compile_validated_authority
+from ..compiler.authority import compile_structural_authority
 from ..compiler.authority_state import canonical_authoring_root_pair
 from ..compiler.corpus_provenance import classify_normative_corpus_provenance
 from ..compiler.identity import resolve_registry_identity
+from ..compiler.fact_providers import (
+    compile_authored_fact_catalogue,
+    collect_registered_fact_provider_fingerprints,
+    fact_catalogue_digest,
+)
 from ..compiler.legal_grounding import published_legal_evidence_text
 from ..compiler.loader_fingerprints import collect_registry_tree_fingerprints
 from ..compiler.source_evidence_fingerprint import (
@@ -63,11 +66,17 @@ __all__ = [
     "AuthorityArtifactCurrency",
     "AuthorityArtifactCurrencyStatus",
     "AuthorityPublicationReceipt",
+    "FactsAuthorityCandidate",
+    "FactsAuthorityPublicationReceipt",
     "ValidatedAuthorityCandidate",
     "authority_artifact_currency",
     "authority_candidate_identity",
+    "facts_authority_artifact_currency",
+    "facts_authority_candidate_identity",
     "publish_authority_candidate",
+    "publish_facts_authority_candidate",
     "publish_validated_authority_candidate",
+    "validate_facts_authority_candidate",
     "validate_authority_candidate",
 ]
 
@@ -131,6 +140,32 @@ class ValidatedAuthorityCandidate:
     artifact: AuthorityArtifact
 
 
+@dataclass(frozen=True, slots=True)
+class FactsAuthorityPublicationReceipt:
+    """Mutable inputs consumed by the facts-only publication boundary.
+
+    The receipt deliberately fingerprints only authored fact declarations and
+    the existing artifact being merged.  Modelo files never participate in
+    this candidate identity: a malformed or changing unrelated revision cannot
+    block publication of an otherwise valid facts index.
+    """
+
+    fact_source_fingerprints: tuple[tuple[str, int, int, str], ...]
+    base_artifact_sha256: str
+    facts_digest: str
+
+
+@dataclass(frozen=True, slots=True)
+class FactsAuthorityCandidate:
+    """A typed authority candidate with only its facts section replaced."""
+
+    registry_root: Path
+    artifact_path: Path
+    receipt: FactsAuthorityPublicationReceipt
+    facts: GovernedFactCatalogue
+    artifact: AuthorityArtifact
+
+
 def publish_authority_candidate(
     *,
     registry_root: Path,
@@ -157,7 +192,7 @@ def validate_authority_candidate(*, registry_root: Path, source_root: Path) -> V
         resolved_registry_root,
         collect_fingerprints=collect_registry_tree_fingerprints,
     )
-    authority = compile_validated_authority(
+    authority = compile_structural_authority(
         resolved_registry_root,
         resolved_source_root,
         identity=identity,
@@ -174,7 +209,6 @@ def validate_authority_candidate(*, registry_root: Path, source_root: Path) -> V
         evidence=_project_evidence(
             authority.catalogues.legal,
             authority.catalogues.sources,
-            authority.modelos,
             source_root=resolved_source_root,
         ),
     )
@@ -186,10 +220,193 @@ def validate_authority_candidate(*, registry_root: Path, source_root: Path) -> V
     )
 
 
+def publish_facts_authority_candidate(
+    *,
+    registry_root: Path,
+    artifact_path: Path,
+) -> AuthorityArtifact:
+    """Publish authored facts into the current typed authority atomically.
+
+    This is the facts-only publication owner.  It compiles and schema-validates
+    ``<registry-root>/facts`` and merges that catalogue into an already
+    published, digest-checked authority.  The existing model graph, legal and
+    source catalogues, runtime projections, and evidence are retained exactly;
+    no Modelo loader or validator is reachable from this path.
+
+    A missing or corrupt base artifact is refused because a raw JSON
+    merge cannot prove the unrelated sections remain typed and valid.  The
+    caller must first provide a current authority publication through the
+    canonical authority writer.
+    """
+    with exclusive_file_lock(artifact_path):
+        candidate = validate_facts_authority_candidate(
+            registry_root=registry_root,
+            artifact_path=artifact_path,
+        )
+        return _publish_facts_candidate(candidate, artifact_path=artifact_path)
+
+
+def validate_facts_authority_candidate(
+    *,
+    registry_root: Path,
+    artifact_path: Path,
+) -> FactsAuthorityCandidate:
+    """Build a facts-only candidate without compiling or validating Modelos."""
+    resolved_registry_root = _canonical_facts_registry_root(registry_root)
+    resolved_artifact_path = artifact_path.expanduser().resolve()
+    facts_fingerprints_before = _fact_source_fingerprints(resolved_registry_root)
+    base_artifact_sha256_before = _artifact_sha256(resolved_artifact_path)
+    base_artifact = _read_facts_merge_base(resolved_artifact_path)
+    facts = compile_authored_fact_catalogue(resolved_registry_root)
+    facts_digest = fact_catalogue_digest(facts)
+    facts_fingerprints_after = _fact_source_fingerprints(resolved_registry_root)
+    base_artifact_sha256_after = _artifact_sha256(resolved_artifact_path)
+    if facts_fingerprints_after != facts_fingerprints_before:
+        raise RegistryValidationError(
+            "authored facts changed while they were being compiled; facts authority publication is refused",
+        )
+    if base_artifact_sha256_after != base_artifact_sha256_before:
+        raise RegistryValidationError(
+            "authority artifact changed while facts were being compiled; facts authority publication is refused",
+        )
+    artifact = AuthorityArtifact(
+        modelos=base_artifact.modelos,
+        catalogues=base_artifact.catalogues.model_copy(update={"facts": facts}),
+        identity_digest=facts_digest,
+        evidence=base_artifact.evidence,
+    )
+    receipt = FactsAuthorityPublicationReceipt(
+        fact_source_fingerprints=facts_fingerprints_after,
+        base_artifact_sha256=base_artifact_sha256_after,
+        facts_digest=facts_digest,
+    )
+    return FactsAuthorityCandidate(
+        registry_root=resolved_registry_root,
+        artifact_path=resolved_artifact_path,
+        receipt=receipt,
+        facts=facts,
+        artifact=artifact,
+    )
+
+
+def facts_authority_candidate_identity(*, registry_root: Path) -> str:
+    """Return the digest a fresh authored-facts compilation would publish."""
+    return fact_catalogue_digest(compile_authored_fact_catalogue(_canonical_facts_registry_root(registry_root)))
+
+
+def facts_authority_artifact_currency(
+    artifact_path: Path,
+    *,
+    registry_root: Path,
+) -> AuthorityArtifactCurrency:
+    """Compare the bundled facts index and identity with a fresh compilation."""
+    candidate_identity = facts_authority_candidate_identity(registry_root=registry_root)
+    try:
+        artifact = read_authority_artifact(artifact_path)
+    except AuthorityArtifactError as exc:
+        return AuthorityArtifactCurrency(
+            artifact_path=artifact_path,
+            status=AuthorityArtifactCurrencyStatus.UNREADABLE,
+            candidate_identity_digest=candidate_identity,
+            recorded_identity_digest=None,
+            detail=f"{type(exc).__name__}: {exc}",
+        )
+    published_facts_digest = fact_catalogue_digest(artifact.catalogues.facts)
+    if artifact.identity_digest != candidate_identity or published_facts_digest != candidate_identity:
+        return AuthorityArtifactCurrency(
+            artifact_path=artifact_path,
+            status=AuthorityArtifactCurrencyStatus.STALE,
+            candidate_identity_digest=candidate_identity,
+            recorded_identity_digest=artifact.identity_digest,
+            detail=(
+                "the published authority facts index or its identity digest differs from the fresh authored-facts "
+                "compilation"
+            ),
+        )
+    return AuthorityArtifactCurrency(
+        artifact_path=artifact_path,
+        status=AuthorityArtifactCurrencyStatus.CURRENT,
+        candidate_identity_digest=candidate_identity,
+        recorded_identity_digest=artifact.identity_digest,
+        detail="the published authority carries the fresh authored-facts compilation",
+    )
+
+
+def _publish_facts_candidate(
+    candidate: FactsAuthorityCandidate,
+    *,
+    artifact_path: Path,
+) -> AuthorityArtifact:
+    """Recheck the facts/base receipt, write through the canonical writer, and reread it."""
+    resolved_artifact_path = artifact_path.expanduser().resolve()
+    if resolved_artifact_path != candidate.artifact_path:
+        raise RegistryValidationError("facts authority candidate target differs from its reviewed artifact target")
+    if _fact_source_fingerprints(candidate.registry_root) != candidate.receipt.fact_source_fingerprints:
+        raise RegistryValidationError(
+            "authored facts changed after facts compilation; facts authority publication is refused",
+        )
+    if _artifact_sha256(resolved_artifact_path) != candidate.receipt.base_artifact_sha256:
+        raise RegistryValidationError(
+            "authority artifact changed after facts compilation; facts authority publication is refused",
+        )
+    write_authority_artifact(resolved_artifact_path, candidate.artifact)
+    try:
+        published = read_authority_artifact(resolved_artifact_path)
+    except AuthorityArtifactError as exc:
+        raise RegistryValidationError(
+            "canonical authority writer produced an unreadable facts publication",
+        ) from exc
+    if published.identity_digest != candidate.receipt.facts_digest:
+        raise RegistryValidationError(
+            "canonical authority writer changed the facts candidate identity digest",
+        )
+    if fact_catalogue_digest(published.catalogues.facts) != candidate.receipt.facts_digest:
+        raise RegistryValidationError(
+            "canonical authority writer changed the facts candidate payload",
+        )
+    return published
+
+
+def _canonical_facts_registry_root(registry_root: Path) -> Path:
+    """Resolve one existing registry root without touching unrelated Modelo data."""
+    try:
+        resolved = registry_root.expanduser().resolve(strict=True)
+    except (OSError, RuntimeError) as exc:
+        raise RegistryValidationError("facts authority registry root must resolve to an existing directory") from exc
+    if not resolved.is_dir():
+        raise RegistryValidationError("facts authority registry root must resolve to a directory")
+    return resolved
+
+
+def _fact_source_fingerprints(registry_root: Path) -> tuple[tuple[str, int, int, str], ...]:
+    """Capture only registered authored-fact source files for race detection."""
+    return tuple(collect_registered_fact_provider_fingerprints(registry_root))
+
+
+def _artifact_sha256(artifact_path: Path) -> str:
+    """Hash the existing publication, refusing a missing merge base."""
+    try:
+        return hash_file(artifact_path)[0]
+    except OSError as exc:
+        raise RegistryValidationError(
+            f"facts authority publication requires an existing typed authority artifact: {artifact_path}",
+        ) from exc
+
+
+def _read_facts_merge_base(artifact_path: Path) -> AuthorityArtifact:
+    """Read the typed merge base through the same strict reader as runtime."""
+    try:
+        return read_authority_artifact(artifact_path)
+    except AuthorityArtifactError as exc:
+        raise RegistryValidationError(
+            "facts authority publication requires a readable current authority artifact; "
+            "corrupt unrelated sections cannot be merged safely",
+        ) from exc
+
+
 def _project_evidence(
     legal: Mapping[str, LegalReference],
     sources: Mapping[str, SourceReference],
-    modelos: tuple[ModeloDefinition, ...],
     *,
     source_root: Path,
 ) -> AuthorityEvidenceProjection:
@@ -203,7 +420,7 @@ def _project_evidence(
         )
         for reference_id, reference in sorted(legal.items())
     )
-    runtime_source_ids = _runtime_xml_source_ids(modelos, sources)
+    runtime_source_ids = _runtime_xml_source_ids(sources)
     source_entries = tuple(
         _project_source_evidence(sources[source_id], source_root=source_root)
         for source_id in sorted(runtime_source_ids)
@@ -211,31 +428,10 @@ def _project_evidence(
     return AuthorityEvidenceProjection(legal=entries, sources=source_entries)
 
 
-def _runtime_xml_source_ids(
-    modelos: tuple[ModeloDefinition, ...], sources: Mapping[str, SourceReference]
-) -> frozenset[str]:
-    """Derive the complete source closure needed by shipped XML workflows.
-
-    The published authority selects revisions at runtime, so every declared
-    revision is considered. Only XML dictionary layouts consume external bytes:
-    their dictionary and the XSD among their declared layout sources are the
-    runtime closure. Other catalogue sources remain compiler-only.
-    """
-    required: set[str] = set()
-    for modelo in modelos:
-        for revision in modelo.revisions.values():
-            for layout in derive_export_layouts_from_bindings(revision):
-                if layout.format is not ExportLayoutFormat.XML_DICTIONARY:
-                    continue
-                if layout.dictionary_source_ref is None:
-                    raise RegistryValidationError(f"XML export layout {layout.id!r} has no dictionary source")
-                required.add(str(layout.dictionary_source_ref))
-                required.update(
-                    str(source_id)
-                    for source_id in layout.source_refs
-                    if sources.get(str(source_id)) is not None and sources[str(source_id)].kind == "xsd"
-                )
-    return frozenset(required)
+def _runtime_xml_source_ids(sources: Mapping[str, SourceReference]) -> frozenset[str]:
+    """Select catalogued source kinds whose bytes shipped XML workflows consume."""
+    runtime_kinds = frozenset({"dictionary", "xsd"})
+    return frozenset(str(source_id) for source_id, source in sources.items() if source.kind in runtime_kinds)
 
 
 def _project_source_evidence(reference: SourceReference, *, source_root: Path) -> PublishedSourceEvidence:

@@ -1,5 +1,6 @@
 [revisions."2003-y-siguientes"]
 casilla_source_refs = ["aeat-dr-840"]
+live_cross_reference_source_refs = ["aeat-modelo-840-procedure"]
 authority_grade = "applicability"
 # valid_from is canonicalised to the ejercicio-start convention (January 1 of
 # period_selector.year_from), not the orden's own effective date -- that fact

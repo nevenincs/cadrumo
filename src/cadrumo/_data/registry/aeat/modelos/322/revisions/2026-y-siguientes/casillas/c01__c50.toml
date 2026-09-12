@@ -463,8 +463,12 @@ legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "38"
+continuidad_id = "m322-liquidacion-iva-devengado-total-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:87 (sha256 be029175f11e), campo 54 posicion 688 len 17 N, box [38]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:102 (sha256 540805f09ca3), campo 69 posicion 883 len 17 N; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:107 (sha256 a70f3a2ca7dd), campo 69 posicion 883 len 17 N; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:138 (sha256 f014cec44d49), campo 82 posicion 1004 len 17 N. Las cuatro descripciones son Total cuota devengada, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 688 -> 883 -> 883 -> 1004. La formula impresa incorpora [161]/[164]/[152]/[155]/[158] en 2023-25 y [173]/[167]/[170] en 2026, preservando el total."
 number = "38"
 section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_total_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -472,8 +476,12 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "39"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-intragrupo-corrientes-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:88 (sha256 be029175f11e), campo 55 posicion 705 len 17 Num, box [39]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:103 (sha256 540805f09ca3), campo 70 posicion 900 len 17 Num; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:108 (sha256 a70f3a2ca7dd), campo 70 posicion 900 len 17 Num; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:139 (sha256 f014cec44d49), campo 83 posicion 1021 len 17 Num. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. Por cuotas soportadas en operaciones intragrupo corrientes. Base imponible, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 705 -> 900 -> 900 -> 1021."
 number = "39"
 section = ["iva", "regimen_general", "intragrupo", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_intragrupo_corrientes_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -481,8 +489,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "40"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-intragrupo-corrientes-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:89 (sha256 be029175f11e), campo 56 posicion 722 len 17 Num box [40]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:104 (sha256 540805f09ca3), campo 71 posicion 917 len 17 Num; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:109 (sha256 a70f3a2ca7dd), campo 71 posicion 917 len 17 Num; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:140 (sha256 f014cec44d49), campo 84 posicion 1038 len 17 Num. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. Por cuotas soportadas en operaciones intragrupo corrientes. Cuota, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 722 -> 917 -> 917 -> 1038."
 number = "40"
 section = ["iva", "regimen_general", "intragrupo", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_intragrupo_corrientes_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -490,8 +502,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "41"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-intragrupo-bienes-de-inversion-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:90 (sha256 be029175f11e), campo 57 posicion 739 len 17 Num box [41]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:105 (sha256 540805f09ca3), campo 72 posicion 934 len 17 Num; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:110 (sha256 a70f3a2ca7dd), campo 72 posicion 934 len 17 Num; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:141 (sha256 f014cec44d49), campo 85 posicion 1055 len 17 Num. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. Por cuotas soportadas en operaciones intragrupo con bienes de inversion. Base imponible, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 739 -> 934 -> 934 -> 1055."
 number = "41"
 section = ["iva", "regimen_general", "intragrupo", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_intragrupo_bienes_de_inversion_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -499,8 +515,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "42"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-intragrupo-bienes-de-inversion-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:91 (sha256 be029175f11e), campo 58 posicion 756 len 17 Num box [42]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:106 (sha256 540805f09ca3), campo 73 posicion 951 len 17 Num; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:111 (sha256 a70f3a2ca7dd), campo 73 posicion 951 len 17 Num; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:142 (sha256 f014cec44d49), campo 86 posicion 1072 len 17 Num. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. Por cuotas soportadas en operaciones intragrupo con bienes de inversion. Cuota, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 756 -> 951 -> 951 -> 1072."
 number = "42"
 section = ["iva", "regimen_general", "intragrupo", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_intragrupo_bienes_de_inversion_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -508,8 +528,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "43"
+continuidad_id = "m322-liquidacion-iva-deducible-rectificacion-deducciones-operaciones-intragrupo-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:92 (sha256 be029175f11e), campo 59 posicion 773 len 17 N box [43]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:107 (sha256 540805f09ca3), campo 74 posicion 968 len 17 N; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:112 (sha256 a70f3a2ca7dd), campo 74 posicion 968 len 17 N; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:143 (sha256 f014cec44d49), campo 87 posicion 1089 len 17 N. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. Rectificacion de deducciones por operaciones intragrupo. Base imponible, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 773 -> 968 -> 968 -> 1089."
 number = "43"
 section = ["iva", "regimen_general", "intragrupo", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_rectificacion_deducciones_operaciones_intragrupo_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -517,8 +541,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "44"
+continuidad_id = "m322-liquidacion-iva-deducible-rectificacion-deducciones-operaciones-intragrupo-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:93 (sha256 be029175f11e), campo 60 posicion 790 len 17 N box [44]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:108 (sha256 540805f09ca3), campo 75 posicion 985 len 17 N; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:113 (sha256 a70f3a2ca7dd), campo 75 posicion 985 len 17 N; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:144 (sha256 f014cec44d49), campo 88 posicion 1106 len 17 N. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. Rectificacion de deducciones por operaciones intragrupo. Cuota, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 790 -> 985 -> 985 -> 1106."
 number = "44"
 section = ["iva", "regimen_general", "intragrupo", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_rectificacion_deducciones_operaciones_intragrupo_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -526,8 +554,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "45"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-interiores-corrientes-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:94 (sha256 be029175f11e), campo 61 posicion 807 len 17 Num box [45]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:109 (sha256 540805f09ca3), campo 76 posicion 1002 len 17 Num; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:114 (sha256 a70f3a2ca7dd), campo 76 posicion 1002 len 17 Num; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:145 (sha256 f014cec44d49), campo 89 posicion 1123 len 17 Num. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. Por cuotas soportadas en otras operaciones interiores corrientes. Base imponible, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 807 -> 1002 -> 1002 -> 1123."
 number = "45"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_interiores_corrientes_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -535,8 +567,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "46"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-interiores-corrientes-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:95 (sha256 be029175f11e), campo 62 posicion 824 len 17 Num box [46]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:110 (sha256 540805f09ca3), campo 77 posicion 1019 len 17 Num; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:115 (sha256 a70f3a2ca7dd), campo 77 posicion 1019 len 17 Num; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:146 (sha256 f014cec44d49), campo 90 posicion 1140 len 17 Num. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. Por cuotas soportadas en otras operaciones interiores corrientes. Cuota, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 824 -> 1019 -> 1019 -> 1140."
 number = "46"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_interiores_corrientes_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -544,8 +580,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "47"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-interiores-bienes-de-inversion-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:96 (sha256 be029175f11e), campo 63 posicion 841 len 17 Num box [47]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:111 (sha256 540805f09ca3), campo 78 posicion 1036 len 17 Num; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:116 (sha256 a70f3a2ca7dd), campo 78 posicion 1036 len 17 Num; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:147 (sha256 f014cec44d49), campo 91 posicion 1157 len 17 Num. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. Por cuotas soportadas en otras operaciones interiores con bienes de inversion. Base imponible, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 841 -> 1036 -> 1036 -> 1157."
 number = "47"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_interiores_bienes_de_inversion_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -553,8 +593,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "48"
+continuidad_id = "m322-liquidacion-iva-deducible-operaciones-interiores-bienes-de-inversion-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:97 (sha256 be029175f11e), campo 64 posicion 858 len 17 Num box [48]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:112 (sha256 540805f09ca3), campo 79 posicion 1053 len 17 Num; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:117 (sha256 a70f3a2ca7dd), campo 79 posicion 1053 len 17 Num; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:148 (sha256 f014cec44d49), campo 92 posicion 1174 len 17 Num. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. Por cuotas soportadas en otras operaciones interiores con bienes de inversion. Cuota, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 858 -> 1053 -> 1053 -> 1174."
 number = "48"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_operaciones_interiores_bienes_de_inversion_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -562,8 +606,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "49"
+continuidad_id = "m322-liquidacion-iva-deducible-importaciones-bienes-corrientes-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:98 (sha256 be029175f11e), campo 65 posicion 875 len 17 Num box [49]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:113 (sha256 540805f09ca3), campo 80 posicion 1070 len 17 Num; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:118 (sha256 a70f3a2ca7dd), campo 80 posicion 1070 len 17 Num; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:149 (sha256 f014cec44d49), campo 93 posicion 1191 len 17 Num. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. Por cuotas soportadas en las importaciones de bienes corrientes. Base imponible, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 875 -> 1070 -> 1070 -> 1191."
 number = "49"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_importaciones_bienes_corrientes_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -571,8 +619,12 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "50"
+continuidad_id = "m322-liquidacion-iva-deducible-importaciones-bienes-corrientes-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201: 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:99 (sha256 be029175f11e), campo 66 posicion 892 len 17 Num box [50]; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:114 (sha256 540805f09ca3), campo 81 posicion 1087 len 17 Num; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:119 (sha256 a70f3a2ca7dd), campo 81 posicion 1087 len 17 Num; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:150 (sha256 f014cec44d49), campo 94 posicion 1208 len 17 Num. Las cuatro descripciones son Liquidacion. IVA DEDUCIBLE. Por cuotas soportadas en las importaciones de bienes corrientes. Cuota, validacion vacia y contenido 15 enteros + 2 decimales; posiciones 892 -> 1087 -> 1087 -> 1208."
 number = "50"
 section = ["iva", "regimen_general", "deducible"]
+semantic_role = "m322_liquidacion_iva_deducible_importaciones_bienes_corrientes_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"

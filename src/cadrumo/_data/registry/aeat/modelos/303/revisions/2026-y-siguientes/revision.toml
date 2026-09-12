@@ -3,6 +3,12 @@ binding_source_refs = ["aeat-dr-303-2026", "aeat-modelo-303-procedure", "boe-mod
 formula_source_refs = ["aeat-dr-303-2026"]
 predecessor = "2025"
 casilla_source_refs = ["aeat-dr-303-2026"]
+parameter_source_refs = ["aeat-dr-303-2026", "aeat-modelo-303-procedure"]
+# live_cross_reference_source_refs: carried from predecessor edition "2022"; not re-grounded on this edition's own design
+live_cross_reference_source_refs = ["aeat-modelo-303-procedure"]
+application_link_source_refs = ["aeat-dr-303-2026", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+# filing_schedule_source_refs: carried from predecessor edition "2023"; not re-grounded on this edition's own design
+filing_schedule_source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 reviewed_against = "2025"
 # Prepared and reviewed by an agent against the bundled diseño de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and

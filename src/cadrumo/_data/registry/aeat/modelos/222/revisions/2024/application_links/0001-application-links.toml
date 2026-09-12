@@ -14,7 +14,6 @@ surface = "deadline"
 consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["orden-hfp-227-2017:art-5"]
-source_refs = ["boe-modelo-202-base-order"]
 
 [[revisions."2024".application_links]]
 id = "modelo-222-filing"
@@ -22,7 +21,6 @@ surface = "filing"
 consumer = "cadrumo.application.filing"
 requires_snapshot = true
 legal_refs = ["orden-hfp-227-2017:art-2"]
-source_refs = ["boe-modelo-202-base-order"]
 
 [[revisions."2024".application_links]]
 id = "modelo-222-workflow"
@@ -30,7 +28,6 @@ surface = "workflow"
 consumer = "cadrumo.application.workflow"
 requires_snapshot = true
 legal_refs = ["orden-hfp-227-2017:art-2"]
-source_refs = ["boe-modelo-202-base-order"]
 
 [[revisions."2024".application_links]]
 id = "modelo-222-calculation"

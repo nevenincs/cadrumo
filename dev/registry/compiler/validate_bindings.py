@@ -1,8 +1,8 @@
 """Per-revision binding refusals derived from the provider registration authority.
 
 The registration table states what each provider kind can do; this module is
-where an authored row is held to it. Six refusals are errors, because each one
-names a declaration that cannot resolve to the value it promises:
+where an authored row is held to it. The refusals below are errors, because
+each one names a declaration that cannot resolve to the value it promises:
 
 * a provider kind with no registration, or a ``deferred`` kind named by a
   ``BOUND`` casilla -- a deferred kind may exist, but nothing routes it, so a
@@ -26,9 +26,13 @@ names a declaration that cannot resolve to the value it promises:
   of its binding fragments, which is a filename accident rather than a
   declaration. Refusing the duplicate is what keeps the surviving positional
   reads meaningful, so the ambiguity is rejected at the source instead of being
-  silently resolved downstream.
+  silently resolved downstream;
+* a ``rows`` binding whose declared ``record`` or ``row_field`` is present but
+  not a string. Such a selector cannot be held to the row-slot uniqueness above,
+  and passing it over would let a selector schema change retire the uniqueness
+  refusal silently rather than break it.
 
-The fifth check, an unreferenced binding without the explicit
+The remaining check, an unreferenced binding without the explicit
 ``non_calculation`` disposition, is :func:`unreferenced_binding_advisories` and
 is deliberately NOT part of the failure list: the authored corpus still carries
 enough such rows across the loadable modelos that enrolling it as an error would
@@ -177,7 +181,16 @@ def _duplicate_row_field_failures(*, prefix: str, revision: ModeloRevision) -> l
     The pair is checked on the declared selector rather than on the export
     projection so that a record which is not (yet) claimed by an export layout
     is held to the same uniqueness as one that is.
+
+    A binding declaring NEITHER axis is not a row-slot claimant at all and is
+    passed over; a binding declaring one of them as something other than a
+    string is refused rather than passed over, because "the slot this binding
+    claims cannot be read" and "this binding claims no contested slot" are
+    different states. Were the unreadable selector skipped, a selector schema
+    change -- ``row_field`` becoming an enum, say -- would empty the uniqueness
+    check corpus-wide and it would pass vacuously.
     """
+    failures: list[str] = []
     claimants: dict[tuple[str, str], list[BindingId]] = {}
     for binding in revision.bindings:
         if binding_aggregation_op(binding) is not BindingAggregationOp.ROWS:
@@ -185,16 +198,32 @@ def _duplicate_row_field_failures(*, prefix: str, revision: ModeloRevision) -> l
         selector = selector_as_dict(binding)
         record = selector.get("record")
         row_field = selector.get("row_field")
+        unreadable = [
+            f"{axis}={value!r}" for axis, value in (("record", record), ("row_field", row_field)) if _unreadable(value)
+        ]
+        if unreadable:
+            failures.append(
+                f"{prefix}: rows binding {binding.id!r} declares a row export selector this check cannot "
+                f"read ({', '.join(unreadable)}); a record/row_field pair that is not a pair of strings "
+                f"cannot be held to one claimant per row slot",
+            )
+            continue
         if not isinstance(record, str) or not isinstance(row_field, str):
             continue
         claimants.setdefault((record, row_field), []).append(binding.id)
-    return [
+    failures.extend(
         f"{prefix}: record {record!r} row field {row_field!r} is claimed by {len(ids)} row bindings "
         f"({sorted(ids)}); only the first in binding order contributes a derived export field, so the "
         f"emitted record depends on binding fragment merge order"
         for (record, row_field), ids in sorted(claimants.items())
         if len(ids) > 1
-    ]
+    )
+    return failures
+
+
+def _unreadable(value: object) -> bool:
+    """Return whether a declared selector axis is present but not a string."""
+    return value is not None and not isinstance(value, str)
 
 
 def unreferenced_binding_advisories(*, prefix: str, revision: ModeloRevision) -> tuple[str, ...]:

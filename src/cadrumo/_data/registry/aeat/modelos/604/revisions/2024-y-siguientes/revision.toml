@@ -1,6 +1,7 @@
 [revisions."2024-y-siguientes"]
 predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["orden-hac-510-2021:art-1"], source_refs = ["enrolled-modelo-604-procedure"] } }
 casilla_source_refs = ["aeat-dr-604-2024"]
+application_link_source_refs = ["enrolled-modelo-604-procedure"]
 authority_grade = "applicability"
 # Modelo 604 autoliquidacion del Impuesto sobre las Transacciones Financieras,
 # approved by orden-hac-510-2021 art 1, plazo grounded verbatim in

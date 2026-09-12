@@ -11,20 +11,29 @@ refused at load:
 * two row bindings claiming one ``row_field`` of one record, because export
   field derivation keeps the first claimant and silently drops the rest.
 
-Each refusal is provoked by editing a COPY of a live modelo in a temporary
-tree, mirroring ``test_validate_bindings``: the bundled corpus is never
-written, no production module is patched, and the clean path is asserted in the
-same suite as the defect. A fixture that stopped refusing its own planted
-duplicate would also have stopped refusing a real one.
+A third refusal guards the second: a row binding whose ``record`` or
+``row_field`` is present but not a string is unreadable to the uniqueness check
+and is refused rather than skipped, so the check cannot be emptied silently.
+
+Each refusal is provoked from a COPY of a live modelo in a temporary tree,
+mirroring ``test_validate_bindings``: the bundled corpus is never written, no
+production module is patched, and the clean path is asserted in the same suite
+as the defect. A fixture that stopped refusing its own planted duplicate would
+also have stopped refusing a real one.
 """
 
 from __future__ import annotations
 
 import shutil
+import warnings
+from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
+
+from cadrumo.core.aggregation import BindingAggregationOp
+from cadrumo.domain.calculations.registry.binding_aggregation import binding_aggregation_op
 
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_bindings import validate_binding_registration_section
@@ -142,3 +151,49 @@ def test_two_row_bindings_claiming_one_row_field_are_refused(tmp_path: Path) -> 
     assert "modelo-720-asset-row-class" in refusals[0]
     assert "modelo-720-asset-row-class-planted-duplicate" in refusals[0]
     assert all(f"modelo 720 revision {_M720_REVISION}" in failure for failure in failures)
+
+
+class _RowFieldToken(Enum):
+    """A non-string ``row_field``, standing in for a later selector schema change."""
+
+    ASSET_CLASS_CODE = "asset_class_code"
+
+
+def test_a_rows_binding_whose_row_field_is_not_a_string_is_refused(tmp_path: Path) -> None:
+    """An unreadable row selector is a finding, never a quiet exemption.
+
+    The uniqueness check reads ``record`` and ``row_field`` off the declared
+    selector. Every family types both as a string today, so the defect is
+    planted by re-typing one axis of a LIVE binding the way a selector schema
+    change would: the provider is the real model, the revision is the real
+    compiled Modelo 720, and only the one field is replaced. Skipping such a
+    binding instead of refusing it would empty the check corpus-wide the first
+    time a family adopts an enum, and the refusal would pass vacuously.
+    """
+    revision = _revision(_copy_modelo(tmp_path, "720"), _M720_REVISION)
+    original = next(
+        binding
+        for binding in revision.bindings
+        if binding_aggregation_op(binding) is BindingAggregationOp.ROWS
+        and getattr(binding.provider, "row_field", None) == _M720_ROW_FIELD
+    )
+    retyped = original.model_copy(
+        update={"provider": original.provider.model_copy(update={"row_field": _RowFieldToken.ASSET_CLASS_CODE})},
+    )
+    defective = revision.model_copy(
+        update={"bindings": tuple(retyped if b.id == original.id else b for b in revision.bindings)},
+    )
+
+    with warnings.catch_warnings():
+        # Dumping the re-typed field is exactly the mismatch being planted, and
+        # pydantic says so on the way past; the assertion is about the refusal.
+        warnings.simplefilter("ignore")
+        failures = validate_binding_registration_section(
+            prefix=f"modelo 720 revision {_M720_REVISION}",
+            revision=defective,
+        )
+
+    refusals = [f for f in failures if "cannot read" in f]
+    assert refusals, f"an unreadable row export selector was not refused; failures were {failures}"
+    assert original.id in refusals[0]
+    assert "row_field=" in refusals[0]

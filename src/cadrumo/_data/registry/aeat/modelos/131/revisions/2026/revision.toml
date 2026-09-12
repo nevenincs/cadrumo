@@ -1,6 +1,7 @@
 [revisions."2026"]
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (unretired withdrawal).", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-dr-131-2026"] } }
+predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (row order and a dropped application_links member both diverge from the 2025 edition). Materialising by inheritance takes the inherited rows in the predecessor's order, and 'saldo-negativo-fin-periodo' is the last of the 35 rows this edition states while it sits sixteenth in 2025, immediately after casilla '15', so every row from that position on would materialise in an order this edition does not state. The 2025 edition also states the application_links member 'modelo-131-declaracion-extractor', which this edition does not state and which no retirement declares withdrawn; omission in an inheriting family is inheritance rather than deletion, so materialising from 2025 would carry that member into this edition.", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-dr-131-2026"] } }
 casilla_source_refs = ["aeat-modelo-131-instructions"]
+parameter_source_refs = ["aeat-modelo-131-instructions"]
 binding_source_refs = ["aeat-dr-131-2026"]
 formula_source_refs = ["aeat-modelo-131-instructions"]
 # Prepared and reviewed by an agent against the bundled diseño de registros and

@@ -371,7 +371,7 @@ COVERAGE_CONDITIONS: Final[tuple[str, ...]] = (
 #: The measurement's version. Bump on any change to what the conditions COUNT,
 #: so a lane diffing two runs can separate corpus movement from instrument
 #: movement rather than having to recall which changed.
-_SIGNAL_SCHEMA: Final = 3
+_SIGNAL_SCHEMA: Final = 4
 
 #: Every condition this screen can report, declared once and used at each
 #: emission site below, so the set cannot be misread off the source.
@@ -390,6 +390,7 @@ CONDITIONS: Final[tuple[str, ...]] = (
     "edition_default_undeclared",
     "edition_default_underivable",
     "edition_keyed_identifier",
+    "foreign_edition_token",
     "row_missing_lineage",
     "row_missing_lineage_on_edge",
     "member_restated",
@@ -404,6 +405,7 @@ CONDITIONS: Final[tuple[str, ...]] = (
 
 #: Measured alongside the conditions and never counted as findings.
 MEASUREMENTS: Final[tuple[str, ...]] = (
+    "year_token_as_content",
     "member_restated_dispositioned",
     "member_restated_unedged",
     "casillas_unmeasured",
@@ -1139,8 +1141,13 @@ def forest_violations(statuses: tuple[EditionStatus, ...]) -> None:
     screen showed one such modelo's edge as the cleanest on the board while the
     tool would not touch it.
 
-    A modelo where every edition omits the key is not a violation: nothing has
-    claimed a chain, so there is no chain to be inconsistent with.
+    A modelo where every edition omits the key is UNDECLARED, not in violation:
+    nothing has claimed a chain, so there is no chain to be inconsistent with,
+    and the forest validator accepts it. 136, 182, 188, 189 and 345 are in that
+    state today. The consequence is that declaring a predecessor on one of them
+    is a whole-modelo change — every edition must be declared in the same
+    load-verified pass, because the first declaration alone would leave the
+    others keyless and turn a loading modelo into a refused one.
     """
     by_modelo: dict[str, list[EditionStatus]] = defaultdict(list)
     for status in statuses:
@@ -1150,7 +1157,15 @@ def forest_violations(statuses: tuple[EditionStatus, ...]) -> None:
         silent = [
             status for status in editions if not status.declares_predecessor and not status.declares_no_predecessor
         ]
-        if len(silent) > 1 and any(status.declares_predecessor for status in editions):
+        # The rule binds once the modelo has made ANY predecessor declaration,
+        # a named predecessor OR an explicit none root — not only a named one.
+        # A modelo that has declared nothing may carry any number of keyless
+        # editions and loads fine; it is UNDECLARED, not in violation. That
+        # distinction matters because the first declaration on such a modelo is
+        # a whole-modelo change: every edition must be declared in one
+        # load-verified pass, or the first one turns a valid modelo invalid.
+        declared_anything = any(status.declares_predecessor or status.declares_no_predecessor for status in editions)
+        if len(silent) > 1 and declared_anything:
             named = ", ".join(sorted(status.edition for status in silent))
             for status in editions:
                 status._add(
@@ -1666,6 +1681,83 @@ def projected_sources(
     return frozenset(sources)
 
 
+def _identifier_stem(identifier: str, token: str) -> str:
+    """The identifier with one edition token removed and the seam closed.
+
+    Two ids share a stem when they are the same name but for that token, which
+    is what makes a sibling spelling proof that the token is decoration.
+    """
+    for separator in ("-", ".", ":"):
+        for form in (f"{separator}{token}{separator}", f"{separator}{token}"):
+            if form in identifier:
+                return identifier.replace(form, separator if form.endswith(separator) else "", 1)
+    return identifier
+
+
+def foreign_edition_tokens(statuses: tuple[EditionStatus, ...]) -> None:
+    """Name every member id carrying the key of a DIFFERENT edition of its modelo.
+
+    ``edition_keyed_identifier`` looks only for an edition's own token, so an id
+    naming a sibling edition passes it silently. That case is worse, not better:
+    the token carries no information the containing directory does not already
+    give, AND it names the wrong edition, so id-keyed inheritance keeps two
+    members for one field under a name that points somewhere else.
+
+    Runs after the scan because an edition cannot know its siblings' keys.
+    Exempt, as in the own-token detector, when the year is the member's own
+    datum rather than an edition reference.
+    """
+    by_modelo: dict[str, list[EditionStatus]] = defaultdict(list)
+    for status in statuses:
+        by_modelo[status.modelo].append(status)
+    for editions in by_modelo.values():
+        keys = {status.edition for status in editions}
+        # Every spelling each family carries anywhere in the modelo, so a stem
+        # can be tested for a sibling that spells it without this token.
+        spellings: dict[str, set[str]] = defaultdict(set)
+        for status in editions:
+            for family, members in status.members.items():
+                spellings[family].update(members)
+        for status in editions:
+            foreign = keys - {status.edition}
+            for family, members in status.members.items():
+                if family == _CASILLAS or family in _PER_EDITION_FAMILIES:
+                    continue
+                for identity, member in members.items():
+                    for other in sorted(foreign):
+                        token = edition_token_in_identifier(identity, other)
+                        if token is None or _token_is_member_data(token, member):
+                            continue
+                        # Structural test, not semantic. The token is an EDITION
+                        # REFERENCE only when a sibling of the same family spells
+                        # the same stem without it — that sibling is the proof
+                        # the stem is the real name and the token decoration.
+                        # With no sibling the year is CONTENT: modelo 100's
+                        # `...-negativa-general-2024-aplicada-maxima` names the
+                        # ejercicio the base came from, nothing else spells that
+                        # concept, and there is no stale reference to fix.
+                        stem = _identifier_stem(identity, token)
+                        twins = sorted(
+                            other_id
+                            for other_id in spellings[family]
+                            if other_id != identity and _identifier_stem(other_id, token) == stem
+                        )
+                        if twins:
+                            status._add(
+                                "foreign_edition_token",
+                                identity,
+                                f"{family} names edition {other} (token={token}); "
+                                f"sibling {twins[0]} carries the same stem",
+                            )
+                        else:
+                            status._add(
+                                "year_token_as_content",
+                                identity,
+                                f"{family} carries {token} with no sibling spelling; the year is content",
+                            )
+                        break
+
+
 def scope_lineage_findings(
     statuses: tuple[EditionStatus, ...],
     found_edges: tuple[Edge, ...],
@@ -1749,6 +1841,7 @@ def build_report(registry_root: Path, *, modelo_ids: tuple[str, ...] = ()) -> Re
     found_edges = edges(statuses)
     forest_violations(statuses)
     carried_defaults(statuses)
+    foreign_edition_tokens(statuses)
     scope_lineage_findings(statuses, found_edges, projected_sources(statuses, promised))
     return Report(
         statuses=statuses,
@@ -2720,7 +2813,13 @@ def render_report(report: Report, *, totals_only: bool = False) -> str:
         finding
         for status in statuses
         for finding in status.findings
-        if finding.kind in {"edition_keyed_identifier", "edition_default_underivable", "row_source_refs_liftable"}
+        if finding.kind
+        in {
+            "edition_keyed_identifier",
+            "foreign_edition_token",
+            "edition_default_underivable",
+            "row_source_refs_liftable",
+        }
     ]
     if singles:
         out.append("NAMED SINGLETONS  (conditions small enough to read here)")

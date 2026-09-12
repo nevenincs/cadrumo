@@ -1,6 +1,8 @@
 [revisions."2019-2022"]
 formula_source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions-2018-2022"]
 casilla_source_refs = ["aeat-dr-202-2019"]
+live_cross_reference_source_refs = ["aeat-modelo-202-instructions-2018-2022"]
+application_link_source_refs = ["aeat-dr-202-2019"]
 authority_grade = "filing"
 valid_from = 2019-01-01
 valid_to = 2022-12-31

@@ -21,6 +21,8 @@ import hashlib
 import io
 import json
 import re
+import shutil
+import subprocess
 import sys
 import tokenize
 from collections import Counter
@@ -31,6 +33,11 @@ from dev._paths import REPO_ROOT
 from dev.registry.analysis.governed_literal_discovery import (
     GovernedLiteralCandidate,
     discover_governed_literal_candidates,
+)
+from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
+from cadrumo.domain.calculations.registry.authority_artifact import (
+    AuthorityArtifactError,
+    read_authority_artifact,
 )
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -66,6 +73,10 @@ REGISTRY_QUERY_SYMBOLS = frozenset(
         "MappingFactQuery",
         "ScalarFactQuery",
         "EntitySetFactQuery",
+        "BracketFactQuery",
+        "OverrideFactQuery",
+        "EventFactQuery",
+        "MultiOutputFactQuery",
     }
 )
 RETAIN_KINDS = frozenset(
@@ -987,7 +998,116 @@ def _enumerate_frozen_universe() -> dict[str, Any]:
     }
 
 
-CONSUMER_QUERY_SYMBOLS = frozenset({"MappingFactQuery", "ScalarFactQuery", "EntitySetFactQuery"})
+def _consumer_source_paths() -> dict[str, Any]:
+    """Find only source files that can contain governed-fact query calls.
+
+    The ordinary signal deliberately audits the frozen Python universe.  That
+    audit is intentionally expensive and includes historical discovery work,
+    so it must not be a prerequisite for a facts-publication measurement.  A
+    facts-only run uses ripgrep's indexed text scan to narrow the AST pass to
+    files containing one of the closed query-family constructors.  The
+    pathlib fallback preserves portability when the developer tool is absent;
+    it remains conservative and reports that fallback in the result.
+    """
+    query_pattern = r"(?:MappingFactQuery|ScalarFactQuery|EntitySetFactQuery|BracketFactQuery|OverrideFactQuery|EventFactQuery|MultiOutputFactQuery)\s*\("
+    rg = shutil.which("rg")
+    if rg is not None:
+        try:
+            result = subprocess.run(
+                [
+                    rg,
+                    "--files-with-matches",
+                    "--no-ignore-vcs",
+                    "--glob",
+                    "*.py",
+                    "--glob",
+                    "!**/tests/**",
+                    "--glob",
+                    "!**/test/**",
+                    "--glob",
+                    "!**/test_*.py",
+                    "--glob",
+                    "!**/*_test.py",
+                    "--glob",
+                    "!**/conftest.py",
+                    "-e",
+                    query_pattern,
+                    "src/cadrumo",
+                ],
+                cwd=REPO_ROOT,
+                capture_output=True,
+                check=False,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+        except OSError as exc:
+            result = None
+            rg_error = f"rg-error:{type(exc).__name__}"
+        else:
+            rg_error = None if result.returncode in {0, 1} else f"rg-exit:{result.returncode}"
+        if result is not None and rg_error is None:
+            paths = sorted(
+                {
+                    line.replace("\\", "/").strip()
+                    for line in result.stdout.splitlines()
+                    if line.strip()
+                    and not _fd_excluded(PurePosixPath(line.replace("\\", "/").strip()))
+                }
+            )
+            return {
+                "paths": paths,
+                "method": "rg",
+                "errors": [],
+            }
+    else:
+        rg_error = "rg-unavailable"
+
+    paths: list[str] = []
+    fallback_errors: list[str] = [rg_error]
+    try:
+        candidates = SOURCE_ROOT.rglob("*.py")
+        for path in candidates:
+            relative = path.resolve().relative_to(REPO_ROOT).as_posix()
+            if _fd_excluded(PurePosixPath(relative)):
+                continue
+            try:
+                text = _decode_python_source(path.read_bytes())
+            except (OSError, UnicodeDecodeError, LookupError, ValueError) as exc:
+                fallback_errors.append(f"{relative}:{type(exc).__name__}")
+                continue
+            if re.search(query_pattern, text):
+                paths.append(relative)
+    except OSError as exc:
+        fallback_errors.append(f"{SOURCE_ROOT.as_posix()}:{type(exc).__name__}")
+    return {
+        "paths": sorted(set(paths)),
+        "method": "pathlib-fallback",
+        "errors": sorted(set(fallback_errors)),
+    }
+
+
+CONSUMER_QUERY_SYMBOLS = frozenset(
+    {
+        "MappingFactQuery",
+        "ScalarFactQuery",
+        "EntitySetFactQuery",
+        "BracketFactQuery",
+        "OverrideFactQuery",
+        "EventFactQuery",
+        "MultiOutputFactQuery",
+    }
+)
+
+QUERY_FAMILY_BY_SYMBOL = {
+    "MappingFactQuery": "mapping",
+    "ScalarFactQuery": "scalar",
+    "EntitySetFactQuery": "entity_set",
+    "BracketFactQuery": "bracket",
+    "OverrideFactQuery": "override",
+    "EventFactQuery": "event",
+    "MultiOutputFactQuery": "multi_output",
+}
 
 
 def _call_symbol(node: ast.AST) -> str | None:
@@ -1025,7 +1145,16 @@ def _date_axis_name(node: ast.AST | None) -> str | None:
     expressions remain unresolved and therefore blocking.
     """
     if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == "DateAxis":
-        return node.attr.lower()
+        # Resolve against the enum owner instead of maintaining a second list
+        # in this detector.  An attribute that is not a real DateAxis member is
+        # intentionally unresolved and therefore remains a signal blocker.
+        try:
+            from cadrumo.domain.calculations.registry.schema_base import DateAxis
+
+            member = DateAxis.__members__.get(node.attr)
+        except (ImportError, AttributeError):
+            return None
+        return member.value if member is not None else None
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return node.value
     return None
@@ -1075,6 +1204,22 @@ class _ConsumerQueryVisitor(ast.NodeVisitor):
         self.constants = constants
         self.symbol_stack: list[str] = []
         self.observations: list[dict[str, Any]] = []
+        self.malformed_observations: list[dict[str, Any]] = []
+        self.query_symbols = set(CONSUMER_QUERY_SYMBOLS)
+        self.query_family_by_symbol = dict(QUERY_FAMILY_BY_SYMBOL)
+
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+        """Recognize aliases of every governed-fact query family."""
+        for imported in node.names:
+            if imported.name in CONSUMER_QUERY_SYMBOLS:
+                symbol = imported.asname or imported.name
+                self.query_symbols.add(symbol)
+                self.query_family_by_symbol[symbol] = QUERY_FAMILY_BY_SYMBOL[imported.name]
+        self.generic_visit(node)
+
+    def visit_Import(self, node: ast.Import) -> None:
+        """Retain module imports for attribute-shaped query calls."""
+        self.generic_visit(node)
 
     def _visit_symbol(self, node: ast.AST, name: str) -> None:
         self.symbol_stack.append(name)
@@ -1092,28 +1237,32 @@ class _ConsumerQueryVisitor(ast.NodeVisitor):
 
     def visit_Call(self, node: ast.Call) -> None:
         query_kind = _call_symbol(node.func)
-        if query_kind in CONSUMER_QUERY_SYMBOLS:
+        if query_kind in self.query_symbols:
             fact_expr = next((keyword.value for keyword in node.keywords if keyword.arg == "fact_id"), None)
             fact_id = _static_string(fact_expr, self.constants)
+            axis_expr = next((keyword.value for keyword in node.keywords if keyword.arg == "date_axis"), None)
+            effective_expr = next(
+                (keyword.value for keyword in node.keywords if keyword.arg == "effective_date"),
+                None,
+            )
+            observation: dict[str, Any] = {
+                "fact_id": fact_id,
+                "query_kind": query_kind,
+                "query_family": self.query_family_by_symbol.get(query_kind),
+                "file": self.file,
+                "line": node.lineno,
+                "column": node.col_offset,
+                "enclosing_symbol": "::".join(self.symbol_stack) or "<module>",
+                "date_axis": _date_axis_name(axis_expr),
+                "date_axis_expression": ast.unparse(axis_expr) if axis_expr is not None else None,
+                "effective_date_expression": ast.unparse(effective_expr) if effective_expr is not None else None,
+                "source_kind": "ast_query_call",
+            }
             if fact_id:
-                axis_expr = next((keyword.value for keyword in node.keywords if keyword.arg == "date_axis"), None)
-                effective_expr = next(
-                    (keyword.value for keyword in node.keywords if keyword.arg == "effective_date"),
-                    None,
-                )
-                observation: dict[str, Any] = {
-                    "fact_id": fact_id,
-                    "query_kind": query_kind,
-                    "file": self.file,
-                    "line": node.lineno,
-                    "column": node.col_offset,
-                    "enclosing_symbol": "::".join(self.symbol_stack) or "<module>",
-                    "date_axis": _date_axis_name(axis_expr),
-                    "date_axis_expression": ast.unparse(axis_expr) if axis_expr is not None else None,
-                    "effective_date_expression": ast.unparse(effective_expr) if effective_expr is not None else None,
-                    "source_kind": "ast_query_call",
-                }
                 self.observations.append(observation)
+            else:
+                observation["blockers"] = ["consumer_query_fact_id_unresolved"]
+                self.malformed_observations.append(observation)
         self.generic_visit(node)
 
 
@@ -1219,12 +1368,18 @@ def _compiled_fact_index(payload: Any) -> dict[str, dict[str, Any]]:
 
 def _consumer_fact_scan(
     manifest: dict[str, Any],
-    universe_scan: dict[str, Any],
+    universe_scan: dict[str, Any] | None = None,
+    *,
+    source_paths: list[str] | None = None,
+    authority_probe: tuple[Any, str] | None = None,
 ) -> dict[str, Any]:
     """Reconcile every named consumer fact through the authority proof chain."""
     callsites_by_fact: dict[str, list[dict[str, Any]]] = {}
+    malformed_callsites: list[dict[str, Any]] = []
     parse_errors: list[str] = []
-    for relative in universe_scan["paths"]:
+    if source_paths is None:
+        source_paths = list((universe_scan or {}).get("paths", []))
+    for relative in source_paths:
         path = REPO_ROOT / Path(*PurePosixPath(relative).parts)
         try:
             text = _decode_python_source(path.read_bytes())
@@ -1236,6 +1391,7 @@ def _consumer_fact_scan(
         visitor.visit(tree)
         for observation in visitor.observations:
             callsites_by_fact.setdefault(observation["fact_id"], []).append(observation)
+        malformed_callsites.extend(visitor.malformed_observations)
 
     external_observations, external_errors = _consumer_requirement_file()
     for external in external_observations:
@@ -1243,6 +1399,10 @@ def _consumer_fact_scan(
         for callsite in external["source_call_sites"]:
             observation = dict(callsite)
             observation.setdefault("query_kind", external.get("query_kind"))
+            observation.setdefault(
+                "query_family",
+                QUERY_FAMILY_BY_SYMBOL.get(str(external.get("query_kind", ""))),
+            )
             observation.setdefault("date_axis", external.get("date_axis"))
             observation.setdefault("date_axis_expression", external.get("date_axis_expression"))
             observation.setdefault("effective_date_expression", external.get("effective_date_expression"))
@@ -1250,10 +1410,13 @@ def _consumer_fact_scan(
             callsites_by_fact.setdefault(fact_id, []).append(observation)
 
     authored, authored_errors = _authored_fact_index()
-    artifact_payload, artifact_status = _load_authority_artifact(BUNDLED_AUTHORITY_ARTIFACT)
+    if authority_probe is None:
+        artifact_payload, artifact_status = _load_authority_artifact(BUNDLED_AUTHORITY_ARTIFACT)
+    else:
+        artifact_payload, artifact_status = authority_probe
     compiled = _compiled_fact_index(artifact_payload) if artifact_status == "ok" else {}
     row_files: dict[str, set[str]] = {}
-    for row in manifest["candidates"]:
+    for row in manifest.get("candidates", []):
         paths: set[str] = set()
         for evidence in row.get("evidence", ()):
             if isinstance(evidence, dict) and isinstance(evidence.get("file"), str):
@@ -1299,9 +1462,19 @@ def _consumer_fact_scan(
             for callsite in deduped_callsites
             if isinstance(callsite.get("date_axis"), str) and callsite.get("date_axis")
         }
-        axis_declared = bool(deduped_callsites) and bool(requested_axes)
+        axis_declared = bool(deduped_callsites) and all(
+            isinstance(callsite.get("date_axis"), str) and bool(callsite.get("date_axis"))
+            for callsite in deduped_callsites
+        )
         axis_compatible = bool(compiled_fact is not None and requested_axes <= compiled_axes)
         axis_resolved = axis_declared and axis_compatible
+        query_families = {
+            str(callsite.get("query_family"))
+            for callsite in deduped_callsites
+            if isinstance(callsite.get("query_family"), str)
+        }
+        compiled_family = compiled_fact.get("family") if isinstance(compiled_fact, dict) else None
+        family_compatible = bool(compiled_fact is not None and query_families and query_families == {str(compiled_family)})
         associated_row_ids = sorted(
             row_id
             for row_id, paths in row_files.items()
@@ -1319,6 +1492,14 @@ def _consumer_fact_scan(
         # blocking.
         if not axis_declared or (compiled_fact is not None and not axis_compatible):
             blockers.append("query_date_axis_unresolved")
+        if compiled_fact is not None and not family_compatible:
+            blockers.append("query_family_unresolved")
+        if any(
+            callsite.get("source_kind") == "ast_query_call"
+            and not callsite.get("effective_date_expression")
+            for callsite in deduped_callsites
+        ):
+            blockers.append("query_effective_date_unresolved")
         observation = {
             "fact_id": fact_id,
             "source_call_sites": deduped_callsites,
@@ -1328,6 +1509,9 @@ def _consumer_fact_scan(
             "bundled_authority_artifact": _display_path(BUNDLED_AUTHORITY_ARTIFACT),
             "bundled_authority_artifact_status": artifact_status,
             "compiled_variant_date_axes": sorted(compiled_axes),
+            "compiled_family": compiled_family,
+            "requested_query_families": sorted(query_families),
+            "query_family_resolved": family_compatible,
             "requested_query_date_axes": sorted(requested_axes),
             "query_date_axis_recognized": axis_declared,
             "query_date_axis_resolved": axis_resolved,
@@ -1344,10 +1528,45 @@ def _consumer_fact_scan(
         }
         observations.append(observation)
 
-    blockers = [item for item in observations if item["blocking"]]
+    malformed_observations = sorted(
+        malformed_callsites,
+        key=lambda item: (
+            str(item.get("file", "")),
+            int(item.get("line", 0) or 0),
+            str(item.get("query_kind", "")),
+        ),
+    )
+    malformed_blockers = [
+        {
+            "fact_id": None,
+            "source_call_sites": [item],
+            "authored_presence": False,
+            "authored_paths": [],
+            "bundled_authority_presence": False,
+            "bundled_authority_artifact": _display_path(BUNDLED_AUTHORITY_ARTIFACT),
+            "bundled_authority_artifact_status": artifact_status,
+            "compiled_variant_date_axes": [],
+            "requested_query_date_axes": [],
+            "query_date_axis_recognized": bool(item.get("date_axis")),
+            "query_date_axis_resolved": False,
+            "proof_chain": {
+                "authored_presence": False,
+                "bundled_authority_presence": False,
+                "query_date_axis_resolution": False,
+                "consumer_seam_loadability": False,
+            },
+            "consumer_seam_loadability": "blocked:consumer_query_fact_id_unresolved",
+            "associated_row_ids": [],
+            "blockers": ["consumer_query_fact_id_unresolved"],
+            "blocking": True,
+        }
+        for item in malformed_observations
+    ]
+    blockers = [item for item in observations if item["blocking"]] + malformed_blockers
     return {
         "observations": observations,
         "blockers": blockers,
+        "malformed_callsites": malformed_observations,
         "errors": sorted(set(parse_errors + external_errors + authored_errors)),
         "counts": {
             "consumer_fact_required_count": len(observations),
@@ -1357,9 +1576,188 @@ def _consumer_fact_scan(
             "consumer_fact_resolved_count": sum(not item["blocking"] for item in observations),
             "consumer_fact_blocker_count": len(blockers),
             "consumer_fact_error_count": len(consumer_errors := (parse_errors + external_errors + authored_errors)),
+            "consumer_query_malformed_count": len(malformed_observations),
+            "consumer_source_path_count": len(source_paths),
         },
         "associated_row_ids": sorted({row_id for item in blockers for row_id in item["associated_row_ids"]}),
     }
+
+
+def _bundled_fact_authority_probe() -> dict[str, Any]:
+    """Require the same bundled authority loader used by production consumers."""
+    try:
+        from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+        authority = bundled_authority()
+        facts = authority.catalogues.facts.facts
+        return {
+            "status": "ok",
+            "fact_count": len(facts),
+            "identity_digest": authority._identity_digest,
+            "error": None,
+        }
+    except Exception as exc:  # noqa: BLE001 - the signal must name any loader refusal
+        return {
+            "status": f"load-error:{type(exc).__name__}",
+            "fact_count": 0,
+            "identity_digest": None,
+            "error": str(exc),
+        }
+
+
+def _facts_only_signal() -> dict[str, Any]:
+    """Measure authored-to-consumer fact publication without the full campaign scan."""
+    source_inventory = _consumer_source_paths()
+    source_paths = source_inventory["paths"]
+    artifact_payload, artifact_status, artifact_metadata = _load_verified_fact_authority_artifact(
+        BUNDLED_AUTHORITY_ARTIFACT
+    )
+    consumer_scan = _consumer_fact_scan(
+        {},
+        source_paths=source_paths,
+        authority_probe=(artifact_payload, artifact_status),
+    )
+    bundled_probe = _bundled_fact_authority_probe()
+    if bundled_probe["status"] != "ok":
+        for observation in consumer_scan["observations"]:
+            if "bundled_authority_load_error" not in observation["blockers"]:
+                observation["blockers"].append("bundled_authority_load_error")
+            observation["blocking"] = True
+            observation["consumer_seam_loadability"] = "blocked:" + ",".join(observation["blockers"])
+            observation["proof_chain"]["consumer_seam_loadability"] = False
+        consumer_scan["blockers"] = [
+            item for item in consumer_scan["observations"] if item["blocking"]
+        ] + [
+            item for item in consumer_scan["blockers"]
+            if item.get("fact_id") is None
+        ]
+
+    authored, authored_errors = _authored_fact_index()
+    compiled = _compiled_fact_index(artifact_payload) if artifact_status == "ok" else {}
+    required_ids = sorted({item["fact_id"] for item in consumer_scan["observations"]})
+    authored_ids = sorted(authored)
+    compiled_ids = sorted(compiled)
+    resolved_ids = sorted(
+        item["fact_id"] for item in consumer_scan["observations"] if not item["blocking"]
+    )
+    authored_missing = sorted(set(required_ids) - set(authored))
+    compiled_missing = sorted(set(required_ids) - set(compiled))
+    axis_blockers = [
+        item
+        for item in consumer_scan["blockers"]
+        if "query_date_axis_unresolved" in item.get("blockers", [])
+    ]
+    authority_errors = sum(
+        status != "ok"
+        for status in (artifact_status, bundled_probe["status"])
+    ) + len(authored_errors)
+    publication_blockers = list(consumer_scan["blockers"])
+    publication_blockers.extend(
+        {
+            "fact_id": fact_id,
+            "source_call_sites": [],
+            "blockers": ["authored_fact_missing"],
+        }
+        for fact_id in authored_missing
+        if not any(item.get("fact_id") == fact_id for item in publication_blockers)
+    )
+    publication_blockers.extend(
+        {
+            "fact_id": fact_id,
+            "source_call_sites": [],
+            "blockers": ["bundled_authority_fact_missing"],
+        }
+        for fact_id in compiled_missing
+        if not any(item.get("fact_id") == fact_id for item in publication_blockers)
+    )
+    counts = {
+        "required_fact_count": len(required_ids),
+        "authored_fact_count": len(authored_ids),
+        "compiled_fact_count": len(compiled_ids),
+        "resolved_fact_count": len(resolved_ids),
+        "required_authored_present_count": len(set(required_ids) & set(authored)),
+        "required_compiled_present_count": len(set(required_ids) & set(compiled)),
+        "required_resolved_count": len(resolved_ids),
+        "authored_fact_missing_count": len(authored_missing),
+        "compiled_fact_missing_count": len(compiled_missing),
+        "query_date_axis_unresolved_count": len(axis_blockers),
+        "consumer_fact_blocker_count": len(publication_blockers),
+        "consumer_fact_error_count": len(consumer_scan["errors"]),
+        "consumer_query_malformed_count": consumer_scan["counts"]["consumer_query_malformed_count"],
+        "authority_error_count": authority_errors,
+        "facts_publication_blocker_count": len(publication_blockers) + authority_errors,
+        "fact_count_equality": len(required_ids) == len(authored_ids) == len(compiled_ids) == len(resolved_ids),
+    }
+    return {
+        "schema": "cadrumo.fact-relocation.facts-publication-signal",
+        "mode": "facts-only",
+        "artifact": artifact_metadata,
+        "bundled_authority": bundled_probe,
+        "source_inventory": source_inventory,
+        "fact_ids": {
+            "required": required_ids,
+            "authored": authored_ids,
+            "compiled": compiled_ids,
+            "resolved": resolved_ids,
+            "authored_missing": authored_missing,
+            "compiled_missing": compiled_missing,
+        },
+        "consumer_fact_observations": consumer_scan["observations"],
+        "consumer_fact_blockers": publication_blockers,
+        "consumer_fact_scan_errors": sorted(set(consumer_scan["errors"] + authored_errors)),
+        "counts": counts,
+        "authority_digest_status": {
+            "artifact_file_sha256": artifact_metadata["file_sha256"],
+            "recorded_payload_sha256": artifact_metadata["recorded_payload_sha256"],
+            "computed_payload_sha256": artifact_metadata["computed_payload_sha256"],
+            "digest_verified": artifact_status == "ok",
+            "bundled_loader_status": bundled_probe["status"],
+            "identity_digest": bundled_probe["identity_digest"],
+        },
+        "exit_code": 0 if counts["facts_publication_blocker_count"] == 0 else 1,
+    }
+
+
+def _facts_only_human(signal: dict[str, Any]) -> str:
+    """Render the bounded facts-publication measurement for a human operator."""
+    counts = signal["counts"]
+    lines = [
+        "facts-only publication signal",
+        "=============================",
+        (
+            "facts: "
+            f"required={counts['required_fact_count']}, "
+            f"authored={counts['authored_fact_count']}, "
+            f"compiled={counts['compiled_fact_count']}, "
+            f"resolved={counts['resolved_fact_count']}"
+        ),
+        (
+            "blockers: "
+            f"authored_missing={counts['authored_fact_missing_count']}, "
+            f"compiled_missing={counts['compiled_fact_missing_count']}, "
+            f"date_axis={counts['query_date_axis_unresolved_count']}, "
+            f"authority_errors={counts['authority_error_count']}, "
+            f"publication={counts['facts_publication_blocker_count']}"
+        ),
+        f"artifact: {signal['artifact']['status']}",
+        f"bundled loader: {signal['bundled_authority']['status']}",
+        "consumer fact blockers:",
+    ]
+    blockers = signal["consumer_fact_blockers"]
+    if not blockers:
+        lines.append("(none)")
+    else:
+        for blocker in blockers:
+            callsites = ", ".join(
+                f"{item.get('file')}:{item.get('line', '?')}"
+                for item in blocker.get("source_call_sites", [])
+            ) or "(no callsite)"
+            lines.append(
+                f"- {blocker.get('fact_id') or '<malformed-query>'}: "
+                f"{', '.join(blocker.get('blockers', []))}; source={callsites}"
+            )
+    lines.append(f"result exit code: {signal['exit_code']}")
+    return "\n".join(lines)
 
 
 def _candidate_payload(candidate: GovernedLiteralCandidate) -> dict[str, Any]:
@@ -1982,6 +2380,36 @@ def _load_authority_artifact(path: Path) -> tuple[Any, str]:
         return json.loads(data.decode("utf-8")), "ok"
     except (UnicodeDecodeError, json.JSONDecodeError, ValueError, TypeError) as exc:
         return None, f"parse-error:{type(exc).__name__}"
+
+
+def _load_verified_fact_authority_artifact(path: Path) -> tuple[Any, str, dict[str, Any]]:
+    """Read facts through the canonical authority artifact codec."""
+    metadata: dict[str, Any] = {
+        "artifact": _display_path(path),
+        "file_sha256": None,
+        "recorded_payload_sha256": None,
+        "computed_payload_sha256": None,
+        "status": "missing",
+    }
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        metadata["status"] = f"read-error:{type(exc).__name__}"
+        return None, metadata["status"], metadata
+    metadata["file_sha256"] = "sha256:" + hashlib.sha256(data).hexdigest()
+    try:
+        authority = read_authority_artifact(path)
+        frame = json.loads(data)
+    except (AuthorityArtifactError, ImportError, TypeError, UnicodeDecodeError, ValueError, json.JSONDecodeError) as exc:
+        metadata["status"] = f"invalid-authority:{type(exc).__name__}"
+        return None, metadata["status"], metadata
+    payload = authority.model_dump(mode="json", exclude_defaults=True)
+    recorded = frame["payload_sha256"]
+    metadata["recorded_payload_sha256"] = recorded
+    computed = sha256_hex(canonical_json_bytes(payload))
+    metadata["computed_payload_sha256"] = computed
+    metadata["status"] = "ok"
+    return {"payload": payload, "payload_sha256": recorded}, "ok", metadata
 
 
 def _fact_declaration(
@@ -3617,12 +4045,27 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="emit machine-readable JSON instead of the human summary",
     )
+    parser.add_argument(
+        "--facts-only",
+        action="store_true",
+        help=(
+            "measure authored, compiled, bundled, and consumer-resolved facts only; "
+            "skip the historical relocation ledger and live-discovery scan"
+        ),
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     """Emit the fact-boundary signal and return its gate-specific exit code."""
     args = parse_args(sys.argv[1:] if argv is None else argv)
+    if args.facts_only:
+        signal = _facts_only_signal()
+        if args.json:
+            print(json.dumps(signal, ensure_ascii=False, sort_keys=True, indent=2))
+        else:
+            print(_facts_only_human(signal))
+        return signal["exit_code"]
     manifest_path = args.manifest.resolve()
     try:
         manifest = _load_manifest(manifest_path)

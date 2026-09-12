@@ -174,6 +174,11 @@ class EditionLift:
     #: are rewritten. The declaration is the higher authority either way: an
     #: equal one is not rewritten, it is simply already true.
     manifest_declared: bool = False
+    #: The predecessor edition whose derived default this edition carries. Set
+    #: only on a carried declaration: an edition owning no member of the family
+    #: that inherits a lifted edition's rows, and so must state the same default
+    #: for those rows to materialise unchanged. Empty on a normal lift.
+    inherited_from: str = ""
 
     @property
     def liftable(self) -> bool:
@@ -199,14 +204,17 @@ class ModeloPlan:
         return [lift for lift in self.lifts if lift.refusal]
 
     @property
-    def manifests(self) -> dict[str, tuple[str, ...]]:
-        """The manifest fields this plan would write, keyed by edition."""
+    def manifests(self) -> dict[str, tuple[tuple[str, ...], str]]:
+        """The manifest fields this plan would write, and any carry, keyed by edition."""
         written: dict[str, list[str]] = {}
+        carried: dict[str, str] = {}
         for lift in self.liftable:
             if lift.manifest_declared:
                 continue
             written.setdefault(lift.edition, []).append(FAMILY_DEFAULT_KEY[lift.family])
-        return {edition: tuple(sorted(keys)) for edition, keys in sorted(written.items())}
+            if lift.inherited_from:
+                carried[lift.edition] = lift.inherited_from
+        return {edition: (tuple(sorted(keys)), carried.get(edition, "")) for edition, keys in sorted(written.items())}
 
 
 def iter_modelo_dirs(modelos_root: Path = REGISTRY_MODELOS_ROOT) -> list[Path]:
@@ -260,6 +268,69 @@ def _unreproducible_statements(fragments: Sequence[Path], edition_id: str, famil
 
 def _header_id(header: re.Match[str]) -> str:
     return str(header.group("dq") or header.group("sq") or header.group("bare") or "")
+
+
+def _declared_predecessor(table: Mapping[str, Any]) -> str | None:
+    """Return the sibling edition this one is authored against, if it declares one.
+
+    ``predecessor`` is either the sibling's revision id or a single ``none``
+    table grounding why no earlier sibling exists. Only the first is a link to
+    walk; a ``none`` table ends the chain, as does an absent declaration.
+    """
+    value = table.get("predecessor")
+    return value if isinstance(value, str) else None
+
+
+def _successor_editions(modelo_dir: Path) -> dict[str, list[str]]:
+    """Return each edition's declared successors, keyed by the predecessor's id."""
+    successors: dict[str, list[str]] = {}
+    for edition_dir in _edition_dirs(modelo_dir):
+        predecessor = _declared_predecessor(_revision_table(edition_dir))
+        if predecessor is not None:
+            successors.setdefault(predecessor, []).append(edition_dir.name)
+    return {edition: sorted(names) for edition, names in successors.items()}
+
+
+def _member_ids(edition_dir: Path, family: str) -> frozenset[str]:
+    """The ids an edition states itself for one family."""
+    members, _fragments = _members(edition_dir, family)
+    return frozenset(str(row["id"]) for row in members if "id" in row)
+
+
+def _live_inherited_ids(
+    modelo_dir: Path,
+    edition: str,
+    family: str,
+    loaded: dict[str, Any] | None = None,
+) -> frozenset[str] | None:
+    """The ids that materialise in ``edition`` without that edition stating them.
+
+    Read off the PUBLIC loader rather than reimplementing the keyed-family
+    merge: a member the successor supersedes appears under the successor's own
+    stated id, and one an evolution retires does not materialise at all, so
+    what remains is exactly the set the successor inherits live. Reproducing
+    that rule here would be a second copy of it, free to disagree with the
+    loader it is predicting.
+
+    Returns ``None`` when the modelo does not load, because then nothing about
+    its materialisation is known and a caller must not read an empty set as
+    proof that nothing is inherited.
+    """
+    cache = loaded if loaded is not None else {}
+    if "modelo" not in cache:
+        try:
+            from .compiler.loader import load_modelo_directory
+
+            cache["modelo"] = load_modelo_directory(modelo_dir)
+        except Exception:
+            cache["modelo"] = None
+    modelo = cache["modelo"]
+    if modelo is None or edition not in modelo.revisions:
+        return None
+    revision = modelo.revisions[edition]
+    members = getattr(revision, family, ())
+    materialised = frozenset(str(member.id) for member in members if getattr(member, "id", None) is not None)
+    return materialised - _member_ids(modelo_dir / _REVISIONS / edition, family)
 
 
 def _rewritable_members(members: Sequence[Mapping[str, Any]], default: tuple[str, ...]) -> int:
@@ -332,14 +403,123 @@ def plan_edition(modelo: str, edition_dir: Path, family: str) -> EditionLift | N
     return unrewritable(derived) or lift(default=derived)
 
 
+def _forward_closure(
+    modelo_dir: Path,
+    lift: EditionLift,
+    successors: Mapping[str, Sequence[str]],
+    loaded: dict[str, Any],
+) -> tuple[list[EditionLift], str]:
+    """Return the declarations this lift's successors must carry, or the reason it refuses.
+
+    A member the lift strips still materialises into every edition that
+    inherits it, and the loader grounds an inherited row stating no
+    ``source_refs`` in the edition it now sits in. So each edition in the
+    forward closure must resolve the same default, or those rows would move
+    onto a different grounding without the edition ever failing to load.
+
+    An edition owning no member of the family carries this default and is
+    marked with the predecessor it came from. One owning members keeps its own
+    plan, and the lift is refused only when that edition's effective default
+    differs AND at least one of the lifted edition's members actually
+    materialises live in it -- a member the successor supersedes or retires
+    never reaches materialisation, so a differing default cannot reground it.
+    An edition owning members that derive no default at all is always refused:
+    the inherited rows would then materialise with no grounding whatever.
+    """
+    key = FAMILY_DEFAULT_KEY[lift.family]
+    lifted_ids = _member_ids(modelo_dir / _REVISIONS / lift.edition, lift.family)
+    carried: list[EditionLift] = []
+    seen = {lift.edition}
+    queue = list(successors.get(lift.edition, ()))
+    while queue:
+        edition = queue.pop(0)
+        if edition in seen:
+            continue
+        seen.add(edition)
+        edition_dir = modelo_dir / _REVISIONS / edition
+        table = _revision_table(edition_dir)
+        members, _fragments = _members(edition_dir, lift.family)
+        declared = table.get(key)
+        effective: tuple[str, ...] | None
+        if isinstance(declared, list):
+            effective, origin = tuple(str(item) for item in declared), "declares"
+        elif members:
+            effective, origin = edition_source_default(members)[0], "owns members and derives"
+        else:
+            carried.append(
+                EditionLift(
+                    modelo=lift.modelo,
+                    edition=edition,
+                    family=lift.family,
+                    default=lift.default,
+                    inherited_from=lift.edition,
+                )
+            )
+            queue.extend(successors.get(edition, ()))
+            continue
+        if effective is None:
+            return [], (
+                f"no_derivable_default: successor edition {edition!r} owns {len(members)} member(s) of "
+                f"{lift.family} and derives no default, so rows inherited from {lift.edition!r} would "
+                f"materialise with no grounding at all instead of {list(lift.default)}"
+            )
+        if effective != lift.default:
+            live = _live_inherited_ids(modelo_dir, edition, lift.family, loaded)
+            if live is None:
+                return [], (
+                    f"live_regrounding: successor edition {edition!r} {origin} {list(effective)} against "
+                    f"{list(lift.default)} on {lift.edition!r}, and the modelo does not load, so which "
+                    "members it inherits live cannot be established"
+                )
+            regrounded = sorted(live & lifted_ids)
+            if regrounded:
+                return [], (
+                    f"live_regrounding: successor edition {edition!r} {origin} {list(effective)}, but "
+                    f"{len(regrounded)} member(s) of {lift.family} inherited live from {lift.edition!r} "
+                    f"would be regrounded from {list(lift.default)} to {list(effective)}: " + ", ".join(regrounded)
+                )
+        queue.extend(successors.get(edition, ()))
+    return carried, ""
+
+
 def plan_modelo(modelo_dir: Path, families: Sequence[str] = FAMILIES) -> ModeloPlan:
-    """Decide every edition and family of one modelo."""
+    """Decide every edition and family of one modelo, and the declarations its successors carry."""
     plan = ModeloPlan(modelo=modelo_dir.name)
     for edition_dir in _edition_dirs(modelo_dir):
         for family in families:
             decision = plan_edition(modelo_dir.name, edition_dir, family)
             if decision is not None:
                 plan.lifts.append(decision)
+
+    successors = _successor_editions(modelo_dir)
+    loaded: dict[str, Any] = {}
+    carried: dict[tuple[str, str], EditionLift] = {}
+    refused_families: set[str] = set()
+    for index, lift in enumerate(list(plan.lifts)):
+        if not lift.liftable or lift.family not in _MEMBER_REWRITE_FAMILIES:
+            continue
+        declarations, refusal = _forward_closure(modelo_dir, lift, successors, loaded)
+        if refusal:
+            refused_families.add(lift.family)
+            plan.lifts[index] = EditionLift(
+                modelo=lift.modelo,
+                edition=lift.edition,
+                family=lift.family,
+                refusal=refusal,
+                members=lift.members,
+            )
+            continue
+        for declaration in declarations:
+            carried.setdefault((declaration.edition, declaration.family), declaration)
+
+    # A carried declaration only makes sense beside the lift that needs it, and
+    # apply_plan is per modelo, so a family with any refusal contributes none.
+    stated = {(lift.edition, lift.family) for lift in plan.lifts}
+    plan.lifts.extend(
+        declaration
+        for identity, declaration in sorted(carried.items())
+        if identity not in stated and declaration.family not in refused_families
+    )
     return plan
 
 
@@ -376,7 +556,19 @@ def lifted_fragment_text(text: str, edition_id: str, family: str, default: tuple
     return "\n".join(rendered) + ("\n" if text.endswith("\n") else "")
 
 
-def _manifest_with_default(text: str, edition_id: str, key: str, refs: tuple[str, ...]) -> str:
+#: Written above a carried declaration so the manifest itself says the value is
+#: the predecessor's rather than this edition's own grounding. A comment and not
+#: a schema key: the fact is provenance for a reader and a prompt for a later
+#: authoring pass, and a new field would oblige every consumer of
+#: ``ModeloRevision`` to carry it.
+_CARRIED_COMMENT: Final = (
+    '# {key}: carried from predecessor edition "{predecessor}"; not re-grounded on this edition\'s own design'
+)
+
+
+def _manifest_with_default(
+    text: str, edition_id: str, key: str, refs: tuple[str, ...], *, carried_from: str = ""
+) -> str:
     """Return a manifest declaring ``key``, placed beside ``casilla_source_refs``.
 
     Beside rather than at the top of the table, because the three keys are one
@@ -397,7 +589,11 @@ def _manifest_with_default(text: str, edition_id: str, key: str, refs: tuple[str
             anchor = index
     if table is None:
         raise RuntimeError(f"no [revisions.{edition_id}] table to declare {key} on")
-    lines.insert((anchor if anchor is not None else table) + 1, _render_refs(key, refs))
+    declaration = [_render_refs(key, refs)]
+    if carried_from:
+        declaration.insert(0, _CARRIED_COMMENT.format(key=key, predecessor=carried_from))
+    at = (anchor if anchor is not None else table) + 1
+    lines[at:at] = declaration
     return "\n".join(lines) + "\n"
 
 
@@ -460,7 +656,11 @@ def apply_plan(plan: ModeloPlan, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
                 continue
             manifest = edition_dir / _MANIFEST
             declared = _manifest_with_default(
-                remember(manifest), lift.edition, FAMILY_DEFAULT_KEY[lift.family], lift.default
+                remember(manifest),
+                lift.edition,
+                FAMILY_DEFAULT_KEY[lift.family],
+                lift.default,
+                carried_from=lift.inherited_from,
             )
             _write(manifest, declared)
             if manifest not in touched:
@@ -539,17 +739,19 @@ def render_plan(
                 liftable += 1
                 per_family[lift.family] = per_family.get(lift.family, 0) + 1
                 manifest = "declared" if lift.manifest_declared else "write"
+                carried = f" inherited_from={lift.inherited_from}" if lift.inherited_from else ""
                 lines.append(
                     f"lift modelo={plan.modelo} edition={lift.edition} family={lift.family} "
-                    f"members={lift.members} default={list(lift.default)} manifest={manifest}"
+                    f"members={lift.members} default={list(lift.default)} manifest={manifest}{carried}"
                 )
             else:
                 lines.append(
                     f"refuse modelo={plan.modelo} edition={lift.edition} family={lift.family} "
                     f"members={lift.members} reason={lift.refusal}"
                 )
-        for edition, keys in plan.manifests.items():
-            lines.append(f"manifest {plan.modelo}/{edition} fields={','.join(keys)}")
+        for edition, (keys, inherited_from) in plan.manifests.items():
+            carried = f" inherited_from={inherited_from}" if inherited_from else ""
+            lines.append(f"manifest {plan.modelo}/{edition} fields={','.join(keys)}{carried}")
         if written is not None:
             for edition, count in _written_editions(written.get(plan.modelo, ())).items():
                 lines.append(f"wrote modelo={plan.modelo} edition={edition} files={count}")

@@ -35,21 +35,21 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-70"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-descripcion-1"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-70", offset = 70, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-132"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-13"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-132", offset = 132, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-137"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-14"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-137", offset = 137, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -105,14 +105,14 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-273"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-22"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-273", offset = 273, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-278"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-23"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-278", offset = 278, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -168,14 +168,14 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-414"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-31"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-414", offset = 414, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-419"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-32"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-419", offset = 419, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -224,7 +224,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-548"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-40"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-548", offset = 548, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -280,7 +280,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-669"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-48"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-669", offset = 669, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -336,7 +336,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-790"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-56"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-790", offset = 790, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]

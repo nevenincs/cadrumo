@@ -3,7 +3,6 @@ id = "patrimonio-limite-conjunto-porcentaje"
 data_type = "ratio"
 unit = "percent"
 legal_refs = ["ley-19-1991:art-31"]
-source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2021".parameters.source_citations]]
 source_ref = "aeat-modelo-714-procedure"
@@ -19,7 +18,6 @@ id = "patrimonio-reduccion-maxima-limite-conjunto-porcentaje"
 data_type = "ratio"
 unit = "percent"
 legal_refs = ["ley-19-1991:art-31"]
-source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2021".parameters.source_citations]]
 source_ref = "aeat-modelo-714-procedure"

@@ -2,6 +2,8 @@
 predecessor = "2022"
 reviewed_against = "2022"
 casilla_source_refs = ["aeat-dr-714-2023"]
+parameter_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+application_link_source_refs = ["aeat-modelo-714-procedure"]
 binding_source_refs = ["aeat-dr-714-2023"]
 formula_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 # Prepared and reviewed by an agent against the bundled diseño de registros and

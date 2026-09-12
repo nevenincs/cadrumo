@@ -2,6 +2,8 @@
 formula_source_refs = ["aeat-modelo-151-procedure"]
 predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["ley-35-2006:art-93"], source_refs = ["aeat-modelo-151-procedure"] } }
 casilla_source_refs = ["aeat-dr-151-2023"]
+parameter_source_refs = ["aeat-modelo-151-procedure"]
+application_link_source_refs = ["aeat-modelo-151-procedure"]
 # Prepared and reviewed by an agent against the bundled diseno de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather
