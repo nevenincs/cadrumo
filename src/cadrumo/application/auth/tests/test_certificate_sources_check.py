@@ -28,7 +28,7 @@ from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import load_settings, override_settings
 from ....tests.certificates import CERTIFICATE_BUNDLE_PASSPHRASE, build_pkcs12_bundle
 from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...state_projection import build_operator_state_projection
 from ...wizard import compiler as _wizard  # noqa: F401  (compiler import seeds the ProfileKey registry)

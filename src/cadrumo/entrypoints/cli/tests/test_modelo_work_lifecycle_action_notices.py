@@ -12,7 +12,7 @@ from click.testing import Result
 from ....core.errors.error_codes import ErrorCategory, get_error_exit_code
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
-from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from ._modelo_work_ux_support import _create_m130_work_unit, _create_profile, _invoke
 from .cli_runner import semantic_cli_output
 

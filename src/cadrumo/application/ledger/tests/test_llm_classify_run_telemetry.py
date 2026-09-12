@@ -23,7 +23,7 @@ from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.errors import LLMClassifierError
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..llm_classification import suggest_llm_classification
 from ._subprocess_classifier_support import SubprocessLLMClassifier
 

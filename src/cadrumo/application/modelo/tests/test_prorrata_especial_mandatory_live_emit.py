@@ -55,7 +55,7 @@ from ....domain.prorrata_register.register import ProrrataRegisterEntry, SectorD
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...aggregation.source_mesh import CalculationSourceDiagnostic
 from ...calculations.observations_repository import CalculationObservationRepository
 from ...prorrata_register.service import ProrrataRegisterService

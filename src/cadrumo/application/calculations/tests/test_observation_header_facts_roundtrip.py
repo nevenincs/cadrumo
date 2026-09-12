@@ -41,7 +41,7 @@ from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..observations_repository import (
     CalculationObservationRepository,
     ObservationEnvelopePayload,

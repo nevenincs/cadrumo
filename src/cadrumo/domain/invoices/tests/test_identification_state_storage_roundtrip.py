@@ -24,7 +24,7 @@ import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....core.classification.policies import SensitivityClass
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...iva.classification import InvoiceKind
 from ...iva.schema import EUMemberState, IvaCategory
 from ..enums import IvaRate, PaymentStatus

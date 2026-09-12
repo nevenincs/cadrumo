@@ -42,7 +42,7 @@ from ....domain.modelos.row_models import Modelo184MemberRow
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...aggregation.foreign_assets import ForeignAssetIngestObservation
 from ...user_profile.preflight import build_profile_preflight_requirement
 from ..action_errors import ModeloAggregationBindingError, ModeloProfileReadinessError

@@ -65,7 +65,7 @@ from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...modelo.calculation_actions import calculate_modelo_revision
 from ...modelo.external_import_actions import import_external_filing_evidence
 from ...modelo.tests.justificante_metadata import persist_justificante_metadata

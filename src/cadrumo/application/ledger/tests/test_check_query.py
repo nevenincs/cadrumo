@@ -28,7 +28,7 @@ from ....domain.invoices.service import LinkInconsistency
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..check_query import ledger_check_years, read_ledger_check
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

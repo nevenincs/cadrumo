@@ -36,7 +36,7 @@ from .....domain.attachments.enums import AttachmentKind, AttachmentSource
 from .....domain.attachments.errors import AttachmentPersistenceError, AttachmentValidationError
 from .....domain.attachments.models import Attachment
 from .....tests.attribute_scope import scoped_attribute
-from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
+from .secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..attachment import AttachmentStore, resolve_attachment_store
 from ..crypto.encrypted_columns import (
     decrypt_secure_object_payload,

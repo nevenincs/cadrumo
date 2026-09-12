@@ -14,7 +14,7 @@ from ....application.operator_surface.command_ports import cli_argv_for
 from ....application.workflow.profile_bucket_scan import read_profile_bucket
 from ....core.bucket_pointer import read_pointer
 from ....core.errors.error_codes import ErrorCategory, get_error_exit_code
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..verb_input_schema import build_verb_input_schemas
 from .cli_runner import invoke_cached_cli, semantic_cli_output
 

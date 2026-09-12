@@ -12,7 +12,7 @@ from .....adapters.persistence.storage.runtime_repository import secure_object_r
 from .....application.workflow.persistence import workflow_state_repository
 from .....application.workflow.state_models import WorkflowState
 from .....domain.buckets.event import BucketEventType
-from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from .....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .....tests.user_profile import register_cli_profile
 from ...tests.cli_runner import invoke_cached_cli
 

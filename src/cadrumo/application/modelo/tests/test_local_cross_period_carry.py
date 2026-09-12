@@ -58,7 +58,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...aggregation.source_mesh import CalculationSourceProvenance, CalculationSourceResolution
 from ...aggregation.source_resolution_operations import merge_source_resolutions
 from ...calculations.observations_repository import APP_FILING_SOURCE_KIND, CalculationObservationRepository

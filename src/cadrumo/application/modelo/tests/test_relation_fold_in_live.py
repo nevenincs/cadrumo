@@ -63,7 +63,7 @@ from ....domain.calculations.registry.tests.registry_tree import bundled_registr
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_snapshot import build_snapshot
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...aggregation.errors import (
     AggregationValidationError,
 )

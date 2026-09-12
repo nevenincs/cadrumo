@@ -23,7 +23,7 @@ from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.llm import LLMSplitChild, LLMSplitResponse, prompt_spec_with_saturation_fields
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ._subprocess_classifier_support import SubprocessLLMClassifier
 
 _NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)

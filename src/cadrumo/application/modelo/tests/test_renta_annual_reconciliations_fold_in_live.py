@@ -86,7 +86,7 @@ from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record, seed_test_profile_record
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...aggregation.percepciones_observations_repository import PercepcionObservationRepository
 from ...aggregation.retencion_observations_repository import RetencionObservationRepository
 from ...aggregation.retenciones import RetencionObservation

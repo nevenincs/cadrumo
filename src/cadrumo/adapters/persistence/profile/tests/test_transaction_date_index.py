@@ -36,7 +36,7 @@ from .....domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAcco
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from .....tests.secure_sql import isolated_runtime_profile
+from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...storage.sql import orm as _orm
 from ...storage.sql.session import session_scope
 from ..transactions import TransactionCatalogueRepository

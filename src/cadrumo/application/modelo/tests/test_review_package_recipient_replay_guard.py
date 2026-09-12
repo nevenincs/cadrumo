@@ -3,7 +3,7 @@
 Exercises :mod:`~adapters.persistence.profile.recipient_replay_guard`
 against a REAL encrypted
 :class:`~adapters.persistence.storage.SecureObjectRepository`
-(:func:`~tests.secure_sql.isolated_runtime_profile` -- a genuine
+(:func:`~cadrumo.adapters.persistence.storage.tests.secure_sql.isolated_runtime_profile` -- a genuine
 ``BUCKET_DEK_V1`` bucket, no mocks or fakes): mark a nonce consumed, confirm
 the ledger roundtrips through the encrypted boundary with strict equality,
 confirm the ledger is real ciphertext at rest, confirm a second
@@ -42,7 +42,7 @@ from ....adapters.persistence.storage.secure_object_namespaces import (
 )
 from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -30,7 +30,7 @@ from uuid import UUID
 import pytest
 
 from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
-from ....tests.secure_sql import reap_profile_session_keys
+from ....adapters.persistence.storage.tests.secure_sql import reap_profile_session_keys
 from .subprocess_cli import run_cadrumo_subprocess
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

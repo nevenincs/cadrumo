@@ -16,7 +16,7 @@ See Also:
 
 The ``"secrets"`` literal in ``isolated_m145_cli_backend`` below is not an
 arbitrary injected value: it must agree with what
-:func:`~tests.secure_sql.isolated_runtime_profile` already minted the master
+:func:`~cadrumo.adapters.persistence.storage.tests.secure_sql.isolated_runtime_profile` already minted the master
 key under, since that fixture derives ``cadrumo_secret_store_dir`` from the
 real taxonomy accessor. The CLI subprocesses this env drives must
 independently compute the same location to unlock the profile the fixture
@@ -38,7 +38,7 @@ from ....application.modelo.m145_communication_records import (
 )
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_envelope import unwrap_schema_envelope
-from ....tests.secure_sql import dev_test_database_password, isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import dev_test_database_password, isolated_runtime_profile
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

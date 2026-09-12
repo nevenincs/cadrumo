@@ -19,7 +19,7 @@ from tempfile import TemporaryDirectory
 import pytest
 
 from ....domain.bienes_inversion.register import BienInversionDisposalRegime, BienInversionKind
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..declare_command import (
     BienInversionDeclarationCommand,
     BienInversionDisposalIncompleteError,

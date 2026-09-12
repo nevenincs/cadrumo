@@ -54,7 +54,7 @@ from ....tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 # INTEGRATION, not unit, and the reason is a production guard rather than a
 # preference: a consented off-host dispatch writes a consent-ledger entry, and

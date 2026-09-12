@@ -23,7 +23,7 @@ from ....core.config import load_settings, override_settings
 from ....core.errors.error_codes import build_error_envelope, resolve_error_message
 from ....domain.contribuyente.keys import profile_keys
 from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...workflow.persistence import workflow_state_repository
 from ..acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path

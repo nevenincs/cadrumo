@@ -27,7 +27,7 @@ from ....adapters.persistence.storage.custody.recovery_artifact import (
     unlock_imported_profile_custody_recovery_artifact,
 )
 from ....adapters.persistence.storage.recovery_key import RecoveryKey, generate_recovery_key
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..profile_repository import CommittedProfileRepository
 from ..registration import ProfileRegistrationError, register_profile_with_credentials
 

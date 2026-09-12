@@ -37,7 +37,7 @@ from ....tests.filing import (
     empty_prior_filing_observations_fingerprint,
     empty_profile_activity_fingerprint,
 )
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..draft_review import (
     approve_draft,
     compute_review_checksum,

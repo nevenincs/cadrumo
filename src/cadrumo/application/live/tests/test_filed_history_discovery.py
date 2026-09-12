@@ -667,7 +667,7 @@ def test_recapture_divergence_notices_absorbs_a_within_tolerance_change_end_to_e
     """
     from ....domain.calculations.registry.bindings import RegistryModeloObservation
     from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-    from ....tests.secure_sql import isolated_runtime_profile
+    from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
     from ...calculations.observations_repository import CalculationObservationRepository
 
     with isolated_runtime_profile(tmp_path=tmp_path):
@@ -711,7 +711,7 @@ def test_recapture_divergence_notices_fires_beyond_tolerance_end_to_end(tmp_path
     """The mutation-based counterpart: a genuine divergence still reaches the operator as a Notice."""
     from ....domain.calculations.registry.bindings import RegistryModeloObservation
     from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-    from ....tests.secure_sql import isolated_runtime_profile
+    from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
     from ...calculations.observations_repository import CalculationObservationRepository
 
     with isolated_runtime_profile(tmp_path=tmp_path):

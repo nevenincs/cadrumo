@@ -24,7 +24,7 @@ from ....core.period import Period
 from ....domain.buckets.event import BucketEvent, BucketEventObjectType
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..action_errors import WorkUnitNotFoundError
 from ..work_lifecycle import (
     discard_work_unit,

@@ -113,6 +113,8 @@ class IvaCategory(StrEnum):
     :attr:`INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE`, which is the goods
     counterpart resting on arts. 13/15.
     """
+    EXPORT_THIRD_COUNTRY_ZERO_RATED = "export_third_country_zero_rated"
+    EXPORT_ASSIMILATED_ZERO_RATED = "export_assimilated_zero_rated"
     IMPORT_THIRD_COUNTRY = "import_third_country"
     RECARGO_EQUIVALENCIA = "recargo_equivalencia"
     REGIMEN_SIMPLIFICADO = "regimen_simplificado"
@@ -132,6 +134,7 @@ class IvaCashAccountingTreatment(StrEnum):
     """
 
     NONE = "none"
+    TAXPAYER_REGIME = "taxpayer_regime"
     SUPPLIER_REGIME = "supplier_regime"
 
 

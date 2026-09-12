@@ -43,7 +43,7 @@ from ....domain.submission.models import ModeloDraftStatus
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.filing import empty_profile_activity_fingerprint
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ..draft_construction import build_draft
 from ..draft_review import (

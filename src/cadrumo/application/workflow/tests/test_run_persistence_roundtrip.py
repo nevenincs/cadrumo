@@ -41,7 +41,7 @@ from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_path
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.submission.models import ModeloDraftStatus
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..abort import WorkflowAbortReason
 from ..errors import WorkflowError

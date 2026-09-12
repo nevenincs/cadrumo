@@ -23,7 +23,7 @@ import pytest
 
 from ....core.config import override_settings
 from ....domain.calculations.registry.authority import bundled_authority
-from ....tests.secure_sql import isolated_sessionless_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_sessionless_storage_root
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

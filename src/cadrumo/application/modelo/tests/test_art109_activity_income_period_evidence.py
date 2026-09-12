@@ -21,7 +21,7 @@ from ....domain.modelos.verification_report import ModeloVerificationFinding, Mo
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .._art109_activity_income import (
     Art109ActivityIncomeCoverageStatus,
     derive_art109_activity_income_coverage,

@@ -24,7 +24,7 @@ from ....domain.modelos.calculation_repository import upsert_calculation_revisio
 from ....domain.modelos.calculation_revision import CalculationRevision, derive_calculation_revision_id
 from ....domain.modelos.errors import ModeloValidationError
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..action_errors import StoredCalculationDriftError
 from ..calculation_actions import calculate_modelo_revision
 from ..verification_actions import verify_modelo_revision

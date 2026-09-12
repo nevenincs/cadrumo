@@ -28,7 +28,7 @@ from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.flow import derive_flow_for_classification
 from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import _modelo_bindings_invoice_iva as modelo_bindings_module
 from .. import _modelo_bindings_invoice_iva_refusal as modelo_bindings_refusal_module
 from .. import _preconditions as preconditions_module

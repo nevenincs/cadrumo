@@ -41,7 +41,7 @@ from ....core.hashing import sha256_hex
 from ....domain.attachments.protocols import AttachmentStoreProtocol
 from ....tests.aeat_literal_fixtures import NOTIFICATION_DETALLE_SEDE_URL_FIXTURE
 from ....tests.pdf_fixtures import text_pdf_bytes
-from ....tests.secure_sql import TestRuntimeProfile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session

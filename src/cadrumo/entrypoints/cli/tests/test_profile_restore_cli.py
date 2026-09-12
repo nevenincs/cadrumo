@@ -38,7 +38,7 @@ from uuid import UUID
 import pytest
 
 from ....tests.cli_envelope import unwrap_envelope_notices
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
 from .cli_runner import invoke_cached_cli
 from .privacy_helpers import assert_public_profile_payload_redacted

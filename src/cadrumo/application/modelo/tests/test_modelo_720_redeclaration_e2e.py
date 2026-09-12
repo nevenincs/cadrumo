@@ -73,7 +73,7 @@ from ....domain.modelos.verification_report import (
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...calculations.foreign_asset_redeclaration import modelo_720_prior_baseline_observation
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..calculation_actions import calculate_modelo_revision, resolve_bucket_source_mesh

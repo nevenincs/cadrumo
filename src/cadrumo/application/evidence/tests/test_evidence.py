@@ -15,7 +15,7 @@ from ....adapters.persistence.storage.secure_object_namespaces import APPLICATIO
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..models import (
     BundleVerificationState,
     EvidenceBundle,

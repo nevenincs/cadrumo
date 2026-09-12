@@ -23,7 +23,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..history_query import (
     LEDGER_EVIDENCE_HISTORY_EVENT_TYPES,
     LEDGER_HISTORY_EVENT_TYPES,

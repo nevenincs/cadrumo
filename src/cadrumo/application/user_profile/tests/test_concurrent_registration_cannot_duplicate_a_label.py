@@ -52,7 +52,7 @@ def _register_in_sibling(tmp_path_text: str, barrier: Barrier, results: Queue[tu
     from pathlib import Path as _Path
 
     from ....tests.profile_persistence import composed_profile_persistence_ports
-    from ....tests.secure_sql import isolated_profile_storage_root
+    from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
     from ..registration import register_profile_with_credentials
 
     with isolated_profile_storage_root(tmp_path=_Path(tmp_path_text)), composed_profile_persistence_ports():
@@ -76,7 +76,7 @@ def test_two_processes_registering_one_label_produce_one_capsule(tmp_path: Path)
     failure this guards against is the operator-visible one -- a label bound to
     two committed capsules, leaving every later selection ambiguous.
     """
-    from ....tests.secure_sql import isolated_profile_storage_root
+    from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
     from ..profile_repository import CommittedProfileRepository
 
     context = get_context("spawn")

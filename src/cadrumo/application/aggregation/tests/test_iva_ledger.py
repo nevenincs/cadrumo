@@ -34,7 +34,7 @@ from ....domain.iva.schema import (
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....tests.secure_sql import isolated_two_bucket_runtime
+from ....adapters.persistence.storage.tests.secure_sql import isolated_two_bucket_runtime
 from ...ledger.preflight import OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE
 from ..errors import (
     AggregationValidationError,

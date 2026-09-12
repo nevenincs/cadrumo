@@ -22,7 +22,7 @@ from ....core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ...operations.capabilities import OperationRequestStoragePolicy
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationRegistry

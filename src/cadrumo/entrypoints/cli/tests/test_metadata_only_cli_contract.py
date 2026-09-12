@@ -12,7 +12,7 @@ from typing import cast
 import pytest
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
 from .cli_runner import invoke_cached_cli
 

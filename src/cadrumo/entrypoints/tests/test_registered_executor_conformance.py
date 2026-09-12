@@ -98,7 +98,7 @@ from ...tests.cross_period_seeding import (
     seed_clean_cross_period_sources,
 )
 from ...tests.profile_capsule import seed_modelo_ready_profile_record
-from ...tests.secure_sql import isolated_profile_storage_root
+from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..censal_review import _run as run_censal_review_through_services
 from ..operation_composition import build_production_operation_registry
 

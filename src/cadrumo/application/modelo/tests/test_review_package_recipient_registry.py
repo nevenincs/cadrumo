@@ -3,7 +3,7 @@
 Exercises :mod:`~application.modelo._review_package_recipient_registry`
 against a REAL encrypted
 :class:`~adapters.persistence.storage.SecureObjectRepository`
-(:func:`~tests.secure_sql.isolated_runtime_profile` -- a genuine
+(:func:`~cadrumo.adapters.persistence.storage.tests.secure_sql.isolated_runtime_profile` -- a genuine
 ``BUCKET_DEK_V1`` bucket, no mocks or fakes): add a recipient, confirm the
 register roundtrips through the encrypted boundary with strict equality,
 confirm the register is real ciphertext at rest, confirm duplicate/missing-id
@@ -38,7 +38,7 @@ from ....adapters.persistence.storage.secure_object_namespaces import (
 from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
 from ....core.classification.policies import SensitivityClass
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..review_package_recipient_registry import (
     RecipientAlreadyRegisteredError,
     RecipientFingerprintRecord,

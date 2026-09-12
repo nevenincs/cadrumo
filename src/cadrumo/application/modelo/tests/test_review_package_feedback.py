@@ -2,7 +2,7 @@
 
 Exercises :mod:`~application.modelo.review_package_feedback` end to end
 against a REAL two-bucket runtime
-(:func:`~tests.secure_sql.isolated_two_bucket_runtime` -- two genuine
+(:func:`~cadrumo.adapters.persistence.storage.tests.secure_sql.isolated_two_bucket_runtime` -- two genuine
 ``BUCKET_DEK_V1`` buckets, no mocks or fakes): the originator (taxpayer) signs
 and hands off a review package, mints their own X25519 encryption keypair, the
 accountant counter-signs the operator's signature and seals a
@@ -63,7 +63,7 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
-from ....tests.secure_sql import isolated_two_bucket_runtime
+from ....adapters.persistence.storage.tests.secure_sql import isolated_two_bucket_runtime
 from ..review_package_collab_audit import emit_collab_feedback_countersign_attached_event
 from ..review_package_counter_sign import counter_sign_review_package
 from ..review_package_feedback import (
@@ -630,7 +630,7 @@ def test_emit_collab_feedback_countersign_attached_event_refuses_unverified_feed
     tmp_path: Path,
 ) -> None:
     """Attaching to the journal is refused when the countersignature was not verified true."""
-    from ....tests.secure_sql import isolated_runtime_profile
+    from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
     from ..review_package_feedback import ImportedFeedback
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="9a1ab02a-114c-439a-ae84-4b55d9bd64d1") as profile:

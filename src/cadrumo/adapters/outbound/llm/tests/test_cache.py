@@ -226,7 +226,7 @@ def test_cache_payload_canary_is_encrypted_in_database(tmp_path: Path) -> None:
     # The encrypted store lives under the secure-object bucket layout, not
     # directly at tmp_path.  Search all .db files under tmp_path to
     # confirm the canary text is absent from every encrypted file.
-    from .....tests.secure_sql import read_db_at_rest_bytes
+    from .....adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 
     db_files = list(scan_directory(tmp_path, pattern="*.db", recursive=True))
     assert db_files, "expected at least one database file under tmp_path after cache write"

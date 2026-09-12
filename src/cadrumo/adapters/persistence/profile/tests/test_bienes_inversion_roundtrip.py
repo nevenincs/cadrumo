@@ -27,7 +27,7 @@ from .....domain.bienes_inversion.register import (
     BienInversionIvaRecord,
     BienInversionKind,
 )
-from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
+from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ....persistence.storage.sql.engine import get_engine
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
 

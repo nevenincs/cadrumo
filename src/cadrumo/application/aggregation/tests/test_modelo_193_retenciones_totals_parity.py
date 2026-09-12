@@ -59,7 +59,7 @@ from ....domain.calculations.registry.formula_runtime import calculate_registry_
 from ....domain.calculations.registry.ids import RelationId
 from ....domain.calculations.registry.relations import relation_prefill_values_as_binding_values
 from ....domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..retenciones import (
     RetencionObservation,
     aggregate_retenciones_193,

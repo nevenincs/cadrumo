@@ -24,7 +24,7 @@ import pytest
 
 from ....domain.iva.classification import IvaTerritorialScope
 from ....domain.iva.schema import EUMemberState
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..counterparty_establishment import (
     ConfirmedCounterpartyFactsInputError,
     ConfirmedCounterpartyFactsRepository,

@@ -17,7 +17,7 @@ import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..enums import TransactionDirection, TransactionLifecycleState
 from ..models import Transaction, TransactionCatalogue
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat

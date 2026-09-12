@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 
 from ....domain.calculations.registry.censo_modelos import CensoModeloEventKind
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..m036_lifecycle import (
     M036DeclarationCommand,
     M036DeclarationResult,

@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from .....tests.secure_sql import TestRuntimeProfile
+from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 
 if TYPE_CHECKING:
     from sqlalchemy import Engine

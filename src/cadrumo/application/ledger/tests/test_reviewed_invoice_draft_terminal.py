@@ -32,7 +32,7 @@ __all__ = ["profile"]
 
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....domain.transactions.errors import TransactionNotFoundError
-from ....tests.secure_sql import TestRuntimeProfile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ..extraction_draft_store import load_extraction_drafts, read_extraction_draft
 from ..invoice_draft_records import InvoiceDraft
 from ..llm_review_workflow import (

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ..storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..profile.transactions import TransactionCatalogueRepository
 
 __all__ = [

@@ -76,7 +76,7 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import CalculationObservationRepository, ObservationSourceKind
 from .._pulled_filing_reconcile import pulled_filing_divergence_findings
 from .._reconcile_casilla import (

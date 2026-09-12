@@ -25,7 +25,7 @@ import pytest
 from ....core.bucket_pointer import BucketPointer, read_pointer
 from ....core.time.clock import now as _now
 from ....tests.os_keychain_hook import require_os_credential_store
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..login_session import (
     _clear_handover_journal,
     _handover_journal_path,

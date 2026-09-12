@@ -39,7 +39,7 @@ from ....domain.modelos.verification_report import (
 from ....domain.transactions.enums import BusinessClassification
 from ....domain.transactions.models import Transaction
 from ....tests.env_scope import ready_clave_settings
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...ledger.actions_manual import attach_manual_transaction_evidence, update_manual_transaction_fields
 from ...ledger.evidence import PurchaseInvoiceEvidenceService
 from ...ledger.models import ManualLedgerTransactionPatch

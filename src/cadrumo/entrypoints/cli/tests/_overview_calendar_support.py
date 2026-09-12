@@ -29,7 +29,7 @@ from ....domain.modelos.filing_record import (
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
 from ....tests.profile_capsule import load_test_profile_record, open_test_profile_session, replace_test_profile_record
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 
 __all__ = ["_isolated_backend"]

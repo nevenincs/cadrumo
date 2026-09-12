@@ -30,7 +30,7 @@ from ....domain.filing.schema import (
     registry_schema_version,
 )
 from ....domain.submission.models import ModeloDraftStatus
-from ....tests.secure_sql import TestRuntimeProfile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ..conftest import _BUCKET_ID
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -97,7 +97,7 @@ def repo() -> ModeloDraftRepository:
 
 
 def _database_bytes(storage_root: Path) -> bytes:
-    from ....tests.secure_sql import read_db_at_rest_bytes
+    from ....adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 
     return read_db_at_rest_bytes(bucket_paths(storage_root, _BUCKET_ID).database_file)
 

@@ -18,12 +18,12 @@ database bytes read the module runtime's ``storage_root`` rather than their
 own per-test ``tmp_path``.
 
 See Also:
-    :func:`aeat-tests.secure_sql.isolated_runtime_profile`
+    :func:`cadrumo.adapters.persistence.storage.tests.secure_sql.isolated_runtime_profile`
         Shared helper that provisions the real active-profile bucket runtime
         used by this fixture.
-    :func:`aeat-tests.secure_sql.reset_secure_object_store`
+    :func:`cadrumo.adapters.persistence.storage.tests.secure_sql.reset_secure_object_store`
         Per-test teardown that truncates the module-shared secure-object store.
-    :class:`aeat-tests.secure_sql.TestRuntimeProfile`
+    :class:`cadrumo.adapters.persistence.storage.tests.secure_sql.TestRuntimeProfile`
         Frozen record yielded by the helper so tests can inspect the isolated
         storage root, bucket id, runtime, and repository.
     :mod:`cadrumo.adapters.persistence.storage.sql.conftest`
@@ -41,7 +41,7 @@ from sqlalchemy import text as sa_text
 
 from ...adapters.persistence.storage.secure_object_namespaces import USER_PROFILE_VALUE_NAMESPACE
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 # Capsule publication mints the bucket's identity through ``UUID(str(profile_id))``
 # (:func:`~cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime.publish_test_profile_capsule`),

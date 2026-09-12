@@ -31,7 +31,7 @@ from ....core.bucket_pointer import require_active_bucket_id
 from ....core.i18n.render import tr
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....tests.profile_capsule import load_test_profile_record
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..components.host import ScreenHostApp
 from ..profile.overview import ProfileManagerScreen
 from .manager_pilot import wait_until_settled

@@ -21,7 +21,7 @@ from ....domain.transactions.m210_income_classification import M210IncomeClassif
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.secure_sql import isolated_injected_secure_object_repository, isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_injected_secure_object_repository, isolated_runtime_profile
 from ...ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
 from ...ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from ...modelo.action_errors import ModeloAggregationBindingError

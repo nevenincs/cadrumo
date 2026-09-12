@@ -19,7 +19,7 @@ from ....application.user_profile.recovery_custody import ProfileRecoveryEnrollm
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.config import override_settings
 from ....tests.inventory import SRC_CADRUMO
-from ....tests.secure_sql import reap_profile_session_keys
+from ....adapters.persistence.storage.tests.secure_sql import reap_profile_session_keys
 from .subprocess_cli import subprocess_cli_env
 
 _PROFILE_SECRET = "s13-profile-passphrase-that-must-never-escape"  # noqa: S105

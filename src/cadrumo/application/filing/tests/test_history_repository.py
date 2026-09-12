@@ -20,7 +20,7 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepo
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
 from ....domain.identifiers import ModeloIdentifier
-from ....tests.secure_sql import TestRuntimeProfile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ..conftest import _BUCKET_ID
 from ..history_models import ModeloHistory, ModeloHistoryEntry
 from ..history_repository import ModeloHistoryRepository
@@ -58,7 +58,7 @@ def repo() -> ModeloHistoryRepository:
 
 
 def _database_bytes(storage_root: Path) -> bytes:
-    from ....tests.secure_sql import read_db_at_rest_bytes
+    from ....adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 
     return read_db_at_rest_bytes(bucket_paths(storage_root, _BUCKET_ID).database_file)
 

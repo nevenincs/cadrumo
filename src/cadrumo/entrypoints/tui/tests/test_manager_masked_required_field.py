@@ -37,7 +37,7 @@ from ....core.bucket_pointer import require_active_bucket_id
 from ....core.classification.policies import SensitivityClass
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....tests.profile_capsule import load_test_profile_record
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
 from ..profile.overview import FieldEditScreen, ProfileManagerScreen

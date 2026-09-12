@@ -45,7 +45,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
-from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation.source_mesh import CalculationSourceContext
 from ..observations_repository import CalculationObservationRepository, ResultDispositionProjection
 from ..prorrata_regularizacion import ProrrataRegularizacionSourceResolver

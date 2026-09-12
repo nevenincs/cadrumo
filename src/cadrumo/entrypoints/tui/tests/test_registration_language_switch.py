@@ -30,7 +30,7 @@ from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.secret.registration import RecoveryWordsScreen, RegistrationScreen
 from ....tests.profile_capsule import load_test_profile_record
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .fixture import registration_attempt
 
 pytestmark = [

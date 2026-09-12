@@ -27,7 +27,7 @@ from ....core.secure_object_write import SecureObjectWrite
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..edit_contract import ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
 from ..revision_persistence import persist_calculation_revision
 

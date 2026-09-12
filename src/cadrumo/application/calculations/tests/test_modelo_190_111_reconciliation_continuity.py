@@ -72,7 +72,7 @@ from ....domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
     resolve_withholding_binding_values,
 )
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...aggregation.retenciones import (
     RetencionObservation,
     aggregate_retenciones_111,

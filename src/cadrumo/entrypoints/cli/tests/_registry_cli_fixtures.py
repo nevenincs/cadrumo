@@ -1,7 +1,7 @@
 """Pytest fixtures for registry CLI tests.
 
 The ``"secrets"`` literal in the CLI env below is not an arbitrary injected
-value: it must agree with what :func:`~tests.secure_sql.isolated_runtime_profile`
+value: it must agree with what :func:`~cadrumo.adapters.persistence.storage.tests.secure_sql.isolated_runtime_profile`
 already minted the master key under, since that fixture derives
 ``cadrumo_secret_store_dir`` from the real taxonomy accessor
 (``storage_overrides(tmp_path, StorageCategory.SECRETS)`` -> ``tmp_path /
@@ -26,7 +26,7 @@ from ....adapters.persistence.storage.master_key.active_session import activate_
 from ....adapters.persistence.storage.master_key.bucket_session import BucketSession
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import override_settings
-from ....tests.secure_sql import dev_test_database_password, isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import dev_test_database_password, isolated_runtime_profile
 from ....tests.user_profile import register_minimal_profile
 from ._registry_cli_support import _BUCKET_ID, _clear_cli_env, _set_cli_env
 

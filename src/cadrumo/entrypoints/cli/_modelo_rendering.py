@@ -66,14 +66,11 @@ if TYPE_CHECKING:
     # calculate module's own deferral of the same type.
     from ...application.aggregation.source_mesh import CalculationSourceDiagnostic
 
-_EXTEMPORANEOUS_RECARGO_LEGAL_REF = "ley-58-2003:art-27.2"
-_M184_SOCIO_HANDOFF_CODE = "modelo.work.m184_socio_handoff"
-# The canonical M100 régimen-de-atribución (actividad económica) income casilla
-# the attributed base folds into: 1577 stays relation-canonical and the
-# cross-bucket value enters the socio's own M100 via a documented manual
-# --binding override on 1577.
-_M184_ATRIBUCION_ACT_ECO_CASILLA = "1577"
-_M184_ATRIBUCION_LEGAL_REFS = "ley-35-2006:art-86, ley-35-2006:art-87, ley-35-2006:art-88, ley-35-2006:art-89"
+def _modelo_rendering_value(key: str) -> str:
+    """Resolve one registry-owned rendering declaration lazily at the CLI seam."""
+    from ...domain.calculations.registry.modelo_rendering import modelo_rendering_value
+
+    return modelo_rendering_value(key)
 
 
 def m210_plazo_notice(resolution: M210PlazoResolution) -> Notice:
@@ -105,35 +102,42 @@ def m184_socio_handoff_notices(revision: CalculationRevision) -> list[Notice]:
     rows, the entity operator who files the M184 is handed, per socio, the exact
     attributed base plus the ``attribution_received`` fact keys the socio records
     on their OWN profile. The cross-bucket value is carried by hand onto the
-    relation-canonical casilla 1577, not auto-flowed across profiles. Grounded
-    in LIRPF arts. 86-89.
+    registry-declared target casilla, not auto-flowed across profiles. Grounding
+    is carried by the selected registry declaration.
     Returns an empty list for any revision without member rows (non-M184, or an
     M184 with no socios), so the handoff stays silent unless there is a real
     per-socio value to relay.
     """
+    handoff_code: str | None = None
+    target_casilla: str | None = None
+    legal_refs: str | None = None
     notices: list[Notice] = []
     for row in revision.detail_rows:
         if not isinstance(row, Modelo184MemberRow):
             continue
+        if handoff_code is None:
+            handoff_code = _modelo_rendering_value("m184.socio_handoff.code")
+            target_casilla = _modelo_rendering_value("m184.socio_handoff.target_casilla")
+            legal_refs = _modelo_rendering_value("m184.socio_handoff.legal_refs")
         notices.append(
             Notice(
                 severity=NoticeSeverity.INFO,
-                code=_M184_SOCIO_HANDOFF_CODE,
+                code=handoff_code,
                 message=tr(
                     "cli.app.modelo.work.m184_socio_handoff_message",
                     nif=row.nif,
                     nombre=row.nombre,
                     importe=row.importe,
                     porcentaje=row.porcentaje,
-                    casilla=_M184_ATRIBUCION_ACT_ECO_CASILLA,
+                    casilla=target_casilla,
                 ),
                 context={
                     "nif": row.nif,
                     "nombre": row.nombre,
                     "porcentaje": str(row.porcentaje),
                     "base_imponible_attributed": str(row.importe),
-                    "target_casilla": _M184_ATRIBUCION_ACT_ECO_CASILLA,
-                    "legal_refs": _M184_ATRIBUCION_LEGAL_REFS,
+                    "target_casilla": target_casilla,
+                    "legal_refs": legal_refs,
                 },
             ),
         )
@@ -496,7 +500,7 @@ def _work_unit_deadline_output_from_posture(
         context["conditional_recargo_preview_reference_on"] = preview.rate_reference_on.isoformat()
     else:
         # The deadline posture remains known even when preview resolution fails.
-        context["legal_refs"] = _EXTEMPORANEOUS_RECARGO_LEGAL_REF
+        context["legal_refs"] = _modelo_rendering_value("extemporaneous_recargo.legal_ref")
     return deadline_payload, [
         Notice(
             severity=NoticeSeverity.WARNING,

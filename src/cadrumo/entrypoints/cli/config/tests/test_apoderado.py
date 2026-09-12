@@ -11,7 +11,7 @@ from ...tests.cli_runner import invoke_typer_app
 
 __all__ = ["profile_storage_root_fixture"]
 
-from .....tests.secure_sql import isolated_profile_storage_root
+from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .....tests.user_profile import register_cli_profile
 from ...config_payloads import (
     ApoderadoCheckResult,

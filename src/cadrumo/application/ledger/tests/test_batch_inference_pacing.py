@@ -28,7 +28,7 @@ from ....application.provisioning import (
 )
 from ....core.hardware import AcceleratorKind
 from ....domain.iva.classification import InvoiceKind
-from ....tests.secure_sql import TestRuntimeProfile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ..batch_ingest import COMPLETED_BATCH_ITEM_STATUSES, BatchRunResult, run_evidence_batch
 from .loopback_reader import serving_a_loopback_reader
 

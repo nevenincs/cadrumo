@@ -271,7 +271,7 @@ def test_module_entry_composes_the_production_session_rather_than_refusing(
     still proven here: against an empty profile store the self-test completes
     without inventing a profile to serve.
     """
-    from ....tests.secure_sql import isolated_profile_storage_root
+    from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         assert run(["--self-test"]) == 0

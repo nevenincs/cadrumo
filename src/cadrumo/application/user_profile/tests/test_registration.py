@@ -38,7 +38,7 @@ from ....core.credentials import (
     assess_profile_password,
 )
 from ....domain.user_profile.values import ProfileSetupState
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..custody_ports import unlock_profile_custody_password
 from ..login_session import logout_active_profile
 from ..registration import ProfileRegistrationError, register_profile_with_credentials

@@ -32,7 +32,7 @@ from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.errors import InvoicePersistenceError
 from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from .....domain.iva.classification import InvoiceKind
-from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..invoices import InvoiceCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

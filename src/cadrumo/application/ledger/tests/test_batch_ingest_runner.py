@@ -37,7 +37,7 @@ from ....core.hardware import AcceleratorKind
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....domain.iva.classification import InvoiceKind
 from ....tests.pdf_fixtures import text_pdf_bytes
-from ....tests.secure_sql import TestRuntimeProfile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ..batch_ingest import BatchRunResult, run_evidence_batch
 from ..evidence import PurchaseInvoiceEvidenceService
 from ..extraction_draft_store import load_extraction_drafts

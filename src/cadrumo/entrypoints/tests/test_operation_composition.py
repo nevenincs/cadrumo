@@ -30,7 +30,7 @@ from ...application.operations.projection_services import (
     OperationWorkspaceRefreshTargetService,
 )
 from ...core.time.clock import now
-from ...tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
+from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ..operation_composition import build_production_operation_registry, compose_operation_dependencies
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

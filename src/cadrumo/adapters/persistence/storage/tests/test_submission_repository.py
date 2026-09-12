@@ -16,7 +16,7 @@ from .....core.period import Period
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
 from .....domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
-from .....tests.secure_sql import TestRuntimeProfile
+from .secure_sql import TestRuntimeProfile
 from ...profile.submission import (
     SubmissionRepository,
 )
@@ -67,7 +67,7 @@ def _save_two_filings(repo: SubmissionRepository) -> tuple[ModeloPresentado, Mod
 
 
 def _database_bytes(profile: TestRuntimeProfile) -> bytes:
-    from .....tests.secure_sql import read_db_at_rest_bytes
+    from .secure_sql import read_db_at_rest_bytes
 
     return read_db_at_rest_bytes(profile.paths.database_file)
 

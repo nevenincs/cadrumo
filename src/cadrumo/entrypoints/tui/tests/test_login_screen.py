@@ -26,7 +26,7 @@ from ....application.user_profile.registration import register_profile_with_cred
 from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.secret.login import LoginScreen
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [
     pytest.mark.integration,

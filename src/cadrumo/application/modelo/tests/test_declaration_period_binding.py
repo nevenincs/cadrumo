@@ -32,7 +32,7 @@ from ....domain.iva_compensation.reconciliation import IvaCompensationReconcilia
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import IvaWalletDecisionRepository
 from ..calculation_actions import calculate_modelo_revision
 from ..work_lifecycle import create_work_unit

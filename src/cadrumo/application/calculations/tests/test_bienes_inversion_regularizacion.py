@@ -38,7 +38,7 @@ from ....domain.calculations.registry.bindings import (
 )
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_base import ThresholdComparison
-from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation.source_mesh import CalculationSourceContext
 from ..bienes_inversion_regularizacion import (
     BienesInversionRegularizacionSourceResolver,

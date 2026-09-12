@@ -19,7 +19,7 @@ from .....core.storage_taxonomy_locations import storage_path
 from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from .....domain.iva.classification import InvoiceKind
-from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
+from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ...storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
 from ..invoices import InvoiceCatalogueRepository
 

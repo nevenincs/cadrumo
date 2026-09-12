@@ -12,7 +12,7 @@ from pydantic import ValidationError
 
 from .....core.directory_scan import iter_directory, scan_directory
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from .....tests.secure_sql import isolated_runtime_profile
+from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ....persistence.storage.namespace_taxonomy import StorageRemoteMirrorPolicy
 from ..errors import OutboundStorageIntegrityError

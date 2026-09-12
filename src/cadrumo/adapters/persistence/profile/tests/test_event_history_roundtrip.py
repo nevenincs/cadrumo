@@ -25,7 +25,7 @@ from .....domain.buckets.event import (
     derive_bucket_event_id,
 )
 from .....domain.buckets.event_repository import BucketEventHistoryPersistenceError
-from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
+from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ...storage.envelope.contract import Envelope
 from ...storage.secure_object_namespaces import BUCKET_EVENT_HISTORY_NAMESPACE
 from ..buckets import BucketEventHistoryRepository

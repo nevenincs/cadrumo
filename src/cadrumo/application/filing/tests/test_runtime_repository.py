@@ -27,7 +27,7 @@ import pytest
 
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....core.config import override_settings
-from ....tests.secure_sql import isolated_storage_root as _isolated_storage  # noqa: F401 - autouse fixture
+from ....adapters.persistence.storage.tests.secure_sql import isolated_storage_root as _isolated_storage  # noqa: F401 - autouse fixture
 from ..errors import ModeloApplicationError
 from ..persistence_wiring import (
     resolve_application_filing_bucket_id,

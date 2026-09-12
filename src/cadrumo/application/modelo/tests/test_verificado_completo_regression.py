@@ -51,7 +51,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...calculations.cross_period_clean_state import cross_period_dependency_requirements
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..action_errors import StoredCalculationDriftError

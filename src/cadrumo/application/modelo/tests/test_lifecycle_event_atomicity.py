@@ -45,7 +45,7 @@ from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....tests.write_unit_recorder import WriteUnitRecorder
 from ..external_import_actions import import_external_filing_evidence
 from ..work_lifecycle import (

@@ -41,7 +41,7 @@ from .....domain.contribuyente.inventory.records import (
 )
 from .....domain.contribuyente.inventory.valuation import inventory_acquisition_fingerprint
 from .....domain.filing_evidence import FilingEvidenceReference
-from .....tests.secure_sql import (
+from .....adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
     read_db_at_rest_bytes,

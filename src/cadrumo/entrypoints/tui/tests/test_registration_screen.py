@@ -31,7 +31,7 @@ from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.secret.credentials import assessment_refusal
 from ....entrypoints.tui.secret.registration import RecoveryWordsScreen, RegistrationScreen
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .fixture import registration_attempt
 
 pytestmark = [

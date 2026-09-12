@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...auth.models import AuthState
 from ...workflow.review_models import (
     InvoiceReviewRecord,

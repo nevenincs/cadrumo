@@ -35,7 +35,7 @@ from ......application.user_profile.recovery_custody import (
 )
 from ......application.user_profile.registration import register_profile_with_credentials
 from ......domain.user_profile.values import ProfileSetupState, UserProfileRecord
-from ......tests.secure_sql import isolated_profile_storage_root
+from ......adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..capsule import load_committed_profile_password_material
 from ..errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
 from ..records import ProfileCustodyEnvelope

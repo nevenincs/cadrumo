@@ -103,7 +103,7 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import APP_FILING_SOURCE_KIND, CalculationObservationRepository
 from ..action_errors import ModeloRequiredBindingsMissingError
 from ..calculation_actions import (

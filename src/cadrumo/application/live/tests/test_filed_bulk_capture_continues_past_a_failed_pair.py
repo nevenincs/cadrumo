@@ -60,7 +60,7 @@ from ....tests.offline_aeat_register import (
     open_routed_declarations_register,
     rendered_register_rows,
 )
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..filed_data_capture import capture_filed_data_bulk
 from ..remote_state_models import BulkFiledDataCaptureReport
 

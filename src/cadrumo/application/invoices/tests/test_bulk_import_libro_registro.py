@@ -24,7 +24,7 @@ import pytest
 from ....core.field_role import FieldRole
 from ....domain.iva.classification import InvoiceKind
 from ....tests.inventory import FIXTURES_DIR
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..bulk_import import import_invoices_from_rows, read_bulk_invoice_import_source
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

@@ -66,7 +66,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ..._foreign_asset_thresholds import foreign_asset_declaration_thresholds
 from ...aggregation.source_mesh import CalculationSourceContext
 from ..binding_prefill import resolve_bindings_from_local_store

@@ -99,7 +99,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
 from ...aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ...aggregation.retencion_observations_repository import RetencionObservationRepository

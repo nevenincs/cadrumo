@@ -8,7 +8,7 @@ from ...core.external_constants import OUTPUT_LANGUAGE_ENV_VAR
 from ...core.i18n.render import clear_output_language_cache
 from ...tests.env import temporary_env
 from ...tests.profile_capsule import open_test_profile_session
-from ...tests.secure_sql import isolated_profile_storage_root
+from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...tests.user_profile import register_minimal_profile
 
 

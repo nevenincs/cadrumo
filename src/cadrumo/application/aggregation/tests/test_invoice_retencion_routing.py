@@ -35,7 +35,7 @@ from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.components import IvaRetencionRole, category_components
 from ....domain.iva.schema import IvaCategory
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..errors import AggregationValidationError
 from ..invoice_retencion import (
     INVOICE_RETENCION_DEFECT_GUIDANCE,

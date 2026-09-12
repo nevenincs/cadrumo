@@ -54,7 +54,7 @@ See Also:
         Real ADC failure proving impersonation dispatch was selected.
     :class:`~entrypoints.cli.config._google_credential_source_payloads.GoogleCredentialSourceViewResult`
         JSON envelope schema asserted for secret-free ``show`` output.
-    :func:`~tests.secure_sql.isolated_runtime_profile`
+    :func:`~cadrumo.adapters.persistence.storage.tests.secure_sql.isolated_runtime_profile`
         Real bucket-session harness used around direct repository reads.
 """
 
@@ -70,8 +70,8 @@ from .....adapters.outbound.google.session_store import load_credential_source_s
 from .....adapters.outbound.storage.factory import build_google_credentials
 from .....core.google_credential_source import GoogleCredentialSourceKind
 from .....tests.env_scope import scoped_env_var
-from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
-from .....tests.secure_sql import isolated_runtime_profile
+from .....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....tests.user_profile import register_cli_profile
 from ...tests.cli_runner import invoke_cached_cli
 

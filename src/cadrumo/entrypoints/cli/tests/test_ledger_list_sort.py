@@ -25,7 +25,7 @@ from ....core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .._ledger_list import project_ledger_list
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

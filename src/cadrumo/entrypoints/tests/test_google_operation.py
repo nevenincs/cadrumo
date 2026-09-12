@@ -36,7 +36,7 @@ from ...core.operations import (
     OperationEventKind,
     OperationTerminalCondition,
 )
-from ...tests.secure_sql import isolated_runtime_profile
+from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..cli.errors import CliRefusedBoundaryError
 from ..cli.modelo_spreadsheet_cli import execute_google_sheets_export, google_operation_error
 from ..operation_composition import compose_operation_dependencies

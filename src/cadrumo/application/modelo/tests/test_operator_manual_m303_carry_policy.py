@@ -10,7 +10,7 @@ import pytest
 
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..action_errors import ModeloLocalObservationError
 from ..local_observation_actions import record_operator_local_observation

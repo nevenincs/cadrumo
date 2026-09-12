@@ -29,7 +29,7 @@ from typing import Protocol, cast, runtime_checkable
 import pytest
 
 from ..tests.env import temporary_env
-from ..tests.secure_sql import isolated_runtime_profile
+from ..adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .user_profile.custody_ports import ProfileCustodySecureObjectRepositoryPort
 
 

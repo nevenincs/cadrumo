@@ -30,7 +30,7 @@ from .....adapters.persistence.storage.sql.engine import dispose_engine
 from .....core.config import override_settings
 from .....core.i18n.render import tr
 from .....tests.profile_capsule import open_test_profile_session
-from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from .....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .....tests.user_profile import register_cli_profile
 from ...tests.cli_runner import invoke_cached_cli
 from ..errors import ConfigBoundaryError

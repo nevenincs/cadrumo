@@ -17,7 +17,7 @@ import pytest
 
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]

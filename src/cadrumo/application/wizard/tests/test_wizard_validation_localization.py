@@ -28,7 +28,7 @@ import typer
 
 from ....core.config import override_settings
 from ....core.i18n.render import tr
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
 from ..catalogue import SETUP_FLOW
 from ..commands import build_wizard_command

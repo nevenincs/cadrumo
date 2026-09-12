@@ -4,7 +4,7 @@ Exercises :mod:`~application.modelo._review_package_signing` end to end
 against a REAL built-and-checksummed review package
 (:func:`~application.modelo.build_review_package`) and a REAL encrypted
 :class:`~adapters.persistence.storage.SecureObjectRepository`
-(:func:`~tests.secure_sql.isolated_runtime_profile` -- a genuine
+(:func:`~cadrumo.adapters.persistence.storage.tests.secure_sql.isolated_runtime_profile` -- a genuine
 ``BUCKET_DEK_V1`` bucket, no mocks or fakes): mint a keypair, confirm the
 private key is persisted only as ciphertext, sign a package, verify the
 signature, then tamper the package/manifest and confirm verification fails.
@@ -54,7 +54,7 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..review_package_signing import (
     ReviewPackageSigningError,
     ReviewPackageSigningKeypair,

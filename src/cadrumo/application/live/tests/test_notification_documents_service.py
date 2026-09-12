@@ -50,7 +50,7 @@ from ....domain.attachments.enums import AttachmentKind
 from ....domain.attachments.models import Attachment
 from ....domain.notifications.sancion import SancionLiquidacion
 from ....tests.aeat_literal_fixtures import NOTIFICATION_DETALLE_SEDE_URL_FIXTURE
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..errors import LiveApplicationInputError
 from ..notification_documents import (
     NotificationDocumentRecord,

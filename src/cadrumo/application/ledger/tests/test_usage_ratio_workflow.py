@@ -25,7 +25,7 @@ import pytest
 
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.usage_ratios.errors import UsageRatioValidationError
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..ratios import (
     apply_usage_ratio_override,
     clear_usage_ratio_override,

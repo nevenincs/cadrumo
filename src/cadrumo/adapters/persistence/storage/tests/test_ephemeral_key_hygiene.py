@@ -115,7 +115,7 @@ def test_database_operating_passphrases_use_core_test_setting() -> None:
     assert not violations, "\n".join(
         (
             "Database-backed tests must read the shared test password from "
-            "Settings.cadrumo_dev_test_database_password or aeat-tests.secure_sql.",
+            "Settings.cadrumo_dev_test_database_password or cadrumo.adapters.persistence.storage.tests.secure_sql.",
             *violations,
         ),
     )

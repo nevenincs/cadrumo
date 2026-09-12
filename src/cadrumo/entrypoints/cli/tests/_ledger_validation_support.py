@@ -14,7 +14,7 @@ from ....core.config import override_settings
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ._cli_json_support import _json_object
 from ._ledger_llm_support import _import_one_transaction

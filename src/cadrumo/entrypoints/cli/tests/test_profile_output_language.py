@@ -30,7 +30,7 @@ import pytest
 from click.testing import Result
 
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ....tests.secure_sql import isolated_profile_storage
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
 from ....tests.user_profile import register_cli_profile
 from .cli_runner import invoke_cached_cli
 
