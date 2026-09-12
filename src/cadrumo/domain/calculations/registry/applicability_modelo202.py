@@ -82,7 +82,10 @@ def _modelo_202_applicability_declarations(
         "reason.incomplete",
         f"reason.{Modelo202Modality.ART_40_3_MANDATORY.value}",
         f"reason.{Modelo202Modality.ART_40_2_OPTIONAL.value}",
+        "legal_refs.not_applicable",
+        "legal_refs.incomplete",
         f"legal_refs.{Modelo202Modality.ART_40_3_MANDATORY.value}",
+        f"legal_refs.{Modelo202Modality.ART_40_2_OPTIONAL.value}",
     }
     missing = sorted(required - declarations.keys())
     if missing:
@@ -94,9 +97,12 @@ def _modelo_202_applicability_declarations(
     return declarations
 
 
-def _modelo_202_legal_refs(declarations: dict[str, str]) -> tuple[LegalRefId, ...]:
+def _modelo_202_legal_refs(
+    declarations: dict[str, str],
+    outcome: str,
+) -> tuple[LegalRefId, ...]:
     """Materialise the catalogue's legal-reference tuple for a verdict."""
-    key = f"legal_refs.{Modelo202Modality.ART_40_3_MANDATORY.value}"
+    key = f"legal_refs.{outcome}"
     return tuple(cast(LegalRefId, item) for item in declarations[key].split("|") if item)
 
 
@@ -163,18 +169,17 @@ def modelo_202_modality_from_inputs(
         effective_date=effective_date,
         authority=authority,
     )
-    legal_refs = _modelo_202_legal_refs(declarations)
     if entity_type is None or entity_type is not EntityType.LEGAL_ENTITY:
         return Modelo202ModalityVerdict(
             modality=Modelo202Modality.INCOMPLETE,
             reason=declarations["reason.not_applicable"],
-            legal_refs=legal_refs,
+            legal_refs=_modelo_202_legal_refs(declarations, "not_applicable"),
         )
     if incn_prior_12_months is None:
         return Modelo202ModalityVerdict(
             modality=Modelo202Modality.INCOMPLETE,
             reason=declarations["reason.incomplete"],
-            legal_refs=legal_refs,
+            legal_refs=_modelo_202_legal_refs(declarations, "incomplete"),
             failure=RegistryFailureClassification(
                 condition=RegistryFailureCondition.MODELO_202_INCN_DECLARED,
                 facts={
@@ -192,13 +197,16 @@ def modelo_202_modality_from_inputs(
         return Modelo202ModalityVerdict(
             modality=Modelo202Modality.ART_40_3_MANDATORY,
             reason=declarations[f"reason.{Modelo202Modality.ART_40_3_MANDATORY.value}"],
-            legal_refs=legal_refs,
+            legal_refs=_modelo_202_legal_refs(
+                declarations,
+                Modelo202Modality.ART_40_3_MANDATORY.value,
+            ),
             threshold_fact=threshold_fact,
         )
     return Modelo202ModalityVerdict(
         modality=Modelo202Modality.ART_40_2_OPTIONAL,
         reason=declarations[f"reason.{Modelo202Modality.ART_40_2_OPTIONAL.value}"],
-        legal_refs=legal_refs,
+        legal_refs=_modelo_202_legal_refs(declarations, Modelo202Modality.ART_40_2_OPTIONAL.value),
         threshold_fact=threshold_fact,
     )
 
