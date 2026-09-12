@@ -158,9 +158,13 @@ def emit_bare_invocation_and_exit(ctx: typer.Context) -> None:
     # invoked.
     from ...application.overview.status_report import build_overview_status_report
     from ...application.workflow.persistence import workflow_state_repository
+    from .state_projection_support import state_projection_read_ports
 
     workflow_state = workflow_state_repository().load()
-    overview_report = build_overview_status_report(state=workflow_state)
+    overview_report = build_overview_status_report(
+        state=workflow_state,
+        read_ports=state_projection_read_ports(ctx),
+    )
     typed_overview = _strict_round_trip(RootStatusResult, overview_report)
     emit_envelope(ctx, command="root.status", result=typed_overview, lines=render_cli_root_landing_lines(landing))
     raise typer.Exit()
