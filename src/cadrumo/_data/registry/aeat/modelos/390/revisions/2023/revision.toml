@@ -1,6 +1,9 @@
 [revisions."2023"]
 predecessor = "2022"
 casilla_source_refs = ["aeat-dr-390-2023"]
+# live_cross_reference_source_refs: carried from predecessor edition "2022"; not re-grounded on this edition's own design
+live_cross_reference_source_refs = ["aeat-modelo-390-procedure"]
+application_link_source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 formula_source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 binding_source_refs = ["aeat-dr-390-2023"]
 reviewed_against = "2022"

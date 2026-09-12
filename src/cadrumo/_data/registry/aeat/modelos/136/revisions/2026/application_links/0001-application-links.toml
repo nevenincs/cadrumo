@@ -12,7 +12,7 @@ surface = "deadline"
 consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["orden-hap-70-2013:art-7"]
-source_refs = ["aeat-modelo-136-procedure", "boe-modelo-136-base-order"]
+additional_source_refs = ["boe-modelo-136-base-order"]
 
 [[revisions."2026".application_links]]
 id = "modelo-136-filing"
@@ -20,7 +20,7 @@ surface = "filing"
 consumer = "cadrumo.application.filing"
 requires_snapshot = true
 legal_refs = ["orden-hap-70-2013:art-10", "orden-hap-70-2013:art-11", "orden-hap-70-2013:art-12"]
-source_refs = ["aeat-modelo-136-procedure", "aeat-modelo-136-procedure-record"]
+additional_source_refs = ["aeat-modelo-136-procedure-record"]
 
 [[revisions."2026".application_links]]
 id = "modelo-136-review"
@@ -28,7 +28,6 @@ surface = "review"
 consumer = "cadrumo.application.filing.review"
 requires_snapshot = true
 legal_refs = ["orden-hap-70-2013:art-11"]
-source_refs = ["aeat-modelo-136-procedure"]
 
 [[revisions."2026".application_links]]
 id = "modelo-136-approval"
@@ -36,7 +35,6 @@ surface = "approval"
 consumer = "cadrumo.application.workflow.approval"
 requires_snapshot = true
 legal_refs = ["orden-hap-70-2013:art-11"]
-source_refs = ["aeat-modelo-136-procedure"]
 
 [[revisions."2026".application_links]]
 id = "modelo-136-reconciliation"
@@ -44,7 +42,6 @@ surface = "reconciliation"
 consumer = "cadrumo.application.reconciliation"
 requires_snapshot = true
 legal_refs = ["orden-hap-70-2013:art-11"]
-source_refs = ["aeat-modelo-136-procedure"]
 
 [[revisions."2026".application_links]]
 id = "modelo-136-workflow"
@@ -52,5 +49,4 @@ surface = "workflow"
 consumer = "cadrumo.application.workflow"
 requires_snapshot = true
 legal_refs = ["orden-hap-70-2013:art-11"]
-source_refs = ["aeat-modelo-136-procedure"]
 

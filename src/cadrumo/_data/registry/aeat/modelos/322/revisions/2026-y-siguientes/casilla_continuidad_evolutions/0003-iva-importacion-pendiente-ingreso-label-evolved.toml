@@ -1,0 +1,16 @@
+# Box 77 preserves the same import VAT pending-entry concept, type and
+# fixed-width representation in all four DR32202 designs. The 2026 workbook
+# adds the presentation prefix "Liquidación (continuación)." and a period to
+# the earlier wording, without changing the legal role or position 69.
+# Source rows: 2022 field 7 at position 69, 2023 field 7 at position 69,
+# 2024-2025 field 7 at position 69, and 2026 field 7 at position 69; each is
+# length 17, type Num, and content 15 enteros + 2 decimales.
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m322-iva-importacion-aduana-pendiente-ingreso-label-2026"
+continuidad_id = "m322-iva-importacion-aduana-pendiente-ingreso"
+from_revision = "2024-2025"
+to_revision = "2026-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2024-2025", "aeat-dr-322-2026"]

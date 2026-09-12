@@ -25,8 +25,9 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Ingresos íntegros [02]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p05.ingresos-integros-02"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15105000 campo at byte position 15-31; no counterpart in corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230)."
+continuidad_id = "m151-p05-ingresos-integros"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15105000 campo 'Ingresos íntegros [2]' at byte position 15-31, length 17, Num; corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15105000 campo 'Ingresos íntegros [02]' at byte position 15-31, length 17, Num. The same activity-income amount is retained; only the printed box token is zero-padded."
 number = "15-31"
 segmento = "M15105000"
 section = ["p05", "ingresos_integros"]
@@ -39,8 +40,9 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Gastos de personal [03]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p05.gastos-de-personal-03"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15105000 campo at byte position 32-48; no counterpart in corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230)."
+continuidad_id = "m151-p05-gastos-de-personal"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15105000 campo 'Gastos de personal [3]' at byte position 32-48, length 17, Num; corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15105000 campo 'Gastos de personal [03]' at byte position 32-48, length 17, Num. The same personnel-expense amount is retained; only the printed box token is zero-padded."
 number = "32-48"
 segmento = "M15105000"
 section = ["p05", "gastos_de_personal"]
@@ -53,8 +55,9 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Gastos de aprovisionamiento de materiales y de suministros [04]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p05.gastos-de-aprovisionamiento-de-materiales-y-de-suministro-04"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15105000 campo at byte position 49-65; no counterpart in corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230)."
+continuidad_id = "m151-p05-gastos-de-aprovisionamiento"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15105000 campo 'Gastos de aprovisionamiento de materiales y de suministros [4]' at byte position 49-65, length 17, Num; corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15105000 campo 'Gastos de aprovisionamiento de materiales y de suministros [04]' at byte position 49-65, length 17, Num. The same materials-and-supplies expense amount is retained; only the printed box token is zero-padded."
 number = "49-65"
 segmento = "M15105000"
 section = ["p05", "gastos_de_aprovisionamiento_de_materiales_y_de_suministros"]
@@ -67,8 +70,9 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Rendimiento neto: positivo [05]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p05.rendimiento-neto-positivo-05"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15105000 campo at byte position 66-82; no counterpart in corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230)."
+continuidad_id = "m151-p05-rendimiento-neto-positivo"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15105000 campo 'Rendimiento neto [5]' at byte position 66-82, length 17, Num; corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15105000 campo 'Rendimiento neto: positivo [05]' at byte position 66-82, length 17, Num. The unsigned net-result amount is the positive component; the successor makes that sign explicit and zero-pads the printed box token."
 number = "66-82"
 segmento = "M15105000"
 section = ["p05", "rendimiento_neto_positivo"]
@@ -81,8 +85,9 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Rendimiento neto: negativo [07]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p05.rendimiento-neto-negativo-07"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15105000 campo at byte position 83-99; no counterpart in corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230)."
+continuidad_id = "m151-p05-rendimiento-neto-negativo"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15105000 campo 'Rendimientos Negativos. Rendimiento neto[7]' at byte position 117-133, length 17, N; corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15105000 campo 'Rendimiento neto: negativo [07]' at byte position 83-99, length 17, N. The same signed negative-net component is retained; the 2023 design moves it before withholding and zero-pads the printed box token."
 number = "83-99"
 segmento = "M15105000"
 section = ["p05", "rendimiento_neto_negativo"]

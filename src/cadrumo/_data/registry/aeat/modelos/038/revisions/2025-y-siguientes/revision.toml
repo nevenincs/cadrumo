@@ -1,6 +1,8 @@
 [revisions."2025-y-siguientes"]
 predecessor = "2024-desde-06"
 casilla_source_refs = ["enrolled-modelo-038-procedure"]
+# application_link_source_refs: carried from predecessor edition "2024-desde-06"; not re-grounded on this edition's own design
+application_link_source_refs = ["enrolled-modelo-038-procedure"]
 reviewed_against = "2024-desde-06"
 authority_grade = "applicability"
 # The 2024 amendment remains in force and AEAT continues to require its

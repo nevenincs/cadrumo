@@ -38,7 +38,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final, cast
+from typing import Final
 
 PROJECTION_ENDPOINTS: Final = "projection_endpoints"
 VERIFICATION_PREDICATES: Final = "verification_predicates"
@@ -80,10 +80,9 @@ def derive_projection_endpoint_id(member: Mapping[str, object]) -> str:
         IdentityDerivationError: The declaration carries no typed reference, or
             the reference names no projection kind.
     """
-    raw_reference = member.get("projection_ref")
-    if not isinstance(raw_reference, Mapping):
+    reference = member.get("projection_ref")
+    if not isinstance(reference, Mapping):
         raise IdentityDerivationError("projection endpoint declares no projection_ref table")
-    reference = cast("Mapping[str, object]", raw_reference)
     kind = reference.get("projection_kind")
     if not isinstance(kind, str) or not kind:
         raise IdentityDerivationError("projection_ref declares no projection_kind")
@@ -191,20 +190,20 @@ class AuthoringOutcome:
 
 def read_members(path: Path, family: str) -> tuple[tuple[str, int, Mapping[str, object]], ...]:
     """Return ``(revision, index, member)`` for every member of ``family`` in ``path``."""
-    document: dict[str, object] = tomllib.loads(path.read_text(encoding="utf-8"))
+    document = tomllib.loads(path.read_text(encoding="utf-8"))
     revisions = document.get("revisions")
     members: list[tuple[str, int, Mapping[str, object]]] = []
     if not isinstance(revisions, dict):
         return ()
-    for revision, table in cast("dict[str, object]", revisions).items():
+    for revision, table in revisions.items():
         if not isinstance(table, dict):
             continue
-        declared = cast("dict[str, object]", table).get(family)
+        declared = table.get(family)
         if not isinstance(declared, list):
             continue
-        for index, member in enumerate(cast("list[object]", declared)):
+        for index, member in enumerate(declared):
             if isinstance(member, dict):
-                members.append((revision, index, cast("Mapping[str, object]", member)))
+                members.append((str(revision), index, member))
     return tuple(members)
 
 

@@ -10,7 +10,6 @@ id = "m303-dr303-154-transitional-rate-percent"
 data_type = "ratio"
 unit = "percent"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
 
 [[revisions.2025.parameters.values]]
 value = "0.00"
@@ -26,7 +25,6 @@ id = "m303-dr303-166-transitional-rate-percent"
 data_type = "ratio"
 unit = "percent"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
 
 [[revisions.2025.parameters.values]]
 value = "0.00"

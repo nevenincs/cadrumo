@@ -3,6 +3,11 @@ binding_source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-mod
 formula_source_refs = ["aeat-dr-303-2025"]
 predecessor = "2024-desde-09-y-3t"
 casilla_source_refs = ["aeat-dr-303-2025"]
+parameter_source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
+# live_cross_reference_source_refs: carried from predecessor edition "2022"; not re-grounded on this edition's own design
+live_cross_reference_source_refs = ["aeat-modelo-303-procedure"]
+application_link_source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+filing_schedule_source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 reviewed_against = "2024-desde-09-y-3t"
 authority_grade = "filing"
 valid_from = 2025-01-01

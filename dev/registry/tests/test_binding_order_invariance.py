@@ -48,15 +48,24 @@ import pytest
 from cadrumo.application.calculations.prorrata_regularizacion import (
     # The four positional role reads in prorrata_regularizacion all index this
     # one derived tuple, so it is the exact surface an order dependency would
-    # move. There is no public projection of it: the public resolver needs live
-    # ledger and observation repositories, which a corpus gate has no business
-    # standing up.
+    # move. The public carrier of the same tuple is
+    # CalculationSourceProvenance.source_casilla_ids, but every public route to
+    # one -- ProrrataRegularizacionSourceResolver.resolve -- requires a live
+    # prorrata register repository and a live calculation observation
+    # repository. A corpus gate cannot stand those up honestly, and supplying
+    # stand-ins would make the assertion depend on the stand-ins rather than on
+    # the registry. The private tuple is read directly instead, and the public
+    # record is proven to carry it verbatim by the resolver's own tests.
     _prorrata_source_casilla_ids,
 )
 from cadrumo.core.aggregation import BindingAggregationOp
 from cadrumo.domain.calculations.registry.binding_aggregation import binding_aggregation_op
-from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.binding_selector_utils import (
+    BindingRowExportSelector,
+    binding_export_selector,
+)
 from cadrumo.domain.calculations.registry.detail_record_bindings import ForeignAssetProvider
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.m303_regimen_simplificado_annual_summary_bindings import (
     m303_regimen_simplificado_annual_summary_requirement,
@@ -66,6 +75,7 @@ from cadrumo.domain.calculations.registry.prorrata_regularizacion_bindings impor
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 
 from ..compiler.loader import load_modelo_directory
+from ..compiler.validate_bindings import validate_binding_registration_section
 
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
@@ -215,25 +225,38 @@ def _export_signature(revision: ModeloRevision) -> frozenset[tuple[str, frozense
     )
 
 
-def _row_slot_claimants(revision: ModeloRevision) -> dict[tuple[str, str], tuple[str, ...]]:
-    """Return the row bindings claiming each ``(record, row_field)`` slot.
+def _row_slot_refusals(modelo_id: str, revision: ModeloRevision) -> list[str]:
+    """Return the production gate's contested-row-slot refusals for ``revision``.
 
-    Read from the binding's own selector rather than from the export projection,
-    because a record no export layout claims today is held to the same
-    uniqueness as one that does: the slot is what the first-wins dedup keys on
-    the moment a layout starts claiming it.
+    The gate itself is the authority on what a contested slot is; re-deriving
+    the ``(record, row_field)`` key here would let this suite keep passing after
+    production narrowed or widened its own key.
     """
-    claimants: dict[tuple[str, str], list[str]] = {}
+    failures = validate_binding_registration_section(prefix=f"modelo {modelo_id}", revision=revision)
+    return [failure for failure in failures if " row field " in failure and "is claimed by" in failure]
+
+
+def _row_slot_bindings(revision: ModeloRevision) -> tuple[tuple[BindingDefinition, BindingRowExportSelector], ...]:
+    """Return the row bindings carrying a typed row export projection.
+
+    Used only to CHOOSE a binding to clone, through the export resolver's own
+    public typed selector rather than through a copy of the gate's key. The gate
+    is deliberately wider than this -- it also holds a record no layout claims
+    yet -- so this is a subset, which is all a candidate pick needs.
+    """
+    if not revision.export_layouts:
+        return ()
+    found: list[tuple[BindingDefinition, BindingRowExportSelector]] = []
     for binding in revision.bindings:
         if binding_aggregation_op(binding) is not BindingAggregationOp.ROWS:
             continue
-        selector = selector_as_dict(binding)
-        record = selector.get("record")
-        row_field = selector.get("row_field")
-        if not isinstance(record, str) or not isinstance(row_field, str):
+        try:
+            selector = binding_export_selector(binding, revision=revision)
+        except RegistryValidationError:
             continue
-        claimants.setdefault((record, row_field), []).append(binding.id)
-    return {slot: tuple(sorted(ids)) for slot, ids in claimants.items()}
+        if isinstance(selector, BindingRowExportSelector):
+            found.append((binding, selector))
+    return tuple(found)
 
 
 def _binding_derived_export_fields(revision: ModeloRevision) -> frozenset[tuple[str, str]]:
@@ -272,10 +295,10 @@ def test_no_two_row_bindings_claim_one_row_field_of_one_record(modelo_id: str, r
 
     This is the structural reason the invariance above holds rather than a
     second observation of it: with one claimant per slot there is no "first" to
-    choose. It is also refused at load, so a future revision cannot quietly
-    reintroduce the ambiguity.
+    choose. The assertion runs the load-time refusal itself, so the invariance
+    suite and the refusal suite cannot drift apart.
     """
-    contested = {slot: ids for slot, ids in _row_slot_claimants(revision).items() if len(ids) > 1}
+    contested = _row_slot_refusals(modelo_id, revision)
     assert not contested, (
         f"modelo {modelo_id}: these row slots are claimed by more than one binding, so which one reaches the "
         f"export record is decided by fragment merge order: {contested}"
@@ -286,22 +309,24 @@ def test_no_two_row_bindings_claim_one_row_field_of_one_record(modelo_id: str, r
 def test_a_duplicate_row_field_claimant_is_visible_to_the_slot_check(modelo_id: str, revision: ModeloRevision) -> None:
     """Anti-tautology: the slot check detects a planted second claimant.
 
-    A clone of a live row binding under a new id must make the slot contested.
-    Without this the assertion above would be satisfied by a projection that
-    silently collapsed the two claimants, or found none at all.
+    A clone of a live row binding under a new id must make the slot contested
+    in the eyes of the production gate. Without this the assertion above would
+    be satisfied by a gate that silently collapsed the two claimants, or found
+    none at all.
     """
-    claimants = _row_slot_claimants(revision)
-    if not claimants:
+    candidates = _row_slot_bindings(revision)
+    if not candidates:
         pytest.skip(f"modelo {modelo_id} declares no row binding claiming a record row field")
 
-    slot, ids = sorted(claimants.items())[0]
-    original = next(binding for binding in revision.bindings if binding.id == ids[0])
+    original, selector = candidates[0]
     planted = original.model_copy(update={"id": f"{original.id}-planted-duplicate"})
     defective = _with_bindings(revision, (*revision.bindings, planted))
 
-    assert len(_row_slot_claimants(defective)[slot]) == 2, (
-        f"modelo {modelo_id}: a cloned row binding did not show up as a second claimant of slot {slot}, "
-        f"so the slot check cannot see a duplicate at all"
+    refusals = _row_slot_refusals(modelo_id, defective)
+    assert any(selector.row_field in refusal and planted.id in refusal for refusal in refusals), (
+        f"modelo {modelo_id}: a cloned row binding did not show up as a second claimant of "
+        f"{selector.record!r}/{selector.row_field!r}, so the slot check cannot see a duplicate at all; "
+        f"refusals were {refusals}"
     )
 
 

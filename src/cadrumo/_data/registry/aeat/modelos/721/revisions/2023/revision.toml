@@ -1,5 +1,6 @@
 [revisions."2023"]
 casilla_source_refs = ["boe-modelo-721-2023-layout"]
+parameter_source_refs = ["aeat-modelo-721-procedure"]
 authority_grade = "applicability"
 # valid_from is canonicalised to the ejercicio-start convention (January 1 of
 # period_selector.year_from), not the orden's own effective date -- that fact

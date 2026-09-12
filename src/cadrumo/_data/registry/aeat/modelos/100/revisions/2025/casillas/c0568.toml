@@ -1,7 +1,10 @@
 [[revisions."2025".casillas]]
 id = "0568"
+continuidad_id = "irpf-incremento-perdida-incentivo-fiscal-estatal"
+continuidad_origin = "grounded"
+continuidad_evidence = "Official AEAT dictionaries establish the same state incentive-loss field in both exercises: aeat-dr-100-2024-dictionary:909 and aeat-dr-100-2025-dictionary:935 map DED33E at /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/DED33E [P102] to box 0568, with the same description for loss of the incentive regulated by article 33.3(c) of the Income Tax Law. The 2024 and 2025 Renta Parte 1 manuals discuss the article 33.3 incentive and the Chapter 18 rule that amounts improperly deducted after loss of entitlement are added to the liquid quota. The state section, semantic_role, legal_refs, box number, and representation are stable; there is no renumbering or repurpose. Continuity is grounded in the official field path, legal concept, and cross-year design, not the number alone."
 number = "0568"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_incremento_perdida_incentivo_fiscal_estatal"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-67", "ley-35-2006:art-77"]
-additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+additional_source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

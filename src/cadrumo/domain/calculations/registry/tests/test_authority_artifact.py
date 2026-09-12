@@ -1,4 +1,4 @@
-"""Behavioral contract tests for the versioned, digest-checked authority publication."""
+"""Behavioral contract tests for the digest-checked authority publication."""
 
 from __future__ import annotations
 
@@ -13,7 +13,6 @@ import pytest
 
 from .....core.hashing import canonical_json_bytes, sha256_hex
 from ..authority_artifact import (
-    AUTHORITY_ARTIFACT_SCHEMA_VERSION,
     AuthorityArtifact,
     AuthorityArtifactFormatError,
     AuthorityArtifactIntegrityError,
@@ -100,11 +99,12 @@ def _publish(path: Path) -> None:
     write_authority_artifact(path, _validated_authority_payload())
 
 
-def _write_frame(path: Path, schema_version: str, payload: object, **extra: object) -> None:
+def _write_frame(path: Path, payload: object, **extra: object) -> None:
     """Write a frame whose digest is consistent with its content, as a correct publisher would."""
-    document = {"schema_version": schema_version, "payload": payload}
     path.write_bytes(
-        canonical_json_bytes({**document, "payload_sha256": sha256_hex(canonical_json_bytes(document)), **extra})
+        canonical_json_bytes(
+            {"payload": payload, "payload_sha256": sha256_hex(canonical_json_bytes(payload)), **extra}
+        )
     )
 
 
@@ -125,8 +125,8 @@ def test_published_authority_round_trips_as_the_complete_typed_payload(tmp_path:
     assert revision.reviewed_at == date(2026, 7, 1)
 
 
-def test_v4_omits_schema_defaults_and_restores_the_same_typed_model(tmp_path: Path) -> None:
-    """Compact v4 may omit only declared defaults; strict hydration restores their meaning."""
+def test_current_frame_omits_schema_defaults_and_restores_the_same_typed_model(tmp_path: Path) -> None:
+    """The current frame omits only declared defaults; strict hydration restores their meaning."""
     artifact_path = tmp_path / "authority.json"
     published = AuthorityArtifact(
         modelos=(_minimal_modelo(_minimal_revision()),),
@@ -138,7 +138,7 @@ def test_v4_omits_schema_defaults_and_restores_the_same_typed_model(tmp_path: Pa
 
     frame = json.loads(artifact_path.read_bytes())
     wire_modelo = frame["payload"]["modelos"][0]
-    assert frame["schema_version"] == "cadrumo-authority-artifact-v4"
+    assert set(frame) == {"payload", "payload_sha256"}
     assert "capabilities" not in wire_modelo
     assert "calculation_class" not in wire_modelo
     assert "output_sensitivity" not in wire_modelo
@@ -226,28 +226,9 @@ def test_a_digest_consistent_frame_does_not_admit_an_invalid_typed_payload(tmp_p
     _publish(artifact_path)
     frame = json.loads(artifact_path.read_bytes())
     frame["payload"]["catalogues"] = {}
-    _write_frame(artifact_path, frame["schema_version"], frame["payload"])
+    _write_frame(artifact_path, frame["payload"])
 
     with pytest.raises(AuthorityArtifactFormatError, match="invalid authority payload"):
-        read_authority_artifact(artifact_path)
-
-
-@pytest.mark.parametrize(
-    "superseded",
-    [
-        "cadrumo-authority-artifact-v1",
-        "cadrumo-authority-artifact-v2",
-        "cadrumo-authority-artifact-v3",
-    ],
-)
-def test_a_frame_of_an_earlier_format_is_refused_by_name(tmp_path: Path, superseded: str) -> None:
-    """An earlier frame names the format to republish in."""
-    artifact_path = tmp_path / "authority.json"
-    _publish(artifact_path)
-    payload = json.loads(artifact_path.read_bytes())["payload"]
-    _write_frame(artifact_path, superseded, payload)
-
-    with pytest.raises(AuthorityArtifactFormatError, match=f"superseded format '{superseded}'"):
         read_authority_artifact(artifact_path)
 
 
@@ -256,15 +237,15 @@ def test_a_current_frame_with_an_extra_member_is_refused(tmp_path: Path) -> None
     artifact_path = tmp_path / "authority.json"
     _publish(artifact_path)
     payload = json.loads(artifact_path.read_bytes())["payload"]
-    _write_frame(artifact_path, AUTHORITY_ARTIFACT_SCHEMA_VERSION, payload, unrecognized_member=True)
+    _write_frame(artifact_path, payload, unrecognized_member=True)
 
     with pytest.raises(AuthorityArtifactFormatError, match="unexpected members \\['unrecognized_member'\\]"):
         read_authority_artifact(artifact_path)
 
 
-@pytest.mark.parametrize("artifact_bytes", [b"not-json", b'{"schema_version":"unsupported"}'])
-def test_malformed_or_unsupported_artifact_frame_is_refused(tmp_path: Path, artifact_bytes: bytes) -> None:
-    """Malformed and unsupported wire inputs never reach authority reconstruction."""
+@pytest.mark.parametrize("artifact_bytes", [b"not-json", b'{"payload":{}}'])
+def test_malformed_artifact_frame_is_refused(tmp_path: Path, artifact_bytes: bytes) -> None:
+    """Malformed wire inputs never reach authority reconstruction."""
     artifact_path = tmp_path / "authority.json"
     artifact_path.write_bytes(artifact_bytes)
 

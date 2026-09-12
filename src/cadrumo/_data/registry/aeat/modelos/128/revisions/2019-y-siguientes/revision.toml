@@ -1,5 +1,6 @@
 [revisions."2019-y-siguientes"]
 casilla_source_refs = ["boe-modelo-128-form-layout"]
+application_link_source_refs = ["aeat-modelo-128-procedure"]
 # Calculation grade is agent-attested: this revision's construct-owned formulas are
 # exercised against the cited AEAT form arithmetic. This does not claim filing/export
 # authority; the liable filer remains the insurer.

@@ -2,6 +2,7 @@
 binding_source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
 predecessor = "2022"
 casilla_source_refs = ["aeat-dr-184-2023-2024"]
+live_cross_reference_source_refs = ["aeat-modelo-184-procedure"]
 reviewed_against = "2022"
 authority_grade = "filing"
 # The bundled AEAT design is independently and strictly parsed for this era;

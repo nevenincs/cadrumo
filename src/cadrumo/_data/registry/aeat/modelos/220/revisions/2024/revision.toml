@@ -1,5 +1,6 @@
 [revisions."2024"]
 casilla_source_refs = ["aeat-dr-220-2024"]
+application_link_source_refs = ["aeat-modelo-200-manual-2024", "boe-modelo-200-2025-form"]
 authority_grade = "applicability"
 # Modelo 220 declaración anual del Impuesto sobre Sociedades del grupo fiscal en
 # régimen de consolidación fiscal. The IS declaration models for períodos

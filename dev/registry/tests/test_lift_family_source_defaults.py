@@ -31,6 +31,8 @@ from ..lift_family_source_defaults import (
     FAMILY_DEFAULT_KEY,
     REGISTRY_MODELOS_ROOT,
     ModeloLiftFailedError,
+    _live_inherited_ids,
+    _member_ids,
     apply_plan,
     lifted_fragment_text,
     load_outcome,
@@ -52,6 +54,12 @@ _FAMILY_KEYS: Final = ("binding_source_refs", "formula_source_refs")
 #: plan. Which families are liftable at all is pinned separately, against the
 #: domain pairing, by the derivation test at the end of this module.
 _UNDER_TEST: Final = ("bindings", "formulas")
+
+#: A modelo whose latest edition inherits this family from its predecessor
+#: rather than restating it. Lifting the predecessor without carrying the
+#: default is exactly what broke this edition's load.
+_INHERITING_MODELO: Final = "303"
+_INHERITING_FAMILY: Final = "filing_schedules"
 
 
 def _unlifted_modelo(tmp_path: Path) -> Path:
@@ -410,3 +418,105 @@ def test_the_liftable_families_are_read_from_the_domain_pairing() -> None:
     assert set(FAMILIES) == set(paired) | {"casillas"}
     assert FAMILY_DEFAULT_KEY["casillas"] == "casilla_source_refs"
     assert "casillas" not in paired, "the casilla family's members are owned by another pass"
+
+
+def test_an_inheriting_successor_materialises_the_same_references_after_the_lift(tmp_path: Path) -> None:
+    """The lift moves no grounding: every inherited row resolves to what it resolved to before.
+
+    Carrying the predecessor's default onto an edition that inherits its rows
+    exists for exactly one reason -- the successor's materialised rows must not
+    change. This drives the real loader over a real inheriting modelo and
+    compares every member's materialised ``source_refs`` before and after, so a
+    lift that regrounded an inherited row fails here rather than in the corpus.
+    """
+    modelo_dir = tmp_path / "modelos" / _INHERITING_MODELO
+    shutil.copytree(REGISTRY_MODELOS_ROOT / _INHERITING_MODELO, modelo_dir)
+
+    def materialised() -> dict[tuple[str, str], tuple[str, ...]]:
+        modelo = load_modelo_directory(modelo_dir)
+        return {
+            (revision_id, str(member.id)): tuple(member.source_refs)
+            for revision_id, revision in modelo.revisions.items()
+            for member in getattr(revision, _INHERITING_FAMILY)
+        }
+
+    before = materialised()
+    assert before, "the fixture materialises no members of the family under test"
+
+    plan = plan_modelo(modelo_dir, (_INHERITING_FAMILY,))
+    assert plan.liftable, "the fixture admits no lift, so it proves nothing"
+    assert any(lift.inherited_from for lift in plan.liftable), (
+        "the fixture has no inheriting successor, so the carry is never exercised"
+    )
+    apply_plan(plan, modelo_dir.parent)
+
+    assert materialised() == before
+
+
+def test_a_carried_declaration_names_the_predecessor_it_came_from(tmp_path: Path) -> None:
+    """An inheriting successor's declaration is marked as carried, not as its own grounding."""
+    modelo_dir = tmp_path / "modelos" / _INHERITING_MODELO
+    shutil.copytree(REGISTRY_MODELOS_ROOT / _INHERITING_MODELO, modelo_dir)
+    plan = plan_modelo(modelo_dir, (_INHERITING_FAMILY,))
+    carried = [lift for lift in plan.liftable if lift.inherited_from]
+    assert carried, "no carried declaration to check"
+    apply_plan(plan, modelo_dir.parent)
+
+    key = FAMILY_DEFAULT_KEY[_INHERITING_FAMILY]
+    for lift in carried:
+        manifest = modelo_dir / "revisions" / lift.edition / "revision.toml"
+        lines = manifest.read_text(encoding="utf-8").splitlines()
+        declaration = next(index for index, line in enumerate(lines) if line.startswith(f"{key} ="))
+        assert lines[declaration - 1] == (
+            f'# {key}: carried from predecessor edition "{lift.inherited_from}"; '
+            "not re-grounded on this edition's own design"
+        )
+
+
+def test_a_successor_regrounding_a_live_inherited_member_refuses_the_lift(tmp_path: Path) -> None:
+    """A default that would move a live inherited row onto other grounding is refused, and says so.
+
+    The successor is given a different declared default while it still inherits
+    the lifted edition's members live. Nothing fails to load in that state, so
+    only this check stands between the corpus and a silent regrounding.
+    """
+    modelo_dir = tmp_path / "modelos" / _INHERITING_MODELO
+    shutil.copytree(REGISTRY_MODELOS_ROOT / _INHERITING_MODELO, modelo_dir)
+    plan = plan_modelo(modelo_dir, (_INHERITING_FAMILY,))
+    successor = next(lift.edition for lift in plan.liftable if lift.inherited_from)
+    key = FAMILY_DEFAULT_KEY[_INHERITING_FAMILY]
+    manifest = modelo_dir / "revisions" / successor / "revision.toml"
+    manifest.write_text(
+        manifest.read_text(encoding="utf-8").replace(
+            f"[revisions.{successor}]", f'[revisions.{successor}]\n{key} = ["aeat-something-else"]', 1
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    refused = plan_modelo(modelo_dir, (_INHERITING_FAMILY,))
+    regrounding = [lift for lift in refused.refusals if lift.refusal.startswith("live_regrounding: ")]
+    assert regrounding, f"no live_regrounding refusal among {[lift.refusal for lift in refused.refusals]}"
+    reason = regrounding[0].refusal
+    assert successor in reason
+    assert "aeat-something-else" in reason
+    assert not any(lift.inherited_from for lift in refused.liftable), "a carried declaration survived a refused family"
+
+
+def test_a_superseded_inherited_member_does_not_refuse_the_lift(tmp_path: Path) -> None:
+    """A differing successor default is harmless where nothing of the lift survives into it.
+
+    The refusal exists to protect rows that materialise in the successor
+    carrying the predecessor's grounding. Where the successor states its own
+    row under every inherited identity, no such row exists, and refusing would
+    withhold a lift that changes nothing.
+    """
+    modelo_dir = tmp_path / "modelos" / _INHERITING_MODELO
+    shutil.copytree(REGISTRY_MODELOS_ROOT / _INHERITING_MODELO, modelo_dir)
+    plan = plan_modelo(modelo_dir, (_INHERITING_FAMILY,))
+    lifted = next(lift for lift in plan.liftable if not lift.inherited_from)
+    successor = next(lift.edition for lift in plan.liftable if lift.inherited_from)
+
+    live = _live_inherited_ids(modelo_dir, successor, _INHERITING_FAMILY)
+    assert live, "the fixture's successor inherits nothing live, so this proves nothing"
+    assert live & _member_ids(modelo_dir / "revisions" / lifted.edition, _INHERITING_FAMILY)

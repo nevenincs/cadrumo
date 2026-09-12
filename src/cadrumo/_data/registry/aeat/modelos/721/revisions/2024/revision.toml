@@ -1,6 +1,8 @@
 [revisions."2024"]
 predecessor = "2023"
 casilla_source_refs = ["boe-modelo-721-2024-layout"]
+# parameter_source_refs: carried from predecessor edition "2023"; not re-grounded on this edition's own design
+parameter_source_refs = ["aeat-modelo-721-procedure"]
 reviewed_against = "2023"
 authority_grade = "applicability"
 # valid_from is canonicalised to the ejercicio-start convention (January 1 of

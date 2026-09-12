@@ -1,6 +1,7 @@
 [revisions."2023-y-siguientes"]
 predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["orden-hac-590-2021:art-1"], source_refs = ["enrolled-modelo-490-procedure"] } }
 casilla_source_refs = ["aeat-dr-490-2023"]
+application_link_source_refs = ["enrolled-modelo-490-procedure"]
 authority_grade = "applicability"
 # Modelo 490 autoliquidacion del Impuesto sobre Determinados Servicios
 # Digitales, approved by orden-hac-590-2021 art 1, plazo grounded verbatim in

@@ -224,8 +224,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-per-38"
+continuidad_id = "tributacion-territorio-alava-regularizacion-1t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:170 (sha256 9a4c8d8cd2e6) box [38] (51 709 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:172 (sha256 d8115bd4f4d1) prints [38] as another concept (61 810 17 N (g) = (e) + (f) Regu (art. 10.3 Ley). Total Regularizac...)."
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:170 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:170 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Álava % período objeto de regularización 1T [38], seccion 490_02, posicion 709, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). Es new_on_form frente a 2022-1t, donde [38] era otro concepto; en 2023 conserva la misma columna 1T, posicion y tipo, sin repurpose."
 number = "38"
 section = ["490_02"]
 data_type = "ratio"
@@ -235,8 +236,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-per-59"
+continuidad_id = "tributacion-territorio-alava-regularizacion-2t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:171 (sha256 9a4c8d8cd2e6) box [59] (52 714 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:181 (sha256 d8115bd4f4d1) prints [59] as another concept (70 950 17 N (b) Regu (art. 10.3 Ley). Regularización negativa (base...)."
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:171 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:171 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Álava % período objeto de regularización 2T [59], seccion 490_02, posicion 714, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). Es new_on_form frente a 2022-1t, donde [59] era otro concepto; en 2023 conserva la misma columna 2T, posicion y tipo, sin repurpose."
 number = "59"
 section = ["490_02"]
 data_type = "ratio"
@@ -246,8 +248,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-per-80"
+continuidad_id = "tributacion-territorio-alava-regularizacion-3t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:172 (sha256 9a4c8d8cd2e6) box [80] (53 719 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:221 (sha256 d8115bd4f4d1) prints [80] as another concept (110 1505 17 Num (e) = (a) * (d) Regu (art. 10.3 Ley). Regularizació...)."
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:172 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:172 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Álava % período objeto de regularización 3T [80], seccion 490_02, posicion 719, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). Es new_on_form frente a 2022-1t, donde [80] era otro concepto; en 2023 conserva la misma columna 3T, posicion y tipo, sin repurpose."
 number = "80"
 section = ["490_02"]
 data_type = "ratio"
@@ -257,8 +260,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-per-101"
+continuidad_id = "tributacion-territorio-alava-regularizacion-4t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:173 (sha256 9a4c8d8cd2e6) box [101] (54 724 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:234 (sha256 d8115bd4f4d1) prints [101] as another concept (+ (57) + (63) + (69) + (75) + (82) + (88) + (94) + (100)) [101] 15 ...)."
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:173 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:173 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Álava % período objeto de regularización 4T [101], seccion 490_02, posicion 724, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). Es new_on_form frente a 2022-1t, donde [101] era otro concepto; en 2023 conserva la misma columna 4T, posicion y tipo, sin repurpose."
 number = "101"
 section = ["490_02"]
 data_type = "ratio"
@@ -312,8 +316,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-per-40"
+continuidad_id = "tributacion-territorio-guipuzcoa-regularizacion-1t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:178 (sha256 9a4c8d8cd2e6) box [40] (59 749 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:153 (sha256 d8115bd4f4d1) prints [40] as another concept (42 543 17 N (b) Regu (art. 10.3 Ley). Regularización negativa (base...)."
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:178 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:178 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Guipúzcoa % período objeto de regularización 1T [40], seccion 490_02, posicion 749, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). Es new_on_form frente a 2022-1t, donde [40] era otro concepto; en 2023 conserva la misma columna 1T, posicion y tipo, sin repurpose."
 number = "40"
 section = ["490_02"]
 data_type = "ratio"
@@ -323,8 +328,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-per-61"
+continuidad_id = "tributacion-territorio-guipuzcoa-regularizacion-2t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:179 (sha256 9a4c8d8cd2e6) box [61] (60 754 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:193 (sha256 d8115bd4f4d1) prints [61] as another concept (82 1098 17 Num (e) = (a) * (d) Regu (art. 10.3 Ley). Regularización...)."
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:179 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:179 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Guipúzcoa % período objeto de regularización 2T [61], seccion 490_02, posicion 754, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). Es new_on_form frente a 2022-1t, donde [61] era otro concepto; en 2023 conserva la misma columna 2T, posicion y tipo, sin repurpose."
 number = "61"
 section = ["490_02"]
 data_type = "ratio"
@@ -334,8 +340,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-per-82"
+continuidad_id = "tributacion-territorio-guipuzcoa-regularizacion-3t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:180 (sha256 9a4c8d8cd2e6) box [82] (61 759 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:229 (sha256 d8115bd4f4d1) prints [82] as another concept (118 1641 17 N (g) = (e) + (f) Regu (art. 10.3 Ley). Total Regulariz...)."
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:180 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:180 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Guipúzcoa % período objeto de regularización 3T [82], seccion 490_02, posicion 759, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). Es new_on_form frente a 2022-1t, donde [82] era otro concepto; en 2023 conserva la misma columna 3T, posicion y tipo, sin repurpose."
 number = "82"
 section = ["490_02"]
 data_type = "ratio"
@@ -345,8 +352,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-per-103"
+continuidad_id = "tributacion-territorio-guipuzcoa-regularizacion-4t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:181 (sha256 9a4c8d8cd2e6) box [103] (62 764 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [103]."
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:181 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:181 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Guipúzcoa % período objeto de regularización 4T [103], seccion 490_02, posicion 764, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). Es new_on_form frente a 2022-1t, donde [103] era otro concepto; en 2023 conserva la misma columna 4T, posicion y tipo, sin repurpose."
 number = "103"
 section = ["490_02"]
 data_type = "ratio"
@@ -400,8 +408,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-per-42"
+continuidad_id = "tributacion-territorio-vizcaya-regularizacion-1t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:186 (sha256 9a4c8d8cd2e6) box [42] (67 789 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:165 (sha256 d8115bd4f4d1) prints [42] as another concept (54 691 17 Num (e) = (a) * (d) Regu (art. 10.3 Ley). Regularización ...)."
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:186 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:186 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Vizcaya % período objeto de regularización 1T [42], seccion 490_02, posicion 789, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). Es new_on_form frente a 2022-1t, donde [42] era otro concepto; en 2023 conserva la misma columna 1T, posicion y tipo, sin repurpose."
 number = "42"
 section = ["490_02"]
 data_type = "ratio"
@@ -411,8 +420,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-per-63"
+continuidad_id = "tributacion-territorio-vizcaya-regularizacion-2t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:187 (sha256 9a4c8d8cd2e6) box [63] (68 794 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:201 (sha256 d8115bd4f4d1) prints [63] as another concept (90 1234 17 N (g) = (e) + (f) Regu (art. 10.3 Ley). Total Regulariza...)."
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:187 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:187 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Vizcaya % período objeto de regularización 2T [63], seccion 490_02, posicion 794, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). Es new_on_form frente a 2022-1t, donde [63] era otro concepto; en 2023 conserva la misma columna 2T, posicion y tipo, sin repurpose."
 number = "63"
 section = ["490_02"]
 data_type = "ratio"
@@ -422,8 +432,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-per-84"
+continuidad_id = "tributacion-territorio-vizcaya-regularizacion-3t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:188 (sha256 9a4c8d8cd2e6) box [84] (69 799 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:210 (sha256 d8115bd4f4d1) prints [84] as another concept (99 1374 17 N (b) Regu (art. 10.3 Ley). Regularización negativa (bas...)."
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:188 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:188 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Vizcaya % período objeto de regularización 3T [84], seccion 490_02, posicion 799, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). Es new_on_form frente a 2022-1t, donde [84] era otro concepto; en 2023 conserva la misma columna 3T, posicion y tipo, sin repurpose."
 number = "84"
 section = ["490_02"]
 data_type = "ratio"
@@ -433,8 +444,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-per-105"
+continuidad_id = "tributacion-territorio-vizcaya-regularizacion-4t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:189 (sha256 9a4c8d8cd2e6) box [105] (70 804 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [105]."
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:189 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:189 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Vizcaya % período objeto de regularización 4T [105], seccion 490_02, posicion 804, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). Es new_on_form frente a 2022-1t, donde [105] era otro concepto; en 2023 conserva la misma columna 4T, posicion y tipo, sin repurpose."
 number = "105"
 section = ["490_02"]
 data_type = "ratio"
@@ -488,8 +500,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-per-46"
+continuidad_id = "tributacion-territorio-comun-regularizacion-1t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:202 (sha256 9a4c8d8cd2e6) box [46] (83 869 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:154 (sha256 d8115bd4f4d1) prints [46] as another concept (43 560 17 N (b) Regu (art. 10.3 Ley). Regularización negativa (base...)."
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:202 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:202 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Territorio común % período objeto de regularización (l) 1T [46], sección 490_02, posición 869, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). Es new_on_form frente a 2022-1t, donde [46] era otro concepto; en 2023 conserva la misma columna 1T, posición y tipo, sin repurpose."
 number = "46"
 section = ["490_02"]
 data_type = "ratio"
@@ -499,8 +512,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-per-67"
+continuidad_id = "tributacion-territorio-comun-regularizacion-2t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:203 (sha256 9a4c8d8cd2e6) box [67] (84 874 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:194 (sha256 d8115bd4f4d1) prints [67] as another concept (83 1115 17 Num (e) = (a) * (d) Regu (art. 10.3 Ley). Regularización...)."
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:203 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:203 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Territorio común % período objeto de regularización (l) 2T [67], sección 490_02, posición 874, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). Es new_on_form frente a 2022-1t, donde [67] era otro concepto; en 2023 conserva la misma columna 2T, posición y tipo, sin repurpose."
 number = "67"
 section = ["490_02"]
 data_type = "ratio"
@@ -510,8 +524,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-per-88"
+continuidad_id = "tributacion-territorio-comun-regularizacion-3t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:204 (sha256 9a4c8d8cd2e6) box [88] (85 879 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:230 (sha256 d8115bd4f4d1) prints [88] as another concept (119 1658 17 N (g) = (e) + (f) Regu (art. 10.3 Ley). Total Regulariz...)."
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:204 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:204 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Territorio común % período objeto de regularización (l) 3T [88], sección 490_02, posición 879, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). Es new_on_form frente a 2022-1t, donde [88] era otro concepto; en 2023 conserva la misma columna 3T, posición y tipo, sin repurpose."
 number = "88"
 section = ["490_02"]
 data_type = "ratio"
@@ -521,8 +536,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-per-109"
+continuidad_id = "tributacion-territorio-comun-regularizacion-4t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:205 (sha256 9a4c8d8cd2e6) box [109] (86 884 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [109]."
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:205 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:205 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Territorio común % período objeto de regularización (l) 4T [109], sección 490_02, posición 884, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). Es new_on_form frente a 2022-1t, donde [109] no existía; en 2023 conserva la misma columna 4T, posición y tipo, sin repurpose."
 number = "109"
 section = ["490_02"]
 data_type = "ratio"
@@ -532,8 +548,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-con-reg-47"
+continuidad_id = "tributacion-territorio-comun-regularizacion-incluida-1t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:206 (sha256 9a4c8d8cd2e6) box [47] (87 889 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:158 (sha256 d8115bd4f4d1) prints [47] as another concept (47 628 17 N ( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizació...)."
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:87 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:87 (sha256 f55ecbfff8fb) en DR49001 confirman Información de la tributación por razón de territorio - Territorio común [24] (posición 970); esos mismos diseños, en DR49002, imprimen en las líneas 206 (sha256 9a4c8d8cd2e6/f55ecbfff8fb) Información de la tributación por razón de territorio - Territorio común % con regularización incluida (m) 1T [47], sección 490_02, posición 889, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). Es new_on_form frente a 2022-1t, donde [47] era otro concepto; en 2023 conserva la misma columna 1T, posición y tipo, sin repurpose."
 number = "47"
 section = ["490_02"]
 data_type = "ratio"
@@ -543,8 +560,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-con-reg-68"
+continuidad_id = "tributacion-territorio-comun-regularizacion-incluida-2t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:207 (sha256 9a4c8d8cd2e6) box [68] (88 894 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:198 (sha256 d8115bd4f4d1) prints [68] as another concept (87 1183 17 N (f) = (b) * (d) Regu (art. 10.3 Ley). Regularización n...)."
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:87 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:87 (sha256 f55ecbfff8fb) en DR49001 confirman Información de la tributación por razón de territorio - Territorio común [24] (posición 970); esos mismos diseños, en DR49002, imprimen en las líneas 207 (sha256 9a4c8d8cd2e6/f55ecbfff8fb) Información de la tributación por razón de territorio - Territorio común % con regularización incluida (m) 2T [68], sección 490_02, posición 894, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). Es new_on_form frente a 2022-1t, donde [68] era otro concepto; en 2023 conserva la misma columna 2T, posición y tipo, sin repurpose."
 number = "68"
 section = ["490_02"]
 data_type = "ratio"
@@ -554,8 +572,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-con-reg-89"
+continuidad_id = "tributacion-territorio-comun-regularizacion-incluida-3t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:208 (sha256 9a4c8d8cd2e6) box [89] (89 899 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:207 (sha256 d8115bd4f4d1) prints [89] as another concept (96 1323 17 Num (a) Regu (art. 10.3 Ley). Regularización positiva (b...)."
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:87 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:87 (sha256 f55ecbfff8fb) en DR49001 confirman Información de la tributación por razón de territorio - Territorio común [24] (posición 970); esos mismos diseños, en DR49002, imprimen en las líneas 208 (sha256 9a4c8d8cd2e6/f55ecbfff8fb) Información de la tributación por razón de territorio - Territorio común % con regularización incluida (m) 3T [89], sección 490_02, posición 899, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). Es new_on_form frente a 2022-1t, donde [89] era otro concepto; en 2023 conserva la misma columna 3T, posición y tipo, sin repurpose."
 number = "89"
 section = ["490_02"]
 data_type = "ratio"
@@ -565,8 +584,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-comun-con-reg-110"
+continuidad_id = "tributacion-territorio-comun-regularizacion-incluida-4t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:209 (sha256 9a4c8d8cd2e6) box [110] (90 904 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [110]."
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:87 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:87 (sha256 f55ecbfff8fb) en DR49001 confirman Información de la tributación por razón de territorio - Territorio común [24] (posición 970); esos mismos diseños, en DR49002, imprimen en las líneas 209 (sha256 9a4c8d8cd2e6/f55ecbfff8fb) Información de la tributación por razón de territorio - Territorio común % con regularización incluida (m) 4T [110], sección 490_02, posición 904, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). Es new_on_form frente a 2022-1t, donde [110] no existía; en 2023 conserva la misma columna 4T, posición y tipo, sin repurpose."
 number = "110"
 section = ["490_02"]
 data_type = "ratio"
@@ -596,8 +616,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-base-declarada-132"
+continuidad_id = "regularizacion-base-declarada-territorio-comun-2t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:212 (sha256 9a4c8d8cd2e6) box [132] (93 930 17 Num Base imponible declarada en período objeto de regular...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [132]."
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:212 (sha256 9a4c8d8cd2e6) prints DR49002 row 93, position 930, width 17, type Num, Base imponible declarada en período objeto de regularización (a).2T [132]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [132], so this is a legitimate 2022-2t-4t 2T root."
 number = "132"
 section = ["490_02"]
 data_type = "money"
@@ -607,8 +628,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-base-declarada-153"
+continuidad_id = "regularizacion-base-declarada-territorio-comun-3t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:213 (sha256 9a4c8d8cd2e6) box [153] (94 947 17 Num Base imponible declarada en período objeto de regular...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [153]."
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:213 (sha256 9a4c8d8cd2e6) prints DR49002 row 94, position 947, width 17, type Num, Base imponible declarada en período objeto de regularización (a).3T [153]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [153], so this is a legitimate 2022-2t-4t 3T root."
 number = "153"
 section = ["490_02"]
 data_type = "money"
@@ -618,8 +640,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-base-declarada-174"
+continuidad_id = "regularizacion-base-declarada-territorio-comun-4t"
 continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:214 (sha256 9a4c8d8cd2e6) box [174] (95 964 17 Num Base imponible declarada en período objeto de regular...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [174]."
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:214 (sha256 9a4c8d8cd2e6) prints DR49002 row 95, position 964, width 17, type Num, Base imponible declarada en período objeto de regularización (a).4T [174]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [174], so this is a legitimate 2022-2t-4t 4T root."
 number = "174"
 section = ["490_02"]
 data_type = "money"
@@ -638,6 +661,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-base-positiva-133"
+continuidad_id = "regularizacion-positiva-base-territorio-comun-2t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:216 (sha256 9a4c8d8cd2e6) prints DR49002 row 97, position 998, width 17, type Num, Regularización positiva (base imponible) (b). 2T [133]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [133], so this is a legitimate 2022-2t-4t 2T root."
 number = "133"
 section = ["490_02"]
 data_type = "money"
@@ -647,6 +673,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-base-positiva-154"
+continuidad_id = "regularizacion-positiva-base-territorio-comun-3t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:217 (sha256 9a4c8d8cd2e6) prints DR49002 row 98, position 1015, width 17, type Num, Regularización positiva (base imponible) (b). 3T [154]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [154], so this is a legitimate 2022-2t-4t 3T root."
 number = "154"
 section = ["490_02"]
 data_type = "money"
@@ -656,6 +685,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-base-positiva-175"
+continuidad_id = "regularizacion-positiva-base-territorio-comun-4t"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "aeat-dr-490-2022-2t; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:218 (sha256 9a4c8d8cd2e6) prints DR49002 row 99, position 1032, width 17, type Num, Regularización positiva (base imponible) (b). 4T [175]; corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [175], so this is a legitimate 2022-2t-4t 4T root."
 number = "175"
 section = ["490_02"]
 data_type = "money"

@@ -1,5 +1,6 @@
 [revisions."2024-desde-06"]
 casilla_source_refs = ["enrolled-modelo-038-procedure"]
+application_link_source_refs = ["enrolled-modelo-038-procedure"]
 authority_grade = "applicability"
 # BOE-A-2024-13049 applies the IRUS design amendment first to the June 2024
 # declaration. No selected source attests the earlier 2024 months, so this

@@ -12,7 +12,6 @@ id = "renta-minimo-descendiente-edad-maxima"
 data_type = "integer"
 unit = "years"
 legal_refs = ["ley-35-2006:art-58"]
-source_refs = ["aeat-renta-2022-manual-parte1"]
 
 [[revisions."2022".parameters.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -29,7 +28,6 @@ id = "renta-minimo-menor-tres-edad-maxima"
 data_type = "integer"
 unit = "years"
 legal_refs = ["ley-35-2006:art-58"]
-source_refs = ["aeat-renta-2022-manual-parte1"]
 
 [[revisions."2022".parameters.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -46,7 +44,6 @@ id = "renta-minimo-custodia-compartida-prorrata"
 data_type = "ratio"
 unit = "fraction"
 legal_refs = ["ley-35-2006:art-61"]
-source_refs = ["aeat-renta-2022-manual-parte1"]
 
 [[revisions."2022".parameters.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"

@@ -4,7 +4,6 @@ surface = "reconciliation"
 consumer = "cadrumo.application.reconciliation"
 requires_snapshot = true
 legal_refs = ["orden-eha-3111-2009:art-1", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2023".application_links]]
 id = "modelo-390-calculation"
@@ -12,7 +11,6 @@ surface = "calculation"
 consumer = "cadrumo.domain.calculations.registry"
 requires_snapshot = true
 legal_refs = ["orden-eha-3111-2009:art-1", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2023".application_links]]
 id = "modelo-390-export"
@@ -20,4 +18,3 @@ surface = "export"
 consumer = "cadrumo.application.filing.export_draft"
 requires_snapshot = true
 legal_refs = ["orden-eha-3111-2009:art-1", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]

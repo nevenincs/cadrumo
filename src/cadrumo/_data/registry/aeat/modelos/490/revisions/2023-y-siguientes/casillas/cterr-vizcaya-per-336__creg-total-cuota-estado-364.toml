@@ -180,6 +180,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-con-reg-299"
+continuidad_id = "regularizacion-territorio-comun-cuota-incluida-1t"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:479 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:479 (sha256 f55ecbfff8fb) imprimen en DR49003, sección 490_03, Información de la tributación por razón de territorio - Territorio común % con regularización incluida (m) 1T [299], posición 1785, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). La columna 1T, posición y tipo son idénticos; las nuevas casillas Navarra [296]/[297], [317]/[318], [338]/[339] y [359]/[360] ocupan el bloque 1725-1760 y permanecen new_on_form, sin alterar [299]. Esta continuidad no encadena ningún concepto de 2022-1t porque [299] no existía allí."
 number = "299"
 section = ["490_03"]
 data_type = "ratio"
@@ -189,6 +192,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-con-reg-320"
+continuidad_id = "regularizacion-territorio-comun-cuota-incluida-2t"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:480 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:480 (sha256 f55ecbfff8fb) imprimen en DR49003, sección 490_03, Información de la tributación por razón de territorio - Territorio común % con regularización incluida (m) 2T [320], posición 1790, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). La columna 2T, posición y tipo son idénticos; las nuevas casillas Navarra [296]/[297], [317]/[318], [338]/[339] y [359]/[360] ocupan el bloque 1725-1760 y permanecen new_on_form, sin alterar [320]. Esta continuidad no encadena ningún concepto de 2022-1t porque [320] no existía allí."
 number = "320"
 section = ["490_03"]
 data_type = "ratio"
@@ -198,6 +204,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-con-reg-341"
+continuidad_id = "regularizacion-territorio-comun-cuota-incluida-3t"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:481 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:481 (sha256 f55ecbfff8fb) imprimen en DR49003, sección 490_03, Información de la tributación por razón de territorio - Territorio común % con regularización incluida (m) 3T [341], posición 1795, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). La columna 3T, posición y tipo son idénticos; las nuevas casillas Navarra [296]/[297], [317]/[318], [338]/[339] y [359]/[360] ocupan el bloque 1725-1760 y permanecen new_on_form, sin alterar [341]. Esta continuidad no encadena ningún concepto de 2022-1t porque [341] no existía allí."
 number = "341"
 section = ["490_03"]
 data_type = "ratio"
@@ -207,6 +216,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-con-reg-362"
+continuidad_id = "regularizacion-territorio-comun-cuota-incluida-4t"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:482 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:482 (sha256 f55ecbfff8fb) imprimen en DR49003, sección 490_03, Información de la tributación por razón de territorio - Territorio común % con regularización incluida (m) 4T [362], posición 1800, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). La columna 4T, posición y tipo son idénticos; las nuevas casillas Navarra [296]/[297], [317]/[318], [338]/[339] y [359]/[360] ocupan el bloque 1725-1760 y permanecen new_on_form, sin alterar [362]. Esta continuidad no encadena ningún concepto de 2022-1t porque [362] no existía allí."
 number = "362"
 section = ["490_03"]
 data_type = "ratio"

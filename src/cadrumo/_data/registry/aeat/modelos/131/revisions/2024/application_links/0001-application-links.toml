@@ -4,49 +4,47 @@ surface = "filing"
 consumer = "cadrumo.application.filing"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-131-2024", "aeat-modelo-131-instructions"]
+additional_source_refs = ["aeat-modelo-131-instructions"]
 [[revisions."2024".application_links]]
 id = "modelo-131-export"
 surface = "export"
 consumer = "cadrumo.application.filing.export_draft"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".application_links]]
 id = "modelo-131-extractor"
 surface = "extractor"
 consumer = "cadrumo.domain.calculations.registry.export_parse.parse_export_payload"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".application_links]]
 id = "modelo-131-review"
 surface = "review"
 consumer = "cadrumo.application.filing.review"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-131-2024", "aeat-modelo-131-instructions"]
+additional_source_refs = ["aeat-modelo-131-instructions"]
 [[revisions."2024".application_links]]
 id = "modelo-131-approval"
 surface = "approval"
 consumer = "cadrumo.application.workflow.approval"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-131-2024", "aeat-modelo-131-instructions"]
+additional_source_refs = ["aeat-modelo-131-instructions"]
 [[revisions."2024".application_links]]
 id = "modelo-131-reconciliation"
 surface = "reconciliation"
 consumer = "cadrumo.application.reconciliation"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-131-2024", "aeat-modelo-131-instructions"]
+additional_source_refs = ["aeat-modelo-131-instructions"]
 [[revisions."2024".application_links]]
 id = "modelo-131-workflow"
 surface = "workflow"
 consumer = "cadrumo.application.workflow"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-131-2024", "aeat-modelo-131-instructions"]
+additional_source_refs = ["aeat-modelo-131-instructions"]
 
 # Calculation-completeness manifest for revision 2024: the
 # casillas in this revision's calculation closure (formula targets,

@@ -1,6 +1,7 @@
 [revisions."2016-2017"]
 binding_source_refs = ["aeat-dr-232-2016"]
 casilla_source_refs = ["aeat-dr-232-2016"]
+live_cross_reference_source_refs = ["aeat-modelo-232-procedure"]
 # Prepared and reviewed by an agent against the bundled diseno de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather

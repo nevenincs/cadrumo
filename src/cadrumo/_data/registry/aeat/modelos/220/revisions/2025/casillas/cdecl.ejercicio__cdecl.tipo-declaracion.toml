@@ -1,12 +1,15 @@
-# Modelo 220 declaration-header casillas. This revision is scheduling/
-# applicability-grade: it declares only the declaration header (ejercicio, tipo
-# de declaración) grounded in Orden HAC/529/2026 art. 6.3 and the art. 124 LIS
-# declaration framework. The numbered money-closure casillas
-# of the group declaration record design are NOT declared here (the comment
-# formerly here said no authoritative Modelo 220 diseño de registro was bundled;
-# aeat-dr-220-2022/2023/2024/2025 are now registered, but no casilla-to-position
-# mapping has been authored from them yet, so a casilla number is still not
-# invented here).
+# Modelo 220 declaration-header casillas: the ejercicio and the tipo de
+# declaración, grounded in Orden HAC/529/2026 art. 6.3 and the art. 124 LIS
+# declaration framework. These two are keyed on words rather than offsets, so
+# they carry no segmento and no position.
+#
+# THE MONEY-CLOSURE CASILLAS NOW EXIST, in sibling fragments of this directory,
+# generated from aeat-dr-220-2025 -- 326 slots over the six settlement records
+# T22007000, T22009000, T22009001, T22016000, T22016001 and T220DID00. The
+# comment formerly here said no casilla-to-position mapping had been authored
+# from the bundled designs; that stopped being true when those fragments landed.
+# The revision stays applicability-grade: declaring where a number sits is not
+# claiming to compute it.
 #
 # source_refs corrected 2026-08-15: boe-modelo-200-2025-form (a 2308-byte orden
 # excerpt) was found to carry no layout content and retiered to

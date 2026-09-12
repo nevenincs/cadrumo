@@ -12,7 +12,7 @@ surface = "filing"
 consumer = "cadrumo.application.filing"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-modelo-123-procedure"]
+additional_source_refs = ["aeat-modelo-123-procedure"]
 
 [[revisions."2024-y-siguientes".application_links]]
 id = "modelo-123-export"
@@ -20,7 +20,6 @@ surface = "export"
 consumer = "cadrumo.application.filing.export_draft"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".application_links]]
 id = "modelo-123-review"
@@ -28,7 +27,7 @@ surface = "review"
 consumer = "cadrumo.application.filing.review"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text", "boe-modelo-123-2024-form-text"]
+additional_source_refs = ["aeat-dr-123-2024-v20-form-text", "boe-modelo-123-2024-form-text"]
 
 [[revisions."2024-y-siguientes".application_links]]
 id = "modelo-123-approval"
@@ -36,7 +35,7 @@ surface = "approval"
 consumer = "cadrumo.application.workflow.approval"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-modelo-123-procedure"]
+additional_source_refs = ["aeat-modelo-123-procedure"]
 
 [[revisions."2024-y-siguientes".application_links]]
 id = "modelo-123-reconciliation"
@@ -44,7 +43,7 @@ surface = "reconciliation"
 consumer = "cadrumo.application.reconciliation"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text", "boe-modelo-123-2024-form-text"]
+additional_source_refs = ["aeat-dr-123-2024-v20-form-text", "boe-modelo-123-2024-form-text"]
 
 [[revisions."2024-y-siguientes".application_links]]
 id = "modelo-123-extractor"
@@ -52,7 +51,7 @@ surface = "extractor"
 consumer = "cadrumo.adapters.inbound.declaracion"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
+additional_source_refs = ["aeat-dr-123-2024-v20-form-text"]
 
 [[revisions."2024-y-siguientes".application_links]]
 id = "modelo-123-portal-cross-reference"
@@ -76,7 +75,7 @@ surface = "workflow"
 consumer = "cadrumo.application.workflow"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-modelo-123-procedure"]
+additional_source_refs = ["aeat-modelo-123-procedure"]
 
 [[revisions."2024-y-siguientes".application_links]]
 id = "modelo-123-deadline"

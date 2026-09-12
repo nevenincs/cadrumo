@@ -71,6 +71,7 @@
 [revisions."2022-2025"]
 formula_source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-form-text"]
 casilla_source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
+application_link_source_refs = ["boe-modelo-136-base-order"]
 authority_grade = "calculation"
 valid_from = 2022-01-01
 valid_to = 2025-12-31

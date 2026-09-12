@@ -1,0 +1,22 @@
+# M15105000 makes the sign of the net-result components explicit in the
+# 2023-and-later design. The positive component keeps its span; the negative
+# component moves before withholding. These are representation/label changes,
+# not new concepts inferred from the printed box numbers.
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p05-rendimiento-neto-positivo-label-evolved"
+continuidad_id = "m151-p05-rendimiento-neto-positivo"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p05-rendimiento-neto-negativo-label-and-position-evolved"
+continuidad_id = "m151-p05-rendimiento-neto-negativo"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]

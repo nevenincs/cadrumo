@@ -4,7 +4,7 @@ surface = "filing"
 consumer = "cadrumo.application.filing"
 requires_snapshot = true
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-184-2025", "aeat-modelo-184-procedure"]
+additional_source_refs = ["aeat-modelo-184-procedure"]
 
 [[revisions."2025-y-siguientes".application_links]]
 id = "modelo-184-extractor"
@@ -12,4 +12,3 @@ surface = "extractor"
 consumer = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 requires_snapshot = true
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-184-2025"]

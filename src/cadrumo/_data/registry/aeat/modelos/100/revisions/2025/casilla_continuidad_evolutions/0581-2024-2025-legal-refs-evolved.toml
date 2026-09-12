@@ -1,0 +1,11 @@
+# Grounding: AEAT dictionaries 2024:920 and 2025:946 retain INT98A at the
+# same GravamenesRes path and box 0581 for autonomous-deduction-loss interest;
+# the 2025 form-order legal reference is added.
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-0581-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-intereses-demora-perdida-deducciones-autonomicas"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "rd-439-2007:art-59", "ley-58-2003:art-26", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1", "aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2024-form", "boe-modelo-100-2025-form"]

@@ -669,8 +669,9 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Total rendimientos netos positivos [08]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p06.total-rendimientos-netos-positivos-08"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15106000 campo at byte position 648-664; no counterpart in corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230)."
+continuidad_id = "m151-p05-total-rendimientos-netos-positivos"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15105000 campo 'Total rendimientos netos [8]' at byte position 134-150, length 17, Num; corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15106000 campo 'Total rendimientos netos positivos [08]' at byte position 648-664, length 17, Num. Official instructions define both as the B-activity total of positive net results: old [8] is the positive [5] amount, and new [08] sums positive [05]."
 number = "648-664"
 segmento = "M15106000"
 section = ["p06", "total_rendimientos_netos_positivos"]
@@ -683,8 +684,9 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Total retenciones o ingresos a cuenta [09]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p06.total-retenciones-o-ingresos-a-cuenta-09"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15106000 campo at byte position 665-681; no counterpart in corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230)."
+continuidad_id = "p05-total-retenciones-o-ingresos-a-cuenta-9"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15105000 campo 'Total retenciones o ingresos a cuenta [9]' at byte position 151-167, length 17, Num; corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15106000 campo 'Total retenciones o ingresos a cuenta [09]' at byte position 665-681, length 17, Num. Official instructions define both as the B-activity total of per-activity retenciones o ingresos a cuenta [6]/[06]."
 number = "665-681"
 segmento = "M15106000"
 section = ["p06", "total_retenciones_o_ingresos_a_cuenta"]

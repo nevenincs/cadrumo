@@ -58,12 +58,17 @@ class RecordDesignUnavailableError(Exception):
 
 @dataclass(frozen=True)
 class RecordDesignRow:
-    """One row of an official record design: an address, a width, and the field's own label."""
+    """One row of an official record design: its ordinal, address, width, and the field's own label."""
 
     record: str
     offset: int
     length: int | None
     label: str
+    #: The design's own row number, from the leading column of that record's
+    #: field table. It is the design's second way of identifying a row, used
+    #: where the label does not single one out, and it is a statement the design
+    #: makes rather than a property of the wire format.
+    ordinal: int | None = None
 
 
 def read_record_design(sidecar: Path) -> dict[tuple[str, int], RecordDesignRow]:
@@ -110,6 +115,7 @@ def read_record_design(sidecar: Path) -> dict[tuple[str, int], RecordDesignRow]:
                 offset=offset,
                 length=_cell_int(cells, length_index),
                 label=cells[label_index],
+                ordinal=_cell_int(cells, 0),
             ),
         )
     return rows
@@ -163,6 +169,18 @@ def design_field_component(label: str) -> str:
     """
     parts = re.split(r"\s-\s+|\s-(?=\S)|(?<=\S)-\s+", label)
     return design_slot_name(parts[-1] if parts else label)
+
+
+def design_field_text(label: str) -> str:
+    """Return the design's OWN words for the final component of a label.
+
+    :func:`design_field_component` slugifies the same span for use in an
+    identifier. This returns it unchanged -- accents, ordinal marks and the
+    per-cent sign intact -- for prose a human reads, where the design's exact
+    wording is the evidence and a slug is a paraphrase of it.
+    """
+    parts = re.split(r"\s-\s+|\s-(?=\S)|(?<=\S)-\s+", label)
+    return str(parts[-1] if parts else label).strip()
 
 
 def _legal_sources() -> dict[str, dict[str, object]]:

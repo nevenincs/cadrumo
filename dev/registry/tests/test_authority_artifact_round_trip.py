@@ -21,7 +21,6 @@ import pytest
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority_artifact import (
-    AUTHORITY_ARTIFACT_SCHEMA_VERSION,
     AuthorityArtifact,
     AuthorityArtifactFormatError,
     read_authority_artifact,
@@ -99,8 +98,8 @@ def _redigest(path: Path, edit_payload_text: Callable[[str], str]) -> None:
     """Rewrite a published frame's payload with a matching digest, as a defective encoder would emit it."""
     frame = json.loads(path.read_bytes())
     payload_text = json.dumps(frame["payload"])
-    edited = {"schema_version": frame["schema_version"], "payload": json.loads(edit_payload_text(payload_text))}
-    path.write_bytes(canonical_json_bytes({**edited, "payload_sha256": sha256_hex(canonical_json_bytes(edited))}))
+    payload = json.loads(edit_payload_text(payload_text))
+    path.write_bytes(canonical_json_bytes({"payload": payload, "payload_sha256": sha256_hex(canonical_json_bytes(payload))}))
 
 
 def _published_atoms(tmp_path: Path) -> Path:
@@ -151,14 +150,9 @@ def test_a_malformed_or_untagged_non_string_atom_is_refused(tmp_path: Path, tagg
         read_authority_artifact(path)
 
 
-@pytest.mark.parametrize("superseded", ["cadrumo-authority-artifact-v1", "cadrumo-authority-artifact-v2"])
-def test_a_frame_of_a_superseded_format_is_refused_by_name(tmp_path: Path, superseded: str) -> None:
+def test_a_malformed_frame_is_unreadable(tmp_path: Path) -> None:
     path = _published_atoms(tmp_path)
-    frame = json.loads(path.read_bytes())
-    document = {"schema_version": superseded, "payload": frame["payload"]}
-    digest = sha256_hex(canonical_json_bytes(document))
-    path.write_bytes(canonical_json_bytes({**document, "payload_sha256": digest, "signature": "00" * 64}))
+    path.write_bytes(b'{"payload":')
 
-    with pytest.raises(AuthorityArtifactFormatError, match=f"superseded format '{superseded}'"):
+    with pytest.raises(AuthorityArtifactFormatError, match="canonical JSON"):
         read_authority_artifact(path)
-    assert superseded != AUTHORITY_ARTIFACT_SCHEMA_VERSION

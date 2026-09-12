@@ -3,7 +3,6 @@ id = "renta-minimo-discapacidad-grado-65"
 data_type = "money"
 unit = "EUR"
 legal_refs = ["ley-35-2006:art-60"]
-source_refs = ["aeat-renta-2020-manual-parte1"]
 
 [[revisions."2020".parameters.source_citations]]
 source_ref = "aeat-renta-2020-manual-parte1"

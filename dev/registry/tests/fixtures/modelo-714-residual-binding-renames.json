@@ -1,0 +1,605 @@
+{
+  "note": "The expected old-id to new-id map for modelo 714's residual bare-offset bindings, derived independently from the official record designs before the tool produced it. It is the oracle for the naming rule: design Descripcion where it proves the row and fits the identifier, otherwise the design's own row ordinal.",
+  "renames": [
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-116",
+      "new_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-19"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-190",
+      "new_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-26"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-264",
+      "new_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-33"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-42",
+      "new_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-12"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-1041",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-113"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-666",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-73"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-741",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-81"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-816",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-89"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-891",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-97"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-966",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-105"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-290",
+      "new_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-3"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-74",
+      "new_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-descripcion-1"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-843",
+      "new_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-isin-7"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1551",
+      "new_id": "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-nie-entidad-emisora-4"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-132",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-13"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-137",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-14"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-273",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-22"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-278",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-23"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-414",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-31"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-419",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-32"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-70",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-descripcion-1"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-548",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-40"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-669",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-48"
+    },
+    {
+      "edition": "2021",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-790",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-56"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-116",
+      "new_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-19"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-190",
+      "new_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-26"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-264",
+      "new_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-33"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-42",
+      "new_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-12"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-1041",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-113"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-666",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-73"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-741",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-81"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-816",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-89"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-891",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-97"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-966",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-105"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-290",
+      "new_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-clave-3"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-74",
+      "new_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-codigo-pais-1"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-843",
+      "new_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-porcentaje-titularidad-7"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1551",
+      "new_id": "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-no-valores-5"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-135",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-14"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-140",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-15"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-279",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-24"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-284",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-25"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-423",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-34"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-428",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-35"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-70",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-codigo-pais-1"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-557",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-43"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-678",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-51"
+    },
+    {
+      "edition": "2022",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-799",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-59"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-116",
+      "new_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-19"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-190",
+      "new_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-26"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-264",
+      "new_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-33"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-42",
+      "new_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-12"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-1041",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-113"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-666",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-73"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-741",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-81"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-816",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-89"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-891",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-97"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-966",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-105"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-290",
+      "new_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-clave-3"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-74",
+      "new_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-codigo-pais-1"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-843",
+      "new_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-porcentaje-titularidad-7"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1551",
+      "new_id": "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-no-valores-5"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-135",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-14"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-140",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-15"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-279",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-24"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-284",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-25"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-423",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-34"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-428",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-35"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-70",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-codigo-pais-1"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-557",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-43"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-678",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-51"
+    },
+    {
+      "edition": "2023",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-799",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-59"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-116",
+      "new_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-19"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-190",
+      "new_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-26"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-264",
+      "new_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-33"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-42",
+      "new_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-12"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-1041",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-113"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-666",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-73"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-741",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-81"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-816",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-89"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-891",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-97"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-966",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-105"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-290",
+      "new_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-clave-3"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-74",
+      "new_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-codigo-pais-1"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-843",
+      "new_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-porcentaje-titularidad-7"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1551",
+      "new_id": "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-no-valores-5"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-135",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-14"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-140",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-15"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-279",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-24"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-284",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-25"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-423",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-34"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-428",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-35"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-70",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-codigo-pais-1"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-557",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-43"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-678",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-51"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-799",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-59"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-116",
+      "new_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-19"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-190",
+      "new_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-26"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-264",
+      "new_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-33"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-42",
+      "new_id": "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-12"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-1041",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-113"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-666",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-73"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-741",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-81"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-816",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-89"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-891",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-97"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-966",
+      "new_id": "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-fila-105"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-290",
+      "new_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-clave-3"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-74",
+      "new_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-codigo-pais-1"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-843",
+      "new_id": "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-porcentaje-titularidad-7"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1551",
+      "new_id": "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-no-valores-5"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-135",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-14"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-140",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-15"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-279",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-24"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-284",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-25"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-423",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-34"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-428",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-35"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-70",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-codigo-pais-1"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-557",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-43"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-678",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-51"
+    },
+    {
+      "edition": "2025",
+      "old_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-799",
+      "new_id": "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-59"
+    }
+  ]
+}

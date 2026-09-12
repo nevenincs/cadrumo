@@ -17,7 +17,6 @@ id = "renta-gastos-carry-forward-anos"
 data_type = "integer"
 unit = "years"
 legal_refs = ["ley-35-2006:art-23"]
-source_refs = ["aeat-renta-2024-manual-parte1"]
 
 [[revisions."2024".parameters.source_citations]]
 source_ref = "aeat-renta-2024-manual-parte1"

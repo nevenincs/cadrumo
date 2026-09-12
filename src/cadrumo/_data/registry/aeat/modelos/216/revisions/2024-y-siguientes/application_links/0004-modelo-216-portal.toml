@@ -4,4 +4,4 @@ surface = "portal"
 consumer = "portal_m216_retenciones_irnr"
 requires_snapshot = true
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1"]
-source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
+additional_source_refs = ["boe-modelo-216-form-layout"]

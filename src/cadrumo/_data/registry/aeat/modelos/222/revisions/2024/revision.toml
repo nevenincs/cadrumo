@@ -1,6 +1,7 @@
 [revisions."2024"]
-predecessor = { none = { reason = "Stated in full: editions 2023 and 2024 are each authored complete because their rows carry no lineage yet. Both state casilla '01' with no continuidad_id, so a chain from 2023 cannot distinguish supersession from a different box of the same number, and the merge refuses. The two editions share one design era (aeat-dr-222-2023-2024, 2023-01-01 to 2024-12-31) and differ only by edition key, so nothing is lost by stating each in full; a chain is seeded through the canonical path with design evidence, not by hand here.", legal_refs = ["orden-hfp-227-2017:art-2"], source_refs = ["aeat-dr-222-2023-2024"] } }
+predecessor = { none = { reason = "Stated in full: editions 2023 and 2024 are each authored complete because their rows carry no lineage yet. Both state casilla '01' with no continuidad_id, so a chain from 2023 cannot distinguish supersession from a different box of the same number, and the merge refuses. The two editions share one design era (aeat-dr-222-2023-2024, 2023-01-01 to 2024-12-31) and differ only by edition key, so nothing is lost by stating each in full; a chain is seeded through the canonical path with design evidence, not by hand here.", legal_refs = ["orden-hfp-227-2017:art-2"], cause = "predecessor_row_without_lineage", source_refs = ["aeat-dr-222-2023-2024"] } }
 casilla_source_refs = ["aeat-dr-222-2023-2024"]
+application_link_source_refs = ["boe-modelo-202-base-order"]
 # Applicability-grade historical edition for modelo 222, filing year 2024.
 #
 # SAME DESIGN, DIFFERENT YEAR. This edition and its predecessor 2023 are

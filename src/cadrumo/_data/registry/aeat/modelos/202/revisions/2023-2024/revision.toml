@@ -2,6 +2,8 @@
 formula_source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]
 predecessor = "2019-2022"
 casilla_source_refs = ["aeat-dr-202-2023"]
+live_cross_reference_source_refs = ["aeat-modelo-202-instructions-2023-2024"]
+application_link_source_refs = ["aeat-dr-202-2023"]
 reviewed_against = "2019-2022"
 authority_grade = "filing"
 valid_from = 2023-01-01

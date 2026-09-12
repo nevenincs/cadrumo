@@ -18,13 +18,13 @@ import pytest
 from ..coverage_dispositions import CLASSIFICATIONS, CoverageDisposition, load_coverage_dispositions
 from ..edition_delta_status import (
     _LIMITATIONS,
-    _schema_families,
     CONDITIONS,
     COVERAGE_CONDITIONS,
     LINEAGE_SCOPES,
     MEASUREMENTS,
     Edge,
     _artifacts_dir,
+    _schema_families,
     _signal_lines,
     _write_detail,
     build_report,
@@ -501,7 +501,7 @@ class TestEdges:
         export.mkdir()
         (export / "0001-layout.toml").write_text('[[revisions."2025".export_layouts]]\nid = "x"\n', encoding="utf-8")
         (edge,) = edges(scan_registry(tmp_path))
-        assert edge.blockers == ("export_scenario_missing",)
+        assert edge.blockers == ("export_scenario_missing=999",)
 
     def test_a_migrated_predecessor_is_walked_to_its_inherited_rows(self, tmp_path: Path) -> None:
         """A delta edition states only its delta; as a predecessor it holds the whole chain.
@@ -1508,7 +1508,7 @@ class TestRootKindReadsTheCause:
         return edge
 
     @pytest.mark.parametrize(
-        "cause", ["parallel scheme variants", "Parallel Scheme Variant", "lower grade", "overlapping predecessor"]
+        "cause", ["parallel scheme variants", "Parallel Scheme Variant", "overlapping predecessor"]
     )
     def test_a_cause_that_is_a_fact_about_the_forms_is_terminal(self, tmp_path: Path, cause: str) -> None:
         edge = self._rooted(tmp_path, cause)
@@ -1516,7 +1516,7 @@ class TestRootKindReadsTheCause:
         assert not edge.root_is_open
         assert edge.blockers == (), "no cause of ours stops a root the law gives"
 
-    @pytest.mark.parametrize("cause", ["unretired withdrawal", "row order"])
+    @pytest.mark.parametrize("cause", ["unretired withdrawal", "row order", "lower grade"])
     def test_a_cause_that_is_work_is_recoverable(self, tmp_path: Path, cause: str) -> None:
         edge = self._rooted(tmp_path, cause)
         assert edge.root_kind == "root_recoverable"
@@ -2127,15 +2127,18 @@ class TestDeclaredEdgesAreStillChecked:
             tmp_path,
             "999",
             "2025",
-            manifest=(
-                'valid_from = 2025-01-01\nauthority_grade = "filing"\npredecessor = "2024"'
-            ),
-            casillas='[[revisions."2025".casillas]]\nid = "01"\n',
+            manifest=('valid_from = 2025-01-01\nauthority_grade = "filing"\npredecessor = "2024"'),
+            casillas='[[revisions."2025".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
         )
+        export = tmp_path / "modelos" / "999" / "revisions" / "2025" / "export"
+        export.mkdir()
+        (export / "0001-layout.toml").write_text('[[revisions."2025".export_layouts]]\nid = "x"\n', encoding="utf-8")
         (edge,) = edges(scan_registry(tmp_path))
-        # The successor withdraws chain c1 without retiring it.
+        # An export surface with no declared scenario: a cause that survives on
+        # a declared edge, unlike unretired_withdrawal, which is meaningless
+        # once the successor states only its delta.
         assert edge.state == "migrated_unverified"
-        assert any(blocker.startswith("unretired_withdrawal") for blocker in edge.blockers)
+        assert any(blocker.startswith("export_scenario_missing") for blocker in edge.blockers)
 
     def test_a_clean_declared_edge_is_plain_migrated(self, tmp_path: Path) -> None:
         _write_edition(
@@ -2225,7 +2228,9 @@ class TestWithdrawalOnlyBitesAFullCopy:
         )
 
     def test_a_delta_successor_omitting_an_inherited_lineage_raises_nothing(self, tmp_path: Path) -> None:
-        self._pair(tmp_path, successor_manifest='valid_from = 2025-01-01\nauthority_grade = "filing"\npredecessor = "2024"')
+        self._pair(
+            tmp_path, successor_manifest='valid_from = 2025-01-01\nauthority_grade = "filing"\npredecessor = "2024"'
+        )
         (edge,) = edges(scan_registry(tmp_path))
         assert not [b for b in edge.blockers if b.startswith("unretired_withdrawal")], (
             "a declared successor states only its delta"
@@ -2267,8 +2272,7 @@ class TestRootCauseBeatsWording:
             "999",
             "2025",
             manifest=(
-                'valid_from = 2025-01-01\nauthority_grade = "filing"\n'
-                f'[revisions."2025".predecessor.none]\n{none}'
+                f'valid_from = 2025-01-01\nauthority_grade = "filing"\n[revisions."2025".predecessor.none]\n{none}'
             ),
             casillas='[[revisions."2025".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
         )
@@ -2313,8 +2317,7 @@ class TestCarriedDefaults:
             "999",
             "2024",
             manifest=(
-                'valid_from = 2024-01-01\nauthority_grade = "filing"\n'
-                'application_link_source_refs = ["aeat-x-2022"]'
+                'valid_from = 2024-01-01\nauthority_grade = "filing"\napplication_link_source_refs = ["aeat-x-2022"]'
             ),
             casillas='[[revisions."2024".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
         )

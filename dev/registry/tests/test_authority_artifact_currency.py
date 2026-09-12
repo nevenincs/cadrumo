@@ -149,20 +149,18 @@ def test_source_evidence_line_endings_are_byte_exact(tmp_path: Path) -> None:
     assert _status(artifact_path, registry_root, source_root) is AuthorityArtifactCurrencyStatus.STALE
 
 
-def test_a_missing_or_superseded_artifact_is_unreadable_rather_than_current(tmp_path: Path) -> None:
+def test_a_missing_or_malformed_artifact_is_unreadable_rather_than_current(tmp_path: Path) -> None:
     registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
     missing = authority_artifact_currency(
         tmp_path / "absent.json", registry_root=registry_root, source_root=source_root
     )
-    frame = json.loads(artifact_path.read_bytes())
-    frame["schema_version"] = "cadrumo-authority-artifact-v2"
-    artifact_path.write_text(json.dumps(frame), encoding="utf-8")
-    superseded = authority_artifact_currency(artifact_path, registry_root=registry_root, source_root=source_root)
+    artifact_path.write_bytes(b'{"payload":')
+    malformed = authority_artifact_currency(artifact_path, registry_root=registry_root, source_root=source_root)
 
     assert missing.status is AuthorityArtifactCurrencyStatus.UNREADABLE
     assert "AuthorityArtifactUnavailableError" in missing.detail
-    assert superseded.status is AuthorityArtifactCurrencyStatus.UNREADABLE
-    assert "cadrumo-authority-artifact-v2" in superseded.detail
+    assert malformed.status is AuthorityArtifactCurrencyStatus.UNREADABLE
+    assert "AuthorityArtifactFormatError" in malformed.detail
     assert missing.recorded_identity_digest is None
 
 

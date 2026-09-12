@@ -24,7 +24,7 @@ id = "renta-guarderia-incremento-cap-anual"
 data_type = "money"
 unit = "EUR"
 legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-2", "ley-35-2006:art-81-3"]
-source_refs = ["aeat-renta-2024-manual-parte1", "aeat-dr-100-2024-dictionary"]
+additional_source_refs = ["aeat-dr-100-2024-dictionary"]
 
 [[revisions."2024".parameters.source_citations]]
 source_ref = "aeat-renta-2024-manual-parte1"

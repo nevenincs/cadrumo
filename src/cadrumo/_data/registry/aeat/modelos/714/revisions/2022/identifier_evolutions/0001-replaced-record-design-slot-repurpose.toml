@@ -1,0 +1,105 @@
+# Modelo 714 repurposed a fixed-width address between the 2021 and
+# 2022 record designs: at each address below the 2022 diseno declares a
+# field of a different width and meaning than its predecessor did. The identifier is
+# not inherited across that boundary -- it is withdrawn and a new one declared -- so
+# each pair is stated here rather than left looking like one slot that changed type.
+
+# 714-04 offset 927: Descripción 1 (62 bytes, 2021 diseno row 64) becomes Código país 1 (3 bytes, 2022 diseno row 64).
+[[revisions."2022".identifier_evolutions]]
+kind = "replaced"
+family = "bindings"
+identifier = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-1"
+replaced_by = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-1"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2021", "aeat-dr-714-2022"]
+
+# 714-04 offset 1143: Nº Valores 3 (13 bytes, 2021 diseno row 76) becomes Clave 3 (1 bytes, 2022 diseno row 76).
+[[revisions."2022".identifier_evolutions]]
+kind = "replaced"
+family = "bindings"
+identifier = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-no-valores-3"
+replaced_by = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-clave-3"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2021", "aeat-dr-714-2022"]
+
+# 714-04 offset 1696: ISIN 7 (20 bytes, 2021 diseno row 109) becomes % Titularidad 7 (5 bytes, 2022 diseno row 113).
+[[revisions."2022".identifier_evolutions]]
+kind = "replaced"
+family = "bindings"
+identifier = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-isin-7"
+replaced_by = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-porcentaje-titularidad-7"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2021", "aeat-dr-714-2022"]
+
+# 714-04 offset 1872: Descripción 8 (62 bytes, 2021 diseno row 120) becomes NIF/NIE entidad emisora 8 (20 bytes, 2022 diseno row 125).
+[[revisions."2022".identifier_evolutions]]
+kind = "replaced"
+family = "bindings"
+identifier = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-8"
+replaced_by = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-nie-entidad-emisora-8"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2021", "aeat-dr-714-2022"]
+
+# 714-05 offset 74: Descripción 1 (62 bytes, 2021 diseno row 13) becomes Código país 1 (3 bytes, 2022 diseno row 13).
+[[revisions."2022".identifier_evolutions]]
+kind = "replaced"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-descripcion-1"
+replaced_by = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-codigo-pais-1"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2021", "aeat-dr-714-2022"]
+
+# 714-05 offset 290: Nº Valores 3 (13 bytes, 2021 diseno row 25) becomes Clave 3 (1 bytes, 2022 diseno row 25).
+[[revisions."2022".identifier_evolutions]]
+kind = "replaced"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-3"
+replaced_by = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-clave-3"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2021", "aeat-dr-714-2022"]
+
+# 714-05 offset 843: ISIN 7 (20 bytes, 2021 diseno row 58) becomes % Titularidad 7 (5 bytes, 2022 diseno row 62).
+[[revisions."2022".identifier_evolutions]]
+kind = "replaced"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-isin-7"
+replaced_by = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-porcentaje-titularidad-7"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2021", "aeat-dr-714-2022"]
+
+# 714-05 offset 1551: NIF/NIE entidad emisora 4 (20 bytes, 2021 diseno row 100) becomes Nº Valores 5 (13 bytes, 2022 diseno row 109).
+[[revisions."2022".identifier_evolutions]]
+kind = "replaced"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-nie-entidad-emisora-4"
+replaced_by = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-no-valores-5"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2021", "aeat-dr-714-2022"]
+
+# 714-05 offset 1821: NIF/NIE entidad emisora 6 (20 bytes, 2021 diseno row 116) becomes Clave 7 (1 bytes, 2022 diseno row 125).
+[[revisions."2022".identifier_evolutions]]
+kind = "replaced"
+family = "bindings"
+identifier = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-nie-entidad-emisora-6"
+replaced_by = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-entidades-jurid-clave-7"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2021", "aeat-dr-714-2022"]
+
+# 714-06 offset 70: Descripción 1 (62 bytes, 2021 diseno row 12) becomes Código país 1 (3 bytes, 2022 diseno row 12).
+[[revisions."2022".identifier_evolutions]]
+kind = "replaced"
+family = "bindings"
+identifier = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-descripcion-1"
+replaced_by = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-codigo-pais-1"
+to_revision = "2022"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31", "ley-19-1991:art-4-9", "orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2021", "aeat-dr-714-2022"]

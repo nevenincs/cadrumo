@@ -1,0 +1,16 @@
+# Box 70 keeps the same legal result concept and fixed-width representation,
+# while the 2026 official DR32201 workbook's DR32202 row subtracts the new
+# [112] operand from the printed result expression. The 2022, 2023 and
+# 2024-2025 designs print [68] - [69]; 2026 prints [68] - [69] - [112].
+# Source rows: 2022 field 12 at position 154, 2023 field 12 at position
+# 154, 2024-2025 field 12 at position 154, and 2026 field 13 at position
+# 171; each is length 17, type N, and content 15 enteros + 2 decimales.
+
+[[revisions."2026-y-siguientes".casilla_continuidad_evolutions]]
+id = "m322-resultado-autoliquidacion-operand-112-2026"
+continuidad_id = "m322-resultado-autoliquidacion"
+from_revision = "2024-2025"
+to_revision = "2026-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2024-2025", "aeat-dr-322-2026"]

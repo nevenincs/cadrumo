@@ -4,7 +4,6 @@ surface = "filing"
 consumer = "cadrumo.application.filing"
 requires_snapshot = true
 legal_refs = ["orden-hac-66-2002:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-038-procedure"]
 
 [[revisions."2024-desde-06".application_links]]
 id = "modelo-038-deadline"
@@ -12,7 +11,6 @@ surface = "deadline"
 consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["orden-hac-66-2002:art-6", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-038-procedure"]
 
 [[revisions."2024-desde-06".application_links]]
 id = "modelo-038-export"

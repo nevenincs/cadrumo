@@ -28,6 +28,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Ingresos íntegros [2]
 [[revisions."2015-2022".casillas]]
 id = "p05.ingresos-integros-2"
+continuidad_id = "m151-p05-ingresos-integros"
 number = "15-31"
 segmento = "M15105000"
 section = ["p05", "ingresos_integros_2"]
@@ -39,6 +40,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Gastos de personal [3]
 [[revisions."2015-2022".casillas]]
 id = "p05.gastos-de-personal-3"
+continuidad_id = "m151-p05-gastos-de-personal"
 number = "32-48"
 segmento = "M15105000"
 section = ["p05", "gastos_de_personal_3"]
@@ -50,6 +52,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Gastos de aprovisionamiento de materiales y de suministros [4]
 [[revisions."2015-2022".casillas]]
 id = "p05.gastos-de-aprovisionam-ales-y-de-suministros-4"
+continuidad_id = "m151-p05-gastos-de-aprovisionamiento"
 number = "49-65"
 segmento = "M15105000"
 section = ["p05", "gastos_de_aprovisio_s_y_de_suministros_4"]
@@ -61,6 +64,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Rendimiento neto [5]
 [[revisions."2015-2022".casillas]]
 id = "p05.rendimiento-neto-5"
+continuidad_id = "m151-p05-rendimiento-neto-positivo"
 number = "66-82"
 segmento = "M15105000"
 section = ["p05", "rendimiento_neto_5"]
@@ -95,6 +99,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Rendimientos Negativos. Rendimiento neto[7]
 [[revisions."2015-2022".casillas]]
 id = "p05.rendimientos-negativos-rendimiento-neto-7"
+continuidad_id = "m151-p05-rendimiento-neto-negativo"
 number = "117-133"
 segmento = "M15105000"
 section = ["p05", "rendimientos_negativos"]
@@ -106,6 +111,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Total rendimientos netos [8]
 [[revisions."2015-2022".casillas]]
 id = "p05.total-rendimientos-netos-8"
+continuidad_id = "m151-p05-total-rendimientos-netos-positivos"
 number = "134-150"
 segmento = "M15105000"
 section = ["p05", "total_rendimientos_netos_8"]

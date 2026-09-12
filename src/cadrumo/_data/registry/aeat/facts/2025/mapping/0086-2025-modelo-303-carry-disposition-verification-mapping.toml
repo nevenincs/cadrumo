@@ -35,4 +35,8 @@ entries = [
   { key = "applicability.source", value = "selected_modelo_303_revision" },
   { key = "source_kind", value = "filing_observation_header" },
   { key = "validation.error_namespace", value = "application.calculations.m303_carry" },
+  { key = "casilla.posterior", value = "iva.compensacion-pendiente-periodos-posteriores" },
+  { key = "casilla.generated", value = "iva.compensacion-generada-periodo" },
+  { key = "casilla.available", value = "iva.compensacion-disponible-fin-periodo" },
+  { key = "casilla.result", value = "iva.resultado" },
 ]

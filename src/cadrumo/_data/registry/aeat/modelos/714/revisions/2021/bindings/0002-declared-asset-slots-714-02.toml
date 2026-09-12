@@ -35,7 +35,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-42"
+id = "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-12"
 provider = { kind = "manual_input", record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-42", offset = 42, length = 33, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -84,7 +84,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-116"
+id = "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-19"
 provider = { kind = "manual_input", record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-116", offset = 116, length = 33, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -133,7 +133,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-190"
+id = "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-26"
 provider = { kind = "manual_input", record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-190", offset = 190, length = 33, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -182,7 +182,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-264"
+id = "modelo-714.714-02.bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-fila-33"
 provider = { kind = "manual_input", record = "714-02", field = "bienes-y-derechos-a1-bienes-inmuebles-naturaleza-urbana-vivienda-habitual-264", offset = 264, length = 33, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]

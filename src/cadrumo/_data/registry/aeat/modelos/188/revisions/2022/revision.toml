@@ -1,5 +1,6 @@
 [revisions."2022"]
 casilla_source_refs = ["boe-modelo-188-form-text", "boe-modelo-188-form-layout"]
+application_link_source_refs = ["aeat-modelo-188-procedure"]
 # Applicability-grade historical edition for modelo 188, ejercicio 2022.
 #
 # The gap this closes was authoring debt, not a legal absence. Modelo 188 was

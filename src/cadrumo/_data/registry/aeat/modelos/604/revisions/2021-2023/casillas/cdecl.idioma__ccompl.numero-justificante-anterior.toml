@@ -327,6 +327,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "liq.03-signo-base-sujetas"
+continuidad_id = "signo-base-sujetas"
+continuidad_origin = "grounded"
+continuidad_evidence = "Official AEAT designs prove this predecessor ends at the Modelo 604 era split: aeat-dr-604-2021, page 1 field 41 at position 645, prints 'Liquidación (3) - Operaciones sujetas no exentas realizadas en el período - Signo BI [03]' as a one-character A field (blank or N); aeat-dr-604-2024, page 1 field 41 at the same position 645, instead prints 'Liquidación (3) - Rectificaciones - Signo BI [03]'. The 2024 design has no sign field for the base of subject non-exempt operations, and its liq.03-signo-base-rectificaciones row is a different rectification concept, not a successor. The historical signo-base-sujetas lineage is therefore grounded through the 2021 design and retired at the 2024-y-siguientes boundary rather than falsely repurposed."
 number = "liq-03-signo-base-sujetas"
 section = ["liquidacion"]
 data_type = "text"

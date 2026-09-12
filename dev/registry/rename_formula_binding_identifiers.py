@@ -209,10 +209,10 @@ import sys
 import tomllib
 from collections import defaultdict
 from collections.abc import Iterator, Mapping, Sequence, Set
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date
 from pathlib import Path
-from types import UnionType
+from types import MappingProxyType, UnionType
 from typing import Annotated, Any, Protocol, Union, get_args, get_origin
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -1756,6 +1756,95 @@ def rewritable_files(modelos_root: Path = REGISTRY_MODELOS_ROOT, mappings_root: 
     return sorted(candidates)
 
 
+def edition_scoped_files(
+    modelo: str,
+    edition: str,
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+    mappings_root: Path = MAPPINGS_ROOT,
+) -> list[Path]:
+    """Every authored file that may quote an id DECLARED BY one edition of one modelo.
+
+    A rename is an edition-level fact. Two editions may declare the same
+    identifier string and mean different fields by it -- modelo 714's ``714-05``
+    offset 290 is a 13-byte amount in 2021 and a 1-byte clave from 2022 -- and a
+    corpus-wide textual pass can only give that string one name. Scoping the
+    rewrite to the declaring edition's own subtree is what lets the two be named
+    separately, which is exactly what the ``identifier_evolutions`` row beside
+    them states.
+
+    The scope is the edition's authored fragment directory, plus that edition's
+    semantic map where one exists. Generator-owned ``export`` trees stay out, as
+    in the corpus-wide mode, and are handled by the republish guard.
+
+    Correctness of the narrowing is a question about the corpus, not a
+    convenience: it holds only while no file OUTSIDE the edition quotes the id.
+    The caller checks that for the ids it is about to rewrite; this function
+    just states the scope.
+    """
+    revision_dir = modelos_root / modelo / "revisions" / edition
+    candidates = [
+        path
+        for path in revision_dir.rglob("*.toml")
+        if revision_dir.is_dir() and not _is_generated_path(path, revision_dir)
+    ]
+    mapping_dir = mappings_root / f"modelo_{modelo}" / edition
+    if mapping_dir.is_dir():
+        candidates.extend(mapping_dir.rglob("*.toml"))
+    return sorted(candidates)
+
+
+def references_outside_rewritten_editions(
+    identifiers: Set[str],
+    modelo: str,
+    editions: Sequence[str],
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+    mappings_root: Path = MAPPINGS_ROOT,
+    repo_root: Path = REPO_ROOT,
+) -> dict[str, list[str]]:
+    """Return, per identifier, the files outside this modelo's rewritten editions that quote it.
+
+    The scope that has to contain every occurrence is the UNION of the editions
+    being rewritten, not one of them. A sibling edition declaring the same
+    identifier is not a dangling reference -- it is a second declaration, in its
+    own namespace, and it is rewritten under its own map in this same run. That
+    is precisely the case edition scoping exists to serve, and treating it as a
+    hazard would refuse every modelo whose editions restate their bindings,
+    which is all of them.
+
+    What genuinely dangles is an occurrence this pass will never reach: another
+    modelo's construct or dependency classification, a locale catalogue, a
+    Python module, a semantic map outside the scoped editions. Those are
+    returned, and the caller refuses rather than renaming half the corpus.
+
+    The generated address map is deliberately NOT counted. It is this tool's own
+    durable record of which identifier carried which fixed-width address, so it
+    states the OLD spelling on purpose; rewriting it would destroy the only
+    record of what the old id was, which is the single thing the map exists for.
+    """
+    scoped = {
+        path.resolve()
+        for edition in editions
+        for path in edition_scoped_files(modelo, edition, modelos_root, mappings_root)
+    }
+
+    found: dict[str, list[str]] = defaultdict(list)
+    catalogues = sorted(LOCALES_ROOT.rglob("*.yml")) if LOCALES_ROOT.is_dir() else []
+    searchable = [*rewritable_files(modelos_root, mappings_root), *code_reference_files(repo_root), *catalogues]
+    for path in searchable:
+        if path.resolve() in scoped or _is_address_map(path):
+            continue
+        text = path.read_text(encoding="utf-8")
+        for identifier in identifiers:
+            if identifier in text:
+                found[identifier].append(_display_path(path, repo_root))
+    return dict(found)
+
+
+def _is_address_map(path: Path) -> bool:
+    """Whether a path is a generated binding-id address map, which records old ids on purpose."""
+    return path.name.endswith("-binding-id-address-map.json")
+
+
 def code_reference_files(repo_root: Path = REPO_ROOT) -> list[Path]:
     """Non-test Python modules that may quote a registry identifier by literal.
 
@@ -1906,11 +1995,48 @@ def rewrite_identifier_references(
             f"pair the pass reaches first; chained pairs: {pairs}"
         )
         raise ChainedRenameMapError(message)
+    code = list(code_reference_files()) if code_files is None else list(code_files)
+    return rewrite_in_files(renames, [*rewritable_files(modelos_root, mappings_root), *code], manifest=manifest)
+
+
+def _display_path(path: Path, root: Path = REPO_ROOT) -> str:
+    """Return a path as a repository-relative posix string, or absolute when it lies outside.
+
+    A report that crashes on a path outside the repository is a report that
+    cannot describe an isolated tree, which is exactly where a destructive rule
+    ought to be exercised first. The fallback keeps the record honest instead:
+    an outside path is shown in full rather than forced into a relative form
+    that would misdescribe it.
+    """
+    try:
+        return path.relative_to(root).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
+def rewrite_in_files(
+    renames: Mapping[str, str],
+    paths: Sequence[Path],
+    *,
+    manifest: list[dict[str, Any]] | None = None,
+    notes: Mapping[str, str] = MappingProxyType({}),
+) -> tuple[list[Path], int]:
+    """Rewrite every quoted occurrence of a renamed id across *paths*; return touched files and hits.
+
+    The one place this tool writes a rewritten file, so the read-back and the
+    manifest cannot be skipped by reaching for a different entry point. The
+    ``sha256_before`` is taken from the bytes read immediately before the write
+    and the ``sha256_after`` from a fresh read afterwards, so the pair describes
+    a real transition on disk rather than an intention.
+
+    *notes* carries a per-identifier explanation into the manifest, which is how
+    a name chosen for a reason a reader cannot reconstruct from the id alone --
+    a row named by its design ordinal rather than its label -- stays auditable.
+    """
     ordered = sorted(renames.items(), key=lambda pair: len(pair[0]), reverse=True)
     touched: list[Path] = []
     hits = 0
-    code = list(code_reference_files()) if code_files is None else list(code_files)
-    for path in [*rewritable_files(modelos_root, mappings_root), *code]:
+    for path in paths:
         original = path.read_text(encoding="utf-8")
         updated = original
         for old_id, new_id in ordered:
@@ -1931,14 +2057,60 @@ def rewrite_identifier_references(
             raise WriteNotObservedError(path)
         touched.append(path)
         if manifest is not None:
-            manifest.append(
-                {
-                    "path": str(path.relative_to(REPO_ROOT).as_posix()),
-                    "identifiers": sorted(old_id for old_id in renames if f'"{old_id}"' in original),
-                    "sha256_before": hashlib.sha256(original.encode("utf-8")).hexdigest(),
-                    "sha256_after": hashlib.sha256(written.encode("utf-8")).hexdigest(),
-                }
+            carried = sorted(old_id for old_id in renames if f'"{old_id}"' in original)
+            entry: dict[str, Any] = {
+                "path": _display_path(path),
+                "identifiers": carried,
+                "sha256_before": hashlib.sha256(original.encode("utf-8")).hexdigest(),
+                "sha256_after": hashlib.sha256(written.encode("utf-8")).hexdigest(),
+                "mtime_after": path.stat().st_mtime,
+            }
+            ambiguous = {old_id: notes[old_id] for old_id in carried if old_id in notes}
+            if ambiguous:
+                entry["record_design_ambiguous"] = ambiguous
+            manifest.append(entry)
+    return touched, hits
+
+
+def rewrite_identifier_references_by_edition(
+    renames_by_edition: Mapping[str, Mapping[str, str]],
+    modelo: str,
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+    mappings_root: Path = MAPPINGS_ROOT,
+    *,
+    manifest: list[dict[str, Any]] | None = None,
+    notes: Mapping[str, str] = MappingProxyType({}),
+) -> tuple[list[Path], int]:
+    """Rewrite each edition's own map inside that edition's own files only.
+
+    This is what makes two editions able to name one address differently. The
+    corpus-wide mode remains correct where an identifier means one thing
+    everywhere; it is simply unable to express a repurposed address, and this
+    mode is for exactly the rows where the record design says the address was
+    repurposed.
+
+    Raises:
+        ChainedRenameMapError: When an edition's map has a target that is also
+            one of its own sources; the refusal is per edition, because that is
+            the scope one textual pass now covers.
+    """
+    touched: list[Path] = []
+    hits = 0
+    for edition in sorted(renames_by_edition):
+        renames = renames_by_edition[edition]
+        if not renames:
+            continue
+        chained = sorted(set(renames.values()) & set(renames))
+        if chained:
+            pairs = ", ".join(f"{old_id} -> {renames[old_id]}" for old_id in chained)
+            raise ChainedRenameMapError(
+                f"refusing a chained rename map for {modelo} {edition}: a target that is itself a source is "
+                f"rewritten again and the result depends on which pair the pass reaches first; pairs: {pairs}"
             )
+        scoped = edition_scoped_files(modelo, edition, modelos_root, mappings_root)
+        edition_touched, edition_hits = rewrite_in_files(renames, scoped, manifest=manifest, notes=notes)
+        touched.extend(edition_touched)
+        hits += edition_hits
     return touched, hits
 
 
@@ -2010,6 +2182,31 @@ class SpanStripPlan:
     #: address map has to record -- a withdrawn id is precisely the one whose
     #: correspondence nothing else in the tree will hold.
     candidates: list[SpanStrip] = field(default_factory=list)
+    #: One line per row whose name could not come from the design's label alone,
+    #: saying which label was contested or too long and which ordinal was used.
+    #: Carried into the write manifest, so the choice is auditable from the
+    #: record rather than reconstructed from the identifier.
+    design_notes: list[str] = field(default_factory=list)
+    #: ``old id -> {edition: new id}`` for every address whose editions name it
+    #: differently. These are the repurposed addresses: the same identifier
+    #: covering two different fields, which the edition-scoped rewrite separates
+    #: and the emitted identifier_evolutions rows declare.
+    divergent: dict[str, dict[str, str]] = field(default_factory=dict)
+    #: The record-design rows this plan read, per edition, kept so the run that
+    #: named the slots is also the run that declares their discontinuities.
+    designs: dict[str, dict[tuple[str, int], Any]] = field(default_factory=dict)
+    #: Every binding member this plan considered, per edition and id.
+    members: dict[str, dict[str, Mapping[str, Any]]] = field(default_factory=dict)
+
+    @property
+    def renames_by_edition(self) -> dict[str, dict[str, str]]:
+        """The accepted map per edition, empty while the modelo is refused."""
+        if self.refused_modelo:
+            return {}
+        grouped: dict[str, dict[str, str]] = defaultdict(dict)
+        for strip in self.strips:
+            grouped[strip.edition][strip.old_id] = strip.new_id
+        return dict(grouped)
 
     @property
     def rename_map(self) -> dict[str, str]:
@@ -2271,6 +2468,91 @@ def _design_named_identifier(
     return named if len(named) <= binding_identifier_limit() else None
 
 
+def design_ordinal_identifier(
+    identifier: str,
+    member: Mapping[str, Any],
+    design: Mapping[tuple[str, int], Any],
+) -> str | None:
+    """Return the id naming this row by the design's OWN row ordinal, or ``None``.
+
+    The design identifies a row two ways: by its ``Descripcion`` and by the
+    ordinal in its first column, which is the row's position in that record's
+    field table. The label is preferred because it carries meaning, but it does
+    not always single a row out -- modelo 714's 2021 design labels both
+    ``714-02`` offset 40 and offset 42 "Situacion 1" -- and it is sometimes too
+    long for the identifier the loader accepts. The ordinal is the design's
+    other answer to "which row is this", and it is a statement the design makes
+    rather than a fact about the file format, which is what separates it from
+    the byte offset this whole rule exists to remove.
+
+    The ordinal is edition-scoped: a design renumbers its rows when a field is
+    inserted. That is sound here because the rewrite that uses it is
+    edition-scoped too.
+    """
+    provider = member.get("provider")
+    if not isinstance(provider, Mapping):
+        return None
+    record, offset = provider.get("record"), provider.get("offset")
+    if not isinstance(record, str) or not isinstance(offset, int) or isinstance(offset, bool):
+        return None
+    row = design.get((record, offset))
+    if row is None or not isinstance(row.ordinal, int):
+        return None
+    block = drop_provider_offset_tail(identifier, member)
+    if not block or block == identifier:
+        return None
+    named = f"{block}-fila-{row.ordinal}"
+    return named if len(named) <= binding_identifier_limit() else None
+
+
+def _resolve_contested_names(
+    modelo: str,
+    edition: str,
+    strips: list[SpanStrip],
+    owned: Mapping[str, str],
+    members: Mapping[str, Mapping[str, Any]],
+    design: Mapping[tuple[str, int], Any],
+) -> list[str]:
+    """Re-name, by design row ordinal, every strip whose label-derived name is contested.
+
+    Projected over the edition's WHOLE namespace, because a name is only a name
+    if one member holds it. Where two would share one, only a stripped row may
+    move: the sibling it contends with already states a slot the design proved,
+    and moving that one instead would rename a row this pass was not asked to
+    touch. The mover falls back to the design's own row ordinal.
+
+    Returns one note per re-named row, which the caller carries into the write
+    manifest so the choice is auditable from the record rather than inferred.
+    """
+    from .record_design_labels import design_slot_name
+
+    proposed = {strip.old_id: strip.new_id for strip in strips}
+    holders: dict[str, list[str]] = defaultdict(list)
+    for identifier in owned:
+        holders[proposed.get(identifier, identifier)].append(identifier)
+
+    notes: list[str] = []
+    for index, strip in enumerate(strips):
+        if len(holders.get(strip.new_id, ())) < 2:
+            continue
+        member = members.get(strip.old_id)
+        ordinal_name = None if member is None else design_ordinal_identifier(strip.old_id, member, design)
+        if ordinal_name is None:
+            continue
+        provider = (member or {}).get("provider") or {}
+        row = design.get((provider.get("record"), provider.get("offset")))
+        others = sorted(set(holders[strip.new_id]) - {strip.old_id})
+        label = design_slot_name(row.label) if row is not None else strip.new_id
+        ordinal = "unknown" if row is None else row.ordinal
+        notes.append(
+            f"{modelo} {edition} bindings {strip.old_id}: the {edition} record design labels more than one "
+            f"row of record {provider.get('record')} {label!r}, and that name is already stated by "
+            f"{', '.join(others)}; named by its own design row ordinal {ordinal} instead"
+        )
+        strips[index] = replace(strip, new_id=ordinal_name, segment=f"{strip.segment}+design-row-ordinal")
+    return notes
+
+
 def plan_span_strip(modelo: str, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> SpanStripPlan:
     """Decide which of one modelo's binding ids lose the fixed-width span they spell.
 
@@ -2298,6 +2580,7 @@ def plan_span_strip(modelo: str, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
         return plan
 
     designs = _resolve_record_designs(modelo, modelos_root, plan)
+    plan.designs = designs
 
     inventory: dict[str, list[tuple[str, str]]] = {}
     for revision_dir in iter_revision_dirs(modelo_dir):
@@ -2313,12 +2596,14 @@ def plan_span_strip(modelo: str, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
             owned.setdefault(layout_id, "export_layouts")
 
         edition_strips: list[SpanStrip] = []
+        members_by_id: dict[str, Mapping[str, Any]] = {}
         seen: set[str] = set()
         for member in sections.get("bindings", ()):
             identifier = member.get("id")
             if not isinstance(identifier, str) or not identifier or identifier in seen:
                 continue
             seen.add(identifier)
+            members_by_id[identifier] = member
             address = provider_address(member)
             runs = span_runs(identifier)
             matching = [] if address is None else [run for run in runs if (run[2], run[3]) == address]
@@ -2353,6 +2638,14 @@ def plan_span_strip(modelo: str, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
             named = _design_named_identifier(modelo, edition, identifier, member, design)
             if named is not None:
                 new_id, segment = named, "design-label"
+            else:
+                # The label either does not prove this row or will not fit the
+                # identifier the loader accepts. The design's own row ordinal
+                # identifies the same row and is shorter; it is the design's
+                # second answer, not a truncation of the first.
+                ordinal_named = design_ordinal_identifier(identifier, member, design)
+                if ordinal_named is not None:
+                    new_id, segment = ordinal_named, "design-row-ordinal"
             # The restoration can put the address straight back where the
             # provider's own ``field`` ends in the offset, and a row that never
             # spelled a run may still end in one, so the tail drop runs on both.
@@ -2371,18 +2664,26 @@ def plan_span_strip(modelo: str, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
                 SpanStrip(modelo=modelo, edition=edition, old_id=identifier, new_id=new_id, segment=segment)
             )
 
+        # A label that does not single a row out inside its own record is not a
+        # name yet. Resolve that here, against this edition's whole namespace,
+        # before the corpus-wide gate sees the plan.
+        plan.design_notes.extend(
+            _resolve_contested_names(modelo, edition, edition_strips, owned, members_by_id, design)
+        )
         plan.strips.extend(edition_strips)
         plan.candidates.extend(edition_strips)
+        plan.members[edition] = members_by_id
         inventory[edition] = sorted(owned.items())
 
     # One id, one name. The rewrite is a TEXTUAL pass over the corpus, so an
     # id two editions both declare can only become one string -- and where the
     # design gives it two different names, that is precisely the signal that the
-    # editions declare different fields at one address. Such a pair is withdrawn
-    # and named, because the rename tool cannot express it: separating the two
-    # needs an identifier_evolutions ``replaced`` row grounded in both designs,
-    # which is an authoring act and not a spelling change.
-    _withdraw_edition_divergent_names(plan)
+    # editions declare different fields at one address. The edition-scoped
+    # rewrite CAN express that -- each edition's own files get that edition's own
+    # name -- so the pair is kept and recorded, and the same record drives the
+    # ``identifier_evolutions`` rows that state the discontinuity in the registry
+    # itself. A corpus-wide rewrite could not, which is why it is not used here.
+    _record_edition_divergent_names(plan)
 
     # One projection answers both hazards. The strip is planned per edition but
     # rewritten textually corpus-wide, so a renamed id may land on a name its
@@ -2391,7 +2692,7 @@ def plan_span_strip(modelo: str, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
     # "Situacion 1" -- or on one a DIFFERENT edition declares. Projecting the
     # map over every edition's full id inventory shows both, and every rename
     # onto a contested name is withdrawn.
-    _refuse_post_image_collisions(plan, inventory)
+    _withdraw_scoped_post_image_collisions(plan, inventory)
 
     # Withdrawal is the remedy, not refusal of the modelo: a row whose name the
     # design states ambiguously keeps the name it has, which a reader can
@@ -2410,27 +2711,69 @@ def plan_span_strip(modelo: str, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
     return plan
 
 
-def _withdraw_edition_divergent_names(plan: SpanStripPlan) -> None:
-    """Withdraw every id whose editions would give it two different names, and say why.
+def _record_edition_divergent_names(plan: SpanStripPlan) -> None:
+    """Record every id whose editions name it differently; these are the repurposed addresses.
 
-    The withdrawal is not a defeat: it isolates the rows where the corpus'
-    single identifier is genuinely covering two different fields, which is the
-    exact input the ``identifier_evolutions`` family exists to record. Leaving
-    them in would let one edition's name silently overwrite the other's
-    everywhere the id is quoted.
+    Not a withdrawal. An identifier two editions spell the same while their
+    record designs describe different fields at that address is a real
+    discontinuity, and the registry has a way to say so: an
+    ``identifier_evolutions`` ``replaced`` row. Recording the pair here is what
+    lets the pass emit that row and rewrite each edition under its own name in
+    the same run, instead of leaving the corpus stating a continuity the designs
+    deny.
     """
-    targets: dict[str, dict[str, str]] = defaultdict(dict)
+    by_edition: dict[str, dict[str, str]] = defaultdict(dict)
     for strip in plan.strips:
-        targets[strip.old_id][strip.new_id] = strip.edition
-    divergent = {old_id: names for old_id, names in targets.items() if len(names) > 1}
-    for old_id, names in sorted(divergent.items()):
-        rendered = "; ".join(f"{edition} -> {new_id}" for new_id, edition in sorted(names.items()))
-        plan.refusals.append(
-            f"{plan.modelo} bindings {old_id}: its editions name this address differently ({rendered}), so one "
-            "identifier is covering two fields. A textual rename cannot express that; declare an "
-            "identifier_evolutions 'replaced' row grounded in both record designs instead"
+        by_edition[strip.old_id][strip.edition] = strip.new_id
+    plan.divergent = {
+        old_id: dict(sorted(names.items()))
+        for old_id, names in sorted(by_edition.items())
+        if len(set(names.values())) > 1
+    }
+    for old_id, names in plan.divergent.items():
+        rendered = "; ".join(f"{edition} -> {new_id}" for edition, new_id in names.items())
+        plan.design_notes.append(
+            f"{plan.modelo} bindings {old_id}: the record designs name this address differently across "
+            f"editions ({rendered}), so one identifier is covering two fields. Each edition is rewritten "
+            "under its own name and the discontinuity is declared as an identifier_evolutions "
+            "'replaced' row citing both designs"
         )
-    plan.withdraw(set(divergent))
+
+
+def _withdraw_scoped_post_image_collisions(
+    plan: SpanStripPlan,
+    inventory: Mapping[str, list[tuple[str, str]]],
+) -> None:
+    """Withdraw every rename that would leave two members of one edition sharing a name.
+
+    Edition-aware, because the rewrite now is. The shared corpus-wide screen
+    projects ONE map over every edition, which is the right question while an
+    identifier means one thing everywhere; here each edition is rewritten under
+    its own map, so each edition's post-image is projected under its own map and
+    a sibling edition's spelling cannot make a name look contested when it is
+    not.
+    """
+    contested: dict[str, set[tuple[str, str]]] = defaultdict(set)
+    by_edition = plan.renames_by_edition
+    for edition, declared in sorted(inventory.items()):
+        renames = by_edition.get(edition, {})
+        if not renames:
+            continue
+        after: dict[str, list[str]] = defaultdict(list)
+        for identifier, family in declared:
+            after[renames.get(identifier, identifier)].append(f"{family}:{identifier}")
+        for collapsed, owners in sorted(after.items()):
+            if len(owners) > 1:
+                plan.collisions.append(
+                    f"{plan.modelo} {edition}: {collapsed} would be shared by {', '.join(sorted(owners))} "
+                    "after the rewrite; every rename onto it is withdrawn"
+                )
+                contested[collapsed].update(
+                    (edition, identifier) for identifier, _family in declared if renames.get(identifier) == collapsed
+                )
+    withdrawn = {pair for group in contested.values() for pair in group}
+    if withdrawn:
+        plan.strips = [strip for strip in plan.strips if (strip.edition, strip.old_id) not in withdrawn]
 
 
 def _surviving_collisions(plan: SpanStripPlan, inventory: Mapping[str, list[tuple[str, str]]]) -> list[str]:
@@ -2441,9 +2784,10 @@ def _surviving_collisions(plan: SpanStripPlan, inventory: Mapping[str, list[tupl
     answers that. An empty result is the injectivity proof for the surviving
     map -- every id in every edition still names exactly one member.
     """
-    renames = plan.rename_map
+    by_edition = plan.renames_by_edition
     remaining: list[str] = []
     for edition, declared in sorted(inventory.items()):
+        renames = by_edition.get(edition, {})
         after: dict[str, list[str]] = defaultdict(list)
         for identifier, family in declared:
             after[renames.get(identifier, identifier)].append(f"{family}:{identifier}")
@@ -2476,15 +2820,147 @@ def apply_span_strip(
             this plan renames and the caller has not stated that the same change
             republishes it.
     """
-    renames = plan.rename_map
-    if not renames:
+    del code_files  # The scope is the declaring edition; no module-wide pass runs here.
+    by_edition = plan.renames_by_edition
+    if not by_edition:
         return [], 0
     if plan.stranded_export_trees and not export_republish_acknowledged:
         raise GeneratedExportTreeStaleError(plan.modelo, plan.stranded_export_trees)
-    return rewrite_identifier_references(renames, modelos_root, mappings_root, code_files=code_files, manifest=manifest)
+    # The narrowing is only sound while the scope holds every occurrence. Checked
+    # against the live tree rather than assumed, because a construct or catalogue
+    # added since the last run would otherwise be left pointing at a declaration
+    # that no longer exists.
+    # Every edition of this modelo, not only the ones carrying a rename. An
+    # identifier resolves inside the revision that declares it, so an occurrence
+    # in a sibling edition is that edition's own declaration and is none of this
+    # rewrite's business -- whether or not that edition renames anything.
+    editions = [revision_dir.name for revision_dir in iter_revision_dirs(modelos_root / plan.modelo)]
+    renamed = {old_id for renames in by_edition.values() for old_id in renames}
+    outside = references_outside_rewritten_editions(renamed, plan.modelo, editions, modelos_root, mappings_root)
+    if outside:
+        raise ReferenceOutsideEditionError(plan.modelo, ", ".join(sorted(by_edition)), outside)
+    notes = _notes_by_identifier(plan)
+    return rewrite_identifier_references_by_edition(
+        by_edition, plan.modelo, modelos_root, mappings_root, manifest=manifest, notes=notes
+    )
+
+
+class ReferenceOutsideEditionError(Exception):
+    """An edition-scoped rewrite would leave an occurrence of a renamed id behind."""
+
+    def __init__(self, modelo: str, edition: str, outside: Mapping[str, list[str]]) -> None:
+        """Record the identifiers quoted outside the edition and where."""
+        rendered = "; ".join(f"{identifier} in {', '.join(paths)}" for identifier, paths in sorted(outside.items()))
+        super().__init__(
+            f"modelo {modelo} {edition}: the edition-scoped rewrite would not reach every occurrence of "
+            f"{len(outside)} renamed identifiers ({rendered}). Scoping is only correct while the declaring "
+            "edition holds them all; rewriting anyway would leave those references pointing at a "
+            "declaration that no longer exists."
+        )
+        self.modelo = modelo
+        self.edition = edition
+        self.outside = dict(outside)
+
+
+def _notes_by_identifier(plan: SpanStripPlan) -> dict[str, str]:
+    """Return the plan's design notes keyed by the identifier each is about."""
+    keyed: dict[str, str] = {}
+    for note in plan.design_notes:
+        for strip in plan.candidates:
+            if f" {strip.old_id}:" in note:
+                keyed[strip.old_id] = note.split(": ", 1)[-1]
+                break
+    return keyed
+
+
+#: The fragment an emitted evolutions run writes into the successor edition.
+_EVOLUTIONS_FRAGMENT = "0001-replaced-record-design-slot-repurpose.toml"
+
+
+def render_identifier_evolutions(
+    plan: SpanStripPlan,
+    designs: Mapping[str, Mapping[tuple[str, int], Any]],
+    members: Mapping[str, Mapping[str, Mapping[str, Any]]],
+    successor: str,
+    legal_refs: Sequence[str],
+    predecessor: str,
+) -> str:
+    """Render the ``identifier_evolutions`` fragment for every repurposed address.
+
+    Generated from the same design rows that produced the names, in the same
+    run, so the declaration and the rename cannot disagree: the ``identifier``
+    is the predecessor edition's design-derived name and ``replaced_by`` is the
+    successor's, both already written into their own editions by this pass.
+
+    Both designs are cited in ``source_refs`` because the statement is ABOUT the
+    difference between them -- one design alone cannot show that an address was
+    repurposed.
+    """
+    from .record_design_labels import design_field_text
+
+    rendered = [
+        f"# Modelo {plan.modelo} repurposed a fixed-width address between the {predecessor} and",
+        f"# {successor} record designs: at each address below the {successor} diseno declares a",
+        "# field of a different width and meaning than its predecessor did. The identifier is",
+        "# not inherited across that boundary -- it is withdrawn and a new one declared -- so",
+        "# each pair is stated here rather than left looking like one slot that changed type.",
+        "",
+    ]
+    legal = ", ".join(f'"{ref}"' for ref in legal_refs)
+    for old_id, names in sorted(plan.divergent.items()):
+        before, after = names.get(predecessor), names.get(successor)
+        if before is None or after is None or before == after:
+            continue
+        provider = members.get(predecessor, {}).get(old_id, {}).get("provider") or {}
+        record, offset = provider.get("record"), provider.get("offset")
+        was = designs.get(predecessor, {}).get((record, offset))
+        now = designs.get(successor, {}).get((record, offset))
+        if was is not None and now is not None:
+            rendered.append(
+                f"# {record} offset {offset}: {design_field_text(was.label)} ({was.length} bytes, "
+                f"{predecessor} diseno row {was.ordinal}) becomes {design_field_text(now.label)} "
+                f"({now.length} bytes, {successor} diseno row {now.ordinal})."
+            )
+        rendered += [
+            f'[[revisions."{successor}".identifier_evolutions]]',
+            'kind = "replaced"',
+            'family = "bindings"',
+            f'identifier = "{before}"',
+            f'replaced_by = "{after}"',
+            f'to_revision = "{successor}"',
+            f"legal_refs = [{legal}]",
+            f'source_refs = ["aeat-dr-{plan.modelo}-{predecessor}", "aeat-dr-{plan.modelo}-{successor}"]',
+            "",
+        ]
+    return "\n".join(rendered)
+
+
+def revision_legal_refs(modelo: str, edition: str, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> tuple[str, ...]:
+    """Return the legal references an edition declares for itself.
+
+    An evolution is a statement about that edition's own law, so it cites what
+    the edition cites rather than a list kept beside this tool.
+    """
+    manifest = modelos_root / modelo / "revisions" / edition / _MANIFEST_NAME
+    if not manifest.is_file():
+        return ()
+    declared = _load_toml(manifest).get("revisions", {}).get(edition, {}).get("legal_refs")
+    return tuple(str(ref) for ref in declared) if isinstance(declared, list) else ()
 
 
 GENERATED_ROOT = REPO_ROOT / "dev" / "registry" / "generated"
+
+
+def _design_label_for(plan: SpanStripPlan, strip: SpanStrip) -> str | None:
+    """Return the official design label behind a strip's new name, for the durable record.
+
+    Recorded because a name derived from the design's row ordinal does not carry
+    the label that justified it, and the map is the one place a later reader can
+    recover what the design actually said about that slot.
+    """
+    provider = plan.members.get(strip.edition, {}).get(strip.old_id, {}).get("provider") or {}
+    row = plan.designs.get(strip.edition, {}).get((provider.get("record"), provider.get("offset")))
+    return None if row is None else str(row.label)
 
 
 def write_address_map(
@@ -2527,12 +3003,22 @@ def write_address_map(
             "old_id": strip.old_id,
             "new_id": strip.new_id,
             "removed": strip.segment,
+            "design_label": _design_label_for(plan, strip),
             **addresses.get(f"{strip.edition}\t{strip.old_id}", {}),
         }
         for strip in sorted(plan.candidates, key=lambda item: (item.edition, item.old_id))
     ]
     document = {
         "modelo": plan.modelo,
+        "note_design_row_ordinal": (
+            "An id ending in 'fila-N' takes N from the leading number column of the official record "
+            "design for that edition: N is the design's own ordinal for the row at this (record, offset), "
+            "counted from the start of that record's field table. It is used only where the design's "
+            "Descripcion does not identify the row uniquely, or where the label-derived name would exceed "
+            "the identifier length the loader accepts, and it is never a byte offset. The ordinal is "
+            "edition-scoped, because a design renumbers its rows whenever a field is inserted; the rewrite "
+            "that uses it is edition-scoped for the same reason."
+        ),
         "refused_modelo": plan.refused_modelo,
         "candidates": len(plan.candidates),
         "surviving": len(plan.strips),
@@ -2541,71 +3027,205 @@ def write_address_map(
     }
     generated_root.mkdir(parents=True, exist_ok=True)
     target = generated_root / f"{plan.modelo}-binding-id-address-map.json"
-    target.write_text(json.dumps(document, indent=2, ensure_ascii=False, sort_keys=False) + "\n", encoding="utf-8")
+    rendered = json.dumps(document, indent=2, ensure_ascii=False, sort_keys=False) + "\n"
+    target.write_text(rendered, encoding="utf-8")
+    if target.read_text(encoding="utf-8") != rendered:
+        raise WriteNotObservedError(target)
     return target
 
 
-class DirtyFragmentDirectoryError(Exception):
-    """A fragment directory this pass emptied carries uncommitted work, so it is not removed."""
+def repurposed_addresses(
+    modelo: str,
+    predecessor: str,
+    successor: str,
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+) -> dict[tuple[str, int], tuple[str, str]]:
+    """Return every address whose two editions declare different fields, as ``(old id, new id)``.
 
-    def __init__(self, directory: Path, status: str) -> None:
-        """Record the directory and the porcelain status that stopped its removal."""
+    Read from the corpus and the designs as they stand, rather than from a
+    rename plan. That matters because the condition survives the rename: once
+    each edition names the address from its own design, the two ids DIFFER, and
+    the question "did this address change meaning" is still answered by the
+    designs -- the same question, asked of the same evidence, before or after.
+
+    An address qualifies when both designs declare a row there and those rows
+    differ in declared width or in field label. A moved field that kept its
+    width and name is not a repurpose; it is the same slot at a new offset.
+    """
+    from .record_design_labels import design_field_component, edition_record_designs
+
+    designs = edition_record_designs(modelo, modelos_root)
+    found: dict[tuple[str, int], tuple[str, str]] = {}
+    ids: dict[str, dict[tuple[str, int], str]] = {}
+    for edition in (predecessor, successor):
+        revision_dir = modelos_root / modelo / "revisions" / edition
+        at_address: dict[tuple[str, int], str] = {}
+        for member in edition_declared_families(revision_dir, edition).get("bindings", ()):
+            provider = member.get("provider")
+            identifier = member.get("id")
+            if isinstance(provider, Mapping) and isinstance(identifier, str):
+                record, offset = provider.get("record"), provider.get("offset")
+                if isinstance(record, str) and isinstance(offset, int) and not isinstance(offset, bool):
+                    at_address[(record, offset)] = identifier
+        ids[edition] = at_address
+
+    for address, old_id in sorted(ids.get(predecessor, {}).items()):
+        new_id = ids.get(successor, {}).get(address)
+        was, now = designs.get(predecessor, {}).get(address), designs.get(successor, {}).get(address)
+        if new_id is None or was is None or now is None or new_id == old_id:
+            continue
+        if was.length == now.length and design_field_component(was.label) == design_field_component(now.label):
+            continue
+        found[address] = (old_id, new_id)
+    return found
+
+
+def render_repurposed_evolutions(
+    modelo: str,
+    predecessor: str,
+    successor: str,
+    legal_refs: Sequence[str],
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+) -> str:
+    """Render the ``identifier_evolutions`` fragment from the corpus and designs as they stand."""
+    from .record_design_labels import design_field_text, edition_record_designs
+
+    designs = edition_record_designs(modelo, modelos_root)
+    addresses = repurposed_addresses(modelo, predecessor, successor, modelos_root)
+    rendered = [
+        f"# Modelo {modelo} repurposed a fixed-width address between the {predecessor} and",
+        f"# {successor} record designs: at each address below the {successor} diseno declares a",
+        "# field of a different width and meaning than its predecessor did. The identifier is",
+        "# not inherited across that boundary -- it is withdrawn and a new one declared -- so",
+        "# each pair is stated here rather than left looking like one slot that changed type.",
+        "",
+    ]
+    legal = ", ".join(f'"{ref}"' for ref in legal_refs)
+    for (record, offset), (old_id, new_id) in sorted(addresses.items()):
+        was = designs.get(predecessor, {}).get((record, offset))
+        now = designs.get(successor, {}).get((record, offset))
+        if was is not None and now is not None:
+            rendered.append(
+                f"# {record} offset {offset}: {design_field_text(was.label)} ({was.length} bytes, "
+                f"{predecessor} diseno row {was.ordinal}) becomes {design_field_text(now.label)} "
+                f"({now.length} bytes, {successor} diseno row {now.ordinal})."
+            )
+        rendered += [
+            f'[[revisions."{successor}".identifier_evolutions]]',
+            'kind = "replaced"',
+            'family = "bindings"',
+            f'identifier = "{old_id}"',
+            f'replaced_by = "{new_id}"',
+            f'to_revision = "{successor}"',
+            f"legal_refs = [{legal}]",
+            f'source_refs = ["aeat-dr-{modelo}-{predecessor}", "aeat-dr-{modelo}-{successor}"]',
+            "",
+        ]
+    return "\n".join(rendered)
+
+
+def write_repurposed_evolutions(
+    modelo: str,
+    predecessor: str,
+    successor: str,
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+) -> Path | None:
+    """Write the successor edition's ``identifier_evolutions`` fragment, or ``None`` when none is due."""
+    if not repurposed_addresses(modelo, predecessor, successor, modelos_root):
+        return None
+    body = render_repurposed_evolutions(
+        modelo, predecessor, successor, revision_legal_refs(modelo, successor, modelos_root), modelos_root
+    )
+    target = modelos_root / modelo / "revisions" / successor / "identifier_evolutions" / _EVOLUTIONS_FRAGMENT
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(body, encoding="utf-8")
+    if target.read_text(encoding="utf-8") != body:
+        raise WriteNotObservedError(target)
+    return target
+
+
+def write_identifier_evolutions(plan: SpanStripPlan, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> Path | None:
+    """Write the ``identifier_evolutions`` fragment for this plan's repurposed addresses.
+
+    Emitted by the same run that renamed the slots, from the same design rows,
+    so the declaration cannot drift from the rename. ``None`` when no address was
+    repurposed -- the common case, and not a fragment worth writing empty.
+
+    The successor is the earliest edition that names an address differently from
+    the edition before it; both are read from the plan's own ordering rather than
+    chosen here.
+    """
+    if not plan.divergent:
+        return None
+    editions = sorted(plan.renames_by_edition)
+    candidates = [edition for names in plan.divergent.values() for edition in names if edition in editions[1:]]
+    if not candidates:
+        return None
+    successor = min(candidates)
+    predecessor = editions[editions.index(successor) - 1]
+    body = render_identifier_evolutions(
+        plan,
+        plan.designs,
+        plan.members,
+        successor,
+        revision_legal_refs(plan.modelo, successor, modelos_root),
+        predecessor,
+    )
+    target = modelos_root / plan.modelo / "revisions" / successor / "identifier_evolutions" / _EVOLUTIONS_FRAGMENT
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(body, encoding="utf-8")
+    if target.read_text(encoding="utf-8") != body:
+        raise WriteNotObservedError(target)
+    return target
+
+
+class UnownedFragmentDirectoryError(Exception):
+    """An empty fragment directory this pass did not empty itself, so it is not removed."""
+
+    def __init__(self, directory: Path) -> None:
+        """Record the directory whose emptiness this pass cannot account for."""
         super().__init__(
-            f"{directory}: the pass emptied this fragment directory, but git reports uncommitted state under "
-            f"it ({status.strip()!r}). Removing it would discard work this tool did not write, so it is left "
-            "in place; resolve the pending change and re-run."
+            f"{directory}: this fragment directory is empty, but this pass did not remove the files that "
+            "emptied it. Something else did, and removing the directory would finish a change this tool "
+            "cannot see the rest of. It is left in place; remove it in the change that emptied it."
         )
         self.directory = directory
 
 
-def _git_status_clean(directory: Path, repo_root: Path = REPO_ROOT) -> str | None:
-    """Return the porcelain status under *directory*, or ``None`` when git reports nothing.
-
-    ``None`` means clean and therefore safe to remove. Any other value is a
-    contributor's pending change and is reported rather than swept away.
-    """
-    import subprocess
-
-    completed = subprocess.run(  # noqa: S603
-        ["git", "status", "--porcelain", "--", str(directory)],  # noqa: S607
-        cwd=repo_root,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if completed.returncode != 0:
-        return completed.stderr or f"git status exited {completed.returncode}"
-    return completed.stdout or None
-
-
-def remove_emptied_fragment_directories(modelo_dir: Path, repo_root: Path = REPO_ROOT) -> list[Path]:
-    """Remove every fragment directory under *modelo_dir* that now holds no fragment.
+def remove_emptied_fragment_directories(modelo_dir: Path, removed_files: Set[Path] = frozenset()) -> list[Path]:
+    """Remove every fragment directory that THIS pass emptied, and only those.
 
     A pass that strips a family's last fragment leaves the directory behind, and
     the revision loader walks directories rather than files: an empty
     ``applicability/`` is not "no applicability declared", it is a family
     directory declaring nothing, and the loader fails on it. The directory is
-    therefore part of the pass's own output and is removed by the pass that
-    emptied it.
+    therefore part of this pass's own output and is removed by the pass that
+    produced it.
 
-    Only a directory holding no files at all, at any depth, is a candidate --
-    a directory still carrying a non-TOML file states something this rule cannot
-    read. Each candidate is checked against ``git status`` first and left in
-    place when anything is pending under it, because an empty directory beside a
-    staged deletion is another contributor's half-finished change.
+    Ownership is proven from the pass's own record rather than from any external
+    tool: *removed_files* is what this run deleted, and a directory qualifies
+    only when it is empty on a read-back AND at least one of the files this run
+    deleted was inside it. An empty directory nobody here emptied is somebody
+    else's half-finished change, and is reported rather than swept away. This is
+    stronger than asking a version-control index, which describes what has been
+    staged rather than what this process did, and which can be made to say
+    "clean" about work that is not.
 
     Raises:
-        DirtyFragmentDirectoryError: When an emptied directory carries
-            uncommitted state.
+        UnownedFragmentDirectoryError: When an empty fragment directory is not
+            one this pass emptied.
     """
+    owned = {resolved.parent for resolved in (path.resolve() for path in removed_files)}
     removed: list[Path] = []
     for directory in sorted((path for path in modelo_dir.rglob("*") if path.is_dir()), reverse=True):
-        if any(child.is_file() for child in directory.rglob("*")):
+        if any(directory.iterdir()):
             continue
-        status = _git_status_clean(directory, repo_root)
-        if status is not None:
-            raise DirtyFragmentDirectoryError(directory, status)
+        if directory.resolve() not in owned:
+            raise UnownedFragmentDirectoryError(directory)
         directory.rmdir()
+        # Read back: the removal is only done when the directory is gone.
+        if directory.exists():
+            raise WriteNotObservedError(directory)
         removed.append(directory)
     return removed
 
@@ -2635,6 +3255,8 @@ def _run_span_strip(
             ],
             "collisions": plan.collisions,
             "refused": plan.refusals,
+            "design_notes": plan.design_notes,
+            "divergent": plan.divergent,
             "stranded_export_trees": list(plan.stranded_export_trees),
             "locale_mentions": locale_mentions(plan.rename_map),
             "test_mentions": test_mentions(plan.rename_map),
@@ -2666,6 +3288,9 @@ def _run_span_strip(
             continue
         if write:
             written: list[dict[str, Any]] = []
+            # This pass deletes no fragment today; the set is threaded through so
+            # the directory sweep can only ever act on this run's own removals.
+            removed_files: set[Path] = set()
             try:
                 touched, hits = apply_span_strip(
                     plan, export_republish_acknowledged=export_republish_acknowledged, manifest=written
@@ -2674,8 +3299,8 @@ def _run_span_strip(
                 print(f"Refusing to apply {modelo}: {exc}", file=sys.stderr)
                 return 1
             try:
-                emptied = remove_emptied_fragment_directories(REGISTRY_MODELOS_ROOT / modelo)
-            except DirtyFragmentDirectoryError as exc:
+                emptied = remove_emptied_fragment_directories(REGISTRY_MODELOS_ROOT / modelo, removed_files)
+            except UnownedFragmentDirectoryError as exc:
                 print(f"Left in place: {exc}", file=sys.stderr)
                 emptied = []
                 exit_code = 1
@@ -2694,6 +3319,353 @@ def _run_span_strip(
                 entry["write_manifest"] = str(manifest_path)
                 print(f"  WRITE MANIFEST {manifest_path} ({len(written)} files, sha256 pre/post from read-back)")
             print(f"Span strip {modelo}: {hits} references rewritten, {len(touched)} files touched")
+    if emit_json:
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+    if report_path is not None:
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return exit_code
+
+
+# ---------------------------------------------------------------------------
+# Fifth rule: the foreign-edition-token collapse (every id-keyed family).
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class ForeignTokenRename:
+    """One id carrying another edition's key, with the sibling that proves it is the same member."""
+
+    modelo: str
+    edition: str
+    family: str
+    old_id: str
+    new_id: str
+    token: str
+    sibling_edition: str
+
+
+@dataclass
+class ForeignTokenPlan:
+    """One modelo's foreign-edition-token collapse: what it renames, reports and refuses."""
+
+    modelo: str
+    renames: list[ForeignTokenRename] = field(default_factory=list)
+    refusals: list[str] = field(default_factory=list)
+    untouched_content: list[str] = field(default_factory=list)
+    collisions: list[str] = field(default_factory=list)
+    file_renames: list[tuple[Path, Path]] = field(default_factory=list)
+
+    @property
+    def rename_map(self) -> dict[str, str]:
+        """The accepted ``old id -> new id`` map."""
+        return {rename.old_id: rename.new_id for rename in self.renames}
+
+
+def edition_token_carried(identifier: str, token: str) -> bool:
+    """Whether *identifier* states *token* as a whole, separator-bounded segment."""
+    return bool(_bounded_token_spans(identifier, token))
+
+
+def foreign_edition_tokens(modelo_dir: Path) -> dict[str, str]:
+    """Return ``edition token -> owning edition`` for every edition of one modelo.
+
+    Only this modelo's OWN editions, which is what anchors the rule: a
+    four-digit year no edition of this modelo keys on is not a foreign edition
+    token, it is content.
+    """
+    from .analysis.edition_delta_status import edition_token_in_identifier
+
+    tokens: dict[str, str] = {}
+    for revision_dir in iter_revision_dirs(modelo_dir):
+        edition = revision_dir.name
+        token = edition_token_in_identifier(edition, edition)
+        if token is not None:
+            tokens.setdefault(token, edition)
+    return tokens
+
+
+def _first_content_difference(left: Mapping[str, Any], right: Mapping[str, Any]) -> str | None:
+    """Return the first non-id field the two members disagree about, or ``None``.
+
+    Named rather than counted, because the whole value of the refusal is telling
+    the reader WHICH field makes these two different members.
+    """
+    for key in sorted(set(left) | set(right)):
+        if key == "id":
+            continue
+        if key not in left:
+            return f"{key} (absent here, present in the sibling)"
+        if key not in right:
+            return f"{key} (present here, absent in the sibling)"
+        if left[key] != right[key]:
+            return f"{key} ({left[key]!r} vs {right[key]!r})"
+    return None
+
+
+def plan_foreign_edition_token_collapse(
+    modelo: str,
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+) -> ForeignTokenPlan:
+    """Decide which ids carrying ANOTHER edition's key collapse to their edition-free spelling.
+
+    An identifier in edition E spelling edition F's key is stating F inside E,
+    which is either a copy that was never renamed or a genuine reference to F's
+    content. The corpus tells the two apart, not the shape of the name:
+
+    * a sibling edition of the same modelo and family must declare the same stem
+      -- the id with the token removed -- so the collapsed name JOINS something
+      rather than inventing it; and
+    * the two members must be identical on EVERY non-id field, so the collapse
+      merges one member's two spellings rather than two different members.
+
+    A year token no sibling spelling accompanies is content and is left alone.
+    Modelo 100's formulas name the ejercicio a negative base came from, and that
+    year is what the row is ABOUT; stripping it would silently merge distinct
+    carry-forward rules into one name.
+
+    A member whose sibling differs is reported with the differing field named
+    and never renamed: two editions stating different things under one stem is a
+    finding about the corpus, not a spelling to tidy. The position of the token
+    is not part of the test -- the corpus spells a foreign edition mid-id
+    (``modelo-210-2025-non-resident-irnr``) and trailing
+    (``m210-tipo-renta-code-2025``) alike.
+    """
+    plan = ForeignTokenPlan(modelo=modelo)
+    modelo_dir = modelos_root / modelo
+    if not modelo_dir.is_dir():
+        plan.refusals.append(f"{modelo}: no such modelo directory under {modelos_root}")
+        return plan
+
+    tokens = foreign_edition_tokens(modelo_dir)
+    withheld = set(data_keyed_families()) | _COLLAPSE_EXCLUDED_FAMILIES
+    declared: dict[str, dict[tuple[str, str], Mapping[str, Any]]] = {}
+    for revision_dir in iter_revision_dirs(modelo_dir):
+        edition = revision_dir.name
+        members: dict[tuple[str, str], Mapping[str, Any]] = {}
+        for family, entries in edition_declared_families(revision_dir, edition).items():
+            if family in withheld:
+                continue
+            for member in entries:
+                if isinstance(member.get("id"), str):
+                    members[(family, member["id"])] = member
+        declared[edition] = members
+
+    owned = {edition: {identifier for _family, identifier in members} for edition, members in declared.items()}
+
+    for edition in sorted(declared):
+        for (family, identifier), member in sorted(declared[edition].items()):
+            foreign = sorted(
+                {
+                    token
+                    for token, owner in tokens.items()
+                    if owner != edition and edition_token_carried(identifier, token)
+                }
+            )
+            if not foreign:
+                continue
+            if len(foreign) > 1:
+                plan.refusals.append(
+                    f"{modelo} {edition} {family} {identifier}: carries more than one foreign edition token "
+                    f"({', '.join(foreign)}); refusing to choose which to remove"
+                )
+                continue
+            token = foreign[0]
+            try:
+                collapsed = strip_identifier_token(identifier, token)
+            except AmbiguousRenameError:
+                continue
+            if not collapsed or collapsed == identifier:
+                continue
+            sibling = next(
+                (other for other in sorted(declared) if other != edition and (family, collapsed) in declared[other]),
+                None,
+            )
+            if sibling is None:
+                plan.untouched_content.append(
+                    f"{modelo} {edition} {family} {identifier}: no sibling edition declares {collapsed!r} in "
+                    f"this family, so {token!r} is content rather than a stale edition key; left alone"
+                )
+                continue
+            difference = _first_content_difference(member, declared[sibling][(family, collapsed)])
+            if difference is not None:
+                plan.refusals.append(
+                    f"{modelo} {edition} {family} {identifier}: differs from {sibling}'s {collapsed!r} at "
+                    f"{difference}; the two are not one member under two spellings, so the token stays"
+                )
+                continue
+            if collapsed in owned.get(edition, set()):
+                plan.collisions.append(
+                    f"{modelo} {edition} {family}: {identifier} -> {collapsed} is already declared in this "
+                    "edition; refused rather than suffixed"
+                )
+                continue
+            plan.renames.append(
+                ForeignTokenRename(
+                    modelo=modelo,
+                    edition=edition,
+                    family=family,
+                    old_id=identifier,
+                    new_id=collapsed,
+                    token=token,
+                    sibling_edition=sibling,
+                )
+            )
+    plan.file_renames = _token_bearing_files(modelo_dir, plan)
+    return plan
+
+
+def _token_bearing_files(modelo_dir: Path, plan: ForeignTokenPlan) -> list[tuple[Path, Path]]:
+    """Return the fragment files whose NAME carries a collapsed token, and their new names.
+
+    A filename is a label, but a label contradicting the declaration it holds is
+    a trap for the next reader. Where a file declares a member this plan renames
+    and its own name carries the same token, the file moves with it -- in every
+    edition, because the sibling's file carries the same stale label for the same
+    reason.
+    """
+    moves: list[tuple[Path, Path]] = []
+    renamed_stems = {rename.new_id.rsplit(".", 1)[-1] for rename in plan.renames}
+    for path in sorted(modelo_dir.rglob("*.toml")):
+        if _is_generated_path(path, modelo_dir):
+            continue
+        for token in sorted({rename.token for rename in plan.renames}):
+            if not _bounded_token_spans(path.stem, token):
+                continue
+            collapsed = strip_identifier_token(path.stem, token)
+            if any(stem in collapsed for stem in renamed_stems):
+                target = path.with_name(collapsed + path.suffix)
+                if target != path:
+                    moves.append((path, target))
+                break
+    return moves
+
+
+def apply_foreign_edition_token_collapse(
+    plan: ForeignTokenPlan,
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+    mappings_root: Path = MAPPINGS_ROOT,
+    *,
+    code_files: Sequence[Path] | None = None,
+    manifest: list[dict[str, Any]] | None = None,
+) -> tuple[list[Path], int]:
+    """Rewrite every reference to a collapsed id, then move the files whose name carried the token.
+
+    Corpus-wide rather than edition-scoped, and deliberately so: the collapse
+    only runs where a sibling edition ALREADY declares the collapsed name for
+    the identical member, so the two spellings are one member and one name is
+    the right answer everywhere. That is the opposite of the repurposed-address
+    case, where the editions mean different things and each needs its own name.
+    """
+    renames = plan.rename_map
+    if not renames:
+        return [], 0
+    code = list(code_reference_files()) if code_files is None else list(code_files)
+    touched, hits = rewrite_in_files(
+        renames, [*rewritable_files(modelos_root, mappings_root), *code], manifest=manifest
+    )
+    for source, target in plan.file_renames:
+        if not source.is_file():
+            continue
+        if target.exists():
+            raise FileRenameTargetExistsError(source, target)
+        body = source.read_text(encoding="utf-8")
+        target.write_text(body, encoding="utf-8")
+        if target.read_text(encoding="utf-8") != body:
+            raise WriteNotObservedError(target)
+        source.unlink()
+        if source.exists():
+            raise WriteNotObservedError(source)
+        touched.append(target)
+        if manifest is not None:
+            manifest.append(
+                {
+                    "path": _display_path(target),
+                    "renamed_from": _display_path(source),
+                    "identifiers": sorted(new_id for new_id in renames.values() if new_id in body),
+                    "sha256_before": hashlib.sha256(body.encode("utf-8")).hexdigest(),
+                    "sha256_after": hashlib.sha256(target.read_bytes()).hexdigest(),
+                    "mtime_after": target.stat().st_mtime,
+                }
+            )
+    return touched, hits
+
+
+class FileRenameTargetExistsError(Exception):
+    """A fragment would be renamed onto a path that already holds a file."""
+
+    def __init__(self, source: Path, target: Path) -> None:
+        """Record the move that would have overwritten an existing fragment."""
+        super().__init__(
+            f"{source}: renaming it to {target} would overwrite a file that already exists. Two fragments "
+            "cannot share one name, and choosing which survives is not this tool's call."
+        )
+        self.source = source
+        self.target = target
+
+
+def _run_foreign_token_collapse(
+    modelos: Sequence[str],
+    *,
+    write: bool,
+    emit_json: bool,
+    report_path: Path | None,
+    manifest_root: Path | None = None,
+) -> int:
+    """Report, and with ``--apply`` perform, the foreign-edition-token collapse."""
+    report: dict[str, Any] = {"foreign_edition_token": {}}
+    exit_code = 0
+    for modelo in modelos:
+        plan = plan_foreign_edition_token_collapse(modelo)
+        entry: dict[str, Any] = {
+            "renamed_count": len(plan.renames),
+            "renames": [
+                {
+                    "edition": rename.edition,
+                    "family": rename.family,
+                    "old_id": rename.old_id,
+                    "new_id": rename.new_id,
+                    "token": rename.token,
+                    "sibling_edition": rename.sibling_edition,
+                }
+                for rename in plan.renames
+            ],
+            "file_renames": [[_display_path(source), _display_path(target)] for source, target in plan.file_renames],
+            "refused": plan.refusals,
+            "collisions": plan.collisions,
+            "untouched_content": plan.untouched_content,
+        }
+        report["foreign_edition_token"][modelo] = entry
+        if not emit_json:
+            print(f"Foreign-edition-token {modelo}: {len(plan.renames)} identifiers, {len(plan.file_renames)} files")
+            for rename in plan.renames:
+                print(f"  RENAME {rename.edition} {rename.family} {rename.old_id} -> {rename.new_id}")
+            for source, target in plan.file_renames:
+                print(f"  MOVE {_display_path(source)} -> {_display_path(target)}")
+            for collision in plan.collisions:
+                print(f"  COLLISION {collision}")
+            for refusal in plan.refusals:
+                print(f"  REFUSED {refusal}")
+            for content in plan.untouched_content:
+                print(f"  CONTENT {content}")
+        if plan.collisions:
+            exit_code = 1
+            continue
+        if write and plan.renames:
+            written: list[dict[str, Any]] = []
+            touched, hits = apply_foreign_edition_token_collapse(plan, manifest=written)
+            entry["files_touched"] = len(touched)
+            entry["references_rewritten"] = hits
+            print(f"Foreign-edition-token {modelo}: {hits} references rewritten, {len(touched)} files touched")
+            if manifest_root is not None:
+                manifest_path = manifest_root / f"foreign-edition-token-{modelo}.json"
+                manifest_path.parent.mkdir(parents=True, exist_ok=True)
+                rendered = json.dumps({"modelo": modelo, "files": written}, indent=2, ensure_ascii=False) + "\n"
+                manifest_path.write_text(rendered, encoding="utf-8")
+                if manifest_path.read_text(encoding="utf-8") != rendered:
+                    raise WriteNotObservedError(manifest_path)
+                entry["write_manifest"] = str(manifest_path)
+                print(f"  WRITE MANIFEST {manifest_path} ({len(written)} files)")
     if emit_json:
         print(json.dumps(report, indent=2, ensure_ascii=False))
     if report_path is not None:
@@ -2737,6 +3709,20 @@ def main(argv: list[str] | None = None) -> int:
         help="Report what --apply would rewrite and write nothing; the default when --apply is absent.",
     )
     parser.add_argument(
+        "--foreign-edition-token",
+        action="store_true",
+        help=(
+            "Run only the foreign-edition-token collapse: drop another edition's key from an id where a "
+            "sibling edition declares the identical member under the edition-free name. Requires --modelo, "
+            "or --all for a corpus-wide pass."
+        ),
+    )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Run the selected per-modelo pass across every in-scope modelo instead of a named one.",
+    )
+    parser.add_argument(
         "--write-manifest-dir",
         type=Path,
         default=None,
@@ -2759,6 +3745,18 @@ def main(argv: list[str] | None = None) -> int:
     write = args.apply and not args.dry_run
 
     _check_separator_set_matches_identifier_lineage()
+
+    if args.foreign_edition_token:
+        chosen = [path.name for path in iter_modelo_dirs()] if args.all else list(selected)
+        if not chosen:
+            parser.error("--foreign-edition-token is a per-modelo pass; name at least one --modelo, or pass --all")
+        return _run_foreign_token_collapse(
+            chosen,
+            write=write,
+            emit_json=args.json,
+            report_path=args.report,
+            manifest_root=args.write_manifest_dir,
+        )
 
     if args.strip_spans:
         if not selected:

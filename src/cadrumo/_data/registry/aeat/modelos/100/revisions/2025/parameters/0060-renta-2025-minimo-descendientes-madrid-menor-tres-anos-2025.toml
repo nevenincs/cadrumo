@@ -3,7 +3,6 @@ id = "renta-minimo-descendientes-madrid-menor-tres-anos"
 data_type = "money"
 unit = "EUR"
 legal_refs = ["madrid-dl-1-2010:art-2"]
-source_refs = ["aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"

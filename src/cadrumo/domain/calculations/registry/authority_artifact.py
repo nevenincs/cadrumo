@@ -10,9 +10,8 @@ compiled from, so development can tell when it is out of date. This module
 neither knows a registry root nor compiles, repairs, or validates authoring
 inputs on a failed read.
 
-Format ``cadrumo-authority-artifact-v4`` is a canonical JSON frame holding
-``schema_version``, ``payload`` and ``payload_sha256``, the SHA-256 of the
-canonical JSON of ``schema_version`` and ``payload`` together. The payload
+The current format is a canonical JSON frame holding exactly ``payload`` and
+``payload_sha256``, the SHA-256 of the canonical JSON payload. The payload
 projects every required schema field and every non-default value. A field is
 omitted only when its schema declares a default and its typed value equals that
 default; the strict schema restores it while decoding. A model that declares
@@ -24,8 +23,7 @@ single-key tagged object -- ``{"$decimal": "0.40"}``, ``{"$date":
 "2025-01-01"}``, ``{"$int": 5}``, ``{"$bool": true}`` -- and a string atom stays
 a bare string. The reader decodes under the same strict schema and refuses an
 unknown tag, a malformed or non-canonical payload, an untagged non-string atom,
-and any frame member beyond the three above. A frame of an earlier format is
-refused by name.
+and any frame member beyond the two above.
 """
 
 from __future__ import annotations
@@ -53,7 +51,6 @@ from .revision_contracts import DeclaredPredecessor, NoPredecessor
 from .schema import ModeloDefinition, RegistryCatalogues
 
 __all__ = [
-    "AUTHORITY_ARTIFACT_SCHEMA_VERSION",
     "AuthorityArtifact",
     "AuthorityArtifactError",
     "AuthorityArtifactFormatError",
@@ -67,11 +64,7 @@ __all__ = [
     "write_authority_artifact",
 ]
 
-AUTHORITY_ARTIFACT_SCHEMA_VERSION: Final[str] = "cadrumo-authority-artifact-v4"
-_SUPERSEDED_SCHEMA_VERSIONS: Final = frozenset(
-    {"cadrumo-authority-artifact-v1", "cadrumo-authority-artifact-v2", "cadrumo-authority-artifact-v3"}
-)
-_FRAME_MEMBERS: Final = frozenset({"schema_version", "payload", "payload_sha256"})
+_FRAME_MEMBERS: Final = frozenset({"payload", "payload_sha256"})
 #: The validators that mark a governed-fact atom position, read from the schema's own field types.
 _FACT_ATOM_VALIDATORS: Final = frozenset(
     (get_args(FactAtomField)[1], get_args(OptionalFactAtomField)[1]),
@@ -306,30 +299,19 @@ def _artifact_file_identity(path: Path) -> _ArtifactFileIdentity:
 def _encode_artifact(artifact: AuthorityArtifact) -> bytes:
     """Return the canonical digest-checked JSON frame for ``artifact``."""
     artifact.catalogues.runtime.require_complete()
-    document = {
-        "schema_version": AUTHORITY_ARTIFACT_SCHEMA_VERSION,
-        "payload": _artifact_document(artifact),
-    }
-    return canonical_json_bytes({**document, "payload_sha256": sha256_hex(canonical_json_bytes(document))})
+    payload = _artifact_document(artifact)
+    return canonical_json_bytes({"payload": payload, "payload_sha256": sha256_hex(canonical_json_bytes(payload))})
 
 
 def _decode_artifact(raw: bytes) -> AuthorityArtifact:
-    """Check one frame's version and digest before reconstructing a fresh typed authority graph."""
+    """Check one frame's shape and digest before reconstructing a fresh typed authority graph."""
     frame = _decode_json_object(raw, subject="published authority artifact")
-    version = _required_string(frame, "schema_version")
-    if version in _SUPERSEDED_SCHEMA_VERSIONS:
-        raise AuthorityArtifactFormatError(
-            f"published authority artifact uses superseded format {version!r}; "
-            f"republish it as {AUTHORITY_ARTIFACT_SCHEMA_VERSION!r}"
-        )
-    if version != AUTHORITY_ARTIFACT_SCHEMA_VERSION:
-        raise AuthorityArtifactFormatError("published authority artifact has an unsupported schema version")
     unexpected = sorted(set(frame) - _FRAME_MEMBERS)
     if unexpected:
         raise AuthorityArtifactFormatError(f"published authority artifact frame has unexpected members {unexpected}")
     payload = _required_mapping(frame, "payload")
     recorded_digest = _required_string(frame, "payload_sha256")
-    expected_digest = sha256_hex(canonical_json_bytes({"schema_version": version, "payload": payload}))
+    expected_digest = sha256_hex(canonical_json_bytes(payload))
     if recorded_digest != expected_digest:
         raise AuthorityArtifactIntegrityError("published authority artifact failed its content digest check")
     return _artifact_from_document(payload)

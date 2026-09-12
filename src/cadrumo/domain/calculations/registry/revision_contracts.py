@@ -13,6 +13,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
+from enum import StrEnum
 from typing import Annotated, Final
 
 from pydantic import (
@@ -29,13 +30,14 @@ from ....core.toml import freeze_toml_value
 from .errors import RegistryValidationError
 from .ids import RegistryRevisionNodeId, RevisionId
 from .period_selector_overlap import period_selectors_overlap
-from .schema_base import MANIFEST_ONLY, LegalRefs, RegistryModel, SourceRefs
+from .schema_base import MANIFEST_ONLY, LegalRefs, RegistryModel, SourceRefs, coerce_enum_member
 from .schema_references import PeriodScopedValidityWindow, PeriodSelector, RegistryTemporalBounds
 
 __all__ = (
     "DeclaredPredecessor",
     "DeclaredPredecessorField",
     "NoPredecessor",
+    "NoPredecessorCause",
     "RegistryRevisionDeclaration",
     "RegistryRevisionNode",
     "RegistryTemporalDeltaDeclaration",
@@ -66,12 +68,49 @@ _PREDECESSOR_KIND_REFUSAL: Final = (
 )
 
 
+class NoPredecessorCause(StrEnum):
+    """The closed set of grounded reasons a revision has no earlier sibling edition.
+
+    The ``reason`` prose of a :class:`NoPredecessor` states the grounding in
+    full and stays required; this token is the machine-readable classification
+    of that same fact, so a census can answer which cause a root stands on
+    without parsing prose. The set is closed: a root whose grounding is none of
+    these is refused at the typed boundary rather than carried as a free-text
+    token a later consumer would have to interpret.
+    """
+
+    predecessor_row_without_lineage = "predecessor_row_without_lineage"
+    """The earlier edition carries rows with no grounded continuity, so nothing can be inherited from it."""
+
+    parallel_scheme_variants = "parallel_scheme_variants"
+    """The edition is one of several concurrent scheme variants, not a step in a sequence."""
+
+    overlapping_predecessor = "overlapping_predecessor"
+    """The candidate earlier edition's validity scope overlaps this one, so neither strictly precedes the other."""
+
+    forbidden_by_norm = "forbidden_by_norm"
+    """The governing norm approves this edition independently, so no earlier edition is its authored basis."""
+
+    lower_grade = "lower_grade"
+    """The candidate earlier edition carries a lower authority grade than this one, so it cannot ground it."""
+
+    unretired_withdrawal = "unretired_withdrawal"
+    """The earlier edition withdraws content without retiring it, so inheritance would carry withdrawn rows."""
+
+    official_structure_differs = "official_structure_differs"
+    """The official record structure is reordered or shifted, so supersede-in-place would not reproduce it."""
+
+
 class NoPredecessor(RegistryModel):
     """A grounded claim that a revision has no earlier sibling revision."""
 
     reason: str = Field(min_length=1, max_length=1024)
     legal_refs: LegalRefs
     source_refs: SourceRefs
+    cause: Annotated[NoPredecessorCause | None, BeforeValidator(coerce_enum_member(NoPredecessorCause))] = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
 
     @model_serializer(mode="wrap")
     def _serialise_as_authored(self, handler: SerializerFunctionWrapHandler) -> dict[str, object]:

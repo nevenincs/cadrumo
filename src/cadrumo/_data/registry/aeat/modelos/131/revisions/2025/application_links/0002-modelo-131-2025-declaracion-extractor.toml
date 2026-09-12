@@ -4,4 +4,4 @@ surface = "extractor"
 consumer = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-131-2025", "aeat-modelo-131-instructions"]
+additional_source_refs = ["aeat-modelo-131-instructions"]

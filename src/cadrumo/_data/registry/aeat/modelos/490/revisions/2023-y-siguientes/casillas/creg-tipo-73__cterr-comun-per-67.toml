@@ -236,6 +236,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-alava-per-38"
+continuidad_id = "tributacion-territorio-alava-regularizacion-1t"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:170 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:170 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Álava % período objeto de regularización 1T [38], seccion 490_02, posicion 709, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). La columna 1T, posicion y tipo son idénticos; la insercion 2023 de las columnas Navarra [44]/[45], [65]/[66], [86]/[87] y [107]/[108] en el bloque reservado 829-864 queda new_on_form y no altera [38]. Esta continuidad no encadena el concepto distinto que ocupaba [38] en 2022-1t."
 number = "38"
 section = ["490_02"]
 data_type = "ratio"
@@ -245,6 +248,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-alava-per-59"
+continuidad_id = "tributacion-territorio-alava-regularizacion-2t"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:171 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:171 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Álava % período objeto de regularización 2T [59], seccion 490_02, posicion 714, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). La columna 2T, posicion y tipo son idénticos; la insercion 2023 de las columnas Navarra [44]/[45], [65]/[66], [86]/[87] y [107]/[108] en el bloque reservado 829-864 queda new_on_form y no altera [59]. Esta continuidad no encadena el concepto distinto que ocupaba [59] en 2022-1t."
 number = "59"
 section = ["490_02"]
 data_type = "ratio"
@@ -254,6 +260,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-alava-per-80"
+continuidad_id = "tributacion-territorio-alava-regularizacion-3t"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:172 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:172 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Álava % período objeto de regularización 3T [80], seccion 490_02, posicion 719, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). La columna 3T, posicion y tipo son idénticos; la insercion 2023 de las columnas Navarra [44]/[45], [65]/[66], [86]/[87] y [107]/[108] en el bloque reservado 829-864 queda new_on_form y no altera [80]. Esta continuidad no encadena el concepto distinto que ocupaba [80] en 2022-1t."
 number = "80"
 section = ["490_02"]
 data_type = "ratio"
@@ -263,6 +272,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-alava-per-101"
+continuidad_id = "tributacion-territorio-alava-regularizacion-4t"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:173 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:173 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Álava % período objeto de regularización 4T [101], seccion 490_02, posicion 724, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). La columna 4T, posicion y tipo son idénticos; la insercion 2023 de las columnas Navarra [44]/[45], [65]/[66], [86]/[87] y [107]/[108] en el bloque reservado 829-864 queda new_on_form y no altera [101]. Esta continuidad no encadena el concepto distinto que ocupaba [101] en 2022-1t."
 number = "101"
 section = ["490_02"]
 data_type = "ratio"
@@ -308,6 +320,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-guipuzcoa-per-40"
+continuidad_id = "tributacion-territorio-guipuzcoa-regularizacion-1t"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:178 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:178 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Guipúzcoa % período objeto de regularización 1T [40], seccion 490_02, posicion 749, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). La columna 1T, posicion y tipo son idénticos; la insercion 2023 de las columnas Navarra [44]/[45], [65]/[66], [86]/[87] y [107]/[108] en el bloque reservado 829-864 queda new_on_form y no altera [40]. Esta continuidad no encadena el concepto distinto que ocupaba [40] en 2022-1t."
 number = "40"
 section = ["490_02"]
 data_type = "ratio"
@@ -317,6 +332,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-guipuzcoa-per-61"
+continuidad_id = "tributacion-territorio-guipuzcoa-regularizacion-2t"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:179 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:179 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Guipúzcoa % período objeto de regularización 2T [61], seccion 490_02, posicion 754, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). La columna 2T, posicion y tipo son idénticos; la insercion 2023 de las columnas Navarra [44]/[45], [65]/[66], [86]/[87] y [107]/[108] en el bloque reservado 829-864 queda new_on_form y no altera [61]. Esta continuidad no encadena el concepto distinto que ocupaba [61] en 2022-1t."
 number = "61"
 section = ["490_02"]
 data_type = "ratio"
@@ -326,6 +344,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-guipuzcoa-per-82"
+continuidad_id = "tributacion-territorio-guipuzcoa-regularizacion-3t"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:180 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:180 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Guipúzcoa % período objeto de regularización 3T [82], seccion 490_02, posicion 759, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). La columna 3T, posicion y tipo son idénticos; la insercion 2023 de las columnas Navarra [44]/[45], [65]/[66], [86]/[87] y [107]/[108] en el bloque reservado 829-864 queda new_on_form y no altera [82]. Esta continuidad no encadena el concepto distinto que ocupaba [82] en 2022-1t."
 number = "82"
 section = ["490_02"]
 data_type = "ratio"
@@ -335,6 +356,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-guipuzcoa-per-103"
+continuidad_id = "tributacion-territorio-guipuzcoa-regularizacion-4t"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:181 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:181 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Guipúzcoa % período objeto de regularización 4T [103], seccion 490_02, posicion 764, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). La columna 4T, posicion y tipo son idénticos; la insercion 2023 de las columnas Navarra [44]/[45], [65]/[66], [86]/[87] y [107]/[108] en el bloque reservado 829-864 queda new_on_form y no altera [103]. Esta continuidad no encadena el concepto distinto que ocupaba [103] en 2022-1t."
 number = "103"
 section = ["490_02"]
 data_type = "ratio"
@@ -380,6 +404,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-vizcaya-per-42"
+continuidad_id = "tributacion-territorio-vizcaya-regularizacion-1t"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:186 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:186 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Vizcaya % período objeto de regularización 1T [42], seccion 490_02, posicion 789, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). La columna 1T, posicion y tipo son idénticos; la insercion 2023 de las columnas Navarra [44]/[45], [65]/[66], [86]/[87] y [107]/[108] en el bloque reservado 829-864 queda new_on_form y no altera [42]. Esta continuidad no encadena el concepto distinto que ocupaba [42] en 2022-1t."
 number = "42"
 section = ["490_02"]
 data_type = "ratio"
@@ -389,6 +416,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-vizcaya-per-63"
+continuidad_id = "tributacion-territorio-vizcaya-regularizacion-2t"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:187 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:187 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Vizcaya % período objeto de regularización 2T [63], seccion 490_02, posicion 794, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). La columna 2T, posicion y tipo son idénticos; la insercion 2023 de las columnas Navarra [44]/[45], [65]/[66], [86]/[87] y [107]/[108] en el bloque reservado 829-864 queda new_on_form y no altera [63]. Esta continuidad no encadena el concepto distinto que ocupaba [63] en 2022-1t."
 number = "63"
 section = ["490_02"]
 data_type = "ratio"
@@ -398,6 +428,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-vizcaya-per-84"
+continuidad_id = "tributacion-territorio-vizcaya-regularizacion-3t"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:188 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:188 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Vizcaya % período objeto de regularización 3T [84], seccion 490_02, posicion 799, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). La columna 3T, posicion y tipo son idénticos; la insercion 2023 de las columnas Navarra [44]/[45], [65]/[66], [86]/[87] y [107]/[108] en el bloque reservado 829-864 queda new_on_form y no altera [84]. Esta continuidad no encadena el concepto distinto que ocupaba [84] en 2022-1t."
 number = "84"
 section = ["490_02"]
 data_type = "ratio"
@@ -407,6 +440,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-vizcaya-per-105"
+continuidad_id = "tributacion-territorio-vizcaya-regularizacion-4t"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:189 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:189 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Vizcaya % período objeto de regularización 4T [105], seccion 490_02, posicion 804, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). La columna 4T, posicion y tipo son idénticos; la insercion 2023 de las columnas Navarra [44]/[45], [65]/[66], [86]/[87] y [107]/[108] en el bloque reservado 829-864 queda new_on_form y no altera [105]. Esta continuidad no encadena el concepto distinto que ocupaba [105] en 2022-1t."
 number = "105"
 section = ["490_02"]
 data_type = "ratio"
@@ -540,6 +576,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-per-46"
+continuidad_id = "tributacion-territorio-comun-regularizacion-1t"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:202 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:202 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Territorio común % período objeto de regularización (l) 1T [46], sección 490_02, posición 869, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). La columna 1T, posición y tipo son idénticos; la inserción 2023 de las columnas Navarra [44]/[45], [65]/[66], [86]/[87] y [107]/[108] en el bloque reservado 829-864 queda new_on_form y no altera [46]. Esta continuidad no encadena el concepto distinto que ocupaba [46] en 2022-1t."
 number = "46"
 section = ["490_02"]
 data_type = "ratio"
@@ -549,6 +588,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-per-67"
+continuidad_id = "tributacion-territorio-comun-regularizacion-2t"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:203 (sha256 9a4c8d8cd2e6) y 01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:203 (sha256 f55ecbfff8fb) imprimen en DR49002 Información de la tributación por razón de territorio - Territorio común % período objeto de regularización (l) 2T [67], sección 490_02, posición 874, campo Num ratio de 5 caracteres (3 enteros + 2 decimales). La columna 2T, posición y tipo son idénticos; la inserción 2023 de las columnas Navarra [44]/[45], [65]/[66], [86]/[87] y [107]/[108] en el bloque reservado 829-864 queda new_on_form y no altera [67]. Esta continuidad no encadena el concepto distinto que ocupaba [67] en 2022-1t."
 number = "67"
 section = ["490_02"]
 data_type = "ratio"

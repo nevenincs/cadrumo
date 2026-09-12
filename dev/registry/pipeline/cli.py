@@ -45,7 +45,7 @@ from ._tree_publication import (
     publish_validated_generated_export_tree,
 )
 from ._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
-from .authority_publication import publish_authority_candidate
+from .authority_publication import publish_authority_candidate, publish_facts_authority_candidate
 from .candidate_staging import (
     GeneratedExportBootstrapTarget,
     generated_export_bootstrap_target,
@@ -127,6 +127,48 @@ def publish_authority(
         f"\tmodelos={len(published.modelos)}",
     )
     typer.echo("next\tcurrentness=report-registry-status\tpublication=registry-publish-target-if-targets-stale")
+
+
+def publish_facts_authority_candidate_workflow(
+    *,
+    registry_root: Path,
+    artifact_path: Path,
+) -> AuthorityArtifact:
+    """Publish only authored governed facts through the canonical authority writer."""
+    return publish_facts_authority_candidate(
+        registry_root=registry_root,
+        artifact_path=artifact_path,
+    )
+
+
+@app.command("publish-facts-authority")
+def publish_facts_authority(
+    registry_root: Annotated[
+        Path | None,
+        typer.Option("--registry-root", help="Facts registry tree; defaults to the bundled registry."),
+    ] = None,
+    artifact: Annotated[
+        Path | None,
+        typer.Option("--artifact", help="Artifact to replace; defaults to the bundled runtime authority artifact."),
+    ] = None,
+) -> None:
+    """Compile authored facts and merge them into the current typed authority artifact.
+
+    The facts-only boundary does not load or validate Modelo revisions.  It
+    refuses when the existing authority is missing or unreadable so
+    unrelated published sections cannot be silently discarded.
+    """
+    artifact_path = artifact or bundled_authority_artifact_path()
+    published = publish_facts_authority_candidate_workflow(
+        registry_root=registry_root or bundled_path("registry", "aeat"),
+        artifact_path=artifact_path,
+    )
+    typer.echo(
+        "publish-facts-authority"
+        f"\tartifact={artifact_path}"
+        f"\tidentity_digest={published.identity_digest}"
+        f"\tfacts={len(published.catalogues.facts.facts)}",
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -805,6 +847,7 @@ __all__ = [
     "TargetCurrentnessState",
     "app",
     "publish_authority_candidate_workflow",
+    "publish_facts_authority_candidate_workflow",
     "stage_isolated_edition",
     "supporting_modelos",
     "target_currentness",
