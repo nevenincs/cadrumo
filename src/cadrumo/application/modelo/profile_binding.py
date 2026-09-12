@@ -974,7 +974,29 @@ _MADRID_CCAA_CODE = "madrid"
 _CONJUNTA_DECLARATION_TYPE = "2"
 _AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY = "renta_family.madrid_nacimiento_adopcion_eligible_count"
 _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY = "renta_family.unidad_familiar_otros_miembros_base"
-MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR = 2025
+_MADRID_AUTONOMIC_DEDUCCION_APPLICABILITY_FACT_ID = "madrid-nacimiento-adopcion-applicability"
+
+
+def is_madrid_autonomic_deduccion_filing_year(
+    filing_year: int,
+    *,
+    context: FamilyFactResolutionContext | None = None,
+) -> bool:
+    """Return whether the registry declares the Madrid deduction for *filing_year*."""
+    context = (
+        context
+        if context is not None
+        else FamilyFactResolutionContext(
+            authority=bundled_authority(),
+            filing_period=date(filing_year, 12, 31),
+            devengo_date=date(filing_year, 12, 31),
+        )
+    )
+    try:
+        declared_year = context.integer(_MADRID_AUTONOMIC_DEDUCCION_APPLICABILITY_FACT_ID)
+    except RegistryValidationError:
+        return False
+    return filing_year == declared_year
 
 
 def is_madrid_resident(fact_index: Mapping[str, UserProfileFactValue]) -> bool:
@@ -1060,12 +1082,10 @@ def inject_derived_autonomic_deduccion_facts(
     entitlement instead. A deducción's failure mode is over-claim, so silence on
     an indeterminate unidad-familiar aggregate is the safe default.
 
-    Only the 2025 filing year is handled (the first-slice registry formula);
-    other years return early. Idempotent: keys already present are not
+    Only the registry-declared filing year is handled (the first-slice
+    registry formula); other years return early. Idempotent: keys already present are not
     overwritten.
     """
-    if filing_year != MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR:
-        return
     context = (
         context
         if context is not None
@@ -1075,6 +1095,8 @@ def inject_derived_autonomic_deduccion_facts(
             devengo_date=date(filing_year, 12, 31),
         )
     )
+    if not is_madrid_autonomic_deduccion_filing_year(filing_year, context=context):
+        return
 
     # Always supply a neutral 0 default so the casilla-1039 formula's two profile
     # bindings resolve for EVERY M100 2025 filer — non-Madrid, tributación
@@ -1820,7 +1842,6 @@ def resolve_profile_binding_value(
 
 
 __all__ = [
-    "MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR",
     "MaternidadMesesResolution",
     "ProfileBindingResolutionError",
     "inject_derived_anualidades_eligibility_facts",
@@ -1828,6 +1849,7 @@ __all__ = [
     "inject_derived_marriage_facts",
     "inject_derived_minimo_descendientes_facts",
     "is_indeterminate_unidad_familiar",
+    "is_madrid_autonomic_deduccion_filing_year",
     "is_madrid_resident",
     "madrid_nacimiento_adopcion_candidate_weighted_count",
     "profile_resolved_binding_ids",
