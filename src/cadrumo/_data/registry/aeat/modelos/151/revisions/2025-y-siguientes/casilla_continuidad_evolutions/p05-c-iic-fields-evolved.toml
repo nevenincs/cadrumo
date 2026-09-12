@@ -1,0 +1,156 @@
+# The 2023-and-later design moves the C/IIC block from M15105000 to
+# M15107000 and zero-pads its printed field numbers. The eight type selectors,
+# eight retention amounts, and the C/IIC retention total retain their roles.
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p05-c-iic-type-01-label-and-record-evolved"
+continuidad_id = "p05-tipo-de-renta-1-02"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p05-c-iic-type-02-label-and-record-evolved"
+continuidad_id = "p05-tipo-de-renta-1-03"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p05-c-iic-type-03-label-and-record-evolved"
+continuidad_id = "p05-tipo-de-renta-1-04"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p05-c-iic-type-04-label-and-record-evolved"
+continuidad_id = "p05-tipo-de-renta-1-05"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p05-c-iic-type-05-label-and-record-evolved"
+continuidad_id = "p05-tipo-de-renta-1-06"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p05-c-iic-type-06-label-and-record-evolved"
+continuidad_id = "p05-tipo-de-renta-1-07"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p05-c-iic-type-07-label-and-record-evolved"
+continuidad_id = "p05-tipo-de-renta-1-08"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p05-c-iic-type-08-label-and-record-evolved"
+continuidad_id = "p05-tipo-de-renta-1-09"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p05-c-iic-retention-01-label-and-record-evolved"
+continuidad_id = "m151-rentencion-o-ingreso-a-cuenta-3"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p05-c-iic-retention-02-label-and-record-evolved"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-02"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p05-c-iic-retention-03-label-and-record-evolved"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-03"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p05-c-iic-retention-04-label-and-record-evolved"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-04"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p05-c-iic-retention-05-label-and-record-evolved"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-05"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p05-c-iic-retention-06-label-and-record-evolved"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-06"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p05-c-iic-retention-07-label-and-record-evolved"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-07"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p05-c-iic-retention-08-label-and-record-evolved"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-08"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p05-c-iic-total-retention-label-and-record-evolved"
+continuidad_id = "p05-total-retenciones-o-ingresos-a-cuenta-5"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]

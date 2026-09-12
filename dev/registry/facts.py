@@ -77,6 +77,7 @@ REGISTRY_QUERY_SYMBOLS = frozenset(
         "OverrideFactQuery",
         "EventFactQuery",
         "MultiOutputFactQuery",
+        "RegistrySnapshot",
     }
 )
 RETAIN_KINDS = frozenset(
@@ -2587,6 +2588,179 @@ def _validate_absorbed_relation_requirements(
         if errors:
             missing[canonical_id] = sorted(set(errors))
     return missing
+
+
+def _typed_modelo_declarations(
+    destination_relative: str,
+    destination: dict[str, Any],
+) -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:
+    """Materialise one live Modelo family through the production typed loader.
+
+    Placement evidence must not trust a raw revision fragment for fields that
+    the live compiler supplies through defaults or predecessor inheritance.
+    A loader failure, malformed typed member, or missing typed identity returns
+    an empty index so the caller remains fail-closed; the raw TOML is never a
+    fallback for Modelo declarations.
+    """
+    parts = PurePosixPath(destination_relative).parts
+    modelos_index = next(
+        (index for index, part in enumerate(parts) if part.casefold() == "modelos"),
+        None,
+    )
+    if modelos_index is None or modelos_index + 1 >= len(parts):
+        return {}, {}
+    modelo_directory = REPO_ROOT / Path(*parts[: modelos_index + 2])
+    try:
+        from dev.registry.compiler.loader import load_modelo_directory
+
+        modelo = load_modelo_directory(modelo_directory)
+        revisions = getattr(modelo, "revisions", None)
+        revision = revisions.get(destination["revision"]) if isinstance(revisions, dict) else None
+        members = getattr(revision, destination["family"], None) if revision is not None else None
+    except Exception:
+        # The typed loader owns schema, defaults, and predecessor resolution.
+        # Any import/compile/schema error must leave the evidence unresolved.
+        return {}, {}
+
+    if not isinstance(members, (list, tuple)):
+        return {}, {}
+
+    declarations: dict[str, dict[str, Any]] = {}
+    duplicate_ids: set[str] = set()
+    for member in members:
+        model_dump = getattr(member, "model_dump", None)
+        if not callable(model_dump):
+            continue
+        try:
+            declaration = model_dump(mode="json", exclude_defaults=False)
+        except Exception:
+            continue
+        if not isinstance(declaration, dict):
+            continue
+        declaration_id = declaration.get("id")
+        if not isinstance(declaration_id, str) or not declaration_id.strip():
+            continue
+        if declaration_id in declarations:
+            duplicate_ids.add(declaration_id)
+            continue
+        declarations[declaration_id] = declaration
+
+    missing_fields: dict[str, list[str]] = {}
+    for declaration_id in destination["declaration_ids"]:
+        declaration = declarations.get(declaration_id)
+        if declaration is None:
+            continue
+        missing: list[str] = [
+            field for field in destination["required_fields"] if field not in declaration
+        ]
+        if declaration_id in duplicate_ids:
+            missing.append("duplicate id")
+        for field in ("legal_refs", "source_refs"):
+            if field not in destination["required_fields"]:
+                continue
+            refs = declaration.get(field)
+            if (
+                not isinstance(refs, (list, tuple))
+                or not refs
+                or any(not isinstance(reference, str) or not reference.strip() for reference in refs)
+            ):
+                missing.append(field)
+        if missing:
+            missing_fields[declaration_id] = sorted(set(missing))
+    return declarations, missing_fields
+
+
+def _ast_registry_symbols(tree: ast.AST) -> set[str]:
+    """Return query/snapshot symbols, including aliases proven by imports."""
+    symbols = set(REGISTRY_QUERY_SYMBOLS)
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.Import, ast.ImportFrom)):
+            continue
+        for alias in node.names:
+            imported = alias.name.rsplit(".", 1)[-1]
+            if imported in REGISTRY_QUERY_SYMBOLS:
+                symbols.add(alias.asname or imported)
+    return symbols
+
+
+def _ast_registry_query_call(node: ast.AST, symbols: set[str]) -> bool:
+    """Require a real query-constructor call in an AST subtree."""
+    query_symbols = symbols - {"RegistrySnapshot"}
+    return any(
+        isinstance(item, ast.Call) and _call_symbol(item.func) in query_symbols
+        for item in ast.walk(node)
+    )
+
+
+def _ast_registry_snapshot_use(node: ast.AST, symbols: set[str]) -> bool:
+    """Recognise a snapshot type/value use, excluding comment-only mentions."""
+    return any(
+        (isinstance(item, ast.Name) and item.id in symbols)
+        or (isinstance(item, ast.Attribute) and item.attr in symbols)
+        for item in ast.walk(node)
+    )
+
+
+def _consumer_registry_resolution(
+    consumer_resolution: Any,
+) -> tuple[bool, bool, str | None]:
+    """Verify a declared consumer seam against its live AST.
+
+    The placement source and the consumer source may be different modules.
+    Named seams must contain the corresponding query/snapshot use; descriptive
+    seams are accepted only when the same use is found in the parsed consumer
+    source.  Text or comments alone never satisfy this check.
+    """
+    if not isinstance(consumer_resolution, dict) or consumer_resolution.get("resolved") is not True:
+        return False, False, None
+    consumer_source = consumer_resolution.get("source_file")
+    seam = consumer_resolution.get("seam")
+    kind = str(consumer_resolution.get("kind", "")).casefold().replace("-", "_")
+    if not isinstance(consumer_source, str) or not consumer_source.strip():
+        return False, False, None
+    if not isinstance(seam, str) or not seam.strip():
+        return False, False, None
+    try:
+        _, consumer_relative = _source_path(
+            consumer_source,
+            label="closure.placement.consumer_resolution.source_file",
+        )
+    except ManifestError:
+        return False, False, None
+    observation = _observe_source_file(consumer_relative)
+    if (
+        observation.get("exists") is not True
+        or observation.get("read_status") != "ok"
+        or observation.get("ast_parse_status") != "ok"
+    ):
+        return False, False, consumer_relative
+    source_text = observation.get("_text", "")
+    try:
+        tree = ast.parse(source_text, filename=consumer_relative)
+    except (SyntaxError, ValueError, TypeError):
+        return False, False, consumer_relative
+
+    symbols = _ast_registry_symbols(tree)
+    query_present = _ast_registry_query_call(tree, symbols)
+    snapshot_present = _ast_registry_snapshot_use(tree, symbols)
+    snapshot_kind = kind in {"registry_snapshot", "snapshot"}
+    actual_present = snapshot_present if snapshot_kind else query_present
+    identifier_seam = re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", seam) is not None
+    if not identifier_seam:
+        return actual_present, actual_present, consumer_relative
+
+    seam_nodes = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and node.name == seam
+    ]
+    if not seam_nodes:
+        return False, actual_present, consumer_relative
+    seam_present = any(
+        _ast_registry_snapshot_use(node, symbols) if snapshot_kind else _ast_registry_query_call(node, symbols)
+        for node in seam_nodes
+    )
+    return seam_present, actual_present, consumer_relative
 
 
 def _placement_scan(

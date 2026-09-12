@@ -11,8 +11,9 @@
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p05.tipo-de-renta-01"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15105000 campo at byte position 13-14; no counterpart in corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230)."
+continuidad_id = "p05-tipo-de-renta-1-01"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15105000 B-activity field 'Tipo de Renta [1]' at byte position 13-14, length 2, Num; corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15105000 first B-activity field 'Tipo de Renta [01]' at byte position 13-14, length 2, Num. Both select the activity type; the printed box token is zero-padded in the successor."
 number = "13-14"
 segmento = "M15105000"
 section = ["p05", "tipo_de_renta"]
@@ -100,8 +101,9 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Rentención o ingreso a cuenta [06]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p05.rentencion-o-ingreso-a-cuenta-06"
-continuidad_origin = "new_on_form"
-continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15105000 campo at byte position 100-116; no counterpart in corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230)."
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-6"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) record M15105000 B-activity field 'Rentención o ingreso a cuenta [6]' at byte position 83-99, length 17, Num; corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935) record M15105000 first B-activity field 'Rentención o ingreso a cuenta [06]' at byte position 100-116, length 17, Num. Both are the ordinary B-activity retention amount. The old negative-subsection [6] at 100-116 is a separate concept and is retired below, not merged into this lineage."
 number = "100-116"
 segmento = "M15105000"
 section = ["p05", "rentencion_o_ingreso_a_cuenta"]

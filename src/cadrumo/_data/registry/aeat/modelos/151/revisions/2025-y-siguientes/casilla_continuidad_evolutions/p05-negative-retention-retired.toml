@@ -1,0 +1,14 @@
+# The 2015 design has a separate retention slot under the negative-results
+# subsection. The 2023-and-later M15105000 design has one general activity
+# retention field [06] and no separate negative-subsection slot. Since the
+# general field is already the ordinary-retention lineage, the old negative
+# slot is explicitly retired rather than conflated with it.
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p05-negative-subsection-retention-retired"
+continuidad_id = "p05-rendimientos-negativos-rentencion-o-ingreso-a-cuenta-6"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]

@@ -27,6 +27,16 @@ entries = [
   { key = "modelo", value = "303" },
   { key = "revision", value = "2025" },
   { key = "disposition.header_key", value = "declaration_type" },
+  # Explicit C/D/G/I/N/V/U/X code-to-semantic projection, grounded by the
+  # ResultDisposition enum/source history and the AEAT citation above.
+  { key = "disposition.code.C", value = "compensacion" },
+  { key = "disposition.code.D", value = "devolucion" },
+  { key = "disposition.code.G", value = "cuenta_corriente_ingreso" },
+  { key = "disposition.code.I", value = "ingreso" },
+  { key = "disposition.code.N", value = "negativa" },
+  { key = "disposition.code.V", value = "cuenta_corriente_devolucion" },
+  { key = "disposition.code.U", value = "domiciliacion" },
+  { key = "disposition.code.X", value = "devolucion_transferencia_extranjero" },
   { key = "disposition.admissible", value = "compensacion,devolucion,cuenta_corriente_ingreso,ingreso,negativa,cuenta_corriente_devolucion,domiciliacion,devolucion_transferencia_extranjero" },
   { key = "sign.negative", value = "compensacion,devolucion,cuenta_corriente_devolucion,devolucion_transferencia_extranjero" },
   { key = "sign.positive", value = "cuenta_corriente_ingreso,ingreso,domiciliacion" },
