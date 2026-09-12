@@ -11,6 +11,12 @@ source_refs = ["boe-lirpf-statutory-facts"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = [
+  "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades",
+]
+
 [fact.variants.payload]
 kind = "mapping"
 entries = [

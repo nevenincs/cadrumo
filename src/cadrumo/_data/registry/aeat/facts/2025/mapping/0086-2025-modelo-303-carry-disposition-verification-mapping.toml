@@ -16,7 +16,10 @@ source_ref = "aeat-modelo-303-procedure"
 required_text = ["Modelo 303"]
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-303-2025"
-required_text = ["xml"]
+required_text = [
+  "El tipo de declaración puede ser: C (solicitud de compensación)",
+  "U (domiciliacion del ingreso en CCC) X (Devolución por transferencia al extranjero)",
+]
 
 [fact.variants.payload]
 kind = "mapping"

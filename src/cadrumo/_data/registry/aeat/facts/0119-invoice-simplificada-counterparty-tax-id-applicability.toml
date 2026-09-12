@@ -7,13 +7,8 @@ variant_id = "invoice-simplificada-counterparty-tax-id-applicability:2013-01-01"
 date_axis = "filing_period"
 valid_from = 2013-01-01
 legal_refs = ["rd-1619-2012:art-6.1.d", "ley-37-1992:art-25", "ley-37-1992:art-84"]
-source_refs = ["boe-modelo-303-2008-form"]
 review_status = "agent_reviewed"
 ownership = "authored"
-
-[[fact.variants.source_citations]]
-source_ref = "boe-modelo-303-2008-form"
-required_text = ["inversión del sujeto pasivo"]
 
 [fact.variants.payload]
 kind = "mapping"

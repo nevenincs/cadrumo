@@ -14,8 +14,9 @@ ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "boe-lirpf-statutory-facts"
 required_text = [
-  "tutela o acogimiento permanente o de delegación de guarda para la convivencia preadoptiva",
-  "no resulta aplicable",
+  "adopción o acogimiento, tanto preadoptivo como permanente",
+  "mínimo por descendientes",
+  "o, en su caso, a un tutor",
 ]
 
 [fact.variants.payload]

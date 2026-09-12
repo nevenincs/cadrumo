@@ -15,7 +15,7 @@ source_ref = "aeat-modelo-100-procedure"
 required_text = ["Modelo 100"]
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-303-2025"
-required_text = ["xml"]
+required_text = ["Modelo 303"]
 
 [fact.variants.payload]
 kind = "mapping"
