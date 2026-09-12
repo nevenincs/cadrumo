@@ -60,8 +60,8 @@ import pytest
 from cadrumo.adapters.inbound.notificacion import sancion
 from cadrumo.adapters.inbound.pdf.label_regex import SPANISH_AMOUNT_GROUP
 from cadrumo.adapters.outbound.aeat.sede import iva_compensation_wallet_parsing
-from cadrumo.tests.inventory import aeat_relative, production_python_files
 from cadrumo.core.decimal.printed_money import AEAT_THOUSANDS_SEPARATORS, is_aeat_printed_money
+from cadrumo.tests.inventory import aeat_relative, production_python_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -21,12 +21,16 @@ from cadrumo.application.modelo.calculation_actions import assert_no_novel_sourc
 from cadrumo.application.modelo.calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.domain.filing.errors import ModeloBuilderError
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.binding_provider_registration import RouteOwnership, provider_model_for, registration_for
+from cadrumo.domain.calculations.registry.binding_provider_registration import (
+    RouteOwnership,
+    provider_model_for,
+    registration_for,
+)
 from cadrumo.domain.calculations.registry.bindings import validate_binding_selector_shape
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.filing.errors import ModeloBuilderError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

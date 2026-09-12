@@ -9,21 +9,10 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from cadrumo.entrypoints.live_state_composition import persist_and_reconcile_iva_compensation_wallet
 
 from cadrumo.adapters.outbound.aeat.sede.iva_compensation_wallet_parsing import parse_iva_compensation_wallet_html
 from cadrumo.adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
-from cadrumo.core.external_constants import load_external_constants
-from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
-from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
-from cadrumo.domain.iva_compensation.reconciliation import (
-    IvaCompensationAuthoritySource,
-    IvaCompensationDecisionReason,
-    IvaCompensationReconciliationDecision,
-)
-from cadrumo.entrypoints.cli.app_live_iva_remote_state_composition import persist_and_reconcile_iva_compensation_wallet
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     dev_test_database_password,
     isolated_runtime_profile,
@@ -36,6 +25,17 @@ from cadrumo.application.calculations.observations_repository import (
     iva_wallet_decision_key,
 )
 from cadrumo.application.live.iva_remote_state import list_iva_compensation_history
+from cadrumo.core.external_constants import load_external_constants
+from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
+from cadrumo.domain.iva_compensation.reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationDecisionReason,
+    IvaCompensationReconciliationDecision,
+)
 
 _EXTERNAL = load_external_constants()
 WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"

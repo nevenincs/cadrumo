@@ -642,11 +642,7 @@ def _parallel_localization_inventory(
             findings.append(_data_finding("invalid_localization_data", path, "", type(exc).__name__))
             continue
         relative = path.relative_to(docs_root)
-        if (
-            len(relative.parts) < 3
-            or relative.parts[0] not in TARGET_LANGUAGES
-            or relative.parts[1] != "LC_MESSAGES"
-        ):
+        if len(relative.parts) < 3 or relative.parts[0] not in TARGET_LANGUAGES or relative.parts[1] != "LC_MESSAGES":
             counts["invalid_data_files"] += 1
             findings.append(_data_finding("invalid_docs_catalogue_layout", path, "", "unknown_locale_or_layout"))
             continue
@@ -725,9 +721,7 @@ def _documentation_source_inventory(
     counts = Counter[str]()
     findings: list[dict[str, object]] = []
     catalogue_files = catalogue_files or {
-        (locale, catalogue)
-        for (catalogue, _message_id), states in catalogue_messages.items()
-        for locale in states
+        (locale, catalogue) for (catalogue, _message_id), states in catalogue_messages.items() for locale in states
     }
     docs_root = repository / "docs"
     try:
@@ -785,9 +779,7 @@ def _documentation_source_inventory(
         counts[f"docs_catalogue_files_expected_{locale}"] = len(pages)
     counts["docs_catalogue_files_expected"] = len(pages) * len(TARGET_LANGUAGES)
     expected_catalogues = {
-        (locale, Path(page).with_suffix(".po").as_posix())
-        for locale in TARGET_LANGUAGES
-        for page in pages
+        (locale, Path(page).with_suffix(".po").as_posix()) for locale in TARGET_LANGUAGES for page in pages
     }
     present_catalogues = catalogue_files & expected_catalogues
     counts["docs_catalogue_files_read"] = len(present_catalogues)
@@ -897,11 +889,7 @@ def _read_gettext_messages(path: Path) -> dict[str, str] | None:
     if not path.is_file():
         return None
     with path.open(encoding=UTF_8) as handle:
-        return {
-            _po_message_identity(message): _po_message_id(message.id)
-            for message in read_po(handle)
-            if message.id
-        }
+        return {_po_message_identity(message): _po_message_id(message.id) for message in read_po(handle) if message.id}
 
 
 def _po_message_id(value: object) -> str:
@@ -974,11 +962,7 @@ def _visible_document_prose(path: Path) -> tuple[tuple[int, str], ...]:
         blocks: list[tuple[int, str]] = []
         blocks_to_read = (nodes.title, nodes.paragraph, nodes.term, nodes.caption)
         for node in document.findall(lambda candidate: isinstance(candidate, blocks_to_read)):
-            parts = [
-                str(text)
-                for text in node.findall(nodes.Text)
-                if not _node_has_ancestor(text, excluded)
-            ]
+            parts = [str(text) for text in node.findall(nodes.Text) if not _node_has_ancestor(text, excluded)]
             value = " ".join("".join(parts).split())
             if value:
                 blocks.append((int(node.line or 0), value))

@@ -22,7 +22,10 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import (
+    isolated_profile_storage_root,
+    isolated_runtime_profile,
+)
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]

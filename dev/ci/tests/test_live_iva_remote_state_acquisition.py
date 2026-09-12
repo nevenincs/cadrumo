@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from cadrumo.entrypoints.live_state_composition import aggregate_iva_compensation_history_reports
 from playwright._impl._errors import Error as PlaywrightError
 from playwright._impl._errors import TargetClosedError
 from pydantic import ValidationError
@@ -17,13 +18,11 @@ from cadrumo.adapters.outbound.aeat.sede.errors import SedeFailureMode, SedeNavi
 from cadrumo.adapters.persistence.profile.iva_remote_state import IvaRemoteStateAcquisitionManifestRepository
 from cadrumo.adapters.persistence.storage.errors import SecureObjectRowIdentityError, StorageValidationError
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE
-from cadrumo.core.auth_provider import AuthProviderKind
-from cadrumo.core.config import Settings
-from cadrumo.core.identity.documents import nif_check_letter
-from cadrumo.core.period import Period
-from cadrumo.tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_sessionless_storage_root, read_db_at_rest_bytes
-from cadrumo.entrypoints.cli.app_live_iva_remote_state_composition import aggregate_iva_compensation_history_reports
+from cadrumo.adapters.persistence.storage.tests.secure_sql import (
+    isolated_runtime_profile,
+    isolated_sessionless_storage_root,
+    read_db_at_rest_bytes,
+)
 from cadrumo.application.auth.session_types import (
     AeatLoginAssertion,
     AeatSession,
@@ -38,13 +37,13 @@ from cadrumo.application.live.errors import (
 )
 from cadrumo.application.live.iva_remote_state import (
     await_live_iva_surface,
-    filed_history_surface_timeout_ms,
-    suppress_live_iva_playwright_cancellation_noise,
     build_iva_remote_state_acquisition_report,
     capture_iva_compensation_history,
     capture_iva_compensation_wallet,
     capture_iva_remote_state,
+    filed_history_surface_timeout_ms,
     persist_iva_remote_state_acquisition_report,
+    suppress_live_iva_playwright_cancellation_noise,
 )
 from cadrumo.application.live.remote_state_models import (
     IvaCompensationHistoryCaptureReport,
@@ -53,6 +52,11 @@ from cadrumo.application.live.remote_state_models import (
     LiveIvaReadStatus,
     LiveIvaReadSurface,
 )
+from cadrumo.core.auth_provider import AuthProviderKind
+from cadrumo.core.config import Settings
+from cadrumo.core.identity.documents import nif_check_letter
+from cadrumo.core.period import Period
+from cadrumo.tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

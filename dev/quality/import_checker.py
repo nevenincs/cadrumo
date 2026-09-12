@@ -24,9 +24,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final
 
+from cadrumo.tests.module_target_inventory import MetadataTargetSetError, load_all_target_sets, load_target_set
 from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import FAILED, TOOL_BROKEN
-from cadrumo.tests.module_target_inventory import MetadataTargetSetError, load_all_target_sets, load_target_set
 
 _DOTTED_NAME: Final[re.Pattern[str]] = re.compile(r"^[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*$")
 _LAYER_NAME: Final[re.Pattern[str]] = re.compile(r"^(?:\(([A-Za-z_]\w*)\)|([A-Za-z_]\w*))$")
@@ -191,7 +191,9 @@ class CheckResult:
                     "path": (
                         finding.path.relative_to(repository).as_posix()
                         if finding.path is not None and finding.path.is_relative_to(repository)
-                        else finding.path.as_posix() if finding.path is not None else None
+                        else finding.path.as_posix()
+                        if finding.path is not None
+                        else None
                     ),
                 }
                 for finding in self.findings
@@ -646,7 +648,11 @@ class _OccurrenceVisitor(ast.NodeVisitor):
             return
         for alias in node.names:
             child = f"{target}.{alias.name}"
-            if alias.name != "*" and _is_package(target, self.modules, self.authority.root_names) and child in self.known:
+            if (
+                alias.name != "*"
+                and _is_package(target, self.modules, self.authority.root_names)
+                and child in self.known
+            ):
                 self._record(child, (), node.lineno, self._static_form())
             else:
                 self._record(target, (alias.name,), node.lineno, self._static_form())
@@ -1057,13 +1063,13 @@ def _check_static_imports(authority: Authority, modules: Mapping[str, _Module], 
 def _check_absolute_spelling(
     module: _Module, target: str, node: ast.Import | ast.ImportFrom, findings: list[Finding]
 ) -> None:
-    """Require relative spelling only inside the ``cadrumo`` distribution root."""
+    """Report absolute first-party spelling as non-architectural style advice."""
     is_absolute = isinstance(node, ast.Import) or node.level == 0
     in_cadrumo = module.name == "cadrumo" or module.name.startswith("cadrumo.")
     if is_absolute and in_cadrumo and (target == "cadrumo" or target.startswith("cadrumo.")):
         findings.append(
             Finding(
-                "ABSOLUTE_INTRA_CADRUMO",
+                "CANONICAL_IMPORT_SPELLING",
                 f"absolute canonical import of {target!r}; relative spelling is optional style",
                 module.path,
                 node.lineno,
@@ -1236,7 +1242,7 @@ def _check_dynamic_imports(
                 ):
                     findings.append(
                         Finding(
-                            "ABSOLUTE_INTRA_CADRUMO",
+                            "CANONICAL_IMPORT_SPELLING",
                             f"absolute canonical dynamic target {resolved!r}; relative spelling is optional style",
                             module.path,
                             node.lineno,
@@ -2047,8 +2053,8 @@ __all__ = [
     "Authority",
     "AuthorityRead",
     "CheckResult",
-    "ForbiddenContract",
     "Finding",
+    "ForbiddenContract",
     "ImportOccurrence",
     "RootPackage",
     "check_authority",

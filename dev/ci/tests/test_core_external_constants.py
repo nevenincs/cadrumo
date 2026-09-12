@@ -26,6 +26,13 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core.config import Settings
+from cadrumo.core.errors.hierarchy import CoreValidationError
+from cadrumo.core.external_constants import (
+    AeatSection,
+    ExternalConstants,
+    load_external_constants,
+)
 from cadrumo.tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
     AEAT_LEGACY_APEX_CANARY,
@@ -34,13 +41,12 @@ from cadrumo.tests.aeat_literal_fixtures import (
     PORTAL_LITERAL_SCAN_TOKENS,
     REMOTE_GUARD_LITERAL_SCAN_TOKENS,
 )
-from cadrumo.tests.inventory import ast_for_path, discover_test_control_modules, package_ast_items, repo_path, repo_relative
-from cadrumo.core.config import Settings
-from cadrumo.core.errors.hierarchy import CoreValidationError
-from cadrumo.core.external_constants import (
-    AeatSection,
-    ExternalConstants,
-    load_external_constants,
+from cadrumo.tests.inventory import (
+    ast_for_path,
+    discover_test_control_modules,
+    package_ast_items,
+    repo_path,
+    repo_relative,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

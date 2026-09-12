@@ -11,12 +11,15 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from cadrumo.entrypoints.live_state_composition import carry_forward_lot_row, taxpayer_ref
 
 from cadrumo.adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation
 from cadrumo.core.identity.tax_id import tax_id_identity_token
 from cadrumo.core.period import Period
-from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationCarryForwardLot, IvaCompensationExpiryReviewState
-from cadrumo.entrypoints.cli.app_live_iva_remote_state_composition import carry_forward_lot_row, taxpayer_ref
+from cadrumo.domain.iva_compensation.carry_forward import (
+    IvaCompensationCarryForwardLot,
+    IvaCompensationExpiryReviewState,
+)
 from cadrumo.tests.aeat_literal_fixtures import IVA_WALLET_SOURCE_URL_FIXTURE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

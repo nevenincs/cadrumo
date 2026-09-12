@@ -187,7 +187,10 @@ def _temporal_coverage_failures(fact: GovernedFact) -> tuple[str, ...]:
         for current, successor in pairwise(ordered):
             current_window = windows[current.variant_id]
             successor_window = windows[successor.variant_id]
-            if current_window.valid_to is None or current_window.valid_to + timedelta(days=1) != successor_window.valid_from:
+            if (
+                current_window.valid_to is None
+                or current_window.valid_to + timedelta(days=1) != successor_window.valid_from
+            ):
                 failures.append(
                     f"retired-provider fact {fact.fact_id!r} track {track!r} has a gap in its "
                     "source-grounded temporal coverage",

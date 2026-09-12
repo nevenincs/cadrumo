@@ -18,9 +18,9 @@ from cadrumo.adapters.persistence.storage.errors import ClassificationError
 from cadrumo.adapters.persistence.storage.sql.engine import get_engine
 from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.sql.session import session_scope
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
-from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

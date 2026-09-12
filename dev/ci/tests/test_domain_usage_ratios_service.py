@@ -19,12 +19,12 @@ from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios,
 from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
 from cadrumo.adapters.persistence.storage.errors import StorageValidationError
 from cadrumo.adapters.persistence.storage.runtime_readiness import StorageRuntimeReadinessCode
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.identity.bucket import BucketId
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
-from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.usage_ratios.errors import UsageRatioPersistenceError
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile

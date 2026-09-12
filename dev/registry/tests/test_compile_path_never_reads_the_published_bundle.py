@@ -121,13 +121,7 @@ def _published_artifact_reads(tree: ast.AST, path: Path) -> tuple[_Read, ...]:
         if not isinstance(node, ast.Call):
             continue
         func = node.func
-        name = (
-            func.id
-            if isinstance(func, ast.Name)
-            else func.attr
-            if isinstance(func, ast.Attribute)
-            else None
-        )
+        name = func.id if isinstance(func, ast.Name) else func.attr if isinstance(func, ast.Attribute) else None
         if name == _FORBIDDEN_CALLEE:
             found.append(_Read(path=path, line=node.lineno))
     return tuple(found)
@@ -140,9 +134,7 @@ def test_the_compile_path_never_reads_the_published_authority() -> None:
         "and would pass this gate no matter what the compile path does"
     )
 
-    reads = tuple(
-        read for path, tree in sorted(closure.items()) for read in _published_artifact_reads(tree, path)
-    )
+    reads = tuple(read for path, tree in sorted(closure.items()) for read in _published_artifact_reads(tree, path))
 
     assert not reads, (
         "the registry compile path reads the published authority artifact it is about to "

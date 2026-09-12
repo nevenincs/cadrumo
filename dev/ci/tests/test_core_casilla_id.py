@@ -6,8 +6,8 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations import registry
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
+from cadrumo.domain.calculations import registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

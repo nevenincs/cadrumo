@@ -67,8 +67,7 @@ def build_import_health(
     supplemental_occurrences = {
         contract.key: int(candidate_by_contract.get(contract.key, 0))
         for contract in authority.forbidden_contracts
-        if int(candidate_by_contract.get(contract.key, 0))
-        and contract_status.get(contract.name) == "kept"
+        if int(candidate_by_contract.get(contract.key, 0)) and contract_status.get(contract.name) == "kept"
     }
     operational_reasons.extend(finding.message for finding in fatal_findings)
 
@@ -423,9 +422,7 @@ def _occurrence_inventory(
                 "test_scoped": test_scoped,
             }
         )
-    inventory_digest = hashlib.sha256(
-        json.dumps(rows, sort_keys=True, separators=(",", ":")).encode(UTF_8)
-    ).hexdigest()
+    inventory_digest = hashlib.sha256(json.dumps(rows, sort_keys=True, separators=(",", ":")).encode(UTF_8)).hexdigest()
     return rows, {
         "contract_occurrences": sum(len(group) for group in grouped.values()),
         "by_contract": dict(sorted(by_contract.items())),

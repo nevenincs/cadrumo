@@ -10,17 +10,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from cadrumo.domain.calculations.registry.bindings import binding_source_modelo
-from cadrumo.domain.calculations.registry.bindings_previous_filing import (
-    is_direct_previous_filing_binding,
-    previous_filing_source_reference,
-)
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_deadlines import filing_schedule_period_kind_mismatches
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.domain.calculations.registry.schema_revision_members import (
     ConstructDefinition,
-    DependencyClassificationDefinition,
 )
 from cadrumo.domain.calculations.registry.validate_revision_identity import duplicates
 

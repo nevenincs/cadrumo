@@ -259,7 +259,9 @@ def run_loadability(
     }
     if timeout <= 0:
         unavailable["operational_error"] = f"loadability probe timed out after {timeout:g}s"
-        return ComponentResult("loadability", TOOL_BROKEN, f"[TOOL_BROKEN] {unavailable['operational_error']}"), unavailable
+        return ComponentResult(
+            "loadability", TOOL_BROKEN, f"[TOOL_BROKEN] {unavailable['operational_error']}"
+        ), unavailable
 
     environment = os.environ.copy()
     import_paths = [str(authority.repository), *(str(root.source_root) for root in authority.roots)]
@@ -306,10 +308,14 @@ def run_loadability(
                 payload["artifact"] = str(report_path)
     except subprocess.TimeoutExpired as exc:
         unavailable["operational_error"] = f"loadability probe timed out after {timeout:g}s: {exc}"
-        return ComponentResult("loadability", TOOL_BROKEN, f"[TOOL_BROKEN] {unavailable['operational_error']}"), unavailable
+        return ComponentResult(
+            "loadability", TOOL_BROKEN, f"[TOOL_BROKEN] {unavailable['operational_error']}"
+        ), unavailable
     except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
         unavailable["operational_error"] = f"loadability evidence is unusable: {exc}"
-        return ComponentResult("loadability", TOOL_BROKEN, f"[TOOL_BROKEN] {unavailable['operational_error']}"), unavailable
+        return ComponentResult(
+            "loadability", TOOL_BROKEN, f"[TOOL_BROKEN] {unavailable['operational_error']}"
+        ), unavailable
 
     output = _combined_output(completed.stdout, completed.stderr)
     if completed.returncode == 0:

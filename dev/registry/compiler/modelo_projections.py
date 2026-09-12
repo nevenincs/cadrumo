@@ -97,7 +97,7 @@ def compile_modelo_parameter_projection_facts(
 
 def _target_variants(modelo: ModeloDefinition, target: _ProjectionTarget) -> tuple[GovernedFactVariant, ...]:
     variants: list[GovernedFactVariant] = []
-    seen: set[tuple[object, ...]] = set()
+    index_by_identity: dict[tuple[object, ...], int] = {}
     for revision in modelo.revisions.values():
         for parameter in revision.parameters:
             if parameter.id != target.parameter_id:
@@ -114,9 +114,21 @@ def _target_variants(modelo: ModeloDefinition, target: _ProjectionTarget) -> tup
                     parameter.source_refs,
                     parameter.source_citations,
                 )
-                if identity in seen:
+                existing_index = index_by_identity.get(identity)
+                if existing_index is not None:
+                    existing = variants[existing_index]
+                    if existing.review_status is not revision.review_status:
+                        raise RegistryValidationError(
+                            f"modelo {modelo.id} parameter {parameter.id!r} revisions contributing one "
+                            "projected fact disagree on review status"
+                        )
+                    source_revision_ids = existing.effective_source_revision_ids
+                    if revision.id not in source_revision_ids:
+                        variants[existing_index] = existing.model_copy(
+                            update={"source_revision_ids": (*source_revision_ids, revision.id)},
+                        )
                     continue
-                seen.add(identity)
+                index_by_identity[identity] = len(variants)
                 variants.append(_project_variant(modelo.id, revision, parameter, value))
     return tuple(sorted(variants, key=lambda variant: (variant.valid_from, variant.variant_id)))
 
@@ -135,7 +147,7 @@ def _project_variant(
     value: DatedValue,
 ) -> GovernedFactVariant:
     return GovernedFactVariant(
-        variant_id=f"m{modelo_id}:{revision.id}:{parameter.id}:{value.valid_from.isoformat()}",
+        variant_id=f"m{modelo_id}:{parameter.id}:{value.valid_from.isoformat()}",
         selectors=(
             FactSelector(name="modelo", value=modelo_id),
             FactSelector(name="parameter_id", value=parameter.id),
@@ -149,5 +161,5 @@ def _project_variant(
         source_citations=parameter.source_citations,
         review_status=revision.review_status,
         ownership=FactOwnership.GENERATED,
-        source_revision_id=revision.id,
+        source_revision_ids=(revision.id,),
     )

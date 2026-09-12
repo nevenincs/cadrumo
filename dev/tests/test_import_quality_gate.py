@@ -314,25 +314,11 @@ def test_invalid_authority_config_fails_closed(tmp_path: Path) -> None:
     ("name", "module", "source", "target", "category"),
     (
         (
-            "absolute-intra-cadrumo",
-            "cadrumo.core.consumer",
-            "import cadrumo.domain.module\n",
-            "cadrumo.domain.module",
-            "ABSOLUTE_INTRA_CADRUMO",
-        ),
-        (
             "static-first-party-target-missing",
             "dev.quality.consumer",
             "import cadrumo.domain.missing\n",
             "",
             "STATIC_TARGET_UNRESOLVED",
-        ),
-        (
-            "absolute-intra-cadrumo-dynamic",
-            "cadrumo.core.consumer",
-            "import importlib\nimportlib.import_module('cadrumo.domain.module')\n",
-            "cadrumo.domain.module",
-            "ABSOLUTE_INTRA_CADRUMO",
         ),
         (
             "unsupported-first-party-wildcard",
@@ -488,6 +474,24 @@ def test_subordinate_defect_fails_through_real_gate(
     _assert_category(root, category)
 
 
+@pytest.mark.parametrize(
+    "source",
+    (
+        "import cadrumo.domain.module\n",
+        "import importlib\nimportlib.import_module('cadrumo.domain.module')\n",
+    ),
+)
+def test_absolute_canonical_import_spelling_is_advisory(tmp_path: Path, source: str) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(root, "cadrumo.domain.module", "VALUE = 1\n")
+    _write_module(root, "cadrumo.core.consumer", source)
+
+    returncode, output = _run_real_gate(root)
+
+    assert returncode == 0, output
+    assert "[ADVISORY:CANONICAL_IMPORT_SPELLING]" in output
+
+
 def test_finite_iterable_dynamic_target_is_resolved_by_the_subordinate_checker(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
     _write_module(
@@ -622,7 +626,7 @@ def test_separate_harness_root_keeps_absolute_product_imports(tmp_path: Path) ->
     returncode, output = _run_real_gate(root)
 
     assert returncode == 0, output
-    assert "ABSOLUTE_INTRA_CADRUMO" not in output
+    assert "CANONICAL_IMPORT_SPELLING" not in output
 
 
 def test_invalid_utf8_in_governed_file_fails_closed(tmp_path: Path) -> None:
@@ -715,12 +719,11 @@ def test_subordinate_timeout_is_tool_broken(tmp_path: Path) -> None:
 
 def test_component_failures_run_in_authority_then_subordinate_order(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
-    _write_module(root, "cadrumo.core.consumer", "import cadrumo.domain.module\n")
-    _write_module(root, "cadrumo.domain.module", "VALUE = 1\n")
+    _write_module(root, "dev.quality.consumer", "from . import *\n")
     returncode, output = _run_real_gate(root, **{_LINTER_ENV: "cadrumo-import-linter-does-not-exist"})
     assert returncode != 0, output
     assert "[TOOL_MISSING]" in output
-    assert "[ABSOLUTE_INTRA_CADRUMO]" in output
+    assert "[UNSUPPORTED_IMPORT]" in output
     assert "[SUBORDINATE_CHECKER]" in output
     assert output.index("[GRAPH_AUTHORITY]") < output.index("[SUBORDINATE_CHECKER]")
 

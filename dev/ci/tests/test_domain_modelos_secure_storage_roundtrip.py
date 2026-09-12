@@ -26,10 +26,10 @@ from sqlalchemy.engine import Engine
 
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import WorkUnitPersistenceError
 from cadrumo.domain.modelos.work_unit import (

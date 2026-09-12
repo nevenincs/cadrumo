@@ -74,6 +74,7 @@ from pydantic import BaseModel, Field, JsonValue
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import publish_test_profile_capsule
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -86,7 +87,6 @@ from cadrumo.tests.profile_capsule import (
     upsert_test_profile_facts,
 )
 from cadrumo.tests.profile_persistence import composed_profile_persistence_ports
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from dev._paths import REPO_ROOT
 
 from .errors import SequenceExecutionError

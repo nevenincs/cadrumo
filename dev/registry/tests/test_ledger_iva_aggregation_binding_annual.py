@@ -11,6 +11,7 @@ from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
+
 from .ledger_iva_aggregation_support import (
     _M303_COMPENSACION_GENERADA_PERIODO_CASILLA,
     _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
