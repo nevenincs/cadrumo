@@ -38,11 +38,13 @@ DATA_ROOT = REPO_ROOT / "src" / "cadrumo" / "_data"
 LEGAL_ROOT = DATA_ROOT / "registry" / "aeat" / "legal"
 MODELOS_ROOT = DATA_ROOT / "registry" / "aeat" / "modelos"
 
-#: The sidecars are written in Latin-1. This is not a guess to be widened to a
-#: tolerant decode: a mis-decoded ``Descripcion`` yields a WRONG slot name that
-#: still looks plausible, so the encoding is stated once and a file that does
-#: not decode under it is an error the caller sees.
-_SIDECAR_ENCODING = "latin-1"
+#: The sidecars are written in UTF-8, and the decode is deliberately strict.
+#: A tolerant decode does not fail on a mis-read sidecar, it yields a WRONG slot
+#: name that still looks plausible -- reading these files as Latin-1 turns
+#: ``Nº Valores 3`` into ``nao-valores-3`` without raising anything. So the
+#: encoding is stated once, errors are not suppressed, and a file that does not
+#: decode under it is an error the caller sees.
+_SIDECAR_ENCODING = "utf-8"
 
 _RECORD_HEADING = re.compile(r"^# (?P<record>\S+)")
 

@@ -36,7 +36,13 @@ def audit_supported_filing_years(
     gaps: list[SupportedFilingYearGap] = []
     for modelo in sorted(modelos, key=lambda item: item.id):
         expected_periods = tuple(
-            sorted({period for revision in modelo.revisions.values() for period in revision.period_selector.periods})
+            sorted(
+                {
+                    period
+                    for revision in modelo.revisions.values()
+                    for period in revision.period_selector.declared_periods
+                }
+            )
         )
         for filing_year in catalogue.years:
             for period in expected_periods:
@@ -78,7 +84,7 @@ def _source_backs_cell(
     selector = source.period_selector
     return selector is None or (
         selector.includes_year(filing_year)
-        and any(selector_period_matches_request(token, period) for token in selector.periods)
+        and any(selector_period_matches_request(token, period) for token in selector.periods_for_year(filing_year))
     )
 
 
