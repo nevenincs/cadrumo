@@ -16,8 +16,8 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.profile_capsule import open_test_profile_session
+from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from ._modelo_work_ux_support import _create_profile, _invoke
-from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

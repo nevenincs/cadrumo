@@ -7,7 +7,6 @@ from dataclasses import replace
 import pytest
 from pydantic import ValidationError
 
-from .._command_schema import command_registration_metadata, command_registration_projection
 from .._profile_authentication_contract import (
     ProfileAuthenticationSecrets,
     ProfileSecretSourceOptions,
@@ -15,6 +14,7 @@ from .._profile_authentication_contract import (
     resolve_profile_secret_model,
     root_profile_secret_model,
 )
+from ..command_schema import command_registration_metadata, command_registration_projection
 from ..command_spec import (
     MachineSecretChannelKind,
     MachineSecretFieldSpec,

@@ -81,7 +81,9 @@ def register_copy_source(kind: CopyRefKind, resolver: CopySourceResolver) -> Non
 def resolve_copy(ref: CopyRef) -> str:
     """Resolve one reference to display copy, or refuse loudly."""
     if ref.kind is CopyRefKind.LOCALE_KEY:
-        rendered = tr(ref.ref, default=_UNRESOLVED_SENTINEL)
+        rendered = tr(
+            ref.ref,
+        )
         if rendered == _UNRESOLVED_SENTINEL:
             raise FlowCopyResolutionError(
                 translated_message="application.flows.errors.copy_locale_key_unresolved",

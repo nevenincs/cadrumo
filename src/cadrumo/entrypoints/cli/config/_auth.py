@@ -12,8 +12,8 @@ import typer
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.json_contract import strict_round_trip
-from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
-from .._common import emit_envelope, resolve_cli_precondition_action
+from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
+from ..common import emit_envelope, resolve_cli_precondition_action
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from .status_rendering import precondition_action_lines
 

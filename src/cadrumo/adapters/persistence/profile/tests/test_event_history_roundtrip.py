@@ -27,16 +27,15 @@ from .....domain.buckets.event import (
 from .....domain.buckets.event_repository import BucketEventHistoryPersistenceError
 from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ...storage.envelope.contract import Envelope
-from ..buckets import (
-    _CATALOGUE_VERSION,
-    _NAMESPACE,
-    _OBJECT_KEY,
-    BucketEventHistoryRepository,
-)
+from ...storage.secure_object_namespaces import BUCKET_EVENT_HISTORY_NAMESPACE
+from ..buckets import BucketEventHistoryRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _OCCURRED_AT = datetime(2026, 5, 28, 9, 0, 0, tzinfo=UTC)
+_NAMESPACE = BUCKET_EVENT_HISTORY_NAMESPACE.namespace
+_OBJECT_KEY = BUCKET_EVENT_HISTORY_NAMESPACE.require_default_object_key()
+_CATALOGUE_VERSION = BUCKET_EVENT_HISTORY_NAMESPACE.schema_version
 
 
 def _build_event(

@@ -51,7 +51,7 @@ import json
 
 import pytest
 
-from .._tools import build_tool_descriptors
+from ..tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

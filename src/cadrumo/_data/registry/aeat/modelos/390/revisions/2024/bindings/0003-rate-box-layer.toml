@@ -18,8 +18,8 @@
 
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-repercutido-tipo-21-base"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_general"], rate_kinds = ["general"], applied_rates = ["0.21"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general"], rate_kinds = ["general"], applied_rates = ["0.21"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -30,8 +30,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-repercutido-tipo-21-cuota"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_general"], rate_kinds = ["general"], applied_rates = ["0.21"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general"], rate_kinds = ["general"], applied_rates = ["0.21"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -42,8 +42,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-repercutido-tipo-10-base"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_reduced"], rate_kinds = ["reduced"], applied_rates = ["0.10"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reduced"], rate_kinds = ["reduced"], applied_rates = ["0.10"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -54,8 +54,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-repercutido-tipo-10-cuota"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_reduced"], rate_kinds = ["reduced"], applied_rates = ["0.10"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reduced"], rate_kinds = ["reduced"], applied_rates = ["0.10"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -66,8 +66,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-repercutido-tipo-7-5-base"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_reduced"], rate_kinds = ["reduced"], applied_rates = ["0.075"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reduced"], rate_kinds = ["reduced"], applied_rates = ["0.075"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -78,8 +78,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-repercutido-tipo-7-5-cuota"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_reduced"], rate_kinds = ["reduced"], applied_rates = ["0.075"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reduced"], rate_kinds = ["reduced"], applied_rates = ["0.075"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -90,8 +90,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-repercutido-tipo-5-base"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_reduced"], rate_kinds = ["reduced"], applied_rates = ["0.05"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reduced"], rate_kinds = ["reduced"], applied_rates = ["0.05"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -102,8 +102,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-repercutido-tipo-5-cuota"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_reduced"], rate_kinds = ["reduced"], applied_rates = ["0.05"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reduced"], rate_kinds = ["reduced"], applied_rates = ["0.05"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -114,8 +114,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-repercutido-tipo-4-base"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], applied_rates = ["0.04"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], applied_rates = ["0.04"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -126,8 +126,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-repercutido-tipo-4-cuota"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], applied_rates = ["0.04"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], applied_rates = ["0.04"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -138,8 +138,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-repercutido-tipo-2-base"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], applied_rates = ["0.02"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], applied_rates = ["0.02"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -150,8 +150,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-repercutido-tipo-2-cuota"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], applied_rates = ["0.02"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], applied_rates = ["0.02"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -162,8 +162,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-repercutido-tipo-0-base"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_zero"], rate_kinds = ["zero"], applied_rates = ["0.00"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_zero"], rate_kinds = ["zero"], applied_rates = ["0.00"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -174,8 +174,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-repercutido-tipo-0-cuota"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_zero"], rate_kinds = ["zero"], applied_rates = ["0.00"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_zero"], rate_kinds = ["zero"], applied_rates = ["0.00"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]

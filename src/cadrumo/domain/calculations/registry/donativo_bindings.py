@@ -22,25 +22,27 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator
 
-from ....core.aggregation import BindingAggregationOp
+from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.country_code import CountryCodeAlpha2
 from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
-    BindingExportDataType,
     invariant_diagnostics,
     selector_against_model,
     uppercase_alpha_code,
 )
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
-from .schema import DataBindingDefinition
 from .schema_base import coerce_enum_member
+from .schema_exports import ExportFieldDataType
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition
 
 __all__ = [
     "DonativoDonorObservation",
@@ -49,7 +51,7 @@ __all__ = [
 
 
 def _validate_donativo_row_field(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     selector_fact: object,
     selector_row_field: object,
 ) -> None:
@@ -127,14 +129,16 @@ class DonativoDonorObservation(BaseModel):
         return value
 
 
-class _DonativoSelector(BaseModel):
+class DonativoDonorProvider(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
+
+    kind: Literal[BindingSourceKind.DONATIVO_DONOR] = BindingSourceKind.DONATIVO_DONOR
 
     fact: Literal["row_field"]
     row_field: _DonativoRowField | None = None
     grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
-    data_type: BindingExportDataType | None = None
+    data_type: ExportFieldDataType | None = None
     """Scalar type of the value this row field contributes to the export.
 
     The same fact ``BindingRowExportSelector.data_type`` carries; declared here
@@ -144,26 +148,26 @@ class _DonativoSelector(BaseModel):
     """
 
 
-def _validated_donativo_selector(binding: DataBindingDefinition) -> _DonativoSelector:
+def _validated_donativo_selector(binding: BindingDefinition) -> DonativoDonorProvider:
     try:
-        selector = _DonativoSelector.model_validate(_selector_as_dict(binding))
+        selector = DonativoDonorProvider.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed donativo selector") from exc
     _validate_donativo_row_field(binding, selector.fact, selector.row_field)
     return selector
 
 
-def validate_donativo_binding(binding: DataBindingDefinition) -> list[str]:
+def validate_donativo_binding(binding: BindingDefinition) -> list[str]:
     """Validate a donativo-donor binding at registry-build time.
 
     Accumulating ``list[str]`` validator: validates the selector against
-    :class:`_DonativoSelector` and lifts the resolve-time op/fact invariant to
+    :class:`DonativoDonorProvider` and lifts the resolve-time op/fact invariant to
     build time, preserving the underlying pydantic field error.
     """
-    failures = selector_against_model(binding, _DonativoSelector)
+    failures = selector_against_model(binding, DonativoDonorProvider)
     if failures:
         return failures
     return invariant_diagnostics(binding, "donativo", lambda b: _validated_donativo_selector(b))
 
 
-DonativoSelector = _DonativoSelector
+DonativoDonorProvider = DonativoDonorProvider

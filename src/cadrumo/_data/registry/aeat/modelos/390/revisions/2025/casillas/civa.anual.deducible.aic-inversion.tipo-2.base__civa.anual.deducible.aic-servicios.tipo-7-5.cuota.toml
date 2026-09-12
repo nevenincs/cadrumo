@@ -28,7 +28,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 # Box [770] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 2% - Cuota [770]' (offset 30, length 17).
 [[revisions."2025".casillas]]
@@ -43,7 +42,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 # Box [771] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 7,5% - Base imponible [771]' (offset 115, length 17).
 [[revisions."2025".casillas]]
@@ -58,7 +56,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 # Box [772] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 7,5% - Cuota [772]' (offset 132, length 17).
 [[revisions."2025".casillas]]
@@ -73,7 +70,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 # Box [773] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 2% - Base imponible [773]' (offset 251, length 17).
 [[revisions."2025".casillas]]
@@ -88,7 +84,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 # Box [774] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 2% - Cuota [774]' (offset 268, length 17).
 [[revisions."2025".casillas]]
@@ -103,7 +98,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 # Box [775] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 7,5% - Base imponible [775]' (offset 353, length 17).
 [[revisions."2025".casillas]]
@@ -118,7 +112,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 # Box [776] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 7,5% - Cuota [776]' (offset 370, length 17).
 [[revisions."2025".casillas]]
@@ -133,4 +126,3 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]

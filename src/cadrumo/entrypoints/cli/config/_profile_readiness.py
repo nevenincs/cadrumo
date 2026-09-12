@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import typer
 
-from .._common import emit_envelope, resolve_cli_precondition_action
+from ..common import emit_envelope, resolve_cli_precondition_action
 from .status_rendering import precondition_action_lines
 
 

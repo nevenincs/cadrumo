@@ -55,7 +55,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @25+40. Entidades del grupo. Entidad dominante. Denominacion social de la entidad dominante.
 [[revisions."2024".casillas]]
@@ -66,7 +65,6 @@ data_type = "name"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @65+40. Entidades del grupo. Entidad dominante. Domicilio fiscal de la entidad dominante.
 [[revisions."2024".casillas]]
@@ -77,7 +75,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @105+8. Entidades del grupo. Entidad dominante. Fecha de incorporacion al grupo, formato AAAAMMDD.
 [[revisions."2024".casillas]]
@@ -88,7 +85,6 @@ data_type = "date"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @113+13. Entidades del grupo. Entidad dominante. Numero de justificante de presentacion de la declaracion individual.
 [[revisions."2024".casillas]]
@@ -99,7 +95,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @126+1. Entidades del grupo. Entidad dominante. Declaracion individual presentada unicamente a Hacienda Foral.
 [[revisions."2024".casillas]]
@@ -110,7 +105,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @127+1. Entidades del grupo. Entidad dominante. Opcion de fraccionamiento del art. 19.1 LIS.
 [[revisions."2024".casillas]]
@@ -121,7 +115,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @128+9. Entidades del grupo. Entidad dependiente o cooperativa integrante. N.I.F. de la entidad dependiente o cooperativa integrante del grupo.
 [[revisions."2024".casillas]]
@@ -132,7 +125,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @137+40. Entidades del grupo. Entidad dependiente o cooperativa integrante. Denominacion social de la entidad dependiente.
 [[revisions."2024".casillas]]
@@ -143,7 +135,6 @@ data_type = "name"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @177+40. Entidades del grupo. Entidad dependiente o cooperativa integrante. Domicilio fiscal de la entidad dependiente.
 [[revisions."2024".casillas]]
@@ -154,7 +145,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @217+8. Entidades del grupo. Entidad dependiente o cooperativa integrante. Fecha de incorporacion al grupo, formato AAAAMMDD.
 [[revisions."2024".casillas]]
@@ -165,7 +155,6 @@ data_type = "date"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @225+5. Entidades del grupo. Entidad dependiente o cooperativa integrante. Participacion directa e indirecta al final del ejercicio, en porcentaje.
 [[revisions."2024".casillas]]
@@ -176,7 +165,6 @@ data_type = "decimal"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @230+5. Entidades del grupo. Entidad dependiente o cooperativa integrante. Porcentaje de derechos de voto.
 [[revisions."2024".casillas]]
@@ -187,7 +175,6 @@ data_type = "decimal"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @235+13. Entidades del grupo. Entidad dependiente o cooperativa integrante. Numero de justificante de presentacion de la declaracion individual.
 [[revisions."2024".casillas]]
@@ -198,7 +185,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @248+1. Entidades del grupo. Entidad dependiente o cooperativa integrante. Declaracion individual presentada unicamente a Hacienda Foral.
 [[revisions."2024".casillas]]
@@ -209,7 +195,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @249+1. Entidades del grupo. Entidad dependiente o cooperativa integrante. Opcion de fraccionamiento del art. 19.1 LIS.
 [[revisions."2024".casillas]]
@@ -220,4 +205,3 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

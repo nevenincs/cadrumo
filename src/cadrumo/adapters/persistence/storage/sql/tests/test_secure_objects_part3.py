@@ -11,6 +11,7 @@ import pytest
 from sqlalchemy import event
 
 from ......core.classification.policies import SensitivityClass
+from ......core.secure_object_write import SecureObjectWrite
 from ...errors import (
     ClassificationError,
     EnvelopeVersionError,
@@ -20,8 +21,8 @@ from ...errors import (
 )
 from ...namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ...secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
-from .._secure_object_records import SecureObjectRecord, SecureObjectUnreadable
-from ..secure_objects import SecureObjectRepository, SecureObjectWrite
+from ..secure_object_records import SecureObjectRecord, SecureObjectUnreadable
+from ..secure_objects import SecureObjectRepository
 from ._secure_objects_support import (
     _ephemeral_secure_repo,
 )

@@ -25,13 +25,10 @@ from decimal import Decimal
 from pydantic import TypeAdapter, ValidationError
 
 from ..application.filing.draft_construction import build_draft
-from ..application.filing.draft_review import (
-    _prior_filing_observations_fingerprint,
-    _profile_activity_fingerprint,
-    approve_draft,
-)
+from ..application.filing.draft_review import approve_draft
 from ..application.filing.runtime import build_runtime_schema_provider
 from ..core.casilla_id import CasillaId, validated_casilla_id
+from ..core.hashing import content_hash_hex
 from ..core.period import Period
 from ..domain.calculations.registry.ids import BindingId
 from ..domain.filing.errors import ModeloBuilderError
@@ -47,12 +44,12 @@ _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 
 def empty_prior_filing_observations_fingerprint() -> str:
     """Return the production digest for an empty prior-observation set."""
-    return _prior_filing_observations_fingerprint(())
+    return content_hash_hex([])
 
 
 def empty_profile_activity_fingerprint() -> str:
     """Return the production digest for an absent taxpayer profile."""
-    return _profile_activity_fingerprint(None)
+    return content_hash_hex([])
 
 
 @dataclass(frozen=True, slots=True)

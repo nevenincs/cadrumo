@@ -32,9 +32,10 @@ from ...domain.deadlines.engine import compute_obligation_schedule, next_deadlin
 from ...domain.deadlines.errors import NoDeadlineWindowsError, ScheduleComputationError
 from ...domain.deadlines.models import ModeloDeadline, Schedule, TaxpayerProfile
 from ..operator_actions.preconditions import no_action_precondition_verdict
+from .abort import WorkflowAbortReason
 from .errors import WorkflowAbortSignalError
 from .protocols import DeadlineEngineProtocol
-from .run_models import WorkflowAbortReason, WorkflowPurpose, WorkflowStage, WorkflowStep
+from .run_models import WorkflowPurpose, WorkflowStage, WorkflowStep
 
 
 def resolve_deadline_stage_obligation(

@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 296, resum anual de retencions de l'impost sobre la renda de no residents sense establiment permanent"
+
+[language.en]
+short_description = "Modelo 296, annual summary of non-resident income-tax withholding without a permanent establishment"
+
+[language.hu]
+short_description = "296-os modell: a telephellyel nem rendelkező nem rezidensek jövedelemadójának éves levonási összesítője"
+

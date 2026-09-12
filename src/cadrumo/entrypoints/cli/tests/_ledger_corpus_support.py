@@ -11,7 +11,6 @@ from click.testing import Result
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from .cli_runner import invoke_cached_cli
-from .ledger_cli import list_ledger_rows_via_cli
 
 _CORPUS = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "financial" / "ledger-corpus"
 _FILES = (
@@ -21,7 +20,6 @@ _FILES = (
     "n26-savings.csv",
 )
 _FIN_FIXTURES = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "financial"
-_list_rows = list_ledger_rows_via_cli
 
 
 def _invoke(args: Sequence[str]) -> Result:

@@ -65,7 +65,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @33+17 N. ACTIVO (cont). Fondo de comercio. [00142]
 [[revisions."2024".casillas]]
@@ -77,7 +76,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @50+17 N. ACTIVO (cont). Otros activos intangibles. [00143]
 [[revisions."2024".casillas]]
@@ -89,7 +87,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @67+17 N. ACTIVO (cont). Activos por impuestos. [00144]
 [[revisions."2024".casillas]]
@@ -101,7 +98,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @84+17 N. ACTIVO (cont). Activos por impuestos corrientes. [00145]
 [[revisions."2024".casillas]]
@@ -113,7 +109,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @101+17 N. ACTIVO (cont). Activos por impuestos diferidos. [00146]
 [[revisions."2024".casillas]]
@@ -125,7 +120,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @118+17 N. ACTIVO (cont). Otros activos. [00147]
 [[revisions."2024".casillas]]
@@ -137,7 +131,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @135+17 N. ACTIVO (cont). Contratos de seguros vinculados a pensiones. [00148]
 [[revisions."2024".casillas]]
@@ -149,7 +142,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @152+17 N. ACTIVO (cont). Existencias. [00149]
 [[revisions."2024".casillas]]
@@ -161,7 +153,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @169+17 N. ACTIVO (cont). Resto de los otros activos. [00150]
 [[revisions."2024".casillas]]
@@ -173,7 +164,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @186+17 N. ACTIVO (cont). Activos no corrientes y grupos enajenables de elementos que se han clasificado como mantenidos para la venta [00151]
 [[revisions."2024".casillas]]
@@ -185,7 +175,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @203+17 N. ACTIVO (cont). Total activo. [00152]
 [[revisions."2024".casillas]]
@@ -197,4 +186,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

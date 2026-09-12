@@ -25,7 +25,7 @@ from ....domain.modelos.participation_index import (
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._ledger_payloads import LedgerTrackResult, LedgerTransactionParticipationPayload
-from ..command_api import ArgumentSpec, OptionSpec
+from ..command_spec import ArgumentSpec, OptionSpec
 from ..command_specs import COMMAND_GRAPH
 from .cli_runner import invoke_cached_cli
 

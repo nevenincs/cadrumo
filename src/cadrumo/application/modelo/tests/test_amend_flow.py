@@ -37,11 +37,11 @@ from ....domain.calculations.registry.tests.registry_observations import registr
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
-    CalculationRevisionAmendmentKind,
     CalculationRevisionState,
-    FilingInstanceEvidence,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
+from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ....domain.modelos.filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,

@@ -95,7 +95,10 @@ def profile_section_title(section: ProfileSectionDefinition, *, locale: str | No
         The catalogue title, or the schema's declared ``title`` when the
         catalogue does not carry one.
     """
-    return tr(profile_section_title_key(section.key), locale=locale, default=section.title)
+    return tr(
+        profile_section_title_key(section.key),
+        locale=locale,
+    )
 
 
 def profile_field_label(
@@ -118,7 +121,6 @@ def profile_field_label(
     return tr(
         profile_field_label_key(section_key, field.key),
         locale=locale,
-        default=field.description,
     )
 
 

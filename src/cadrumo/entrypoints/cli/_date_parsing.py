@@ -14,7 +14,7 @@ from __future__ import annotations
 from datetime import date as _date
 
 from ...core.i18n.render import tr
-from ._common import bad
+from .common import bad
 
 __all__ = ["_parse_iso_date", "_parse_iso_date_str", "_parse_optional_iso_date_str"]
 
@@ -34,7 +34,6 @@ def _parse_iso_date(
         raw=raw,
         option=label,
         value=raw,
-        default=default or f"{label} must be an ISO date (YYYY-MM-DD); got {raw!r}.",
     )
     try:
         parsed = parse_iso8601_date(raw.strip())

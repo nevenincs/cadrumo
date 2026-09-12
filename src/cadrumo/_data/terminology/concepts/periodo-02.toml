@@ -15,3 +15,13 @@ updated_at = 2026-06-10
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Període mensual de febrer (codi 02)."
+
+[language.en]
+short_description = "February monthly period (code 02)."
+
+[language.hu]
+short_description = "februári havi időszak (02-es kód)."
+

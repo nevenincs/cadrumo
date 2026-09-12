@@ -111,7 +111,7 @@ def test_a_freshly_approved_draft_is_not_immediately_stale(repos: Repos) -> None
     an aged-out approval the moment anyone opens the queue, and a permanent
     high-severity row that is always wrong is worse than no row at all.
     """
-    from ...review._adapters import _reviewed_against_current_state
+    from ...review.source_adapters import reviewed_against_current_state
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo, filing_year=2024)
@@ -147,7 +147,7 @@ def test_a_freshly_approved_draft_is_not_immediately_stale(repos: Repos) -> None
     # Asserted through the refresh rather than through drafts_pending, whose
     # empty result is the CORRECT answer for a healthy approved draft and so
     # cannot distinguish a working invariant from a queue that saw nothing.
-    refreshed, reasons = _reviewed_against_current_state(stored[0], bucket_id=work_unit.bucket_id)
+    refreshed, reasons = reviewed_against_current_state(stored[0], bucket_id=work_unit.bucket_id)
     assert reasons == ()
     assert refreshed.status is ModeloDraftStatus.APROBADO
 

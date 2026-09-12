@@ -8,7 +8,6 @@ continuidad_id = "irpf-pf-modulos-suma-rendimientos"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".casillas]]
 id = "02"
 number = "02"
@@ -19,7 +18,6 @@ continuidad_id = "pago-fraccionado-previo-datos-base"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".casillas]]
 id = "03"
 number = "03"
@@ -30,7 +28,6 @@ continuidad_id = "irpf-pf-modulos-volumen-sin-datos-base"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".casillas]]
 id = "04"
 number = "04"
@@ -42,7 +39,6 @@ required = false
 input_kind = "computed"
 formula = "modelo-131-pago-fraccionado-sin-datos-base"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".casillas]]
 id = "05"
 number = "05"
@@ -54,7 +50,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-131-volumen-ingresos-agrario"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".casillas]]
 id = "06"
 number = "06"
@@ -66,7 +61,6 @@ required = false
 input_kind = "computed"
 formula = "modelo-131-pago-fraccionado-agrario"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".casillas]]
 id = "07"
 number = "07"
@@ -74,12 +68,11 @@ section = ["total_liquidacion"]
 data_type = "money"
 semantic_role = "pago_fraccionado_previo"
 continuidad_id = "pago-fraccionado-previo"
-constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"] }
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"] }
 required = false
 input_kind = "computed"
 formula = "modelo-131-suma-pagos-previos"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".casillas]]
 id = "08"
 number = "08"
@@ -87,11 +80,10 @@ section = ["total_liquidacion"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"
 continuidad_id = "retenciones-ingresos-a-cuenta"
-constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"] }
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"] }
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".casillas]]
 id = "09"
 number = "09"
@@ -102,7 +94,6 @@ continuidad_id = "minoracion-rendimientos-actividades-economicas"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".casillas]]
 id = "10"
 number = "10"
@@ -114,7 +105,6 @@ required = false
 input_kind = "computed"
 formula = "modelo-131-diferencia"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".casillas]]
 id = "11"
 number = "11"
@@ -127,7 +117,6 @@ input_kind = "bound"
 binding = "modelo-131-resultados-negativos-anteriores"
 constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".casillas]]
 id = "12"
 number = "12"
@@ -138,7 +127,6 @@ continuidad_id = "prestamo-vivienda-habitual"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".casillas]]
 id = "13"
 number = "13"
@@ -150,7 +138,6 @@ required = false
 input_kind = "computed"
 formula = "modelo-131-total"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".casillas]]
 id = "14"
 number = "14"
@@ -161,7 +148,6 @@ continuidad_id = "resultado-anteriores-autoliquidaciones"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".casillas]]
 id = "15"
 number = "15"
@@ -173,4 +159,3 @@ required = false
 input_kind = "computed"
 formula = "modelo-131-resultado"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]

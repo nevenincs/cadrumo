@@ -26,6 +26,9 @@ part_of_speech = "noun"
 
 [language.en]
 short_description = "The build-time RAG run over the closed terminology query vocabulary."
+definition = "A build-time compilation process enumerates the closed vocabulary of concepts, admitted terms, and hidden forms, queries the resident RAG service, and turns its hits into a reviewable list of documentation targets. The sweep pre-executes at build time what a RAG would do at runtime."
+scope_note = "The sweep uses the RAG service as a compilation oracle; CI consumes only the resulting data and does not run embeddings or live retrieval."
+
 
 [[language.en.term]]
 label = "RAG sweep"
@@ -34,6 +37,12 @@ part_of_speech = "noun"
 
 [language.ca]
 short_description = "L'execucio build-time de RAG sobre el vocabulari terminologic tancat."
+definition = "Procés de compilació que enumera el vocabulari tancat de conceptes, termes admesos i formes ocultes, consulta el servei RAG resident i transforma els resultats en una llista revisable de destinacions documentals. El rastreig preexecuta en temps de compilació el que un RAG faria en temps d'execució."
+scope_note = "A rastreig utilitza el servei RAG com a oracle de compilació; la CI només consumeix les dades resultants, no executa embeddings ni recuperació en directe."
+
 
 [language.hu]
 short_description = "A zar terminologiai lekerdezesek build-time RAG futasa."
+definition = "Fordítási időben futó folyamat, amely felsorolja a fogalmak, elfogadott kifejezések és rejtett alakok zárt szókészletét, lekérdezi a rezidens RAG-szolgáltatást, és találatait áttekinthető dokumentációs célpontok listájává alakítja. A pásztázás fordításkor előre végrehajtja azt, amit a RAG futásidőben tenne."
+scope_note = "A pásztázás a RAG-szolgáltatást fordítási orákulumként használja; a CI csak az eredményül kapott adatokat fogyasztja, beágyazásokat és élő visszakeresést nem futtat."
+

@@ -25,7 +25,6 @@ from typing import Union, get_args, get_origin
 
 import pytest
 
-from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from ...tests.env_scope import isolated_aeat_env as _isolated_aeat_env
 from ...tests.env_scope import scoped_env_var, settings_without_env_file
 from ...tests.inventory import REPO_ROOT
@@ -463,7 +462,13 @@ class TestDatabaseUrlDerivation:
         with _isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=storage_root.as_posix()):
             settings = settings_without_env_file(cadrumo_active_profile="acme")
 
-        expected = f"sqlite:///{bucket_paths(storage_root, 'acme').database_file.as_posix()}"
+        expected_database_file = (
+            storage_root
+            / storage_location(StorageCategory.BUCKETS).relative_path()
+            / "acme"
+            / storage_location(StorageCategory.BUCKET_DATABASE_FILE).relative_path()
+        )
+        expected = f"sqlite:///{expected_database_file.as_posix()}"
         assert settings.cadrumo_database_url == expected
 
     def test_load_settings_routes_from_its_single_atomic_pointer_observation(
@@ -566,6 +571,12 @@ class TestDatabaseUrlDerivation:
                 cadrumo_active_profile=bucket_id,
             )
 
-        expected = f"sqlite:///{bucket_paths(storage_root, bucket_id).database_file.as_posix()}"
+        expected_database_file = (
+            storage_root
+            / storage_location(StorageCategory.BUCKETS).relative_path()
+            / bucket_id
+            / storage_location(StorageCategory.BUCKET_DATABASE_FILE).relative_path()
+        )
+        expected = f"sqlite:///{expected_database_file.as_posix()}"
         assert settings.cadrumo_database_url == expected
         assert classify_storage_route(settings).kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE

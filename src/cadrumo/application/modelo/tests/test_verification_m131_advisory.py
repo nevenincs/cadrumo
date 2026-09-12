@@ -11,8 +11,8 @@ from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ..verification_actions import evaluate_verification_predicates
-from ._verification_substance_support import _CASILLA_01, _CASILLA_02, _workflow_profile
+from ..verification_predicates import evaluate_verification_predicates
+from .verification_substance_support import _CASILLA_01, _CASILLA_02, workflow_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -52,7 +52,7 @@ def test_m131_advisory_fires_when_rendimientos_positive_but_pago_zero() -> None:
             _CASILLA_02: Decimal("0"),
         }
 
-        findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+        findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
 
         assert len(findings) == 1, revision_id
         assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY, revision_id
@@ -69,7 +69,7 @@ def test_m131_advisory_silent_when_pago_fraccionado_present() -> None:
             _CASILLA_02: Decimal("360.00"),
         }
 
-        findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+        findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
         assert findings == [], revision_id
 
 
@@ -81,5 +81,5 @@ def test_m131_advisory_silent_when_no_datos_base_activity() -> None:
         explicit_zero: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("0"), _CASILLA_02: Decimal("0")}
         absent: dict[CasillaId, Decimal] = {}
 
-        assert evaluate_verification_predicates((predicate,), explicit_zero, _workflow_profile()) == [], revision_id
-        assert evaluate_verification_predicates((predicate,), absent, _workflow_profile()) == [], revision_id
+        assert evaluate_verification_predicates((predicate,), explicit_zero, workflow_profile()) == [], revision_id
+        assert evaluate_verification_predicates((predicate,), absent, workflow_profile()) == [], revision_id

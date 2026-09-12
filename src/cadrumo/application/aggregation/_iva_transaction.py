@@ -13,15 +13,16 @@ from decimal import Decimal
 
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.period import Period
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.iva.classification import InvoiceKind, domestic_categories_by_rate_kind
-from ...domain.iva.components import IvaKindApplicability, category_components, category_cuota_is_zero_by_law
 from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ...domain.iva.flow import IvaFlowDirection, derive_flow_for_classification
-from ...domain.iva.lookup import rate_table_covers_any_positive_tier
 from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import (
-    EUMemberState,
     IvaCashAccountingTreatment,
     IvaCategory,
     IvaExemptionArticle,
@@ -42,8 +43,35 @@ from .iva_ledger import (
     missing_tax_fact_detail,
     missing_tax_fact_reason,
     prorrata_reference_for,
-    validate_intracom_export_counterparty,
 )
+
+
+def _resolve_iva_registry_declarations(*, effective_date: date) -> tuple[object, ...]:
+    """Resolve the selected IVA model surfaces and governed fact catalogues."""
+    authority = bundled_authority()
+    query_service = RegistryQueryService(authority)
+    modelo_303 = query_service.describe_modelo("303")
+    modelo_390 = query_service.describe_modelo("390")
+    fact_ids = (
+        "iva-invoice-classification-catalogue",
+        "iva-category-component-catalogue",
+        "iva-deduction-applicability-catalogue",
+        "iva-regime-legend-catalogue",
+        "iva-supply-nature-citation-catalogue",
+    )
+    facts = tuple(
+        authority.resolve_governed_fact(
+            MappingFactQuery(
+                fact_id=fact_id,
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=effective_date,
+            ),
+        )
+        for fact_id in fact_ids
+    )
+    if not all(isinstance(fact, ResolvedMappingFact) for fact in facts):
+        raise TypeError("IVA applicability and catalogue declarations must resolve as mapping facts")
+    return (modelo_303, modelo_390, *facts)
 
 
 @dataclass(frozen=True, slots=True)
@@ -88,56 +116,6 @@ class _IvaTransactionClassification:
     flow_direction: IvaFlowDirection
 
 
-# Categories that never produce a declarable IVA observation: recargo de
-# equivalencia (the IVA + RE surcharge is non-deductible acquisition cost for the
-# retailer, settled via the supplier) and the unknown/erroneous sentinels.
-_NON_DECLARABLE_IVA_CATEGORIES = frozenset(
-    {
-        IvaCategory.RECARGO_EQUIVALENCIA,
-        IvaCategory.UNKNOWN,
-        IvaCategory.ERRONEOUS_INVOICE,
-    },
-)
-
-# Categories outside the criterio-de-caja regime. Ley 37/1992 art. 163 duodecies
-# excludes on TWO distinct mechanisms, and this one set carries both -- the
-# distinction is why a member could go missing without anyone noticing:
-#
-#   Apartado DOS enumerates carve-outs for operations that ARE in the TAI:
-#     (b) arts. 21-25 exempt supplies  -> INTRA_COMMUNITY_SUPPLY, both exports
-#     (c) adquisiciones intracomunitarias -> INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE
-#     (d) art. 84.Uno.2/3/4 reverse charge -> DOMESTIC_REVERSE_CHARGE
-#     (e) importaciones -> IMPORT_THIRD_COUNTRY
-#
-#   Apartado UNO scopes the regime to operations "que se entiendan realizadas en
-#   el territorio de aplicacion del Impuesto". An operation that is not subject
-#   in the TAI is outside by SCOPE and matches no letter of apartado Dos. Both
-#   not-subject members belong here on that ground and neither on any other:
-#     OPERACION_NO_SUJETA, DOMESTIC_NOT_SUBJECT
-#
-# The scope limb reaches every rule emitting a not-subject category -- outbound
-# EU B2B services (art. 69.Uno.1 locates them at the customer), B2C distance
-# sales, the OSS rules, and issuers outside the territory. An OSS operation is
-# doubly outside: art. 163 unvicies.Uno places it in the Member State of
-# consumption, art. 163 duovicies.Uno.c gives the scheme its own
-# declaracion-liquidacion, and art. 163 tervicies.Uno bars deduction within it.
-# A non-subject operation has no devengo for a timing rule to defer.
-_CASH_ACCOUNTING_EXCLUDED_CATEGORIES = frozenset(
-    {
-        # apartado Dos carve-outs
-        IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
-        IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
-        IvaCategory.IMPORT_THIRD_COUNTRY,
-        IvaCategory.DOMESTIC_REVERSE_CHARGE,
-        # apartado Uno scope: not subject in the TAI
-        IvaCategory.OPERACION_NO_SUJETA,
-        IvaCategory.DOMESTIC_NOT_SUBJECT,
-    },
-)
-
-
 def _substrate_admission_issue(
     transaction: Transaction,
     *,
@@ -175,57 +153,6 @@ def _substrate_admission_issue(
                 f"transaction currency {transaction.raw.currency!r} has a converted gross value_in_eur "
                 "but taxable_base/iva_amount remain native-currency facts; IVA aggregation requires "
                 "explicit EUR tax substrate"
-            ),
-        )
-    return None
-
-
-def _declared_category_issue(
-    transaction: Transaction,
-    *,
-    transaction_id: str,
-    explicit_category: IvaCategory,
-    invoice_kind: InvoiceKind,
-) -> IvaLedgerAggregationIssue | None:
-    """Return why an OPERATOR-DECLARED category contradicts the row, or ``None``.
-
-    Every screen here is scoped to the declared category deliberately. The
-    derived branch reads its category off the rate, so it cannot contradict the
-    rate; a screen written across both would be vacuous on half its population
-    while reading as though it covered it.
-    """
-    d5_issue = validate_intracom_export_counterparty(
-        transaction_id=transaction_id,
-        category=explicit_category,
-        counterparty_country=transaction.counterparty_country,
-        eu_member_state=transaction.counterparty_eu_member_state,
-        identification_state=transaction.counterparty_identification_state,
-    )
-    if d5_issue is not None:
-        return d5_issue
-    components = category_components(explicit_category, invoice_kind)
-    if components.applicability is IvaKindApplicability.DOES_NOT_ARISE:
-        # The row's own note names the category that IS this side's
-        # counterpart, so the refusal can say what the operator probably
-        # meant. Told only "this cannot arise", they would guess.
-        return IvaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            reason=IvaLedgerAggregationIssueReason.NON_ARISING_CATEGORY_FOR_INVOICE_SIDE,
-            detail=(
-                f"row declares iva_category {explicit_category.value!r} on a "
-                f"{invoice_kind.value!r} invoice, a combination that describes no operation. "
-                f"{components.retencion_note}"
-            ),
-        )
-    if category_cuota_is_zero_by_law(explicit_category, invoice_kind) and transaction.iva_rate != Decimal("0"):
-        return IvaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            reason=IvaLedgerAggregationIssueReason.NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY,
-            detail=(
-                f"row declares iva_category {explicit_category.value!r} on a "
-                f"{invoice_kind.value!r} invoice, whose cuota is zero by law, with "
-                f"iva_rate {transaction.iva_rate}; a category that admits no cuota admits "
-                "no tipo either, so one of the two facts is wrong"
             ),
         )
     return None
@@ -287,18 +214,6 @@ def _resolve_iva_transaction_amounts(
     operation_date: date,
     proportionality: Decimal,
 ) -> _IvaTransactionAmounts | _IvaTransactionOutcome:
-    iva_category = transaction.iva_category
-    if iva_category is not None and iva_category in _NON_DECLARABLE_IVA_CATEGORIES:
-        return _IvaTransactionOutcome(
-            gate_issue=IvaLedgerAggregationIssue(
-                transaction_id=transaction.transaction_id,
-                reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_CATEGORY,
-                detail=(
-                    f"iva_category {iva_category.value!r} does not produce a declarable IVA "
-                    "observation (recargo-equivalencia is non-deductible cost; unknown/erroneous are sentinels)"
-                ),
-            ),
-        )
     return _resolved_iva_transaction_amounts(
         transaction,
         operation_date=operation_date,
@@ -363,26 +278,11 @@ def _canonical_iva_rate_kind(
     """Resolve a declared rate against the legal table available on its date."""
     rate_kind = iva_rate_kind_for(iva_rate, on_date=operation_date)
     if rate_kind is None:
-        covered = rate_table_covers_any_positive_tier(EUMemberState.ES, operation_date)
         return _IvaTransactionOutcome(
             gate_issue=IvaLedgerAggregationIssue(
                 transaction_id=transaction.transaction_id,
-                reason=(
-                    IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE
-                    if covered
-                    else IvaLedgerAggregationIssueReason.IVA_RATE_DATE_OUTSIDE_TABLE_COVERAGE
-                ),
-                detail=(
-                    f"IVA rate {iva_rate} is not a canonical substrate IVA rate"
-                    if covered
-                    else (
-                        f"no IVA rate is on record for {operation_date.isoformat()}: the rate table "
-                        f"reaches no tier bearing a positive rate on that date, so a transaction dated "
-                        f"there cannot be classified whatever rate it carries. The rate "
-                        f"{iva_rate} is not what needs correcting -- the filing year is "
-                        f"outside the supported window"
-                    )
-                ),
+                reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE,
+                detail=(f"IVA rate {iva_rate} is not a canonical substrate IVA rate for {operation_date.isoformat()}"),
             ),
         )
     return rate_kind
@@ -397,48 +297,13 @@ def _resolve_iva_transaction_classification(
 ) -> _IvaTransactionClassification | _IvaTransactionOutcome:
     explicit_category = transaction.iva_category
     if explicit_category is not None:
-        declared_issue = _declared_category_issue(
-            transaction,
-            transaction_id=transaction_id,
-            explicit_category=explicit_category,
-            invoice_kind=invoice_kind,
-        )
-        if declared_issue is not None:
-            return _IvaTransactionOutcome(gate_issue=declared_issue)
         effective_category = explicit_category
     else:
         effective_category = domestic_categories_by_rate_kind()[rate_kind]
-    cash_treatment = transaction.cash_accounting_treatment
-    if (
-        cash_treatment is not IvaCashAccountingTreatment.NONE
-        and effective_category in _CASH_ACCOUNTING_EXCLUDED_CATEGORIES
-    ):
-        return _IvaTransactionOutcome(
-            gate_issue=IvaLedgerAggregationIssue(
-                transaction_id=transaction_id,
-                reason=IvaLedgerAggregationIssueReason.CASH_ACCOUNTING_EXCLUDED_CATEGORY,
-                detail=(
-                    f"iva_category {effective_category.value!r} is excluded from the cash-accounting regime "
-                    "under Ley 37/1992 art. 163 duodecies"
-                ),
-            ),
-        )
     flow_direction = derive_flow_for_classification(
         category=effective_category,
         invoice_direction=invoice_kind,
     )
-    if (
-        flow_direction in {IvaFlowDirection.SOPORTADO, IvaFlowDirection.INVERSION_SUJETO_PASIVO}
-        and effective_category is not IvaCategory.RECARGO_EQUIVALENCIA
-        and (transaction.deduction_fact_kind is None or transaction.deduction_provenance is None)
-    ):
-        return _IvaTransactionOutcome(
-            gate_issue=IvaLedgerAggregationIssue(
-                transaction_id=transaction_id,
-                reason=IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION,
-                detail="IVA deduction facts require an exact kind and immutable evidence provenance before calculation",
-            ),
-        )
     return _IvaTransactionClassification(category=effective_category, flow_direction=flow_direction)
 
 
@@ -457,6 +322,7 @@ def classify_iva_transaction(
     reference; an invalid prorrata reference is reported as a
     ``prorrata_issue`` alongside the observation.
     """
+    _resolve_iva_registry_declarations(effective_date=resolved_period.end_date)
     context = _resolve_iva_transaction_context(transaction, resolved_period=resolved_period)
     if isinstance(context, _IvaTransactionOutcome):
         return context

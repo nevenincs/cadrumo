@@ -32,7 +32,7 @@ import typer
 from typer._click.core import Context as _TyperClickContext
 
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
-from .._common import activate_subcommand_output_language
+from ..common import activate_subcommand_output_language
 from ..errors import command_error_boundary as _command_error_boundary
 
 if TYPE_CHECKING:
@@ -57,7 +57,7 @@ def with_profile_cli_projection(wizard_command: Callable[..., None], *, mode: Wi
             raise TypeError("profile frontend dispatch requires a Typer context")
 
         if mode == "create":
-            from ._scripted_registration import register_profile_from_scripted_invocation
+            from .scripted_registration import register_profile_from_scripted_invocation
 
             activate_subcommand_output_language(
                 cast(typer.Context, context),

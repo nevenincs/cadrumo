@@ -7,11 +7,21 @@ from itertools import product
 import pytest
 from pydantic import ValidationError
 
-from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from .....core.aggregation import (
+    BindingAggregation,
+    BindingAggregationOp,
+)
 from .....core.modelo import Modelo
 from ..binding_selector_utils import binding_row_set_selector
-from ..inventory_bindings import InventorySelector, validate_inventory_binding
-from ..schema import DataBindingDefinition
+from ..binding_value_contract import (
+    BindingDataType,
+    BindingValueChannel,
+    BindingValueContract,
+)
+from ..inventory_bindings import InventoryProvider, validate_inventory_binding
+from ..schema import BindingDefinition
+
+_MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -28,7 +38,6 @@ def _selector(
 ) -> dict[str, object]:
     return {
         "modelo": Modelo.M100,
-        "filing_year": 2025,
         "projection_grain": "taxpayer_year_activity",
         "fact": "row_field",
         "record": "inventory_activity",
@@ -43,7 +52,7 @@ def test_inventory_selector_accepts_each_exact_2025_operation_destination(
     operation: str,
     destination: str,
 ) -> None:
-    selector = InventorySelector.model_validate(_selector(operation, destination))
+    selector = InventoryProvider.model_validate(_selector(operation, destination))
 
     assert selector.target_casilla_id == destination
     assert selector.projection_grain == "taxpayer_year_activity"
@@ -66,7 +75,7 @@ def test_inventory_selector_refuses_crossed_operation_destination_identity(
     destination: str,
 ) -> None:
     with pytest.raises(ValidationError, match="must target casilla"):
-        InventorySelector.model_validate(_selector(operation, destination))
+        InventoryProvider.model_validate(_selector(operation, destination))
 
 
 @pytest.mark.parametrize(
@@ -95,7 +104,7 @@ def test_inventory_selector_refuses_unsupported_scope_stale_signed_and_readiness
     raw.update(mutation)
 
     with pytest.raises(ValidationError):
-        InventorySelector.model_validate(raw)
+        InventoryProvider.model_validate(raw)
 
 
 def test_inventory_selector_requires_complete_row_template_shape() -> None:
@@ -103,21 +112,26 @@ def test_inventory_selector_requires_complete_row_template_shape() -> None:
     del raw["grouping"]
 
     with pytest.raises(ValidationError, match="grouping"):
-        InventorySelector.model_validate(raw)
+        InventoryProvider.model_validate(raw)
 
 
 def test_inventory_selector_roundtrips_without_taxpayer_activity_identity() -> None:
-    selector = InventorySelector.model_validate(_selector("complete_acquisition_cost", "0181"))
+    selector = InventoryProvider.model_validate(_selector("complete_acquisition_cost", "0181"))
 
     assert "actividad_id" not in selector.model_dump()
-    assert InventorySelector.model_validate(selector.model_dump()) == selector
+    assert InventoryProvider.model_validate(selector.model_dump()) == selector
 
 
 def test_inventory_binding_validator_preserves_the_operation_destination_failure() -> None:
-    binding = DataBindingDefinition.model_construct(
+    binding = BindingDefinition.model_construct(
         id="inventory-stock-increase",
-        source=BindingSourceKind.INVENTORY,
-        selector=_selector("closing_minus_opening_positive", "0182"),
+        # ``model_construct`` on both levels: the crossed operation/destination
+        # pair is exactly what the provider's own validator refuses, and this
+        # test proves the binding-level validator reports it too.
+        provider=InventoryProvider.model_construct(
+            **_selector("closing_minus_opening_positive", "0182"),
+        ),
+        value=_MONEY_VALUE,
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
     )
 
@@ -128,10 +142,10 @@ def test_inventory_binding_validator_preserves_the_operation_destination_failure
 
 
 def test_inventory_binding_validator_requires_rows_aggregation() -> None:
-    binding = DataBindingDefinition.model_construct(
+    binding = BindingDefinition.model_construct(
         id="inventory-purchases",
-        source=BindingSourceKind.INVENTORY,
-        selector=_selector("complete_acquisition_cost", "0181"),
+        provider=InventoryProvider.model_validate(_selector("complete_acquisition_cost", "0181")),
+        value=_MONEY_VALUE,
         aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
     )
 
@@ -141,10 +155,10 @@ def test_inventory_binding_validator_requires_rows_aggregation() -> None:
 
 
 def test_inventory_binding_reuses_the_canonical_row_set_projection() -> None:
-    binding = DataBindingDefinition(
+    binding = BindingDefinition(
         id="inventory-purchases",
-        source=BindingSourceKind.INVENTORY,
-        selector=_selector("complete_acquisition_cost", "0181"),
+        provider=InventoryProvider.model_validate(_selector("complete_acquisition_cost", "0181")),
+        value=_MONEY_VALUE,
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=("rd-439-2007:art-75",),
         source_refs=("aeat-renta-2025-inventory",),
@@ -160,7 +174,7 @@ def test_inventory_binding_reuses_the_canonical_row_set_projection() -> None:
 
 
 def test_inventory_selector_is_frozen_and_has_only_the_three_unsigned_destinations() -> None:
-    selector = InventorySelector.model_validate(_selector("complete_acquisition_cost", "0181"))
+    selector = InventoryProvider.model_validate(_selector("complete_acquisition_cost", "0181"))
 
     assert set(_OPERATION_DESTINATIONS.values()) == {"0177", "0181", "0182"}
     assert "0155" not in _OPERATION_DESTINATIONS.values()

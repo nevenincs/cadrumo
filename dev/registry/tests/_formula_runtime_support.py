@@ -9,7 +9,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expression
 from cadrumo.domain.calculations.registry.schema import (
-    DataBindingDefinition,
+    BindingDefinition,
     ModeloDefinition,
     RegistryCatalogues,
     RegistrySnapshot,
@@ -127,5 +127,5 @@ def _modelo_180_snapshot_with_inactive_relation_period(
     )
 
 
-def _previous_year_net_income_binding(snapshot: RegistrySnapshot) -> DataBindingDefinition:
+def _previous_year_net_income_binding(snapshot: RegistrySnapshot) -> BindingDefinition:
     return next(binding for binding in snapshot.revision.bindings if binding.id == _PREVIOUS_YEAR_NET_INCOME_BINDING)

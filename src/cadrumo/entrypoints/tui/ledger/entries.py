@@ -7,7 +7,7 @@ from typing import ClassVar, cast, override
 from textual.app import App, ComposeResult
 from textual.widgets import DataTable, Static
 
-from ....core.identity import TransactionId
+from ....core.identity.transaction_ids import TransactionId
 from ..components.widgets import ContentDataTable
 from .controller import (
     LedgerEntrySelected,

@@ -29,7 +29,7 @@ _CASILLA_TO_BINDING: Mapping[str, str] = {
     "DPNIF_D": "renta-2024-profile-tax-id",
     "DP_APENOM_D": "renta-2024-profile-display-name",
     "ZCCAD": "renta-2024-profile-tax-residence-ccaa",
-    "TIPOTRIBUTACION": "renta-2024-profile-declaration-type",
+    "TIPOTRIBUTACION": "renta-profile-declaration-type",
     "SEXO_D": "renta-2024-profile-taxpayer-sex",
     "ECIVIL": "renta-2024-profile-marital-status",
     "DPFNAC_D": "renta-2024-profile-taxpayer-birth-date",
@@ -44,7 +44,7 @@ _CASILLA_TO_BINDING: Mapping[str, str] = {
     "RESIDENTEUE": "renta-2024-profile-spouse-eu-eea-resident",
     "ZRUE2": "renta-2024-profile-spouse-eu-eea-country",
     "HIJOSUE": "renta-2024-profile-family-descendants-eu-eea-deduction",
-    "PH18": "renta-2024-profile-family-minor-children-in-unit",
+    "PH18": "renta-profile-family-minor-children-in-unit",
     "NIFDLG": "renta-2024-family-descendant-tax-id",
     "APENOMDLG": "renta-2024-family-descendant-display-name",
     "FNACDLG": "renta-2024-family-descendant-birth-date",
@@ -61,7 +61,7 @@ _CASILLA_TO_BINDING: Mapping[str, str] = {
 _SCALAR_PROFILE_BINDING_VALUES: Mapping[str, object] = {
     "renta-2024-profile-tax-id": "12345678Z",
     "renta-2024-profile-tax-residence-ccaa": "madrid",
-    "renta-2024-profile-declaration-type": Decimal("2"),
+    "renta-profile-declaration-type": Decimal("2"),
     "renta-2024-profile-taxpayer-sex": "H",
     "renta-2024-profile-marital-status": Decimal("2"),
     "renta-2024-profile-taxpayer-birth-date": date(1980, 3, 15),
@@ -75,7 +75,7 @@ _SCALAR_PROFILE_BINDING_VALUES: Mapping[str, object] = {
     "renta-2024-profile-spouse-eu-eea-resident": True,
     "renta-2024-profile-spouse-eu-eea-country": "DE",
     "renta-2024-profile-family-descendants-eu-eea-deduction": True,
-    "renta-2024-profile-family-minor-children-in-unit": False,
+    "renta-profile-family-minor-children-in-unit": False,
 }
 
 _ROW_BINDINGS: Mapping[str, tuple[str, str]] = {

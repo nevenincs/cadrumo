@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Annotated, NamedTuple, Protocol
+from typing import TYPE_CHECKING, Annotated, Literal, NamedTuple, Protocol
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
@@ -42,8 +42,10 @@ from .errors import RegistryValidationError
 from .ids import BindingId
 from .ledger_binding_selector_support import LedgerIvaFact, LedgerIvaFactValue
 from .quantity_screen_enrolment import assert_quantity_readers_cover_independent_facts, independent_quantity_facts
-from .schema import DataBindingDefinition, ModeloRevision
 from .schema_base import coerce_decimal_tuple, coerce_enum_member, coerce_enum_tuple
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition, ModeloRevision
 
 
 class IvaLedgerObservation(BaseModel):
@@ -184,10 +186,12 @@ _IVA_SUPPORTED_FACTS: frozenset[str] = frozenset(
 )
 
 
-class _IvaLedgerSelector(BaseModel):
+class LedgerIvaProvider(BaseModel):
     """Validated form of a ledger_iva_aggregation binding selector."""
 
     model_config = STRICT_FROZEN_CONFIG
+
+    kind: Literal[BindingSourceKind.LEDGER_IVA_AGGREGATION] = BindingSourceKind.LEDGER_IVA_AGGREGATION
 
     categories: Annotated[tuple[IvaCategory, ...], BeforeValidator(coerce_enum_tuple(IvaCategory))] = Field(
         min_length=1,
@@ -273,7 +277,7 @@ class _IvaLedgerSelector(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def _exemption_article_filter_requires_domestic_exempt(self) -> _IvaLedgerSelector:
+    def _exemption_article_filter_requires_domestic_exempt(self) -> LedgerIvaProvider:
         if self.exemption_articles is not None and IvaCategory.DOMESTIC_EXEMPT not in self.categories:
             raise RegistryValidationError(
                 "exemption_articles selector requires DOMESTIC_EXEMPT in categories",
@@ -281,10 +285,10 @@ class _IvaLedgerSelector(BaseModel):
         return self
 
 
-def iva_ledger_selector(binding: DataBindingDefinition) -> _IvaLedgerSelector:
+def iva_ledger_selector(binding: BindingDefinition) -> LedgerIvaProvider:
     """Validate and parse a binding selector into a typed IVA selector."""
     try:
-        return _IvaLedgerSelector.model_validate(_selector_as_dict(binding))
+        return LedgerIvaProvider.model_validate(_selector_as_dict(binding))
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed ledger_iva_aggregation selector") from exc
 
@@ -299,7 +303,7 @@ class IvaLedgerScreenBinding(NamedTuple):
     """
 
     binding_id: BindingId
-    selector: _IvaLedgerSelector
+    selector: LedgerIvaProvider
 
 
 class _InvoiceLedgerScreenShape(NamedTuple):
@@ -395,8 +399,8 @@ _INVOICE_LEDGER_SCREEN_MODELOS = frozenset({"303", "390"})
 
 def _is_invoice_ledger_screen_candidate(
     revision: ModeloRevision,
-    binding: DataBindingDefinition,
-    selector: _IvaLedgerSelector,
+    binding: BindingDefinition,
+    selector: LedgerIvaProvider,
     *,
     modelo: str,
 ) -> bool:
@@ -430,7 +434,7 @@ def _is_invoice_ledger_screen_candidate(
     )
 
 
-def _invoice_ledger_screen_shape(selector: _IvaLedgerSelector) -> _InvoiceLedgerScreenShape:
+def _invoice_ledger_screen_shape(selector: LedgerIvaProvider) -> _InvoiceLedgerScreenShape:
     return _InvoiceLedgerScreenShape(
         categories=selector.categories,
         rate_kinds=selector.rate_kinds,
@@ -516,12 +520,12 @@ def invoice_ledger_screen_binding_ids(
 
 
 def validate_ledger_iva_aggregation_binding_definition(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
 ) -> None:
     """Validate a ``ledger_iva_aggregation`` binding's selector and aggregation.
 
     Args:
-        binding: The :class:`DataBindingDefinition` to validate. Must
+        binding: The :class:`BindingDefinition` to validate. Must
             have ``source == "ledger_iva_aggregation"``.
 
     Raises:
@@ -624,7 +628,7 @@ class _IvaReachabilityProbeObservation(NamedTuple):
     applied_rate: Decimal | None = None
 
 
-def _iva_reachability_probe(selector: _IvaLedgerSelector) -> None:
+def _iva_reachability_probe(selector: LedgerIvaProvider) -> None:
     """Assert the selector matches at least one constructible observation shape.
 
     Builds a synthetic observation from the selector's OWN declared values and
@@ -679,7 +683,7 @@ def _iva_reachability_probe(selector: _IvaLedgerSelector) -> None:
 
 def _iva_ledger_observation_matches_selector(
     observation: IvaSelectorAxesProtocol,
-    selector: _IvaLedgerSelector,
+    selector: LedgerIvaProvider,
     *,
     categories: set[IvaCategory],
     rate_kinds: set[IvaRateKind],
@@ -701,7 +705,7 @@ def _iva_ledger_observation_matches_selector(
     return observation.exemption_article in set(selector.exemption_articles)
 
 
-def _iva_build_matcher(selector: _IvaLedgerSelector) -> Callable[[IvaSelectorAxesProtocol], bool]:
+def _iva_build_matcher(selector: LedgerIvaProvider) -> Callable[[IvaSelectorAxesProtocol], bool]:
     categories = set(selector.categories)
     rate_kinds = set(selector.rate_kinds)
 
@@ -716,7 +720,7 @@ def _iva_build_matcher(selector: _IvaLedgerSelector) -> Callable[[IvaSelectorAxe
     return matcher
 
 
-def _iva_aggregate(matched: Sequence[IvaLedgerObservation], selector: _IvaLedgerSelector) -> Decimal:
+def _iva_aggregate(matched: Sequence[IvaLedgerObservation], selector: LedgerIvaProvider) -> Decimal:
     if selector.fact == "iva_amount_sum":
         return sum((observation.iva_amount for observation in matched), Decimal("0"))
     if selector.fact == "recargo_amount_sum":
@@ -902,7 +906,7 @@ def unrouted_ledger_iva_quantities(
     )
 
 
-def _base_iva_selectors(revision: ModeloRevision) -> tuple[_IvaLedgerSelector, ...]:
+def _base_iva_selectors(revision: ModeloRevision) -> tuple[LedgerIvaProvider, ...]:
     """Return the revision's ``base_amount_sum`` IVA selectors in source order."""
     selectors = [
         iva_ledger_selector(binding)
@@ -914,7 +918,7 @@ def _base_iva_selectors(revision: ModeloRevision) -> tuple[_IvaLedgerSelector, .
 
 def _iva_reachability_probe_for_category(
     category: IvaCategory,
-    selector: _IvaLedgerSelector,
+    selector: LedgerIvaProvider,
 ) -> _IvaReachabilityProbeObservation | None:
     """Build a probe from a selector when it declares ``category``."""
     if category not in selector.categories:
@@ -932,7 +936,7 @@ def _iva_reachability_probe_for_category(
 
 def _iva_category_is_reachable(
     category: IvaCategory,
-    matchers: Sequence[tuple[_IvaLedgerSelector, Callable[[IvaSelectorAxesProtocol], bool]]],
+    matchers: Sequence[tuple[LedgerIvaProvider, Callable[[IvaSelectorAxesProtocol], bool]]],
 ) -> bool:
     """Return whether a real IVA matcher can accept a declared category probe."""
     for selector, matcher in matchers:
@@ -1047,18 +1051,18 @@ def structurally_unroutable_iva_base_categories(
 # before any calculation. Coverage is currently a subset of the full
 
 
-def validate_ledger_iva_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
+def validate_ledger_iva_aggregation_binding(binding: BindingDefinition) -> list[str]:
     """Validate a ``ledger_iva_aggregation`` binding at registry-build time.
 
-    Accumulating ``list[str]`` validator over :class:`_IvaLedgerSelector`; runs
+    Accumulating ``list[str]`` validator over :class:`LedgerIvaProvider`; runs
     the fact/aggregation-op invariant at build time through
     :func:`invariant_diagnostics`, whose raise-style body is
     :func:`validate_ledger_iva_aggregation_binding_definition`.
     """
-    failures = selector_against_model(binding, _IvaLedgerSelector)
+    failures = selector_against_model(binding, LedgerIvaProvider)
     if failures:
         return failures
     return invariant_diagnostics(binding, "ledger_iva_aggregation", validate_ledger_iva_aggregation_binding_definition)
 
 
-IvaLedgerSelector = _IvaLedgerSelector
+LedgerIvaProvider = LedgerIvaProvider

@@ -7,7 +7,6 @@ semantic_role = "is_reserva_nivelacion_adicion_pendiente"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-105"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "01111"
 number = "01111"
@@ -17,4 +16,3 @@ semantic_role = "is_reserva_nivelacion_adicion_pendiente"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-105"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

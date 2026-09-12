@@ -222,12 +222,12 @@ def test_invoice_sourced_rows_reach_their_own_rate_specific_box() -> None:
 
     from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
     from ...calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
-    from ...calculations.registry.schema import DataBindingDefinition, ModeloRevision
+    from ...calculations.registry.schema import BindingDefinition, ModeloRevision
     from ...calculations.registry.schema_references import PeriodSelector
     from ..invoice_classification import invoice_line_to_iva_observation
 
-    def _rate_box(binding_id: str, rate: Decimal) -> DataBindingDefinition:
-        return DataBindingDefinition(
+    def _rate_box(binding_id: str, rate: Decimal) -> BindingDefinition:
+        return BindingDefinition(
             id=binding_id,
             source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
             selector={

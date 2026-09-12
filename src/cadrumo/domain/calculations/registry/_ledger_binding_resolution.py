@@ -31,12 +31,14 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from decimal import Decimal
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from ....core.aggregation import BindingSourceKind
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .schema import DataBindingDefinition, ModeloRevision
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition, ModeloRevision
 
 __all__ = [
     "UnroutedLedgerQuantity",
@@ -51,7 +53,7 @@ def resolve_ledger_family_binding_values[ObservationT, SelectorT](
     observations: Iterable[ObservationT],
     *,
     source_kind: BindingSourceKind,
-    parse_selector: Callable[[DataBindingDefinition], SelectorT],
+    parse_selector: Callable[[BindingDefinition], SelectorT],
     build_matcher: Callable[[SelectorT], Callable[[ObservationT], bool]],
     aggregate: Callable[[Sequence[ObservationT], SelectorT], Decimal],
 ) -> dict[BindingId, Decimal]:
@@ -98,7 +100,7 @@ def unsupported_ledger_family_observations[ObservationT, SelectorT](
     observations: Iterable[ObservationT],
     *,
     source_kind: BindingSourceKind,
-    parse_selector: Callable[[DataBindingDefinition], SelectorT],
+    parse_selector: Callable[[BindingDefinition], SelectorT],
     build_matcher: Callable[[SelectorT], Callable[[ObservationT], bool]],
     is_declarable: Callable[[ObservationT], bool],
     extra_exclusion: Callable[[ObservationT], bool] | None = None,
@@ -166,7 +168,7 @@ def unrouted_ledger_family_quantities[ObservationT, SelectorT](
     observations: Iterable[ObservationT],
     *,
     source_kind: BindingSourceKind,
-    parse_selector: Callable[[DataBindingDefinition], SelectorT],
+    parse_selector: Callable[[BindingDefinition], SelectorT],
     build_matcher: Callable[[SelectorT], Callable[[ObservationT], bool]],
     read_fact: Callable[[SelectorT], str],
     independent_facts: frozenset[str],
@@ -257,7 +259,7 @@ def _matchers_by_fact[ObservationT, SelectorT](
     revision: ModeloRevision,
     *,
     source_kind: BindingSourceKind,
-    parse_selector: Callable[[DataBindingDefinition], SelectorT],
+    parse_selector: Callable[[BindingDefinition], SelectorT],
     build_matcher: Callable[[SelectorT], Callable[[ObservationT], bool]],
     read_fact: Callable[[SelectorT], str],
 ) -> dict[str, list[Callable[[ObservationT], bool]]]:

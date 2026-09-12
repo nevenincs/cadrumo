@@ -26,7 +26,7 @@ from decimal import Decimal
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.i18n.render import tr
-from ._common import bad
+from .common import bad
 
 __all__ = ["optional_decimal_text", "parse_decimal_amount", "parse_optional_decimal_amount"]
 

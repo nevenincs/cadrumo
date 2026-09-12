@@ -27,14 +27,12 @@ from ....core.tax_domain import TaxDomain
 from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
 from .authority import ValidatedRegistryAuthority
 from .binding_selector_utils import boolean_binding_encoded_values
+from .binding_temporal import binding_applies_to_period
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
-from .ids import BindingId, RelationId
+from .ids import BindingId
 from .period_selector_match import registry_period_for_request, selector_token_for_request
 from .query_reports import (
     BindingInputChannel,
-    BindingSelectorQueryEntry,
-    BindingSelectorQueryProjection,
-    BindingSelectorQueryValue,
     ModeloBindingQueryRow,
     ModeloBindingsReport,
     ModeloCasillaDetailReport,
@@ -50,16 +48,17 @@ from .query_reports import (
     RegistrySourceInventoryRow,
     RegistrySourceSite,
 )
+from .relation_prefill_bindings import RelationPrefillProvider
 from .runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
     expression_casilla_refs,
     expression_parameter_refs,
-    expression_relation_refs,
 )
-from .schema import ModeloDefinition, ModeloRevision, filing_period_from_scope
+from .schema import BindingDefinition, ModeloDefinition, ModeloRevision
+from .schema_base import filing_period_from_scope
 from .schema_input_kind import InputKind
-from .schema_surfaces import CasillaDefinition, RelationDefinition
+from .schema_surfaces import CasillaDefinition
 from .support_matrix import build_support_matrix
 from .temporal import select_revision_for_year
 
@@ -734,7 +733,6 @@ def _build_modelo_formulas_report(context: ResolvedRegistryQueryContext) -> Mode
             input_casilla_ids=tuple(dict.fromkeys(expression_casilla_refs(formula.expression))),
             input_bindings=tuple(dict.fromkeys(expression_binding_refs(formula.expression))),
             input_parameters=tuple(dict.fromkeys(expression_parameter_refs(formula.expression))),
-            input_relations=tuple(dict.fromkeys(expression_relation_refs(formula.expression))),
             expression=_public_mapping(formula.expression.model_dump(mode="json")),
             legal_refs=tuple(str(ref) for ref in formula.legal_refs),
             source_refs=tuple(str(ref) for ref in formula.source_refs),
@@ -764,16 +762,6 @@ def _build_modelo_bindings_report(context: ResolvedRegistryQueryContext) -> Mode
     )
 
 
-def relations_by_target_binding(
-    revision: ModeloRevision,
-) -> dict[BindingId, tuple[RelationDefinition, ...]]:
-    """Group declared relations by target binding in declaration order."""
-    grouped: dict[BindingId, list[RelationDefinition]] = {}
-    for relation in revision.relations:
-        grouped.setdefault(relation.target_binding, []).append(relation)
-    return {binding_id: tuple(relations) for binding_id, relations in grouped.items()}
-
-
 def _binding_rows(
     revision: ModeloRevision,
     *,
@@ -788,20 +776,17 @@ def _binding_rows(
     as a string enum key, ``decimal`` for every other binding.
     """
     enum_consumed = enum_consumed_binding_ids(revision)
-    relation_inputs_by_target = _relation_inputs_by_target_binding(revision, period=period)
     operator_required = _operator_input_required_by_binding(revision, modelo=modelo, period=period)
     return tuple(
         ModeloBindingQueryRow(
             binding_id=binding.id,
-            source=binding.source,
-            typed_enum=binding.typed_enum,
+            typed_enum=binding.value.typed_enum,
             input_channel=(BindingInputChannel.ENUM if binding.id in enum_consumed else BindingInputChannel.DECIMAL),
-            selector=_public_selector(binding.source, binding.selector),
+            provider=binding.provider,
             aggregation={"op": binding.aggregation.op.value} if binding.aggregation is not None else None,
             legal_refs=tuple(binding.legal_refs),
             source_refs=tuple(binding.source_refs),
             borrador_capable=binding.aeat_prefilled is True,
-            relation_inputs=relation_inputs_by_target.get(binding.id, ()),
             encoded_options=boolean_binding_encoded_values(binding),
             operator_input_required=operator_required.get(binding.id, True),
         )
@@ -890,49 +875,24 @@ def _casilla_detail_report(context: ResolvedRegistryQueryContext, casilla: str) 
     )
 
 
-def _relation_inputs_by_target_binding(
-    revision: ModeloRevision,
-    *,
-    period: str | None = None,
-) -> dict[BindingId, tuple[RelationId, ...]]:
-    """Map each binding id to the relation ids whose ``target_binding`` is that binding.
-
-    A ``relation_prefill`` binding's value is materialised by one or more
-    registry :class:`RelationDefinition` fold-ins; each declares the
-    binding it feeds via ``target_binding``. Inverting that declaration
-    makes the feeding relation discoverable from the binding listing
-    surface for any modelo, grounded in the resolved revision rather than
-    a per-form hardcoded channel table. Relation ids preserve their
-    declaration order so the listing is deterministic.
-    """
-    return {
-        target_binding: relation_ids
-        for target_binding, relations in relations_by_target_binding(revision).items()
-        if (
-            relation_ids := tuple(
-                relation.id
-                for relation in relations
-                if period is None or not relation.target_periods or period in relation.target_periods
-            )
-        )
-    }
-
-
 def _relation_prefill_is_period_default(
-    source: BindingSourceKind,
-    relations: tuple[RelationDefinition, ...],
+    binding: BindingDefinition,
     *,
     modelo: str,
     period: str,
 ) -> bool:
-    """Return whether a relation-prefill binding has only same-model prior defaults."""
-    if source is not BindingSourceKind.RELATION_PREFILL:
+    """Return whether a relation-prefill slot is a same-model prior default here.
+
+    The slot is fed by this modelo's own earlier periods and does not apply to
+    the target period, so the operator is not expected to supply it: the value
+    either arrives from a prior filing or the slot is legitimately out of scope.
+    """
+    provider = binding.provider
+    if not isinstance(provider, RelationPrefillProvider):
         return False
-    if not relations:
+    if binding_applies_to_period(binding.applicability, period):
         return False
-    if any(not relation.target_periods or period in relation.target_periods for relation in relations):
-        return False
-    return all(relation.kind == "previous_period" and str(relation.source_modelo) == modelo for relation in relations)
+    return provider.relation_kind == "previous_period" and str(provider.source_modelo) == modelo
 
 
 def _operator_input_required_by_binding(
@@ -945,10 +905,8 @@ def _operator_input_required_by_binding(
     required = {binding.id: True for binding in revision.bindings}
     if modelo != Modelo.M202.value or period is None:
         return required
-    relations_by_target = relations_by_target_binding(revision)
     for binding in revision.bindings:
-        relations = tuple(relations_by_target.get(binding.id, ()))
-        if _relation_prefill_is_period_default(binding.source, relations, modelo=modelo, period=period):
+        if _relation_prefill_is_period_default(binding, modelo=modelo, period=period):
             required[binding.id] = False
     return required
 
@@ -961,21 +919,6 @@ def _query_filing_period(filing_year: int | None, period: str | None) -> Period 
     if filing_year is None or period is None:
         return None
     return filing_period_from_scope(filing_year, period)
-
-
-def _public_selector(source: str, selector: object) -> BindingSelectorQueryProjection:
-    if isinstance(selector, BaseModel):
-        selector = selector.model_dump(exclude={"source"}, exclude_none=True, exclude_unset=True)
-    selector_mapping = _public_mapping_items(selector)
-    entries = tuple(
-        BindingSelectorQueryEntry(key=str(key), value=_public_selector_value(value))
-        for key, value in sorted(selector_mapping.items(), key=lambda item: str(item[0]))
-    )
-    return BindingSelectorQueryProjection(
-        source=str(source),
-        keys=tuple(entry.key for entry in entries),
-        entries=entries,
-    )
 
 
 def _public_mapping(value: object) -> dict[str, object]:
@@ -1007,22 +950,6 @@ def _public_tuple(value: object) -> tuple[object, ...] | None:
     return OBJECT_TUPLE_ADAPTER.validate_python(value)
 
 
-def _public_selector_value(value: object) -> BindingSelectorQueryValue:
-    public_value = _public_value(value)
-    if isinstance(public_value, str | int | bool):
-        return public_value
-    tuple_value = _public_tuple(public_value)
-    if tuple_value is not None:
-        string_items: list[str] = []
-        for item in tuple_value:
-            if not isinstance(item, str):
-                break
-            string_items.append(item)
-        else:
-            return tuple(string_items)
-    raise RegistryValidationError(f"unsupported public binding selector value {public_value!r}")
-
-
 def _public_value(value: object) -> object:
     if isinstance(value, Decimal):
         return format(value, "f")
@@ -1038,5 +965,4 @@ def _public_value(value: object) -> object:
 __all__ = [
     "RegistryQueryService",
     "ResolvedRegistryQueryContext",
-    "relations_by_target_binding",
 ]

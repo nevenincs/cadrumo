@@ -17,8 +17,9 @@ from ...core.i18n.render import tr
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
 from .errors import ManifestError, ManualNotFoundError, ManualParseError
+from .ids import ManualId, ManualPart
 from .loader import iter_sections, load_manual, resolve_part_root
-from .schema import ManualId, ManualPart, Section
+from .schema import Section
 
 _logger = get_logger(__name__)
 
@@ -89,7 +90,6 @@ def _section_multilingual_warnings(section: Section) -> list[ManualVerificationI
                     code="missing-translation",
                     message=tr(
                         "cli.registry.manuals.verify_missing_translation",
-                        default="section %{section_id}: %{field_name} missing translation key",
                         section_id=section.section_id,
                         field_name=field_name,
                     ),
@@ -118,7 +118,6 @@ def _cross_reference_issues(
                         code="dangling-section-ref",
                         message=tr(
                             "cli.registry.manuals.verify_dangling_section_ref",
-                            default="section %{section_id} references unknown section %{target}",
                             section_id=section.section_id,
                             target=target,
                         ),
@@ -133,7 +132,6 @@ def _cross_reference_issues(
                             code="dangling-section-ref",
                             message=tr(
                                 "cli.registry.manuals.verify_dangling_rule_section_ref",
-                                default="rule %{rule_id} references unknown section %{target}",
                                 rule_id=rule.rule_id,
                                 target=target,
                             ),
@@ -180,7 +178,6 @@ def verify_manual_dir(
                 code="missing-manifest",
                 message=tr(
                     "cli.registry.manuals.verify_missing_manifest",
-                    default="%{manifest_path} is absent; run 'aeat manual fetch' to materialise it",
                     manifest_path=manifest_path,
                 ),
             ),

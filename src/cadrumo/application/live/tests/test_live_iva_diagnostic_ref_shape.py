@@ -20,11 +20,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilApprovalTimeoutError
-from ..remote_state_models import (
-    LiveIvaAcquisitionFailureMode,
-    LiveIvaAuthOutcome,
-    LiveIvaReadStatus,
-)
+from ..errors import LiveIvaAcquisitionFailureMode
+from ..remote_state_models import LiveIvaAuthOutcome, LiveIvaReadStatus
 from ..remote_state_outcomes import auth_outcome, evidence_ref
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

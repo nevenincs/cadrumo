@@ -111,7 +111,7 @@ def _store_profile(objects: SecureObjectRepository) -> None:
     )
 
 
-def _workflow_profile() -> TaxpayerProfile:
+def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAX_ID,
         iva_regime=IVARegime.GENERAL,
@@ -367,7 +367,7 @@ def test_modelo_303_verify_blocks_on_deductible_gap_and_only_warns_on_the_output
     verification = verify_modelo_revision_with_preconditions(
         revision.calculation_revision_id,
         actor="operator",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         settings=ready_clave_settings(_TAX_ID),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -467,7 +467,7 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
         report = verify_modelo_revision(
             revision.calculation_revision_id,
             actor="operator",
-            workflow_profile=_workflow_profile(),
+            workflow_profile=workflow_profile(),
             settings=ready_clave_settings(_TAX_ID),
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
@@ -574,7 +574,7 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
         report = verify_modelo_revision(
             revision.calculation_revision_id,
             actor="operator",
-            workflow_profile=_workflow_profile(),
+            workflow_profile=workflow_profile(),
             settings=ready_clave_settings(_TAX_ID),
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
@@ -610,7 +610,7 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
         filed = file_modelo_revision(
             revision.calculation_revision_id,
             actor="operator",
-            workflow_profile=_workflow_profile(),
+            workflow_profile=workflow_profile(),
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
             filing_repository=filing_repo,
@@ -647,7 +647,7 @@ def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
             return verify_modelo_revision(
                 revision.calculation_revision_id,
                 actor="operator",
-                workflow_profile=_workflow_profile(),
+                workflow_profile=workflow_profile(),
                 settings=ready_clave_settings(_TAX_ID),
                 work_unit_repository=wu_repo,
                 calculation_repository=cr_repo,
@@ -794,7 +794,7 @@ def test_modelo_303_export_refuses_legacy_verified_deductible_iva_missing_eviden
                 output_path=output_path,
                 actor="operator",
             ),
-            workflow_profile=_workflow_profile(),
+            workflow_profile=workflow_profile(),
             calculation_repository=cr_repo,
         )
 
@@ -824,7 +824,7 @@ def test_modelo_303_internal_file_refuses_legacy_verified_deductible_iva_missing
         file_modelo_revision(
             legacy.calculation_revision_id,
             actor="operator",
-            workflow_profile=_workflow_profile(),
+            workflow_profile=workflow_profile(),
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
             filing_repository=filing_repo,

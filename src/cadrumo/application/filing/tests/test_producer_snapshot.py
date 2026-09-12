@@ -52,13 +52,15 @@ from ....domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
-from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind, FilingInstanceEvidence
+from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ....domain.modelos.calculation_revision_m303_evidence import (
     M303Exonerado390ActivityRowEvidence,
     M303Exonerado390EndpointEvidence,
     M303Exonerado390FilingEvidence,
+    M303InsolvencyFilingFact,
+    M303InsolvencyFilingSubtype,
 )
-from ....domain.modelos.calculation_revision_m303_handoff import M303FilingInstanceEvidence
+from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence, M303FilingInstanceEvidence
 from ....domain.prorrata_register.register import (
     ProrrataEspecialTransitionEvidence,
     ProrrataRegister,
@@ -71,14 +73,12 @@ from ...aggregation.m303_arrivals import (
     M303SupplierRegimeArrival,
     resolve_m303_prorrata_transition_arrival,
 )
-from .. import __init__ as filing
-from ..export import (
-    _complementaria_page_marker,
-    _filing_producer_values,
-    _m303_complementaria_marker,
-    _m303_no_activity_marker,
+from .._record_field_renderer import (
+    complementaria_page_marker,
+    m303_complementaria_marker,
+    m303_no_activity_marker,
 )
-from ..export_producer import m303_profile_lexicals
+from ..export_producer import filing_producer_values, m303_profile_lexicals
 from ..producer_snapshot import (
     M202_UNSUPPORTED_PRODUCER_IDS,
     AmendmentEvidence,
@@ -89,8 +89,6 @@ from ..producer_snapshot import (
     GeneralFilingProfileFacts,
     M202UnsupportedProducerId,
     M303FilingFacts,
-    M303InsolvencyFilingFact,
-    M303InsolvencyFilingSubtype,
     Modelo111ProfileFacts,
     Modelo202ActivityFacts,
     Modelo202ProducerProfile,
@@ -146,7 +144,7 @@ _PARAMS = BienesInversionRegularizacionParameters(
 )
 
 
-def _params_for(year: int) -> BienesInversionRegularizacionParameters:
+def m303_bienes_inversion_parameters(year: int) -> BienesInversionRegularizacionParameters:
     """The bundle, resolved for ``year``.
 
     The projection refuses a bundle resolved for a different filing year, so a
@@ -259,7 +257,7 @@ def _empty_m303_export_arrivals(
         bienes_register,
         regularizacion_year=filing_year,
         prorrata_definitiva_by_identifier={},
-        parameters=_params_for(filing_year),
+        parameters=m303_bienes_inversion_parameters(filing_year),
     )
     return register, bienes_register, regularisation
 
@@ -300,7 +298,7 @@ def _m303_filing_facts(
         joint_return_elected=False,
         annual_volume_nonzero=annual_volume_nonzero,
         insolvency=None,
-        exonerado_390=_m303_exonerado_evidence(applicable=False),
+        exonerado_390=m303_exonerado_390_evidence(applicable=False),
         regimen_simplificado=evidence.regimen_simplificado,
         regimen_simplificado_result=evidence.regimen_simplificado.calculation_result,
         period=period,
@@ -314,11 +312,11 @@ def _m303_filing_facts(
         differentiated_contributions=(),
         bienes_register=bienes_register,
         regularisation_result=regularisation,
-        bienes_parameters=_params_for(filing_year),
+        bienes_parameters=m303_bienes_inversion_parameters(filing_year),
     )
 
 
-def _m303_exonerado_evidence(*, applicable: bool) -> M303Exonerado390FilingEvidence:
+def m303_exonerado_390_evidence(*, applicable: bool) -> M303Exonerado390FilingEvidence:
     reference = FilingEvidenceReference(reference="test:producer-snapshot:exonerado-390")
     endpoints = (
         (
@@ -370,7 +368,7 @@ def _m303_instance_evidence(period: Period) -> M303FilingInstanceEvidence:
         joint_return_elected=False,
         annual_volume_nonzero=False,
         insolvency=None,
-        exonerado_390=_m303_exonerado_evidence(applicable=False),
+        exonerado_390=m303_exonerado_390_evidence(applicable=False),
         regimen_simplificado=regimen_simplificado_filing_evidence(
             period=period,
             scope_decision=scope,
@@ -431,7 +429,7 @@ def _m303_foral_snapshot(
             judicial_order_date=date(2026, 8, 11),
             subtype=M303InsolvencyFilingSubtype.POST_ORDER,
         ),
-        exonerado_390=_m303_exonerado_evidence(applicable=True),
+        exonerado_390=m303_exonerado_390_evidence(applicable=True),
         regimen_simplificado=evidence.regimen_simplificado,
         regimen_simplificado_result=evidence.regimen_simplificado.calculation_result,
         period=period,
@@ -445,7 +443,7 @@ def _m303_foral_snapshot(
         differentiated_contributions=(),
         bienes_register=bienes_register,
         regularisation_result=regularisation,
-        bienes_parameters=_params_for(period.filing_year),
+        bienes_parameters=m303_bienes_inversion_parameters(period.filing_year),
     )
     profile = _m303_profile().model_copy(
         update={
@@ -487,7 +485,7 @@ def test_presenter_is_required_and_never_derived_from_taxpayer() -> None:
     )
     assert snapshot.presenter.tax_id == _PRESENTER_TAX_ID
     assert snapshot.taxpayer_tax_id == _TAXPAYER_TAX_ID
-    producer_values = _filing_producer_values(snapshot)
+    producer_values = filing_producer_values(snapshot)
     assert producer_values[FilingProducerKey.PRESENTER_TAX_ID] == _PRESENTER_TAX_ID
     assert producer_values[FilingProducerKey.TAXPAYER_TAX_ID] == _TAXPAYER_TAX_ID
     with pytest.raises(ValidationError, match="frozen"):
@@ -584,11 +582,6 @@ def test_modelo_202_uses_canonical_taxpayer_profile_without_scalarising_repeatab
         assert producer_id.value in str(exc_info.value)
 
 
-def test_legacy_duplicate_profile_classes_are_not_public() -> None:
-    assert not hasattr(filing, "Modelo202ProfileFacts")
-    assert not hasattr(filing, "Modelo303ProfileFacts")
-
-
 def test_modelo_303_uses_the_canonical_iva_profile_type() -> None:
     snapshot = build_filing_producer_snapshot(
         modelo=Modelo.M303,
@@ -603,7 +596,7 @@ def test_modelo_303_uses_the_canonical_iva_profile_type() -> None:
         m303_filing_facts=_m303_filing_facts(),
     )
     assert type(snapshot.model_profile) is ModeloIVAProfile
-    values = _filing_producer_values(snapshot)
+    values = filing_producer_values(snapshot)
     assert values[FilingProducerKey.M303_EXCLUSIVELY_FORAL] == "2"
     assert values[FilingProducerKey.M303_REDEME_ENROLLED] == "2"
     assert values[FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO] is None
@@ -673,7 +666,7 @@ def test_modelo_303_annual_volume_marker_requires_explicit_evidence() -> None:
         charge_account=None,
         m303_filing_facts=facts,
     )
-    assert _filing_producer_values(snapshot)[FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO] == "1"
+    assert filing_producer_values(snapshot)[FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO] == "1"
 
 
 def test_modelo_303_foral_territory_projects_true_without_a_constant_fallback() -> None:
@@ -690,7 +683,7 @@ def test_modelo_303_foral_territory_projects_true_without_a_constant_fallback() 
         m303_filing_facts=_m303_filing_facts(),
     )
 
-    assert _filing_producer_values(snapshot)[FilingProducerKey.M303_EXCLUSIVELY_FORAL] == "1"
+    assert filing_producer_values(snapshot)[FilingProducerKey.M303_EXCLUSIVELY_FORAL] == "1"
 
 
 @pytest.mark.parametrize(
@@ -704,7 +697,7 @@ def test_modelo_303_foral_note_5_overrides_each_a16_to_a30_lexical_branch(
     arrival, register = _m303_prorrata_transition_arrival(transition)
     snapshot = _m303_foral_snapshot(prorrata_transition=arrival, prorrata_register=register)
 
-    values = _filing_producer_values(snapshot)
+    values = filing_producer_values(snapshot)
 
     assert {
         FilingProducerKey.M303_REDEME_ENROLLED: values[FilingProducerKey.M303_REDEME_ENROLLED],
@@ -753,7 +746,7 @@ def test_modelo_303_foral_note_5_retains_blank_prorrata_slots_before_final_perio
         prorrata_transition=M303ProrrataTransitionArrival(period=period, transition=None, register_evidence=())
     )
 
-    values = _filing_producer_values(snapshot)
+    values = filing_producer_values(snapshot)
 
     assert values[FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION] is None
     assert values[FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION] is None
@@ -783,7 +776,7 @@ def test_m303_regime_composition_projects_only_the_exclusively_simplified_arm(
         charge_account=None,
         m303_filing_facts=_m303_filing_facts(),
     )
-    assert _filing_producer_values(snapshot)[FilingProducerKey.M303_REGIME_COMPOSITION_CODE] == expected
+    assert filing_producer_values(snapshot)[FilingProducerKey.M303_REGIME_COMPOSITION_CODE] == expected
 
 
 @pytest.mark.parametrize(
@@ -817,7 +810,7 @@ def test_m303_insolvency_fact_projects_coupled_date_and_official_subtype_code(
         charge_account=None,
         m303_filing_facts=facts,
     )
-    values = _filing_producer_values(snapshot)
+    values = filing_producer_values(snapshot)
     assert values[FilingProducerKey.M303_INSOLVENCY_DECLARED] == "1"
     assert values[FilingProducerKey.M303_INSOLVENCY_JUDICIAL_ORDER_DATE] == "11082026"
     assert values[FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE] == expected
@@ -834,7 +827,7 @@ def test_m303_filing_facts_refuse_annual_and_non_official_filing_periods(period_
             joint_return_elected=False,
             annual_volume_nonzero=False,
             insolvency=None,
-            exonerado_390=_m303_exonerado_evidence(applicable=False),
+            exonerado_390=m303_exonerado_390_evidence(applicable=False),
             regimen_simplificado=evidence.regimen_simplificado,
             regimen_simplificado_result=evidence.regimen_simplificado.calculation_result,
             period=period,
@@ -848,7 +841,7 @@ def test_m303_filing_facts_refuse_annual_and_non_official_filing_periods(period_
             differentiated_contributions=(),
             bienes_register=bienes_register,
             regularisation_result=regularisation,
-            bienes_parameters=_params_for(period.filing_year),
+            bienes_parameters=m303_bienes_inversion_parameters(period.filing_year),
         )
 
 
@@ -873,7 +866,7 @@ def test_m303_filing_facts_resolver_refuses_non_official_period_before_producer_
             differentiated_contributions=(),
             bienes_register=bienes_register,
             regularisation_result=regularisation,
-            bienes_parameters=_params_for(period.filing_year),
+            bienes_parameters=m303_bienes_inversion_parameters(period.filing_year),
         )
 
 
@@ -977,7 +970,7 @@ def test_disposition_selects_only_the_secure_account_with_the_matching_role() ->
     assert refund_snapshot.model_profile.charge_account is None
     assert _REFUND_IBAN in refund_snapshot.model_dump_json()
     assert _CHARGE_IBAN not in refund_snapshot.model_dump_json()
-    refund_values = _filing_producer_values(refund_snapshot)
+    refund_values = filing_producer_values(refund_snapshot)
     assert refund_values[FilingProducerKey.SELECTED_ACCOUNT_IBAN] == _REFUND_IBAN
     assert refund_values[FilingProducerKey.SELECTED_ACCOUNT_SWIFT_BIC] == ""
 
@@ -996,7 +989,7 @@ def test_disposition_selects_only_the_secure_account_with_the_matching_role() ->
     assert isinstance(charge_snapshot.selected_account, ChargeAccountSelection)
     assert _CHARGE_IBAN in charge_snapshot.model_dump_json()
     assert _REFUND_IBAN not in charge_snapshot.model_dump_json()
-    charge_values = _filing_producer_values(charge_snapshot)
+    charge_values = filing_producer_values(charge_snapshot)
     assert charge_values[FilingProducerKey.SELECTED_ACCOUNT_IBAN] == _CHARGE_IBAN
     assert charge_values[FilingProducerKey.SELECTED_ACCOUNT_SWIFT_BIC] is None
 
@@ -1079,7 +1072,7 @@ def test_amendment_flags_are_derived_from_one_typed_kind() -> None:
         charge_account=None,
         m303_filing_facts=None,
     )
-    values = _filing_producer_values(snapshot)
+    values = filing_producer_values(snapshot)
     assert values[FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA] is True
     assert values[FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA] is False
     assert values[FilingProducerKey.AMENDMENT_ORIGINAL_AEAT_RECEIPT] == "1234567890123"
@@ -1118,12 +1111,12 @@ def test_m303_source_markers_share_immutable_amendment_and_disposition_evidence(
     )
 
     draft = _marker_draft()
-    assert _m303_complementaria_marker(draft, complemented) == "X"
-    assert _complementaria_page_marker(draft, complemented) == "C"
-    assert _m303_no_activity_marker(draft, complemented) == "X"
-    assert _m303_complementaria_marker(draft, ordinary) is None
-    assert _complementaria_page_marker(draft, ordinary) is None
-    assert _m303_no_activity_marker(draft, ordinary) is None
+    assert m303_complementaria_marker(draft, complemented) == "X"
+    assert complementaria_page_marker(draft, complemented) == "C"
+    assert m303_no_activity_marker(draft, complemented) == "X"
+    assert m303_complementaria_marker(draft, ordinary) is None
+    assert complementaria_page_marker(draft, ordinary) is None
+    assert m303_no_activity_marker(draft, ordinary) is None
 
 
 def test_taxpayer_tax_id_is_a_distinct_producer_without_presenter_fallback() -> None:
@@ -1140,7 +1133,7 @@ def test_taxpayer_tax_id_is_a_distinct_producer_without_presenter_fallback() -> 
         m303_filing_facts=None,
     )
 
-    values = _filing_producer_values(snapshot)
+    values = filing_producer_values(snapshot)
 
     assert values[FilingProducerKey.TAXPAYER_TAX_ID] == _TAXPAYER_TAX_ID
     assert values[FilingProducerKey.PRESENTER_TAX_ID] == _PRESENTER_TAX_ID
@@ -1194,7 +1187,7 @@ def test_m303_filing_facts_accept_the_canonical_bienes_regularisation_result() -
         register,
         regularizacion_year=2026,
         prorrata_definitiva_by_identifier={"canonical-bien": Decimal("80")},
-        parameters=_params_for(2026),
+        parameters=m303_bienes_inversion_parameters(2026),
     )
 
     facts = M303FilingFacts.model_validate(
@@ -1217,7 +1210,7 @@ def test_m303_filing_facts_refuse_an_empty_regularisation_for_a_register_bien() 
         computed_count=0,
         pending_percentage_count=0,
         sector_contributions=(),
-        parameters_provenance=_params_for(2026).provenance,
+        parameters_provenance=m303_bienes_inversion_parameters(2026).provenance,
     )
 
     with pytest.raises(ValidationError, match="canonical projection of the supplied Bienes register"):
@@ -1236,7 +1229,7 @@ def test_m303_filing_facts_refuse_a_regularisation_from_another_bienes_register(
         foreign_register,
         regularizacion_year=2026,
         prorrata_definitiva_by_identifier={"foreign-bien": Decimal("80")},
-        parameters=_params_for(2026),
+        parameters=m303_bienes_inversion_parameters(2026),
     )
 
     with pytest.raises(ValidationError, match="canonical projection of the supplied Bienes register"):
@@ -1254,7 +1247,7 @@ def test_m303_filing_facts_refuse_a_regularisation_that_omits_an_in_window_bien(
         register,
         regularizacion_year=2026,
         prorrata_definitiva_by_identifier={},
-        parameters=_params_for(2026),
+        parameters=m303_bienes_inversion_parameters(2026),
     )
     omitted = RegistroRegularizacionResult(
         regularizacion_year=2026,
@@ -1263,7 +1256,7 @@ def test_m303_filing_facts_refuse_a_regularisation_that_omits_an_in_window_bien(
         computed_count=0,
         pending_percentage_count=1,
         sector_contributions=(),
-        parameters_provenance=_params_for(2026).provenance,
+        parameters_provenance=m303_bienes_inversion_parameters(2026).provenance,
     )
 
     with pytest.raises(ValidationError, match="canonical projection of the supplied Bienes register"):

@@ -64,7 +64,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @33+6. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2015. Tipo gravamen período generación
 [[revisions."2024".casillas]]
@@ -76,7 +75,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @39+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2015. 2024 deducción pendiente
 [[revisions."2024".casillas]]
@@ -88,7 +86,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @56+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2015. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -100,7 +97,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @73+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2015. Pendiente de aplicación períodos futuros
 [[revisions."2024".casillas]]
@@ -112,7 +108,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @90+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2016. Deducción pendiente
 [[revisions."2024".casillas]]
@@ -124,7 +119,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @107+6. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2016. Tipo gravamen período generación
 [[revisions."2024".casillas]]
@@ -136,7 +130,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @113+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2016. 2024 deducción pendiente
 [[revisions."2024".casillas]]
@@ -148,7 +141,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @130+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2016. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -160,7 +152,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @147+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2016. Pendiente de aplicación períodos futuros
 [[revisions."2024".casillas]]
@@ -172,7 +163,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @164+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2017. Deducción pendiente
 [[revisions."2024".casillas]]
@@ -184,7 +174,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @181+6. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2017. Tipo gravamen período generación
 [[revisions."2024".casillas]]
@@ -196,7 +185,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @187+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2017. 2024 deducción pendiente
 [[revisions."2024".casillas]]
@@ -208,7 +196,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @204+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2017. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -220,7 +207,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @221+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2017. Pendiente de aplicación períodos futuros
 [[revisions."2024".casillas]]
@@ -232,7 +218,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @238+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2018. Deducción pendiente
 [[revisions."2024".casillas]]
@@ -244,7 +229,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @255+6. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2018. Tipo gravamen período generación
 [[revisions."2024".casillas]]
@@ -256,7 +240,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @261+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2018. 2024 deducción pendiente
 [[revisions."2024".casillas]]
@@ -268,7 +251,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @278+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2018. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -280,7 +262,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @295+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2018. Pendiente de aplicación períodos futuros
 [[revisions."2024".casillas]]
@@ -292,7 +273,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @312+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2019. Deducción pendiente
 [[revisions."2024".casillas]]
@@ -304,7 +284,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @329+6. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2019. Tipo gravamen período generación
 [[revisions."2024".casillas]]
@@ -316,7 +295,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @335+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2019. 2024 deducción pendiente
 [[revisions."2024".casillas]]
@@ -328,7 +306,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @352+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2019. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -340,7 +317,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @369+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2019. Pendiente de aplicación períodos futuros
 [[revisions."2024".casillas]]
@@ -352,7 +328,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @386+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2020. Deducción pendiente
 [[revisions."2024".casillas]]
@@ -364,7 +339,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @403+6. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2020. Tipo gravamen período generación
 [[revisions."2024".casillas]]
@@ -376,7 +350,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @409+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2020. 2024 deducción pendiente
 [[revisions."2024".casillas]]
@@ -388,7 +361,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @426+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2020. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -400,7 +372,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @443+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2020. Pendiente de aplicación períodos futuros
 [[revisions."2024".casillas]]
@@ -412,7 +383,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @460+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2021. Deducción pendiente
 [[revisions."2024".casillas]]
@@ -424,7 +394,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @477+6. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2021. Tipo gravamen período generación
 [[revisions."2024".casillas]]
@@ -436,7 +405,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @483+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2021. 2024 deducción pendiente
 [[revisions."2024".casillas]]
@@ -448,7 +416,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @500+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2021. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -460,7 +427,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @517+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2021. Pendiente de aplicación períodos futuros
 [[revisions."2024".casillas]]
@@ -472,7 +438,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @534+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2022. deducción pendiente
 [[revisions."2024".casillas]]
@@ -484,7 +449,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @551+6. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2022. Tipo gravamen período generación
 [[revisions."2024".casillas]]
@@ -496,7 +460,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @557+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2022. 2024 deducción pendiente
 [[revisions."2024".casillas]]
@@ -508,7 +471,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @574+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2022. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -520,7 +482,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @591+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2022. Pendiente de aplicación períodos futuros
 [[revisions."2024".casillas]]
@@ -532,7 +493,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @608+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2023. deducción pendiente
 [[revisions."2024".casillas]]
@@ -544,7 +504,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @625+6. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2023. Tipo gravamen período generación
 [[revisions."2024".casillas]]
@@ -556,7 +515,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @631+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2023. 2024 deducción pendiente
 [[revisions."2024".casillas]]
@@ -568,7 +526,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @648+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2023. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -580,7 +537,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @665+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2023. Pendiente de aplicación períodos futuros
 [[revisions."2024".casillas]]
@@ -592,7 +548,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @682+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2024(*). deducción pendiente
 [[revisions."2024".casillas]]
@@ -604,7 +559,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @699+6. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2024(*). Tipo gravamen período generación
 [[revisions."2024".casillas]]
@@ -616,7 +570,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @705+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2024(*). 2024 deducción pendiente
 [[revisions."2024".casillas]]
@@ -628,7 +581,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @722+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2024(*). Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -640,7 +592,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @739+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: DI internacional 2024(*). Pendiente de aplicación períodos futuros
 [[revisions."2024".casillas]]
@@ -652,7 +603,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @756+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: Total. Deducción pendiente
 [[revisions."2024".casillas]]
@@ -664,7 +614,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @773+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: Total. 2024 deducción pendiente
 [[revisions."2024".casillas]]
@@ -676,7 +625,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @790+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: Total. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -688,7 +636,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @807+17. Deducciones doble imposición internacional LIS. DI internacional períodos anteriores: Total. Pendiente de aplicación períodos futuros
 [[revisions."2024".casillas]]
@@ -700,7 +647,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @824+17. Deducciones doble imposición internacional LIS.DI internacional 2024: DI jurídica: Imp. soportado por el contribuyente (art. 31 LIS). Deducción generada
 [[revisions."2024".casillas]]
@@ -712,7 +658,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @841+17. Deducciones doble imposición internacional LIS.DI internacional 2024: DI jurídica: Imp. soportado por el contribuyente (art. 31 LIS). Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -724,7 +669,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @858+17. Deducciones doble imposición internacional LIS.DI internacional 2024: DI jurídica: Imp. soportado por el contribuyente (art. 31 LIS). Pendiente de aplicación períodos futuros
 [[revisions."2024".casillas]]
@@ -736,7 +680,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @875+17. Deducciones doble imposición internacional LIS.DI internacional 2024:DI económica: Dividendos y part. en beneficios (art. 32 LIS). Deducción generada
 [[revisions."2024".casillas]]
@@ -748,7 +691,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @892+17. Deducciones doble imposición internacional LIS.DI internacional 2024: DI económica: Dividendos y part. en beneficios (art. 32 LIS). Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -760,7 +702,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @909+17. Deducciones doble imposición internacional LIS.DI internacional 2024: DI económica: Dividendos y part. en beneficios (art. 32 LIS). Pendiente de aplicación períodos futuros
 [[revisions."2024".casillas]]
@@ -772,7 +713,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @926+17. Deducciones doble imposición internacional LIS.DI internacional 2024:Total 2024. Deducción generada
 [[revisions."2024".casillas]]
@@ -784,7 +724,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @943+17. Deducciones doble imposición internacional LIS.DI internacional 2024:Total 2024. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -796,7 +735,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @960+17. Deducciones doble imposición internacional LIS.DI internacional 2024: Total 2024. Pendiente de aplicación períodos futuros
 [[revisions."2024".casillas]]
@@ -808,4 +746,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

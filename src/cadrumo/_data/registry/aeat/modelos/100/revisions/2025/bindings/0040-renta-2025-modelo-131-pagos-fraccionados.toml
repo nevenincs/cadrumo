@@ -1,7 +1,8 @@
 [[revisions."2025".bindings]]
 id = "renta-modelo-131-pagos-fraccionados"
-source = "relation_prefill"
-selector = { source_modelo = "131", source_casilla_id = "15" }
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "131", source_casilla_id = "15", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["rd-439-2007:art-109", "orden-hac-277-2026:art-3", "orden-eha-672-2007:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]

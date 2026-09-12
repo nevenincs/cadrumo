@@ -7,10 +7,9 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.corpus_text import normalise_corpus_text
-from cadrumo.core.resources.bundled_data import bundled_path
-
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.corpus_text import normalise_corpus_text
+from .....core.resources.bundled_data import bundled_path
 from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import CasillaObservation, RegistryModeloObservation

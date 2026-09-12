@@ -1,0 +1,31 @@
+[fact]
+fact_id = "lirpf-objective-estimation-exclusion-applicability-map"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "lirpf-objective-estimation-exclusion-applicability-map:2016-2026"
+date_axis = "filing_period"
+valid_from = 2016-01-01
+valid_to = 2026-12-31
+legal_refs = ["ley-35-2006:art-31", "ley-35-2006:dt-32"]
+source_refs = ["boe-lirpf-dt-32-2016-01-01", "boe-lirpf-art-31-2016-01-01"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-dt-32-2016-01-01"
+required_text = ["quedan fijadas en 250.000 y 125.000 euros"]
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-art-31-2016-01-01"
+required_text = ["actividades agrícolas, ganaderas y forestales, 250.000 euros anuales."]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "objective_estimation_prior_year_gross_income_eur", value = "lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur" },
+  { key = "objective_estimation_prior_year_gross_income_eur.label", value = "rendimientos integros del conjunto de actividades economicas" },
+  { key = "objective_estimation_prior_year_invoice_gross_income_eur", value = "lirpf-dt-32:eo-exclusion-rendimientos-factura-eur" },
+  { key = "objective_estimation_prior_year_invoice_gross_income_eur.label", value = "rendimientos integros de operaciones con obligacion de factura" },
+  { key = "objective_estimation_prior_year_agri_livestock_forest_gross_eur", value = "lirpf-art-31:eo-exclusion-rendimientos-agricolas-ganaderos-forestales-eur" },
+  { key = "objective_estimation_prior_year_agri_livestock_forest_gross_eur.label", value = "rendimientos integros de actividades agricolas, ganaderas y forestales" },
+  { key = "objective_estimation_prior_year_purchases_eur", value = "lirpf-dt-32:eo-exclusion-compras-eur" },
+  { key = "objective_estimation_prior_year_purchases_eur.label", value = "volumen de compras en bienes y servicios" },
+]

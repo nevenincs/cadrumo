@@ -15,8 +15,8 @@
 
 [[revisions."2026-y-siguientes".bindings]]
 id = "m210-profile-country-of-fiscal-residence"
-source = "profile"
-selector = { profile_model = "taxpayer", field = "country_of_fiscal_residence" }
+provider = { kind = "profile", profile_model = "taxpayer", field = "country_of_fiscal_residence" }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = [
     "trlirnr-rdleg-5-2004:art-2",
@@ -37,8 +37,8 @@ required_text = ["no residentes", "país de residencia"]
 # source-scope authority.
 [[revisions."2026-y-siguientes".bindings]]
 id = "m210-ledger-irnr-rendimientos-integros"
-source = "ledger_irnr_income_aggregation"
-selector = { modelo = "210", target_casilla_id = "rendimientos_integros", fact = "gross_income_sum" }
+provider = { kind = "ledger_irnr_income_aggregation", modelo = "210", target_casilla_id = "rendimientos_integros", fact = "gross_income_sum" }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-13.1", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure"]

@@ -15,8 +15,8 @@ from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
-from .._common import cli_policy_refusal_projection
 from .._ledger_support import ledger_invoice_validation_no_recovery
+from ..common import cli_policy_refusal_projection
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

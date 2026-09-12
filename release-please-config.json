@@ -14,7 +14,7 @@
       "release-type": "python",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
-        "src/cadrumo/__init__.py",
+        "src/cadrumo/core/package_version.py",
         "pyproject.toml",
         "packaging/cadrumo_data_manuals/pyproject.toml",
         "packaging/cadrumo_data_official/pyproject.toml"

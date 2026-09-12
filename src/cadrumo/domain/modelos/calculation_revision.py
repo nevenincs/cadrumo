@@ -80,7 +80,6 @@ from .calculation_revision_identity import (
     outputs_for_hash_from_observations,
 )
 from .calculation_revision_m303_handoff import (
-    M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
     FilingInstanceEvidence,
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
@@ -437,20 +436,14 @@ def _validate_annual_summary_handoff_target(revision: CalculationRevision) -> No
         raise ModeloValidationError(
             "M303 simplified annual-summary handoff target calculation revision id must equal its containing revision",
         )
-    missing_outputs = tuple(
-        casilla_id
-        for casilla_id in M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
-        if casilla_id not in revision.casilla_values
-    )
+    missing_outputs = tuple(casilla_id for casilla_id in handoff.values if casilla_id not in revision.casilla_values)
     if missing_outputs:
         raise ModeloValidationError(
             "M303 simplified annual-summary handoff target revision is missing its "
             f"Modelo 390 outputs: {missing_outputs!r}",
         )
     mismatched_outputs = tuple(
-        casilla_id
-        for casilla_id in M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
-        if revision.casilla_values[casilla_id] != handoff.values[casilla_id]
+        casilla_id for casilla_id in handoff.values if revision.casilla_values[casilla_id] != handoff.values[casilla_id]
     )
     if mismatched_outputs:
         raise ModeloValidationError(
@@ -1236,7 +1229,6 @@ def assert_revision_snapshot_evidence_coverage(revision: CalculationRevision) ->
 
 
 __all__ = [
-    "M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS",
     "CalculationRevision",
     "CalculationRevisionAmendmentIdentity",
     "CalculationRevisionAmendmentKind",

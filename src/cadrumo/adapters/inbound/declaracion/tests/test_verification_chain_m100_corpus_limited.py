@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
 from ._verification_chain_m100_support import (
@@ -14,7 +16,6 @@ from ._verification_chain_m100_support import (
     _parse_m100_corpus,
 )
 from ._verification_chain_support import (
-    Decimal,
     _calculate_engine_values_from_inputs,
     _decimal_inputs_from_extracted_values,
 )
@@ -65,14 +66,14 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
 
     inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_M100_COMPUTED_CASILLAS)
     binding_values = {
-        "renta-2022-modelo-100-estimacion-directa-es-normal": Decimal("0"),
-        "renta-2022-modelo-111-retenciones-periodicas": Decimal("0"),
-        "renta-2022-modelo-123-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+        "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-123-retenciones-periodicas": Decimal("0"),
         # Childless corpus fixture: Art. 58/61 LIRPF mínimo por descendientes
         # aggregate is zero.
-        "renta-2022-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         # Parte autonómica: Cataluña profile mirrors the estatal zero.
-        "renta-2022-profile-minimo-descendientes-autonomico": Decimal("0"),
+        "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
     enum_binding_values = {
         "renta-2022-profile-tax-residence-ccaa": "cataluna",

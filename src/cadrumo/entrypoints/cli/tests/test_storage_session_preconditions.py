@@ -19,7 +19,7 @@ from ....core.operator_action_enums import ActionConditionality, ActionEvidenceP
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
 from .. import errors
-from .._common import cli_policy_refusal_projection
+from ..common import cli_policy_refusal_projection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

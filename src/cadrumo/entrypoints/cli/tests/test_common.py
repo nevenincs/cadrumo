@@ -1,4 +1,4 @@
-"""Tests for localized error surfaces in _common.py helpers.
+"""Tests for localized error surfaces in common.py helpers.
 
 contract / contract: ``draft_by_id`` raises a localized ``typer.BadParameter`` whose
 message is drawn from the locale catalogue — never a hard-coded f-string.

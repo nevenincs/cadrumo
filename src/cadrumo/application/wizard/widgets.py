@@ -18,6 +18,7 @@ ends with ``-tax-id``) route through
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Final
 
 from ...core.errors.error_codes import resolve_error_message
 from ...core.i18n.render import tr
@@ -33,6 +34,23 @@ _TAX_ID_QUESTION_IDS: frozenset[str] = frozenset({"tax-id", "spouse-tax-id"})
 _POSTCODE_QUESTION_IDS: frozenset[str] = frozenset({"address-postcode"})
 """Question ids whose answer must be a Spanish 5-digit postcode."""
 
+WIZARD_VALIDATION_REASON_CODES: Final[tuple[str, ...]] = (
+    "blank_text",
+    "select_unknown",
+    "invalid_tax_id",
+    "invalid_postcode",
+    "blank_secret",
+    "invalid_confirm",
+    "select_without_choices",
+    "checkbox_without_choices",
+    "checkbox_required",
+    "checkbox_unknown",
+    "blank_path",
+    "blank_integer",
+    "invalid_integer",
+)
+"""Complete finite vocabulary emitted by the widget validation failures."""
+
 
 def _fail(question: WizardQuestion, reason: str, **context: object) -> WizardValidationError:
     """Build a translated :class:`WizardValidationError` for ``question``.
@@ -46,6 +64,8 @@ def _fail(question: WizardQuestion, reason: str, **context: object) -> WizardVal
     The raw key path is intentionally not carried in the context; the
     operator-facing surface only needs the resolved field label.
     """
+    if reason not in WIZARD_VALIDATION_REASON_CODES:
+        raise ValueError(f"unknown wizard validation reason {reason!r}")
     message_key = f"wizard.errors.{reason}"
     field_label = tr(str(question.prompt))
     render_context: dict[str, object] = {
@@ -254,6 +274,7 @@ def validate_widget_answer(question: WizardQuestion, raw: str) -> str:
 
 
 __all__ = [
+    "WIZARD_VALIDATION_REASON_CODES",
     "validate_checkbox",
     "validate_confirm",
     "validate_integer",

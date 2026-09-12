@@ -26,7 +26,7 @@ from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Final, overload
+from typing import overload
 
 from pydantic import BaseModel, Field
 
@@ -35,12 +35,16 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
 from ...core.i18n.translatable import Translatable as t
-from ...core.identity import TransactionId
+from ...core.identity.transaction_ids import TransactionId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodKind
 from ...core.prorrata_register import regime_apportions_deduction
 from ...core.prose_elision import IssueDetail
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.categories.profile import CategoryProfile
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.contribuyente.ccaa import CCAA
@@ -55,7 +59,6 @@ from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.classification import InvoiceKind
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.ledger_expenses import (
-    RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS,
     RentaDeductibilityContext,
     RentaDeductibilityStatus,
     RentaDeductibleExpenseFact,
@@ -94,14 +97,36 @@ from .errors import AggregationPeriodError, AggregationValidationError
 _LEDGER_CATALOGUE_ID = "ledger"
 
 
-def _first_slice_supported_mappings() -> str:
-    grouped: dict[CasillaId, list[str]] = {}
-    for category, casilla_id in sorted(
-        RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS.items(),
-        key=lambda item: (str(item[1]), item[0].value),
-    ):
-        grouped.setdefault(casilla_id, []).append(category.value)
-    return "; ".join(f"{casilla_id}={', '.join(categories)}" for casilla_id, categories in grouped.items())
+# fact-relocation: selected renta-ledger insurance variants, category-profile routing, issue/applicability, and binding declarations are consumed through the dated mapping
+def _registry_renta_ledger_declarations(*, modelo: str, filing_year: int) -> dict[str, str]:
+    """Resolve the selected renta-ledger declaration mapping without fallbacks."""
+    authority = bundled_authority()
+    effective_date = date(filing_year, 12, 31)
+    RegistryQueryService(authority).describe_modelo(modelo, as_of=effective_date)
+    resolved = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="renta-ledger-category-variant-routing-mapping",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise TypeError("renta-ledger declarations must resolve as a mapping fact")
+    entries: dict[str, str] = {}
+    for entry in resolved.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            raise TypeError("renta-ledger declaration entries must be string-to-string")
+        if entry.key in entries:
+            raise ValueError(f"duplicate renta-ledger declaration key {entry.key!r}")
+        entries[entry.key] = entry.value
+    return entries
+
+
+def _required_renta_ledger_declaration(entries: Mapping[str, str], key: str) -> str:
+    value = entries.get(key)
+    if value is None or not value.strip():
+        raise ValueError(f"renta-ledger mapping is missing {key!r}")
+    return value
 
 
 class RentaLedgerAggregationIssueReason(StrEnum):
@@ -195,30 +220,19 @@ class RentaLedgerExpenseAggregation(
         return self.casilla_aggregation.casilla_values
 
 
-#: The Art. 30.2.5.a cap variant ids the spending-category corpus declares. The
-#: resolver keys its per-population counts by variant id, and a parity test asserts
-#: the shipped rule still declares exactly these two, so a rename in the corpus reds
-#: rather than silently zeroing a population.
-_SEGURO_GENERAL_VARIANT: Final[str] = "general"
-_SEGURO_DISCAPACIDAD_VARIANT: Final[str] = "discapacidad"
-
-
 def _seguro_enfermedad_person_counts(
     *,
     bucket_id: str,
     profile_record: UserProfileRecord | None,
     filing_year: int,
+    modelo: str,
 ) -> dict[str, int]:
-    """Count the Art. 30.2.5.a insured persons for the statutory-cap resolver.
-
-    Returns an EMPTY mapping when no profile is reachable, which the resolver reads
-    as "nothing counted" and answers with the ordinary limb over the persons it does
-    know about. A bucket without a profile therefore stays exactly where it was
-    before the higher limb existed rather than losing its cap altogether.
-
-    The counting itself is domain work and lives there: both this package and
-    application.modelo need it, and neither may import the other.
-    """
+    """Resolve insured-person variant counts using selected registry declarations."""
+    declarations = _registry_renta_ledger_declarations(modelo=modelo, filing_year=filing_year)
+    general_variant = _required_renta_ledger_declaration(declarations, "insurance.variant.general")
+    disability_variant = _required_renta_ledger_declaration(declarations, "insurance.variant.discapacidad")
+    general_field = _required_renta_ledger_declaration(declarations, "insurance.count_field.general")
+    disability_field = _required_renta_ledger_declaration(declarations, "insurance.count_field.discapacidad")
     record = profile_record
     if record is None:
         try:
@@ -230,8 +244,8 @@ def _seguro_enfermedad_person_counts(
         filing_year=filing_year,
     )
     return {
-        _SEGURO_GENERAL_VARIANT: counts.general,
-        _SEGURO_DISCAPACIDAD_VARIANT: counts.discapacidad,
+        general_variant: getattr(counts, general_field),
+        disability_variant: getattr(counts, disability_field),
     }
 
 
@@ -492,6 +506,7 @@ def aggregate_renta_ledger_expenses(
             bucket_id=bucket_id,
             profile_record=profile_record,
             filing_year=resolved_profile_year,
+            modelo=modelo,
         ),
     )
     observations: list[RentaDeductibleExpenseObservation] = []
@@ -652,15 +667,6 @@ def _renta_category_profile_or_issue(
             transaction,
             RentaLedgerAggregationIssueReason.UNKNOWN_CATEGORY,
             f"ledger category {category_id!r} is not in the spending taxonomy",
-        )
-    if category not in RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS:
-        return _renta_transaction_issue(
-            transaction,
-            RentaLedgerAggregationIssueReason.CATEGORY_OUTSIDE_FIRST_SLICE,
-            (
-                f"category {category.value!r} has no first-slice Modelo 100 casilla mapping; "
-                f"current supported mappings: {_first_slice_supported_mappings()}"
-            ),
         )
     profile = profiles.get(category)
     if profile is None:

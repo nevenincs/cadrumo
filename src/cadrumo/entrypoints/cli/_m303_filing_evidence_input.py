@@ -11,7 +11,7 @@ from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n.render import tr
 from ...core.modelo import Modelo
 from ...core.period import Period
-from ...domain.modelos.calculation_revision import FilingInstanceEvidence
+from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 
 
 def m303_filing_instance_evidence_from_cli(

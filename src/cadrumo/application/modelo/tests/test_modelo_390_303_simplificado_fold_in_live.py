@@ -50,12 +50,11 @@ from ....domain.iva.regimen_simplificado_rows import (
 )
 from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError, upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
-    M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
     CalculationRevision,
     CalculationRevisionState,
-    FilingInstanceEvidence,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ....domain.modelos.filing_record import (
     ModeloRecord,
     ModeloRecordCatalogue,
@@ -84,6 +83,14 @@ _T1 = datetime(2026, 8, 14, 10, 0, tzinfo=UTC)
 _T2 = datetime(2026, 8, 14, 11, 0, tzinfo=UTC)
 _TAX_ID = "12345678Z"
 _SOURCE_CASILLA_IDS: tuple[CasillaId, ...] = ("51", "53", "52", "54", "55", "56", "57", "58")
+
+
+def _summary_casilla_ids() -> tuple[CasillaId, ...]:
+    requirement = m303_regimen_simplificado_annual_summary_requirement(
+        bundled_authority().snapshot("390", filing_year=_YEAR, period="0A").revision
+    )
+    assert requirement is not None
+    return tuple(requirement.binding_ids_by_summary_casilla_id)
 
 
 def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
@@ -191,7 +198,7 @@ def _source_values(evidence: FilingInstanceEvidence) -> Mapping[CasillaId, Decim
     }
 
 
-def _workflow_profile() -> TaxpayerProfile:
+def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAX_ID,
         iva_regime=IVARegime.SIMPLIFICADO,
@@ -448,16 +455,16 @@ def test_m390_persists_exact_ten_value_handoff_from_one_filed_current_m303_4t_re
     assert source_evidence is not None
     source_result = source_evidence.m303.regimen_simplificado.calculation_result
     expected = {
-        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[0]: source_result.activities[0].cuota_resultante,
-        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[1]: Decimal("0"),
-        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[2]: source_values["51"],
-        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[3]: source_values["53"],
-        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[4]: source_values["52"],
-        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[5]: source_values["54"],
-        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[6]: source_values["55"],
-        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[7]: source_values["56"],
-        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[8]: source_values["57"],
-        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[9]: source_values["58"],
+        _summary_casilla_ids()[0]: source_result.activities[0].cuota_resultante,
+        _summary_casilla_ids()[1]: Decimal("0"),
+        _summary_casilla_ids()[2]: source_values["51"],
+        _summary_casilla_ids()[3]: source_values["53"],
+        _summary_casilla_ids()[4]: source_values["52"],
+        _summary_casilla_ids()[5]: source_values["54"],
+        _summary_casilla_ids()[6]: source_values["55"],
+        _summary_casilla_ids()[7]: source_values["56"],
+        _summary_casilla_ids()[8]: source_values["57"],
+        _summary_casilla_ids()[9]: source_values["58"],
     }
     assert dict(handoff.values) == expected
     assert {casilla_id: result.revision.casilla_values[casilla_id] for casilla_id in expected} == expected
@@ -505,7 +512,7 @@ def test_m390_encrypted_calculation_catalogue_refuses_a_corrupted_populated_hand
     handoff = target.m303_regimen_simplificado_annual_summary_handoff
     assert handoff is not None
     assert handoff.target_calculation_revision_id == target.calculation_revision_id
-    assert handoff.values[M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[0]] != Decimal("0")
+    assert handoff.values[_summary_casilla_ids()[0]] != Decimal("0")
 
     definition = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
     statement = select(SecureObjectRow).where(
@@ -525,7 +532,7 @@ def test_m390_encrypted_calculation_catalogue_refuses_a_corrupted_populated_hand
         if corruption == "alter_value":
             values = stored_handoff["values"]
             assert isinstance(values, dict), "fixture must persist the handoff's ten-value mapping"
-            casilla_id = M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[0]
+            casilla_id = _summary_casilla_ids()[0]
             assert values[casilla_id] != "999999", "corruption value must differ from the stored handoff"
             values[casilla_id] = "999999"
             return
@@ -572,7 +579,7 @@ def test_m390_refuses_a_source_when_current_calculation_pointer_diverges_from_fi
         verify_modelo_revision(
             target.calculation_revision_id,
             actor="operator",
-            workflow_profile=_workflow_profile(),
+            workflow_profile=workflow_profile(),
             work_unit_repository=work_units,
             calculation_repository=calculations,
             filing_repository=filings,
@@ -605,7 +612,7 @@ def test_m390_refuses_a_non_presentado_source_calculation_revision(
         verify_modelo_revision(
             target.calculation_revision_id,
             actor="operator",
-            workflow_profile=_workflow_profile(),
+            workflow_profile=workflow_profile(),
             work_unit_repository=work_units,
             calculation_repository=calculations,
             filing_repository=filings,
@@ -666,7 +673,7 @@ def test_m390_refuses_post_calculate_non_vigente_source_filing_record(
         verify_modelo_revision(
             target.calculation_revision_id,
             actor="operator",
-            workflow_profile=_workflow_profile(),
+            workflow_profile=workflow_profile(),
             work_unit_repository=work_units,
             calculation_repository=calculations,
             filing_repository=filings,
@@ -704,7 +711,7 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
         verify_modelo_revision(
             target.calculation_revision_id,
             actor="operator",
-            workflow_profile=_workflow_profile(),
+            workflow_profile=workflow_profile(),
             work_unit_repository=work_units,
             calculation_repository=calculations,
             filing_repository=filings,
@@ -723,7 +730,7 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
         file_modelo_revision(
             verified_target.calculation_revision_id,
             actor="operator",
-            workflow_profile=_workflow_profile(),
+            workflow_profile=workflow_profile(),
             work_unit_repository=work_units,
             calculation_repository=calculations,
             filing_repository=filings,
@@ -735,7 +742,7 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
                 output_path=tmp_path / "m390-stale-source.txt",
                 actor="operator",
             ),
-            workflow_profile=_workflow_profile(),
+            workflow_profile=workflow_profile(),
             work_unit_repository=work_units,
             calculation_repository=calculations,
             filing_repository=filings,
@@ -748,7 +755,7 @@ def test_m390_registry_requires_all_ten_endpoints_and_rejects_the_retired_scalar
     requirement = m303_regimen_simplificado_annual_summary_requirement(snapshot.revision)
     assert requirement is not None
     assert set(requirement.binding_ids_by_summary_casilla_id) == set(
-        M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
+        _summary_casilla_ids(),
     )
     assert requirement.source_casilla_ids == _SOURCE_CASILLA_IDS
     assert "modelo-390-rel-303-cuota-devengada-simplificado" not in {
@@ -810,7 +817,7 @@ def test_handoff_digest_and_post_identity_stamp_refuse_tampering() -> None:
     evidence = _non_agricultural_source_evidence()
     values = _source_values(evidence)
     source_result = evidence.m303.regimen_simplificado.calculation_result
-    from ....domain.modelos.calculation_revision import M303RegimenSimplificadoAnnualSummaryHandoff
+    from ....domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoAnnualSummaryHandoff
 
     handoff = M303RegimenSimplificadoAnnualSummaryHandoff.assembled(
         source_bucket_id=_BUCKET_ID,
@@ -827,20 +834,20 @@ def test_handoff_digest_and_post_identity_stamp_refuse_tampering() -> None:
         target_registry_revision_id="2010-y-siguientes",
         target_filing_year=_YEAR,
         values={
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[0]: source_result.activities[0].cuota_resultante,
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[1]: Decimal("0"),
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[2]: values["51"],
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[3]: values["53"],
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[4]: values["52"],
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[5]: values["54"],
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[6]: values["55"],
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[7]: values["56"],
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[8]: values["57"],
-            M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[9]: values["58"],
+            _summary_casilla_ids()[0]: source_result.activities[0].cuota_resultante,
+            _summary_casilla_ids()[1]: Decimal("0"),
+            _summary_casilla_ids()[2]: values["51"],
+            _summary_casilla_ids()[3]: values["53"],
+            _summary_casilla_ids()[4]: values["52"],
+            _summary_casilla_ids()[5]: values["54"],
+            _summary_casilla_ids()[6]: values["55"],
+            _summary_casilla_ids()[7]: values["56"],
+            _summary_casilla_ids()[8]: values["57"],
+            _summary_casilla_ids()[9]: values["58"],
         },
     )
     assert type(handoff).model_validate_json(handoff.model_dump_json()) == handoff
     tampered = handoff.model_dump(mode="python")
-    tampered["values"][M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS[2]] = Decimal("12")
+    tampered["values"][_summary_casilla_ids()[2]] = Decimal("12")
     with pytest.raises(ValidationError, match="digest"):
         type(handoff).model_validate(tampered)

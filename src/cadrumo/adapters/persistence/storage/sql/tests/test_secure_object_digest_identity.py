@@ -30,7 +30,7 @@ from pydantic import TypeAdapter, ValidationError
 from ......core.classification.policies import SensitivityClass
 from ......core.identity.digest import ContentDigest
 from ......tests.master_key import EphemeralMasterKeyProvider
-from .._secure_object_records import SecureObjectRawRow, SecureObjectRecord
+from ..secure_object_records import SecureObjectRawRow, SecureObjectRecord
 from ._secure_objects_support import (
     _repo_at,
 )

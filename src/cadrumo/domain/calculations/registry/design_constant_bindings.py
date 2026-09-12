@@ -32,25 +32,26 @@ See Also:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from ....core.aggregation import BindingSourceKind
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_selector_utils import selector_against_model
 from .errors import RegistryValidationError
 from .manual_input_selector import ManualInputDataType
 
 if TYPE_CHECKING:
-    from .schema import DataBindingDefinition
+    from .schema import BindingDefinition
 
 __all__ = [
-    "DesignConstantSelector",
+    "DesignConstantProvider",
     "validate_design_constant_binding",
 ]
 
 
-class DesignConstantSelector(BaseModel):
+class DesignConstantProvider(BaseModel):
     """Strict validator for a ``design_constant`` binding's selector mapping.
 
     Declares the record-field coordinate plus the literal ``value`` AEAT fixes
@@ -60,6 +61,8 @@ class DesignConstantSelector(BaseModel):
     """
 
     model_config = STRICT_FROZEN_CONFIG
+
+    kind: Literal[BindingSourceKind.DESIGN_CONSTANT] = BindingSourceKind.DESIGN_CONSTANT
 
     record: str = Field(min_length=1, max_length=64)
     field: str = Field(min_length=1, max_length=128)
@@ -76,7 +79,7 @@ class DesignConstantSelector(BaseModel):
     value: str = Field(min_length=1, max_length=128)
 
     @model_validator(mode="after")
-    def _validate_value_fills_the_declared_run(self) -> DesignConstantSelector:
+    def _validate_value_fills_the_declared_run(self) -> DesignConstantProvider:
         if len(self.value) != self.length:
             raise RegistryValidationError(
                 f"design_constant selector value {self.value!r} is {len(self.value)} character(s) "
@@ -87,7 +90,7 @@ class DesignConstantSelector(BaseModel):
         return self
 
 
-def validate_design_constant_binding(binding: DataBindingDefinition) -> list[str]:
+def validate_design_constant_binding(binding: BindingDefinition) -> list[str]:
     """Return every build-time diagnostic for a ``design_constant`` binding.
 
     Accumulating and never raising, per the one-validator-per-family contract:
@@ -95,4 +98,4 @@ def validate_design_constant_binding(binding: DataBindingDefinition) -> list[str
     families, so a raise here would hide every later binding's problems behind
     the first one.
     """
-    return selector_against_model(binding, DesignConstantSelector)
+    return selector_against_model(binding, DesignConstantProvider)

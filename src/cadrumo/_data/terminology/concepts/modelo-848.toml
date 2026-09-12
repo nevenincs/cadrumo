@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 848, comunicació de l'import net de la xifra de negocis per a l'impost sobre activitats econòmiques"
+
+[language.en]
+short_description = "Modelo 848, communication of net turnover for the tax on economic activities"
+
+[language.hu]
+short_description = "848-as modell: a nettó árbevétel közlése a gazdasági tevékenységek adójához"
+

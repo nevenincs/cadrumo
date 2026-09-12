@@ -22,12 +22,11 @@ from .orden_applicability import RevisionLegalApplicabilityWindow, validate_orde
 from .period_selector_match import registry_period_for_request
 from .reference_checks import check_all_id_references
 from .revision_context import records_by_id
-from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot, filing_period_from_scope
-from .schema_base import DateAxis
+from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
+from .schema_base import DateAxis, filing_period_from_scope
 from .schema_references import LegalReference, SourceReference, governed_period_span
 from .schema_surfaces import CasillaDefinition
 from .temporal import select_revision
-from .validate_cross_domain_snapshot import REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES
 from .validate_revision_identity import revision_reference_identity_failures
 
 
@@ -128,8 +127,9 @@ def _collect_deadline_schedule_refs(
 # Derived from the requirement declaration rather than restated beside it: the
 # modules installed here and the checks the validator demands are the same set
 # by construction, so neither can be moved without the other.
-_CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = tuple(
-    dict.fromkeys(REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES.values()),
+_CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = (
+    "...renta.first_slice_routing_integrity",
+    "...renta.retenciones_routing_integrity",
 )
 _cross_domain_checks_installed = False
 
@@ -152,7 +152,7 @@ def _install_cross_domain_snapshot_checks() -> None:
         return
     for module_name in _CROSS_DOMAIN_CHECK_MODULES:
         # Module names are controlled by the hard-coded tuple above.
-        importlib.import_module(module_name)  # nosemgrep
+        importlib.import_module(module_name, package=__package__)  # nosemgrep
     _cross_domain_checks_installed = True
 
 
@@ -841,7 +841,6 @@ def collect_snapshot_ref_ids(
         revision.formulas,
         *((revision.parameters,) if include_parameters else ()),
         revision.bindings,
-        revision.relations,
         revision.projection_endpoints,
         revision.extraction_profiles,
         revision.live_cross_references,

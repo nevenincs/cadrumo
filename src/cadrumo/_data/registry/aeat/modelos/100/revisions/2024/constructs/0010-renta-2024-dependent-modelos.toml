@@ -40,15 +40,6 @@ casilla_ids = [
 formulas = [
     "renta-pagos-fraccionados-ingresados",
 ]
-relations = [
-    "renta-2024-rel-111-retenciones-trimestrales",
-    "renta-2024-rel-111-retenciones-mensuales",
-    "renta-2024-rel-123-retenciones-trimestrales",
-    "renta-2024-rel-130-pagos-fraccionados",
-    "renta-2024-rel-131-pagos-fraccionados",
-    "renta-2024-rel-131-rendimiento-neto-modulos",
-    "renta-2024-rel-193-retenciones-anuales",
-]
 dependency_classifications = [
     "renta-2024-dep-111",
     "renta-2024-dep-123",

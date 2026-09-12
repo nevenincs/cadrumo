@@ -18,7 +18,10 @@ from ......tests.profile_capsule import open_test_profile_session
 from ......tests.secure_sql import isolated_runtime_profile
 from ......tests.user_profile import register_minimal_profile
 from ...operator_progress import operator_progress_sink
-from ..clave_movil import ClaveMovilAuthProvider, ClaveMovilConfigurationError
+from ..clave_movil import ClaveMovilAuthProvider
+from ..clave_movil_support import (
+    ClaveMovilConfigurationError,
+)
 from ..clave_movil_support import (
     auth_browser_action_policy as _auth_browser_action_policy,
 )

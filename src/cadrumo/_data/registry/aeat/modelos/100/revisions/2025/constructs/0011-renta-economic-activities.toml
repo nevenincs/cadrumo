@@ -117,11 +117,6 @@ formulas = [
     "renta-estimacion-directa-rendimiento-neto-reducido-total",
     "renta-pagos-fraccionados-ingresados",
 ]
-relations = [
-    "renta-2025-rel-130-pagos-fraccionados",
-    "renta-2025-rel-131-pagos-fraccionados",
-    "renta-2025-rel-184-atribucion-actividades-economicas",
-]
 dependency_classifications = [
     "renta-2025-dep-130",
     "renta-2025-dep-131",

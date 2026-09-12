@@ -225,9 +225,9 @@ def test_a_shipped_field_masks_exactly_when_the_schema_says_secret() -> None:
 
 
 def _mask_keywords() -> frozenset[str]:
-    from ..overview import _MASK_KEYWORDS
+    from ..overview import MASK_KEYWORDS
 
-    return _MASK_KEYWORDS
+    return MASK_KEYWORDS
 
 
 @pytest.mark.parametrize("keyword", sorted(_mask_keywords()))
@@ -285,8 +285,8 @@ def test_no_shipped_field_depends_on_the_keyword_arm() -> None:
         "the keyword arm must cover an undeclared credential-shaped fact before the mutation"
     )
 
-    original_keywords = overview._MASK_KEYWORDS
-    overview._MASK_KEYWORDS = frozenset()
+    original_keywords = overview.MASK_KEYWORDS
+    overview.MASK_KEYWORDS = frozenset()
     try:
         changed = {path: (was, now) for path, was in before.items() if (now := _shipped_decisions()[path]) is not was}
         assert not changed, f"these shipped fields mask through the keyword arm, not their declaration: {changed}"
@@ -294,4 +294,4 @@ def test_no_shipped_field_depends_on_the_keyword_arm() -> None:
             "the keyword arm was not actually removed, so the assertion above proves nothing"
         )
     finally:
-        overview._MASK_KEYWORDS = original_keywords
+        overview.MASK_KEYWORDS = original_keywords

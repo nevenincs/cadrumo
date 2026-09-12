@@ -30,9 +30,9 @@ from ....domain.modelos.calculation_repository import upsert_calculation_revisio
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    FilingInstanceEvidence,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id

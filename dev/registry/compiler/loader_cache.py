@@ -19,7 +19,7 @@ See Also:
         Coverage for bundled-root versus mutable-authoring-tree separation.
     :func:`~domain.calculations.registry.tests.testloader_cache_isolation.test_bundled_tree_fingerprint_cache_survives_past_the_mutable_tree_ttl`
         Coverage for the longer bundled-root fingerprint TTL window.
-    :func:`~conftest._isolate_registry_caches`
+    :func:`~dev.registry.conftest._isolate_registry_caches`
         Session fixture that clears registry caches around pytest runs.
 """
 
@@ -30,7 +30,6 @@ import re
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
 
 from cadrumo.core.config import load_settings
 from cadrumo.core.directory_scan import (
@@ -42,7 +41,7 @@ from cadrumo.core.hashing import blake2b_hex
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
-from cadrumo.core.toml import freeze_toml, read_toml
+from cadrumo.core.toml import read_toml
 from cadrumo.domain.calculations.registry.errors import (
     RegistryFailureClassification,
     RegistryFailureCondition,
@@ -77,9 +76,6 @@ BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS = 10.0
 # edit is picked up well within one operator interaction. A genuinely
 # read-only installed (non-editable) wheel benefits identically: nothing
 # ever rewrites it, so the periodic re-walk merely repeats the same answer.
-ModeloSourceLayout = Literal["single_file", "directory"]
-ModeloRevisionSourceLayout = Literal["revision_file", "fragment_directory"]
-
 _ADMINISTRATIVE_FRAGMENT_NAME = re.compile(
     r"^(?P<prefix>[0-9]{4})-[a-z0-9](?:[a-z0-9]|[.-](?=[a-z0-9]))*\.toml$",
 )
@@ -94,7 +90,6 @@ class ModeloRevisionSource:
     """On-disk source for one modelo revision before schema validation."""
 
     revision_id: RevisionId
-    layout: ModeloRevisionSourceLayout
     path: Path
     fragment_paths: tuple[Path, ...]
 
@@ -104,41 +99,36 @@ class ModeloSource:
     """On-disk source for one modelo before schema validation."""
 
     modelo_id: str
-    layout: ModeloSourceLayout
     path: Path
     manifest_path: Path
     revision_sources: tuple[ModeloRevisionSource, ...] = ()
 
 
 def discover_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
-    """Discover single-file and directory-mode modelo sources."""
+    """Discover every directory-mode modelo source under ``modelos_dir``."""
     resolved = modelos_dir.resolve()
-    modelo_files, modelo_directories = _validate_modelos_directory_entries(resolved)
+    modelo_directories = _validate_modelos_directory_entries(resolved)
     sources: list[ModeloSource] = []
     seen_modelo_ids: dict[str, ModeloSource] = {}
-    for source in _single_file_modelo_sources(modelo_files):
-        _append_modelo_source(source, sources, seen_modelo_ids)
     for source in _directory_modelo_sources(modelo_directories):
         _append_modelo_source(source, sources, seen_modelo_ids)
     return tuple(sources)
 
 
-def _validate_modelos_directory_entries(modelos_dir: Path) -> tuple[tuple[Path, ...], tuple[Path, ...]]:
+def _validate_modelos_directory_entries(modelos_dir: Path) -> tuple[Path, ...]:
     """Refuse plausible modelo sources that discovery would otherwise ignore.
 
-    Returns the classification it already computed. Every directory reaching
-    the second element has been confirmed to carry ``manifest.toml``, which is
-    the same predicate discovery used to filter on, so neither the listing nor
-    the manifest probe is repeated.
+    Every directory returned has been confirmed to carry ``manifest.toml``,
+    which is the same predicate discovery used to filter on, so neither the
+    listing nor the manifest probe is repeated.
 
     Returns:
-        The ``.toml`` modelo files, then the directory-mode modelo directories.
+        The directory-mode modelo directories, in scan order.
 
     Raises:
-        RegistryLoadError: When an entry is a non-TOML file, a directory
-            without ``manifest.toml``, or neither a file nor a directory.
+        RegistryLoadError: When an entry is a file, a directory without
+            ``manifest.toml``, or neither a file nor a directory.
     """
-    files: list[Path] = []
     directories: list[Path] = []
     # require_root: an unreadable modelos/ yielding empty would validate nothing
     # and hand discovery a registry with no modelos in it, so every casilla would
@@ -146,12 +136,10 @@ def _validate_modelos_directory_entries(modelos_dir: Path) -> tuple[tuple[Path, 
     # tree, never a registry that legitimately declares no modelo.
     for entry in scan_directory(modelos_dir, require_root=True):
         if entry.is_file():
-            if entry.suffix != ".toml":
-                raise RegistryLoadError(
-                    f"{entry}: unrecognized modelos file; modelo files must use the '.toml' suffix",
-                )
-            files.append(entry)
-            continue
+            raise RegistryLoadError(
+                f"{entry}: single-file modelos are not a supported layout; "
+                "each modelo must be a modelos/<id>/ directory containing manifest.toml",
+            )
         if entry.is_dir():
             if not (entry / "manifest.toml").is_file():
                 raise RegistryLoadError(
@@ -160,7 +148,7 @@ def _validate_modelos_directory_entries(modelos_dir: Path) -> tuple[tuple[Path, 
             directories.append(entry)
             continue
         raise RegistryLoadError(f"{entry}: unrecognized modelos entry")
-    return tuple(files), tuple(directories)
+    return tuple(directories)
 
 
 def _read_modelo_id(path: Path, *, description: str) -> str:
@@ -172,18 +160,6 @@ def _read_modelo_id(path: Path, *, description: str) -> str:
         return str(modelo_table["id"])
     except Exception as exc:
         raise RegistryLoadError(f"{path}: invalid {description}: {exc}") from exc
-
-
-def _single_file_modelo_sources(modelo_files: tuple[Path, ...]) -> tuple[ModeloSource, ...]:
-    return tuple(
-        ModeloSource(
-            modelo_id=_read_modelo_id(path, description="modelo file"),
-            layout="single_file",
-            path=path.resolve(),
-            manifest_path=path.resolve(),
-        )
-        for path in modelo_files
-    )
 
 
 def _directory_modelo_sources(modelo_directories: tuple[Path, ...]) -> tuple[ModeloSource, ...]:
@@ -199,7 +175,6 @@ def _directory_modelo_source(entry: Path) -> ModeloSource:
     manifest_path = entry / "manifest.toml"
     return ModeloSource(
         modelo_id=_read_modelo_id(manifest_path, description="manifest"),
-        layout="directory",
         path=entry.resolve(),
         manifest_path=manifest_path.resolve(),
         revision_sources=revision_sources,
@@ -257,17 +232,15 @@ def _append_modelo_source(
 def _discover_revision_sources(revisions_dir: Path) -> tuple[ModeloRevisionSource, ...]:
     if not revisions_dir.is_dir():
         return ()
-    revision_files, revision_directories = _validate_revision_directory_entries(revisions_dir)
-    file_sources = tuple(source for path in revision_files for source in _revision_file_sources(path))
-    directory_sources = tuple(_revision_directory_source(path) for path in revision_directories)
-    return (*file_sources, *directory_sources)
+    revision_directories = _validate_revision_directory_entries(revisions_dir)
+    return tuple(_revision_directory_source(path) for path in revision_directories)
 
 
-def _validate_revision_directory_entries(revisions_dir: Path) -> tuple[tuple[Path, ...], tuple[Path, ...]]:
-    """Validate one revisions directory and return its files and subdirectories.
+def _validate_revision_directory_entries(revisions_dir: Path) -> tuple[Path, ...]:
+    """Validate one revisions directory and return its revision subdirectories.
 
     Returns what it classified rather than only raising, because the caller
-    needs exactly the same split. This directory used to be listed three times
+    needs exactly that listing. This directory used to be listed three times
     per modelo -- once to validate, once for ``*.toml`` and once for
     subdirectories -- and the classification each pass needed was already
     computed by the validating pass. Measured across a warm registry compile,
@@ -280,43 +253,25 @@ def _validate_revision_directory_entries(revisions_dir: Path) -> tuple[tuple[Pat
     :mod:`~cadrumo.core.directory_scan` documents when it declines to cache.
 
     Returns:
-        The ``.toml`` files, then the subdirectories, each in scan order.
+        The revision fragment subdirectories, in scan order.
 
     Raises:
-        RegistryLoadError: When an entry is a non-TOML file, or is neither a
-            file nor a directory.
+        RegistryLoadError: When an entry is a file, or is neither a file nor a
+            directory.
     """
-    files: list[Path] = []
     directories: list[Path] = []
     # require_root: the sole caller guards on is_dir() before reaching here.
     for entry in scan_directory(revisions_dir, require_root=True):
         if entry.is_file():
-            if entry.suffix != ".toml":
-                raise RegistryLoadError(
-                    f"{entry}: unrecognized revision file; revision files must use the '.toml' suffix",
-                )
-            files.append(entry)
-        elif entry.is_dir():
+            raise RegistryLoadError(
+                f"{entry}: revision files are not a supported layout; "
+                "each revision must be a revisions/<id>/ directory containing revision.toml",
+            )
+        if entry.is_dir():
             directories.append(entry)
         else:
             raise RegistryLoadError(f"{entry}: unrecognized revisions entry")
-    return tuple(files), tuple(directories)
-
-
-def _revision_file_sources(path: Path) -> tuple[ModeloRevisionSource, ...]:
-    rev_data = freeze_toml(read_toml(path, error_factory=RegistryLoadError))
-    file_revisions = _as_toml_table(rev_data.get("revisions"))
-    if not file_revisions:
-        raise RegistryLoadError(f"{path}: revision file must declare [revisions.<id>]")
-    return tuple(
-        ModeloRevisionSource(
-            revision_id=revision_id,
-            layout="revision_file",
-            path=path,
-            fragment_paths=(path,),
-        )
-        for revision_id in sorted(file_revisions)
-    )
+    return tuple(directories)
 
 
 def fragment_sort_key(path: Path) -> str:
@@ -338,7 +293,9 @@ def fragment_sort_key(path: Path) -> str:
 def _revision_directory_source(path: Path) -> ModeloRevisionSource:
     _validate_revision_fragment_tree(path)
     revision_manifest = path / "revision.toml"
-    fragment_paths = (revision_manifest,) if revision_manifest.is_file() else ()
+    if not revision_manifest.is_file():
+        raise RegistryLoadError(f"{path}: revision fragment directory must contain revision.toml")
+    fragment_paths = (revision_manifest,)
     fragment_paths = (
         *fragment_paths,
         *tuple(
@@ -349,7 +306,6 @@ def _revision_directory_source(path: Path) -> ModeloRevisionSource:
     )
     return ModeloRevisionSource(
         revision_id=path.name,
-        layout="fragment_directory",
         path=path,
         fragment_paths=fragment_paths,
     )

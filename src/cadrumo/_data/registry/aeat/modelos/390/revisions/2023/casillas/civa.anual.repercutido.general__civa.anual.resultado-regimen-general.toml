@@ -9,7 +9,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-general-cuota"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.repercutido.reducido"
@@ -22,7 +21,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-reducido-cuota"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.repercutido.super-reducido"
@@ -35,7 +33,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-super-reducido-cuota"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.soportado.interiores"
@@ -48,7 +45,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-soportado-interiores-cuota"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023"]
 
 # Annual IVA soportado deducible en importaciones de bienes corrientes. Mirrors
 # the M303 import-deducible cuota (LIVA art. 17 hecho imponible + art. 92
@@ -66,7 +62,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-soportado-importaciones-cuota"
 legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.regularizacion-prorrata-definitiva"
@@ -78,7 +73,7 @@ continuidad_id = "iva-anual-regularizacion-prorrata-definitiva"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.regularizacion-bienes-inversion"
@@ -91,7 +86,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-bienes-inversion-regularizacion-casilla-63"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 # Rate-blind AIC TOTAL layer, feeding the annual devengada total formula
 # (modelo-390-iva-anual-cuota-devengada-total) so an AIC row whose rate was
@@ -114,7 +109,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-autorepercutido-intracomunitaria-cuota"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023"]
 
 # Recargo de equivalencia cuota devengada - anual (LIVA art. 161). Mirrors the
 # M303 casillas 21/24 so the annual devengada total includes the recargo a
@@ -131,7 +125,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-recargo-equivalencia-general-cuota"
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.repercutido.recargo.reducido"
@@ -146,7 +139,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-recargo-equivalencia-reducido-cuota"
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023"]
 
 # Recargo de equivalencia tipo 0.5pct - Cuota devengada anual (LIVA art. 161).
 # Mirrors the M303 casilla 158 so the annual devengada total includes the
@@ -166,7 +158,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-recargo-equivalencia-super-reducido-cuota"
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023"]
 
 # Reconciliation casillas — pulled from the four 303 quarters via previous_filing.
 
@@ -181,7 +172,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-prev-303-cuota-devengada-total"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.reconciliacion.deducible-303"
@@ -194,7 +184,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-prev-303-cuota-deducible-total"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.reconciliacion.resultado-303"
@@ -207,7 +196,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-prev-303-resultado-regimen-general"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.compensacion-ultimo-periodo-97"
@@ -219,9 +207,9 @@ continuidad_id = "iva-anual-compensacion-ultimo-periodo"
 required = false
 input_kind = "bound"
 binding = "modelo-390-prev-303-compensacion-ultimo-periodo"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"], source_refs = ["aeat-dr-390-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"] }
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.compensacion-generada-ejercicio-no-97"
@@ -233,9 +221,9 @@ continuidad_id = "iva-anual-compensacion-generada-ejercicio"
 required = false
 input_kind = "bound"
 binding = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"], source_refs = ["aeat-dr-390-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"] }
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 # -----------------------------------------------------------------------------
 # Computed annual totals — same shape as Modelo 303 result-casillas, applied
@@ -258,7 +246,6 @@ input_kind = "computed"
 formula = "modelo-390-iva-anual-total-bases-cuotas-iva"
 form_number = "34"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.cuota-devengada-total"
@@ -274,7 +261,6 @@ formula = "modelo-390-iva-anual-cuota-devengada-total"
 # "Total cuotas IVA y recargo de equivalencia (34 + 36 + ...) ... 47 88.416,00".
 form_number = "47"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.cuota-deducible-total"
@@ -290,7 +276,6 @@ formula = "modelo-390-iva-anual-cuota-deducible-total"
 # "Suma de deducciones (49 + 513 + ...) ... 64 68.202,00".
 form_number = "64"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.resultado-regimen-general"
@@ -306,7 +291,6 @@ formula = "modelo-390-iva-anual-resultado-regimen-general"
 # "Resultado regimen general (4 7 - 64) ... 65 20.214,00".
 form_number = "65"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023"]
 
 # -----------------------------------------------------------------------------
 # Formulas backing the three computed annual result-casillas.

@@ -66,8 +66,20 @@ from ...domain.deadlines.models import TaxpayerProfile as _TaxpayerProfile
 from ...domain.deadlines.plazo import resolve_filing_window as _resolve_filing_window
 from ...domain.modelos.work_unit import WorkUnit as _WorkUnit
 from ...domain.modelos.work_unit import WorkUnitState as _WorkUnitState
-from .calendar_evidence import (
+from ._calendar_evidence_sources import (
     authenticated_identity_matches_expected as _authenticated_identity_matches_expected,
+)
+from ._calendar_evidence_sources import (
+    filing_axes_from_modelo_record as _filing_axes_from_modelo_record,
+)
+from ._calendar_evidence_sources import (
+    filing_evidence_from_justificante_capture_snapshot as _filing_evidence_from_justificante_capture_snapshot,
+)
+from ._calendar_evidence_sources import (
+    is_active_aeat_filing_status as _is_active_aeat_filing_status,
+)
+from ._calendar_evidence_sources import (
+    justificantes_by_csv as _justificantes_by_csv,
 )
 from .calendar_evidence import (
     calendar_entry_filing_evidence as _calendar_entry_filing_evidence,
@@ -77,18 +89,6 @@ from .calendar_evidence import (
 )
 from .calendar_evidence import (
     dedupe_calendar_events as _dedupe_calendar_events,
-)
-from .calendar_evidence import (
-    filing_axes_from_modelo_record as _filing_axes_from_modelo_record,
-)
-from .calendar_evidence import (
-    filing_evidence_from_justificante_capture_snapshot as _filing_evidence_from_justificante_capture_snapshot,
-)
-from .calendar_evidence import (
-    is_active_aeat_filing_status as _is_active_aeat_filing_status,
-)
-from .calendar_evidence import (
-    justificantes_by_csv as _justificantes_by_csv,
 )
 from .calendar_models import (
     CalendarCompleteness as _CalendarCompleteness,

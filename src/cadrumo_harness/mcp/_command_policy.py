@@ -48,7 +48,7 @@ def command_policy(command_key: str) -> CommandPolicyProjection:
     resolves a CLI path or carries a second policy map; unknown keys fail.
     Runtime gates receive ``descriptor.execution_policy`` directly.
     """
-    from ._tools import build_tool_descriptors
+    from .tools import build_tool_descriptors
 
     descriptor = next(
         (item for item in build_tool_descriptors() if item.command_key == command_key),

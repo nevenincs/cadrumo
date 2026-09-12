@@ -18,7 +18,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
-from ...domain.calculations.registry.schema import DataBindingDefinition
+from ...domain.calculations.registry.profile_bindings import ProfileProvider
+from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.schema import ProfileSchemaDefinition
@@ -56,7 +57,7 @@ def compose_legal_full_name(*, surnames: str, name: str) -> str:
 
 
 def _profile_export_binding_applies(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     fact_index: Mapping[str, UserProfileFactValue],
 ) -> bool:
     """Whether a conditional export binding's declared precondition holds.
@@ -77,16 +78,19 @@ def _profile_export_binding_applies(
     already apply to ``renta_filing.declaration_type``, and folds case so a
     stored boolean ``True`` matches a registry-declared ``"true"``.
     """
-    gate_key = getattr(binding.selector, "required_when_profile_key", None)
+    provider = binding.provider
+    if not isinstance(provider, ProfileProvider):
+        return True
+    gate_key = provider.required_when_profile_key
     if gate_key is None:
         return True
-    expected = str(getattr(binding.selector, "required_when_value", "") or "").strip()
+    expected = str(provider.required_when_value or "").strip()
     actual = str(fact_index.get(gate_key, "")).strip()
     return bool(expected) and actual.casefold() == expected.casefold()
 
 
 def _profile_export_value(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     fact_index: Mapping[str, UserProfileFactValue],
 ) -> UserProfileFactValue | None:
     """Resolve one export binding's value, honouring a declared multi-key format.
@@ -104,10 +108,10 @@ def _profile_export_value(
     authority beside ``_format_xml_dictionary_value`` that could silently
     disagree with it on a filed artefact.
     """
-    selector = binding.selector
-    if getattr(selector, "format", None) != _SURNAMES_NAME_FORMAT:
+    provider = binding.provider
+    if not isinstance(provider, ProfileProvider) or provider.format != _SURNAMES_NAME_FORMAT:
         return resolve_profile_binding_value(binding, fact_index)
-    keys = tuple(getattr(selector, "profile_keys", ()) or ())
+    keys = provider.profile_keys
     if len(keys) < 2:
         return resolve_profile_binding_value(binding, fact_index)
     composed = compose_legal_full_name(
@@ -118,7 +122,7 @@ def _profile_export_value(
 
 
 def resolve_profile_export_values(
-    bindings: Sequence[DataBindingDefinition],
+    bindings: Sequence[BindingDefinition],
     *,
     bucket_id: str,
     profile_record: object | None = None,
@@ -310,7 +314,7 @@ def _taxpayer_identity_facts(
 
 
 def _resolve_profile_export_values(
-    bindings: Sequence[DataBindingDefinition],
+    bindings: Sequence[BindingDefinition],
     *,
     bucket_id: str,
     profile_record: object | None,
@@ -335,9 +339,11 @@ def _resolve_profile_export_values(
 
     values: dict[str, UserProfileFactValue] = {}
     for binding in bindings:
-        selector = binding.selector
-        field_id = getattr(selector, "dictionary_field", None)
-        if field_id is None or getattr(selector, "repeating", False):
+        provider = binding.provider
+        if not isinstance(provider, ProfileProvider):
+            continue
+        field_id = provider.dictionary_field
+        if field_id is None or provider.repeating:
             continue
         if not _profile_export_binding_applies(binding, fact_index):
             continue

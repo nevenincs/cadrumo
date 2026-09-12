@@ -50,8 +50,7 @@ from ...core.payment_election import PaymentElection
 from ...core.period import Period
 from ...core.refund_election import RefundElection
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
-from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
+from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind, M303RectificativaMotive
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.row_models import (
     M184Clave,
@@ -89,7 +88,7 @@ from ..operations.registry import (
 )
 from ._edit_execution import apply_modelo_edit
 from .amendment_actions import amend_modelo_revision
-from .edit_contract import ModeloEditCompatibilityTupleV1
+from .edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
 from .edit_models import (
     ModeloBindingEditIntentV1,
     ModeloDetailRowEditIntentV1,
@@ -100,7 +99,6 @@ from .edit_models import (
     ModeloEditDetailRowAddressV1,
     ModeloEditDetailRowIntentKind,
     ModeloEditExecutionNoEffectV1,
-    ModeloEditMutationFamily,
     ModeloEditPermittedSurfaceEntryV1,
     ModeloEditRowAddressV1,
     ModeloEditRowIntentKind,

@@ -31,15 +31,15 @@ from ...core.period import Period, PeriodError
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ._app_quickfile_payloads import QuickfileResultPayload
-from ._common import (
+from ._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
+from ._modelo_cli_support import unsupported_local_work_period_refusal, work_calculate_input_bundle_from_cli
+from ._modelo_rendering import advisory_notice, verification_report_notices
+from .common import (
     activate_subcommand_output_language,
     emit_envelope,
     filing_taxpayer_or_refuse,
     no_active_profile_refusal,
 )
-from ._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
-from ._modelo_cli_support import unsupported_local_work_period_refusal, work_calculate_input_bundle_from_cli
-from ._modelo_rendering import advisory_notice, verification_report_notices
 
 
 def _require_active_profile() -> str:

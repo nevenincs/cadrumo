@@ -9,9 +9,8 @@ from typing import Annotated, Literal, get_args
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.calculations.registry.bindings import selector_model_for_source
+from ....domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
 from ..workspace_manifest import (
     ModeloWorkspaceFieldManifestEntryV1,
     ModeloWorkspaceFieldManifestV1,
@@ -125,11 +124,7 @@ def test_workspace_manifest_includes_every_public_selector_root_and_its_extra_un
     selector_roots = tuple(root for root in manifest.traversal_roots if root.startswith("selector."))
     selector_entries = tuple(entry for entry in manifest.entries if entry.path.startswith("selector."))
 
-    expected_roots = tuple(
-        sorted(
-            f"selector.{source.value}" for source in BindingSourceKind if selector_model_for_source(source) is not None
-        )
-    )
+    expected_roots = tuple(sorted(f"selector.{kind.value}" for kind in BINDING_PROVIDER_REGISTRATIONS))
     assert selector_roots == expected_roots
     assert selector_entries
     assert len(selector_entries) < len(manifest.entries)

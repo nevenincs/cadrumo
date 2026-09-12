@@ -13,7 +13,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.tipo-declaracion"
@@ -25,7 +24,6 @@ semantic_role = "declaracion_tipo_309"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.nombre"
@@ -37,7 +35,6 @@ semantic_role = "declarante_nombre_309"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.transmitente-nif"
@@ -51,7 +48,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.transmitente-apellidos"
@@ -63,7 +59,6 @@ semantic_role = "transmitente_apellidos"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.transmitente-nombre"
@@ -75,7 +70,6 @@ semantic_role = "transmitente_nombre"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.transmitente-pais"
@@ -87,7 +81,6 @@ semantic_role = "transmitente_pais"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.situacion-tributaria"
@@ -99,7 +92,6 @@ semantic_role = "situacion_tributaria"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.hecho-imponible"
@@ -111,7 +103,6 @@ semantic_role = "hecho_imponible"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.vehiculo-marca"
@@ -125,7 +116,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.vehiculo-tipo"
@@ -139,7 +129,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.vehiculo-modelo"
@@ -153,7 +142,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.vehiculo-bastidor"
@@ -167,7 +155,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.vehiculo-clasificacion"
@@ -181,7 +168,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.embarcacion-fabricante"
@@ -195,7 +181,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.embarcacion-tipo"
@@ -209,7 +194,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.embarcacion-identificacion"
@@ -223,7 +207,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.embarcacion-eslora"
@@ -237,7 +220,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.aeronave-fabricante"
@@ -251,7 +233,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.aeronave-marca"
@@ -265,7 +246,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.aeronave-serie"
@@ -279,7 +259,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.aeronave-ano"
@@ -293,7 +272,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.aeronave-peso"
@@ -307,7 +285,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.complementaria"
@@ -321,7 +298,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.justificante-anterior"
@@ -335,7 +311,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.iban"
@@ -349,7 +324,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.transmitente-nif-iva"
@@ -362,7 +336,6 @@ continuidad_id = "transmitente-nif-iva"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.adjudicatario-nif"
@@ -375,7 +348,6 @@ continuidad_id = "adjudicatario-nif"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.adjudicatario-apellidos"
@@ -388,7 +360,6 @@ continuidad_id = "adjudicatario-apellidos"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.adjudicatario-nombre"
@@ -401,7 +372,6 @@ continuidad_id = "adjudicatario-nombre"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.rg-base-01"
@@ -412,12 +382,11 @@ data_type = "money"
 semantic_role = "rg_base_01"
 continuidad_id = "rg-base-01"
 continuidad_origin = "seeded"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design regimen general base imponible [01].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.rg-tipo-02"
@@ -432,7 +401,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.rg-cuota-03"
@@ -443,12 +411,11 @@ data_type = "money"
 semantic_role = "rg_cuota_03"
 continuidad_id = "rg-cuota-03"
 continuidad_origin = "seeded"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design regimen general cuota [03].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 
 
@@ -462,12 +429,11 @@ data_type = "money"
 semantic_role = "rg_base_04"
 continuidad_id = "rg-base-04"
 continuidad_origin = "seeded"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design regimen general base imponible [04].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.rg-tipo-05"
@@ -482,7 +448,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.rg-cuota-06"
@@ -493,12 +458,11 @@ data_type = "money"
 semantic_role = "rg_cuota_06"
 continuidad_id = "rg-cuota-06"
 continuidad_origin = "seeded"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design regimen general cuota [06].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.rg-base-07"
@@ -509,12 +473,11 @@ data_type = "money"
 semantic_role = "rg_base_07"
 continuidad_id = "rg-base-07"
 continuidad_origin = "seeded"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design regimen general base imponible [07].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.rg-tipo-08"
@@ -529,7 +492,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.rg-cuota-09"
@@ -540,12 +502,11 @@ data_type = "money"
 semantic_role = "rg_cuota_09"
 continuidad_id = "rg-cuota-09"
 continuidad_origin = "seeded"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design regimen general cuota [09].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.re-base-10"
@@ -556,12 +517,11 @@ data_type = "money"
 semantic_role = "re_base_10"
 continuidad_id = "re-base-10"
 continuidad_origin = "seeded"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design recargo equivalencia base imponible [10].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.re-tipo-11"
@@ -576,7 +536,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.re-cuota-12"
@@ -587,12 +546,11 @@ data_type = "money"
 semantic_role = "re_cuota_12"
 continuidad_id = "re-cuota-12"
 continuidad_origin = "seeded"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design recargo equivalencia cuota [12].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.re-base-13"
@@ -603,12 +561,11 @@ data_type = "money"
 semantic_role = "re_base_13"
 continuidad_id = "re-base-13"
 continuidad_origin = "seeded"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design recargo equivalencia base imponible [13].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.re-tipo-14"
@@ -623,7 +580,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.re-cuota-15"
@@ -634,12 +590,11 @@ data_type = "money"
 semantic_role = "re_cuota_15"
 continuidad_id = "re-cuota-15"
 continuidad_origin = "seeded"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design recargo equivalencia cuota [15].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.re-base-16"
@@ -650,12 +605,11 @@ data_type = "money"
 semantic_role = "re_base_16"
 continuidad_id = "re-base-16"
 continuidad_origin = "seeded"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design recargo equivalencia base imponible [16].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.re-tipo-17"
@@ -670,7 +624,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.re-cuota-18"
@@ -681,12 +634,11 @@ data_type = "money"
 semantic_role = "re_cuota_18"
 continuidad_id = "re-cuota-18"
 continuidad_origin = "seeded"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design recargo equivalencia cuota [18].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.re-base-19"
@@ -697,12 +649,11 @@ data_type = "money"
 semantic_role = "re_base_19"
 continuidad_id = "re-base-19"
 continuidad_origin = "seeded"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design recargo equivalencia base imponible [19].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.re-tipo-20"
@@ -717,7 +668,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.re-cuota-21"
@@ -728,12 +678,11 @@ data_type = "money"
 semantic_role = "re_cuota_21"
 continuidad_id = "re-cuota-21"
 continuidad_origin = "seeded"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design recargo equivalencia cuota [21].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.cuota-devengada-22"
@@ -744,13 +693,12 @@ data_type = "money"
 semantic_role = "cuota_devengada_22"
 continuidad_id = "cuota-devengada-22"
 continuidad_origin = "seeded"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design total cuota devengada [22]: the design's own sum of the eight cuota casillas.
 required = true
 input_kind = "computed"
 formula = "modelo-309-cuota-devengada-total"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.a-deducir-23"
@@ -761,12 +709,11 @@ data_type = "money"
 semantic_role = "a_deducir_23"
 continuidad_id = "a-deducir-23"
 continuidad_origin = "seeded"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design a deducir [23].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]
 
 [[revisions."2018-2022".casillas]]
 id = "decl.resultado-24"
@@ -777,10 +724,9 @@ data_type = "money"
 semantic_role = "resultado_24"
 continuidad_id = "resultado-24"
 continuidad_origin = "seeded"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2018"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design resultado a ingresar [24]: the design's own [22]-[23].
 required = true
 input_kind = "computed"
 formula = "modelo-309-resultado"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2018"]

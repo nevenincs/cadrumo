@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import SourceCitation
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
@@ -196,16 +195,19 @@ def test_casilla_id_cannot_equal_another_casilla_display_token() -> None:
 def test_casilla_display_token_cannot_equal_binding_id() -> None:
     """Casilla metadata tokens cannot collide with non-casilla registry ids."""
     display_owner = segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
-    binding = DataBindingDefinition(
+    binding = BindingDefinition(
         id="00562",
-        source=BindingSourceKind.MANUAL_INPUT,
-        selector={
-            "record": "DPA",
-            "field": "test",
-            "offset": 1,
-            "length": 1,
-            "data_type": "integer",
+        provider={
+            "kind": "manual_input",
+            **{
+                "record": "DPA",
+                "field": "test",
+                "offset": 1,
+                "length": 1,
+                "data_type": "integer",
+            },
         },
+        value={"data_type": "integer", "channel": "integer"},
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
     )

@@ -46,6 +46,7 @@ from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from .calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
+from .edit_contract import ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
 from .edit_models import (
     ModeloDetailRowEditIntentV1,
     ModeloEditAddressV1,
@@ -57,8 +58,6 @@ from .edit_models import (
     ModeloEditExecutionNoEffectV1,
     ModeloEditExecutionResultV1,
     ModeloEditExecutionUpdatedV1,
-    ModeloEditMutationFamily,
-    ModeloEditMutationResultReceiptV1,
     ModeloEditRefusalCode,
     ModeloEditRowIntentKind,
     ModeloEditScalarIntentKind,

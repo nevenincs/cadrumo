@@ -10,7 +10,7 @@ from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ..authority import bundled_authority
 from ..binding_targets import bound_casilla_binding_ids, casillas_by_binding
 from ..bindings import resolve_bound_casilla_binding_value
-from ..inventory_bindings import InventorySelector
+from ..inventory_bindings import InventoryProvider
 from ..schema_input_kind import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -35,8 +35,8 @@ def test_inventory_row_templates_link_bidirectionally_to_exact_casillas() -> Non
         assert binding.source is BindingSourceKind.INVENTORY
         assert binding.aggregation is not None
         assert binding.aggregation.op is BindingAggregationOp.ROWS
-        assert isinstance(binding.selector, InventorySelector)
-        assert binding.selector.target_casilla_id == casilla_id
+        assert isinstance(binding.provider, InventoryProvider)
+        assert binding.provider.target_casilla_id == casilla_id
         assert casilla.input_kind is InputKind.BOUND
         assert bound_casilla_binding_ids(casilla) == (binding_id,)
         assert reverse[binding_id] == (casilla_id,)

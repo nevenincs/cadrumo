@@ -25,8 +25,9 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ....domain.calculations.registry.ids import BindingId, RelationId
-from ....domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, RegistrySnapshot
+from ....domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, RegistrySnapshot
 from ....domain.calculations.registry.schema_formula import FormulaExpression
 from ....domain.modelos.errors import ModeloError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -48,7 +49,7 @@ _YEAR = 2025
 _PERIOD = "0A"
 _TYPED_PERIOD = Period.from_year_and_code(_YEAR, _PERIOD)
 _CCAA_BINDING: BindingId = "renta-2025-profile-tax-residence-ccaa"
-_ESTIMACION_BINDING: BindingId = "renta-2025-modelo-100-estimacion-directa-es-normal"
+_ESTIMACION_BINDING: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
 _SYNTHETIC_DECIMAL_PROFILE_BINDING: BindingId = "test-profile-business-ratio-decimal-binding"
 _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
 
@@ -223,11 +224,11 @@ def test_profile_numeric_fact_resolves_into_the_decimal_binding_channel() -> Non
 
 
 def _snapshot_with_decimal_profile_binding(snapshot: RegistrySnapshot) -> RegistrySnapshot:
-    binding = DataBindingDefinition.model_validate(
+    binding = BindingDefinition.model_validate(
         {
             "id": _SYNTHETIC_DECIMAL_PROFILE_BINDING,
-            "source": BindingSourceKind.PROFILE,
-            "selector": {"profile_key": "usage_ratios.business_ratio"},
+            "provider": {"kind": BindingSourceKind.PROFILE, "profile_key": "usage_ratios.business_ratio"},
+            "value": {"data_type": "money", "channel": "decimal"},
             "legal_refs": snapshot.revision.legal_refs,
             "source_refs": snapshot.revision.source_refs,
         },
@@ -323,11 +324,11 @@ def _snapshot_with_bool_profile_binding(snapshot: RegistrySnapshot) -> RegistryS
     pattern: a yes/no profile fact consumed as a numeric 1/0 operand
     inside an ``if_then_else`` predicate on the Decimal channel.
     """
-    binding = DataBindingDefinition.model_validate(
+    binding = BindingDefinition.model_validate(
         {
             "id": _SYNTHETIC_BOOL_PROFILE_BINDING,
-            "source": BindingSourceKind.PROFILE,
-            "selector": {"profile_key": "entity.new_entity_override"},
+            "provider": {"kind": BindingSourceKind.PROFILE, "profile_key": "entity.new_entity_override"},
+            "value": {"data_type": "boolean", "channel": "boolean"},
             "legal_refs": snapshot.revision.legal_refs,
             "source_refs": snapshot.revision.source_refs,
         },
@@ -519,7 +520,7 @@ def test_estimacion_directa_binding_stays_in_the_decimal_channel(
 ) -> None:
     """The estimacion-directa modality binding is a Decimal-channel binding.
 
-    ``renta-2025-modelo-100-estimacion-directa-es-normal`` carries a
+    ``renta-modelo-100-estimacion-directa-es-normal`` carries a
     ``typed_enum`` annotation, yet the Modelo 100 rendimiento-neto
     formula consumes it as a Decimal operand (compared to a numeric
     literal). Supplying it as a Decimal must be accepted; the boundary
@@ -590,3 +591,23 @@ def test_estimacion_directa_binding_rejected_through_enum_channel(
                 clock=_CLOCK,
             )
         assert calc_repo.load().revisions == {}
+
+
+def test_profile_resolution_declares_the_terminal_origin_it_produced() -> None:
+    """The real resolver names the class of terminal fact behind each value.
+
+    Provenance that says which resolver ran but not what kind of fact it
+    reached cannot be audited against the binding's declared terminal origin:
+    the value and the declaration would agree by assumption. This pins that the
+    live profile resolver states ``profile_field`` on every row it emits, with
+    the evidence fingerprint that class is expected to carry.
+    """
+    result = resolve_profile_sourced_bindings(
+        _modelo_100_snapshot(),
+        bucket_id=_BUCKET_ID,
+        profile_record=_profile_with_ccaa("cataluna"),
+    )
+
+    assert result.provenance
+    assert all(row.terminal_origin is TerminalOriginClass.PROFILE_FIELD for row in result.provenance)
+    assert all(row.fingerprint is not None for row in result.provenance)

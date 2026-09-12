@@ -91,7 +91,7 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.period import calculation_filing_date
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ...filing.draft_construction import _filing_period_date, build_draft
+from ...filing.draft_construction import build_draft, filing_period_date
 from .._revision_replay_inputs import revision_filing_replay_inputs
 from ..calculation_actions import (
     BucketAggregationCalculationResult,
@@ -274,7 +274,7 @@ def test_m202_calculation_revision_replays_to_draft_on_the_same_sanctioned_filin
     work_unit = WorkUnitCatalogueRepository(objects=secure_objects).load().get(calculated.work_unit_id)
     assert work_unit is not None
     assert calculation_filing_date(work_unit.period) == expected_filing_date
-    assert _filing_period_date(work_unit.period) == expected_filing_date
+    assert filing_period_date(work_unit.period) == expected_filing_date
 
     replay_inputs = revision_filing_replay_inputs(revision=calculated, work_unit=work_unit)
     draft = build_draft(

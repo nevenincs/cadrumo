@@ -23,8 +23,8 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from .._verification_predicates import evaluate_advisory_predicate_fires
 from ..action_errors import WorkUnitRevisionDivergenceError
+from ..verification_predicates import evaluate_advisory_predicate_fires
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

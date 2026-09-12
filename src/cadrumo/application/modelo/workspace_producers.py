@@ -19,8 +19,8 @@ from ...domain.calculations.registry.static_inspection import RegistryRevisionIn
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..state_projection import ProjectionModeloReadiness
-from ._work_selection import ModeloWorkResolution, ModeloWorkSelectionMode, ModeloWorkSelectorRequest
 from .work_review import ModeloWorkReview
+from .work_selection import ModeloWorkResolution, ModeloWorkSelectionMode, ModeloWorkSelectorRequest
 from .workspace_manifest import ModeloWorkspaceFieldManifestV1
 from .workspace_models import ModeloWorkspaceContributorIdentityV1
 

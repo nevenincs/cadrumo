@@ -26,8 +26,6 @@ from pydantic import ValidationError
 
 from ..enums import TransactionDirection
 from ..irpf_categories import (
-    IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
-    IRPF_CATEGORY_TRABAJO,
     has_activity_irpf_category,
     has_non_work_irpf_category,
     has_rent_irpf_category,
@@ -44,6 +42,14 @@ _RENT_CATEGORY = "arrendamiento_local"
 # A Renta income-type tag: a different classification axis carried in the same
 # field, with no withholding treatment and therefore no relaxation.
 _RENTA_INCOME_TAG = "actividades_economicas_directa_simplificada"
+
+
+def _category_id_for_purpose(purpose: str) -> str:
+    return next(descriptor.id for descriptor in ledger_irpf_category_catalogue() if descriptor.purpose == purpose)
+
+
+_ACTIVITY_CATEGORY = _category_id_for_purpose("activity_income_withholding")
+_EMPLOYMENT_CATEGORY = _category_id_for_purpose("employment_income")
 
 
 def _raw(*, amount: Decimal) -> RawTransaction:
@@ -156,7 +162,7 @@ def test_activity_withholding_above_the_supported_rate_stays_refused() -> None:
         _transaction(
             amount=Decimal("1000.00"),
             direction=TransactionDirection.INCOMING,
-            irpf_category=IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
+            irpf_category=_ACTIVITY_CATEGORY,
             taxable_base=Decimal("2000.00"),
             iva_amount=Decimal("420.00"),
         )
@@ -169,12 +175,12 @@ def test_catalogued_axis_on_its_declared_direction_is_accepted() -> None:
     transaction = _transaction(
         amount=Decimal("2120.00"),
         direction=TransactionDirection.INCOMING,
-        irpf_category=IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
+        irpf_category=_ACTIVITY_CATEGORY,
         taxable_base=Decimal("2000.00"),
         iva_amount=Decimal("420.00"),
     )
 
-    assert transaction.irpf_category == IRPF_CATEGORY_ACTIVIDAD_ECONOMICA
+    assert transaction.irpf_category == _ACTIVITY_CATEGORY
     assert transaction.taxable_base == Decimal("2000.00")
     assert transaction.iva_amount == Decimal("420.00")
 
@@ -184,19 +190,19 @@ def test_predicates_resolve_through_the_closed_catalogue_with_direction() -> Non
     incoming = TransactionDirection.INCOMING
     outgoing = TransactionDirection.OUTGOING
 
-    assert has_non_work_irpf_category(IRPF_CATEGORY_ACTIVIDAD_ECONOMICA, direction=incoming) is True
+    assert has_non_work_irpf_category(_ACTIVITY_CATEGORY, direction=incoming) is True
     assert has_non_work_irpf_category(_RENT_CATEGORY, direction=outgoing) is True
     assert has_non_work_irpf_category(_RENT_CATEGORY, direction=incoming) is False
-    assert has_non_work_irpf_category(IRPF_CATEGORY_TRABAJO, direction=incoming) is False
+    assert has_non_work_irpf_category(_EMPLOYMENT_CATEGORY, direction=incoming) is False
     assert has_non_work_irpf_category("bogus_withholding", direction=incoming) is False
     assert has_non_work_irpf_category(_RENTA_INCOME_TAG, direction=incoming) is False
     assert has_non_work_irpf_category(None, direction=incoming) is False
 
-    assert has_activity_irpf_category(IRPF_CATEGORY_ACTIVIDAD_ECONOMICA, direction=outgoing) is True
+    assert has_activity_irpf_category(_ACTIVITY_CATEGORY, direction=outgoing) is True
     assert has_activity_irpf_category(_RENT_CATEGORY, direction=outgoing) is False
     assert has_rent_irpf_category(_RENT_CATEGORY, direction=outgoing) is True
     assert has_rent_irpf_category(_RENT_CATEGORY, direction=incoming) is False
-    assert has_rent_irpf_category(IRPF_CATEGORY_ACTIVIDAD_ECONOMICA, direction=outgoing) is False
+    assert has_rent_irpf_category(_ACTIVITY_CATEGORY, direction=outgoing) is False
 
 
 def test_catalogue_membership_is_closed_and_direction_aware() -> None:
@@ -204,8 +210,8 @@ def test_catalogue_membership_is_closed_and_direction_aware() -> None:
     accepted = tuple(row.id for row in ledger_irpf_category_catalogue())
 
     assert set(accepted) == {
-        IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
-        IRPF_CATEGORY_TRABAJO,
+        _ACTIVITY_CATEGORY,
+        _EMPLOYMENT_CATEGORY,
         _RENT_CATEGORY,
         "arrendamiento_vivienda_afecto",
     }
@@ -214,7 +220,7 @@ def test_catalogue_membership_is_closed_and_direction_aware() -> None:
     assert ledger_irpf_category(_RENTA_INCOME_TAG) is None
     assert ledger_irpf_category(None) is None
 
-    trabajo = ledger_irpf_category(IRPF_CATEGORY_TRABAJO)
+    trabajo = ledger_irpf_category(_EMPLOYMENT_CATEGORY)
     assert trabajo is not None
     assert trabajo.directions == (TransactionDirection.INCOMING,)
-    assert ledger_irpf_category(IRPF_CATEGORY_TRABAJO, direction=TransactionDirection.OUTGOING) is None
+    assert ledger_irpf_category(_EMPLOYMENT_CATEGORY, direction=TransactionDirection.OUTGOING) is None

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Sequence
 from decimal import Decimal
-from typing import Literal, NamedTuple, Protocol
+from typing import TYPE_CHECKING, Literal, NamedTuple, Protocol
 
 from pydantic import BaseModel
 
@@ -25,7 +25,9 @@ from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .ledger_binding_selector_support import casilla_id_set
-from .schema import DataBindingDefinition, ModeloRevision
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition, ModeloRevision
 
 _RENTA_130_GASTO_CASILLAS: frozenset[CasillaId] = casilla_id_set("_RENTA_130_GASTO_CASILLAS", "02")
 
@@ -51,7 +53,7 @@ class RentaGastosPagoFraccionadoObservationProtocol(Protocol):
         ...
 
 
-class _RentaLedgerGastosPagoFraccionadoSelector(BaseModel):
+class LedgerRentaGastosPagoFraccionadoProvider(BaseModel):
     """Validated form of a ledger_renta_gastos_pago_fraccionado_aggregation binding selector.
 
     ``modelo`` is fixed to the M130 series (the only model sourcing gastos via
@@ -62,16 +64,20 @@ class _RentaLedgerGastosPagoFraccionadoSelector(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
+    kind: Literal[BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION] = (
+        BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION
+    )
+
     modelo: Literal[Modelo.M130] = Modelo.M130
     target_casilla_id: CasillaId
     fact: Literal["deductible_amount_sum"] = "deductible_amount_sum"
 
 
 def _renta_ledger_gastos_pago_fraccionado_selector(
-    binding: DataBindingDefinition,
-) -> _RentaLedgerGastosPagoFraccionadoSelector:
+    binding: BindingDefinition,
+) -> LedgerRentaGastosPagoFraccionadoProvider:
     try:
-        return _RentaLedgerGastosPagoFraccionadoSelector.model_validate(_selector_as_dict(binding))
+        return LedgerRentaGastosPagoFraccionadoProvider.model_validate(_selector_as_dict(binding))
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed ledger_renta_gastos_pago_fraccionado_aggregation selector: {exc}",
@@ -97,7 +103,7 @@ class _ReachabilityProbeObservation(NamedTuple):
 
 
 def _renta_gastos_pago_fraccionado_reachability_probe(
-    selector: _RentaLedgerGastosPagoFraccionadoSelector,
+    selector: LedgerRentaGastosPagoFraccionadoProvider,
 ) -> None:
     """Assert the selector matches at least one constructible observation shape.
 
@@ -153,7 +159,7 @@ def _renta_gastos_pago_fraccionado_reachability_probe(
 
 
 def validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
 ) -> None:
     """Validate a ``ledger_renta_gastos_pago_fraccionado_aggregation`` binding definition."""
     if binding.source != BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION:
@@ -184,7 +190,7 @@ def validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition
 
 
 def _renta_gastos_pago_fraccionado_build_matcher(
-    selector: _RentaLedgerGastosPagoFraccionadoSelector,
+    selector: LedgerRentaGastosPagoFraccionadoProvider,
 ) -> Callable[[RentaGastosPagoFraccionadoObservationProtocol], bool]:
     target_casilla_id = selector.target_casilla_id
 
@@ -196,7 +202,7 @@ def _renta_gastos_pago_fraccionado_build_matcher(
 
 def _renta_gastos_pago_fraccionado_aggregate(
     matched: Sequence[RentaGastosPagoFraccionadoObservationProtocol],
-    selector: _RentaLedgerGastosPagoFraccionadoSelector,
+    selector: LedgerRentaGastosPagoFraccionadoProvider,
 ) -> Decimal:
     del selector  # single declared fact (deductible_amount_sum); nothing to dispatch on
     return sum((observation.deductible_amount for observation in matched), Decimal("0"))
@@ -260,15 +266,15 @@ def unsupported_ledger_renta_gastos_pago_fraccionado_observations(
     )
 
 
-def validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
+def validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding(binding: BindingDefinition) -> list[str]:
     """Validate a ``ledger_renta_gastos_pago_fraccionado_aggregation`` binding at registry-build time.
 
-    Accumulating ``list[str]`` validator over :class:`_RentaLedgerGastosPagoFraccionadoSelector`;
+    Accumulating ``list[str]`` validator over :class:`LedgerRentaGastosPagoFraccionadoProvider`;
     runs the casilla / fact / aggregation-op invariant at build time through
     :func:`invariant_diagnostics`, whose raise-style body is
     :func:`validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition`.
     """
-    failures = selector_against_model(binding, _RentaLedgerGastosPagoFraccionadoSelector)
+    failures = selector_against_model(binding, LedgerRentaGastosPagoFraccionadoProvider)
     if failures:
         return failures
     return invariant_diagnostics(
@@ -278,4 +284,4 @@ def validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding(binding: D
     )
 
 
-RentaLedgerGastosPagoFraccionadoSelector = _RentaLedgerGastosPagoFraccionadoSelector
+LedgerRentaGastosPagoFraccionadoProvider = LedgerRentaGastosPagoFraccionadoProvider

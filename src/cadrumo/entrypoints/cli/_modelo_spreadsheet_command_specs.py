@@ -60,7 +60,7 @@ _GOOGLE_CALCULATION_HANDOFF = ExecutionPolicySpec(
 )
 
 
-_MODULE = "._modelo_spreadsheet_cli"
+_MODULE = ".modelo_spreadsheet_cli"
 _PAYLOADS = "._modelo_spreadsheet_payloads"
 
 

@@ -23,7 +23,7 @@ from typing import Any
 
 from textual.app import App
 
-from .fixture import registration_attempt
+from cadrumo.entrypoints.tui.tests.fixture import registration_attempt
 
 
 @dataclass(frozen=True)
@@ -129,7 +129,7 @@ def _workbench_surfaces() -> tuple[Surface, ...]:
     non-sensitive projection built in memory, which is the property that lets
     the whole matrix render without provisioning encrypted storage per state.
     """
-    from .workbench_fixtures import WORKBENCH_FIXTURES
+    from cadrumo.entrypoints.tui.tests.workbench_fixtures import WORKBENCH_FIXTURES
 
     return tuple(
         Surface(

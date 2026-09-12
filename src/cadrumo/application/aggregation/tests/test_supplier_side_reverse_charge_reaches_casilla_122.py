@@ -33,9 +33,14 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
-from ....domain.iva.flow import is_deducible_flow
+from ....domain.iva.components import (
+    IvaComponentPresence,
+    IvaKindApplicability,
+    registry_component_catalogue,
+)
+from ....domain.iva.flow import derive_flow_for_classification, is_deducible_flow
 from ....domain.iva.schema import IvaCategory
-from .._modelo_bindings_invoice_iva import _DECLARED_CATEGORY_BASE_ONLY_FLOWS, _invoice_line_iva_observation
+from .._modelo_bindings_invoice_iva import _invoice_line_iva_observation
 from ..iva_ledger import resolve_iva_ledger_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -46,6 +51,7 @@ _DEVENGO = date(2024, 3, 15)
 _CASILLA_122 = "modelo-303-casilla-122-inversion-sujeto-pasivo-base"
 _CASILLA_59 = "modelo-303-casilla-59-entregas-intracomunitarias-base"
 _CASILLA_60 = "modelo-303-casilla-60-exportaciones-base"
+COMPONENT_CATALOGUE = registry_component_catalogue(effective_date=_DEVENGO)
 
 
 def test_every_declared_category_base_only_flow_stays_outside_deduction_authority() -> None:
@@ -59,7 +65,12 @@ def test_every_declared_category_base_only_flow_stays_outside_deduction_authorit
     """
     wrongly_deducible = {
         category.value: flow.value
-        for category, flow in _DECLARED_CATEGORY_BASE_ONLY_FLOWS.items()
+        for (category, kind), row in COMPONENT_CATALOGUE.items()
+        if kind is InvoiceKind.ISSUED
+        and row.applicability is IvaKindApplicability.ARISES
+        and row.base is IvaComponentPresence.REQUIRED
+        and row.cuota is IvaComponentPresence.ZERO_BY_LAW
+        for flow in (derive_flow_for_classification(category=category, invoice_direction=kind),)
         if is_deducible_flow(flow)
     }
 

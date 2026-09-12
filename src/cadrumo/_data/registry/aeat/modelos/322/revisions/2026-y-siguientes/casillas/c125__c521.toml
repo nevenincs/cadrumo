@@ -20,7 +20,6 @@ semantic_role = "m322_operaciones_sujetas_con_inversion_del_sujeto_pasivo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "126"
@@ -33,7 +32,6 @@ semantic_role = "m322_operaciones_no_sujetas_por_reglas_de_localizacion_acogidas
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "127"
@@ -46,7 +44,6 @@ semantic_role = "m322_operaciones_sujetas_y_acogidas_a_los_regimenes_especiales_
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "128"
@@ -56,7 +53,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "150"
@@ -69,7 +65,6 @@ semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "151"
@@ -82,7 +77,6 @@ semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "152"
@@ -95,7 +89,6 @@ semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "153"
@@ -108,7 +101,6 @@ semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "154"
@@ -121,7 +113,6 @@ semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "155"
@@ -134,7 +125,6 @@ semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "156"
@@ -147,7 +137,6 @@ semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_base_imp
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "157"
@@ -160,7 +149,6 @@ semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "158"
@@ -173,7 +161,6 @@ semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "159"
@@ -186,7 +173,6 @@ semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_impo
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "160"
@@ -199,7 +185,6 @@ semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "161"
@@ -212,7 +197,6 @@ semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "162"
@@ -225,7 +209,6 @@ semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_impo
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "163"
@@ -238,7 +221,6 @@ semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "164"
@@ -251,7 +233,6 @@ semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "165"
@@ -261,7 +242,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "166"
@@ -274,7 +254,6 @@ semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "167"
@@ -287,7 +266,6 @@ semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "168"
@@ -300,7 +278,6 @@ semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_base_imp
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "169"
@@ -313,7 +290,6 @@ semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_tipo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "170"
@@ -326,7 +302,6 @@ semantic_role = "m322_liquidacion_iva_devengado_recargo_de_equivalencia_cuota"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "171"
@@ -339,7 +314,6 @@ semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_base_impo
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "172"
@@ -352,7 +326,6 @@ semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_tipo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "173"
@@ -365,7 +338,6 @@ semantic_role = "m322_liquidacion_iva_devengado_operaciones_intragrupo_cuota"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "500"
@@ -375,7 +347,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "501"
@@ -385,7 +356,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "502"
@@ -395,7 +365,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "503"
@@ -405,7 +374,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "504"
@@ -415,7 +383,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "505"
@@ -425,7 +392,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "506"
@@ -435,7 +401,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "507"
@@ -445,7 +410,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "508"
@@ -455,7 +419,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "509"
@@ -465,7 +428,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "510"
@@ -475,7 +437,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "511"
@@ -485,7 +446,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "512"
@@ -495,7 +455,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "513"
@@ -505,7 +464,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "514"
@@ -515,7 +473,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "515"
@@ -525,7 +482,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "516"
@@ -535,7 +491,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "517"
@@ -545,7 +500,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "518"
@@ -555,7 +509,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "519"
@@ -565,7 +518,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "520"
@@ -575,7 +527,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "521"
@@ -585,4 +536,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]

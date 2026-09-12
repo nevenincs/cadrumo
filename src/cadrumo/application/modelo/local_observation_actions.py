@@ -15,7 +15,7 @@ observation is not itself a filing act -- and stored as provenance-bearing
 non-official.
 
 See Also:
-    :func:`~application.modelo._filed_revision_observation.persist_filed_revision_observation`:
+    :func:`~application.modelo.filed_revision_observation.persist_filed_revision_observation`:
         Local-filing projection that uses ``app_filing`` rather than
         operator-manual source.
     :mod:`~application.calculations.cross_period_clean_state`:

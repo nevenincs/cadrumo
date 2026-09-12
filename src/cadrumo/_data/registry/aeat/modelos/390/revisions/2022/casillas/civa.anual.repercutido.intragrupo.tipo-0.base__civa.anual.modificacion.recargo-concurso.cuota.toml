@@ -30,7 +30,6 @@ semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [705] - "5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 0% - Cuota [705]" (offset 200, length 17).
 [[revisions."2022".casillas]]
@@ -47,7 +46,6 @@ semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [500] - "5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 4% - Base imponible [500]" (offset 217, length 17).
 [[revisions."2022".casillas]]
@@ -64,7 +62,6 @@ semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [501] - "5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 4% - Cuota [501]" (offset 234, length 17).
 [[revisions."2022".casillas]]
@@ -81,7 +78,6 @@ semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [706] - "5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 5% - Base imponible [706]" (offset 251, length 17).
 [[revisions."2022".casillas]]
@@ -98,7 +94,6 @@ semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [707] - "5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 5% - Cuota [707]" (offset 268, length 17).
 [[revisions."2022".casillas]]
@@ -115,7 +110,6 @@ semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [502] - "5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 10% - Base imponible [502]" (offset 285, length 17).
 [[revisions."2022".casillas]]
@@ -132,7 +126,6 @@ semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [503] - "5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 10% - Cuota [503]" (offset 302, length 17).
 [[revisions."2022".casillas]]
@@ -149,7 +142,6 @@ semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [504] - "5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 21% - Base imponible [504]" (offset 319, length 17).
 [[revisions."2022".casillas]]
@@ -166,7 +158,6 @@ semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [505] - "5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 21% - Cuota [505]" (offset 336, length 17).
 [[revisions."2022".casillas]]
@@ -183,7 +174,6 @@ semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [708] - "5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 0% - Base imponible [708]" (offset 353, length 17).
 [[revisions."2022".casillas]]
@@ -200,7 +190,6 @@ semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a d
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [709] - "5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 0% - Cuota [709]" (offset 370, length 17).
 [[revisions."2022".casillas]]
@@ -217,7 +206,6 @@ semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a d
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [643] - "5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 4% - Base imponible [643]" (offset 387, length 17).
 [[revisions."2022".casillas]]
@@ -234,7 +222,6 @@ semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a d
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [644] - "5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 4% - Cuota [644]" (offset 404, length 17).
 [[revisions."2022".casillas]]
@@ -251,7 +238,6 @@ semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a d
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [710] - "5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 5% - Base imponible [710]" (offset 421, length 17).
 [[revisions."2022".casillas]]
@@ -268,7 +254,6 @@ semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a d
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [711] - "5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 5% - Cuota [711]" (offset 438, length 17).
 [[revisions."2022".casillas]]
@@ -285,7 +270,6 @@ semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a d
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [645] - "5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 10% - Base imponible [645]" (offset 455, length 17).
 [[revisions."2022".casillas]]
@@ -302,7 +286,6 @@ semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a d
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [646] - "5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 10% - Cuota [646]" (offset 472, length 17).
 [[revisions."2022".casillas]]
@@ -319,7 +302,6 @@ semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a d
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [647] - "5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 21% - Base imponible [647]" (offset 489, length 17).
 [[revisions."2022".casillas]]
@@ -336,7 +318,6 @@ semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a d
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [648] - "5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 21% - Cuota [648]" (offset 506, length 17).
 [[revisions."2022".casillas]]
@@ -353,7 +334,6 @@ semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a d
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [712] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 0% - Base imponible [712]" (offset 523, length 17).
 [[revisions."2022".casillas]]
@@ -370,7 +350,6 @@ semantic_role_cardinality_reason = "Regimen especial de bienes usados is a disti
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [713] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 0% - Cuota [713]" (offset 540, length 17).
 [[revisions."2022".casillas]]
@@ -387,7 +366,6 @@ semantic_role_cardinality_reason = "Regimen especial de bienes usados is a disti
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [07] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 4% - Base imponible [07]" (offset 557, length 17).
 [[revisions."2022".casillas]]
@@ -404,7 +382,6 @@ semantic_role_cardinality_reason = "Regimen especial de bienes usados is a disti
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [08] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 4% - Cuota [08]" (offset 574, length 17).
 [[revisions."2022".casillas]]
@@ -421,7 +398,6 @@ semantic_role_cardinality_reason = "Regimen especial de bienes usados is a disti
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [714] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 5% - Base imponible [714]" (offset 591, length 17).
 [[revisions."2022".casillas]]
@@ -438,7 +414,6 @@ semantic_role_cardinality_reason = "Regimen especial de bienes usados is a disti
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [715] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 5% - Cuota [715]" (offset 608, length 17).
 [[revisions."2022".casillas]]
@@ -455,7 +430,6 @@ semantic_role_cardinality_reason = "Regimen especial de bienes usados is a disti
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [09] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 10% - Base imponible [09]" (offset 625, length 17).
 [[revisions."2022".casillas]]
@@ -472,7 +446,6 @@ semantic_role_cardinality_reason = "Regimen especial de bienes usados is a disti
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [10] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 10% - Cuota [10]" (offset 642, length 17).
 [[revisions."2022".casillas]]
@@ -489,7 +462,6 @@ semantic_role_cardinality_reason = "Regimen especial de bienes usados is a disti
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [11] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 21% - Base imponible [11]" (offset 659, length 17).
 [[revisions."2022".casillas]]
@@ -506,7 +478,6 @@ semantic_role_cardinality_reason = "Regimen especial de bienes usados is a disti
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [12] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 21% - Cuota [12]" (offset 676, length 17).
 [[revisions."2022".casillas]]
@@ -523,7 +494,6 @@ semantic_role_cardinality_reason = "Regimen especial de bienes usados is a disti
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [13] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. agencias viajes - Tipo 21% - Base imponible [13]" (offset 693, length 17).
 [[revisions."2022".casillas]]
@@ -540,7 +510,6 @@ semantic_role_cardinality_reason = "Regimen especial de agencias de viajes is a 
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [14] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. agencias viajes - Tipo 21% - Cuota [14]" (offset 710, length 17).
 [[revisions."2022".casillas]]
@@ -557,7 +526,6 @@ semantic_role_cardinality_reason = "Regimen especial de agencias de viajes is a 
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [29] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Modificac. bases y cuotas - Base imponible [29]" (offset 1101, length 17).
 [[revisions."2022".casillas]]
@@ -574,7 +542,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box on the bundled Di
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [30] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Modificac. bases y cuotas - Cuota [30]" (offset 1118, length 17).
 [[revisions."2022".casillas]]
@@ -591,7 +558,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box on the bundled Di
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [649] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Modificac. bases y cuotas intragrupo - Base [649]" (offset 1135, length 17).
 [[revisions."2022".casillas]]
@@ -608,7 +574,6 @@ semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-sexies", "ley-37-1992:art-80", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [650] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Modificac. bases y cuotas intragrupo - Cuota [650]" (offset 1152, length 17).
 [[revisions."2022".casillas]]
@@ -625,7 +590,6 @@ semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-sexies", "ley-37-1992:art-80", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [31] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Modificac. bases/cuotas concurso acreedores - Base imponible [31]" (offset 1169, length 17).
 [[revisions."2022".casillas]]
@@ -642,7 +606,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box on the bundled Di
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [32] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Modificac. bases/cuotas concurso acreedores - Cuota [32]" (offset 1186, length 17).
 [[revisions."2022".casillas]]
@@ -659,7 +622,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box on the bundled Di
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [33] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Total bases y cuotas IVA - Base imponible [33]" (offset 1203, length 17).
 [[revisions."2022".casillas]]
@@ -676,7 +638,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box on the bundled Di
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [35] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 0,5% - Base imponible [35]" (offset 1237, length 17).
 [[revisions."2022".casillas]]
@@ -693,7 +654,6 @@ semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier u
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [599] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 1,4% - Base imponible [599]" (offset 1271, length 17).
 [[revisions."2022".casillas]]
@@ -710,7 +670,6 @@ semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier u
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [601] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 5,2% - Base imponible [601]" (offset 1305, length 17).
 [[revisions."2022".casillas]]
@@ -727,7 +686,6 @@ semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier u
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [41] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 1,75% - Base imponible [41]" (offset 1339, length 17).
 [[revisions."2022".casillas]]
@@ -744,7 +702,6 @@ semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier u
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [42] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 1,75% - Cuota [42]" (offset 1356, length 17).
 [[revisions."2022".casillas]]
@@ -761,7 +718,6 @@ semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier u
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [43] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Modific. recargo equivalencia - Base imponible [43]" (offset 1373, length 17).
 [[revisions."2022".casillas]]
@@ -778,7 +734,6 @@ semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier u
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-80", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [44] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Modific. recargo equivalencia - Cuota [44]" (offset 1390, length 17).
 [[revisions."2022".casillas]]
@@ -795,7 +750,6 @@ semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier u
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-80", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [45] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Modific. recargo equiv. Concurso acreedores - Base imponible [45]" (offset 1407, length 17).
 [[revisions."2022".casillas]]
@@ -812,7 +766,6 @@ semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier u
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-80", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [46] - "5. Operaciones Reg. Gral. - Base Imponible y cuota - Modific. recargo equiv. Concurso acreedores - Cuota [46]" (offset 1424, length 17).
 [[revisions."2022".casillas]]
@@ -829,4 +782,3 @@ semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier u
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-80", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]

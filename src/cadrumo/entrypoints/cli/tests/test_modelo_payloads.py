@@ -36,16 +36,18 @@ from .._modelo_payloads import (
     CasillaObservationPayload,
     DeltaRowPayload,
     FindingPayload,
-    ObservationPayload,
-    SourceProvenancePayload,
     WorkCalculateResult,
-    WorkObservationsResult,
-    WorkRevisionResult,
-    WorkWizardResult,
 )
 from .._modelo_rendering import calculation_revision_payload
-from .._modelo_revision_payload_parts import CalculationRevisionProjectionFields, DetailRowPayload
+from .._modelo_revision_payload_parts import (
+    CalculationRevisionProjectionFields,
+    DetailRowPayload,
+    ObservationPayload,
+    SourceProvenancePayload,
+)
 from .._modelo_spreadsheet_payloads import ModeloSpreadsheetCalculateCasillaPayload
+from .._modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
+from .._modelo_work_wizard_payloads import WorkWizardResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

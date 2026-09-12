@@ -9,8 +9,8 @@ from typer.core import TyperGroup
 from ....application.operator_surface.help_models import RootLandingReport
 from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from .._common import emit_envelope
 from .._root_payloads import RootStatusResult
+from ..common import emit_envelope
 from .cli_runner import cadrumo_click_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

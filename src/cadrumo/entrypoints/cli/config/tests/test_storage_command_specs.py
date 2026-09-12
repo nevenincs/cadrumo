@@ -36,7 +36,7 @@ def test_storage_spec_surface_and_parameter_contract_are_exact() -> None:
 
 
 def test_storage_behavior_module_has_no_structural_cli_registration() -> None:
-    source = Path(__file__).parents[1].joinpath("_storage_cli.py").read_text(encoding="utf-8")
+    source = Path(__file__).parents[1].joinpath("storage_cli.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
 
     assert not any(

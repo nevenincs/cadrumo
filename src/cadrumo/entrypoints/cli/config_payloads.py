@@ -24,8 +24,8 @@ from ...application.auth.catalogue import AuthProviderListing
 from ...application.auth.diagnostics import AuthDiagnosticDetail, AuthDiagnosticPhoneState, AuthDiagnosticSummary
 from ...application.auth.operator_results import AuthLoginResult, AuthStatusResult, AuthTestResult
 from ...application.auth.probes import ProviderProbeResult
-from ...application.bucket_maintenance.contracts import BucketDeletionFingerprint
-from ...application.config_reset import (
+from ...application.bucket_deletion_contracts import BucketDeletionFingerprint
+from ...application.config_reset_models import (
     ConfigResetOperationStatus,
     ConfigResetPauseReason,
     ConfigResetTargetPhase,
@@ -59,7 +59,7 @@ from ._config_quarantine_payloads import QuarantineNamespacePayload
 
 if TYPE_CHECKING:
     from ...application.auth.operator_results import AuthConfigureResult
-    from ...application.config_reset import ConfigResetOperation
+    from ...application.config_reset_models import ConfigResetOperation
 
 # Shared nested models (not direct CommandSpec schema targets)
 

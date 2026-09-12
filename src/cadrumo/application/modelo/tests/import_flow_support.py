@@ -94,7 +94,7 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
         objects = profile.repository
-        _seed_ready_profile(bucket_id=_PROFILE_ID)
+        seed_ready_profile(bucket_id=_PROFILE_ID)
         wu = WorkUnitCatalogueRepository(objects=objects)
         cr = CalculationRevisionCatalogueRepository(objects=objects)
         fr = ModeloRecordCatalogueRepository(objects=objects)
@@ -103,7 +103,7 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
         yield wu, cr, fr, vr, bv
 
 
-def _seed_ready_profile(*, bucket_id: str) -> None:
+def seed_ready_profile(*, bucket_id: str) -> None:
     seed_test_profile_record(
         UserProfileRecord(
             setup_state=ProfileSetupState.COMPLETE,

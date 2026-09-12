@@ -164,7 +164,7 @@ def _store_operator_profile(*, period_token: str) -> None:
     )
 
 
-def _workflow_profile(*, redeme_enrolled: bool, period_token: str) -> TaxpayerProfile:
+def workflow_profile(*, redeme_enrolled: bool, period_token: str) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAX_ID,
         iva_regime=IVARegime.GENERAL,
@@ -251,7 +251,7 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
     verification = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator",
-        workflow_profile=_workflow_profile(redeme_enrolled=redeme_enrolled, period_token=period),
+        workflow_profile=workflow_profile(redeme_enrolled=redeme_enrolled, period_token=period),
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
         filing_repository=filing_repo,
@@ -269,7 +269,7 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
     file_modelo_revision(
         revision.calculation_revision_id,
         actor="operator",
-        workflow_profile=_workflow_profile(redeme_enrolled=redeme_enrolled, period_token=period),
+        workflow_profile=workflow_profile(redeme_enrolled=redeme_enrolled, period_token=period),
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
         filing_repository=filing_repo,

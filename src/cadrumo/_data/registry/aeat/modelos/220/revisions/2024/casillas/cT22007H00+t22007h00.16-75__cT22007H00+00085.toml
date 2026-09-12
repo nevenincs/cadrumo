@@ -53,7 +53,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @76+9 An. Otras correcciones (1).N.I.F. de la Entidad del grupo que origina la corrección de la suma de bases imponibles
 [[revisions."2024".casillas]]
@@ -65,7 +64,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @85+9 An. Otras correcciones (1).N.I.F. de la otra Entidad del grupo que interviene en la operación
 [[revisions."2024".casillas]]
@@ -77,7 +75,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @94+17 N. Otras correcciones (1).Corrección en base imponible
 [[revisions."2024".casillas]]
@@ -89,7 +86,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @4766+17 N. OTRAS CORRECCIONES A LA SUMA DE BASES IMPONIBLES: Otras correcciones a la suma de bases imponibles individuales, no comprendidas en los apartados anteriores. Corrección en base imponible. Total [00085]
 [[revisions."2024".casillas]]
@@ -101,4 +97,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

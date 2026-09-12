@@ -31,13 +31,13 @@ _AREA = ValueContract(DeferredTarget("....core.storage_taxonomy", "StorageArea",
 def _schema(name: str, identity: str) -> ResultSchemaSpec:
     return ResultSchemaSpec(
         SchemaState.TARGET,
-        target=DeferredTarget("._storage_payloads", name, __package__),
+        target=DeferredTarget(".storage_payloads", name, __package__),
         identity=identity,
     )
 
 
 def _handler(name: str) -> LazyBinding:
-    return LazyBinding.available(DeferredTarget("._storage_cli", name, __package__))
+    return LazyBinding.available(DeferredTarget(".storage_cli", name, __package__))
 
 
 CONFIG_STORAGE_COMMAND_SPECS = (

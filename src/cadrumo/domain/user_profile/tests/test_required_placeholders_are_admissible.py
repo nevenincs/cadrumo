@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....tests.user_profile import _REQUIRED_PLACEHOLDERS
+from ....tests import user_profile as profile_test_support
 from ..loader import load_user_profile_schema
 from ..schema import ProfileFieldDefinition
 
@@ -44,8 +44,9 @@ def test_every_filled_path_is_declared_by_the_schema() -> None:
     the one it thinks it made.
     """
     declared = _field_index()
+    required_placeholders = vars(profile_test_support)["_REQUIRED_PLACEHOLDERS"]
 
-    undeclared = sorted(path for path in _REQUIRED_PLACEHOLDERS if path not in declared)
+    undeclared = sorted(path for path in required_placeholders if path not in declared)
 
     assert undeclared == [], f"the minimal-profile table fills paths the schema does not declare: {undeclared}"
 
@@ -59,11 +60,12 @@ def test_every_filled_value_is_admissible_for_its_field() -> None:
     """
     declared = _field_index()
     assert declared, "the profile field index is empty; no filled value can be judged against nothing"
-    assert _REQUIRED_PLACEHOLDERS, "the required-placeholder table is empty; there is nothing to judge"
+    required_placeholders = vars(profile_test_support)["_REQUIRED_PLACEHOLDERS"]
+    assert required_placeholders, "the required-placeholder table is empty; there is nothing to judge"
 
     refused = [
         f"{path} -> {value!r} not in {list(field.enum_values)}"
-        for path, value in _REQUIRED_PLACEHOLDERS.items()
+        for path, value in required_placeholders.items()
         if (field := declared.get(path)) is not None and field.enum_values and str(value) not in field.enum_values
     ]
 
@@ -78,9 +80,10 @@ def test_the_table_constrains_something_so_the_sweep_is_not_vacuous() -> None:
     checked.
     """
     declared = _field_index()
+    required_placeholders = vars(profile_test_support)["_REQUIRED_PLACEHOLDERS"]
 
     constrained = [
-        path for path in _REQUIRED_PLACEHOLDERS if (field := declared.get(path)) is not None and field.enum_values
+        path for path in required_placeholders if (field := declared.get(path)) is not None and field.enum_values
     ]
 
     assert constrained, "no filled path belongs to a constrained field; the admissibility sweep would prove nothing"

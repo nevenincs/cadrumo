@@ -66,7 +66,7 @@ from ....adapters.outbound.google.session_store import (
     save_credential_source_selection,
 )
 from ....core.google_credential_source import GoogleCredentialSourceKind
-from .._common import emit_envelope
+from ..common import emit_envelope
 from ._google_credential_source_payloads import (
     GoogleCredentialSourceSetResult,
     GoogleCredentialSourceViewResult,

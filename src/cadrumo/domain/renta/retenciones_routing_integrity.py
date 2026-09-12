@@ -1,75 +1,87 @@
-"""Snapshot-time referential integrity for the M130 retenciones output casilla.
+"""Snapshot-time referential integrity for a registry-owned Renta route.
 
-The ``modelo-130-actividad-economica-retenciones-cumulative`` binding matches
-casilla 01 income rows (``target_casilla_id = "01"``, the OBSERVATION-MATCH
-key: see :class:`~domain.calculations.registry.ledger_renta_income_bindings.RentaLedgerIncomeSelector`'s
-docstring for why that field cannot also name the output casilla) but its
-resolved value is redirected onto casilla 06 -- retenciones e ingresos a
-cuenta soportados -- by a hardcoded application-layer constant
-(:data:`RENTA_130_RETENCIONES_OUTPUT_CASILLA`, read by
-``application.aggregation.modelo_bindings._m130_retenciones_backend_inputs``).
-A hardcoded casilla routed to outside the registry is a routing-integrity
-hazard: nothing stops the constant from drifting out of sync with a revision
-that drops or renumbers the casilla it names, and that drift fails silently
--- the value simply lands nowhere the filed form reads. This module closes
-it the same way :mod:`cadrumo.domain.renta.first_slice_routing_integrity`
-closes the equivalent M100 hazard: the constant stays, and a snapshot-time
-cross-domain check confirms it names a real casilla on the revision before
-any calculation can silently write a value nowhere the filed form will ever
-read it.
+The route declaration is authored in the governed registry mapping. This
+module retains only the generic query projection and the cross-domain check
+that confirms a selected output endpoint exists before a consumer redirects a
+resolved value to it.
 
-This check is owned by the ``renta`` domain because the routing fact is
-renta domain knowledge -- M130 pago fraccionado retención a cuenta is a
-renta (IRPF) concept, the same domain that owns the Modelo 100 first-slice
-routing table. The registry must not import ``renta`` directly -- that
-reverses the dependency direction the hexagonal architecture enforces.
-Instead this module registers a
-:class:`~cadrumo.domain.calculations.registry.CrossDomainSnapshotCheck` with
-the registry validator via
-:func:`~cadrumo.domain.calculations.registry.register_cross_domain_snapshot_check`.
-The registration runs when the registry's snapshot builder imports THIS
-module by name, not when the ``renta`` package is imported: the registry
-declares the module that performs the registration, so no package
-``__init__`` sits between the registry and the check. That is why this
-module is public. It was private while the package facade imported it for
-its side effect, and a facade made inert -- which the architecture rule
-requires of every package namespace -- would have stopped the registration
-silently. The registry still names no symbol from ``renta`` and calls the
-check through the abstract Protocol.
-
-The Protocol's third parameter (``renta_first_slice_binding_targets``) is
-the first-slice check's own concern, not this one's -- this check ignores it
-and reads only ``modelo_id``, ``casilla_ids`` and ``revision_binding_ids``,
-which is all the shared Protocol shape needs to express a second,
-independent domain fact.
+The registry must not import the Renta domain directly. This module registers
+the abstract snapshot check when the registry's snapshot builder imports the
+declared module, preserving the dependency direction while keeping the check
+at the domain boundary.
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from datetime import date
+from typing import TYPE_CHECKING
+
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.modelo import Modelo
+from ..calculations.registry.authority import bundled_authority
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.ids import BindingId
+from ..calculations.registry.queries import RegistryQueryService
+from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.validate_cross_domain_snapshot import register_cross_domain_snapshot_check
 
-RENTA_130_RETENCIONES_OUTPUT_CASILLA: CasillaId = validated_casilla_id(
-    "06",
-    surface="RENTA_130_RETENCIONES_OUTPUT_CASILLA",
-)
-"""The M130 casilla the retenciones-a-cuenta binding's resolved value reports on.
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import ValidatedRegistryAuthority
 
-Read by ``application.aggregation.modelo_bindings`` as the single source
-of truth for the redirect; a second literal declaring the same casilla id
-anywhere else is a duplication this constant exists to prevent.
-"""
 
-RENTA_130_RETENCIONES_BINDING_ID: BindingId = "modelo-130-actividad-economica-retenciones-cumulative"
-"""The binding whose resolved value is redirected onto the output casilla above.
+@dataclass(frozen=True, slots=True)
+class M130RetencionesRoute:
+    """Generic typed projection of the selected registry route declaration."""
 
-Lives beside the casilla it routes to because the two are one fact -- "this
-binding reports on that casilla" -- and splitting them let the requirement be
-asserted without reference to the thing that creates it. The application-layer
-redirect reads both from here rather than re-declaring either.
-"""
+    modelo_id: str
+    binding_id: BindingId
+    output_casilla: CasillaId
+
+
+# fact-relocation: selected Renta binding routing is consumed through the governed mapping fact
+def _registry_m130_retenciones_route(
+    *,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> M130RetencionesRoute:
+    """Resolve the selected route declaration without a Python fallback."""
+    selected_authority = authority or bundled_authority()
+    RegistryQueryService(selected_authority).describe_modelo("130")
+    resolved = selected_authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="m130-retenciones-output-routing",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date.today(),
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise TypeError("Renta route must resolve as a mapping fact")
+    entries: dict[str, str] = {}
+    for entry in resolved.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            raise TypeError("Renta route entries must be string-to-string")
+        if entry.key in entries:
+            raise ValueError(f"duplicate Renta route key {entry.key!r}")
+        entries[entry.key] = entry.value.strip()
+
+    def required(key: str) -> str:
+        value = entries.get(key)
+        if value is None or not value:
+            raise ValueError(f"Renta route is missing {key!r}")
+        return value
+
+    return M130RetencionesRoute(
+        modelo_id=required("modelo"),
+        binding_id=required("binding_id"),
+        output_casilla=validated_casilla_id(
+            required("output_casilla"),
+            surface="registry_renta_retenciones_route",
+        ),
+    )
+
+
+def resolve_m130_retenciones_route() -> M130RetencionesRoute:
+    """Return the selected route for application-layer binding projection."""
+    return _registry_m130_retenciones_route()
 
 
 def check_m130_retenciones_output_casilla(
@@ -78,33 +90,17 @@ def check_m130_retenciones_output_casilla(
     renta_first_slice_binding_targets: frozenset[CasillaId],  # shared Protocol shape, unused here
     revision_binding_ids: frozenset[BindingId] = frozenset(),
 ) -> list[str]:
-    """Assert the M130 retenciones output casilla exists when its binding is declared.
-
-    The requirement is conditional on the binding that creates it, mirroring
-    the sibling first-slice check, which likewise asserts only over the casillas
-    a revision's own bindings target. A revision declaring no retenciones
-    binding runs no redirect, so there is nothing for casilla 06 to receive and
-    nothing to protect.
-
-    Asserting it unconditionally for every modelo-130 revision was both wider
-    than the fact and wrong in practice: it fired on synthetic revisions built
-    to exercise unrelated referential-integrity properties, which legitimately
-    declare a minimal casilla set. A gate that reddens on revisions it has no
-    claim over trains its readers to work around it.
-
-    Returns a list of failure strings (empty when consistent). The registry
-    validator prefixes each failure with the snapshot coordinates and raises
-    a single ``RegistryValidationError``.
-    """
-    if modelo_id != Modelo.M130:
+    """Assert a selected route output endpoint exists when its binding is declared."""
+    route = _registry_m130_retenciones_route()
+    if modelo_id != route.modelo_id:
         return []
-    if RENTA_130_RETENCIONES_BINDING_ID not in revision_binding_ids:
+    if route.binding_id not in revision_binding_ids:
         return []
-    if RENTA_130_RETENCIONES_OUTPUT_CASILLA in casilla_ids:
+    if route.output_casilla in casilla_ids:
         return []
     return [
-        f"M130 revision declares binding {RENTA_130_RETENCIONES_BINDING_ID!r} but its "
-        f"retenciones-a-cuenta output casilla {RENTA_130_RETENCIONES_OUTPUT_CASILLA!r} "
+        f"selected revision declares binding {route.binding_id!r} but its "
+        f"retenciones output casilla {route.output_casilla!r} "
         "is absent from the revision -- the resolved retencion would be written nowhere "
         "the filed form reads",
     ]
@@ -113,4 +109,4 @@ def check_m130_retenciones_output_casilla(
 register_cross_domain_snapshot_check(check_m130_retenciones_output_casilla)
 
 
-__all__ = ["RENTA_130_RETENCIONES_OUTPUT_CASILLA", "check_m130_retenciones_output_casilla"]
+__all__ = ["M130RetencionesRoute", "check_m130_retenciones_output_casilla", "resolve_m130_retenciones_route"]

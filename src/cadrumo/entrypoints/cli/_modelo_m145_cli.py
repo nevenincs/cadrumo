@@ -35,10 +35,10 @@ from ...application.modelo.m145_communication_records import (
     mark_m145_communication_record_locally_completed,
     validate_m145_communication_record,
 )
-from ._common import active_bucket_id_or_refuse
 from ._modelo_cli_support import parse_casilla_override, resolve_default_actor
 from ._modelo_m145_parsing import m145_actor_from_cli, m145_create_command_from_cli
 from ._modelo_m145_rendering import emit_m145_export_result, emit_m145_record_result, emit_m145_validation_result
+from .common import active_bucket_id_or_refuse
 
 __all__ = ["m145_create", "m145_export", "m145_mark_delivered_to_payer", "m145_mark_locally_completed", "m145_validate"]
 

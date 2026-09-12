@@ -41,10 +41,8 @@ from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.modelo import Modelo
-from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
-from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
+from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind, M303RectificativaMotive
 from ...domain.modelos.row_models import ModeloDetailRow
-from ._common import activate_subcommand_output_language
 from ._modelo_behavior_support import (
     require_active_profile as _require_active_profile,
 )
@@ -82,6 +80,7 @@ from ._modelo_rendering import (
 from ._modelo_rendering import (
     verification_report_payload as _verification_report_payload,
 )
+from .common import activate_subcommand_output_language
 
 
 def work_compare_taxation(
@@ -106,7 +105,7 @@ def work_compare_taxation(
 
     This is an ephemeral operation: no revision is persisted.
     """
-    from ._common import activate_subcommand_output_language, emit_envelope
+    from .common import activate_subcommand_output_language, emit_envelope
 
     activate_subcommand_output_language(ctx, output_language)
 
@@ -136,7 +135,6 @@ def work_compare_taxation(
             tr(
                 "cli.app.modelo.work.compare_taxation_work_unit_not_found",
                 work_unit_id=work_unit_id or "",
-                default="Work unit {work_unit_id} not found; check 'aeat app modelo work list'.",
             ),
         ) from exc
     except TaxationComparisonError as exc:
@@ -144,11 +142,10 @@ def work_compare_taxation(
             tr(
                 "cli.app.modelo.work.compare_taxation_error",
                 detail=str(exc),
-                default="Taxation comparison failed: {detail}",
             ),
         ) from exc
 
-    from ._modelo_payloads import WorkCompareTaxationResult
+    from ._payloads_modelo_reconcile import WorkCompareTaxationResult
 
     result = WorkCompareTaxationResult(
         filing_year=comparison.filing_year,
@@ -194,7 +191,6 @@ def work_compare_taxation(
             "cli.app.modelo.work.compare_taxation_recommendation_line",
             recommendation=comparison.recommendation.value,
             reason=comparison.recommendation_reason,
-            default="RECOMENDACIÓN: {recommendation} — {reason}",
         ),
     ]
     if caveat_notice is not None:
@@ -237,8 +233,8 @@ def work_history(
         bucket_id=bucket_id,
     )
     history = assemble_work_unit_history(unit.work_unit_id)
-    from ._common import emit_envelope, resolve_lifecycle_continuation_notice
-    from ._modelo_payloads import WorkHistoryResult, WorkUnitHistoryEventPayload
+    from .common import emit_envelope, resolve_lifecycle_continuation_notice
+    from .modelo_aux_payloads import WorkHistoryResult, WorkUnitHistoryEventPayload
 
     result = WorkHistoryResult(
         bucket_id=history.bucket_id,
@@ -451,8 +447,8 @@ def work_amend(
     ) as exc:
         raise _bad_parameter_from_error(exc) from exc
 
-    from ._common import emit_envelope
     from ._modelo_payloads import WorkAmendResult
+    from .common import emit_envelope
 
     result = WorkAmendResult.model_validate(
         {
@@ -486,8 +482,8 @@ def modelo_history(
 ) -> None:
     """Stream the bucket-event history for one modelo across all lifecycle stages."""
     from ...application.modelo.history import assemble_modelo_lifecycle_history
-    from ._common import emit_envelope
     from ._modelo_payloads import ModeloHistoryResult, ModeloLifecycleEventPayload
+    from .common import emit_envelope
 
     matches = assemble_modelo_lifecycle_history(modelo, filing_year=year, period=period).events
 

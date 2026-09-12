@@ -23,8 +23,9 @@ from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.schema import ModeloDraft, registry_schema_version
 from ....domain.modelos.errors import ModeloExportError
 from ....domain.submission.models import ModeloDraftStatus
-from ..export import _RecordRenderRow, _render_record
-from ._export_support import _typed_producer_snapshot
+from .._record_field_renderer import render_record
+from ..record_types import RecordRenderRow
+from .export_support import _typed_producer_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -157,14 +158,14 @@ def _canonical_record(*, signed_money: bool = True, required_integer: bool = Fal
 
 
 def _application_bytes(record: ExportRecordDefinition, values: Mapping[CasillaId, object]) -> bytes:
-    rendered = _render_record(
+    rendered = render_record(
         record,
         draft=_draft(),
         producer_values={},
         producer_snapshot=_typed_producer_snapshot(),
         casilla_values=dict(values),
         binding_values={},
-        row=_RecordRenderRow(row_index=None, active_binding_ids=frozenset()),
+        row=RecordRenderRow(row_index=None, active_binding_ids=frozenset()),
         render_context=None,
         projection_values={},
     )
@@ -224,14 +225,14 @@ def test_real_amendment_header_internal_boolean_spelling_emits_exact_wire_byte(
         fields=(field,),
     )
 
-    rendered = _render_record(
+    rendered = render_record(
         record,
         draft=_draft(),
         producer_values={FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: internal_value},
         producer_snapshot=_typed_producer_snapshot(complementaria=internal_value == "true"),
         casilla_values={},
         binding_values={},
-        row=_RecordRenderRow(row_index=None, active_binding_ids=frozenset()),
+        row=RecordRenderRow(row_index=None, active_binding_ids=frozenset()),
         render_context=None,
         projection_values={},
     ).encode(record.encoding)

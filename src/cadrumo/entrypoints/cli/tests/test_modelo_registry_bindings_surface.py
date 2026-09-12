@@ -619,7 +619,7 @@ def test_bindings_list_exposes_m100_salary_certificate_withholding_input() -> No
     )
     assert result.exit_code == 0, result.output
     rows = {row["binding_id"]: row for row in _payload(result.output)["bindings"]}
-    row = rows["renta-2024-certificado-trabajo-retenciones"]
+    row = rows["renta-certificado-trabajo-retenciones"]
     assert row["source"] == "manual_input"
     assert row["input_channel"] == "decimal"
     assert "ley-35-2006:art-101" in row["legal_refs"]

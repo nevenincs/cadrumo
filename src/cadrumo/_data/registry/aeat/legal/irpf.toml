@@ -86,6 +86,25 @@ required_text = [
     "más los intereses de demora",
 ]
 
+[legal."rd-439-2007:art-72"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007.html#a72"
+document_id = "BOE-A-2007-6820"
+article = "72"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a72"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-12
+reviewed_by = "agent-authored from bundled rd-439-2007.html#a72; operator to re-stamp"
+notes = "RIRPF art 72: acreditación de la condición de persona con discapacidad y de la necesidad de ayuda de otra persona o de la existencia de dificultades de movilidad. Establishes the 33 percent minimum disability grade used by the IRPF disability-minimum registry fact."
+required_text = [
+    "Acreditación de la condición de persona con discapacidad",
+    "grado de minusvalía igual o superior al 33 por ciento",
+]
+
 [legal."rd-439-2007:art-86"]
 evidence_tier = "legal_authority"
 authority = "boe"

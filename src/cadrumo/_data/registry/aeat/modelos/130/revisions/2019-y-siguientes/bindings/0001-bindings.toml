@@ -10,8 +10,8 @@
 # with provenance marker on the resulting CasillaObservation.
 [[revisions."2019-y-siguientes".bindings]]
 id = "modelo-130-resultados-negativos-anteriores"
-source = "previous_filing"
-selector = { source_modelo = "130", source_casilla_id = "saldo-negativo-fin-periodo", source_period_offset_from_target = -1, max_year_delta = 0 }
+provider = { kind = "previous_filing", source_modelo = "130", source_casilla_id = "saldo-negativo-fin-periodo", temporal = { kind = "target_period_offset", periods = -1, within_filing_year = true } }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions"]
@@ -43,8 +43,8 @@ required_text = [
 # Casilla 07 = 04 - 05 - 06 reads the populated casilla 05 unchanged.
 [[revisions."2019-y-siguientes".bindings]]
 id = "modelo-130-pagos-fraccionados-anteriores"
-source = "previous_filing"
-selector = { source_modelo = "130", source_casilla_ids = ["07", "16"], required_source_casilla_ids = ["07"], prior_quarter_expanding_span = true, max_year_delta = 0 }
+provider = { kind = "previous_filing", source_modelo = "130", source_casilla_ids = ["07", "16"], required_source_casilla_ids = ["07"], temporal = { kind = "prior_quarter_expanding_span" } }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "prior_pagos_fraccionados" }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions"]

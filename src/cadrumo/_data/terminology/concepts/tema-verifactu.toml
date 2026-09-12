@@ -15,3 +15,13 @@ updated_at = 2026-06-29
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Tema sobre els registres de facturació i els requisits de Veri*Factu."
+
+[language.en]
+short_description = "Topic covering invoice records and Veri*Factu requirements."
+
+[language.hu]
+short_description = "A számlázási nyilvántartásokkal és a Veri*Factu követelményeivel foglalkozó téma."
+

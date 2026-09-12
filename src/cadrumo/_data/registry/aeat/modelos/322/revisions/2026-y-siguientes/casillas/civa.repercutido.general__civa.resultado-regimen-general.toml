@@ -10,7 +10,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-322-iva-repercutido-general-cuota"
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "iva.repercutido.reducido"
@@ -24,7 +23,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-322-iva-repercutido-reducido-cuota"
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "iva.repercutido.super-reducido"
@@ -38,7 +36,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-322-iva-repercutido-super-reducido-cuota"
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "iva.soportado.interiores"
@@ -52,7 +49,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-322-iva-soportado-interiores-cuota"
 legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "iva.autorepercutido.intracomunitaria"
@@ -66,7 +62,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-322-iva-autorepercutido-intracomunitaria-cuota"
 legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 # Internal calculation aggregate, not an AEAT form box. The 2026 design carries
 # its own numbered totals -- [38] total cuota devengada, [62] total a deducir,
@@ -86,7 +81,6 @@ input_kind = "computed"
 internal_only = true
 formula = "modelo-322-iva-cuota-devengada-total"
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 # Internal calculation aggregate, not an AEAT form box. The 2026 design carries
 # its own numbered totals -- [38] total cuota devengada, [62] total a deducir,
@@ -106,7 +100,6 @@ input_kind = "computed"
 internal_only = true
 formula = "modelo-322-iva-cuota-deducible-total"
 legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 # Internal calculation aggregate, not an AEAT form box. The 2026 design carries
 # its own numbered totals -- [38] total cuota devengada, [62] total a deducir,
@@ -126,5 +119,3 @@ input_kind = "computed"
 internal_only = true
 formula = "modelo-322-iva-resultado-regimen-general"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
-

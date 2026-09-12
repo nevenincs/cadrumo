@@ -1,7 +1,7 @@
 [[revisions."2024".bindings]]
 id = "renta-rental-reduccion-art-23-2-tier"
-source = "profile"
-selector = { profile_key = "renta_rental.reduccion_art_23_2_tier_2024" }
+provider = { kind = "profile", profile_key = "renta_rental.reduccion_art_23_2_tier_2024" }
+value = { data_type = "enum", channel = "enum", typed_enum = "RentalReductionArt232Tier" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1", "lirpf-cuota-chain-authority"]

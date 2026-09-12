@@ -17,8 +17,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -29,8 +27,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -41,8 +37,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -53,8 +47,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -65,8 +57,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -77,8 +67,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -89,8 +77,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -101,8 +87,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -113,8 +97,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -125,8 +107,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -137,8 +117,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -149,8 +127,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -161,8 +137,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -173,8 +147,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -185,8 +157,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -197,8 +167,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -209,8 +177,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -221,8 +187,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -233,8 +197,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -245,8 +207,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -257,8 +217,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -269,8 +227,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -281,8 +237,6 @@ section = ["resumen_patrimonio_neto"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-Ingreso
 
 [[revisions."2023".casillas]]
@@ -293,8 +247,6 @@ section = ["deudas_deducibles"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -309,7 +261,7 @@ semantic_role = "patrimonio_base_imponible"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-265-2024:art-4", "ley-19-1991:art-28", "ley-19-1991:art-4-9"]
-source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 # also printed on 714-Ingreso
 
 
@@ -322,7 +274,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1991:art-28", "orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 
 [[revisions."2023".casillas]]
 id = "patrimonio.base-liquidable"
@@ -336,7 +287,7 @@ semantic_role = "patrimonio_base_liquidable"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1991:art-28", "orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 # also printed on 714-Ingreso
 
 
@@ -348,8 +299,6 @@ section = ["patrimonio_exento_con_progresividad"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 
 [[revisions."2023".casillas]]
 id = "patrimonio.cuota-integra"
@@ -364,7 +313,7 @@ required = false
 input_kind = "computed"
 formula = "patrimonio-cuota-integra-escala-estatal"
 legal_refs = ["ley-19-1991:art-30", "orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 # also printed on 714-Ingreso
 
 
@@ -381,7 +330,7 @@ required = false
 input_kind = "computed"
 formula = "patrimonio-irpf-bases-imponibles-m100"
 legal_refs = ["ley-19-1991:art-31", "orden-hac-265-2024:art-4", "ley-35-2006:art-48", "ley-35-2006:art-49"]
-source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 
 [[revisions."2023".casillas]]
@@ -396,7 +345,7 @@ semantic_role = "patrimonio_dividendos_no_irpf"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1991:art-31", "orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 
 [[revisions."2023".casillas]]
@@ -411,7 +360,7 @@ semantic_role = "patrimonio_base_ahorro_excluida"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1991:art-31", "orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 
 [[revisions."2023".casillas]]
@@ -427,7 +376,7 @@ required = false
 input_kind = "computed"
 formula = "patrimonio-limite-conjunto-art31"
 legal_refs = ["ley-19-1991:art-31", "orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 
 [[revisions."2023".casillas]]
@@ -443,7 +392,7 @@ required = false
 input_kind = "computed"
 formula = "patrimonio-irpf-cuotas-integras-m100"
 legal_refs = ["ley-19-1991:art-31", "orden-hac-265-2024:art-4", "ley-35-2006:art-63", "ley-35-2006:art-74"]
-source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 
 [[revisions."2023".casillas]]
@@ -458,7 +407,7 @@ semantic_role = "patrimonio_irpf_cuotas_excluidas_base_ahorro"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1991:art-31", "orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 
 [[revisions."2023".casillas]]
@@ -473,7 +422,7 @@ semantic_role = "patrimonio_cuota_integra_susceptible_limitacion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1991:art-31", "orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 
 [[revisions."2023".casillas]]
@@ -489,7 +438,7 @@ required = false
 input_kind = "computed"
 formula = "patrimonio-suma-cuotas-limite-art31"
 legal_refs = ["ley-19-1991:art-31", "orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 
 [[revisions."2023".casillas]]
@@ -505,7 +454,7 @@ required = false
 input_kind = "computed"
 formula = "patrimonio-exceso-limite-conjunto-art31"
 legal_refs = ["ley-19-1991:art-31", "orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 
 [[revisions."2023".casillas]]
@@ -521,7 +470,7 @@ required = false
 input_kind = "computed"
 formula = "patrimonio-reduccion-limite-80-suelo"
 legal_refs = ["ley-19-1991:art-31", "orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 
 [[revisions."2023".casillas]]
@@ -537,7 +486,7 @@ required = false
 input_kind = "computed"
 formula = "patrimonio-total-cuota-integra-art31"
 legal_refs = ["ley-19-1991:art-30", "ley-19-1991:art-31", "orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 
 [[revisions."2023".casillas]]
@@ -548,8 +497,6 @@ section = ["liquidacion"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 
 [[revisions."2023".casillas]]
 id = "declaracion-42"
@@ -559,8 +506,6 @@ section = ["liquidacion"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 
 [[revisions."2023".casillas]]
 id = "declaracion-43"
@@ -570,8 +515,6 @@ section = ["liquidacion"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 
 [[revisions."2023".casillas]]
 id = "declaracion-44"
@@ -581,8 +524,6 @@ section = ["liquidacion"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 
 [[revisions."2023".casillas]]
 id = "patrimonio.cuota-minorada"
@@ -596,7 +537,7 @@ semantic_role = "patrimonio_cuota_minorada"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-265-2024:art-4", "ley-19-1991:art-30", "ley-19-1991:art-31"]
-source_refs = ["aeat-dr-714-2023", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 
 [[revisions."2023".casillas]]
@@ -607,8 +548,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]
 # also printed on 714-09
 
 [[revisions."2023".casillas]]
@@ -619,5 +558,3 @@ section = ["liquidacion"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hac-265-2024:art-4"]
-source_refs = ["aeat-dr-714-2023"]

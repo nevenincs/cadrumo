@@ -8,7 +8,7 @@ shape they need here and consume whatever satisfies it, rather than importing
 application-layer module.
 
 The ports are structural, following the same pattern as
-:mod:`application.calculations._ports`: a concrete renderer satisfies
+:mod:`application.calculations.ports`: a concrete renderer satisfies
 :class:`FicheroBoeRecordRenderer` by shape alone, so the implementation stays
 adapter-owned and neither layer needs to import the other's module to make the
 contract hold.

@@ -76,7 +76,7 @@ def test_the_issue_branch_reads_both_the_capability_and_the_deployment_flag() ->
     The behaviour those inputs feed is proved where it can be: the resolver's
     own gate tests under ``application/user_profile/tests``.
     """
-    source = (Path(__file__).resolve().parents[1] / "_check_cli.py").read_text(encoding="utf-8")
+    source = (Path(__file__).resolve().parents[1] / "check_cli.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
 
     branches = [

@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 140, sol·licitud del pagament anticipat de la deducció per maternitat"
+
+[language.en]
+short_description = "Modelo 140, request for advance payment of the maternity deduction"
+
+[language.hu]
+short_description = "140-es modell: az anyasági adókedvezmény előlegének kérelme"
+

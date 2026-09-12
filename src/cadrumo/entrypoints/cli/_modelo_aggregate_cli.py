@@ -33,9 +33,9 @@ from ...domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
     aggregate_withholding_by_clave,
 )
-from ._common import emit_envelope, load_invoices
 from ._modelo_behavior_support import resolve_year_period
 from ._modelo_payloads import ModeloAggregateResult
+from .common import emit_envelope, load_invoices
 
 
 def _route_invoice_retenciones_into_command(

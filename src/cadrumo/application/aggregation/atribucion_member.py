@@ -20,6 +20,7 @@ from pydantic import TypeAdapter
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import content_hash_hex
 from ...core.identity.tax_id import tax_id_identity_token
+from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.detail_record_bindings import (
     AtributionMemberObservation,
     resolve_atribucion_binding_row_values,
@@ -125,6 +126,7 @@ class AtribucionMemberSourceResolver:
                     lineage_role=CalculationSourceLineageRole.PRIMARY,
                     source_ref=f"profile:{context.bucket_id}:attribution_entity_socios:{socio.index}",
                     parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.PROFILE_FIELD,
                     fingerprint=fingerprint,
                 )
                 for socio in projection.complete

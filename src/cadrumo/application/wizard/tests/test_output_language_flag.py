@@ -10,7 +10,7 @@ two properties of the shipped wizard:
   prompts) renders in the requested language through ``tr()`` and defaults to
   Spanish on a clean install.
 
-Both drive real objects — the shipped ``_SETUP_OPTION_INFOS`` flag map, the
+Both drive real objects — the shipped ``SETUP_OPTION_INFOS`` flag map, the
 real ``SETUP_FLOW`` descriptor, and the real ``override_settings`` seam — with
 no test doubles.
 """
@@ -23,9 +23,9 @@ import pytest
 from ....core.config import override_settings
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n.render import clear_output_language_cache, tr
-from ....tests.clean_install_fixtures import _clean_install
+from ....tests.clean_install_fixtures import clean_install
 from ..catalogue import SETUP_FLOW
-from ..commands import _SETUP_OPTION_INFOS
+from ..commands import SETUP_OPTION_INFOS
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -42,7 +42,7 @@ def test_wizard_output_language_flag_constrains_to_supported_set() -> None:
     CLI-boundary hinting rule) and consistent with every other
     subcommand's language flag.
     """
-    info = _SETUP_OPTION_INFOS["output-language"]
+    info = SETUP_OPTION_INFOS["output-language"]
     choice = info.click_type
     assert isinstance(choice, click.Choice), type(choice).__name__
     assert tuple(choice.choices) == tuple(SUPPORTED_OUTPUT_LANGUAGES)
@@ -69,10 +69,10 @@ def test_wizard_prose_localizes_and_resolves_under_both_overrides() -> None:
     assert prompt_en != prompt_es
 
 
-__all__ = ["_clean_install"]
+__all__ = ["clean_install"]
 
 
-@pytest.mark.usefixtures("_clean_install")
+@pytest.mark.usefixtures("clean_install")
 def test_wizard_prose_defaults_to_spanish() -> None:
     """A clean install renders the wizard prose in Spanish with no override.
 

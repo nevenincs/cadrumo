@@ -25,14 +25,14 @@ from .._meta_tools import (
     search_commands_response,
 )
 from .._persona_scope import AgentPersona
-from .._server import (
+from .._transport import _run_subprocess_tool
+from ..command_surface import command_surface
+from ..server import (
     build_meta_sdk_tools,
     build_server,
     persona_scope_refusal,
 )
-from .._tools import McpToolDescriptor, build_tool_descriptors
-from .._transport import _run_subprocess_tool
-from ..command_surface import command_surface
+from ..tools import McpToolDescriptor, build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

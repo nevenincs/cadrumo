@@ -27,7 +27,6 @@ semantic_role = "payee_nif"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "perc.nif-representante-legal"
@@ -40,7 +39,6 @@ semantic_role = "payee_representative_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "perc.nombre"
@@ -53,7 +51,6 @@ semantic_role = "payee_name"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "perc.nombre-representante"
@@ -66,7 +63,6 @@ semantic_role = "m270_representante_nombre"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
 # Claves 1-5 enumerated verbatim by the design: 1 persona física contribuyente
 # del IRPF, 2 entidad en régimen de atribución de rentas residente, 3 persona
@@ -84,7 +80,6 @@ semantic_role = "m270_tipo_perceptor"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
 # "F" persona física, "J" persona jurídica o entidad. Alphabetic, so it is not
 # an enumerated-digit domain; the design fills it only when tipo de perceptor
@@ -100,7 +95,6 @@ semantic_role = "m270_clave_personalidad"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "perc.provincia"
@@ -113,7 +107,6 @@ semantic_role = "payee_province"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "perc.fecha-sorteo"
@@ -126,7 +119,6 @@ semantic_role = "m270_fecha_sorteo"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "perc.fecha-pago"
@@ -139,7 +131,6 @@ semantic_role = "m270_fecha_pago_premio"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "perc.importe-premio"
@@ -152,8 +143,7 @@ semantic_role = "m270_importe_premio"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"] }
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "perc.base-retencion"
@@ -166,8 +156,7 @@ semantic_role = "base_retenciones_ingresos_a_cuenta"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"] }
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "perc.retencion"
@@ -180,8 +169,7 @@ semantic_role = "retenciones_ingresos_a_cuenta"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
-constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"] }
 
 # "X" only where a prize previously distributed as participaciones is
 # presented for collection by someone who is not its ultimate beneficiary.
@@ -196,7 +184,6 @@ semantic_role = "m270_gestor_cobro"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "perc.nif-pais-residencia"
@@ -209,7 +196,6 @@ semantic_role = "m270_nif_pais_residencia"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "perc.fecha-nacimiento"
@@ -222,7 +208,6 @@ semantic_role = "m270_fecha_nacimiento"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
 # AEAT declares 461-497 as ONE 37-position campo, "LUGAR DE NACIMIENTO",
 # subdivided in its own prose into 461-495 CIUDAD (35) and 496-497 CÓDIGO PAÍS
@@ -242,7 +227,6 @@ semantic_role = "m270_lugar_nacimiento"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "perc.pais-residencia"
@@ -255,4 +239,3 @@ semantic_role = "m270_pais_residencia"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]

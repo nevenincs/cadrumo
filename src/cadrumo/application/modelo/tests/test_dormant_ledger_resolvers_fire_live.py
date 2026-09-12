@@ -25,12 +25,11 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations.observations_repository import CalculationObservationRepository
+from ...calculations.observations_repository import APP_FILING_SOURCE_KIND, CalculationObservationRepository
 from ..calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ..filed_revision_observation import APP_FILING_SOURCE_KIND
 from ..work_lifecycle import create_work_unit
 from ._dormant_resolver_live_support import _T0, _T1, _revision, _seed_ready_profile
 

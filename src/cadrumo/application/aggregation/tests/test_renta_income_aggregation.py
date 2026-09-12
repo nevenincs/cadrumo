@@ -29,7 +29,7 @@ from .renta_income_aggregation_support import (
     _Q1_2024,
     _Q2_2024,
     _income_transaction,
-    _raw_transaction,
+    raw_transaction,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -133,7 +133,7 @@ def test_outgoing_business_expense_is_skipped_silently_by_income_pipeline() -> N
     """
     tx = Transaction.model_validate(
         {
-            "raw": _raw_transaction(
+            "raw": raw_transaction(
                 "out",
                 booked_date=date(2024, 3, 1),
                 value_date=date(2024, 3, 1),
@@ -168,7 +168,7 @@ def test_outgoing_personal_transaction_is_skipped_silently_by_income_pipeline() 
     """A personal OUTGOING row is neither income nor a deducible gasto."""
     tx = Transaction.model_validate(
         {
-            "raw": _raw_transaction("out", booked_date=date(2024, 3, 1), value_date=date(2024, 3, 1)),
+            "raw": raw_transaction("out", booked_date=date(2024, 3, 1), value_date=date(2024, 3, 1)),
             "direction": TransactionDirection.OUTGOING,
             "group_label": None,
             "source_jurisdiction": "ES",

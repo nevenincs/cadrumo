@@ -15,3 +15,13 @@ updated_at = 2026-08-07
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Prestació intracomunitària de serveis"
+
+[language.en]
+short_description = "Intra-Community supply of services"
+
+[language.hu]
+short_description = "Közösségen belüli szolgáltatásnyújtás"
+

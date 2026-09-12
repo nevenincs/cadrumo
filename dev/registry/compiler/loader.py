@@ -13,6 +13,15 @@ from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.modelo_localization import (
+    ModeloLocalizationFieldKind,
+    casilla_alias_locale_key,
+    casilla_continuity_locale_key,
+    casilla_occurrence_locale_key,
+    construct_locale_key,
+    modelo_locale_key,
+    revision_locale_key,
+)
 from cadrumo.domain.calculations.registry.schema import (
     ModeloDefinition,
     RegistryCatalogues,
@@ -25,7 +34,9 @@ from cadrumo.domain.calculations.registry.schema_references import LegalReferenc
 from ._loader_internals import (
     _load_catalogue_file_cached,
     _load_modelo_directory_cached,
-    _load_modelo_file_cached,
+    _load_modelo_manifest,
+    _load_modelo_revisions,
+    _materialise_revisions,
     _refresh_modelo_directory_fingerprints_after_load_error,
     _refresh_registry_tree_fingerprints_after_load_error,
     _RegistryPathFingerprints,
@@ -57,19 +68,6 @@ from .loader_fingerprints import (
 )
 
 
-def load_modelo_file(path: Path) -> ModeloDefinition:
-    """Load one modelo TOML file into strict schema objects."""
-    resolved = path.resolve()
-    fingerprint = _toml_fingerprint(resolved)
-    try:
-        return _load_modelo_file_cached(str(resolved), fingerprint[1], fingerprint[2], fingerprint[3])
-    except RegistryLoadError as exc:
-        refreshed = _refresh_toml_fingerprint_after_load_error(resolved, exc)
-        if refreshed == fingerprint:
-            raise
-        return _load_modelo_file_cached(str(resolved), refreshed[1], refreshed[2], refreshed[3])
-
-
 def load_modelo_directory(directory: Path) -> ModeloDefinition:
     """Compile one directory-mode modelo from its mutable TOML sources."""
     resolved = directory.resolve()
@@ -90,7 +88,152 @@ def load_modelo_directory(directory: Path) -> ModeloDefinition:
 
 def load_modelo_source(source: ModeloSource) -> ModeloDefinition:
     """Compile one discovered mutable modelo source."""
-    return load_modelo_file(source.path) if source.layout == "single_file" else load_modelo_directory(source.path)
+    return load_modelo_directory(source.path)
+
+
+def load_modelo_locale_key_projection(root: Path) -> frozenset[str]:
+    """Read the committed Modelo structure and derive its locale-key universe.
+
+    Locale inventory must remain available while the binding provider schema is
+    being migrated (or when an unrelated binding row is malformed).  This
+    projection therefore stops at the structural compiler boundary: it reads
+    manifests and revision fragments, materialises only the casilla predecessor
+    chain, and validates the identity-bearing arrays needed for localization.
+    It never constructs a typed ``BindingDefinition`` or reads the shared
+    catalogue, so binding validation cannot erase the Modelo key universe.
+
+    The projection is deliberately strict about localization structure.  A
+    malformed or ambiguous modelo, revision, construct, casilla, or alias row
+    raises ``RegistryLoadError`` rather than returning a partial key set.
+    """
+    resolved = root.resolve()
+    sources = discover_modelo_sources(resolved / "modelos")
+    if not sources:
+        raise RegistryLoadError(f"{resolved / 'modelos'}: no modelo sources found")
+
+    keys: set[str] = set()
+    for source in sources:
+        manifest = _load_modelo_manifest(source.path)
+        modelo_table = _raw_table(manifest.get("modelo"))
+        if modelo_table is None:
+            raise RegistryLoadError(f"{source.manifest_path}: missing [modelo] table")
+        modelo_id = _required_identity(modelo_table.get("id"), f"{source.manifest_path}: [modelo].id")
+        revisions = _load_modelo_revisions(source.path)
+        if not revisions:
+            raise RegistryLoadError(f"{source.path}: no revisions found in revisions/")
+        _validate_predecessor_references(source.path, revisions)
+        materialised = _materialise_revisions(source.path, modelo_id, revisions).revisions
+
+        keys.add(modelo_locale_key(modelo_id, "title"))
+        keys.add(modelo_locale_key(modelo_id, "official_name"))
+        for revision_id, raw_revision in materialised.items():
+            revision_token = _required_identity(revision_id, f"{source.path}: revision id")
+            revision_table = _raw_table(raw_revision)
+            if revision_table is None:
+                raise RegistryLoadError(f"{source.path}: revision {revision_token!r} must be a table")
+            authored_revision_id = revision_table.get("id")
+            if authored_revision_id is not None and authored_revision_id != revision_token:
+                raise RegistryLoadError(
+                    f"{source.path}: revision {revision_token!r} authored id {authored_revision_id!r} differs",
+                )
+            keys.add(revision_locale_key(modelo_id, revision_token))
+            _project_revision_locale_keys(keys, modelo_id, revision_token, revision_table, source.path)
+    return frozenset(keys)
+
+
+def _raw_table(value: object) -> Mapping[str, object] | None:
+    """Return a TOML table without coercing malformed values."""
+    return value if isinstance(value, Mapping) else None
+
+
+def _required_identity(value: object, subject: str) -> str:
+    """Require one non-blank string identity used in a locale key."""
+    if not isinstance(value, str) or not value.strip():
+        raise RegistryLoadError(f"{subject} must be a non-blank string")
+    return value
+
+
+def _raw_array(table: Mapping[str, object], field: str, subject: str) -> tuple[object, ...]:
+    """Read one optional TOML array, treating absence as the schema default."""
+    value = table.get(field, ())
+    if not isinstance(value, tuple):
+        raise RegistryLoadError(f"{subject}: {field!r} must be an array")
+    return value
+
+
+def _validate_predecessor_references(source_path: Path, revisions: Mapping[str, object]) -> None:
+    """Reject predecessor shapes that would make inherited locale rows unknowable."""
+    revision_ids = set(revisions)
+    for revision_id, raw_revision in revisions.items():
+        table = _raw_table(raw_revision)
+        if table is None:
+            raise RegistryLoadError(f"{source_path}: revision {revision_id!r} must be a table")
+        predecessor = table.get("predecessor")
+        if predecessor is None:
+            continue
+        if isinstance(predecessor, str):
+            if predecessor not in revision_ids:
+                raise RegistryLoadError(
+                    f"{source_path}: revision {revision_id!r} declares unknown predecessor {predecessor!r}",
+                )
+            continue
+        if isinstance(predecessor, Mapping) and set(predecessor) == {"none"}:
+            continue
+        raise RegistryLoadError(
+            f"{source_path}: revision {revision_id!r} predecessor must name a sibling or declare none",
+        )
+
+
+def _project_revision_locale_keys(
+    keys: set[str],
+    modelo_id: str,
+    revision_id: str,
+    revision: Mapping[str, object],
+    source_path: Path,
+) -> None:
+    """Project construct, casilla, and alias identities from one raw revision."""
+    constructs = _raw_array(revision, "constructs", f"{source_path}: revision {revision_id!r}")
+    seen_construct_ids: set[str] = set()
+    for index, raw_construct in enumerate(constructs):
+        subject = f"{source_path}: revision {revision_id!r} construct[{index}]"
+        construct = _raw_table(raw_construct)
+        if construct is None:
+            raise RegistryLoadError(f"{subject} must be a table")
+        construct_id = _required_identity(construct.get("id"), f"{subject}.id")
+        if construct_id in seen_construct_ids:
+            raise RegistryLoadError(f"{subject}: duplicate construct id {construct_id!r}")
+        seen_construct_ids.add(construct_id)
+        keys.add(construct_locale_key(modelo_id, revision_id, construct_id))
+
+    casillas = _raw_array(revision, "casillas", f"{source_path}: revision {revision_id!r}")
+    seen_casilla_ids: set[str] = set()
+    for index, raw_casilla in enumerate(casillas):
+        subject = f"{source_path}: revision {revision_id!r} casilla[{index}]"
+        casilla = _raw_table(raw_casilla)
+        if casilla is None:
+            raise RegistryLoadError(f"{subject} must be a table")
+        casilla_id = _required_identity(casilla.get("id"), f"{subject}.id")
+        if casilla_id in seen_casilla_ids:
+            raise RegistryLoadError(f"{subject}: duplicate casilla id {casilla_id!r}")
+        seen_casilla_ids.add(casilla_id)
+
+        localization_keys = [
+            casilla_occurrence_locale_key(modelo_id, revision_id, casilla_id, ModeloLocalizationFieldKind.LABEL),
+        ]
+        if "continuidad_id" in casilla:
+            continuidad_id = _required_identity(casilla["continuidad_id"], f"{subject}.continuidad_id")
+            localization_keys.append(
+                casilla_continuity_locale_key(modelo_id, continuidad_id, ModeloLocalizationFieldKind.LABEL),
+            )
+        for localization_key in localization_keys:
+            keys.add(localization_key)
+            keys.add(f"{localization_key.removesuffix('.label')}.help")
+
+        aliases = _raw_array(casilla, "aliases", subject)
+        for alias_index, raw_alias in enumerate(aliases):
+            if _raw_table(raw_alias) is None:
+                raise RegistryLoadError(f"{subject} alias[{alias_index}] must be a table")
+            keys.add(casilla_alias_locale_key(modelo_id, revision_id, casilla_id, str(alias_index)))
 
 
 def load_catalogue_file(path: Path) -> RegistryCatalogues:

@@ -15,3 +15,13 @@ updated_at = 2026-06-10
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Període mensual de octubre (codi 10)."
+
+[language.en]
+short_description = "October monthly period (code 10)."
+
+[language.hu]
+short_description = "októberi havi időszak (10-es kód)."
+

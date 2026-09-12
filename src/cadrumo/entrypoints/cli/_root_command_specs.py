@@ -234,7 +234,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_STATE_FREE,
-        handler=LazyBinding.available(DeferredTarget(".config._root_cli", "config_root", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".config.root_cli", "config_root", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("._config_help_payloads", "ConfigRootResult", __package__),

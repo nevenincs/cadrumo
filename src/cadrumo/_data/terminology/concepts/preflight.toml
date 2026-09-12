@@ -29,9 +29,18 @@ part_of_speech = "noun"
 
 [language.en]
 short_description = "A readiness check on the ledger for a period before you calculate a modelo."
+definition = "A ledger-availability check for a period. Before calculating a model, it reports rows missing a category, base amount, VAT rate, currency, or pro-rata reference so the person can correct the data before continuing."
+scope_note = "An internal concept in the application's search and calculation machinery, documented for the development RAG. It is not a taxpayer-facing tax term and therefore remains outside the glossary."
+
 
 [language.ca]
 short_description = "La comprovacio que el ledger esta complet per a un periode abans de calcular un model."
+definition = "Comprovació de disponibilitat del llibre major per a un període. Informa de les files a les quals falta una categoria, un import base, un tipus d'IVA, una divisa o una referència de prorrata abans de calcular un model, perquè la persona corregeixi les dades abans de continuar."
+scope_note = "Concepte intern de la maquinària de cerca i càlcul de l'aplicació; es documenta per al RAG de desenvolupament, no és un terme tributari adreçat al contribuent i per això queda fora del glossari."
+
 
 [language.hu]
 short_description = "A ledger készenléti ellenőrzése egy időszakra, mielőtt egy modellt számolnál."
+definition = "Egy időszak főkönyvi rendelkezésre állásának ellenőrzése. Modell számítása előtt jelzi azokat a sorokat, amelyekből hiányzik a kategória, az alapösszeg, az áfakulcs, a pénznem vagy az arányosítási hivatkozás, hogy az adatok javíthatók legyenek a folytatás előtt."
+scope_note = "Az alkalmazás keresési és számítási gépezetének belső fogalma, amelyet a fejlesztési RAG számára dokumentálunk. Nem adózóknak szóló adóügyi kifejezés, ezért kívül marad a szójegyzéken."
+

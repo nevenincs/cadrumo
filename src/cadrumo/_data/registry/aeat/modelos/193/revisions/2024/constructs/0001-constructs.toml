@@ -14,7 +14,6 @@ bindings = [
     "modelo-193-perceptor-row-percibido",
     "modelo-193-perceptor-row-retencion",
 ]
-relations = ["modelo-193-rel-123-base-anual", "modelo-193-rel-123-retenciones-anual"]
 extraction_profiles = ["modelo-193-declaracion-pdf"]
 live_cross_references = ["modelo-193-filed-declarations-read"]
 workbook_parity_refs = ["modelo-193-dr-pdf-2025"]

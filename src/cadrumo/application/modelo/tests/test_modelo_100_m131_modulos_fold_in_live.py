@@ -48,9 +48,8 @@ from ....domain.calculations.registry.tests.registry_observations import (
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ...calculations.observations_repository import CalculationObservationRepository
+from ...calculations.observations_repository import APP_FILING_SOURCE_KIND, CalculationObservationRepository
 from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
-from ..filed_revision_observation import APP_FILING_SOURCE_KIND
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -211,7 +210,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     return {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
-        if binding.id != "renta-2024-certificado-trabajo-retenciones"
+        if binding.id != "renta-certificado-trabajo-retenciones"
         if binding.source
         not in (
             "profile",

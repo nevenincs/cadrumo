@@ -153,7 +153,7 @@ class AuthSessionUnavailableError(CadrumoError):
 class SessionDeserializationError(AuthSessionUnavailableError):
     """Raised when a persisted session field cannot be deserialized to the expected type.
 
-    Replaces the bare :exc:`TypeError` raised by :func:`_session_metadata_datetime`
+    Replaces the bare :exc:`TypeError` raised by :func:`session_metadata_datetime`
     so callers catch a typed, registry-bound error that inherits from
     :class:`AuthSessionUnavailableError`.
     """
@@ -529,13 +529,13 @@ def _provider_neutral_session_metadata(raw: dict[str, object]) -> PersistedAuthS
         {
             "provider_kind": AuthProviderKind(str(raw["provider_kind"])),
             "identity_nif": str(raw["identity_nif"]),
-            "authenticated_at": _session_metadata_datetime(raw["authenticated_at"], field="authenticated_at"),
-            "idle_deadline": _session_metadata_datetime(raw["idle_deadline"], field="idle_deadline"),
+            "authenticated_at": session_metadata_datetime(raw["authenticated_at"], field="authenticated_at"),
+            "idle_deadline": session_metadata_datetime(raw["idle_deadline"], field="idle_deadline"),
         },
     )
 
 
-def _session_metadata_datetime(value: object, *, field: str) -> datetime:
+def session_metadata_datetime(value: object, *, field: str) -> datetime:
     if isinstance(value, datetime):
         return value
     if isinstance(value, str):

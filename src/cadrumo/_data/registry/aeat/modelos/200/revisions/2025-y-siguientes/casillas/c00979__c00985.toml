@@ -7,7 +7,6 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00980"
 number = "00980"
@@ -17,7 +16,6 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00981"
 number = "00981"
@@ -27,7 +25,6 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00982"
 number = "00982"
@@ -37,7 +34,6 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00983"
 number = "00983"
@@ -47,7 +43,6 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00984"
 number = "00984"
@@ -57,7 +52,6 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00985"
 number = "00985"
@@ -67,4 +61,3 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]

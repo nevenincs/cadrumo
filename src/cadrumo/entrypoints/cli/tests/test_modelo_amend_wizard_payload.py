@@ -17,7 +17,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
-from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
+from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ....domain.modelos.filing_record import ModeloRecordStatus
 from .._modelo_amend_wizard_payloads import WorkAmendWizardResult
 

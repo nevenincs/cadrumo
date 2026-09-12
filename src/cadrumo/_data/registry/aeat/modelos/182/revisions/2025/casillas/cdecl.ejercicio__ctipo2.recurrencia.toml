@@ -7,7 +7,6 @@ semantic_role = "filing_year"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-182-procedure"]
 
 [[revisions."2025".casillas]]
 id = "decl.tipo-declaracion"
@@ -18,7 +17,6 @@ semantic_role = "tipo_declaracion"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-182-procedure"]
 
 [[revisions."2025".casillas]]
 id = "tipo2.donante-nif"
@@ -29,7 +27,6 @@ semantic_role = "donante_nif"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-182-procedure"]
 
 [[revisions."2025".casillas]]
 id = "tipo2.donante-nombre"
@@ -40,7 +37,6 @@ semantic_role = "donante_nombre"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-182-procedure"]
 
 [[revisions."2025".casillas]]
 id = "tipo2.importe-donado"
@@ -51,7 +47,6 @@ semantic_role = "importe_donativo"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-182-procedure"]
 
 [[revisions."2025".casillas]]
 id = "tipo2.porcentaje-deduccion"
@@ -62,7 +57,6 @@ semantic_role = "porcentaje_deduccion"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-68.3", "orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-182-procedure"]
 
 [[revisions."2025".casillas]]
 id = "tipo2.recurrencia"
@@ -73,4 +67,3 @@ semantic_role = "donativo_recurrente"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-68.3", "orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-182-procedure"]

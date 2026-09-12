@@ -18,7 +18,6 @@ from typing import Any, cast
 import anyio
 import pytest
 
-from .._harness_tools import HARNESS_LOAD_TOOL
 from .._surface import (
     SURFACE_ENV_VAR,
     SurfaceMode,
@@ -26,8 +25,9 @@ from .._surface import (
     is_orientation_command,
     resolve_surface_mode,
 )
-from .._tools import build_tool_descriptors
-from ._session import connected_server_and_client_session as connect
+from ..harness_tools import HARNESS_LOAD_TOOL
+from ..tools import build_tool_descriptors
+from .session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -77,7 +77,7 @@ def test_advertised_descriptors_core_is_a_strict_orientation_subset_of_full() ->
 
 
 def test_built_server_advertises_core_by_default_and_full_on_opt_out() -> None:
-    from .._server import build_server
+    from ..server import build_server
 
     descriptors = build_tool_descriptors()
     always_on = {HARNESS_LOAD_TOOL, "search", "execute"}
@@ -111,7 +111,7 @@ def test_long_tail_verb_stays_callable_by_name_under_the_core_surface() -> None:
     # reachable by a direct call or the ``execute`` meta-tool - discovered, not
     # removed. An unknown name returns the ``unknown tool`` error; a known but
     # unadvertised name does not.
-    from .._server import build_server
+    from ..server import build_server
 
     descriptors = build_tool_descriptors()
     server = cast("Any", build_server(descriptors, persona=None, surface_mode=SurfaceMode.CORE))

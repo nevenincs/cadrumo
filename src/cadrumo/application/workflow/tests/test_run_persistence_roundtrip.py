@@ -43,11 +43,11 @@ from ....domain.deadlines.models import ObligationStatus
 from ....domain.submission.models import ModeloDraftStatus
 from ....tests.secure_sql import isolated_runtime_profile
 from ...operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from ..abort import WorkflowAbortReason
 from ..errors import WorkflowError
 from ..persistence import WorkflowRunRepository, load_run, save_run
 from ..run_models import (
     SiteHealthAlert,
-    WorkflowAbortReason,
     WorkflowDeadlineContextDetails,
     WorkflowDeadlineRecoveryFacts,
     WorkflowDraftNotReadyDetails,

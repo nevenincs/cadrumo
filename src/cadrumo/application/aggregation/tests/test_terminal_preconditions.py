@@ -13,7 +13,6 @@ from typing import override
 
 import pytest
 
-from ....core.aggregation import BindingSourceKind
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.period import Period
@@ -22,7 +21,7 @@ from ....domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     invoice_ledger_screen_binding_ids,
 )
-from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
@@ -411,13 +410,16 @@ def test_missing_retenciones_observations_has_an_exact_application_state_operato
             legal_refs=("ley-35-2006:art-99",),
             source_refs=("test-terminal-preconditions",),
             bindings=(
-                DataBindingDefinition(
+                BindingDefinition(
                     id="test-111-retenciones-binding",
-                    source=BindingSourceKind.RETENCIONES_AGGREGATION,
-                    selector={
-                        "target_casilla_id": "decl.total-perceptores",
-                        "fact": "perceptor_count_distinct",
+                    provider={
+                        "kind": "retenciones_aggregation",
+                        **{
+                            "target_casilla_id": "decl.total-perceptores",
+                            "fact": "perceptor_count_distinct",
+                        },
                     },
+                    value={"data_type": "money", "channel": "decimal"},
                     legal_refs=("ley-35-2006:art-99",),
                     source_refs=("test-terminal-preconditions",),
                 ),

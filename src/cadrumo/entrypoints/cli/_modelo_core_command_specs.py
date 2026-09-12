@@ -38,7 +38,7 @@ _CALCULATION_WRITE = ExecutionPolicySpec(
 _LANGUAGE = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
 _MODELO = ValueContract(
     DeferredTarget("builtins", "str"),
-    click_type=DeferredTarget("._common", "MODELO_CODE_CHOICE", __package__),
+    click_type=DeferredTarget(".common", "MODELO_CODE_CHOICE", __package__),
 )
 _AMENDMENT_KIND = ValueContract(
     DeferredTarget("...domain.modelos.calculation_revision_amendment", "CalculationRevisionAmendmentKind", __package__)

@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 165, certificats per a socis o partícips d'entitats de nova o recent creació"
+
+[language.en]
+short_description = "Modelo 165, certificates for partners or participants in newly or recently created entities"
+
+[language.hu]
+short_description = "165-ös modell: újonnan vagy nemrég alapított szervezetek tagjainak vagy résztvevőinek igazolásai"
+

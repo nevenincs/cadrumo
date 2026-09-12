@@ -21,7 +21,7 @@ from ...errors import (
     StorageValidationError,
 )
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
-from .._secure_object_records import SecureObjectRecord, SecureObjectUnreadable
+from ..secure_object_records import SecureObjectRecord, SecureObjectUnreadable
 from ..secure_objects import SecureObjectRepository
 from ._secure_objects_support import (
     _ephemeral_secure_repo,

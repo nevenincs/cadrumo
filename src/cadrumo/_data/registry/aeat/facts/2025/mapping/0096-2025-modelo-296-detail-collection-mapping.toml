@@ -1,0 +1,32 @@
+[fact]
+fact_id = "modelo-296-detail-collection-mapping"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-296-detail-collection-mapping:2024-01-01"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+source_refs = ["aeat-dr-296-2024"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-296-2024"
+required_text = ["%PDF"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "modelo", value = "296" },
+  { key = "revision", value = "2024-y-siguientes" },
+  { key = "modelo.296.projection.m296_perceptor.collection", value = "perceptor_rows" },
+  { key = "modelo.296.projection.m296_perceptor_intereses.collection", value = "perceptor_intereses_rows" },
+  { key = "modelo.296.projection.m296_anexo_pago.collection", value = "anexo_pago_rows" },
+  { key = "modelo.296.projection.m296_anexo_certificado.collection", value = "anexo_certificado_rows" },
+  { key = "detail.source", value = "selected_modelo_revision" },
+  { key = "export.source", value = "selected_modelo_revision" },
+  { key = "binding.source", value = "selected_modelo_revision" },
+  { key = "applicability.source", value = "selected_modelo_revision" },
+  { key = "legal_reference.source", value = "selected_registry_revision" },
+  { key = "fact_id.source", value = "selected_registry_revision" },
+]

@@ -25,7 +25,7 @@ See Also:
         Separate import boundary that creates current records with
         :class:`~ExternalEvidence`; this persistence helper
         deliberately creates local records without that payload.
-    :func:`~application.modelo._filed_revision_observation.persist_filed_revision_observation`:
+    :func:`~application.modelo.filed_revision_observation.persist_filed_revision_observation`:
         Projects filed casilla observations into non-official cross-period
         carry evidence.
     :class:`~adapters.persistence.profile.prorrata_register.ProrrataRegisterRepository`:
@@ -72,9 +72,11 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevisionState,
     CalculationSourceIssue,
     CalculationSourceRef,
+    derive_calculation_revision_id,
+)
+from ...domain.modelos.calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
     M303RegimenSimplificadoAnnualSummaryHandoff,
-    derive_calculation_revision_id,
 )
 from ...domain.modelos.filing_record import (
     ModeloRecord,
@@ -101,9 +103,9 @@ from ..calculations.observations_repository import (
 )
 from ..filing.retention import try_record_filing_retention_snapshot
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
-from ._m303_filing_evidence import m303_filing_evidence_failure
 from .action_errors import M303FilingEvidenceError
 from .filed_revision_observation import persist_filed_revision_observation, require_filing_result_disposition
+from .m303_filing_evidence import m303_filing_evidence_failure
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 2
 """Schema version for the bucket-event payload dict emitted by modelo actions."""
@@ -1066,7 +1068,7 @@ def persist_filed_revision(
 
     When ``calculation_observation_repository`` is supplied, the filed revision's
     observations are co-emitted with ``MODELO_FILED`` through
-    :func:`~application.modelo._filed_revision_observation.persist_filed_revision_observation`,
+    :func:`~application.modelo.filed_revision_observation.persist_filed_revision_observation`,
     so later calculations can carry them through the ``previous_filing`` resolver.
     The record is stamped with NON-official ``app_filing`` and never satisfies the
     cross-period clean-state filing gate; use

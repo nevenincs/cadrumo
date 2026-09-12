@@ -24,7 +24,8 @@ from ....domain.iva_compensation.reconciliation import (
     IvaCompensationDecisionReason,
     IvaCompensationReconciliationDecision,
 )
-from ....domain.modelos.calculation_revision import CalculationRevision, FilingInstanceEvidence
+from ....domain.modelos.calculation_revision import CalculationRevision
+from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

@@ -29,7 +29,7 @@ import typer
 import yaml
 
 from ....domain.categories.spending_category import SpendingCategory
-from .._ledger_rules_cli import validate_category_id as rules_validator
+from .._ledger_support import validate_category_id as rules_validator
 from .._ledger_support import validate_category_id as support_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

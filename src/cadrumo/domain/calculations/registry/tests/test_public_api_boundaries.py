@@ -146,7 +146,7 @@ def test_registry_parameter_resolution_lives_in_its_defining_module() -> None:
 
 
 def test_registry_package_marker_is_inert() -> None:
-    registry = importlib.import_module("cadrumo.domain.calculations.registry")
+    registry = importlib.import_module("..", package=__package__)
 
     assert registry.__all__ == []
     assert not any(hasattr(registry, name) for name in _LEDGER_BINDING_PUBLIC_NAMES)

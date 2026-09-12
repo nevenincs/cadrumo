@@ -2,7 +2,7 @@
 
 Exercises the real :func:`parse_decimal_amount` /
 :func:`parse_optional_decimal_amount` helpers in
-:mod:`cadrumo.entrypoints.cli._common` — the single owned validator the six
+:mod:`cadrumo.entrypoints.cli.common` — the single owned validator the six
 duplicated ledger ``_parse_decimal`` copies now delegate to. No mocks, no
 stubs, no skips: every case drives the real regex + ``is_finite()`` guard and
 asserts a concrete accept or a real ``typer.BadParameter`` refusal.
@@ -20,7 +20,7 @@ import pytest
 import typer
 
 from .._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
-from ._strict_cli_fixture_support import english_locale_fixture
+from ._english_locale_fixture import english_locale_fixture
 
 __all__ = ["english_locale_fixture"]
 

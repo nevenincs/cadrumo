@@ -1,7 +1,8 @@
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-190-111-trabajo-dinerario-importe-anual"
-source = "relation_prefill"
-selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["02"] }
+provider = { kind = "relation_prefill", relation_kind = "annual_summary", dependency_role = "periodic_to_annual_summary", source_modelo = "111", source_casilla_id = "02", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
@@ -12,8 +13,9 @@ required_text = ["Casilla 02. Total de las percepciones", "Percepción íntegra"
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-190-111-trabajo-especie-importe-anual"
-source = "relation_prefill"
-selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["05"] }
+provider = { kind = "relation_prefill", relation_kind = "annual_summary", dependency_role = "periodic_to_annual_summary", source_modelo = "111", source_casilla_id = "05", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
@@ -24,8 +26,9 @@ required_text = ["Casilla 02. Total de las percepciones", "Percepción íntegra"
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-190-111-actividades-dinerario-importe-anual"
-source = "relation_prefill"
-selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["08"] }
+provider = { kind = "relation_prefill", relation_kind = "annual_summary", dependency_role = "periodic_to_annual_summary", source_modelo = "111", source_casilla_id = "08", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
@@ -36,8 +39,9 @@ required_text = ["Casilla 02. Total de las percepciones", "Percepción íntegra"
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-190-111-actividades-especie-importe-anual"
-source = "relation_prefill"
-selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["11"] }
+provider = { kind = "relation_prefill", relation_kind = "annual_summary", dependency_role = "periodic_to_annual_summary", source_modelo = "111", source_casilla_id = "11", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
@@ -48,8 +52,9 @@ required_text = ["Casilla 02. Total de las percepciones", "Percepción íntegra"
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-190-111-premios-dinerario-importe-anual"
-source = "relation_prefill"
-selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["14"] }
+provider = { kind = "relation_prefill", relation_kind = "annual_summary", dependency_role = "periodic_to_annual_summary", source_modelo = "111", source_casilla_id = "14", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
@@ -60,8 +65,9 @@ required_text = ["Casilla 02. Total de las percepciones", "Percepción íntegra"
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-190-111-premios-especie-importe-anual"
-source = "relation_prefill"
-selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["17"] }
+provider = { kind = "relation_prefill", relation_kind = "annual_summary", dependency_role = "periodic_to_annual_summary", source_modelo = "111", source_casilla_id = "17", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
@@ -72,8 +78,9 @@ required_text = ["Casilla 02. Total de las percepciones", "Percepción íntegra"
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-190-111-ganancias-dinerario-importe-anual"
-source = "relation_prefill"
-selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["20"] }
+provider = { kind = "relation_prefill", relation_kind = "annual_summary", dependency_role = "periodic_to_annual_summary", source_modelo = "111", source_casilla_id = "20", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
@@ -84,8 +91,9 @@ required_text = ["Casilla 02. Total de las percepciones", "Percepción íntegra"
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-190-111-ganancias-especie-importe-anual"
-source = "relation_prefill"
-selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["23"] }
+provider = { kind = "relation_prefill", relation_kind = "annual_summary", dependency_role = "periodic_to_annual_summary", source_modelo = "111", source_casilla_id = "23", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
@@ -96,8 +104,9 @@ required_text = ["Casilla 02. Total de las percepciones", "Percepción íntegra"
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-190-111-derechos-imagen-importe-anual"
-source = "relation_prefill"
-selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["26"] }
+provider = { kind = "relation_prefill", relation_kind = "annual_summary", dependency_role = "periodic_to_annual_summary", source_modelo = "111", source_casilla_id = "26", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
@@ -108,8 +117,9 @@ required_text = ["Casilla 02. Total de las percepciones", "Percepción íntegra"
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-190-111-retenciones-anual"
-source = "relation_prefill"
-selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["28"] }
+provider = { kind = "relation_prefill", relation_kind = "annual_summary", dependency_role = "periodic_to_annual_summary", source_modelo = "111", source_casilla_id = "28", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]

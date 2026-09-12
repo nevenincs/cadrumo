@@ -15,3 +15,13 @@ updated_at = 2026-06-29
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Exportació assimilada amb tipus zero d'IVA"
+
+[language.en]
+short_description = "Assimilated export transaction taxed at zero VAT"
+
+[language.hu]
+short_description = "Exporttal azonos elbírálású, nulla kulcsú áfaügylet"
+

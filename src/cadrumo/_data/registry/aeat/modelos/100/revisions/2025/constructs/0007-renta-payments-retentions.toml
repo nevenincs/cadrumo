@@ -59,15 +59,6 @@ formulas = [
     "renta-pagos-fraccionados-ingresados",
     "renta-total-pagos-a-cuenta",
 ]
-relations = [
-    "renta-2025-rel-111-retenciones-trimestrales",
-    "renta-2025-rel-111-retenciones-mensuales",
-    "renta-2025-rel-123-retenciones-trimestrales",
-    "renta-2025-rel-130-pagos-fraccionados",
-    "renta-2025-rel-131-pagos-fraccionados",
-    "renta-2025-rel-190-retenciones-anuales",
-    "renta-2025-rel-193-retenciones-anuales",
-]
 dependency_classifications = [
     "renta-2025-dep-111",
     "renta-2025-dep-123",

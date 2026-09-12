@@ -34,8 +34,8 @@
 
 [[revisions."2011-2024".bindings]]
 id = "modelo-347-contraparte-row-nif"
-source = "m347_third_party_operation"
-selector = { fact = "row_field", row_field = "party_tax_id", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+provider = { kind = "m347_third_party_operation", fact = "row_field", row_field = "party_tax_id", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = [
     "orden-eha-3012-2008:art-1",
@@ -51,8 +51,8 @@ required_text = ["operaciones con terceras personas"]
 
 [[revisions."2011-2024".bindings]]
 id = "modelo-347-contraparte-row-nombre"
-source = "m347_third_party_operation"
-selector = { fact = "row_field", row_field = "party_legal_name", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+provider = { kind = "m347_third_party_operation", fact = "row_field", row_field = "party_legal_name", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = [
     "orden-eha-3012-2008:art-1",
@@ -68,8 +68,8 @@ required_text = ["operaciones con terceras personas"]
 
 [[revisions."2011-2024".bindings]]
 id = "modelo-347-contraparte-row-clave"
-source = "m347_third_party_operation"
-selector = { fact = "row_field", row_field = "clave", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+provider = { kind = "m347_third_party_operation", fact = "row_field", row_field = "clave", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = [
     "orden-eha-3012-2008:art-1",
@@ -83,8 +83,8 @@ required_text = ["operaciones con terceras personas"]
 
 [[revisions."2011-2024".bindings]]
 id = "modelo-347-contraparte-row-importe"
-source = "m347_third_party_operation"
-selector = { fact = "row_field", row_field = "importe_total", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+provider = { kind = "m347_third_party_operation", fact = "row_field", row_field = "importe_total", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+value = { data_type = "money", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = [
     "orden-eha-3012-2008:art-1",
@@ -98,8 +98,8 @@ required_text = ["operaciones con terceras personas"]
 
 [[revisions."2011-2024".bindings]]
 id = "modelo-347-contraparte-row-importe-q1"
-source = "m347_third_party_operation"
-selector = { fact = "row_field", row_field = "importe_q1", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+provider = { kind = "m347_third_party_operation", fact = "row_field", row_field = "importe_q1", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+value = { data_type = "money", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = [
     "orden-eha-3012-2008:art-1",
@@ -113,8 +113,8 @@ required_text = ["operaciones con terceras personas"]
 
 [[revisions."2011-2024".bindings]]
 id = "modelo-347-contraparte-row-importe-q2"
-source = "m347_third_party_operation"
-selector = { fact = "row_field", row_field = "importe_q2", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+provider = { kind = "m347_third_party_operation", fact = "row_field", row_field = "importe_q2", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+value = { data_type = "money", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = [
     "orden-eha-3012-2008:art-1",
@@ -128,8 +128,8 @@ required_text = ["operaciones con terceras personas"]
 
 [[revisions."2011-2024".bindings]]
 id = "modelo-347-contraparte-row-importe-q3"
-source = "m347_third_party_operation"
-selector = { fact = "row_field", row_field = "importe_q3", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+provider = { kind = "m347_third_party_operation", fact = "row_field", row_field = "importe_q3", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+value = { data_type = "money", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = [
     "orden-eha-3012-2008:art-1",
@@ -143,8 +143,8 @@ required_text = ["operaciones con terceras personas"]
 
 [[revisions."2011-2024".bindings]]
 id = "modelo-347-contraparte-row-importe-q4"
-source = "m347_third_party_operation"
-selector = { fact = "row_field", row_field = "importe_q4", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+provider = { kind = "m347_third_party_operation", fact = "row_field", row_field = "importe_q4", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+value = { data_type = "money", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = [
     "orden-eha-3012-2008:art-1",
@@ -158,8 +158,8 @@ required_text = ["operaciones con terceras personas"]
 
 [[revisions."2011-2024".bindings]]
 id = "modelo-347-contraparte-row-pais-codigo"
-source = "m347_third_party_operation"
-selector = { fact = "row_field", row_field = "country_code", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+provider = { kind = "m347_third_party_operation", fact = "row_field", row_field = "country_code", grouping = "contraparte_clave", claves = [], rectification_scope = "any" }
+value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = [
     "orden-eha-3012-2008:art-1",

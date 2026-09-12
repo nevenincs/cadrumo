@@ -56,9 +56,8 @@ from ....domain.calculations.registry.tests.registry_observations import (
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ...calculations.observations_repository import CalculationObservationRepository
+from ...calculations.observations_repository import APP_FILING_SOURCE_KIND, CalculationObservationRepository
 from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
-from ..filed_revision_observation import APP_FILING_SOURCE_KIND
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -86,7 +85,7 @@ _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id
 )
 _RELATION_PREFILL_SOURCE = "relation_prefill"
 _OPTIONAL_PAYEE_RETENCIONES_BINDINGS: frozenset[BindingId] = frozenset(
-    {"renta-2024-certificado-trabajo-retenciones"},
+    {"renta-certificado-trabajo-retenciones"},
 )
 _M130_PAGOS_BINDING_ID: BindingId = "renta-2024-modelo-130-pagos-fraccionados"
 _M130_PAGOS_RELATION_ID = "renta-2024-rel-130-pagos-fraccionados"

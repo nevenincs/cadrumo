@@ -7,7 +7,7 @@ their own module-level ``_BUCKET_ID`` again later, in assertions and collector
 calls, so a module that silently inherited another module's id would still
 pass while asserting against the wrong bucket. Each consuming module supplies
 its own id by overriding ``bucket_id`` (the shared scaffold in
-:mod:`cadrumo.tests._bucket_id_fixture`); its default raises so a module that
+:mod:`cadrumo.tests.bucket_id_fixture`); its default raises so a module that
 forgets the override fails loudly instead of inheriting one.
 """
 
@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from ....tests._bucket_id_fixture import bucket_id  # noqa: F401
+from ....tests.bucket_id_fixture import bucket_id  # noqa: F401
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile

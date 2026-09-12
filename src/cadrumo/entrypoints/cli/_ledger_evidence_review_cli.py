@@ -35,7 +35,7 @@ from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.iva.establishment import StatedCountryCodeStatus
-from ._common import bad, current_workflow_state, emit_envelope, resolve_notice_action, transaction_catalogue_repo
+from .common import bad, current_workflow_state, emit_envelope, resolve_notice_action, transaction_catalogue_repo
 from .ledger_business_payloads import (
     EvidenceReviewBlockerPayload,
     EvidenceReviewFieldPayload,

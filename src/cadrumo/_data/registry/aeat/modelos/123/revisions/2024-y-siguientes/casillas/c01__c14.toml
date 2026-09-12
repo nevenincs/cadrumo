@@ -13,7 +13,6 @@ semantic_role = "numero_rentas_dividendos"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "02"
@@ -27,7 +26,6 @@ semantic_role = "numero_rentas_resto"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "03"
@@ -42,7 +40,6 @@ required = false
 input_kind = "computed"
 formula = "modelo-123-total-rentas"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "04"
@@ -56,7 +53,6 @@ semantic_role = "base_rentas_dividendos"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "05"
@@ -70,7 +66,6 @@ semantic_role = "base_rentas_resto"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "06"
@@ -85,7 +80,6 @@ required = false
 input_kind = "computed"
 formula = "modelo-123-total-base"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "07"
@@ -100,7 +94,6 @@ required = false
 input_kind = "manual"
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90"], source_refs = ["aeat-dr-123-2024-v20"] }
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "08"
@@ -115,7 +108,6 @@ required = false
 input_kind = "manual"
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90"], source_refs = ["aeat-dr-123-2024-v20"] }
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "09"
@@ -126,12 +118,11 @@ number = "09"
 section = ["retenciones_ingresos_cuenta", "total"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"
-constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"] }
 required = false
 input_kind = "computed"
 formula = "modelo-123-total-retenciones"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "10"
@@ -145,7 +136,6 @@ semantic_role = "ingresos_ejercicios_anteriores"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "11"
@@ -159,7 +149,6 @@ semantic_role = "regularizacion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "12"
@@ -171,7 +160,6 @@ required = false
 input_kind = "computed"
 formula = "modelo-123-total-liquidacion"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "13"
@@ -185,7 +173,6 @@ semantic_role = "resultado_anteriores_autoliquidaciones"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "14"
@@ -196,10 +183,8 @@ number = "14"
 section = ["total_liquidacion"]
 data_type = "money"
 semantic_role = "cuota_a_ingresar"
-constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"] }
 required = false
 input_kind = "computed"
 formula = "modelo-123-resultado-ingresar"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
-source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
-

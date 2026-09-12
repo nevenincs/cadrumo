@@ -40,9 +40,8 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.money.rounding import round_to_cents
-
+from .....core.authority_grade import RegistryAuthorityGrade
+from .....core.money.rounding import round_to_cents
 from ..formula_runtime import calculate_registry_snapshot
 from ._modelo_131_modulos_engine_support import (
     _ALIMENTACION_647_1,

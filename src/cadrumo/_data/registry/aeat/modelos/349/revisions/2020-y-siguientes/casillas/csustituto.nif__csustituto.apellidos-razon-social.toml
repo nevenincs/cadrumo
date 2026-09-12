@@ -19,7 +19,6 @@ semantic_role = "intracomunitario_sustituto_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".casillas]]
 id = "sustituto.apellidos-razon-social"
@@ -30,4 +29,3 @@ semantic_role = "intracomunitario_sustituto_nombre"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current"]

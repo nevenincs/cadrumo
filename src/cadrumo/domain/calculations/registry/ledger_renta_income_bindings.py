@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from decimal import Decimal
-from typing import Literal, NamedTuple, Protocol
+from typing import TYPE_CHECKING, Literal, NamedTuple, Protocol
 
 from pydantic import BaseModel, model_validator
 
@@ -29,10 +29,12 @@ from .errors import RegistryValidationError
 from .ids import BindingId
 from .ledger_binding_selector_support import LedgerIncomeFactValue, casilla_id_set, mapping_lacks_fact
 from .quantity_screen_enrolment import assert_quantity_readers_cover_independent_facts, independent_quantity_facts
-from .schema import DataBindingDefinition, ModeloRevision
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition, ModeloRevision
 
 
-class _RentaLedgerIncomeSelector(BaseModel):
+class LedgerRentaIncomeProvider(BaseModel):
     """Validated form of a ledger_renta_income_aggregation binding selector.
 
     ``modelo`` names the declaration series the aggregation feeds: M130's
@@ -82,6 +84,8 @@ class _RentaLedgerIncomeSelector(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
+    kind: Literal[BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION] = BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
+
     modelo: Literal[Modelo.M130, Modelo.M100, Modelo.M131] = Modelo.M130
     target_casilla_id: CasillaId
     fact: LedgerIncomeFactValue
@@ -122,9 +126,9 @@ _RENTA_INCOME_CASILLAS_BY_MODELO: dict[Modelo, frozenset[CasillaId]] = {
 }
 
 
-def _renta_ledger_income_selector(binding: DataBindingDefinition) -> _RentaLedgerIncomeSelector:
+def _renta_ledger_income_selector(binding: BindingDefinition) -> LedgerRentaIncomeProvider:
     try:
-        return _RentaLedgerIncomeSelector.model_validate(_selector_as_dict(binding))
+        return LedgerRentaIncomeProvider.model_validate(_selector_as_dict(binding))
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed ledger_renta_income_aggregation selector: {exc}",
@@ -140,7 +144,7 @@ _RENTA_INCOME_SUPPORTED_FACTS: frozenset[str] = frozenset(
 )
 
 
-def validate_ledger_renta_income_aggregation_binding_definition(binding: DataBindingDefinition) -> None:
+def validate_ledger_renta_income_aggregation_binding_definition(binding: BindingDefinition) -> None:
     """Validate a ``ledger_renta_income_aggregation`` binding definition."""
     if binding.source != BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION:
         raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_renta_income_aggregation source")
@@ -210,7 +214,7 @@ class RentaIncomeObservationProtocol(Protocol):
 
 
 def _renta_income_build_matcher(
-    selector: _RentaLedgerIncomeSelector,
+    selector: LedgerRentaIncomeProvider,
 ) -> Callable[[RentaIncomeObservationProtocol], bool]:
     target_casilla_id = selector.target_casilla_id
 
@@ -222,7 +226,7 @@ def _renta_income_build_matcher(
 
 def _renta_income_aggregate(
     matched: Sequence[RentaIncomeObservationProtocol],
-    selector: _RentaLedgerIncomeSelector,
+    selector: LedgerRentaIncomeProvider,
 ) -> Decimal:
     if selector.fact == "ingresos_integros_sum":
         return sum(
@@ -515,15 +519,15 @@ def unrouted_ledger_renta_income_quantities(
 # any calculation runs.
 
 
-def validate_ledger_renta_income_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
+def validate_ledger_renta_income_aggregation_binding(binding: BindingDefinition) -> list[str]:
     """Validate a ``ledger_renta_income_aggregation`` binding at registry-build time.
 
-    Accumulating ``list[str]`` validator over :class:`_RentaLedgerIncomeSelector`;
+    Accumulating ``list[str]`` validator over :class:`LedgerRentaIncomeProvider`;
     runs the fact/aggregation-op invariant at build time through
     :func:`invariant_diagnostics`, whose raise-style body is
     :func:`validate_ledger_renta_income_aggregation_binding_definition`.
     """
-    failures = selector_against_model(binding, _RentaLedgerIncomeSelector)
+    failures = selector_against_model(binding, LedgerRentaIncomeProvider)
     if failures:
         return failures
     return invariant_diagnostics(
@@ -533,4 +537,4 @@ def validate_ledger_renta_income_aggregation_binding(binding: DataBindingDefinit
     )
 
 
-RentaLedgerIncomeSelector = _RentaLedgerIncomeSelector
+LedgerRentaIncomeProvider = LedgerRentaIncomeProvider

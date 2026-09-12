@@ -13,7 +13,7 @@ from ....filing_evidence import FilingEvidenceReference
 
 # Import concrete model classes only after the record bootstrap has completed.
 from .._anexo_d_records import InventoryAnexoDResult
-from .._closing_authority_records import (
+from ..closing_authority_records import (
     InventoryClosingAuthorityDecision,
     InventoryClosingAuthorityRecord,
     PriorAuthoritativeClosingLink,

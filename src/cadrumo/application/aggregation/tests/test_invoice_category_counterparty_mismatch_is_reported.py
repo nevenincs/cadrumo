@@ -42,13 +42,13 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepo
 from ....core.aggregation import IntracomOperationType
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.ledger_iva_bindings import structurally_unroutable_iva_base_categories
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ...invoices.catalogue_creation import build_catalogue_invoice
 from .._modelo_bindings_invoice_iva import (
     ScreenedInvoiceIva,
-    _claims_a_base_only_category,
     category_counterparty_mismatch_diagnostics,
     screened_invoice_iva_observations,
 )
@@ -225,5 +225,7 @@ def test_the_predicate_narrows_to_categories_that_had_a_casilla_to_reach() -> No
         iva_category=IvaCategory.DOMESTIC_EXEMPT,
     )
 
-    assert _claims_a_base_only_category(contradicted) is True
-    assert _claims_a_base_only_category(domestic) is False
+    revision = bundled_authority().snapshot("303", filing_year=_YEAR, period=_PERIOD).revision
+    unroutable = frozenset(structurally_unroutable_iva_base_categories(revision))
+    assert contradicted.iva_category not in unroutable
+    assert domestic.iva_category in unroutable

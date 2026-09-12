@@ -24,10 +24,10 @@ from openpyxl import load_workbook
 from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
+from .....core.external_constants import XLSX_EXTENSION
 from .....core.logging import get_logger
 from .....core.workbook import FORMULA_CELL_REFUSAL, first_formula_cell_column
 from .....domain.transactions.raw_transaction import SourceFormat
-from ._constants import XLSX_EXTENSION
 from .base import (
     FinancialProvider,
     FinancialValidationError,

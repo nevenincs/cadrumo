@@ -1,7 +1,7 @@
 """Modelo 145 local communication backend ownership tests.
 
 See Also:
-    :mod:`~application.modelo._m145_communication`
+    :mod:`~application.modelo.m145_communication`
         Registry-backed ownership contract under test.
     :class:`~application.modelo.M145CommunicationServiceContract`
         Immutable contract returned by the service builder.
@@ -18,8 +18,8 @@ from __future__ import annotations
 
 import pytest
 
-from .._m145_communication import (
-    M145_COMMUNICATION_MODELO,
+from ....core.modelo import Modelo
+from ..m145_communication import (
     M145_COMMUNICATION_PERIOD,
     M145_COMMUNICATION_SERVICE_OWNER,
     M145CommunicationAction,
@@ -33,7 +33,7 @@ def test_m145_communication_service_contract_is_backend_owned_and_registry_backe
     contract = build_m145_communication_service_contract()
 
     assert contract.service_owner == M145_COMMUNICATION_SERVICE_OWNER
-    assert contract.modelo == M145_COMMUNICATION_MODELO
+    assert contract.modelo == Modelo.M145.value
     assert contract.period_token == M145_COMMUNICATION_PERIOD
     assert contract.revision_id == "2012-01-31-y-siguientes"
     assert contract.surfaces == ("communication", "payer_delivery", "export")

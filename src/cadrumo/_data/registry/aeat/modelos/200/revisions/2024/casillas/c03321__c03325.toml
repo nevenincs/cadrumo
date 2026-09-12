@@ -9,7 +9,6 @@ semantic_role_cardinality_reason = "official Modelo 200 source separates operaci
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-1"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03322"
 number = "03322"
@@ -21,7 +20,6 @@ semantic_role_cardinality_reason = "official Modelo 200 source separates operaci
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-1"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03323"
 number = "03323"
@@ -33,7 +31,6 @@ semantic_role_cardinality_reason = "official Modelo 200 source separates operaci
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-1"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03324"
 number = "03324"
@@ -43,7 +40,6 @@ semantic_role = "is_correccion_operaciones_a_plazos_dt1_saldo_inicial"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-1"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03325"
 number = "03325"
@@ -53,4 +49,3 @@ semantic_role = "is_correccion_operaciones_a_plazos_dt1_saldo_final"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-1"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

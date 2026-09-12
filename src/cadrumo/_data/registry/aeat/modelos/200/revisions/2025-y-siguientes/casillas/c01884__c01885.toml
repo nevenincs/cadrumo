@@ -7,7 +7,6 @@ semantic_role = "is_correccion_libertad_amortizacion_vehiculos_saldo_inicial_net
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:da-18"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01885"
 number = "01885"
@@ -17,4 +16,3 @@ semantic_role = "is_correccion_libertad_amortizacion_vehiculos_permanente_dismin
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:da-18"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]

@@ -15,7 +15,8 @@ from ....core.config import Settings, override_settings
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
 from ...cli.main import app
-from .._common import (
+from ..command_suggestions import INVOCATION_REMAINDER_META_KEY
+from ..common import (
     RequestedCliLeaf,
     attach_cli_policy_refusal_projection,
     cli_policy_refusal_projection,
@@ -23,7 +24,6 @@ from .._common import (
     preserve_requested_cli_leaf,
     project_cli_policy_refusal,
 )
-from ..command_suggestions import INVOCATION_REMAINDER_META_KEY
 from ..errors import CliRefusedBoundaryError, suspend_error_boundary
 from .cli_runner import cadrumo_click_command
 

@@ -48,6 +48,12 @@ from .....domain.calculations.registry.export_parse import (
     ParsedExportFieldValue,
     parse_export_payload,
 )
+from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_AVAILABLE_CASILLA,
+    M303_COMPENSATION_GENERADA_CASILLA,
+    M303_COMPENSATION_POSTERIOR_CASILLA,
+    M303_COMPENSATION_RESULTADO_CASILLA,
+)
 from .....domain.calculations.registry.remote_state_guard import (
     RemoteStateGuardPolicy,
     remote_state_policy_from_cross_reference,
@@ -58,10 +64,7 @@ from .....domain.calculations.registry.schema_exports import ExportFieldDefiniti
 from .....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from .....domain.filing.reconciliation.errors import ReconciliationDeclaracionParseError
 from .....domain.iva_compensation.filed_derivation import (
-    M303_COMPENSATION_AVAILABLE_CASILLA,
-    M303_COMPENSATION_GENERADA_CASILLA,
-    M303_COMPENSATION_POSTERIOR_CASILLA,
-    M303_COMPENSATION_RESULTADO_CASILLA,
+    CompensationCasillaDeclarations,
     M303CompensationAvailableDerivation,
     derive_m303_compensation_available_from_casillas,
 )
@@ -795,7 +798,15 @@ def _with_derived_303_compensation_available_observation(
     # the common case and over-states the carry for a period the taxpayer had
     # refunded. Stated rather than defaulted, and stamped into the locator below
     # so an operator auditing the carry can see the assumption that produced it.
-    derivation = derive_m303_compensation_available_from_casillas(values, refunded=False)
+    derivation = derive_m303_compensation_available_from_casillas(
+        values,
+        declarations=CompensationCasillaDeclarations(
+            posterior=M303_COMPENSATION_POSTERIOR_CASILLA,
+            generated=M303_COMPENSATION_GENERADA_CASILLA,
+            result=M303_COMPENSATION_RESULTADO_CASILLA,
+        ),
+        refunded=False,
+    )
     if derivation is None:
         return observation
     source_artefact_kind, source_locator = _m303_compensation_source_metadata(

@@ -85,7 +85,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @33+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe pendiente de integración a inicio de período. Período de generación 2023. [01008]
 [[revisions."2024".casillas]]
@@ -97,7 +96,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @50+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe integrado en el periodo. Período de generación 2023 [01009]
 [[revisions."2024".casillas]]
@@ -109,7 +107,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @67+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe pendiente de integración a final de período. Período de generación 2023 [01010]
 [[revisions."2024".casillas]]
@@ -121,7 +118,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @84+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe original de bases imponibles negativas individuales no integradas. DA 19 LIS (**). Período de generación 2024(*). [01011]
 [[revisions."2024".casillas]]
@@ -133,7 +129,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @101+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe pendiente de integración a inicio de período. Período de generación 2024(*). [01012]
 [[revisions."2024".casillas]]
@@ -145,7 +140,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @118+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe integrado en el periodo. Período de generación 2024(*). [01013]
 [[revisions."2024".casillas]]
@@ -157,7 +151,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @135+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe pendiente de integración a final de período. Período de generación 2024(*) [01014]
 [[revisions."2024".casillas]]
@@ -169,7 +162,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @152+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe original de bases imponibles negativas individuales no integradas. DA 19 LIS (**). Período de generación 2024. [01015]
 [[revisions."2024".casillas]]
@@ -181,7 +173,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @169+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe pendiente de integración a inicio de período. Período de generación 2024. [01016]
 [[revisions."2024".casillas]]
@@ -193,7 +184,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @186+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe integrado en el periodo. Período de generación 2024. [01017]
 [[revisions."2024".casillas]]
@@ -205,7 +195,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @203+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe pendiente de integración a final de período. Período de generación 2024. [01018]
 [[revisions."2024".casillas]]
@@ -217,7 +206,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @220+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe original de bases imponibles negativas individuales no integradas. DA 19 LIS (**). Total [01019]
 [[revisions."2024".casillas]]
@@ -229,7 +217,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @237+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe pendiente de integración a inicio de período. Total. [01020]
 [[revisions."2024".casillas]]
@@ -241,7 +228,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @254+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe integrado en el periodo. Total. [01021]
 [[revisions."2024".casillas]]
@@ -253,7 +239,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @271+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen general. Importe pendiente de integración a final de período. Total [01022]
 [[revisions."2024".casillas]]
@@ -265,7 +250,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @288+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe original de bases imponibles negativas individuales no integradas. DA 19 LIS (**). Período de generación 2023. [01023]
 [[revisions."2024".casillas]]
@@ -277,7 +261,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @305+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe pendiente de integración a inicio de período. Período de generación 2023. [01024]
 [[revisions."2024".casillas]]
@@ -289,7 +272,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @322+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe integrado en el periodo. Período de generación 2023 [01025]
 [[revisions."2024".casillas]]
@@ -301,7 +283,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @339+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe pendiente de integración a final de período. Período de generación 2023 [01026]
 [[revisions."2024".casillas]]
@@ -313,7 +294,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @356+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe original de bases imponibles negativas individuales no integradas. DA 19 LIS (**). Período de generación 2024(*). [01027]
 [[revisions."2024".casillas]]
@@ -325,7 +305,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @373+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe pendiente de integración a inicio de período. Período de generación 2024(*). [01028]
 [[revisions."2024".casillas]]
@@ -337,7 +316,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @390+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe integrado en el periodo. Período de generación 2024(*) [01029]
 [[revisions."2024".casillas]]
@@ -349,7 +327,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @407+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe pendiente de integración a final de período. Período de generación 2024(*) [01030]
 [[revisions."2024".casillas]]
@@ -361,7 +338,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @424+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe original de bases imponibles negativas individuales no integradas. DA 19 LIS (**). Período de generación 2024. [01031]
 [[revisions."2024".casillas]]
@@ -373,7 +349,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @441+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe pendiente de integración a inicio de período. Período de generación 2024. [01032]
 [[revisions."2024".casillas]]
@@ -385,7 +360,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @458+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe integrado en el periodo. Período de generación 2024 [01033]
 [[revisions."2024".casillas]]
@@ -397,7 +371,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @475+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe pendiente de integración a final de período. Período de generación 2024 [01034]
 [[revisions."2024".casillas]]
@@ -409,7 +382,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @492+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe original de bases imponibles negativas individuales no integradas. DA 19 LIS (**). Total. [01035]
 [[revisions."2024".casillas]]
@@ -421,7 +393,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @509+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe pendiente de integración a inicio de período. Total. [01036]
 [[revisions."2024".casillas]]
@@ -433,7 +404,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @526+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe integrado en el periodo. Total [01935]
 [[revisions."2024".casillas]]
@@ -445,7 +415,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @543+17 N. Bases imponibles negativas individuales de las entidades del grupo fiscal (DA 19º LIS. Régimen especial de buques y empresas navieras de Canarias. Importe pendiente de integración a final de período. Total [01936]
 [[revisions."2024".casillas]]
@@ -457,4 +426,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

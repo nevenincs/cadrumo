@@ -18,8 +18,8 @@ from decimal import Decimal
 import pytest
 
 from .....domain.notifications.sancion import SancionLiquidacion
-from .._sancion import parse_sancion_document
 from ..errors import SancionArithmeticError, SancionParseError
+from ..sancion import parse_sancion_document
 
 pytestmark = [
     pytest.mark.unit,

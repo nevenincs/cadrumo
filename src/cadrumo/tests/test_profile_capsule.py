@@ -26,7 +26,7 @@ import pytest
 
 from ..application.user_profile.profile_record_repository import ProfileRecordRepository
 from ..domain.user_profile.values import ProfileSetupState, UserProfileRecord
-from .profile_capsule import seed_test_profile_record
+from .profile_capsule import MODELO_READY_PROFILE_FACTS, seed_test_profile_record
 from .secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -100,6 +100,4 @@ def test_a_profile_seeded_incomplete_is_left_incomplete(tmp_path: Path) -> None:
 
 def _complete_facts():
     """Return the fact set a completed profile carries, from a real seeding caller."""
-    from ..application.modelo.tests.test_work_unit_discard_refusal import _READY_PROFILE_FACTS
-
-    return _READY_PROFILE_FACTS
+    return MODELO_READY_PROFILE_FACTS

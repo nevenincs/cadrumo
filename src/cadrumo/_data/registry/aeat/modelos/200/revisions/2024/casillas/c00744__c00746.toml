@@ -7,7 +7,6 @@ semantic_role = "is_deduccion_dt24a1_periodificacion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "00745"
 number = "00745"
@@ -17,7 +16,6 @@ semantic_role = "is_deduccion_dt24a1_periodificacion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "00746"
 number = "00746"
@@ -27,4 +25,3 @@ semantic_role = "is_deduccion_dt24a1_periodificacion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

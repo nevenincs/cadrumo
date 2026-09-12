@@ -23,8 +23,8 @@ from typing import TYPE_CHECKING
 import typer
 
 from ....core.model_catalogue import ModelRole
-from .._common import emit_envelope, resolve_cli_precondition_action
-from ._provision_payloads import (
+from ..common import emit_envelope, resolve_cli_precondition_action
+from .provision_payloads import (
     ProvisionContentionPayload,
     ProvisionModelPayload,
     ProvisionPullResult,
@@ -43,7 +43,7 @@ def _contention_payload(snapshot: object | None) -> ProvisionContentionPayload |
     """Project a contention verdict onto its payload, preserving the cause set."""
     if snapshot is None:
         return None
-    from ....application.provisioning import ContentionSnapshot
+    from ....application.provisioning_runtime import ContentionSnapshot
 
     if not isinstance(snapshot, ContentionSnapshot):  # pragma: no cover - defensive
         return None
@@ -179,10 +179,9 @@ def _provision_result_lines(result: object) -> tuple[str, ...]:
 def _emit_provision_report(ctx: typer.Context) -> None:
     """Measure hardware, select a model per role, and emit the provisioning report."""
     from ....application.provisioning import (
-        assess_model_load_contention,
         probe_hardware_profile,
-        read_runtime_residents,
     )
+    from ....application.provisioning_runtime import assess_model_load_contention, read_runtime_residents
 
     profile = probe_hardware_profile()
     residents = read_runtime_residents()
@@ -220,7 +219,7 @@ def _emit_provision_report(ctx: typer.Context) -> None:
 
 def _emit_provision_pull(ctx: typer.Context, *, model: str | None, role: ModelRole | None) -> None:
     """Fetch the resolved model and emit the pull envelope, exiting 2 when nothing pulled."""
-    from ....application.provisioning import pull_runtime_model
+    from ....application.provisioning_runtime import pull_runtime_model
 
     selection, target, requirement = _resolve_role_model(role, model)
     if target is None or requirement is None:
@@ -255,7 +254,7 @@ def _emit_provision_pull(ctx: typer.Context, *, model: str | None, role: ModelRo
 
 def _emit_provision_verify(ctx: typer.Context, *, model: str | None, role: ModelRole | None) -> None:
     """Verify the resolved model is ready and emit the envelope, exiting 2 when it is not."""
-    from ....application.provisioning import verify_model_ready
+    from ....application.provisioning_runtime import verify_model_ready
 
     selection, target, requirement = _resolve_role_model(role, model)
     if target is None or requirement is None:

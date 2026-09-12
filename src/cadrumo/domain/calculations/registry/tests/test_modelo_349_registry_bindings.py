@@ -17,7 +17,7 @@ from ..invoice_bindings import (
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
-from ..schema import DataBindingDefinition
+from ..schema import BindingDefinition
 from ..schema_input_kind import InputKind
 from ._modelo_349_registry_support import (
     _DECL_IMPORTE_OPERACIONES_CASILLA,
@@ -33,19 +33,19 @@ from ._modelo_349_registry_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _selector(binding: DataBindingDefinition) -> dict[str, Any]:
+def _selector(binding: BindingDefinition) -> dict[str, Any]:
     return selector_as_dict(binding)
 
 
 def test_committed_modelo_349_declares_invoice_source_bindings_for_declarant_summary() -> None:
     revision = _modelo_349_revision()
 
-    collectible_bindings: dict[str, DataBindingDefinition] = {
+    collectible_bindings: dict[str, BindingDefinition] = {
         b.id: b
         for b in revision.bindings
         if b.source == "collectible_invoice" and b.aggregation is not None and b.aggregation.op != "rows"
     }
-    payable_bindings: dict[str, DataBindingDefinition] = {
+    payable_bindings: dict[str, BindingDefinition] = {
         b.id: b
         for b in revision.bindings
         if b.source == "payable_invoice" and b.aggregation is not None and b.aggregation.op != "rows"
@@ -308,12 +308,12 @@ def test_committed_modelo_349_declarant_summary_casillas_are_bound_to_invoice_bi
 def test_committed_modelo_349_declares_operador_and_rectificacion_row_bindings() -> None:
     revision = _modelo_349_revision()
 
-    row_bindings: dict[str, DataBindingDefinition] = {
+    row_bindings: dict[str, BindingDefinition] = {
         b.id: b
         for b in revision.bindings
         if b.source == "collectible_invoice" and b.aggregation is not None and b.aggregation.op == "rows"
     }
-    payable_row_bindings: dict[str, DataBindingDefinition] = {
+    payable_row_bindings: dict[str, BindingDefinition] = {
         b.id: b
         for b in revision.bindings
         if b.source == "payable_invoice" and b.aggregation is not None and b.aggregation.op == "rows"

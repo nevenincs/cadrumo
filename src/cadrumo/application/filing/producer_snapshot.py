@@ -29,8 +29,8 @@ from ...domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionRegularizacionParameters,
 )
 from ...domain.deadlines.models import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
-from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind, FilingInstanceEvidence
 from ...domain.modelos.calculation_revision_amendment import (
+    CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
     m303_rectificativa_motive_is_applicable,
 )
@@ -40,7 +40,10 @@ from ...domain.modelos.calculation_revision_m303_evidence import (
     M303InsolvencyFilingSubtype,
     M303RegimenSimplificadoCalculationResult,
 )
-from ...domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
+from ...domain.modelos.calculation_revision_m303_handoff import (
+    FilingInstanceEvidence,
+    M303RegimenSimplificadoFilingEvidence,
+)
 from ...domain.prorrata_register.register import ProrrataRegister
 from ..aggregation.iva_ledger import (
     IvaDifferentiatedDeductionContribution,

@@ -9,7 +9,6 @@ semantic_role_cardinality_reason = "Modelo 136 identifies one declarant per auto
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-70-2013:art-5", "orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".casillas]]
 id = "declarante-nombre"
@@ -20,7 +19,6 @@ semantic_role = "m136_declarante_nombre"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-70-2013:art-5", "orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".casillas]]
 id = "fecha-cobro-premio"
@@ -31,7 +29,6 @@ semantic_role = "m136_fecha_cobro_premio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".casillas]]
 id = "ejercicio-declaracion"
@@ -44,7 +41,6 @@ semantic_role_cardinality_reason = "Modelo 136 carries one exercise field per qu
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-70-2013:art-11", "orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".casillas]]
 id = "periodo-declaracion"
@@ -68,7 +64,6 @@ semantic_role = "m136_provincia_residencia_irpf"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".casillas]]
 id = "organizador-denominacion"
@@ -79,7 +74,6 @@ semantic_role = "m136_organizador_denominacion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".casillas]]
 id = "organizador-pais"
@@ -90,7 +84,6 @@ semantic_role = "m136_organizador_pais"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".casillas]]
 id = "organizador-codigo-pais"
@@ -101,7 +94,6 @@ semantic_role = "m136_organizador_codigo_pais"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".casillas]]
 id = "loteria-apuesta-denominacion"
@@ -112,7 +104,6 @@ semantic_role = "m136_loteria_apuesta_denominacion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".casillas]]
 id = "fecha-celebracion"
@@ -123,7 +114,6 @@ semantic_role = "m136_fecha_celebracion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".casillas]]
 id = "precio-unitario"
@@ -134,7 +124,6 @@ semantic_role = "m136_precio_unitario"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".casillas]]
 id = "01"
@@ -145,7 +134,6 @@ semantic_role = "m136_importe_premio_total"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".casillas]]
 id = "02"
@@ -156,7 +144,6 @@ semantic_role = "m136_importe_premio_declarante"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".casillas]]
 id = "03"
@@ -202,7 +189,6 @@ semantic_role = "m136_resultados_anteriores_mismo_premio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".casillas]]
 id = "07"
@@ -210,12 +196,11 @@ number = "07"
 section = ["liquidacion", "resultado"]
 data_type = "money"
 semantic_role = "cuota_a_ingresar"
-constraints = { sign = "non_negative", legal_refs = ["orden-hap-70-2013:art-11", "orden-hac-763-2018:art-tercero"], source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-hap-70-2013:art-11", "orden-hac-763-2018:art-tercero"] }
 required = false
 input_kind = "computed"
 formula = "modelo-136-resultado-ingresar"
 legal_refs = ["orden-hap-70-2013:art-11", "orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".casillas]]
 id = "autoliquidacion-complementaria"
@@ -226,7 +211,6 @@ semantic_role = "m136_autoliquidacion_complementaria"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".casillas]]
 id = "justificante-anterior"
@@ -237,7 +221,6 @@ semantic_role = "m136_justificante_anterior"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".casillas]]
 id = "09"
@@ -245,11 +228,10 @@ number = "09"
 section = ["ingreso"]
 data_type = "money"
 semantic_role = "m136_importe_ingresado"
-constraints = { sign = "non_negative", legal_refs = ["orden-hap-70-2013:art-11", "orden-hac-763-2018:art-tercero"], source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-hap-70-2013:art-11", "orden-hac-763-2018:art-tercero"] }
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-70-2013:art-11", "orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".casillas]]
 id = "forma-pago"
@@ -257,11 +239,10 @@ number = "ingreso.forma-pago"
 section = ["ingreso"]
 data_type = "text"
 semantic_role = "m136_forma_pago"
-constraints = { enum = ["adeudo_en_cuenta", "efectivo", "domiciliacion_bancaria"], legal_refs = ["orden-hap-70-2013:art-12", "orden-hac-763-2018:art-tercero"], source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"] }
+constraints = { enum = ["adeudo_en_cuenta", "efectivo", "domiciliacion_bancaria"], legal_refs = ["orden-hap-70-2013:art-12", "orden-hac-763-2018:art-tercero"] }
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-70-2013:art-12", "orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".casillas]]
 id = "iban"
@@ -272,5 +253,3 @@ semantic_role = "m136_codigo_iban"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-70-2013:art-12", "orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
-

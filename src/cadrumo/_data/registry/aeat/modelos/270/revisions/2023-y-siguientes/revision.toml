@@ -1,4 +1,7 @@
 [revisions."2023-y-siguientes"]
+predecessor = "2013-2022"
+casilla_source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+reviewed_against = "2013-2022"
 authority_grade = "applicability"
 # Modelo 270 declaración informativa, approved by orden-hap-2368-2013 art 1
 # with its plazo grounded verbatim in orden-hap-2368-2013 art 3.
@@ -43,19 +46,3 @@ captured 2026-08-26, which still publish the 2023 design as CURRENT -- AEAT reis
 for modelo 347 under this same orden and did NOT for modelo 270. Its df unica applies the \
 orden "por primera vez ... al ejercicio 2025 y siguientes", so 2025 is governed here."""
 reviewed_at = 2026-08-30
-
-[revisions."2023-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = """
-The predecessor is the 2013--2022 epoch. Its Type 1 slot movement preserves each \
-casilla identity, so no renumbering, split, merge, or retirement transition exists."""
-legal_refs = [
-    "orden-hap-2368-2013:art-1",
-    "orden-hap-2368-2013:art-3",
-    "orden-hfp-1286-2023:art-2",
-    "orden-hfp-1286-2023:df-unica",
-    "ley-58-2003:art-93",
-]
-source_refs = [
-    "enrolled-modelo-270-procedure",
-    "aeat-dr-270-2023",
-]

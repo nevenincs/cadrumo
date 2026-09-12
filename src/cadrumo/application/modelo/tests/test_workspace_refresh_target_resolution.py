@@ -22,6 +22,7 @@ from ....core.operations import OperationEffect, OperationLifecycle, OperationTe
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.work_unit import derive_work_unit_id
+from ...operations.capabilities import OperationRequestStoragePolicy
 from ...operations.frontend_requests import (
     OperationWorkspaceRefreshTargetRefusalCode,
     OperationWorkspaceRefreshTargetRefusalV1,
@@ -33,7 +34,7 @@ from ...operations.persistence.events import OperationPhaseEvent, OperationTermi
 from ...operations.persistence.journal import OperationPersistedSnapshot
 from ...operations.persistence.leases import OperationOwnerLease, operation_conflict_scope_reference
 from ...operations.projection_services import OperationWorkspaceRefreshTargetService
-from ...operations.registry import OperationRegistry, OperationRequestStoragePolicy
+from ...operations.registry import OperationRegistry
 from ..operation_definitions import (
     MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
     MODELO_WORKSPACE_REFRESH_TARGET_SCHEMA_SUFFIX,

@@ -2051,6 +2051,50 @@ legal_refs = [
 ]
 
 [[sections.fields]]
+key = "exemption_path_rebeca"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Indica que la renta del trabajador del mar se declara por el itinerario de exención REBECA del artículo 75 de la Ley 19/1994. La condición se resuelve a partir de la clasificación marítima y no sustituye la comprobación de los requisitos del buque."
+model_selectors = ["maritime_worker.exemption_path_rebeca"]
+legal_refs = ["ley-19-1994:art-75"]
+
+[[sections.fields]]
+key = "gross_navigation_income"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Ingresos íntegros del trabajo personal devengados con ocasión de la navegación, base de la exención REBECA cuando el itinerario marítimo resulta aplicable."
+minimum = "0"
+model_selectors = ["maritime_worker.gross_navigation_income"]
+legal_refs = ["ley-19-1994:art-75"]
+
+[[sections.fields]]
+key = "annual_salary"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Retribuciones íntegras anuales del trabajo utilizadas para prorratear la exención del artículo 7.p) por los días efectivamente trabajados fuera de España."
+minimum = "0"
+model_selectors = ["maritime_worker.annual_salary"]
+legal_refs = ["ley-35-2006:art-7"]
+
+[[sections.fields]]
+key = "qualifying_days"
+type = "integer"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Número de días del ejercicio en los que el trabajo se realizó efectivamente fuera de España para el cálculo prorrateado de la exención del artículo 7.p)."
+minimum = "0"
+maximum = "365"
+model_selectors = ["maritime_worker.qualifying_days"]
+legal_refs = ["ley-35-2006:art-7"]
+
+[[sections.fields]]
 key = "retmar_registered"
 type = "boolean"
 required = false

@@ -38,10 +38,10 @@ PROFILE_INVENTORY_COMMAND_SPECS = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(_OUTPUT_LANGUAGE_OPTION,),
         policy=PROFILE_READ,
-        handler=LazyBinding.available(DeferredTarget("._profile_list_cli", "config_list", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".profile_list_cli", "config_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._profile_list_payloads", "ConfigListResult", __package__),
+            target=DeferredTarget(".profile_list_payloads", "ConfigListResult", __package__),
             identity="config.profile.list",
         ),
     ),
@@ -55,7 +55,7 @@ PROFILE_INVENTORY_COMMAND_SPECS = (
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(_OUTPUT_LANGUAGE_OPTION,),
         policy=CALCULATION_READ,
-        handler=LazyBinding.available(DeferredTarget("._profile_status_cli", "config_status", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".profile_status_cli", "config_status", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("..config_payloads", "ConfigStatusResult", __package__),

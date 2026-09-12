@@ -25,7 +25,8 @@ from ....application.ledger.workspace import (
     LedgerWorkspaceEntryRefV1,
 )
 from ....application.operator_actions.models import ActionReference
-from ....core.identity import InvoiceId, TransactionId
+from ....core.identity.hex_ids import InvoiceId
+from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG
 
 type LedgerDestinationIdV1 = Literal[

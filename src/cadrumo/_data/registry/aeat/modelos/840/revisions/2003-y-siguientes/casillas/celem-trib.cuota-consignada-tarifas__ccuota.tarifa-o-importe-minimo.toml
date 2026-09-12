@@ -37,8 +37,6 @@ data_type = "text"
 semantic_role = "elem_trib_cuota_consignada_tarifas"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @560+13, type_code An. A) Suma de elementos tributarios del grupo o epigrafe. [85].
 # Reservado: cumplimentado por la Administracion.
@@ -50,8 +48,6 @@ data_type = "text"
 semantic_role = "elem_trib_grupo_epigrafe_suma"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @850+7, type_code Num. C) Suma de Total. [87].
 [[revisions."2003-y-siguientes".casillas]]
@@ -62,8 +58,6 @@ data_type = "integer"
 semantic_role = "elem_trib_municipal_suma_total"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @857+7, type_code Num. C) Suma de Rectificada. [88].
 [[revisions."2003-y-siguientes".casillas]]
@@ -74,8 +68,6 @@ data_type = "integer"
 semantic_role = "elem_trib_municipal_suma_rectificada"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @864+7, type_code Num. C) Suma de Computable. [89].
 [[revisions."2003-y-siguientes".casillas]]
@@ -86,8 +78,6 @@ data_type = "integer"
 semantic_role = "elem_trib_municipal_suma_computable"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @871+5, type_code Num. C) Superficie deducible. [90].
 [[revisions."2003-y-siguientes".casillas]]
@@ -98,8 +88,6 @@ data_type = "integer"
 semantic_role = "elem_trib_municipal_superficie_deducible"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @876+7, type_code Num. C) Superficie computable. [91].
 [[revisions."2003-y-siguientes".casillas]]
@@ -110,8 +98,6 @@ data_type = "integer"
 semantic_role = "elem_trib_municipal_superficie_computable"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @883+13, type_code An. C) Valor elemento tributario. [92].
 # Reservado: cumplimentado por la Administracion.
@@ -123,8 +109,6 @@ data_type = "text"
 semantic_role = "elem_trib_municipal_valor_elemento"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @896+5, type_code An. C) Coeficiente corrector. [93].
 # Reservado: cumplimentado por la Administracion.
@@ -136,8 +120,6 @@ data_type = "text"
 semantic_role = "elem_trib_municipal_coeficiente_corrector"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @901+13, type_code An. C) Cuota elemento tributario. [94].
 # Reservado: cumplimentado por la Administracion.
@@ -149,8 +131,6 @@ data_type = "text"
 semantic_role = "elem_trib_municipal_cuota_elemento"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @914+5, type_code Num. D) Locales, numero de locales. [95].
 [[revisions."2003-y-siguientes".casillas]]
@@ -161,8 +141,6 @@ data_type = "integer"
 semantic_role = "elem_trib_provincial_nacional_numero"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @919+8, type_code Num. D) Locales, Total. [96].
 [[revisions."2003-y-siguientes".casillas]]
@@ -173,8 +151,6 @@ data_type = "integer"
 semantic_role = "elem_trib_provincial_nacional_total"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @927+8, type_code Num. D) Locales, Rectificada. [97].
 [[revisions."2003-y-siguientes".casillas]]
@@ -185,8 +161,6 @@ data_type = "integer"
 semantic_role = "elem_trib_provincial_nacional_rectificada"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @935+8, type_code Num. D) Locales, Computable. [98].
 [[revisions."2003-y-siguientes".casillas]]
@@ -197,8 +171,6 @@ data_type = "integer"
 semantic_role = "elem_trib_provincial_nacional_computable"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @943+13, type_code An. D) Locales, Cuota elemento tributario. [99].
 # Reservado: cumplimentado por la Administracion.
@@ -210,8 +182,6 @@ data_type = "text"
 semantic_role = "elem_trib_provincial_nacional_cuota_elemento"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @956+13, type_code An. Cuota antes de bonificaciones o incrementos. [100].
 # Reservado: cumplimentado por la Administracion.
@@ -223,8 +193,6 @@ data_type = "text"
 semantic_role = "cuota_antes_bonificaciones_incrementos"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @969+5, type_code An. Bonificacion. [101].
 # Reservado: cumplimentado por la Administracion.
@@ -236,8 +204,6 @@ data_type = "text"
 semantic_role = "cuota_bonificacion_clave"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @974+13, type_code An. Bonificacion, porcentaje sobre. [102].
 # Reservado: cumplimentado por la Administracion.
@@ -249,8 +215,6 @@ data_type = "text"
 semantic_role = "cuota_bonificacion_porcentaje"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @987+13, type_code An. Bonificacion, cuota. [103].
 # Reservado: cumplimentado por la Administracion.
@@ -262,8 +226,6 @@ data_type = "text"
 semantic_role = "cuota_bonificacion_importe"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @1000+5, type_code An. Incremento. [104].
 # Reservado: cumplimentado por la Administracion.
@@ -275,8 +237,6 @@ data_type = "text"
 semantic_role = "cuota_incremento_clave"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @1005+13, type_code An. Incremento, porcentaje sobre. [105].
 # Reservado: cumplimentado por la Administracion.
@@ -288,8 +248,6 @@ data_type = "text"
 semantic_role = "cuota_incremento_porcentaje"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @1018+13, type_code An. Incremento, cuota. [106].
 # Reservado: cumplimentado por la Administracion.
@@ -301,8 +259,6 @@ data_type = "text"
 semantic_role = "cuota_incremento_importe"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @1031+13, type_code An. Cuota despues de bonificaciones o incrementos. [107].
 # Reservado: cumplimentado por la Administracion.
@@ -314,8 +270,6 @@ data_type = "text"
 semantic_role = "cuota_despues_bonificaciones_incrementos"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @1057+13, type_code An. Cuota de tarifa o importe minimo. [108].
 # Reservado: cumplimentado por la Administracion.
@@ -327,5 +281,3 @@ data_type = "text"
 semantic_role = "cuota_tarifa_o_importe_minimo"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]

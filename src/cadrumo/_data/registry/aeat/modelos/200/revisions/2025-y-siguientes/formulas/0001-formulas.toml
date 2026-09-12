@@ -433,8 +433,8 @@ target_casilla_id = "DP200014B:00611"
 expression = { op = "subtract", args = [
     { casilla_id = "DP200014B:00599" },
     { op = "add", args = [
-        { relation = "modelo-200-2024-rel-202-pagos-fraccionados" },
-        { relation = "modelo-200-2024-rel-202-pagos-fraccionados-40-2" },
+        { binding = "modelo-200-pagos-fraccionados-anuales" },
+        { binding = "modelo-200-pagos-fraccionados-anuales-40-2" },
     ] },
 ] }
 rounding = "money-2"

@@ -22,7 +22,7 @@ from ......tests.master_key import EphemeralMasterKeyProvider
 from ...crypto.encrypted_columns import secure_object_key_digest
 from ...errors import SecureObjectRevisionConflictError
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
-from .._secure_object_records import SecureObjectDeletion
+from ..secure_object_records import SecureObjectDeletion
 from ..secure_objects import SecureObjectRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

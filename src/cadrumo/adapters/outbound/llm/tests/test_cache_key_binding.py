@@ -23,7 +23,8 @@ from pathlib import Path
 import pytest
 
 from .....core.config_support import LLMProvider
-from ..cache import _CACHE_NAMESPACE, LLMCache
+from ....persistence.storage.secure_object_namespaces import LLM_CACHE_NAMESPACE
+from ..cache import LLMCache
 from ..errors import LLMCacheError
 from ..models import LLMRequest, LLMResponse
 from ._engine_binding_fixtures import _ENGINE_HOLDER, _bind_engine  # noqa: F401
@@ -84,7 +85,7 @@ def _row_payload(model: str) -> bytes:
 
     with session_scope(_repository_engine()) as session:
         for row in session.execute(
-            select(SecureObjectRow).where(SecureObjectRow.namespace == _CACHE_NAMESPACE),
+            select(SecureObjectRow).where(SecureObjectRow.namespace == LLM_CACHE_NAMESPACE.namespace),
         ).scalars():
             aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
             plaintext = decrypt_secure_object_payload(bytes(row.payload), associated_data=aad)
@@ -108,7 +109,7 @@ def _substitute_row(*, victim_model: str, donor_model: str) -> None:
     donor_plaintext = _row_payload(donor_model)
     with session_scope(_repository_engine()) as session:
         for row in session.execute(
-            select(SecureObjectRow).where(SecureObjectRow.namespace == _CACHE_NAMESPACE),
+            select(SecureObjectRow).where(SecureObjectRow.namespace == LLM_CACHE_NAMESPACE.namespace),
         ).scalars():
             aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
             plaintext = decrypt_secure_object_payload(bytes(row.payload), associated_data=aad)

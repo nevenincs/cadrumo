@@ -189,7 +189,7 @@ def list_auth_diagnostics() -> AuthDiagnosticListReport:
     """
     rows = tuple(
         sorted(
-            (_summary_from_payload(_payload(record.payload)) for record in _diagnostic_records()),
+            (_summary_from_payload(diagnostic_payload(record.payload)) for record in _diagnostic_records()),
             key=lambda row: row.captured_at,
             reverse=True,
         ),
@@ -212,7 +212,7 @@ def load_auth_diagnostic(diagnostic_id: str) -> AuthDiagnosticDetail | None:
     )
     if record is None:
         return None
-    payload = _payload(record.payload)
+    payload = diagnostic_payload(record.payload)
     summary = _summary_from_payload(payload)
     html = payload.html
     excerpt = None
@@ -265,7 +265,7 @@ def record_auth_diagnostic_phone_state(
     )
     if record is None:
         return None
-    payload = _payload(record.payload)
+    payload = diagnostic_payload(record.payload)
     reported_at = now()
     updated = payload.model_copy(
         update={
@@ -302,7 +302,7 @@ def _secure_objects() -> SecureObjectRepository:
     return secure_object_repository_for_active_bucket()
 
 
-def _payload(raw: bytes) -> _DiagnosticPayload:
+def diagnostic_payload(raw: bytes) -> _DiagnosticPayload:
     """Deserialize an encrypted auth diagnostic blob into a typed payload envelope."""
     data = json.loads(raw.decode(UTF_8_ENCODING))
     if not isinstance(data, dict):

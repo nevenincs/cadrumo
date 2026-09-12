@@ -29,9 +29,10 @@ from typing import Any, cast
 import pytest
 
 from ....core.errors.severity import BaseSeverity
+from ..abort import WorkflowAbortReason
 from ..engine import WorkflowEngine
 from ..errors import WorkflowAbortSignalError
-from ..run_models import WorkflowAbortReason, WorkflowStage, WorkflowStep
+from ..run_models import WorkflowStage, WorkflowStep
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

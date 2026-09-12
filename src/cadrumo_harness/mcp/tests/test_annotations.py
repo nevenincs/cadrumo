@@ -16,15 +16,15 @@ from .._annotations import (
     annotation_coverage_gaps,
     annotations_are_covered,
 )
-from .._hitl import (
+from ..command_surface import command_surface
+from ..hitl import (
     REQUIRES_USER_INTERACTION_META_KEY,
     ConfirmationPolicy,
     confirmation_for_tool,
     requires_user_interaction,
 )
-from .._server import build_sdk_tools
-from .._tools import build_tool_descriptors
-from ..command_surface import command_surface
+from ..server import build_sdk_tools
+from ..tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

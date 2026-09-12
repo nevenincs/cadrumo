@@ -26,7 +26,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [140] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores - Bienes y servic. - Cuota deducible [140]' (offset 30, length 17).
 [[revisions."2022".casillas]]
@@ -43,7 +42,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [141] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores - Bienes inversión - Base imponible [141]' (offset 47, length 17).
 [[revisions."2022".casillas]]
@@ -60,7 +58,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [142] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores - Bienes inversión - Cuota deducible [142]' (offset 64, length 17).
 [[revisions."2022".casillas]]
@@ -77,7 +74,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [143] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes corrientes - Base imponible [143]' (offset 81, length 17).
 [[revisions."2022".casillas]]
@@ -94,7 +90,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [144] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes corrientes - Cuota deducible [144]' (offset 98, length 17).
 [[revisions."2022".casillas]]
@@ -111,7 +106,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [145] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes inversión - Base imponible [145]' (offset 115, length 17).
 [[revisions."2022".casillas]]
@@ -128,7 +122,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [146] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes inversión - Cuota deducible [146]' (offset 132, length 17).
 [[revisions."2022".casillas]]
@@ -145,7 +138,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [147] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun. - Bienes corrientes - Base imponible [147]' (offset 149, length 17).
 [[revisions."2022".casillas]]
@@ -162,7 +154,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [148] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun.  - Bienes corrientes - Cuota deducible [148]' (offset 166, length 17).
 [[revisions."2022".casillas]]
@@ -179,7 +170,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [149] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun. - Bienes inversión - Base imponible [149]' (offset 183, length 17).
 [[revisions."2022".casillas]]
@@ -196,7 +186,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [150] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun. - Bienes inversión - Cuota deducible [150]' (offset 200, length 17).
 [[revisions."2022".casillas]]
@@ -213,7 +202,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [151] - '13. Reg. Deducc. Diferenc.- 1 - Compensac. rég. especial agric./ganad./pesca - Base impon. [151]' (offset 217, length 17).
 [[revisions."2022".casillas]]
@@ -230,7 +218,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [152] - '13. Reg. Deducc. Diferenc.- 1 - Compensac. rég. especial agric./ganad./pesca - Cuota deduc. [152]' (offset 234, length 17).
 [[revisions."2022".casillas]]
@@ -247,7 +234,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [640] - '13. Reg. Deducc. Diferenc.- 1 - Rectificación de deducciones - Base impon.  [640]' (offset 251, length 17).
 [[revisions."2022".casillas]]
@@ -264,7 +250,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-89", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [153] - '13. Reg. Deducc. Diferenc.- 1 - Rectificación de deducciones - Cuota deduc. [153]' (offset 268, length 17).
 [[revisions."2022".casillas]]
@@ -281,7 +266,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-89", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [154] - '13. Reg. Deducc. Diferenc.- 1 - Regularización de inversiones [154]' (offset 285, length 17).
 [[revisions."2022".casillas]]
@@ -298,7 +282,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [155] - '13. Reg. Deducc. Diferenc.- 1 - Suma de deducciones [155]' (offset 302, length 17).
 [[revisions."2022".casillas]]
@@ -315,7 +298,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [156] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores - Bienes y servic. - Base imponible [156]' (offset 319, length 17).
 [[revisions."2022".casillas]]
@@ -332,7 +314,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [157] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores - Bienes y servic. - Cuota deducible [157]' (offset 336, length 17).
 [[revisions."2022".casillas]]
@@ -349,7 +330,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [158] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores - Bienes inversión - Base imponible [158]' (offset 353, length 17).
 [[revisions."2022".casillas]]
@@ -366,7 +346,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [159] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores - Bienes inversión - Cuota deducible [159]' (offset 370, length 17).
 [[revisions."2022".casillas]]
@@ -383,7 +362,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [160] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes corrientes - Base imponible [160]' (offset 387, length 17).
 [[revisions."2022".casillas]]
@@ -400,7 +378,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [161] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes corrientes - Cuota deducible [161]' (offset 404, length 17).
 [[revisions."2022".casillas]]
@@ -417,7 +394,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [162] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes inversión - Base imponible [162]' (offset 421, length 17).
 [[revisions."2022".casillas]]
@@ -434,7 +410,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [163] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes inversión - Cuota deducible [163]' (offset 438, length 17).
 [[revisions."2022".casillas]]
@@ -451,7 +426,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [164] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun. - Bienes corrientes - Base imponible [164]' (offset 455, length 17).
 [[revisions."2022".casillas]]
@@ -468,7 +442,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [165] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun.  - Bienes corrientes - Cuota deducible [165]' (offset 472, length 17).
 [[revisions."2022".casillas]]
@@ -485,7 +458,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [166] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun. - Bienes inversión - Base imponible [166]' (offset 489, length 17).
 [[revisions."2022".casillas]]
@@ -502,7 +474,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [167] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun. - Bienes inversión - Cuota deducible [167]' (offset 506, length 17).
 [[revisions."2022".casillas]]
@@ -519,7 +490,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [168] - '13. Reg. Deducc. Diferenc.- 2 - Compensac. rég. especial agric./ganad./pesca - Base impon. [168]' (offset 523, length 17).
 [[revisions."2022".casillas]]
@@ -536,7 +506,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [169] - '13. Reg. Deducc. Diferenc.- 2 - Compensac. rég. especial agric./ganad./pesca - Cuota deduc. [169]' (offset 540, length 17).
 [[revisions."2022".casillas]]
@@ -553,7 +522,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [641] - '13. Reg. Deducc. Diferenc.- 2 - Rectificación de deducciones - Base impon. [641]' (offset 557, length 17).
 [[revisions."2022".casillas]]
@@ -570,7 +538,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-89", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [170] - '13. Reg. Deducc. Diferenc.- 2 - Rectificación de deducciones - Cuota decuc. [170]' (offset 574, length 17).
 [[revisions."2022".casillas]]
@@ -587,7 +554,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-89", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [171] - '13. Reg. Deducc. Diferenc.- 2 - Regularización de inversiones [171]' (offset 591, length 17).
 [[revisions."2022".casillas]]
@@ -604,7 +570,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [172] - '13. Reg. Deducc. Diferenc.- 2 - Suma de deducciones [172]' (offset 608, length 17).
 [[revisions."2022".casillas]]
@@ -621,7 +586,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [173] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Operac. Interiores - Bienes y servic. - Base imponible [173]' (offset 625, length 17).
 [[revisions."2022".casillas]]
@@ -638,7 +602,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [174] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Operac. Interiores - Bienes y servic. - Cuota deducible [174]' (offset 642, length 17).
 [[revisions."2022".casillas]]
@@ -655,7 +618,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [175] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Operac. Interiores - Bienes inversión - Base imponible [175]' (offset 659, length 17).
 [[revisions."2022".casillas]]
@@ -672,7 +634,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [176] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Operac. Interiores - Bienes inversión - Cuota deducible [176]' (offset 676, length 17).
 [[revisions."2022".casillas]]
@@ -689,7 +650,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [177] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Importaciones - Bienes corrientes - Base imponible [177]' (offset 693, length 17).
 [[revisions."2022".casillas]]
@@ -706,7 +666,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [178] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Importaciones - Bienes corrientes - Cuota deducible [178]' (offset 710, length 17).
 [[revisions."2022".casillas]]
@@ -723,7 +682,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [179] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Importaciones - Bienes inversión - Base imponible [179]' (offset 727, length 17).
 [[revisions."2022".casillas]]
@@ -740,7 +698,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [180] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Importaciones - Bienes inversión - Cuota deducible [180]' (offset 744, length 17).
 [[revisions."2022".casillas]]
@@ -757,7 +714,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [181] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Adquisic. intracomun. - Bienes corrientes - Base imponible [181]' (offset 761, length 17).
 [[revisions."2022".casillas]]
@@ -774,7 +730,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [182] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Adquisic. intracomun.  - Bienes corrientes - Cuota deducible [182]' (offset 778, length 17).
 [[revisions."2022".casillas]]
@@ -791,7 +746,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [183] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Adquisic. intracomun. - Bienes inversión - Base imponible [183]' (offset 795, length 17).
 [[revisions."2022".casillas]]
@@ -808,7 +762,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [184] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Adquisic. intracomun. - Bienes inversión - Cuota deducible [184]' (offset 812, length 17).
 [[revisions."2022".casillas]]
@@ -825,7 +778,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [185] - '13. Reg. Deducc. Diferenc.- 3 - Compensac. rég. especial agric./ganad./pesca - Base impon. [185]' (offset 829, length 17).
 [[revisions."2022".casillas]]
@@ -842,7 +794,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [186] - '13. Reg. Deducc. Diferenc.- 3 - Compensac. rég. especial agric./ganad./pesca - Cuota deduc. [186]' (offset 846, length 17).
 [[revisions."2022".casillas]]
@@ -859,7 +810,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [642] - '13. Reg. Deducc. Diferenc.- 3 - Rectificación de deducciones - Base impon. [642]' (offset 863, length 17).
 [[revisions."2022".casillas]]
@@ -876,7 +826,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-89", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [187] - '13. Reg. Deducc. Diferenc.- 3 - Rectificación de deducciones - Cuota deduc. [187]' (offset 880, length 17).
 [[revisions."2022".casillas]]
@@ -893,7 +842,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-89", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [188] - '13. Reg. Deducc. Diferenc.- 3 - Regularización de inversiones [188]' (offset 897, length 17).
 [[revisions."2022".casillas]]
@@ -910,7 +858,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [189] - '13. Reg. Deducc. Diferenc.- 3 - Suma de deducciones [189]' (offset 914, length 17).
 [[revisions."2022".casillas]]
@@ -927,4 +874,3 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 1
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]

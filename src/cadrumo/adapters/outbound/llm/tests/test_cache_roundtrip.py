@@ -22,6 +22,7 @@ import pytest
 
 from .....core.config_support import LLMProvider
 from .....tests.secure_sql import TestRuntimeProfile, mutate_encrypted_secure_object_json
+from ....persistence.storage.secure_object_namespaces import LLM_CACHE_NAMESPACE
 from ..cache import LLMCache
 from ..models import LLMRequest, LLMResponse
 
@@ -158,7 +159,6 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
     from sqlalchemy import select
 
     from ....persistence.storage.sql.orm import SecureObjectRow
-    from ..cache import _CACHE_NAMESPACE
     from ..errors import LLMCacheError
 
     created_at = _CREATED_AT
@@ -170,9 +170,9 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
     # Reach into the encrypted row and surgically delete ``text``
     # from the nested response on the redacted entry. The column
     # accessor handles encrypt/decrypt automatically; the
-    # _CACHE_NAMESPACE filter pins the right row.
+    # The canonical cache namespace filter pins the right row.
     stmt = select(SecureObjectRow).where(
-        SecureObjectRow.namespace == _CACHE_NAMESPACE,
+        SecureObjectRow.namespace == LLM_CACHE_NAMESPACE.namespace,
     )
 
     def mutate(decoded):

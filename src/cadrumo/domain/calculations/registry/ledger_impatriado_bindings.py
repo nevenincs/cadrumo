@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Sequence
 from decimal import Decimal
-from typing import Literal, Protocol
+from typing import TYPE_CHECKING, Literal, Protocol
 
 from pydantic import BaseModel, model_validator
 
@@ -39,7 +39,6 @@ from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .ledger_binding_selector_support import ImpatriadoLedgerIncomeFact, mapping_lacks_fact
-from .schema import DataBindingDefinition, ModeloRevision
 
 # Ledger-aggregation binding source kinds. Re-exported from
 # :data:`cadrumo.core.aggregation.LEDGER_BINDING_SOURCE_KINDS`, which derives the
@@ -62,6 +61,9 @@ __all__ = [
 
 from .ledger_binding_selector_support import casilla_id_set
 
+if TYPE_CHECKING:
+    from .schema import BindingDefinition, ModeloRevision
+
 # Ledger Modelo 151 impatriado (Ley Beckham, art. 93 LIRPF) Spanish-source
 # base aggregation source bindings.
 #
@@ -77,7 +79,7 @@ from .ledger_binding_selector_support import casilla_id_set
 # observations per the one-aggregation-path discipline.
 
 
-class _ImpatriadoLedgerIncomeSelector(BaseModel):
+class LedgerImpatriadoIncomeProvider(BaseModel):
     """Validated form of a ``ledger_impatriado_income_aggregation`` binding selector.
 
     ``modelo`` is Modelo 151 (the only modelo whose base is legally
@@ -85,7 +87,7 @@ class _ImpatriadoLedgerIncomeSelector(BaseModel):
     is the base casilla that receives the annual Spanish-source total.
 
     ``fact`` is REQUIRED and carries no default, matching its
-    :class:`~.ledger_renta_income_bindings.RentaLedgerIncomeSelector` sibling. The two
+    :class:`~.ledger_renta_income_bindings.LedgerRentaIncomeProvider` sibling. The two
     accepted values name different legal measures of the same rows, so a
     default silently picks a legal claim on the taxpayer's behalf — and a
     default on one sibling but not the other re-creates exactly the divergence
@@ -105,6 +107,10 @@ class _ImpatriadoLedgerIncomeSelector(BaseModel):
     """
 
     model_config = STRICT_FROZEN_CONFIG
+
+    kind: Literal[BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION] = (
+        BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION
+    )
 
     modelo: Literal[Modelo.M151] = Modelo.M151
     target_casilla_id: CasillaId
@@ -141,16 +147,16 @@ _IMPATRIADO_BASE_CASILLAS: frozenset[CasillaId] = casilla_id_set(
 _IMPATRIADO_SUPPORTED_FACTS: frozenset[str] = frozenset({"ingresos_integros_sum", "cash_received_sum"})
 
 
-def _impatriado_ledger_income_selector(binding: DataBindingDefinition) -> _ImpatriadoLedgerIncomeSelector:
+def _impatriado_ledger_income_selector(binding: BindingDefinition) -> LedgerImpatriadoIncomeProvider:
     try:
-        return _ImpatriadoLedgerIncomeSelector.model_validate(_selector_as_dict(binding))
+        return LedgerImpatriadoIncomeProvider.model_validate(_selector_as_dict(binding))
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed ledger_impatriado_income_aggregation selector: {exc}",
         ) from exc
 
 
-def validate_ledger_impatriado_income_aggregation_binding_definition(binding: DataBindingDefinition) -> None:
+def validate_ledger_impatriado_income_aggregation_binding_definition(binding: BindingDefinition) -> None:
     """Validate a ``ledger_impatriado_income_aggregation`` binding definition."""
     if binding.source != BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION:
         raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_impatriado_income_aggregation source")
@@ -173,15 +179,15 @@ def validate_ledger_impatriado_income_aggregation_binding_definition(binding: Da
         )
 
 
-def validate_ledger_impatriado_income_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
+def validate_ledger_impatriado_income_aggregation_binding(binding: BindingDefinition) -> list[str]:
     """Validate a ``ledger_impatriado_income_aggregation`` binding at registry-build time.
 
-    Accumulating ``list[str]`` validator over :class:`_ImpatriadoLedgerIncomeSelector`;
+    Accumulating ``list[str]`` validator over :class:`LedgerImpatriadoIncomeProvider`;
     runs the casilla / fact / aggregation-op invariant at build time through
     :func:`invariant_diagnostics`, whose raise-style body is
     :func:`validate_ledger_impatriado_income_aggregation_binding_definition`.
     """
-    failures = selector_against_model(binding, _ImpatriadoLedgerIncomeSelector)
+    failures = selector_against_model(binding, LedgerImpatriadoIncomeProvider)
     if failures:
         return failures
     return invariant_diagnostics(
@@ -217,7 +223,7 @@ class ImpatriadoIncomeObservationProtocol(Protocol):
 
 
 def _impatriado_income_build_matcher(
-    selector: _ImpatriadoLedgerIncomeSelector,
+    selector: LedgerImpatriadoIncomeProvider,
 ) -> Callable[[ImpatriadoIncomeObservationProtocol], bool]:
     target_casilla_id = selector.target_casilla_id
 
@@ -229,7 +235,7 @@ def _impatriado_income_build_matcher(
 
 def _impatriado_income_aggregate(
     matched: Sequence[ImpatriadoIncomeObservationProtocol],
-    selector: _ImpatriadoLedgerIncomeSelector,
+    selector: LedgerImpatriadoIncomeProvider,
 ) -> Decimal:
     if selector.fact == "ingresos_integros_sum":
         return sum(
@@ -325,4 +331,4 @@ def unsupported_ledger_impatriado_income_observations(
 # from this simple cumulative sum.
 
 
-ImpatriadoLedgerIncomeSelector = _ImpatriadoLedgerIncomeSelector
+LedgerImpatriadoIncomeProvider = LedgerImpatriadoIncomeProvider

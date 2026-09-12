@@ -15,7 +15,7 @@ import typer
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodError
 from ._app_live_auth_preflight import emit_live_auth_preflight
-from ._common import active_bucket_id_or_refuse, emit_envelope
+from .common import active_bucket_id_or_refuse, emit_envelope
 
 
 def _period_option(period: str, *, year: int) -> Period:

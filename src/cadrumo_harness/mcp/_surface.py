@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from ._tools import McpToolDescriptor
+from .tools import McpToolDescriptor
 
 #: The environment variable selecting the advertised tool surface.
 SURFACE_ENV_VAR = "CADRUMO_MCP_SURFACE"

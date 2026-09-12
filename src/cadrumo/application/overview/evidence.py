@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from ..calculations._ports import FiledDeclaracionObservationProtocol
+from ..calculations.ports import FiledDeclaracionObservationProtocol
 from .calendar_evidence import calendar_filing_evidence_from_sources, merge_calendar_filing_evidence
 from .calendar_models import OverviewAeatSubmissionState, OverviewCalendarFilingEvidence, OverviewLocalFilingState
 from .home import HomeAvailability, HomeZoneState

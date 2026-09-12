@@ -17,7 +17,6 @@ from ._app_live_command_spec_support import (
     _REQUIRED_YEAR_OPTION,
     _REQUIRED_YEAR_TO_OPTION,
     NO_RESULT_SCHEMA,
-    _key,
 )
 from .command_spec import (
     CommandNodeKind,
@@ -32,6 +31,9 @@ from .command_spec import (
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
+)
+from .command_spec import (
+    translation_key as _key,
 )
 
 LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (

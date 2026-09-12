@@ -21,11 +21,18 @@ from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ....adapters.persistence.storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ....adapters.persistence.storage.sql.engine import get_engine
 from ....adapters.persistence.storage.sql.orm import SecureObjectRow
-from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from ....core.aggregation import (
+    BindingAggregation,
+    BindingAggregationOp,
+    BindingSourceKind,
+    CalculationSourceLineageRole,
+)
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.calculations.registry.inventory_bindings import InventoryProjectionOperation, InventorySelector
-from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
+from ....domain.calculations.registry.inventory_bindings import InventoryProjectionOperation, InventoryProvider
+from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.contribuyente.inventory.records import (
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,
@@ -51,6 +58,7 @@ from ....domain.filing_evidence import FilingEvidenceReference
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..inventory import _VALUE_ATTRIBUTE_BY_OPERATION, InventorySourceResolver
 from ..source_mesh import CalculationSourceContext
+from ..terminal_origin_audit import collect_terminal_origin_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -185,20 +193,23 @@ def _ledger(actividad_id: str, *, physical_closing: Decimal | None = None) -> In
     )
 
 
-def _binding(operation: InventoryProjectionOperation, target: str) -> DataBindingDefinition:
-    return DataBindingDefinition(
+def _binding(operation: InventoryProjectionOperation, target: str) -> BindingDefinition:
+    return BindingDefinition(
         id=f"inventory-{target}",
-        source=BindingSourceKind.INVENTORY,
-        selector={
-            "modelo": "100",
-            "filing_year": 2025,
-            "projection_grain": "taxpayer_year_activity",
-            "fact": "row_field",
-            "record": "inventory_activity",
-            "grouping": "per_inventory_activity",
-            "row_field": operation,
-            "target_casilla_id": target,
+        provider={
+            "kind": "inventory",
+            **{
+                "modelo": "100",
+                "filing_year": 2025,
+                "projection_grain": "taxpayer_year_activity",
+                "fact": "row_field",
+                "record": "inventory_activity",
+                "grouping": "per_inventory_activity",
+                "row_field": operation,
+                "target_casilla_id": target,
+            },
         },
+        value={"data_type": "money", "channel": "decimal"},
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=("ley-35-2006:art-30",),
         source_refs=("aeat-renta-2025-manual",),
@@ -230,7 +241,7 @@ def _context(revision: ModeloRevision, *, year: int = 2025) -> CalculationSource
 
 
 def test_inventory_operation_adapter_tracks_the_canonical_row_field_vocabulary() -> None:
-    annotation = InventorySelector.model_fields["row_field"].annotation
+    annotation = InventoryProvider.model_fields["row_field"].annotation
     operations = set(get_args(getattr(annotation, "__value__", annotation)))
 
     assert operations == set(_VALUE_ATTRIBUTE_BY_OPERATION)
@@ -273,7 +284,7 @@ def test_inventory_row_templates_expand_complete_activities_in_canonical_rows() 
         ("inventory-0182", 2): Decimal("0.00"),
     }
     assert result.unresolved_binding_ids == ()
-    assert result.provenance == ()
+    assert len(result.provenance) == 2
     assert result.diagnostics == ()
     for binding_id in ("inventory-0177", "inventory-0181", "inventory-0182"):
         assert result.row_source_identities[(binding_id, 1)].source_row_identity == "alpha"
@@ -428,3 +439,76 @@ def test_inventory_template_cohort_refuses_atomically_before_storage(shape: str)
     assert result.row_binding_values == {}
     assert result.row_source_identities == {}
     assert result.diagnostics[0].reason == "unresolved_derived_binding"
+
+
+def _terminal_origin_binding(operation: InventoryProjectionOperation, target: str) -> BindingDefinition:
+    """Build one inventory row template against the live provider model."""
+    return BindingDefinition(
+        id=f"inventory-{target}",
+        provider={
+            "kind": "inventory",
+            "modelo": "100",
+            "projection_grain": "taxpayer_year_activity",
+            "fact": "row_field",
+            "record": "inventory_activity",
+            "grouping": "per_inventory_activity",
+            "row_field": operation,
+            "target_casilla_id": target,
+        },
+        value={"data_type": "money", "channel": "decimal"},
+        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
+        legal_refs=("ley-35-2006:art-30",),
+        source_refs=("aeat-renta-2025-manual",),
+    )
+
+
+def _terminal_origin_revision() -> ModeloRevision:
+    """Build the inventory row-template cohort on a self-contained revision."""
+    return ModeloRevision(
+        id="renta-2025-inventory-terminal-origin",
+        localization_key="registry.modelo.100.2025",
+        valid_from=date(2026, 1, 1),
+        period_selector=PeriodSelector(years=(2025,), periods=("0A",)),
+        legal_refs=("ley-35-2006:art-30",),
+        source_refs=("aeat-renta-2025-manual",),
+        bindings=(
+            _terminal_origin_binding("complete_acquisition_cost", "0181"),
+            _terminal_origin_binding("closing_minus_opening_positive", "0177"),
+            _terminal_origin_binding("opening_minus_closing_positive", "0182"),
+        ),
+    )
+
+
+def test_inventory_rows_carry_a_primary_detail_record_node_the_terminal_audit_admits() -> None:
+    revision = _terminal_origin_revision()
+    repository = _InventoryLedgerRepositoryScenario(
+        InventoryLedgerDocument(ledgers=(_ledger("zeta"), _ledger("alpha"))),
+    )
+
+    result = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision))
+
+    assert len(result.row_binding_values) == 6
+    # One activity record stands behind the three operation values it produced.
+    assert len(result.provenance) == 2
+    assert all(node.lineage_role is CalculationSourceLineageRole.PRIMARY for node in result.provenance)
+    assert all(node.terminal_origin is TerminalOriginClass.DETAIL_RECORD for node in result.provenance)
+    assert all(node.resolved_binding_source is BindingSourceKind.INVENTORY for node in result.provenance)
+    assert all(node.parent_source_ref is None for node in result.provenance)
+    assert all(node.fingerprint is not None for node in result.provenance)
+    assert all(node.source_ref == f"inventory_activity:{node.fingerprint}" for node in result.provenance)
+    assert len({node.source_ref for node in result.provenance}) == 2
+    assert collect_terminal_origin_diagnostics(revision, result) == ()
+    public = f"{result!r} {result.model_dump()!r} {result.model_dump_json()}"
+    assert "alpha" not in public
+    assert "zeta" not in public
+
+
+def test_inventory_resolution_without_activity_rows_claims_no_terminal_origin() -> None:
+    revision = _terminal_origin_revision()
+    repository = _InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=()))
+
+    result = InventorySourceResolver(inventory_repository=repository).resolve(_context(revision))
+
+    assert result.row_binding_values == {}
+    assert result.provenance == ()
+    assert collect_terminal_origin_diagnostics(revision, result) == ()

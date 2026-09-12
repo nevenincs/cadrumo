@@ -44,8 +44,6 @@ data_type = "text"
 semantic_role = "maquinas_recreativas_autoventa_suma"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @1044+13, type_code An. Apartado VII: Cuota maquinas recreativas o autoventa. [86].
 # Slug number: the printed [86] already belongs to the Apartado VI sub-total above,
@@ -59,8 +57,6 @@ data_type = "text"
 semantic_role = "cuota_maquinas_recreativas_autoventa"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @1070+25, type_code An. Notificacion. Lugar. [109].
 # Carries AEAT's number for the notification block.
@@ -72,8 +68,6 @@ data_type = "text"
 semantic_role = "notificacion_lugar"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @1095+2 Dia, @1097+2 Mes, @1099+4 Ano, all type_code Num. [109].
 # ONE date casilla, not three integers: the diseno splits a single fecha into three
@@ -86,8 +80,6 @@ data_type = "date"
 semantic_role = "notificacion_fecha"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @1103+1, type_code An. Notificacion. En calidad de titular o representante. [109].
 # Values "T", "R" or blank. An independent fact, so its own casilla with a slug.
@@ -99,5 +91,3 @@ data_type = "text"
 semantic_role = "notificacion_calidad_firmante"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]

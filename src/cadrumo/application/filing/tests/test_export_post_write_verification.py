@@ -22,7 +22,7 @@ from ..export_verification import (
 )
 from ..producer_snapshot import FilingProducerSnapshot, GeneralFilingProfileFacts, build_filing_producer_snapshot
 from ..runtime import RegistrySchemaAccessor
-from ._export_support import (
+from .export_support import (
     _approved_modelo_131_historical_registry_draft,
     _schema_provider,
     _typed_producer_snapshot,
@@ -175,7 +175,7 @@ def test_export_draft_itself_refuses_a_real_renderer_parser_disagreement(tmp_pat
     incompatible_layout = original_layout.model_copy(
         update={"id": "post-write-incompatible-layout", "records": (incompatible_record,)},
     )
-    # export_draft selects its layout from the SNAPSHOT and _render_layout
+    # export_draft selects its layout from the SNAPSHOT and render_filing_layout
     # asserts snapshot ownership by identity, so the doctored layout has to be
     # the very object the snapshot's revision carries -- doctoring the subview
     # alone would no longer reach the renderer at all.

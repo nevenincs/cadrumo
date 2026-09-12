@@ -301,7 +301,7 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
     ),
     AllowlistRule(
         path=_path(
-            r"^src/cadrumo/entrypoints/cli/_common\.py$|^src/cadrumo/entrypoints/cli/tests/test_ledger_period_grammar\.py$"
+            r"^src/cadrumo/entrypoints/cli/common\.py$|^src/cadrumo/entrypoints/cli/tests/test_ledger_period_grammar\.py$"
         ),
         reason="CLI period grammar refusal docs and tests prove calendar/hybrid spellings are rejected",
     ),
@@ -407,7 +407,7 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="calculation carry-gate tests preserve opaque AEAT expediente source labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/cadrumo/application/filing/tests/_export_support\.py$"),
+        path=_path(r"^src/cadrumo/application/filing/tests/export_support\.py$"),
         reason="filing export support tests preserve external export path labels",
     ),
     AllowlistRule(

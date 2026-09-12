@@ -7,11 +7,11 @@ whose ``relation_prefill`` binding sums a periodic source modelo's retenciones
 output through the enrolled :class:`RelationPrefillSourceResolver`:
 
 * casilla ``0596`` ("Por rendimientos del trabajo") binds
-  ``renta-2025-modelo-111-retenciones-periodicas`` — ``source_modelo='111'``,
+  ``renta-modelo-111-retenciones-periodicas`` — ``source_modelo='111'``,
   ``source_casilla_id='28'`` (M111 "retenciones e ingresos a cuenta"), summed over
   the four quarters.
 * casilla ``0597`` ("Por rendimientos del capital mobiliario") binds
-  ``renta-2025-modelo-123-retenciones-periodicas`` — ``source_modelo='123'``,
+  ``renta-modelo-123-retenciones-periodicas`` — ``source_modelo='123'``,
   ``source_casilla_id='09'`` (M123 retenciones), summed over the four quarters.
 
 This module proves both folds work end-to-end on the LIVE operator calculate
@@ -80,12 +80,11 @@ from ...aggregation.source_mesh import (
     CallerOverrideDisposition,
     precedence_ladder_sources,
 )
-from ...calculations.observations_repository import CalculationObservationRepository
+from ...calculations.observations_repository import APP_FILING_SOURCE_KIND, CalculationObservationRepository
 from ..calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ..filed_revision_observation import APP_FILING_SOURCE_KIND
 from ..work_lifecycle import create_work_unit
 from ._fold_in_assertions_support import _assert_distinct_positive
 
@@ -99,7 +98,7 @@ _ANNUAL_PERIOD = "0A"
 _QUARTERS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
 _RELATION_PREFILL_SOURCE = "relation_prefill"
 _OPTIONAL_PAYEE_RETENCIONES_BINDINGS: frozenset[BindingId] = frozenset(
-    {"renta-2025-certificado-trabajo-retenciones"},
+    {"renta-certificado-trabajo-retenciones"},
 )
 
 # The two genuine cross-modelo retenciones-credit casillas and their source casilla ids.

@@ -6,7 +6,7 @@ application in future periods — casilla 00671 ("pendiente de aplicación en
 períodos futuros") — becomes the next ejercicio's opening stock pending at
 the start of the period — casilla 00670 ("pendiente de aplicación a
 principio del período"). The cross-year binding
-``modelo-200-2024-bin-pendiente-ejercicios-anteriores`` (a ``previous_filing``
+``modelo-200-bin-pendiente-ejercicios-anteriores`` (a ``previous_filing``
 copy of the prior year's 00671, ``filing_year_delta = -1``) makes casilla
 00670 auto-resolve from the prior filing — the operator does not re-key the
 carried BIN stock.
@@ -95,9 +95,9 @@ _M200_PAGOS_RELATION_40_2 = "modelo-200-2024-rel-202-pagos-fraccionados-40-2"
 
 #: Minimal SL-persona profile bindings the M200 cuota chain requires to compute.
 _PROFILE_DECIMAL_BINDINGS: dict[str, Decimal] = {
-    "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
-    "modelo-200-2024-profile-incn-prior-12-months": Decimal("500000"),
-    "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+    "modelo-200-profile-new-entity-flag": Decimal("0"),
+    "modelo-200-profile-incn-prior-12-months": Decimal("500000"),
+    "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
 }
 _PROFILE_ENUM_BINDINGS: dict[str, str] = {
     "modelo-200-2024-profile-legal-entity-form": "sl",

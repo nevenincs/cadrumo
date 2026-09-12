@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
-from .....core.casilla_id import validated_casilla_id
-from ._verification_chain_support import BindingId, CasillaId, Decimal, _assert_annual_relation_closure_chain
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....domain.calculations.registry.ids import BindingId
+from ._verification_chain_support import _assert_annual_relation_closure_chain
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

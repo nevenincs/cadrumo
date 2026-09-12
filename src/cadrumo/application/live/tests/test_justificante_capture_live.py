@@ -22,9 +22,9 @@ from ..errors import LiveApplicationInputError
 from ..expedientes import capture_expedientes
 from ..justificante import (
     JustificanteCaptureSnapshotService,
-    SnapshotLifecycleState,
     capture_justificante_snapshot,
 )
+from ..snapshot_base import SnapshotLifecycleState
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_application]
 

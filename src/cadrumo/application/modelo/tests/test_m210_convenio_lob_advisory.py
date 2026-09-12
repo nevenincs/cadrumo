@@ -37,7 +37,8 @@ __all__ = ["m210_snapshot"]
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
+from ....domain.contribuyente.renta_codes import FiscalResidency
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,

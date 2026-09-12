@@ -23,7 +23,7 @@ from ...identifiers import canonical_decimal_string as _canonical_decimal_string
 # The record module completes the cycle-breaking model bootstrap before these
 # concrete model modules are imported directly.
 from ._anexo_d_records import InventoryAnexoDResult
-from ._closing_authority_records import (
+from .closing_authority_records import (
     InventoryClosingAuthorityRecord,
     InventoryClosingConflictDiagnostic,
     InventoryClosingResolution,

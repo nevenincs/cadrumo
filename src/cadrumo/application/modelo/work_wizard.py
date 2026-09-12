@@ -161,10 +161,6 @@ def discover_modelo_work_wizard_steps(unit: WorkUnit) -> tuple[ModeloWorkWizardS
                     help_text=tr(
                         "cli.app.modelo.work.wizard_relation_help",
                         binding_id=str(row.binding_id),
-                        default=(
-                            "Fed by registry relation {binding_id}; supply the cross-period or cross-modelo value "
-                            "this relation carries."
-                        ),
                     ),
                     legal_refs=tuple(row.legal_refs),
                     source_refs=tuple(row.source_refs),
@@ -172,7 +168,7 @@ def discover_modelo_work_wizard_steps(unit: WorkUnit) -> tuple[ModeloWorkWizardS
                 for relation_id in row.relation_inputs
             )
             continue
-        if row.source not in _PROMPTABLE_BINDING_SOURCES or row.binding_id in profile_resolved:
+        if row.provider.kind not in _PROMPTABLE_BINDING_SOURCES or row.binding_id in profile_resolved:
             continue
         binding_steps.append(
             ModeloWorkWizardStep(
@@ -225,10 +221,6 @@ def modelo_work_wizard_follow_up_step(
             help_text=tr(
                 "cli.app.modelo.work.wizard_relation_help",
                 binding_id=relation_id,
-                default=(
-                    "Fed by registry relation {binding_id}; supply the cross-period or cross-modelo value "
-                    "this relation carries."
-                ),
             ),
             legal_refs=legal_refs,
             source_refs=source_refs,
@@ -270,7 +262,6 @@ class ModeloWorkWizardRun:
                 "cli.app.modelo.work.wizard_prompt",
                 number=step.number,
                 label=step.label,
-                default="Casilla {number} ({label})",
             )
             help_ref: str | None = None
             if step.help_text:

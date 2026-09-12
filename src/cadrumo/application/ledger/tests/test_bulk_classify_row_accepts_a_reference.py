@@ -24,7 +24,7 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from ....core.identity import TransactionId, TransactionIdReference
+from ....core.identity.transaction_ids import TransactionId, TransactionIdReference
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....domain.transactions.enums import BusinessClassification
 from ..models import BulkClassifyRow

@@ -20,7 +20,7 @@ import pytest
 
 from ....application.review.operator import ReviewQueueReport
 from ....core.config import override_settings
-from ....tests.clean_install_fixtures import _clean_install
+from ....tests.clean_install_fixtures import clean_install
 from .._review import _queue_lines
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -40,7 +40,7 @@ def _rendered(language: str | None) -> str:
         return "\n".join(_queue_lines(_EMPTY_REPORT))
 
 
-__all__ = ["_clean_install"]
+__all__ = ["clean_install"]
 
 
 def test_review_queue_renders_english_under_english_override() -> None:
@@ -61,7 +61,7 @@ def test_review_queue_renders_spanish_under_spanish_override() -> None:
     assert "Severity" not in rendered, rendered
 
 
-@pytest.mark.usefixtures("_clean_install")
+@pytest.mark.usefixtures("clean_install")
 def test_review_queue_defaults_to_spanish() -> None:
     """With no language override a clean install defaults the queue to Spanish."""
     rendered = _rendered(None)

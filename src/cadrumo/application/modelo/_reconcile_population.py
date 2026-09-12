@@ -65,7 +65,7 @@ from ...domain.calculations.registry.runtime_graph import (
 from ...domain.calculations.registry.schema_input_kind import InputKind
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+    from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
     from ...domain.calculations.registry.schema_formula import FormulaExpression
     from ...domain.modelos.calculation_revision import CalculationRevision
 
@@ -145,7 +145,7 @@ def _closure_leaves(
 
 
 def _binding_is_evidence(
-    binding: DataBindingDefinition | None,
+    binding: BindingDefinition | None,
     *,
     overridden: bool,
     ledger_contributed: bool,
@@ -185,9 +185,7 @@ def resolve_casilla_population_scope(
     formula_expressions: dict[CasillaId, FormulaExpression] = {
         formula.target_casilla_id: formula.expression for formula in registry_revision.formulas
     }
-    bindings_by_id: dict[BindingId, DataBindingDefinition] = {
-        binding.id: binding for binding in registry_revision.bindings
-    }
+    bindings_by_id: dict[BindingId, BindingDefinition] = {binding.id: binding for binding in registry_revision.bindings}
     casilla_bindings: dict[CasillaId, BindingId] = {
         casilla.id: casilla.binding for casilla in registry_revision.casillas if casilla.binding is not None
     }
@@ -217,7 +215,7 @@ def _partition_population_scope(
     registry_revision: ModeloRevision,
     *,
     formula_expressions: dict[CasillaId, FormulaExpression],
-    bindings_by_id: dict[BindingId, DataBindingDefinition],
+    bindings_by_id: dict[BindingId, BindingDefinition],
     casilla_bindings: dict[CasillaId, BindingId],
     supplied_inputs: frozenset[CasillaId],
     overridden_bindings: frozenset[BindingId],
@@ -248,7 +246,7 @@ def _casilla_is_populated(
     casilla_id: CasillaId,
     *,
     formula_expressions: dict[CasillaId, FormulaExpression],
-    bindings_by_id: dict[BindingId, DataBindingDefinition],
+    bindings_by_id: dict[BindingId, BindingDefinition],
     casilla_bindings: dict[CasillaId, BindingId],
     supplied_inputs: frozenset[CasillaId],
     overridden_bindings: frozenset[BindingId],

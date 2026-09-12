@@ -6,7 +6,7 @@ selection happens later in the application reconciliation layer.
 
 This module owns the Playwright navigation and representation-gate state
 machine; the side-effect-free HTML parsing, URL-audit, and page-shape
-diagnostics live in the sibling ``_iva_compensation_wallet_parsing`` module
+diagnostics live in the sibling ``iva_compensation_wallet_parsing`` module
 and are re-imported here so the public read surface is unchanged.
 """
 
@@ -49,7 +49,8 @@ from ._browser_constants import (
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_NETWORKIDLE as _WAIT_NETWORKIDLE,
 )
-from ._iva_compensation_wallet_parsing import (
+from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
+from .iva_compensation_wallet_parsing import (
     EXTERNAL,
     IVA_COMPENSATION_WALLET_READ_POLICY,
     PRE303,
@@ -65,7 +66,6 @@ from ._iva_compensation_wallet_parsing import (
     wallet_execute_gate_status,
     wallet_page_shape_context,
 )
-from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from .schema import IvaCompensationWalletObservation
 
 if TYPE_CHECKING:

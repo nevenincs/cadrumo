@@ -28,7 +28,7 @@ See Also:
         Verification predicate evaluator exercised directly by these tests.
     :class:`~ModeloVerificationFindingKind`
         Finding-kind enum proving the guard remains advisory, not blocking.
-    :func:`~application.modelo.tests._verification_substance_support._workflow_profile`
+    :func:`~application.modelo.tests.verification_substance_support.workflow_profile`
         Real workflow-profile fixture used by the predicate evaluator.
     :mod:`~application.modelo.tests.test_prorrata_regularizacion_advisory`
         Calculate-path prorrata advisory regression that complements this
@@ -47,8 +47,8 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ..verification_actions import evaluate_verification_predicates
-from ._verification_substance_support import _workflow_profile
+from ..verification_predicates import evaluate_verification_predicates
+from .verification_substance_support import workflow_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -149,7 +149,7 @@ def test_advisory_fires_when_volume_declared_but_casilla_44_zero() -> None:
     for revision_id, revision in _m303_revisions():
         predicate = _sole_prorrata_predicate(revision_id, revision)
 
-        findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+        findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
 
         assert len(findings) == 1, revision_id
         assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY, revision_id
@@ -167,7 +167,7 @@ def test_advisory_silent_when_casilla_44_present() -> None:
 
     for revision_id, revision in _m303_revisions():
         predicate = _sole_prorrata_predicate(revision_id, revision)
-        assert evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile()) == [], revision_id
+        assert evaluate_verification_predicates((predicate,), casilla_values, workflow_profile()) == [], revision_id
 
 
 def test_advisory_silent_for_art94_full_deduction_default() -> None:
@@ -177,5 +177,5 @@ def test_advisory_silent_for_art94_full_deduction_default() -> None:
 
     for revision_id, revision in _m303_revisions():
         predicate = _sole_prorrata_predicate(revision_id, revision)
-        assert evaluate_verification_predicates((predicate,), explicit_zero, _workflow_profile()) == [], revision_id
-        assert evaluate_verification_predicates((predicate,), absent, _workflow_profile()) == [], revision_id
+        assert evaluate_verification_predicates((predicate,), explicit_zero, workflow_profile()) == [], revision_id
+        assert evaluate_verification_predicates((predicate,), absent, workflow_profile()) == [], revision_id

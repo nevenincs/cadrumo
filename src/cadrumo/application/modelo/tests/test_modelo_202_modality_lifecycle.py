@@ -75,7 +75,7 @@ _ZERO_M202_CASILLA_VALUES = {
 }
 
 
-def _workflow_profile(incn: Decimal | None) -> TaxpayerProfile:
+def workflow_profile(incn: Decimal | None) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAX_ID,
         entity_type=EntityType.LEGAL_ENTITY,
@@ -340,7 +340,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) 
             calculation_repository=calc_repo,
             state=CalculationRevisionState.BORRADOR,
         )
-        workflow_profile = _workflow_profile(Decimal("500000"))
+        workflow_profile = workflow_profile(Decimal("500000"))
 
         with pytest.raises(ModeloRequiredBindingsMissingError) as verify_error:
             verify_modelo_revision(
@@ -430,7 +430,7 @@ def test_m202_wrong_state_still_refuses_file_before_required_binding_gate(tmp_pa
             file_modelo_revision(
                 revision.calculation_revision_id,
                 actor="operator-test",
-                workflow_profile=_workflow_profile(Decimal("500000")),
+                workflow_profile=workflow_profile(Decimal("500000")),
                 work_unit_repository=work_repo,
                 calculation_repository=calc_repo,
                 filing_repository=filing_repo,
@@ -494,7 +494,7 @@ def test_m202_declared_incn_below_or_above_threshold_can_verify(tmp_path: Path, 
         report = verify_modelo_revision(
             revision.calculation_revision_id,
             actor="operator-test",
-            workflow_profile=_workflow_profile(incn),
+            workflow_profile=workflow_profile(incn),
             settings=ready_clave_settings("12345678Z"),
             work_unit_repository=work_repo,
             calculation_repository=calc_repo,

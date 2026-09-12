@@ -90,12 +90,11 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation.percepciones_observations_repository import PercepcionObservationRepository
 from ...aggregation.retencion_observations_repository import RetencionObservationRepository
 from ...aggregation.retenciones import RetencionObservation
-from ...calculations.observations_repository import CalculationObservationRepository
+from ...calculations.observations_repository import APP_FILING_SOURCE_KIND, CalculationObservationRepository
 from ..calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ..filed_revision_observation import APP_FILING_SOURCE_KIND
 from ..revision_persistence import persist_filed_revision
 from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit
@@ -370,7 +369,7 @@ def _seed_retencion_perceptors(
     return Decimal(len(set(nifs)))
 
 
-def _workflow_profile() -> TaxpayerProfile:
+def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL)
 
 
@@ -531,7 +530,7 @@ def _seed_and_file_m111_1t(secure_objects: SecureObjectRepository) -> BucketAggr
     report = verify_modelo_revision(
         result.revision.calculation_revision_id,
         actor="test-operator",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         settings=ready_clave_settings("12345678Z"),
         work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
         calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
@@ -562,7 +561,7 @@ def _seed_and_file_m111_1t(secure_objects: SecureObjectRepository) -> BucketAggr
         work_unit_repository=wu_repo,
         bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
         calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
-        taxpayer_nif=_workflow_profile().tax_id,
+        taxpayer_nif=workflow_profile().tax_id,
     )
     return result
 
@@ -634,7 +633,7 @@ def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
     report = verify_modelo_revision(
         result.revision.calculation_revision_id,
         actor="test-operator",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         settings=ready_clave_settings("12345678Z"),
         work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
         calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),
@@ -695,7 +694,7 @@ def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quart
     report = verify_modelo_revision(
         result.revision.calculation_revision_id,
         actor="test-operator",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         settings=ready_clave_settings("12345678Z"),
         work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
         calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects, bucket_id=_BUCKET_ID),

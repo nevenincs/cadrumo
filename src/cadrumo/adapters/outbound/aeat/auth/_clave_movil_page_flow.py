@@ -45,9 +45,6 @@ from .clave_movil_support import (
     DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS as _DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS,
 )
 from .clave_movil_support import (
-    DIAGNOSTIC_NAMESPACE as _DIAGNOSTIC_NAMESPACE,
-)
-from .clave_movil_support import (
     ClaveMovilApprovalTimeoutError,
     ClaveMovilConfigurationError,
     ClaveMovilFailureMode,
@@ -499,7 +496,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
                 except (TimeoutError, PlaywrightTimeoutError):
                     payload["screenshot_capture_error"] = "timeout"
             secure_object_repository_for_active_bucket().save(
-                namespace=_DIAGNOSTIC_NAMESPACE,
+                namespace=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace,
                 object_key=diagnostic_id,
                 classification=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.sensitivity,
                 schema_version=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.schema_version,

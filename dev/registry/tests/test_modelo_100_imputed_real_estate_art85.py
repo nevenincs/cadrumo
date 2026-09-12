@@ -50,19 +50,19 @@ def _binding_values(year: int) -> dict[str, Decimal]:
     if year == 2025:
         # The production profile resolver supplies this predicate as 1/0 from
         # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
-        values["renta-2025-profile-has-economic-activity"] = Decimal("1")
+        values["renta-profile-has-economic-activity"] = Decimal("1")
         values["renta-2025-modelo-184-atribucion-actividades-economicas"] = Decimal("0")
         # Madrid nacimiento/adopción deducción (casilla 1039) profile-derived
         # facts; neutral zero when the chain under test is unrelated.
-        values["renta-2025-profile-madrid-nacimiento-adopcion-eligible-count"] = Decimal("0")
-        values["renta-2025-profile-unidad-familiar-otros-miembros-base"] = Decimal("0")
+        values["renta-profile-madrid-nacimiento-adopcion-eligible-count"] = Decimal("0")
+        values["renta-profile-unidad-familiar-otros-miembros-base"] = Decimal("0")
     if year == 2024:
         values.update(
             {
-                "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
-                "renta-2024-profile-incremento-guarderia": Decimal("0"),
-                "renta-2024-profile-descendientes-guarderia": Decimal("0"),
-                "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
+                "renta-profile-guarderia-gastos-reales": Decimal("0"),
+                "renta-profile-incremento-guarderia": Decimal("0"),
+                "renta-profile-descendientes-guarderia": Decimal("0"),
+                "renta-profile-cotizaciones-ss-madre": Decimal("0"),
                 # The maternity deducción's own profile fact, neutral zero for
                 # the same reason as its four siblings above: this scenario is
                 # an art. 85 imputed-real-estate example and claims no

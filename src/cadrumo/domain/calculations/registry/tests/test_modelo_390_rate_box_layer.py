@@ -44,7 +44,7 @@ from ..ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from ..schema import DataBindingDefinition, ModeloRevision
+from ..schema import BindingDefinition, ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -371,8 +371,8 @@ def _with_applied_rates(
     """
     revision = _m390_revision()
 
-    def _rated(binding: DataBindingDefinition) -> DataBindingDefinition:
-        selector = binding.selector
+    def _rated(binding: BindingDefinition) -> BindingDefinition:
+        selector = binding.provider
         # A selector compiles to either a typed model or a raw mapping. This
         # mutation only means anything against the typed form, so the raw one
         # is refused by name rather than reaching `model_copy` and failing with

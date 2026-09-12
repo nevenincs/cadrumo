@@ -1,7 +1,8 @@
 [[revisions."2020".bindings]]
 id = "renta-modelo-123-retenciones-periodicas"
-source = "relation_prefill"
-selector = { source_modelo = "123", source_casilla_id = "03" }
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "direct_calculation", source_modelo = "123", source_casilla_id = "03", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
 source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]

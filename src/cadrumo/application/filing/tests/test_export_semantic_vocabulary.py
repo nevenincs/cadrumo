@@ -25,7 +25,7 @@ from ..export import export_draft, render_filing_envelope
 from ..export_envelope import FilingEnvelopeOccurrence, FilingEnvelopeRenderRequest, FilingEnvelopeRenderResult
 from ..export_producer import _SHARED_SNAPSHOT_PRODUCER_KEYS
 
-modelo_export_module = import_module("cadrumo.application.modelo.export")
+modelo_export_module = import_module("...modelo.export", package=__package__)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -7,17 +7,16 @@ export layout, and records delivery/completion transitions without creating an
 AEAT filing path.
 
 See Also:
-    :mod:`~application.modelo`
-        Public facade that re-exports these Modelo 145 record DTOs and service
-        functions.
-    :func:`~application.modelo.build_m145_communication_service_contract`
+    :mod:`~cadrumo.application.modelo.m145_communication`
+        Focused ownership contract consumed by this record service.
+    :func:`~cadrumo.application.modelo.m145_communication.build_m145_communication_service_contract`
         Registry-backed ownership contract that refuses filing-like surfaces.
-    :class:`~application.modelo.M145CommunicationCreateCommand`
+    :class:`~cadrumo.application.modelo.m145_communication_records.M145CommunicationCreateCommand`
         Strict create-command DTO consumed by
-        :func:`~application.modelo.create_m145_communication_record`.
-    :class:`~application.modelo.M145CommunicationRecord`
+        :func:`~cadrumo.application.modelo.m145_communication_records.create_m145_communication_record`.
+    :class:`~cadrumo.application.modelo.m145_communication_records.M145CommunicationRecord`
         Persisted bucket-local communication record handled by this module.
-    :class:`~application.modelo.M145CommunicationValidationResult`
+    :class:`~cadrumo.application.modelo.m145_communication_records.M145CommunicationValidationResult`
         Validation result returned before export and on explicit validation.
     :class:`~domain.calculations.registry.ModeloRevision`
         Registry revision whose casillas, legal refs, source refs, and export
@@ -50,6 +49,7 @@ from ...core.identity.digest import ContentDigest
 from ...core.identity.documents import IdentityError
 from ...core.identity.tax_id import validate_spanish_tax_id
 from ...core.logging import get_logger
+from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
@@ -68,12 +68,11 @@ from ...domain.calculations.registry.schema_references import RegistrySnapshotRe
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.errors import ModeloError, ModeloExportError
 from ..calculations.revision_carry_gate import revision_carry_outcome
-from ._m145_communication import (
-    M145_COMMUNICATION_MODELO,
+from ._ports import FicheroBoeRecordRenderer
+from .m145_communication import (
     M145_COMMUNICATION_SERVICE_OWNER,
     build_m145_communication_service_contract,
 )
-from ._ports import FicheroBoeRecordRenderer
 from .m145_communication_period import M145CommunicationPeriod
 from .revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from .revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
@@ -161,7 +160,7 @@ class M145CommunicationValidationResult(BaseModel):
         default=M145_COMMUNICATION_SERVICE_OWNER,
         pattern=r"^cadrumo\.application\.modelo$",
     )
-    modelo: str = Field(default=M145_COMMUNICATION_MODELO, pattern=r"^145$")
+    modelo: str = Field(default=Modelo.M145.value, pattern=r"^145$")
     communication_year: int = Field(ge=2012, le=2099)
     period_token: M145CommunicationPeriod
     revision_id: RevisionId = Field(min_length=1)
@@ -190,7 +189,7 @@ class M145CommunicationExportResult(BaseModel):
         default=M145_COMMUNICATION_SERVICE_OWNER,
         pattern=r"^cadrumo\.application\.modelo$",
     )
-    modelo: str = Field(default=M145_COMMUNICATION_MODELO, pattern=r"^145$")
+    modelo: str = Field(default=Modelo.M145.value, pattern=r"^145$")
     communication_year: int = Field(ge=2012, le=2099)
     period_token: M145CommunicationPeriod
     revision_id: RevisionId = Field(min_length=1)
@@ -321,7 +320,7 @@ class M145CommunicationRecord(BaseModel):
         default=M145_COMMUNICATION_SERVICE_OWNER,
         pattern=r"^cadrumo\.application\.modelo$",
     )
-    modelo: str = Field(default=M145_COMMUNICATION_MODELO, pattern=r"^145$")
+    modelo: str = Field(default=Modelo.M145.value, pattern=r"^145$")
     communication_year: int = Field(ge=2012, le=2099)
     period_token: M145CommunicationPeriod
     revision_id: RevisionId = Field(min_length=1)
@@ -379,7 +378,7 @@ def derive_m145_communication_record_id(
     return content_hash_hex(
         {
             "bucket_id": str(bucket_id).strip(),
-            "modelo": M145_COMMUNICATION_MODELO,
+            "modelo": Modelo.M145.value,
             "communication_year": communication_year,
             "period_token": _period_value(period_token),
             "revision_id": revision_id,
@@ -455,7 +454,7 @@ def _snapshot_for_scope(
     contract = build_m145_communication_service_contract(filing_year=communication_year)
 
     snapshot = bundled_authority().snapshot(
-        M145_COMMUNICATION_MODELO,
+        Modelo.M145.value,
         filing_year=communication_year,
         period=period_token.value,
     )

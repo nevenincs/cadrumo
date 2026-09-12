@@ -12,21 +12,19 @@ from ....core.period import Period
 from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.modelos.codes import ModeloCode
 from ...operations.registry import OperationSchemaIdentityV1
+from ..edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
 from ..edit_models import (
     ModeloBindingEditIntentV1,
     ModeloEditAdmittedV1,
     ModeloEditBaselineV1,
     ModeloEditBindingAddressV1,
     ModeloEditBindingIntentKind,
-    ModeloEditCompatibilityTupleV1,
     ModeloEditDomainRefusalV1,
     ModeloEditExecutionNoEffectV1,
     ModeloEditExecutionUpdatedV1,
     ModeloEditExistingRowAddressV1,
     ModeloEditFindingSeverity,
     ModeloEditFindingV1,
-    ModeloEditMutationFamily,
-    ModeloEditMutationResultReceiptV1,
     ModeloEditNewRowCorrelationV1,
     ModeloEditPreflightEvaluatedV1,
     ModeloEditRefusalCode,

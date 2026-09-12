@@ -7,7 +7,6 @@ semantic_role = "irpf_declarante_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3481-2008:art-1"]
-source_refs = ["boe-modelo-189-base-order"]
 
 [[revisions."2025".casillas]]
 id = "ejercicio-declaracion"
@@ -18,7 +17,7 @@ semantic_role = "filing_year"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3481-2008:art-1", "orden-eha-3481-2008:art-5"]
-source_refs = ["boe-modelo-189-base-order", "aeat-modelo-189-procedure"]
+additional_source_refs = ["aeat-modelo-189-procedure"]
 
 [[revisions."2025".casillas]]
 id = "declarado-nif"
@@ -29,7 +28,6 @@ semantic_role = "m189_declarado_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3481-2008:art-1"]
-source_refs = ["boe-modelo-189-base-order"]
 
 [[revisions."2025".casillas]]
 id = "declarado-nombre"
@@ -40,7 +38,6 @@ semantic_role = "m189_declarado_nombre"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3481-2008:art-1"]
-source_refs = ["boe-modelo-189-base-order"]
 
 [[revisions."2025".casillas]]
 id = "codigo-pais"
@@ -51,7 +48,7 @@ semantic_role = "m189_codigo_pais"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-1284-2023:art-11"]
-source_refs = ["boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1284"]
+additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1284"]
 
 [[revisions."2025".casillas]]
 id = "clave-valor"
@@ -62,7 +59,7 @@ semantic_role = "m189_clave_valor"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-1180-2023:art-primero"]
-source_refs = ["boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1180"]
+additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1180"]
 
 [[revisions."2025".casillas]]
 id = "valoracion"
@@ -73,11 +70,7 @@ semantic_role = "m189_valoracion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-1180-2023:art-primero", "orden-hac-132-2026:art-unico"]
-source_refs = [
-    "boe-modelo-189-base-order",
-    "boe-modelo-189-2023-amendment-hfp-1180",
-    "boe-modelo-189-2025-values",
-]
+additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2025-values"]
 
 [[revisions."2025".casillas]]
 id = "numero-valores"
@@ -88,11 +81,7 @@ semantic_role = "m189_numero_valores"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-1284-2023:art-11", "orden-hac-132-2026:art-unico"]
-source_refs = [
-    "boe-modelo-189-base-order",
-    "boe-modelo-189-2023-amendment-hfp-1284",
-    "boe-modelo-189-2025-values",
-]
+additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1284", "boe-modelo-189-2025-values"]
 
 [[revisions."2025".casillas]]
 id = "nominal-unitario-valores"
@@ -103,9 +92,4 @@ semantic_role = "m189_nominal_unitario_valores"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-1284-2023:art-11", "orden-hac-132-2026:art-unico"]
-source_refs = [
-    "boe-modelo-189-base-order",
-    "boe-modelo-189-2023-amendment-hfp-1284",
-    "boe-modelo-189-2025-values",
-]
-
+additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1284", "boe-modelo-189-2025-values"]

@@ -39,7 +39,7 @@ from ....application.ledger.models import (
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
 )
-from ....application.ledger.tests._remove_draft_revision_support import _seed_revision_citing_transaction
+from ....application.ledger.tests.remove_draft_revision_support import seed_revision_citing_transaction
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
@@ -113,7 +113,7 @@ def _deductible_expense_row(profile: TestRuntimeProfile, *, idempotency_key: str
 
 
 def _finalize_revision_citing(profile: TestRuntimeProfile, transaction_id: str) -> str:
-    return _seed_revision_citing_transaction(
+    return seed_revision_citing_transaction(
         profile.repository,
         transaction_id=transaction_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,

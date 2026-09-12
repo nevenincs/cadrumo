@@ -1,7 +1,7 @@
 """Real-runtime validation tests for Modelo 145 local communication records.
 
 See Also:
-    :mod:`~application.modelo._m145_communication_records`
+    :mod:`~application.modelo.m145_communication_records`
         Backend validation service under test.
     :func:`~application.modelo.validate_m145_communication_record`
         Public facade validator exercised by this module.

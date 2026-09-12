@@ -39,6 +39,7 @@ from typing import TYPE_CHECKING
 from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
+from ....core.secure_object_write import SecureObjectWrite
 from ....domain.modelos.errors import raise_catalogue_integrity_error
 from ....domain.modelos.filing_record import ModeloRecordCatalogue
 from ....domain.modelos.filing_repository import ModeloRecordPersistenceError
@@ -49,7 +50,7 @@ from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from collections.abc import Callable
 
-    from ..storage.sql.secure_objects import SecureObjectRepository, SecureObjectWrite
+    from ..storage.sql.secure_objects import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
 _FILING_NAMESPACE = MODELO_FILING_RECORD_CATALOGUE_NAMESPACE.namespace

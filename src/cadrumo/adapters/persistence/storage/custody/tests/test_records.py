@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import ast
 import base64
 import json
+from pathlib import Path
 from typing import Literal
 from uuid import UUID
 
@@ -18,8 +20,6 @@ from ......core.credentials import (
 )
 from ......core.storage_taxonomy import StorageCategory
 from ......core.storage_taxonomy_locations import storage_location
-from ... import __all__ as storage_exports
-from .. import __all__ as custody_exports
 from .. import records
 from ..errors import (
     ProfileCustodyPasswordError,
@@ -43,6 +43,23 @@ from ..records import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _PROFILE_ID = UUID("b6af9dd0-7c7d-46d1-bb8d-4c842c62be4d")
+
+
+def _initializer_exports(path: Path) -> frozenset[str]:
+    """Read a package initializer's declared exports without importing its facade."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    assignment = next(
+        node
+        for node in tree.body
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "__all__"
+    )
+    value = assignment.value
+    if not isinstance(value, (ast.List, ast.Tuple)):
+        raise AssertionError("package __all__ must be a literal sequence")
+    names = {item.value for item in value.elts if isinstance(item, ast.Constant) and isinstance(item.value, str)}
+    if len(names) != len(value.elts):
+        raise AssertionError("package __all__ must contain only string literals")
+    return frozenset(names)
 
 
 def _b64(byte: int, length: int) -> str:
@@ -205,6 +222,8 @@ def test_obsolete_custody_password_policy_symbols_are_absent_from_every_facade()
     }
 
     assert all(not hasattr(records, name) for name in obsolete)
+    custody_exports = _initializer_exports(Path(__file__).resolve().parents[1] / "__init__.py")
+    storage_exports = _initializer_exports(Path(__file__).resolve().parents[2] / "__init__.py")
     assert obsolete.isdisjoint(custody_exports)
     assert obsolete.isdisjoint(storage_exports)
 

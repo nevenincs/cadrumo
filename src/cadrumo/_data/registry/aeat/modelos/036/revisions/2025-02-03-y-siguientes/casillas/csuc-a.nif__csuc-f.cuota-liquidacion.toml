@@ -50,7 +50,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @20+125. Bloque 13a. Apellidos y nombre, razon o denominacion social del sucesor o beneficiario. 921] (malformed bracket in the diseno)
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -65,7 +65,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @145+5. Bloque 13a. Porcentaje de liquidacion, participacion o herencia (3 enteros + 2 decimales). 922] (malformed bracket in the diseno)
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -80,7 +80,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @150+14. Bloque 13a. Cuota de liquidacion, patrimonio o caudal hereditario (12 enteros + 2 decimales). 923] (malformed bracket in the diseno)
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -95,7 +95,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @214+9. Bloque 13b. N.I.F. del sucesor o beneficiario. [924]
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -110,7 +110,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @223+125. Bloque 13b. Apellidos y nombre, razon o denominacion social del sucesor o beneficiario. 925] (malformed bracket in the diseno)
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -125,7 +125,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @348+5. Bloque 13b. Porcentaje de liquidacion, participacion o herencia (3 enteros + 2 decimales). 926] (malformed bracket in the diseno)
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -140,7 +140,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @353+14. Bloque 13b. Cuota de liquidacion, patrimonio o caudal hereditario (12 enteros + 2 decimales). 927] (malformed bracket in the diseno)
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -155,7 +155,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @417+9. Bloque 13c. N.I.F. del sucesor o beneficiario. [928]
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -170,7 +170,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @426+125. Bloque 13c. Apellidos y nombre, razon o denominacion social del sucesor o beneficiario. 929] (malformed bracket in the diseno)
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -185,7 +185,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @551+5. Bloque 13c. Porcentaje de liquidacion, participacion o herencia (3 enteros + 2 decimales). 930] (malformed bracket in the diseno)
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -200,7 +200,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @556+14. Bloque 13c. Cuota de liquidacion, patrimonio o caudal hereditario (12 enteros + 2 decimales). 931] (malformed bracket in the diseno)
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -215,7 +215,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @620+9. Bloque 13d. N.I.F. del sucesor o beneficiario. [932]
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -230,7 +230,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @629+125. Bloque 13d. Apellidos y nombre, razon o denominacion social del sucesor o beneficiario. 933] (malformed bracket in the diseno)
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -245,7 +245,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @754+5. Bloque 13d. Porcentaje de liquidacion, participacion o herencia (3 enteros + 2 decimales). 934] (malformed bracket in the diseno)
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -260,7 +260,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @759+14. Bloque 13d. Cuota de liquidacion, patrimonio o caudal hereditario (12 enteros + 2 decimales). 935] (malformed bracket in the diseno)
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -275,7 +275,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @823+9. Bloque 13e. N.I.F. del sucesor o beneficiario. [936]
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -290,7 +290,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @832+125. Bloque 13e. Apellidos y nombre, razon o denominacion social del sucesor o beneficiario. 937] (malformed bracket in the diseno)
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -305,7 +305,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @957+5. Bloque 13e. Porcentaje de liquidacion, participacion o herencia (3 enteros + 2 decimales). 938] (malformed bracket in the diseno)
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -320,7 +320,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @962+14. Bloque 13e. Cuota de liquidacion, patrimonio o caudal hereditario (12 enteros + 2 decimales). 939] (malformed bracket in the diseno)
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -335,7 +335,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @1026+9. Bloque 13f. N.I.F. del sucesor o beneficiario. [940]
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -350,7 +350,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @1035+125. Bloque 13f. Apellidos y nombre, razon o denominacion social del sucesor o beneficiario. 941] (malformed bracket in the diseno)
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -365,7 +365,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @1160+5. Bloque 13f. Porcentaje de liquidacion, participacion o herencia (3 enteros + 2 decimales). 942] (malformed bracket in the diseno)
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -380,7 +380,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @1165+14. Bloque 13f. Cuota de liquidacion, patrimonio o caudal hereditario (12 enteros + 2 decimales). 943] (malformed bracket in the diseno)
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -395,4 +395,4 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]

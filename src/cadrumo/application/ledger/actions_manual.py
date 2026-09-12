@@ -41,12 +41,14 @@ from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryPr
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
-from ...domain.transactions.models import (
-    Transaction,
-    TransactionCatalogue,
+from ...domain.transactions.lineage_models import (
     TransactionEditLineageEntry,
     TransactionEvidenceProvenanceEntry,
     TransactionLifecycleLineageEntry,
+)
+from ...domain.transactions.models import (
+    Transaction,
+    TransactionCatalogue,
     derive_import_fingerprint,
 )
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol

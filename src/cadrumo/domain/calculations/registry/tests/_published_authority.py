@@ -7,8 +7,7 @@ publication dependency.
 
 from __future__ import annotations
 
-from cadrumo.core.authority_grade import RegistryAuthorityGrade
-
+from .....core.authority_grade import RegistryAuthorityGrade
 from ..authority import bundled_authority
 from ..schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 

@@ -23,10 +23,10 @@ from ....application.filing.producer_snapshot import (
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
 )
-from ....application.modelo._export_amendment_evidence import resolve_persisted_amendment_export_evidence
 from ....application.modelo.action_errors import AmendmentM303RectificativaMotiveError
 from ....application.modelo.amendment_actions import amend_modelo_revision
-from ....application.modelo.export import ModeloExportCommand, ModeloExportError, export_modelo_revision
+from ....application.modelo.export import ModeloExportCommand, export_modelo_revision
+from ....application.modelo.export_amendment_evidence import resolve_persisted_amendment_export_evidence
 from ....core.filing_producer_key import FilingProducerKey
 from ....core.modelo import Modelo
 from ....core.payment_election import PaymentElection
@@ -44,8 +44,6 @@ from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScop
 from ....domain.justificante.schema import Justificante
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
-    CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
     derive_calculation_revision_id,
@@ -55,10 +53,13 @@ from ....domain.modelos.calculation_revision_aggregate import (
     CalculationRevisionAggregateContext,
 )
 from ....domain.modelos.calculation_revision_amendment import (
+    CalculationRevisionAmendmentIdentity,
+    CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
     m303_rectificativa_motive_is_applicable,
     m303_rectificativa_record_design_from_snapshot,
 )
+from ....domain.modelos.errors import ModeloExportError
 from ....domain.modelos.filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,

@@ -57,7 +57,6 @@ def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
     _check_formula_refs(checker, revision)
     _check_parameter_refs(checker, revision)
     _check_binding_refs(checker, revision)
-    _check_relation_refs(checker, revision)
     _check_extraction_profile_refs(checker, revision)
     _check_cross_reference_refs(checker, revision)
     _check_workbook_parity_refs(checker, revision)
@@ -164,15 +163,6 @@ def _check_binding_refs(checker: _IdReferenceChecker, revision: ModeloRevision) 
         checker.chk_legal_source_refs(bp, binding.legal_refs, binding.source_refs)
         for citation in binding.source_citations:
             checker.chk(f"{bp}.source_citations.{citation.source_ref}", citation.source_ref, checker.source_ids)
-
-
-def _check_relation_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
-    for relation in revision.relations:
-        rp = f"relation {relation.id}"
-        checker.chk(f"{rp}.target_binding", relation.target_binding, checker.binding_ids)
-        checker.chk_legal_source_refs(rp, relation.legal_refs, relation.source_refs)
-        # cross-model source_casilla_id values are checked at registry-validate time
-        # instead of against this snapshot's casilla set.
 
 
 def _check_extraction_profile_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:

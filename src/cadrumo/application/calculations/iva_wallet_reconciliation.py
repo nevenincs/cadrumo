@@ -173,6 +173,11 @@ class IvaWalletDecisionSourceResolver:
                     lineage_role=CalculationSourceLineageRole.PRIMARY,
                     source_ref=primary_ref,
                     parent_source_ref=None,
+                    # No terminal origin: ``iva_wallet_decision`` is a mesh-only
+                    # source with no provider registration, so no declared
+                    # expectation exists for a resolved class to be audited
+                    # against.
+                    terminal_origin=None,
                     fingerprint=fingerprint,
                 ),
                 *tuple(

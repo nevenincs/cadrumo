@@ -15,7 +15,6 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
 
 import pytest
-from dev.tui.harness.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from textual.screen import Screen
 
 from ....application.search.installed_workbench import (
@@ -37,6 +36,7 @@ from ..launcher import (
     main,
     run_authenticated_workbench_sessions,
 )
+from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 
 if TYPE_CHECKING:
     from textual.pilot import Pilot

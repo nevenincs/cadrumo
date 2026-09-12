@@ -38,17 +38,21 @@ from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodError, StandardPeriodCode
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister
+from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
+from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.irnr_ledger_bindings import (
     resolve_ledger_irnr_income_aggregation_binding_values,
     unsupported_ledger_irnr_income_observations,
 )
+from ...domain.calculations.registry.ledger_binding_selector_support import LedgerIvaFact
 from ...domain.calculations.registry.ledger_impatriado_bindings import (
     resolve_ledger_impatriado_income_aggregation_binding_values,
     unsupported_ledger_impatriado_income_observations,
 )
 from ...domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
+    LedgerIvaProvider,
     invoice_ledger_screen_binding_ids,
     structurally_unroutable_iva_base_categories,
     unrouted_ledger_iva_quantities,
@@ -71,10 +75,7 @@ from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
-from ...domain.renta.retenciones_routing_integrity import (
-    RENTA_130_RETENCIONES_BINDING_ID,
-    RENTA_130_RETENCIONES_OUTPUT_CASILLA,
-)
+from ...domain.renta.retenciones_routing_integrity import resolve_m130_retenciones_route
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ._modelo_bindings_invoice_iva import (
     category_counterparty_mismatch_diagnostics,
@@ -359,6 +360,7 @@ class LedgerIvaAggregationSourceResolver:
                         lineage_role=CalculationSourceLineageRole.PRIMARY,
                         source_ref=f"transaction:{observation.ledger_id}",
                         parent_source_ref=None,
+                        terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
                     ),
                 )
                 + _provenance_for(
@@ -371,6 +373,7 @@ class LedgerIvaAggregationSourceResolver:
                         lineage_role=CalculationSourceLineageRole.PRIMARY,
                         source_ref=f"prorrata:{reference.transaction_id}",
                         parent_source_ref=None,
+                        terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
                     ),
                 )
                 + _iva_prorrata_apportionment_provenance(
@@ -538,6 +541,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                     lineage_role=CalculationSourceLineageRole.PRIMARY,
                     source_ref=f"transaction:{observation.transaction_id}",
                     parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
                 ),
             ),
         )
@@ -629,40 +633,14 @@ def _m130_retenciones_backend_inputs(
     context: CalculationSourceContext,
     binding_values: Mapping[BindingId, Decimal],
 ) -> dict[CasillaId, Decimal]:
-    """Redirect the retenciones binding's resolved value to its output casilla.
-
-    This is the OUTPUT half of a fact that is declared with
-    `target_casilla_id = "01"` in the registry (see the comment on the
-    `modelo-130-actividad-economica-retenciones-cumulative` binding in
-    `_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/bindings/
-    0003-m130-income-cumulative.toml`). That selector field is the
-    OBSERVATION-MATCH key -- it must stay "01" for the aggregation to see any
-    rows at all -- not a declaration of where the aggregate lands.
-    `RENTA_130_RETENCIONES_OUTPUT_CASILLA` is hardcoded here because this
-    binding family has no schema field to express "match on X's
-    observations, output to Y's casilla" honestly; do not "fix" the selector
-    to that casilla without reading that TOML comment first, since doing so
-    silently zeroes this value instead of redirecting it.
-
-    A schema field expressing that divergence honestly was tried and
-    reverted: it would reopen the cross-domain routing-table design this
-    redirect depends on, which needs a deliberate redesign of that table, not
-    an implementation choice made in passing. Following the established remedy
-    instead: the hardcoded casilla constant lives in `domain.renta` and is
-    validated against every
-    M130 revision by a `CrossDomainSnapshotCheck` registered at snapshot-build
-    time (`domain.renta.retenciones_routing_integrity`), the same mechanism
-    that already validates the Modelo 100 first-slice routing table. A
-    revision that dropped or renumbered the output casilla would fail loudly
-    at snapshot build, before this function ever runs -- it does not
-    re-validate that guarantee itself.
-    """
-    if str(context.modelo) != Modelo.M130.value:
+    """Redirect the selected registry binding route to its declared endpoint."""
+    route = resolve_m130_retenciones_route()
+    if str(context.modelo) != route.modelo_id:
         return {}
-    value = binding_values.get(RENTA_130_RETENCIONES_BINDING_ID)
+    value = binding_values.get(route.binding_id)
     if value is None:
         return {}
-    return {RENTA_130_RETENCIONES_OUTPUT_CASILLA: value}
+    return {route.output_casilla: value}
 
 
 class LedgerImpatriadoIncomeAggregationSourceResolver:
@@ -752,6 +730,7 @@ class LedgerImpatriadoIncomeAggregationSourceResolver:
                     lineage_role=CalculationSourceLineageRole.PRIMARY,
                     source_ref=f"transaction:{observation.transaction_id}",
                     parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
                 ),
             ),
         )
@@ -872,6 +851,7 @@ class LedgerIrnrIncomeAggregationSourceResolver:
                     lineage_role=CalculationSourceLineageRole.PRIMARY,
                     source_ref=f"transaction:{observation.transaction_id}",
                     parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
                 ),
             ),
         )
@@ -995,6 +975,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                     lineage_role=CalculationSourceLineageRole.PRIMARY,
                     source_ref=f"transaction:{observation.transaction_id}",
                     parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
                 ),
             ),
         )
@@ -1042,6 +1023,7 @@ def _iva_prorrata_apportionment_provenance(
             lineage_role=CalculationSourceLineageRole.PRIMARY,
             source_ref=_iva_prorrata_apportionment_source_ref(period, apportionment),
             parent_source_ref=None,
+            terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
             legal_refs=tuple(dict.fromkeys(ref for casilla in casillas for ref in casilla.legal_refs)),
             source_refs=tuple(dict.fromkeys(ref for casilla in casillas for ref in casilla.source_refs)),
         ),
@@ -1065,17 +1047,13 @@ def _iva_deducible_cuota_casillas(revision: ModeloRevision) -> tuple[CasillaDefi
     ledger_iva_amount_bindings = {
         binding.id
         for binding in revision.bindings
-        if binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION
-        and getattr(binding.selector, "fact", "iva_amount_sum") == "iva_amount_sum"
+        if isinstance(binding.provider, LedgerIvaProvider) and binding.provider.fact == LedgerIvaFact.IVA_AMOUNT_SUM
     }
     return tuple(
         casilla
         for casilla in revision.casillas
         if "deducible" in casilla.section
-        and any(
-            binding_id is not None and binding_id in ledger_iva_amount_bindings
-            for binding_id in (casilla.binding, *casilla.alternate_bindings)
-        )
+        and any(binding_id in ledger_iva_amount_bindings for binding_id in bound_casilla_binding_ids(casilla))
     )
 
 

@@ -29,7 +29,7 @@ import pytest
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from .._verification_predicates import _advisory_predicate_finding
+from ..verification_predicates import _advisory_predicate_finding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

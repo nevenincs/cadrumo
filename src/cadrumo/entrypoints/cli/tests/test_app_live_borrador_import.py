@@ -26,11 +26,11 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n.render import tr
 from ....core.resources.bundled_data import bundled_path
+from ....tests.cli_envelope import unwrap_cli_result as _json
 from ....tests.fixtures.borrador.generate import render_borrador_pdf
 from ._cli_surface_support import (
     _active_bucket_id,
     _invoke,
-    _json,
     create_cli_surface_profile,
     isolated_cli_surface_backend,
 )

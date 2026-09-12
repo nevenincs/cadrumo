@@ -100,6 +100,21 @@ def test_locale_signal_fails_closed_when_child_payload_is_not_parseable(
     assert metadata["exit_status"] == 7
 
 
+def test_locale_signal_normalizes_nonzero_child_without_payload_to_tool_failure(tmp_path: Path) -> None:
+    status = run(
+        (sys.executable, "-c", "print('broken'); raise SystemExit(1)"),
+        repository=tmp_path,
+        family="test-runs",
+        label="locales-status",
+        signal="locales-status",
+    )
+
+    assert status == 7
+    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+    assert metadata["exit_status"] == 7
+
+
 def test_command_run_confines_child_temp_and_cache_paths(tmp_path: Path) -> None:
     probe = (
         "import json, os, pathlib, tempfile; "

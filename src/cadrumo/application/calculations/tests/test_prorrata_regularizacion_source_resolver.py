@@ -36,6 +36,9 @@ from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRe
 from ....core.resources.bundled_data import bundled_path
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_RESULTADO_CASILLA as M303_RESULTADO_CASILLA,
+)
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
@@ -44,7 +47,6 @@ from ....domain.calculations.registry.tests.registry_observations import (
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation.source_mesh import CalculationSourceContext
-from ..iva_compensation_casillas import M303_RESULTADO_CASILLA
 from ..observations_repository import CalculationObservationRepository, ResultDispositionProjection
 from ..prorrata_regularizacion import ProrrataRegularizacionSourceResolver
 

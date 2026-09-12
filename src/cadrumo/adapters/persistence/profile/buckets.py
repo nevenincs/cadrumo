@@ -56,7 +56,7 @@ from typing import TYPE_CHECKING
 from pydantic import ValidationError
 
 from ....core.logging import get_logger
-from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
+from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.buckets.event_repository import BucketEventHistoryPersistenceError
 from ..storage.secure_object_namespaces import BUCKET_EVENT_HISTORY_NAMESPACE
@@ -66,7 +66,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     # pragma: no cover — import-cycle guard
-    from ..storage.sql.secure_objects import SecureObjectRepository, SecureObjectWrite
+    from ..storage.sql.secure_objects import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
 _NAMESPACE = BUCKET_EVENT_HISTORY_NAMESPACE.namespace

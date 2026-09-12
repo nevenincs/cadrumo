@@ -79,7 +79,7 @@ _CREDENTIAL_EVIDENCE_KEYWORDS: Final[frozenset[str]] = frozenset(
 )
 """Substrings whose presence in a field's path or description PRESUMES a credential.
 
-This was read off ``_overview._MASK_KEYWORDS`` until that set was recomposed onto
+This was read off ``_overview.MASK_KEYWORDS`` until that set was recomposed onto
 the shared redaction base, and the two must not be the same vocabulary again --
 they answer different questions. The masking predicate asks *should this value be
 hidden from an operator*, for which a NIF, a tax id and a certificate reference

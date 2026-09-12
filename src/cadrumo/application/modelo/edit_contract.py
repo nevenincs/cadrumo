@@ -24,6 +24,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from ...core.hex import Hex64Str
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import (
     CalculationRevisionId,
@@ -32,7 +33,6 @@ from ...core.identity.hex_ids import (
     WorkUnitId,
 )
 from ...core.time.utc import validate_utc_aware
-from ...domain.buckets.event import BucketEventId
 from ..operations.models import OperationDefinitionId, OperationId, OperationReference
 from ..operations.registry import OperationSchemaIdentityV1
 
@@ -77,7 +77,7 @@ class ModeloEditMutationResultReceiptV1(EditModel):
     baseline_id: ModeloEditBaselineId
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
-    bucket_event_id: BucketEventId | None
+    bucket_event_id: Hex64Str | None
     effect: Literal[ModeloEditExecutionEffect.UPDATED] = ModeloEditExecutionEffect.UPDATED
     committed_at: datetime
     result_destination: OperationReference

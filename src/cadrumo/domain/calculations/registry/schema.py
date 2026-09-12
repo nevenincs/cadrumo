@@ -14,20 +14,18 @@ from enum import StrEnum
 from typing import Annotated, Final, Literal
 
 from pydantic import (
-    BaseModel,
     BeforeValidator,
     Discriminator,
     Field,
     SerializerFunctionWrapHandler,
     Tag,
     ValidationInfo,
-    field_serializer,
     field_validator,
     model_serializer,
     model_validator,
 )
 
-from ....core.aggregation import BindingAggregation, BindingSourceKind, BindingTypedEnumKind
+from ....core.aggregation import BindingAggregation, BindingSourceKind
 from ....core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId
 from ....core.classification.policies import SensitivityClass
@@ -38,7 +36,15 @@ from ....core.period import Period, RegistrySelectorPeriodCode
 from ....core.revision_review import RevisionReviewStatus
 from ....core.tax_domain import TaxDomain
 from ....core.toml import freeze_toml_value
-from ._toml_helpers import as_toml_table as _as_toml_table
+from .binding_provider import BindingProvider
+from .binding_temporal import (
+    AllRevisionContexts,
+    AuthoredBinding,
+    BindingApplicability,
+    BindingAuthorship,
+)
+from .binding_terminal_origin import TerminalOriginExpectation
+from .binding_value_contract import BindingValueChannel, BindingValueContract
 from .errors import RegistryValidationError
 from .ids import (
     ApplicationLinkId,
@@ -70,15 +76,6 @@ from .schema_rounding import RegistryRoundingCode as RegistryRoundingCode
 from .schema_rounding import RegistryRoundingCodeValue
 from .schema_scalars import (
     BicString as _BicString,
-)
-from .schema_scalars import (
-    BindingSelector as _BindingSelector,
-)
-from .schema_scalars import (
-    BindingSelectorMap as _BindingSelectorMap,
-)
-from .schema_scalars import (
-    BindingSelectorValue as _BindingSelectorValue,
 )
 from .schema_scalars import (
     CalendarDate as _CalendarDate,
@@ -130,10 +127,9 @@ from .schema_verification import (
 )
 
 __all__ = [
-    "BindingSelector",
+    "BindingDefinition",
     "CasillaProducerInventory",
     "CasillaProducerProvenance",
-    "DataBindingDefinition",
     "DecimalValue",
     "DeclaredPredecessor",
     "FormulaDefinition",
@@ -151,10 +147,12 @@ __all__ = [
 from ....core.filing_year import FilingYear
 from .convenio import ConvenioAuthority
 from .facts.schema import GovernedFactCatalogue
+from .identifier_evolutions import IdentifierEvolution
 from .modelo_localization import require_modelo_localization, resolve_modelo_localization
 from .revision_predecessor_date_agreement import EditionWindow, validate_predecessor_date_agreement
 from .revision_predecessor_forest import validate_predecessor_forest
 from .schema_base import (
+    CHAIN_FAMILY,
     GOVERNANCE_STAMP,
     MANIFEST_ONLY,
     SCHEMA_FAMILY,
@@ -198,7 +196,6 @@ from .schema_surfaces import (
     CalculationCompletenessManifest,
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,
-    RelationDefinition,
 )
 
 # Scalar and annotated value types live in ``_schema_scalars``; retaining these
@@ -218,9 +215,6 @@ MunicipalityCode = _MunicipalityCode
 BicString = _BicString
 CalendarDate = _CalendarDate
 WorkbookCellRefStr = _WorkbookCellRefStr
-BindingSelectorValue = _BindingSelectorValue
-BindingSelectorMap = _BindingSelectorMap
-BindingSelector = _BindingSelector
 
 
 class ContinuidadValidationMode(StrEnum):
@@ -255,183 +249,72 @@ ModeloCadenceField = Annotated[ModeloCadence, BeforeValidator(coerce_enum_member
 """Registry token hydrated into a ModeloCadence member."""
 
 
-class DataBindingDefinition(RegistryModel):
-    """Declare one typed source-to-casilla binding in a registry revision."""
+class BindingDefinition(RegistryModel):
+    """Declare one typed source-to-casilla binding in a registry revision.
+
+    The declaration is a closed statement in four parts: :attr:`provider` names
+    WHERE the value comes from as one member of the discriminated
+    :data:`~.binding_provider.BindingProvider` union, :attr:`value` states the
+    typed contract the value honours, :attr:`aggregation` states how several
+    source facts fold into one, and :attr:`terminal_origins` states the classes
+    of terminal fact the resolved value is allowed to rest on -- the authored
+    half of the provenance audit.
+
+    The former ``source`` token and untyped ``selector`` mapping are gone: they
+    were two fields that could disagree, and the union makes the tag part of the
+    member. :attr:`source` survives as a read-only projection of the member's
+    discriminator for consumers that still key on the source kind alone.
+    """
 
     id: BindingId
-    source: BindingSourceKind
-    # Accepts a raw authoring mapping (the TOML shape, and the shape every
-    # constructor call site in the test suite passes) in addition to an
-    # already-typed selector model: ``_coerce_selector`` (a ``mode="before"``
-    # validator, below) hydrates either into the source-family model at
-    # construction, so the declared input type must cover both.
-    selector: BindingSelector | Mapping[str, object]
+    provider: BindingProvider
+    value: BindingValueContract
     aggregation: BindingAggregation | None = None
-    typed_enum: BindingTypedEnumKind | None = None
-    """Closed-set enum class name a consumer routes the binding value through.
-
-    LIVE field (do NOT remove). Typed as the closed
-    :class:`~core.aggregation.BindingTypedEnumKind` reference (F8 — was a
-    bare ``str``); declared in registry TOML for the bindings that bridge a
-    closed-membership substrate axis — ``"censo_event_kind"`` (M036), ``"CCAA"``
-    and ``"EstimacionDirectaModalidad"`` (M100), ``"LegalEntityForm"`` (M200) —
-    and surfaced by the operator-facing ``bindings list`` CLI table
-    (``_modelo_discovery_cli.py``), the
-    :class:`~domain.calculations.registry._query_reports.ModeloBindingQueryRow`
-    query projection, the borrador binding resolver, and the Sheets-pull edit router.
-    Because a :class:`~enum.StrEnum` serialises to its value, those ``str``
-    consumers stay byte-compatible. It is the closed-set *annotation* on the
-    binding, distinct from the ``input_channel`` (how a formula consumes the
-    value); a binding may carry a ``typed_enum`` yet still be a numeric
-    ``decimal`` channel. The loader's raw TOML token is hydrated to its member
-    by :meth:`~domain.calculations.registry.DataBindingDefinition._coerce_typed_enum`
-    at the boundary (an unknown token raises).
-    Gated by
-    ``test_schema_hygiene.py::test_renta_typed_binding_candidates_declare_substrate_enum_class``.
-    """
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-    source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
+    applicability: BindingApplicability = AllRevisionContexts()
+    terminal_origins: tuple[TerminalOriginExpectation, ...] = ()
+    authorship: BindingAuthorship = AuthoredBinding()
     # AEAT borrador pre-fill tier: the third, AEAT-live prefill tier, distinct
     # from the local relation prefill (`_relation_prefill`) and previous-filing
     # direct-carry (`_binding_prefill`) tiers. The three share only the word
     # "prefill" and must not be merged.
     aeat_prefilled: bool = False
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+    source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
 
-    @field_validator("source", mode="before")
-    @classmethod
-    def _coerce_source(cls, value: object) -> object:
-        """Hydrate the registry TOML's raw ``source`` string into its enum member.
+    @property
+    def source(self) -> BindingSourceKind:
+        """Return the provider member's discriminator as its source kind.
 
-        The authoring tree declares ``source`` as a plain string (``"profile"``,
-        ``"ledger_iva_aggregation"``, ...). Under the strict model config a
-        :class:`~core.BindingSourceKind` field requires the actual member,
-        not its value, so the raw string from ``model_validate`` would be
-        rejected. Coercing the known closed-set string to its member at the
-        boundary keeps the TOML plain while preserving strict rejection of an
-        unknown source (:class:`~core.BindingSourceKind` raises on an
-        invalid value). This is the source-kind sibling of
-        :meth:`~core.aggregation.BindingAggregation._coerce_op`.
+        A projection, never a stored field: the discriminator IS the source
+        kind, so the two can no longer disagree the way the former sibling
+        ``source`` column could.
         """
-        if isinstance(value, str) and not isinstance(value, BindingSourceKind):
-            return BindingSourceKind(value)
-        return value
-
-    @field_validator("selector", mode="before")
-    @classmethod
-    def _coerce_selector(cls, value: object, info: ValidationInfo) -> object:
-        """Hydrate a raw selector mapping into its source-family model."""
-        if isinstance(value, BaseModel):
-            return value
-        source: object = info.data.get("source")
-        binding_id: object = info.data.get("id", "<unknown>")
-        from .binding_selector_utils import canonical_selector_key_hint
-        from .bindings import selector_model_for_source
-
-        selector_model = selector_model_for_source(source)
-        if selector_model is None:
-            source_value = source.value if isinstance(source, BindingSourceKind) else str(source)
-            raise RegistryValidationError(
-                f"binding {binding_id!r} source {source_value!r} is not a registry binding source "
-                "or has no selector model",
-            )
-        try:
-            # Validated in Python mode, so a selector decoded from JSON carries
-            # lists where the strict selector models require tuples; freeze it
-            # to the same shape the registry loader hands over.
-            return selector_model.model_validate(freeze_toml_value(value))
-        except ValueError as exc:
-            selector = _as_toml_table(value) or {}
-            hint = canonical_selector_key_hint(selector, selector_model)
-            raise RegistryValidationError(
-                f"binding {binding_id!r} (source={source!r}) selector violates {selector_model.__name__}: {exc}{hint}",
-            ) from exc
-
-    @field_serializer("selector")
-    def _serialize_selector(self, selector: object) -> dict[str, object]:
-        """Serialise the concrete selector model as the authored selector mapping."""
-        if isinstance(selector, BaseModel):
-            return {
-                str(key): value
-                for key, value in selector.model_dump(
-                    exclude={"source"},
-                    exclude_none=True,
-                    exclude_unset=True,
-                ).items()
-            }
-        raise RegistryValidationError(
-            f"binding {self.id!r} selector serializer requires a mapping or model, got {type(selector).__name__}",
-        )
-
-    @field_validator("typed_enum", mode="before")
-    @classmethod
-    def _coerce_typed_enum(cls, value: object) -> object:
-        """Hydrate the registry TOML's raw ``typed_enum`` token into its member.
-
-        The authoring tree declares ``typed_enum`` as a plain string (the name
-        of the substrate enum class — ``"censo_event_kind"``, ``"CCAA"``,
-        ``"EstimacionDirectaModalidad"``, ``"LegalEntityForm"``). Under the
-        strict model config a :class:`~core.aggregation.BindingTypedEnumKind`
-        field requires the actual member, not its value, so the raw string from
-        ``model_validate`` would be rejected. Coercing the known closed-set token
-        to its member at the boundary keeps the TOML plain while preserving
-        strict rejection of an unknown annotation
-        (:class:`~core.aggregation.BindingTypedEnumKind` raises on an invalid
-        value). This is the ``typed_enum`` sibling of :meth:`_coerce_source`.
-        """
-        if isinstance(value, str) and not isinstance(value, BindingTypedEnumKind):
-            return BindingTypedEnumKind(value)
-        return value
+        return BindingSourceKind(self.provider.kind)
 
     @model_validator(mode="after")
-    def _validate_selector_shape(self) -> DataBindingDefinition:
-        """Validate the hydrated selector against its source family's schema at construction.
+    def _validate_row_set_terminal_cardinality(self) -> BindingDefinition:
+        """Refuse a row collection that claims exactly one terminal fact.
 
-        Dispatches on :attr:`source` through the discriminated-union selector
-        table (``_BINDING_SELECTOR_REGISTRY`` in
-        :mod:`~domain.calculations.registry._bindings`, surfaced by
-        :func:`~domain.calculations.registry._bindings.selector_model_for_source`):
-        the raw authoring mapping
-        is hydrated into the per-family model and re-validated the moment the
-        binding is constructed, promoting the
-        selector-shape half of the former snapshot-build-only gate
-        (:func:`~domain.calculations.registry._bindings.validate_binding_selector_shape`)
-        up into the model.
-
-        This strictly TIGHTENS validation: a misshapen selector (an unknown key,
-        a retired key name, an out-of-set ``fact`` literal) now fails at
-        construction rather than only when the snapshot-build section validator
-        runs. The op/fact cross-invariants — which depend on the separate
-        :attr:`aggregation` field — remain owned by ``validate_binding_selector_shape``
-        at snapshot build, so a binding whose selector is well-shaped but whose
-        op/fact pairing is wrong stays constructible (the build gate rejects it).
-        A source absent from the selector registry is mesh-only or unregistered
-        and is refused as a registry binding source.
-
-        The accessor and validator are imported lazily because
-        :mod:`~domain.calculations.registry._bindings`
-        imports :class:`DataBindingDefinition` from this module; the lazy import
-        breaks the cycle, matching the snapshot-build validators
-        (``_validate_reference_sections``, ``_validate_registry_scope``). The
-        shared
-        :func:`~domain.calculations.registry._binding_selector_utils.selector_against_model`
-        runs the
-        SAME normalisation and emits the SAME diagnostic the build gate does, so
-        a construction-time refusal and a build-time refusal carry identical
-        text.
+        A row family rests on however many terminal facts the period produced,
+        including none: ``exactly_one`` would make an empty row family
+        indistinguishable from a missing one, which is the collapse
+        :mod:`binding_terminal_origin`'s cardinality axis exists to prevent.
+        Whether the rows are grouped or provider-native is the registration's
+        question; the cardinality is contract-local, so it is checked here.
         """
-        from .binding_selector_utils import selector_against_model
-        from .bindings import selector_model_for_source
-
-        selector_model = selector_model_for_source(self.source)
-        if selector_model is None:
+        if self.value.channel is not BindingValueChannel.ROW_SET:
+            return self
+        offending = tuple(
+            expectation.source_class.value
+            for expectation in self.terminal_origins
+            if expectation.cardinality == "exactly_one"
+        )
+        if offending:
             raise RegistryValidationError(
-                f"binding {self.id!r} source {self.source.value!r} is not a registry binding source "
-                "or has no selector model",
+                f"binding {self.id!r}: a row_set value cannot rest on an exactly_one terminal origin",
+                context={"id": self.id, "source_classes": list(offending)},
             )
-        diagnostics = selector_against_model(self, selector_model)
-        if diagnostics:
-            raise RegistryValidationError(diagnostics[0])
         return self
 
 
@@ -478,24 +361,19 @@ class CasillaProducerProvenance:
     """One lossless producer path for a revision-local casilla.
 
     The record retains the real schema declarations instead of copying or
-    flattening their legal/source provenance.  A relation-backed binding emits
-    one record per relation declaration, so distinct relation ids and their
-    independent provenance remain visible even when they target the same
-    binding and casilla.
+    flattening their legal/source provenance, so a producer's own grounding
+    stays visible rather than being restated on the casilla.
     """
 
     casilla: CasillaDefinition
     producer_kind: CasillaProducerKindField
     reason: str
     formula: FormulaDefinition | None = None
-    binding: DataBindingDefinition | None = None
-    relation: RelationDefinition | None = None
+    binding: BindingDefinition | None = None
 
     @property
     def producer_legal_refs(self) -> tuple[LegalRefId, ...]:
         """Return the existing legal refs on this path's producer declaration."""
-        if self.relation is not None:
-            return tuple(self.relation.legal_refs)
         if self.binding is not None:
             return tuple(self.binding.legal_refs)
         if self.formula is not None:
@@ -507,8 +385,6 @@ class CasillaProducerProvenance:
     @property
     def producer_source_refs(self) -> tuple[SourceRefId, ...]:
         """Return the existing source refs on this path's producer declaration."""
-        if self.relation is not None:
-            return tuple(self.relation.source_refs)
         if self.binding is not None:
             return tuple(self.binding.source_refs)
         if self.formula is not None:
@@ -572,14 +448,13 @@ def _producer_provenance(
     reason: str,
     *,
     formulas: Sequence[FormulaDefinition] = (),
-    binding: DataBindingDefinition | None = None,
-    relations: Sequence[RelationDefinition] = (),
+    binding: BindingDefinition | None = None,
 ) -> tuple[CasillaProducerProvenance, ...]:
     """Build the provenance records for one classified production path.
 
     A declaration that resolves to several real registry rows -- several formula
-    declarations sharing one id, several relations targeting one binding -- emits
-    one record per row, so their independent legal provenance stays visible. A
+    declarations sharing one id -- emits one record per row, so their
+    independent legal provenance stays visible. A
     declaration that resolves to none still emits a single record carrying the
     reason, which is what keeps an unresolved producer auditable instead of
     absent.
@@ -594,17 +469,6 @@ def _producer_provenance(
             )
             for formula in formulas
         )
-    if relations:
-        return tuple(
-            CasillaProducerProvenance(
-                casilla=casilla,
-                producer_kind=kind,
-                reason=reason,
-                binding=binding,
-                relation=relation,
-            )
-            for relation in relations
-        )
     return (
         CasillaProducerProvenance(
             casilla=casilla,
@@ -618,8 +482,7 @@ def _producer_provenance(
 def _bound_casilla_producer(
     casilla: CasillaDefinition,
     *,
-    bindings_by_id: Mapping[BindingId, DataBindingDefinition],
-    relations_by_binding: Mapping[BindingId, Sequence[RelationDefinition]],
+    bindings_by_id: Mapping[BindingId, BindingDefinition],
 ) -> tuple[CasillaProducerKind, str, tuple[CasillaProducerProvenance, ...]]:
     """Classify a ``bound`` casilla from the binding its declaration names.
 
@@ -638,13 +501,7 @@ def _bound_casilla_producer(
         return (
             CasillaProducerKind.RELATION,
             reason,
-            _producer_provenance(
-                casilla,
-                CasillaProducerKind.RELATION,
-                reason,
-                binding=binding,
-                relations=relations_by_binding.get(binding.id, ()),
-            ),
+            _producer_provenance(casilla, CasillaProducerKind.RELATION, reason, binding=binding),
         )
     reason = f"upstream production uses binding {binding.id!r} with source {binding.source.value!r}"
     return (
@@ -658,8 +515,7 @@ def _casilla_producer(
     casilla: CasillaDefinition,
     *,
     formulas_by_id: Mapping[FormulaId, Sequence[FormulaDefinition]],
-    bindings_by_id: Mapping[BindingId, DataBindingDefinition],
-    relations_by_binding: Mapping[BindingId, Sequence[RelationDefinition]],
+    bindings_by_id: Mapping[BindingId, BindingDefinition],
 ) -> tuple[CasillaProducerKind, str, tuple[CasillaProducerProvenance, ...]]:
     """Classify one casilla's declared production path, with its reason.
 
@@ -689,11 +545,7 @@ def _casilla_producer(
         )
         return CasillaProducerKind.MANUAL, reason, _producer_provenance(casilla, CasillaProducerKind.MANUAL, reason)
     if casilla.input_kind is InputKind.BOUND:
-        return _bound_casilla_producer(
-            casilla,
-            bindings_by_id=bindings_by_id,
-            relations_by_binding=relations_by_binding,
-        )
+        return _bound_casilla_producer(casilla, bindings_by_id=bindings_by_id)
     if casilla.input_kind is InputKind.PROJECTION_ONLY:
         reason = "projection-only casilla is populated exclusively from its canonical typed row"
         return (
@@ -924,6 +776,19 @@ class ModeloRevision(RegistryModel):
     sits in. A table stating both keys, additions that are empty, or additions
     in an edition declaring no ``casilla_source_refs`` is refused. The key is
     consumed by the loader and never reaches this model.
+
+    ``binding_source_refs`` and ``formula_source_refs`` are the same fact for
+    the binding and formula families, and carry the same member-side rule: a
+    row stating no ``source_refs`` takes the edition default, a row stating
+    ``additional_source_refs`` takes the default followed by its additions, and
+    a row stating ``source_refs`` keeps them whole. Three fields rather than one
+    because the three families are grounded in different documents -- a
+    modelo's casillas in its diseno de registros, its bindings in that design's
+    record layout, its formulas in the approving orden's instructions -- and one
+    shared default would force an edition to restate on two families whenever
+    the third differs. Each is independent: declaring one says nothing about
+    the others, and an edition declaring none is exactly as it was before these
+    keys existed.
     """
 
     id: RevisionId
@@ -944,11 +809,18 @@ class ModeloRevision(RegistryModel):
         default=None,
         exclude_if=lambda value: value is None,
     )
+    binding_source_refs: Annotated[SourceRefs | None, MANIFEST_ONLY] = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
+    formula_source_refs: Annotated[SourceRefs | None, MANIFEST_ONLY] = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
     parameters: Annotated[tuple[ParameterDefinition, ...], SCHEMA_FAMILY] = ()
     casillas: Annotated[tuple[CasillaDefinition, ...], SCHEMA_FAMILY] = ()
     formulas: Annotated[tuple[FormulaDefinition, ...], SCHEMA_FAMILY] = ()
-    bindings: Annotated[tuple[DataBindingDefinition, ...], SCHEMA_FAMILY] = ()
-    relations: Annotated[tuple[RelationDefinition, ...], SCHEMA_FAMILY] = ()
+    bindings: Annotated[tuple[BindingDefinition, ...], SCHEMA_FAMILY] = ()
     projection_endpoints: Annotated[tuple[ProjectionEndpointDeclaration, ...], SCHEMA_FAMILY] = ()
     export_layouts: Annotated[tuple[ExportLayoutDefinition, ...], SCHEMA_FAMILY] = ()
     extraction_profiles: Annotated[tuple[ExtractionProfileDefinition, ...], SCHEMA_FAMILY] = ()
@@ -964,7 +836,9 @@ class ModeloRevision(RegistryModel):
     completeness_manifest: CalculationCompletenessManifest | None = None
     verification_predicates: Annotated[tuple[VerificationPredicateDefinition, ...], SCHEMA_FAMILY] = ()
     continuidad_validation: ContinuidadValidationModeField = ContinuidadValidationMode.ADVISORY
-    casilla_continuidad_evolutions: Annotated[tuple[CasillaContinuidadEvolutionDefinition, ...], SCHEMA_FAMILY] = ()
+    casilla_continuidad_evolutions: Annotated[tuple[CasillaContinuidadEvolutionDefinition, ...], CHAIN_FAMILY] = ()
+    binding_evolutions: Annotated[tuple[IdentifierEvolution, ...], CHAIN_FAMILY] = ()
+    formula_evolutions: Annotated[tuple[IdentifierEvolution, ...], CHAIN_FAMILY] = ()
     authority_grade: Annotated[RegistryAuthorityGradeField | None, MANIFEST_ONLY] = None
     family_dispositions: Annotated[Mapping[str, SchemaFamilyDispositionDeclaration], MANIFEST_ONLY, FROZEN_MAPPING] = (
         Field(default_factory=dict, validate_default=True)
@@ -1074,9 +948,6 @@ class ModeloRevision(RegistryModel):
 
         formula_declarations_by_casilla: dict[CasillaId, list[FormulaId]] = {}
         bindings_by_id = {binding.id: binding for binding in self.bindings}
-        relations_by_binding: dict[BindingId, list[RelationDefinition]] = {}
-        for relation in self.relations:
-            relations_by_binding.setdefault(relation.target_binding, []).append(relation)
         computed_casilla_ids: set[CasillaId] = set()
         producer_kind_by_casilla: dict[CasillaId, CasillaProducerKind] = {}
         producer_reason_by_casilla: dict[CasillaId, str] = {}
@@ -1092,7 +963,6 @@ class ModeloRevision(RegistryModel):
                 casilla,
                 formulas_by_id=formulas_by_id,
                 bindings_by_id=bindings_by_id,
-                relations_by_binding=relations_by_binding,
             )
             producer_kind_by_casilla[casilla.id] = kind
             producer_reason_by_casilla[casilla.id] = reason
@@ -1186,7 +1056,8 @@ A superset of :data:`REVISION_GOVERNANCE_FIELDS` by construction, since
 :class:`GovernanceStampMarker` is a :class:`ManifestOnlyMarker`. Beyond the
 governance stamp it carries the legally load-bearing scalars ``legal_refs``,
 ``orden_aplicabilidad`` and ``valid_to``, which share the stamp's readability
-hazard and raise its stakes, ``casilla_source_refs``, which grounds rows in
+hazard and raise its stakes, ``casilla_source_refs``, ``binding_source_refs``
+and ``formula_source_refs``, which ground rows in
 every fragment of the edition, and ``authority_grade``, which is a claim about how
 far the whole revision's authority reaches and so belongs in the one file a
 reviewer opens; :mod:`..schema_governance` records how a deep
@@ -1523,11 +1394,3 @@ class RegistrySnapshot(RegistryModel):
                 lambda expectation: expectation.discrepancy_causes,
             ),
         )
-
-
-def filing_period_from_scope(filing_year: int, period: str) -> Period | None:
-    """Return a core :class:`Period` when the registry token is a real filing-period code."""
-    try:
-        return Period.from_year_and_code(filing_year, period)
-    except ValueError:
-        return None

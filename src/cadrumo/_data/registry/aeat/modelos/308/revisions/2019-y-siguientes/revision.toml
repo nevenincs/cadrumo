@@ -1,4 +1,6 @@
 [revisions."2019-y-siguientes"]
+predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["ley-37-1992:art-21"], source_refs = ["aeat-dr-308-2019"] } }
+casilla_source_refs = ["aeat-dr-308-2019"]
 # Prepared and reviewed by an agent against the bundled diseño de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather
@@ -46,24 +48,6 @@ source_refs = [
     "boe-modelo-308-2008-form",
 ]
 
-
-[revisions."2019-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = """
-CasillaContinuidadEvolutionDefinition requires a proved identity across two revisions. The three historical record designs and the 2019 design have distinct layouts, but no source-backed casilla identity programme has adjudicated their transitions. This frontier revision therefore declares no continuity evolution rather than inventing one from repeated BOE form wording."""
-legal_refs = [
-    "ley-37-1992:art-21",
-    "rd-1624-1992:art-30-bis",
-    "orden-eha-3786-2008:art-2",
-    "orden-eha-3786-2008:art-11",
-    "ley-37-1992:art-161",
-]
-source_refs = [
-    "aeat-dr-308-2019",
-    "aeat-modelo-308-procedure",
-    "boe-modelo-308-2008-form",
-]
-
-
 [revisions."2019-y-siguientes".family_dispositions.applicability]
 reason = "Modelo 308 is filed AD-HOC, one declaration per settlement period as the intra-community operations occur: the filing condition is the operation itself, modeled by the filing_schedules AD-HOC entry, not a periodic taxpayer-condition profile state. The applicability family has no periodic condition to declare."
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
@@ -103,12 +87,6 @@ source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
 reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. Modelo 308's record design declares two fixed pages with no repeated projection record and no field of kind 'projection'. The family has no repeated endpoint to admit; authoring a projection row into the layout is what would make it apply."
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
-
-[revisions."2019-y-siguientes".family_dispositions.relations]
-reason = "A relation declares a cross-modelo fold-in. Modelo 308 folds nothing in: its values are the operator's per-operation entries, and no other modelo's annual summary or quarterly output feeds it. The relation family is empty because no cross-modelo fold exists."
-legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
-source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure"]
-
 [revisions."2019-y-siguientes".family_dispositions.verification_expectations]
 reason = "A verification expectation reconciles a FILED return against this application's engine. Modelo 308's AD-HOC filings carry only the operator's own entered values with no engine-computed figures to reconcile, and the application holds no justificante reconciliation surface for the recapitulativa. The family is empty until such a surface is authored, not by omission."
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]

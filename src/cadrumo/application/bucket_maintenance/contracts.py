@@ -17,7 +17,7 @@ from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.retention.floor import RetentionFloorAssessment
 from ...domain.user_profile.values import ProfileSetupState
-from .._bucket_deletion_contracts import BucketDeletionFingerprint
+from ..bucket_deletion_contracts import BucketDeletionFingerprint
 
 
 class AssessBucketDeletionCommand(BaseModel):

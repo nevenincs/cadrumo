@@ -84,13 +84,14 @@ from ....adapters.persistence.storage.namespace_taxonomy import StorageRemoteMir
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....adapters.persistence.storage.secure_object_namespaces import SecureObjectNamespaceDefinition
 from ....adapters.persistence.storage.sql.secure_object_crypto import verify_revision_self_consistency
-from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRawRow, SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_object_records import SecureObjectRawRow
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.config import load_settings
 from ....core.hashing import sha256_hex
 from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.models import STRICT_FROZEN_CONFIG
-from .._common import emit_envelope
+from ..common import emit_envelope
 from ..errors import CliRefusedBoundaryError
 from ._archive_push_payloads import (
     ProfileArchivePushDegradedManifestPayload,

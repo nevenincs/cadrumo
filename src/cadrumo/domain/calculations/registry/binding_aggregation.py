@@ -20,8 +20,12 @@ See Also:
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ....core.aggregation import ROW_SET_GROUPING_FOR_BINDING_SOURCE, BindingAggregationOp, BindingSourceKind
-from .schema import DataBindingDefinition
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition
 
 #: Binding ``source`` kinds whose aggregation defaults to ``rows`` (one detail
 #: row per observation) when the binding declares no explicit op. Every other
@@ -50,11 +54,11 @@ def default_binding_aggregation_op(source: str) -> BindingAggregationOp:
     return BindingAggregationOp.SUM
 
 
-def binding_aggregation_op(binding: DataBindingDefinition) -> BindingAggregationOp:
+def binding_aggregation_op(binding: BindingDefinition) -> BindingAggregationOp:
     """Return the typed :class:`~core.aggregation.BindingAggregationOp` a binding declares, or its default.
 
     When the
-    :class:`~domain.calculations.registry.DataBindingDefinition` carries an
+    :class:`~domain.calculations.registry.BindingDefinition` carries an
     explicit :class:`~core.aggregation.BindingAggregation`, its typed ``op``
     is returned. When ``aggregation`` is ``None``, the declared per-family
     default for the binding's ``source`` is applied in this one place.

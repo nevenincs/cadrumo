@@ -11,8 +11,9 @@
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-296-prev-216-base-retenciones"
-source = "relation_prefill"
-selector = { source_modelo = "216", source_casilla_id = "10" }
+provider = { kind = "relation_prefill", relation_kind = "annual_summary", dependency_role = "periodic_to_annual_summary", source_modelo = "216", source_casilla_id = "10", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
@@ -23,8 +24,9 @@ required_text = ["modelo 296"]
 
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-296-prev-216-retenciones-total"
-source = "relation_prefill"
-selector = { source_modelo = "216", source_casilla_id = "13" }
+provider = { kind = "relation_prefill", relation_kind = "annual_summary", dependency_role = "periodic_to_annual_summary", source_modelo = "216", source_casilla_id = "13", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
 source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]

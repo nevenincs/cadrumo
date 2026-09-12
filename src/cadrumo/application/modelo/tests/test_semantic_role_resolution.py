@@ -19,11 +19,11 @@ from ..semantic_role_resolution import (
     casilla_id_for_unique_semantic_role,
 )
 
-art20_advisory = import_module("cadrumo.application.modelo._art20_advisory")
-binding_resolution = import_module("cadrumo.application.modelo.binding_resolution")
-calculate_input = import_module("cadrumo.application.modelo.calculate_input")
-dt12_advisory = import_module("cadrumo.application.modelo._dt12_advisory")
-taxation_comparison = import_module("cadrumo.application.modelo.taxation_comparison")
+art20_advisory = import_module("..art20_advisory", package=__package__)
+binding_resolution = import_module("..binding_resolution", package=__package__)
+calculate_input = import_module("..calculate_input", package=__package__)
+dt12_advisory = import_module("..dt12_advisory", package=__package__)
+taxation_comparison = import_module("..taxation_comparison", package=__package__)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _M100_RESULTADO_CASILLA: CasillaId = validated_casilla_id("0610", surface="_M100_RESULTADO_CASILLA")

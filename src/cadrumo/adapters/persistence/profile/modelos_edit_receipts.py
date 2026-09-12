@@ -1,7 +1,7 @@
 """Encrypted persistence adapter for Modelo edit mutation result receipts.
 
 :class:`ModeloEditReceiptRepository` persists one
-:class:`~application.modelo._edit_models.ModeloEditMutationResultReceiptV1` per encrypted
+:class:`~application.modelo.edit_contract.ModeloEditMutationResultReceiptV1` per encrypted
 row, keyed by its own content-addressed ``receipt_id``, through
 :class:`~adapters.persistence.storage.SecureBoundRepository` at ``FINANCIAL``
 :class:`~adapters.persistence.storage.SensitivityClass`. Each receipt is its
@@ -11,7 +11,7 @@ compare-and-swap edit committed must be recoverable after a crash without
 decrypting every receipt a bucket has ever produced.
 
 See Also:
-    :class:`~application.modelo._edit_models.ModeloEditMutationResultReceiptV1`
+    :class:`~application.modelo.edit_contract.ModeloEditMutationResultReceiptV1`
         The strict receipt payload this repository stores.
     :data:`~adapters.persistence.storage.MODELO_EDIT_RECEIPT_NAMESPACE`
         Central namespace, sensitivity, and schema-version contract for these

@@ -11,9 +11,11 @@ from dataclasses import is_dataclass
 
 import pytest
 
-from ._generate import (
+from ._generate_base import (
     _FIXTURES,
     _Fixture,
+)
+from ._generate_misc_a import (
     _Modelo036Fixture,
     _Modelo115Fixture,
     _Modelo180Fixture,

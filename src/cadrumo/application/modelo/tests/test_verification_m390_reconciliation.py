@@ -12,8 +12,8 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ..verification_actions import evaluate_verification_predicates
-from ._verification_substance_support import _workflow_profile
+from ..verification_predicates import evaluate_verification_predicates
+from .verification_substance_support import workflow_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -129,7 +129,7 @@ def test_m390_reconciliation_blocks_when_annual_total_diverges_from_303_fold() -
             case.reconciliation_id: Decimal("900.00"),
         }
 
-        findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+        findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
 
         assert len(findings) == 1, case.label
         assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE, case.label
@@ -145,4 +145,4 @@ def test_m390_reconciliation_passes_when_annual_total_matches_303_fold() -> None
             case.reconciliation_id: Decimal("1200.00"),
         }
 
-        assert evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile()) == [], case.label
+        assert evaluate_verification_predicates((predicate,), casilla_values, workflow_profile()) == [], case.label

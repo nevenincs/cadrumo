@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 122, regularització de la deducció per família nombrosa o persones amb discapacitat a càrrec"
+
+[language.en]
+short_description = "Modelo 122, regularization of the deduction for a large family or a disabled dependant"
+
+[language.hu]
+short_description = "122-es modell: a nagycsaládos vagy fogyatékossággal élő eltartott utáni levonás korrekciója"
+

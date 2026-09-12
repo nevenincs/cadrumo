@@ -17,8 +17,8 @@
 #    dicen expresamente.
 [[revisions."2026".bindings]]
 id = "modelo-131-volumen-ingresos-agrario"
-source = "ledger_renta_income_aggregation"
-selector = { modelo = "131", target_casilla_id = "05", fact = "ingresos_integros_sum" }
+provider = { kind = "ledger_renta_income_aggregation", modelo = "131", target_casilla_id = "05", fact = "ingresos_integros_sum" }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["rd-439-2007:art-110"]
 source_refs = ["aeat-modelo-131-instructions"]

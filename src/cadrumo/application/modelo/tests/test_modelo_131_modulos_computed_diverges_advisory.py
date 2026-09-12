@@ -24,8 +24,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
-from .._verification_predicates import evaluate_advisory_predicate_fires
-from ..verification_actions import _evaluate_verification_predicates
+from ..verification_predicates import evaluate_advisory_predicate_fires, evaluate_verification_predicates
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -111,6 +110,6 @@ def test_emits_single_advisory_warning_finding_when_violated() -> None:
         _CASILLA_01: Decimal("15000.00"),
         _COMPUTED: Decimal("21995.99"),
     }
-    findings = _evaluate_verification_predicates((_predicate(),), values, _profile())
+    findings = evaluate_verification_predicates((_predicate(),), values, _profile())
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY

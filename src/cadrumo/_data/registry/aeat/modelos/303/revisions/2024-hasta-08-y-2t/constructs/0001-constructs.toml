@@ -167,7 +167,6 @@ bindings = [
     "modelo-303-bienes-inversion-regularizacion-casilla-43",
     "modelo-303-prorrata-regularizacion-casilla-44",
 ]
-relations = ["modelo-303-rel-self-compensacion-anteriores"]
 dependency_classifications = ["modelo-303-dep-self-prior-quarter"]
 workbook_parity_refs = ["modelo-303-dr-2024-early"]
 extraction_profiles = ["modelo-303-declaracion-pdf"]

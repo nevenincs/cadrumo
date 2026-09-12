@@ -19,8 +19,8 @@ from typing import Any, cast
 
 import pytest
 
-from .._server import build_server, server_initialization_options
-from .._tools import build_tool_descriptors
+from ..server import build_server, server_initialization_options
+from ..tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

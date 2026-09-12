@@ -5,840 +5,840 @@
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.13-17.tipo-y-cierre"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-envelope", field = "tipo-y-cierre", offset = 13, length = 5, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-envelope", field = "tipo-y-cierre", offset = 13, length = 5, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.9-13.regimen"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "regimen", offset = 9, length = 5, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "regimen", offset = 9, length = 5, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.14-14.categoria"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "categoria", offset = 14, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "categoria", offset = 14, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.15-15.tipo-de-pago"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "tipo-de-pago", offset = 15, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "tipo-de-pago", offset = 15, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.16-37.nrc-pago"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "nrc-pago", offset = 16, length = 22, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "nrc-pago", offset = 16, length = 22, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.38-54.importe-pagado"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "importe-pagado", offset = 38, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "importe-pagado", offset = 38, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.56-57.1-declarante-pais"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "1-declarante-pais", offset = 56, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "1-declarante-pais", offset = 56, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.73-87.1-declarante-numero-de-operador-en-el-regimen-nioss"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "1-declarante-numero-de-operador-en-el-regimen-nioss", offset = 73, length = 15, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "1-declarante-numero-de-operador-en-el-regimen-nioss", offset = 73, length = 15, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.213-213.1-actua-a-traves-de-intermediario"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "1-actua-a-traves-de-intermediario", offset = 213, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "1-actua-a-traves-de-intermediario", offset = 213, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.214-228.1-no-de-identificacion-del-intermediario-niossin"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "1-no-de-identificacion-del-intermediario-niossin", offset = 214, length = 15, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "1-no-de-identificacion-del-intermediario-niossin", offset = 214, length = 15, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.229-232.2-ejercicio-y-periodo-ejercicio"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "2-ejercicio-y-periodo-ejercicio", offset = 229, length = 4, data_type = "integer" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "2-ejercicio-y-periodo-ejercicio", offset = 229, length = 4, data_type = "integer" }
+value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.233-233.2-ejercicio-y-periodo-tipo-de-periodo"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "2-ejercicio-y-periodo-tipo-de-periodo", offset = 233, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "2-ejercicio-y-periodo-tipo-de-periodo", offset = 233, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.234-235.2-ejercicio-y-periodo-periodo"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "2-ejercicio-y-periodo-periodo", offset = 234, length = 2, data_type = "integer" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "2-ejercicio-y-periodo-periodo", offset = 234, length = 2, data_type = "integer" }
+value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.236-243.2-ejercicio-y-periodo-fecha-desde"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "2-ejercicio-y-periodo-fecha-desde", offset = 236, length = 8, data_type = "integer" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "2-ejercicio-y-periodo-fecha-desde", offset = 236, length = 8, data_type = "integer" }
+value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.244-251.2-ejercicio-y-periodo-fecha-hasta"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "2-ejercicio-y-periodo-fecha-hasta", offset = 244, length = 8, data_type = "integer" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "2-ejercicio-y-periodo-fecha-hasta", offset = 244, length = 8, data_type = "integer" }
+value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.252-252.2-ejercicio-y-periodo-declaracion-sin-actividad"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "2-ejercicio-y-periodo-declaracion-sin-actividad", offset = 252, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "2-ejercicio-y-periodo-declaracion-sin-actividad", offset = 252, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.253-254.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo", offset = 253, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo", offset = 253, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.255-259.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-1"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-1", offset = 255, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-1", offset = 255, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.260-260.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-1"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-1", offset = 260, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-1", offset = 260, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.261-277.3-importaciones-de-bienes-de-menos-de-150-base-imponible-1"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-1", offset = 261, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-1", offset = 261, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.278-294.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-1"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-1", offset = 278, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-1", offset = 278, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.295-296.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-2"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-2", offset = 295, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-2", offset = 295, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.297-301.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-2"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-2", offset = 297, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-2", offset = 297, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.302-302.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-2"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-2", offset = 302, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-2", offset = 302, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.303-319.3-importaciones-de-bienes-de-menos-de-150-base-imponible-2"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-2", offset = 303, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-2", offset = 303, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.320-336.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-2"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-2", offset = 320, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-2", offset = 320, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.337-338.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-3"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-3", offset = 337, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-3", offset = 337, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.339-343.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-3"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-3", offset = 339, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-3", offset = 339, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.344-344.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-3"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-3", offset = 344, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-3", offset = 344, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.345-361.3-importaciones-de-bienes-de-menos-de-150-base-imponible-3"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-3", offset = 345, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-3", offset = 345, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.362-378.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-3"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-3", offset = 362, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-3", offset = 362, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.379-380.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-4"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-4", offset = 379, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-4", offset = 379, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.381-385.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-4"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-4", offset = 381, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-4", offset = 381, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.386-386.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-4"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-4", offset = 386, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-4", offset = 386, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.387-403.3-importaciones-de-bienes-de-menos-de-150-base-imponible-4"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-4", offset = 387, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-4", offset = 387, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.404-420.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-4"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-4", offset = 404, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-4", offset = 404, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.421-422.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-5"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-5", offset = 421, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-5", offset = 421, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.423-427.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-5"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-5", offset = 423, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-5", offset = 423, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.428-428.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-5"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-5", offset = 428, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-5", offset = 428, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.429-445.3-importaciones-de-bienes-de-menos-de-150-base-imponible-5"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-5", offset = 429, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-5", offset = 429, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.446-462.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-5"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-5", offset = 446, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-5", offset = 446, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.463-464.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-6"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-6", offset = 463, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-6", offset = 463, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.465-469.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-6"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-6", offset = 465, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-6", offset = 465, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.470-470.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-6"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-6", offset = 470, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-6", offset = 470, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.471-487.3-importaciones-de-bienes-de-menos-de-150-base-imponible-6"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-6", offset = 471, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-6", offset = 471, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.488-504.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-6"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-6", offset = 488, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-6", offset = 488, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.505-506.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-7"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-7", offset = 505, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-7", offset = 505, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.507-511.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-7"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-7", offset = 507, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-7", offset = 507, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.512-512.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-7"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-7", offset = 512, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-7", offset = 512, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.513-529.3-importaciones-de-bienes-de-menos-de-150-base-imponible-7"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-7", offset = 513, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-7", offset = 513, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.530-546.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-7"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-7", offset = 530, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-7", offset = 530, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.547-548.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-8"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-8", offset = 547, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-8", offset = 547, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.549-553.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-8"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-8", offset = 549, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-8", offset = 549, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.554-554.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-8"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-8", offset = 554, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-8", offset = 554, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.555-571.3-importaciones-de-bienes-de-menos-de-150-base-imponible-8"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-8", offset = 555, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-8", offset = 555, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.572-588.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-8"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-8", offset = 572, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-8", offset = 572, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.589-590.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-9"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-9", offset = 589, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-9", offset = 589, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.591-595.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-9"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-9", offset = 591, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-9", offset = 591, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.596-596.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-9"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-9", offset = 596, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-9", offset = 596, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.597-613.3-importaciones-de-bienes-de-menos-de-150-base-imponible-9"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-9", offset = 597, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-9", offset = 597, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.614-630.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-9"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-9", offset = 614, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-9", offset = 614, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.631-632.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-10"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-10", offset = 631, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-10", offset = 631, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.633-637.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-10"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-10", offset = 633, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-10", offset = 633, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.638-638.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-10"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-10", offset = 638, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-10", offset = 638, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.639-655.3-importaciones-de-bienes-de-menos-de-150-base-imponible-10"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-10", offset = 639, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-10", offset = 639, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.656-672.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-10"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-10", offset = 656, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-10", offset = 656, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.673-674.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-11"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-11", offset = 673, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-11", offset = 673, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.675-679.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-11"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-11", offset = 675, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-11", offset = 675, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.680-680.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-11"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-11", offset = 680, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-11", offset = 680, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.681-697.3-importaciones-de-bienes-de-menos-de-150-base-imponible-11"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-11", offset = 681, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-11", offset = 681, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.698-714.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-11"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-11", offset = 698, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-11", offset = 698, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.715-716.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-12"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-12", offset = 715, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-12", offset = 715, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.717-721.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-12"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-12", offset = 717, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-12", offset = 717, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.722-722.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-12"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-12", offset = 722, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-12", offset = 722, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.723-739.3-importaciones-de-bienes-de-menos-de-150-base-imponible-12"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-12", offset = 723, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-12", offset = 723, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.740-756.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-12"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-12", offset = 740, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-12", offset = 740, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.757-758.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-13"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-13", offset = 757, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-13", offset = 757, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.759-763.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-13"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-13", offset = 759, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-13", offset = 759, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.764-764.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-13"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-13", offset = 764, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-13", offset = 764, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.765-781.3-importaciones-de-bienes-de-menos-de-150-base-imponible-13"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-13", offset = 765, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-13", offset = 765, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.782-798.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-13"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-13", offset = 782, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-13", offset = 782, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.799-800.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-14"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-14", offset = 799, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-14", offset = 799, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.801-805.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-14"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-14", offset = 801, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-14", offset = 801, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.806-806.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-14"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-14", offset = 806, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-14", offset = 806, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.807-823.3-importaciones-de-bienes-de-menos-de-150-base-imponible-14"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-14", offset = 807, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-14", offset = 807, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.824-840.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-14"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-14", offset = 824, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-14", offset = 824, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.841-842.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-15"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-15", offset = 841, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-15", offset = 841, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.843-847.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-15"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-15", offset = 843, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-15", offset = 843, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.848-848.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-15"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-15", offset = 848, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-15", offset = 848, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.849-865.3-importaciones-de-bienes-de-menos-de-150-base-imponible-15"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-15", offset = 849, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-15", offset = 849, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.866-882.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-15"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-15", offset = 866, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-15", offset = 866, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.883-884.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-16"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-16", offset = 883, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-16", offset = 883, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.885-889.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-16"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-16", offset = 885, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-16", offset = 885, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.890-890.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-16"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-16", offset = 890, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-16", offset = 890, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.891-907.3-importaciones-de-bienes-de-menos-de-150-base-imponible-16"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-16", offset = 891, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-16", offset = 891, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.908-924.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-16"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-16", offset = 908, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-16", offset = 908, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.925-926.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-17"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-17", offset = 925, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-17", offset = 925, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.927-931.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-17"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-17", offset = 927, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-17", offset = 927, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.932-932.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-17"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-17", offset = 932, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-17", offset = 932, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.933-949.3-importaciones-de-bienes-de-menos-de-150-base-imponible-17"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-17", offset = 933, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-17", offset = 933, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.950-966.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-17"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-17", offset = 950, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-17", offset = 950, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.967-968.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-18"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-18", offset = 967, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-18", offset = 967, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.969-973.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-18"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-18", offset = 969, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-18", offset = 969, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.974-974.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-18"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-18", offset = 974, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-18", offset = 974, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.975-991.3-importaciones-de-bienes-de-menos-de-150-base-imponible-18"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-18", offset = 975, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-18", offset = 975, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.992-1008.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-18"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-18", offset = 992, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-18", offset = 992, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.1009-1010.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-19"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-19", offset = 1009, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-19", offset = 1009, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.1011-1015.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-19"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-19", offset = 1011, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-19", offset = 1011, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.1016-1016.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-19"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-19", offset = 1016, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-19", offset = 1016, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.1017-1033.3-importaciones-de-bienes-de-menos-de-150-base-imponible-19"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-19", offset = 1017, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-19", offset = 1017, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.1034-1050.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-19"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-19", offset = 1034, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-19", offset = 1034, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.1051-1052.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-20"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-20", offset = 1051, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-20", offset = 1051, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.1053-1057.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-20"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-20", offset = 1053, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-20", offset = 1053, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.1058-1058.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-20"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-20", offset = 1058, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-20", offset = 1058, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.1059-1075.3-importaciones-de-bienes-de-menos-de-150-base-imponible-20"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-20", offset = 1059, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-20", offset = 1059, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.1076-1092.3-importaciones-de-bienes-de-menos-de-150-cuota-iva-20"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-20", offset = 1076, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-cuota-iva-20", offset = 1076, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.1093-1094.3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-21"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-21", offset = 1093, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-codigo-de-pais-em-de-consumo-21", offset = 1093, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.1095-1099.3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-21"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-21", offset = 1095, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-de-iva-21", offset = 1095, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.1100-1100.3-importaciones-de-bienes-de-menos-de-150-tipo-iva-21"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-21", offset = 1100, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-tipo-iva-21", offset = 1100, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.1101-1117.3-importaciones-de-bienes-de-menos-de-150-base-imponible-21"
-source = "manual_input"
-selector = { record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-21", offset = 1101, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-importacion-t36910", field = "3-importaciones-de-bienes-de-menos-de-150-base-imponible-21", offset = 1101, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]

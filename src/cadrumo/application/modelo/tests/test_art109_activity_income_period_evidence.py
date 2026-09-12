@@ -29,7 +29,7 @@ from .._art109_activity_income import (
 from ..calculation_actions import calculate_modelo_revision
 from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit
-from ._verification_substance_support import (
+from .verification_substance_support import (
     _CASILLA_01,
     _CASILLA_02,
     _CASILLA_05,
@@ -42,7 +42,7 @@ from ._verification_substance_support import (
     _T1,
     _T2,
     _seed_ready_profile,
-    _workflow_profile,
+    workflow_profile,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -264,7 +264,7 @@ def _verify_art109_findings(
     report = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator-test",
-        workflow_profile=_workflow_profile().model_copy(
+        workflow_profile=workflow_profile().model_copy(
             update={"art109_activity_income_withholding_ge_70pct": profile_flag},
         ),
         work_unit_repository=WorkUnitCatalogueRepository(objects=objects),

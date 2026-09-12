@@ -1,4 +1,6 @@
 [revisions.2023-y-siguientes]
+predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["ley-35-2006:art-99"], source_refs = ["aeat-dr-180-2023"] } }
+casilla_source_refs = ["aeat-dr-180-2023"]
 # Prepared and reviewed by an agent against the bundled diseño de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather

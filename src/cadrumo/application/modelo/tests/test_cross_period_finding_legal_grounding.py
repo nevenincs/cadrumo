@@ -6,7 +6,7 @@ references behind the rule". Before this gate the cross-period
 activity-start finding) shipped with empty ``legal_refs``, so ``view`` rendered
 no ``finding_legal_refs`` line for the most common blocking outcome on a
 quarterly IVA filing. This locks the grounding onto each finding the
-:func:`_cross_period_clean_state_findings` builder emits.
+:func:`cross_period_clean_state_findings` builder emits.
 """
 
 from __future__ import annotations
@@ -30,11 +30,12 @@ from ...calculations.cross_period_models import (
     CrossPeriodDependencyOrigin,
     CrossPeriodDependencyRequirement,
 )
-from .._verification_cross_period import _CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS, _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS
 from ..action_errors import WORKFLOW_GATE_LEGAL_REFS
-from ..verification_actions import (
-    _IVA_COMPENSATION_CARRY_LEGAL_REF,
-    _cross_period_clean_state_findings,
+from ..verification_cross_period import (
+    _CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
+    _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS,
+    IVA_COMPENSATION_CARRY_LEGAL_REF,
+    cross_period_clean_state_findings,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -136,7 +137,7 @@ def test_application_legal_refs_resolve_to_bundled_corpus() -> None:
 
     assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= ref_ids
     assert set(_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS) <= ref_ids
-    assert _IVA_COMPENSATION_CARRY_LEGAL_REF in ref_ids
+    assert IVA_COMPENSATION_CARRY_LEGAL_REF in ref_ids
     assert set(WORKFLOW_GATE_LEGAL_REFS) <= ref_ids
     assert all(ref.article for ref in references.values())
     assert all(ref.corpus_ref for ref in references.values())
@@ -147,7 +148,7 @@ def test_iva_compensacion_dependency_finding_cites_liva_and_lgt() -> None:
     """A compensación carry cites the prior-declaration LGT basis plus LIVA art. 99."""
     verdict = _verdict(_unclean_evidence(origin_ids=("modelo-303-compensacion-pendiente-anteriores",)))
 
-    findings = _cross_period_clean_state_findings(verdict, activity_start_date=None)
+    findings = cross_period_clean_state_findings(verdict, activity_start_date=None)
 
     blocking = next(
         f
@@ -156,7 +157,7 @@ def test_iva_compensacion_dependency_finding_cites_liva_and_lgt() -> None:
         and f.message_locale_key == "application.modelo.findings.cross_period_dependency_unclean"
     )
     assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= set(blocking.legal_refs)
-    assert _IVA_COMPENSATION_CARRY_LEGAL_REF in blocking.legal_refs
+    assert IVA_COMPENSATION_CARRY_LEGAL_REF in blocking.legal_refs
     assert tuple(blocking.source_refs) == _DEFAULT_DEPENDENCY_SOURCE_REFS
 
 
@@ -170,7 +171,7 @@ def test_dependency_finding_carries_registry_requirement_refs() -> None:
         ),
     )
 
-    findings = _cross_period_clean_state_findings(verdict, activity_start_date=None)
+    findings = cross_period_clean_state_findings(verdict, activity_start_date=None)
 
     blocking = next(
         f for f in findings if f.message_locale_key == "application.modelo.findings.cross_period_dependency_unclean"
@@ -184,13 +185,13 @@ def test_non_compensacion_dependency_finding_cites_lgt_only() -> None:
     """A non-compensación carry cites the prior-declaration LGT basis, not LIVA art. 99."""
     verdict = _verdict(_unclean_evidence(origin_ids=("modelo-100-rel-pago-fraccionado",)))
 
-    findings = _cross_period_clean_state_findings(verdict, activity_start_date=None)
+    findings = cross_period_clean_state_findings(verdict, activity_start_date=None)
 
     blocking = next(
         f for f in findings if f.message_locale_key == "application.modelo.findings.cross_period_dependency_unclean"
     )
     assert tuple(blocking.legal_refs) == _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS
-    assert _IVA_COMPENSATION_CARRY_LEGAL_REF not in blocking.legal_refs
+    assert IVA_COMPENSATION_CARRY_LEGAL_REF not in blocking.legal_refs
     assert tuple(blocking.source_refs) == _DEFAULT_DEPENDENCY_SOURCE_REFS
 
 
@@ -198,7 +199,7 @@ def test_missing_activity_start_finding_cites_censo_alta() -> None:
     """The first-filer fail-closed finding cites the start-of-activity censo basis."""
     verdict = _verdict(_unclean_evidence(origin_ids=("modelo-303-compensacion-pendiente-anteriores",)))
 
-    findings = _cross_period_clean_state_findings(verdict, activity_start_date=None)
+    findings = cross_period_clean_state_findings(verdict, activity_start_date=None)
 
     activity_start = next(
         f for f in findings if f.message_locale_key == "application.modelo.findings.cross_period_activity_start_missing"
@@ -210,7 +211,7 @@ def test_every_cross_period_finding_carries_legal_refs() -> None:
     """No cross-period finding ships with empty grounding (the page's promise)."""
     verdict = _verdict(_unclean_evidence(origin_ids=("modelo-303-compensacion-pendiente-anteriores",)))
 
-    findings = _cross_period_clean_state_findings(verdict, activity_start_date=None)
+    findings = cross_period_clean_state_findings(verdict, activity_start_date=None)
 
     assert findings
     assert all(f.legal_refs for f in findings)
@@ -233,11 +234,11 @@ def test_not_applicable_suppression_summary_carries_dependency_legal_refs() -> N
     )
     verdict = _verdict(evidence)
 
-    findings = _cross_period_clean_state_findings(verdict, activity_start_date=None)
+    findings = cross_period_clean_state_findings(verdict, activity_start_date=None)
 
     summary = next(f for f in findings if f.kind is ModeloVerificationFindingKind.ADVISORY)
     assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= set(summary.legal_refs)
-    assert _IVA_COMPENSATION_CARRY_LEGAL_REF in summary.legal_refs
+    assert IVA_COMPENSATION_CARRY_LEGAL_REF in summary.legal_refs
     assert tuple(summary.source_refs) == _DEFAULT_DEPENDENCY_SOURCE_REFS
     assert summary.message_locale_key == "application.modelo.findings.cross_period_modelo_not_applicable.message"
     assert summary.message_facts["source_modelos"] == "303"
@@ -261,11 +262,11 @@ def test_non_official_local_chain_advisory_carries_dependency_legal_refs() -> No
     )
     verdict = _verdict(evidence)
 
-    findings = _cross_period_clean_state_findings(verdict, activity_start_date=None)
+    findings = cross_period_clean_state_findings(verdict, activity_start_date=None)
 
     assert len(findings) == 1
     advisory = findings[0]
     assert advisory.kind is ModeloVerificationFindingKind.ADVISORY
     assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= set(advisory.legal_refs)
-    assert _IVA_COMPENSATION_CARRY_LEGAL_REF in advisory.legal_refs
+    assert IVA_COMPENSATION_CARRY_LEGAL_REF in advisory.legal_refs
     assert tuple(advisory.source_refs) == _DEFAULT_DEPENDENCY_SOURCE_REFS

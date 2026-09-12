@@ -97,7 +97,8 @@ import pytest
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....domain.calculations.registry.authority import bundled_authority
 from .....tests.inventory import FIXTURES_DIR
-from ..parser import _extract_profile_values, _select_extraction_profile, extract_pages_text
+from .._parsers.pdfplumber_backend import extract_pages_text
+from ..parser import _extract_profile_values, _select_extraction_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

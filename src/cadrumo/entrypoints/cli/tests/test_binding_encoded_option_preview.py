@@ -14,7 +14,7 @@ from __future__ import annotations
 import pytest
 
 from ....domain.calculations.registry.binding_selector_utils import BooleanBindingEncodedValue
-from .._modelo_payloads import BindingEncodedOptionPayload
+from .._modelo_bindings_payloads import BindingEncodedOptionPayload
 from .._modelo_rendering import binding_encoded_option_lines, binding_encoded_option_payloads
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -39,10 +39,10 @@ def test_encoded_option_text_line_enumerates_the_mapping() -> None:
     """The listing hint names the binding and its decimal-to-meaning mapping."""
     payloads = binding_encoded_option_payloads(_ESTIMACION_OPTIONS)
 
-    lines = binding_encoded_option_lines("renta-2025-modelo-100-estimacion-directa-es-normal", payloads)
+    lines = binding_encoded_option_lines("renta-modelo-100-estimacion-directa-es-normal", payloads)
 
     assert lines == [
-        "encoded_option\trenta-2025-modelo-100-estimacion-directa-es-normal\t1=true(N)  0=false(S)",
+        "encoded_option\trenta-modelo-100-estimacion-directa-es-normal\t1=true(N)  0=false(S)",
     ]
 
 

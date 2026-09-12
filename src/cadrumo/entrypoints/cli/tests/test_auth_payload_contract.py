@@ -11,7 +11,7 @@ from ....application.auth.operator_results import AuthLoginResult, AuthStatusRes
 from ....application.auth.probes import ProviderProbeResult
 from ....application.operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from .._common import resolve_cli_precondition_action
+from ..common import resolve_cli_precondition_action
 from ..config_payloads import AuthLoginPayload, AuthStatusPayload, AuthTestPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

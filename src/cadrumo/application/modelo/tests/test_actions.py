@@ -22,7 +22,10 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_PENDING_PRIOR_CASILLA as M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+)
+from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import PeriodSelector, RegistrySnapshotRef
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -37,24 +40,23 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ...calculations.iva_compensation_casillas import M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
 from ...workflow.errors import WorkflowInputMismatchError
 from .._calculation_preparation import _IVA_LEDGER_EXEMPT_REGIMES
 from .._revision_replay_inputs import _informational_casilla_replay_inputs
 from ..action_errors import ModeloAggregationBindingError
+from ..art20_advisory import art20_reduccion_advisory_finding
+from ..art52_advisory import art52_reduccion_advisory_finding
 from ..calculation_actions import _reject_caller_overrides_of_source_bindings
+from ..dt12_advisory import dt12_reduccion_advisory_finding
+from ..dt12_antiquity_advisory import dt12_antiquity_advisory_finding
 from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ..iva_wallet_gate import apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding
 from ..verification_actions import (
-    _art20_reduccion_advisory_finding,
-    _art52_reduccion_advisory_finding,
     _collect_revision_verification_findings,
-    _dt12_antiquity_advisory_finding,
-    _dt12_reduccion_advisory_finding,
-    _evaluate_verification_predicates,
     _iva_wallet_error_verification_finding,
     _missing_required_casilla_finding,
 )
+from ..verification_predicates import evaluate_verification_predicates
 from ..workflow_gate import _RevisionInputsProvider, workflow_period_for_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -119,7 +121,7 @@ def _test_casilla_definition(
 def _test_revision(
     *,
     casillas: tuple[CasillaDefinition, ...] = (),
-    bindings: tuple[DataBindingDefinition, ...] = (),
+    bindings: tuple[BindingDefinition, ...] = (),
 ) -> ModeloRevision:
     return ModeloRevision(
         id="test-actions-revision",
@@ -204,15 +206,18 @@ def _source_bound_revision() -> ModeloRevision:
             # clears the F8 construction-time selector gate; the test exercises
             # the override-error localisation against the matching owned source,
             # not selector shape.
-            DataBindingDefinition(
+            BindingDefinition(
                 id=_SOURCE_BOUND_BINDING,
-                source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-                selector={
-                    "categories": ("domestic_general",),
-                    "rate_kinds": ("general",),
-                    "flow_direction": "repercutido",
-                    "fact": "iva_amount_sum",
+                provider={
+                    "kind": "ledger_iva_aggregation",
+                    **{
+                        "categories": ("domestic_general",),
+                        "rate_kinds": ("general",),
+                        "flow_direction": "repercutido",
+                        "fact": "iva_amount_sum",
+                    },
                 },
+                value={"data_type": "money", "channel": "decimal"},
                 legal_refs=(_TEST_LEGAL_REF,),
                 source_refs=(_TEST_SOURCE_REF,),
             ),
@@ -240,7 +245,7 @@ def _predicate_finding(
         expression=expression,
         finding_kind="BLOCKING_RULE",
     )
-    findings = _evaluate_verification_predicates((predicate,), casilla_values, _resident_profile())
+    findings = evaluate_verification_predicates((predicate,), casilla_values, _resident_profile())
     assert len(findings) == 1
     return predicate, findings[0]
 
@@ -466,7 +471,7 @@ def test_registry_snapshot_unresolved_finding_is_locale_neutral() -> None:
 
 
 def test_dt12_reduccion_advisory_message_is_localised() -> None:
-    """_dt12_reduccion_advisory_finding emits a tr()-rendered message.
+    """dt12_reduccion_advisory_finding emits a tr()-rendered message.
 
     A real revision object carrying two casillas with the correct semantic
     roles triggers the advisory. The finding message must contain ingreso_id,
@@ -475,7 +480,7 @@ def test_dt12_reduccion_advisory_message_is_localised() -> None:
     revision = _dt12_revision()
     casilla_values = {_DT12_INGRESO_CASILLA: Decimal("25000"), _DT12_REDUCCION_CASILLA: Decimal("0")}
 
-    finding = _dt12_reduccion_advisory_finding(revision, casilla_values)
+    finding = dt12_reduccion_advisory_finding(revision, casilla_values)
 
     assert finding is not None
     assert finding.message_locale_key == "application.modelo.findings.dt12a_reduccion_possible"
@@ -492,7 +497,7 @@ def test_dt12_reduccion_advisory_message_is_localised() -> None:
 
 
 def test_art20_reduccion_advisory_fires_within_band_and_is_localised() -> None:
-    """_art20_reduccion_advisory_finding warns when RNT is in-band but reduction is zero.
+    """art20_reduccion_advisory_finding warns when RNT is in-band but reduction is zero.
 
     A real revision carrying the rendimiento-neto-del-trabajo role and the
     art. 20 general-reducción role triggers the ADVISORY finding when RNT is strictly
@@ -503,7 +508,7 @@ def test_art20_reduccion_advisory_fires_within_band_and_is_localised() -> None:
     revision = _art20_revision()
     casilla_values = {_ART20_RNT_CASILLA: Decimal("12000"), _ART20_REDUCCION_CASILLA: Decimal("0")}
 
-    finding = _art20_reduccion_advisory_finding(revision, casilla_values, context=_MODELO_FACT_CONTEXT)
+    finding = art20_reduccion_advisory_finding(revision, casilla_values, context=_MODELO_FACT_CONTEXT)
 
     assert finding is not None
     # Non-blocking advisory: the eligibility gate (otras rentas <= 6.500) is not engine-visible.
@@ -542,11 +547,11 @@ def test_art20_reduccion_advisory_silent_for_declared_or_ineligible_values(
     No false positive when: RNT is at/above the ceiling (reduction is genuinely zero),
     the reducción is already declared, or RNT is zero.
     """
-    assert _art20_reduccion_advisory_finding(_art20_revision(), casilla_values, context=_MODELO_FACT_CONTEXT) is None
+    assert art20_reduccion_advisory_finding(_art20_revision(), casilla_values, context=_MODELO_FACT_CONTEXT) is None
 
 
 def test_art20_reduccion_advisory_silent_when_roles_absent() -> None:
-    assert _art20_reduccion_advisory_finding(_test_revision(), {}, context=_MODELO_FACT_CONTEXT) is None
+    assert art20_reduccion_advisory_finding(_test_revision(), {}, context=_MODELO_FACT_CONTEXT) is None
 
 
 # ---------------------------------------------------------------------------
@@ -555,7 +560,7 @@ def test_art20_reduccion_advisory_silent_when_roles_absent() -> None:
 
 
 def test_art52_reduccion_advisory_fires_for_purely_individual_over_sublimit() -> None:
-    """_art52_reduccion_advisory_finding warns on a purely-individual over-reduction.
+    """art52_reduccion_advisory_finding warns on a purely-individual over-reduction.
 
     A purely-individual filer (no plan-de-empleo worker contribution, no
     contribución empresarial) whose granted reducción (0468) exceeds the EUR 1.500
@@ -571,7 +576,7 @@ def test_art52_reduccion_advisory_fires_for_purely_individual_over_sublimit() ->
         _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: Decimal("0"),
     }
 
-    finding = _art52_reduccion_advisory_finding(revision, casilla_values, context=_MODELO_FACT_CONTEXT)
+    finding = art52_reduccion_advisory_finding(revision, casilla_values, context=_MODELO_FACT_CONTEXT)
 
     assert finding is not None
     assert finding.kind == "advisory"
@@ -602,7 +607,7 @@ def test_art52_reduccion_advisory_silent_when_employer_backed() -> None:
         _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: Decimal("0"),
     }
 
-    assert _art52_reduccion_advisory_finding(revision, casilla_values, context=_MODELO_FACT_CONTEXT) is None
+    assert art52_reduccion_advisory_finding(revision, casilla_values, context=_MODELO_FACT_CONTEXT) is None
 
 
 def test_art52_reduccion_advisory_silent_when_plan_de_empleo_backed() -> None:
@@ -615,7 +620,7 @@ def test_art52_reduccion_advisory_silent_when_plan_de_empleo_backed() -> None:
         _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: Decimal("0"),
     }
 
-    assert _art52_reduccion_advisory_finding(revision, casilla_values, context=_MODELO_FACT_CONTEXT) is None
+    assert art52_reduccion_advisory_finding(revision, casilla_values, context=_MODELO_FACT_CONTEXT) is None
 
 
 def test_art52_reduccion_advisory_silent_when_autonomo_backed() -> None:
@@ -635,7 +640,7 @@ def test_art52_reduccion_advisory_silent_when_autonomo_backed() -> None:
         _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: Decimal("2500"),
     }
 
-    assert _art52_reduccion_advisory_finding(revision, casilla_values, context=_MODELO_FACT_CONTEXT) is None
+    assert art52_reduccion_advisory_finding(revision, casilla_values, context=_MODELO_FACT_CONTEXT) is None
 
 
 def test_art52_reduccion_advisory_silent_when_under_sublimit() -> None:
@@ -648,11 +653,11 @@ def test_art52_reduccion_advisory_silent_when_under_sublimit() -> None:
         _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: Decimal("0"),
     }
 
-    assert _art52_reduccion_advisory_finding(revision, casilla_values, context=_MODELO_FACT_CONTEXT) is None
+    assert art52_reduccion_advisory_finding(revision, casilla_values, context=_MODELO_FACT_CONTEXT) is None
 
 
 def test_art52_reduccion_advisory_silent_when_roles_absent() -> None:
-    assert _art52_reduccion_advisory_finding(_test_revision(), {}, context=_MODELO_FACT_CONTEXT) is None
+    assert art52_reduccion_advisory_finding(_test_revision(), {}, context=_MODELO_FACT_CONTEXT) is None
 
 
 # ---------------------------------------------------------------------------
@@ -661,7 +666,7 @@ def test_art52_reduccion_advisory_silent_when_roles_absent() -> None:
 
 
 def test_dt12_antiquity_advisory_fires_when_reduccion_applied() -> None:
-    """_dt12_antiquity_advisory_finding warns to confirm antiquity when 40% applies.
+    """dt12_antiquity_advisory_finding warns to confirm antiquity when 40% applies.
 
     A strictly positive trabajo reducción prompts the operator to confirm the
     pre-2007 TRLIRPF art. 17.2.a) two-year antiquity condition (waived for
@@ -670,7 +675,7 @@ def test_dt12_antiquity_advisory_fires_when_reduccion_applied() -> None:
     revision = _dt12_antiquity_revision()
     casilla_values = {_DT12_ANTIQUITY_REDUCCION_CASILLA: Decimal("4000")}
 
-    finding = _dt12_antiquity_advisory_finding(revision, casilla_values)
+    finding = dt12_antiquity_advisory_finding(revision, casilla_values)
 
     assert finding is not None
     assert finding.kind == "advisory"
@@ -690,11 +695,11 @@ def test_dt12_antiquity_advisory_silent_when_reduccion_zero() -> None:
     revision = _dt12_antiquity_revision()
     casilla_values = {_DT12_ANTIQUITY_REDUCCION_CASILLA: Decimal("0")}
 
-    assert _dt12_antiquity_advisory_finding(revision, casilla_values) is None
+    assert dt12_antiquity_advisory_finding(revision, casilla_values) is None
 
 
 def test_dt12_antiquity_advisory_silent_when_roles_absent() -> None:
-    assert _dt12_antiquity_advisory_finding(_test_revision(), {}) is None
+    assert dt12_antiquity_advisory_finding(_test_revision(), {}) is None
 
 
 def test_iva_wallet_blocked_exception_carries_translated_message_key() -> None:
@@ -883,22 +888,22 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
     work_unit = _minimal_work_unit(modelo="100", period="0A", filing_year=2024, revision_id="2024")
     snapshot = bundled_authority().snapshot("100", filing_year=2024, period="0A", revision_id="2024")
     binding_values: dict[BindingId, Decimal] = {
-        "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
-        "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
-        "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
-        "renta-2024-profile-declaration-type": Decimal("1"),
-        "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
-        "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
-        "renta-2024-profile-incremento-guarderia": Decimal("0"),
-        "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
-        "renta-2024-profile-descendientes-guarderia": Decimal("0"),
-        "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
-        "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
-        "renta-2024-profile-marriage-full-year": Decimal("0"),
-        "renta-2024-profile-marriage-month-start": Decimal("0"),
-        "renta-2024-profile-marriage-month-end": Decimal("0"),
-        "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-193-retenciones-anuales": Decimal("0"),
+        "renta-profile-declaration-type": Decimal("1"),
+        "renta-profile-family-minor-children-in-unit": Decimal("0"),
+        "renta-profile-guarderia-gastos-reales": Decimal("0"),
+        "renta-profile-incremento-guarderia": Decimal("0"),
+        "renta-profile-cotizaciones-ss-madre": Decimal("0"),
+        "renta-profile-descendientes-guarderia": Decimal("0"),
+        "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        "renta-profile-marriage-full-year": Decimal("0"),
+        "renta-profile-marriage-month-start": Decimal("0"),
+        "renta-profile-marriage-month-end": Decimal("0"),
+        "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
     }
     relation_values = {
         "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
@@ -984,7 +989,7 @@ def test_iva_regime_cli_choices_cover_operator_selectable_wizard_values() -> Non
     ``--iva-regime`` choice set.
     """
     from ....core.wizard_catalogue import get_setup_flow
-    from ...wizard.commands import _IVA_REGIME_CHOICE_VALUES
+    from ...wizard.commands import IVA_REGIME_CHOICE_VALUES
 
     wizard_values = {
         choice.value
@@ -993,7 +998,7 @@ def test_iva_regime_cli_choices_cover_operator_selectable_wizard_values() -> Non
         if question.id == "iva-regime"
         for choice in question.choices
     }
-    choice_set = set(_IVA_REGIME_CHOICE_VALUES)
+    choice_set = set(IVA_REGIME_CHOICE_VALUES)
     assert choice_set == wizard_values
     assert IVARegime.NO_APLICA.value not in choice_set
 

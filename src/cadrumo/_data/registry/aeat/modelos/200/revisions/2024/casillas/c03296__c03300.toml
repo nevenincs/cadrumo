@@ -7,7 +7,6 @@ semantic_role = "is_correccion_ric_permanente"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1994:art-27"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03297"
 number = "03297"
@@ -17,7 +16,6 @@ semantic_role = "is_reserva_inversiones_canarias_ajuste_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1994:art-27"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03298"
 number = "03298"
@@ -27,7 +25,6 @@ semantic_role = "is_reserva_inversiones_canarias_ajuste_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1994:art-27"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03299"
 number = "03299"
@@ -37,7 +34,6 @@ semantic_role = "is_reserva_inversiones_canarias_ajuste_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1994:art-27"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03300"
 number = "03300"
@@ -47,4 +43,3 @@ semantic_role = "is_reserva_inversiones_canarias_ajuste_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1994:art-27"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

@@ -49,15 +49,17 @@ from ...core.hashing import sha256_hex
 from ...core.parsing.dates import parse_iso8601_date
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
+from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.profile_bindings import ProfileProvider
 from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
     expression_date_binding_refs,
 )
-from ...domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, RegistrySnapshot
+from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_base import NUMERIC_CASILLA_DATA_TYPES
 from ...domain.calculations.registry.schema_formula import ParameterDefinition
 from ...domain.contribuyente.ccaa import CCAA
@@ -205,10 +207,7 @@ def _declared_profile_selectors(revision: ModeloRevision) -> frozenset[str]:
     :func:`_derived_binding_diagnostics` reports it.
     """
     return frozenset(
-        selector
-        for binding in revision.bindings
-        if binding.source == BindingSourceKind.PROFILE
-        for selector in profile_binding_selectors(binding.selector)
+        selector for binding in revision.bindings for selector in profile_binding_selectors(binding.provider)
     )
 
 
@@ -1328,7 +1327,7 @@ def _route_resolved_binding(
 class _ProfileBindingSelection:
     """Profile bindings the source mesh must resolve, plus the date-consumed set."""
 
-    bindings: tuple[DataBindingDefinition, ...]
+    bindings: tuple[BindingDefinition, ...]
     formula_date_consumed: frozenset[BindingId]
 
 
@@ -1340,19 +1339,15 @@ class _ProfileFacts:
     fingerprint: str | None
 
 
-def _is_calculation_only_profile_binding(binding: DataBindingDefinition) -> bool:
-    selector = binding.selector
-    return not any(
-        (
-            getattr(selector, "xsd_path", None),
-            getattr(selector, "xsd_attribute", None),
-            getattr(selector, "dictionary_field", None),
-        )
-    )
+def _is_calculation_only_profile_binding(binding: BindingDefinition) -> bool:
+    provider = binding.provider
+    if not isinstance(provider, ProfileProvider):
+        return False
+    return not any((provider.xsd_path, provider.xsd_attribute, provider.dictionary_field))
 
 
 def _is_relevant_profile_binding(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     *,
     formula_consumed: set[BindingId],
     formula_date_consumed: set[BindingId],
@@ -1407,7 +1402,7 @@ def _load_profile_facts(
     bucket_id: str,
     profile_record: object | None,
     schema: ProfileSchemaDefinition | None,
-    selected_bindings: tuple[DataBindingDefinition, ...],
+    selected_bindings: tuple[BindingDefinition, ...],
 ) -> _ProfileFacts | None:
     """Load and derive the bucket's profile fact index, or ``None`` when absent."""
     record = profile_record
@@ -1431,14 +1426,14 @@ def _load_profile_facts(
     _inject_derived_deduccion_maternidad_facts(fact_index, snapshot, declared_selectors, context=family_context)
     _inject_derived_incremento_guarderia_facts(fact_index, snapshot, declared_selectors, context=family_context)
     if "tax_residence.state_attribution_ratio" in {
-        selector for binding in selected_bindings for selector in profile_binding_selectors(binding.selector)
+        selector for binding in selected_bindings for selector in profile_binding_selectors(binding.provider)
     }:
         _inject_derived_state_attribution_facts(fact_index)
     return _ProfileFacts(fact_index=fact_index, fingerprint=profile_record_fingerprint)
 
 
 def _resolve_profile_binding_channels(
-    bindings: tuple[DataBindingDefinition, ...],
+    bindings: tuple[BindingDefinition, ...],
     fact_index: Mapping[str, UserProfileFactValue],
     *,
     caller_binding_ids: frozenset[BindingId],
@@ -1458,7 +1453,7 @@ def _resolve_profile_binding_channels(
             binding_id,
             value,
             is_date_channel=binding_id in formula_date_consumed,
-            is_enum_channel=binding_id in enum_bindings or binding.typed_enum is not None,
+            is_enum_channel=binding_id in enum_bindings or binding.value.typed_enum is not None,
             channels=channels,
         )
     return channels
@@ -1582,6 +1577,7 @@ def resolve_profile_sourced_bindings(
                 lineage_role=CalculationSourceLineageRole.PRIMARY,
                 source_ref=f"profile:{bucket_id}:binding:{binding_id}",
                 parent_source_ref=None,
+                terminal_origin=TerminalOriginClass.PROFILE_FIELD,
                 fingerprint=fingerprint,
             )
             for binding_id in sourced
@@ -1590,7 +1586,7 @@ def resolve_profile_sourced_bindings(
 
 
 def _derived_binding_diagnostics(
-    bindings: tuple[DataBindingDefinition, ...],
+    bindings: tuple[BindingDefinition, ...],
     fact_index: Mapping[str, UserProfileFactValue],
     schema: ProfileSchemaDefinition,
     *,
@@ -1615,7 +1611,7 @@ def _derived_binding_diagnostics(
     for binding in bindings:
         if resolve_profile_binding_value(binding, fact_index) is not None:
             continue
-        for selector in profile_binding_selectors(binding.selector):
+        for selector in profile_binding_selectors(binding.provider):
             derived = derived_selector_for_path(selector, schema.derived_selectors)
             if derived is None:
                 continue
@@ -1662,13 +1658,13 @@ def _profile_selector_value(
 
 
 def _first_profile_binding_selector_value(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     fact_index: Mapping[str, UserProfileFactValue],
     *,
     gate_selector: object | None,
 ) -> UserProfileFactValue | None:
     """Resolve the first non-gate selector value in declared selector order."""
-    for selector in profile_binding_selectors(binding.selector):
+    for selector in profile_binding_selectors(binding.provider):
         if gate_selector is not None and selector == gate_selector:
             continue
         value = _profile_selector_value(selector, fact_index)
@@ -1678,7 +1674,7 @@ def _first_profile_binding_selector_value(
 
 
 def resolve_profile_binding_value(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     fact_index: Mapping[str, UserProfileFactValue],
 ) -> UserProfileFactValue | None:
     """Return the typed profile fact value for one profile binding, or None if absent."""

@@ -27,7 +27,7 @@ from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import TransactionCatalogue, derive_import_fingerprint, derive_transaction_id
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...transactions.import_diagnostics import import_ledger_with_diagnostics
-from ..actions_import import _evaluate_import_rows
+from ..actions_import import evaluate_import_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -69,7 +69,7 @@ def _both_paths(raws: tuple[RawTransaction, ...]) -> tuple[int, int, int, int]:
         existing_catalogue=TransactionCatalogue(),
         import_fingerprints=fingerprints,
     )
-    plan = _evaluate_import_rows(
+    plan = evaluate_import_rows(
         bucket_id="preview",
         catalogue=TransactionCatalogue(),
         parsed_rows=parsed_rows,

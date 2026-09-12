@@ -1,24 +1,25 @@
-"""Ley 44/2015 art. 14 SAL/SLL reserva especial dotacion.
+"""Deferred SAL/SLL special-reserve calculation boundary.
 
-Sociedades Laborales must endow a special reserve of 10% of net profit each year
-until the accumulated reserve is strictly above twice (2x) the share capital
-(Ley 44/2015 art. 14.1, BOE-A-2015-11071: "se dotará con el diez por ciento del
-beneficio líquido de cada ejercicio, hasta que alcance al menos una cifra
-superior al doble del capital social").
+The versioned registry owns the allocation formula, scalar operands,
+applicability, strict-cap boundary, and rounding declarations. This module
+retains only the typed calculation boundary while registry-backed evaluation
+is wired into its consumers.
 """
 
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
-from ...core.money.rounding import CENT, round_to_cents
-from .errors import PensionReduccionError
-from .modelo_fact_context import ModeloFactResolutionContext
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.queries import RegistryQueryService
+from ..calculations.registry.schema_base import DateAxis
 
-_SAL_RESERVA_DOTACION_RATE_FACT_ID = "sal-special-reserve-allocation-rate"
-_SAL_RESERVA_CAPITAL_MULTIPLE_FACT_ID = "sal-special-reserve-capital-multiple"
+if TYPE_CHECKING:
+    from .modelo_fact_context import ModeloFactResolutionContext
 
 
+# RegistryQueryService and MappingFactQuery consume the dated SAL/SLL formula mapping
 def compute_sal_reserva_especial_dotacion(
     *,
     beneficio_neto: Decimal,
@@ -26,37 +27,20 @@ def compute_sal_reserva_especial_dotacion(
     capital_social: Decimal,
     context: ModeloFactResolutionContext,
 ) -> Decimal:
-    """Compute the Ley 44/2015 art. 14 SAL/SLL reserva especial dotacion.
+    """Evaluate SAL/SLL reserve allocation from the registry specification."""
+    del beneficio_neto, reserva_dotada, capital_social
+    authority = context.authority
+    RegistryQueryService(authority).describe_modelo("100")
+    resolved = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="sal-special-reserve-formula-spec",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=context.filing_period,
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise TypeError("SAL/SLL reserve formula must resolve as a mapping fact")
+    raise NotImplementedError("SAL/SLL reserve formula specification is unresolved")
 
-    Formula: ``dotacion = min(beneficio_neto * 10%, cap_headroom)`` where
-    ``cap_headroom`` closes the gap to the first euro cent above twice the
-    capital social. Once the accumulated reserva is already strictly above twice
-    (2x) the capital social, the dotacion is zero. The result is rounded to 2
-    decimal places (money-2).
 
-    Raises:
-        PensionReduccionError: When ``capital_social`` is zero or negative, or
-            when any input is negative.
-    """
-    if capital_social <= Decimal(0):
-        raise PensionReduccionError(
-            f"capital_social must be positive; got {capital_social}",
-            context={"field": "capital_social", "value": str(capital_social)},
-        )
-    if beneficio_neto < Decimal(0):
-        raise PensionReduccionError(
-            f"beneficio_neto must be non-negative; got {beneficio_neto}",
-            context={"field": "beneficio_neto", "value": str(beneficio_neto)},
-        )
-    if reserva_dotada < Decimal(0):
-        raise PensionReduccionError(
-            f"reserva_dotada must be non-negative; got {reserva_dotada}",
-            context={"field": "reserva_dotada", "value": str(reserva_dotada)},
-        )
-
-    double_capital = round_to_cents(capital_social * context.decimal(_SAL_RESERVA_CAPITAL_MULTIPLE_FACT_ID))
-    minimum_reserve_above_double = double_capital + CENT
-    headroom = max(Decimal("0.00"), minimum_reserve_above_double - reserva_dotada)
-    dotacion_obligatoria = round_to_cents(beneficio_neto * context.decimal(_SAL_RESERVA_DOTACION_RATE_FACT_ID))
-    dotacion = min(dotacion_obligatoria, headroom)
-    return round_to_cents(dotacion)
+__all__ = ["compute_sal_reserva_especial_dotacion"]

@@ -1,0 +1,449 @@
+"""Import-light command authority for the Modelo work subtree."""
+
+from __future__ import annotations
+
+from typing import Final
+
+from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
+from .command_spec import (
+    FLAG_VALUE,
+    PATH_VALUE,
+    TEXT_VALUE,
+    WHOLE_NUMBER_VALUE,
+    ArgumentSpec,
+    Capability,
+    CommandNodeKind,
+    CommandSpec,
+    CommandWriteRoute,
+    CommandWriteRouteValue,
+    DeferredTarget,
+    ExecutionPolicySpec,
+    InvocationSpec,
+    LazyBinding,
+    LiteralValue,
+    OptionSpec,
+    ParameterDefault,
+    PerformanceClass,
+    ResultSchemaSpec,
+    SchemaState,
+    SideEffect,
+    ValueContract,
+)
+from .command_spec import translation_key as _key
+
+_LANGUAGE = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
+_MODELO = ValueContract(
+    DeferredTarget("builtins", "str"),
+    click_type=DeferredTarget(".common", "MODELO_CODE_CHOICE", __package__),
+)
+_M210_SOURCE = ValueContract(DeferredTarget("...core.irnr", "M210GrossIncomeSourceMode", __package__))
+_RESCATE_TYPE = ValueContract(DeferredTarget("...core.rescate_type", "RescateType", __package__))
+_VERIFY_SELECTOR = ValueContract(
+    DeferredTarget("...application.modelo.verify_selector", "ModeloVerifySelector", __package__)
+)
+_REFUND = ValueContract(DeferredTarget("...core.refund_election", "RefundElection", __package__))
+_PAYMENT = ValueContract(DeferredTarget("...core.payment_election", "PaymentElection", __package__))
+_DOMICILIATION = ValueContract(
+    DeferredTarget("...core.prior_domiciliation_election", "PriorDomiciliationElection", __package__)
+)
+
+
+def _policy(
+    capabilities: frozenset[Capability],
+    side_effects: frozenset[SideEffect],
+    performance: PerformanceClass,
+    write_route: CommandWriteRouteValue,
+    *,
+    destructive: bool = False,
+    handoff: bool = False,
+) -> ExecutionPolicySpec:
+    return ExecutionPolicySpec(
+        capabilities,
+        side_effects,
+        performance,
+        write_route,
+        destructive=destructive,
+        handoff=handoff,
+    )
+
+
+_CALC_WRITE = _policy(
+    frozenset({"calculation", "encrypted-facts"}),
+    frozenset({"local-state"}),
+    "compute",
+    CommandWriteRoute.PROFILE_BOUND,
+)
+_MODEL_WRITE = _policy(
+    frozenset({"encrypted-facts"}), frozenset({"local-state"}), "local-io", CommandWriteRoute.PROFILE_BOUND
+)
+_MODEL_READ = _policy(frozenset({"encrypted-facts"}), frozenset({"none"}), "local-io", CommandWriteRoute.NONE)
+_CALC_READ = _policy(
+    frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute", CommandWriteRoute.NONE
+)
+_CREATE = _policy(
+    frozenset({"encrypted-facts", "registry"}), frozenset({"local-state"}), "local-io", CommandWriteRoute.PROFILE_BOUND
+)
+_FILE = _policy(
+    frozenset({"encrypted-facts", "filing"}),
+    frozenset({"local-state"}),
+    "compute",
+    CommandWriteRoute.PROFILE_BOUND,
+    handoff=True,
+)
+_WIZARD = _policy(
+    frozenset({"calculation", "encrypted-facts"}),
+    frozenset({"local-state"}),
+    "interactive",
+    CommandWriteRoute.PROFILE_BOUND,
+)
+
+
+def _o(
+    name: str,
+    declaration: str,
+    value: ValueContract = TEXT_VALUE,
+    *,
+    help_name: str | None = None,
+    default: LiteralValue | tuple[LiteralValue, ...] = None,
+    multiple: bool = False,
+    flag: bool = False,
+    required: bool = False,
+    transport_locus: TransportLocus = TransportLocus.NONE,
+    transport_shape: TransportShape = TransportShape.NOT_APPLICABLE,
+    transport_role: TransportRole = TransportRole.NOT_APPLICABLE,
+) -> OptionSpec:
+    literal_default = False if flag and default is None else (() if multiple else default)
+    return OptionSpec(
+        name,
+        (declaration,),
+        value,
+        ParameterDefault.required() if required else ParameterDefault.value(literal_default),
+        _key(f"cli.app.modelo.work.{help_name or name}_help"),
+        multiple=multiple,
+        is_flag=flag,
+        flag_value=True if flag else None,
+        transport_locus=transport_locus,
+        transport_shape=transport_shape,
+        transport_role=transport_role,
+    )
+
+
+def _a(name: str, *, help_name: str | None = None, required: bool = False) -> ArgumentSpec:
+    return ArgumentSpec(
+        name,
+        TEXT_VALUE,
+        ParameterDefault.required() if required else ParameterDefault.value(None),
+        _key(f"cli.app.modelo.work.{help_name or name}_help"),
+    )
+
+
+_ADDRESS: Final = (
+    _o("modelo", "--modelo", _MODELO),
+    _o("year", "--year", WHOLE_NUMBER_VALUE),
+    _o("period", "--period"),
+    _o("revision", "--revision"),
+    _o("bucket_id", "--bucket-id"),
+)
+_LANG = OptionSpec(
+    "output_language",
+    ("--output-language", "--language"),
+    _LANGUAGE,
+    ParameterDefault.value(None),
+    _key("cli.config.auth.output_language_help"),
+)
+
+
+def _leaf(
+    token: str,
+    module: str,
+    parameters: tuple[ArgumentSpec | OptionSpec, ...],
+    policy: ExecutionPolicySpec,
+    schema_module: str,
+    schema_name: str,
+    *,
+    handler_name: str | None = None,
+) -> CommandSpec:
+    name = token.replace("-", "_")
+    return CommandSpec(
+        f"app_modelo_work_{name}",
+        "app_modelo_work",
+        token,
+        CommandNodeKind.LEAF,
+        _key(f"cli.app.modelo.work.{name}_help"),
+        None,
+        InvocationSpec(context_parameter="ctx"),
+        parameters,
+        policy,
+        LazyBinding.available(DeferredTarget(module, handler_name or f"work_{name}", __package__)),
+        ResultSchemaSpec(
+            SchemaState.TARGET,
+            DeferredTarget(schema_module, schema_name, __package__),
+            identity=f"modelo.work.{name}",
+        ),
+    )
+
+
+_CALCULATE_PARAMETERS = (
+    _a("work_unit_id"),
+    *_ADDRESS,
+    _o("casilla", "--casilla", multiple=True),
+    _o("binding", "--binding", help_name="override", multiple=True),
+    _o("borrador_snapshot_id", "--borrador", help_name="borrador"),
+    _o("m210_gross_income_source", "--m210-gross-income-source", _M210_SOURCE, default="manual"),
+    _o("actor", "--by"),
+    _o("relation", "--relation", multiple=True),
+    _o("row", "--row", multiple=True),
+    _o("prestacion_inss_exenta", "--prestacion-inss-exenta"),
+    _o("rescate_plan_pensiones_capital", "--rescate-plan-pensiones-capital"),
+    _o("rescate_plan_pensiones_aportaciones_pre_2007", "--rescate-plan-pensiones-aportaciones-pre-2007"),
+    _o("rescate_plan_pensiones_aportaciones_totales", "--rescate-plan-pensiones-aportaciones-totales"),
+    _o("rescate_type", "--rescate-type", _RESCATE_TYPE),
+    _o("contingencia_year", "--contingencia-year", WHOLE_NUMBER_VALUE, help_name="rescate_contingencia_year"),
+    _o("rescate_year", "--rescate-year", WHOLE_NUMBER_VALUE),
+    _o("sal_beneficio_neto", "--sal-beneficio-neto"),
+    _o("sal_reserva_dotada", "--sal-reserva-dotada"),
+    _o("sal_capital_social", "--sal-capital-social"),
+    _o("autoconsumo_promotor_base", "--autoconsumo-promotor-base"),
+    _o(
+        "m303_filing_evidence",
+        "--m303-filing-evidence",
+        PATH_VALUE,
+        transport_locus=TransportLocus.LOCAL_IN,
+        transport_shape=TransportShape.FILE,
+        transport_role=TransportRole.AUXILIARY,
+    ),
+    _LANG,
+)
+
+_REVISION_ADDRESS = (
+    _o("modelo", "--modelo", _MODELO),
+    _o("year", "--year", WHOLE_NUMBER_VALUE),
+    _o("period", "--period"),
+    _o("registry_revision", "--registry-revision", help_name="revision"),
+    _o("work_unit_id", "--work-unit-id"),
+    _o("select", "--select", default="current", help_name="revision_selector"),
+    _o("bucket_id", "--bucket-id"),
+)
+
+MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
+    _leaf(
+        "calculate",
+        "._modelo_work_calculate_cli",
+        _CALCULATE_PARAMETERS,
+        _CALC_WRITE,
+        "._modelo_payloads",
+        "WorkCalculateResult",
+    ),
+    _leaf(
+        "create",
+        "._modelo_work_lifecycle_cli",
+        (
+            _o("modelo", "--modelo", TEXT_VALUE, required=True),
+            _o("year", "--year", WHOLE_NUMBER_VALUE, required=True),
+            _o("period", "--period", required=True),
+            *_ADDRESS[3:],
+            _o("name", "--name"),
+            _o("actor", "--by"),
+            _o("allow_not_applicable", "--allow-not-applicable", FLAG_VALUE, flag=True),
+            _o("quiet", "--quiet", FLAG_VALUE, help_name="create_quiet", flag=True),
+            _o("causante_ccaa_raw", "--causante-ccaa", help_name="causante_ccaa"),
+            _LANG,
+        ),
+        _CREATE,
+        "._modelo_payloads",
+        "WorkCreateResult",
+    ),
+    _leaf(
+        "dependencies",
+        "._modelo_work_verification_cli",
+        (
+            _o("year", "--year", WHOLE_NUMBER_VALUE, required=True),
+            _o("modelo", "--modelo", _MODELO),
+            _o("period", "--period"),
+            _LANG,
+        ),
+        _CALC_READ,
+        "._modelo_payloads",
+        "WorkDependenciesResult",
+    ),
+    _leaf(
+        "discard",
+        "._modelo_work_lifecycle_cli",
+        (
+            _a("work_unit_id"),
+            *_ADDRESS,
+            _o("actor", "--by"),
+            _o("reason", "--reason"),
+            _o("confirmed", "--yes", FLAG_VALUE, help_name="discard_yes", flag=True),
+        ),
+        _policy(
+            frozenset({"encrypted-facts"}),
+            frozenset({"local-state"}),
+            "local-io",
+            CommandWriteRoute.PROFILE_BOUND,
+            destructive=True,
+        ),
+        "._modelo_payloads",
+        "WorkDiscardResult",
+    ),
+    _leaf(
+        "list",
+        "._modelo_work_lifecycle_cli",
+        (_o("bucket_id", "--bucket-id"), _o("include_discarded", "--include-discarded", FLAG_VALUE, flag=True), _LANG),
+        _MODEL_READ,
+        "._modelo_payloads",
+        "WorkListResult",
+    ),
+    _leaf(
+        "select",
+        "._modelo_work_select_cli",
+        (_o("bucket_id", "--bucket-id"), _o("include_discarded", "--include-discarded", FLAG_VALUE, flag=True), _LANG),
+        _MODEL_READ,
+        "._modelo_payloads",
+        "WorkSelectResult",
+    ),
+    _leaf(
+        "rename",
+        "._modelo_work_lifecycle_cli",
+        (_a("work_unit_id"), *_ADDRESS, _o("name", "--name"), _o("actor", "--by")),
+        _MODEL_WRITE,
+        "._modelo_payloads",
+        "WorkRenameResult",
+    ),
+    _leaf(
+        "status",
+        "._modelo_work_lifecycle_cli",
+        (_a("work_unit_id"), *_ADDRESS, _LANG),
+        _MODEL_READ,
+        "._modelo_payloads",
+        "WorkStatusResult",
+    ),
+    _leaf(
+        "review",
+        "._modelo_work_review_cli",
+        (_a("work_unit_id"), *_ADDRESS, _LANG),
+        _MODEL_READ,
+        "._modelo_payloads",
+        "WorkReviewResult",
+    ),
+    _leaf(
+        "revisions",
+        "._modelo_work_revision_cli",
+        (_a("work_unit_id"), *_ADDRESS, _LANG),
+        _MODEL_READ,
+        "._modelo_payloads",
+        "WorkRevisionsResult",
+    ),
+    _leaf(
+        "revision",
+        "._modelo_work_revision_cli",
+        (
+            _a("calculation_revision_id"),
+            *_REVISION_ADDRESS,
+            _o("verbose", "--verbose", FLAG_VALUE, help_name="revision_verbose", flag=True),
+            _LANG,
+        ),
+        _MODEL_READ,
+        "._modelo_work_revision_payloads",
+        "WorkRevisionResult",
+    ),
+    _leaf(
+        "observations",
+        "._modelo_work_revision_cli",
+        (_a("calculation_revision_id"), *_REVISION_ADDRESS, _LANG),
+        _MODEL_READ,
+        "._modelo_work_revision_payloads",
+        "WorkObservationsResult",
+    ),
+    _leaf(
+        "run",
+        "._modelo_work_runs_cli",
+        (_a("run_id", required=True), _LANG),
+        _MODEL_READ,
+        ".modelo_aux_payloads",
+        "WorkRunResult",
+    ),
+    _leaf(
+        "run-details",
+        "._modelo_work_runs_cli",
+        (_a("run_id", required=True), _LANG),
+        _MODEL_READ,
+        ".modelo_aux_payloads",
+        "WorkRunDetailsResult",
+    ),
+    _leaf(
+        "runs",
+        "._modelo_work_runs_cli",
+        (_LANG,),
+        _MODEL_READ,
+        ".modelo_aux_payloads",
+        "WorkRunsResult",
+    ),
+    _leaf(
+        "resume",
+        "._modelo_work_runs_cli",
+        (
+            _a("target", help_name="resume_target"),
+            *_ADDRESS[:4],
+            _o("select", "--select", help_name="revision_selector"),
+            _o("work_unit_id", "--work-unit-id"),
+            _o("calculation_revision_id", "--calculation-revision-id"),
+            _o("bucket_id", "--bucket-id"),
+            _LANG,
+        ),
+        _MODEL_READ,
+        "._modelo_payloads",
+        "WorkResumeResult",
+    ),
+    _leaf(
+        "verify",
+        "._modelo_work_verification_cli",
+        (
+            _a("calculation_revision_id"),
+            *_ADDRESS[:4],
+            _o("work_unit_id", "--work-unit-id"),
+            _o("select", "--select", _VERIFY_SELECTOR, default="current", help_name="verify_selector"),
+            _o("bucket_id", "--bucket-id"),
+            _o("actor", "--by"),
+            _LANG,
+        ),
+        _CALC_WRITE,
+        "._modelo_payloads",
+        "WorkVerifyResult",
+    ),
+    _leaf(
+        "file",
+        "._modelo_work_verification_cli",
+        (
+            _a("calculation_revision_id"),
+            *_ADDRESS[:4],
+            _o("work_unit_id", "--work-unit-id"),
+            _o("select", "--select", default="current", help_name="revision_selector"),
+            _o("bucket_id", "--bucket-id"),
+            _o("actor", "--by"),
+            _o("notes", "--notes"),
+            _o("refund_election", "--refund-election", _REFUND, default="compensar"),
+            _o("payment_election", "--payment-election", _PAYMENT, default="ingreso"),
+            _o("prior_domiciliation_election", "--prior-domiciliation-election", _DOMICILIATION, default="keep"),
+            _LANG,
+        ),
+        _FILE,
+        "._modelo_payloads",
+        "WorkFileResult",
+    ),
+    _leaf(
+        "wizard",
+        "._modelo_work_wizard_cli",
+        (
+            _a("work_unit_id"),
+            *_ADDRESS,
+            _o("actor", "--by"),
+            _o("output_language_opt", "--output-language", _LANGUAGE, help_name="output_language"),
+        ),
+        _WIZARD,
+        "._modelo_work_wizard_payloads",
+        "WorkWizardResult",
+    ),
+)
+
+__all__ = ["MODELO_WORK_COMMAND_SPECS"]

@@ -22,7 +22,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Devolución. SWIFT-BIC
 [[revisions."2015-2022".casillas]]
@@ -34,7 +33,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Renuncia a la devolución a favor del Tesoro Público
 [[revisions."2015-2022".casillas]]
@@ -46,7 +44,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Solicita la devolución por transferencia
 [[revisions."2015-2022".casillas]]
@@ -58,7 +55,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Cuota cero
 [[revisions."2015-2022".casillas]]
@@ -70,4 +66,3 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]

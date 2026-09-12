@@ -43,7 +43,7 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.calculations.registry.profile_grounding import binding_profile_keys
-from ...domain.calculations.registry.schema import DataBindingDefinition
+from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
@@ -289,7 +289,7 @@ def _inventory_entry(
 
 def _collect_inventory_buckets(
     revision: ModeloRevision,
-    bindings_by_id: dict[BindingId, DataBindingDefinition],
+    bindings_by_id: dict[BindingId, BindingDefinition],
 ) -> _DataInventoryBuckets:
     buckets = _DataInventoryBuckets(
         required_manual=[],

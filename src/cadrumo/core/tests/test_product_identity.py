@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 from ... import core as core_package
-from .. import __all__ as core_all
 from .. import product_identity as identity_module
 from ..product_identity import (
     PRODUCT_IDENTITY,
@@ -138,12 +137,9 @@ def test_aeat_product_software_identity_requires_exact_values_and_evidence() -> 
         )
 
 
-def test_core_facade_reexports_the_exact_identity_objects() -> None:
-    """The defining module and core facade expose one closed identity API."""
+def test_core_facade_is_inert_and_identity_stays_in_its_defining_module() -> None:
+    """The defining module owns identity while the core package stays inert."""
     assert set(identity_module.__all__) == _IDENTITY_EXPORTS
-    # The core facade is inert, so the identity API must NOT be reachable
-    # through it. Iterating the intersection would have passed vacuously.
-    assert not set(core_all)
     for export_name in _IDENTITY_EXPORTS:
         assert not hasattr(core_package, export_name), export_name
 

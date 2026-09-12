@@ -27,12 +27,3 @@ reason = """
 The cited final provision establishes the model's applicability but supplies no recurring calendar presentation window. No deadline window is authored from a non-calendar citation, and no date is fabricated for an event-based filing process."""
 legal_refs = ["orden-eha-1981-2005:df-unica"]
 source_refs = ["boe-modelo-576-2005-procedure"]
-
-[revisions."2007".family_dispositions.casilla_continuidad_evolutions]
-reason = """
-Revision '2007' is the earliest declared Modelo 576 revision. Its only casilla is the form-backed declaration year and has no fixed-width export identity, so it cannot establish a continuity transition to the 2008 positional design. The family is empty by construction rather than omission."""
-legal_refs = [
-    "orden-eha-1981-2005:df-unica",
-    "ley-58-2003:art-93",
-]
-source_refs = ["boe-modelo-576-2005-procedure"]

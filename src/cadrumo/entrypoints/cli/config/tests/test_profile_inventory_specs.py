@@ -29,7 +29,7 @@ def test_profile_inventory_specs_preserve_paths_handlers_and_language_option() -
         assert option.declarations == ("--output-language", "--language")
 
 
-@pytest.mark.parametrize("module_name", ["_profile_list_cli.py", "_profile_status_cli.py"])
+@pytest.mark.parametrize("module_name", ["profile_list_cli.py", "profile_status_cli.py"])
 def test_profile_inventory_handlers_own_no_typer_registration_metadata(module_name: str) -> None:
     source = Path(__file__).parents[1].joinpath(module_name).read_text(encoding="utf-8")
     tree = ast.parse(source)

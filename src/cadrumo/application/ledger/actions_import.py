@@ -140,7 +140,7 @@ def _apply_fx_conversion(
     return (result.rate, abs(result.eur_amount), result.rate_source, rate_date_iso)
 
 
-def _evaluate_import_rows(
+def evaluate_import_rows(
     *,
     bucket_id: str,
     catalogue: TransactionCatalogue,
@@ -304,7 +304,7 @@ def _build_dry_run_source_result(
     diagnostics: tuple[LedgerImportDiagnosticReport, ...],
 ) -> LedgerSourceImportResult:
     """Project the real deduplication outcome without persisting any row."""
-    dry_run_plan = _evaluate_import_rows(
+    dry_run_plan = evaluate_import_rows(
         bucket_id=command.bucket_id or "preview",
         catalogue=existing_catalogue,
         parsed_rows=parsed_rows,
@@ -406,7 +406,7 @@ def import_ledger_transactions(
     event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
     rows = tuple(parsed_rows)
-    plan = _evaluate_import_rows(
+    plan = evaluate_import_rows(
         bucket_id=bucket_id,
         catalogue=catalogue,
         parsed_rows=rows,

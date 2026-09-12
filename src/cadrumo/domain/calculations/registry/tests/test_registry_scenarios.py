@@ -170,7 +170,7 @@ def test_modelo_100_2023_simplified_expenses_use_temporary_da56_rate() -> None:
         period="0A",
         inputs=_inputs({"0171": Decimal("10000.00")}),
         binding_values={
-            "renta-2023-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+            "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
         },
         relation_values={
             "renta-2023-rel-130-pagos-fraccionados": Decimal("0"),

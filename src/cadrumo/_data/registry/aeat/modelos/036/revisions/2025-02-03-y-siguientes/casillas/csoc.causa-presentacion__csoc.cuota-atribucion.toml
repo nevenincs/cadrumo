@@ -60,7 +60,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # Fecha de la causa de la presentacion. ONE casilla over the dia, mes and ano components, all printed under the single number 805.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -75,7 +75,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # N.I.F. del socio, miembro o participe.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -90,7 +90,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # Apellidos y nombre, razon o denominacion social del socio, miembro o participe.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -105,7 +105,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # Domicilio fiscal en el Estado de residencia. IRPF, estimacion objetiva: renuncia o revocacion. LIST bracket [819,820].
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -120,7 +120,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # Domicilio fiscal en el Estado de residencia. IRPF, estimacion directa simplificada: renuncia o revocacion. LIST bracket [821,822].
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -135,7 +135,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # Domicilio fiscal en el Estado de residencia. IVA, regimen simplificado: renuncia o revocacion. LIST bracket [823,824].
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -150,7 +150,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # Domicilio fiscal en el Estado de residencia. IVA, regimen especial de agricultura, ganaderia y pesca: renuncia o revocacion. LIST bracket [825,826].
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -165,7 +165,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # Cuota o porcentaje de participacion, 3 enteros y 2 decimales.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -180,7 +180,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # Cuota o porcentaje de atribucion, 3 enteros y 2 decimales.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -195,4 +195,4 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]

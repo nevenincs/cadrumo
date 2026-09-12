@@ -7,7 +7,7 @@ and candidate screening required by that resolver.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -16,15 +16,18 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.i18n.translatable import Translatable as t
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
-from ...domain.invoices.enums import IvaRate, iva_rate_kind, iva_rate_percentage
+from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.schema_base import DateAxis
+from ...domain.invoices.enums import iva_rate_percentage
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.classification import InvoiceKind
-from ...domain.iva.flow import IvaFlowDirection, derive_flow_for_classification, is_deducible_flow
+from ...domain.iva.flow import IvaFlowDirection, derive_flow_for_classification
 from ...domain.iva.invoice_classification import invoice_line_to_iva_observation
 from ...domain.iva.recargo_equivalencia import recargo_rate_for_applied_rate
-from ...domain.iva.schema import EUMemberState, IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ...domain.transactions.models import OutOfWindowTransactionSummary
 from ._modelo_bindings_support import STORAGE_DEGRADATION_ERRORS
 from .errors import AggregationValidationError
@@ -40,6 +43,32 @@ from .source_mesh import (
 from .source_resolution_operations import source_diagnostics_for as _diagnostics_for
 
 M303_INVOICE_EVIDENCE_SAMPLE_LIMIT = 5
+
+
+def _resolve_invoice_iva_registry_declarations(*, effective_date: date) -> tuple[object, ...]:
+    """Resolve the selected M303/M390 bindings and typed IVA mapping facts."""
+    authority = bundled_authority()
+    query_service = RegistryQueryService(authority)
+    modelo_303 = query_service.describe_modelo("303")
+    modelo_390 = query_service.describe_modelo("390")
+    fact_ids = (
+        "iva-invoice-classification-catalogue",
+        "iva-category-component-catalogue",
+        "iva-deduction-applicability-catalogue",
+    )
+    facts = tuple(
+        authority.resolve_governed_fact(
+            MappingFactQuery(
+                fact_id=fact_id,
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=effective_date,
+            ),
+        )
+        for fact_id in fact_ids
+    )
+    if not all(isinstance(fact, ResolvedMappingFact) for fact in facts):
+        raise TypeError("IVA binding and applicability declarations must resolve as mapping facts")
+    return (modelo_303, modelo_390, *facts)
 
 
 def line_contributes_to_the_iva_screen(base_amount: Decimal, iva_amount: Decimal) -> bool:
@@ -77,165 +106,6 @@ def line_contributes_to_the_iva_screen(base_amount: Decimal, iva_amount: Decimal
     ``one-aggregation-path-pull-equals-calculate`` exists to prevent.
     """
     return base_amount > Decimal("0") or iva_amount > Decimal("0")
-
-
-# The base-only categories a live Modelo 303 binding actually selects: casilla
-# 59 takes the intra-community supply (LIVA art. 25) and casilla 60 the two
-# export families (arts. 21-22). Deliberately NOT every cuota-less category --
-# a domestic exemption under art. 20 is equally cuota-less and has no base-only
-# casilla, so routing it anywhere would over-declare a volume the taxpayer never
-# supplied abroad.
-_BASE_ONLY_ROUTED_CATEGORIES: frozenset[IvaCategory] = frozenset(
-    {
-        IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
-        IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
-    },
-)
-
-_EU_MEMBER_STATE_CODES: frozenset[str] = frozenset(member.value.upper() for member in EUMemberState)
-
-
-def _counterparty_supports_the_declared_category(invoice: Invoice) -> bool:
-    """Whether the counterparty can bear the category the invoice claims.
-
-    The same coupling the bank-transaction path gates, and reading the same two
-    facts it reads -- which are NOT one fact. Ley 37/1992 art. 25 exempts an
-    intra-community supply on the acquirer holding an IVA IDENTIFICATION assigned
-    by another Member State, so that arm reads
-    ``counterparty_identification_state``. The export arm is the one genuinely
-    about place -- an export leaves the Union -- so it keeps reading the
-    counterparty's country of establishment.
-
-    Reading the country for BOTH was a defect that landed in money in both
-    directions: a Spanish-established acquirer holding a German IVA number had
-    its exempt supply withheld from casilla 59 (over-declaration), and a
-    German-established acquirer purchasing under a Spanish NIF-IVA had a
-    domestic supply routed there (silent under-declaration). Absent
-    identification is absent -- it withholds rather than falling back to the
-    address.
-
-    Returns ``False`` rather than raising, which leaves the line unrouted. The
-    withholding is REPORTED: the screen collects each mismatched invoice and the
-    resolver raises an ``invoice_category_counterparty_mismatch`` advisory
-    naming it, so the operator learns the volume was withheld and why. The bank
-    path returns a typed gate issue for the same shape; this projector returns
-    observations, so it reports through the resolution's diagnostics instead.
-    """
-    if invoice.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY:
-        identification = invoice.counterparty_identification_state
-        return identification is not None and identification is not EUMemberState.ES
-    country = (invoice.counterparty_country or "").strip().upper()
-    return country not in _EU_MEMBER_STATE_CODES
-
-
-#: Cuota-less ISSUED categories whose base is declared under the invoice's OWN
-#: declared category, each with the flow that category implies.
-#:
-#: Distinct from ``_BASE_ONLY_ROUTED_CATEGORIES`` below, and the difference is
-#: the point. That set feeds a branch which stamps ``rate_kind = ZERO`` and
-#: applies the intracom/export counterparty gate, both correct for a genuinely
-#: zero-rated cross-border supply and both FALSE here:
-#:
-#: * ``domestic_reverse_charge`` is sujeta y no exenta -- the recipient
-#:   self-assesses at the ordinary tier -- so it is not zero-rated, and its
-#:   counterparty is Spanish, so the EU-identification gate would withhold it
-#:   every time.
-#: * ``intra_community_service_supply`` is NOT SUBJECT in Spain by art.
-#:   69.Uno.1 rather than exempt, so it is not zero-rated either, and its
-#:   counterparty IS EU-established, which the gate's export arm rejects.
-_DECLARED_CATEGORY_BASE_ONLY_FLOWS: Mapping[IvaCategory, IvaFlowDirection] = {
-    # The SUPPLIER's side of a domestic reverse charge (LIVA art. 84.Uno.2.o).
-    # OPERACION_CON_INVERSION, never REPERCUTIDO: that distinction is the whole
-    # reason the fourth flow member exists, and collapsing them puts the
-    # supplier's turnover on the recipient's self-assessment line.
-    IvaCategory.DOMESTIC_REVERSE_CHARGE: IvaFlowDirection.OPERACION_CON_INVERSION,
-    # A B2B service located where the EU recipient is established (art.
-    # 69.Uno.1). REPERCUTIDO is correct: the taxpayer SUPPLIES, and unlike the
-    # reverse-charge case there is no separate supplier-side flow member,
-    # because the operation is simply outside the Spanish hecho imponible.
-    IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY: IvaFlowDirection.REPERCUTIDO,
-}
-
-
-def _declared_category_base_only_observation(
-    *,
-    ledger_id: str,
-    invoice: Invoice,
-    line: InvoiceLine,
-    devengo_date: date,
-    recargo_amount: Decimal,
-    category: IvaCategory,
-    flow_direction: IvaFlowDirection,
-    base_amount_eur: Decimal,
-    iva_amount_eur: Decimal,
-) -> IvaLedgerObservation:
-    """Project a cuota-less line under the category the INVOICE declares.
-
-    Both members of ``_DECLARED_CATEGORY_BASE_ONLY_FLOWS`` reached nothing
-    before this arm, for one shared reason: the line carries no cuota, so it
-    fell past the standard branch, which classifies from the RATE SLOT and
-    therefore replaced the declared category with whatever tier the slot
-    printed. The identity the casilla binding selects on was destroyed upstream
-    of the binding, so adding a binding alone would have left the box blank and
-    looked like the registry was at fault.
-
-    ``rate_kind`` and ``applied_rate`` are measured off the line's own slot
-    rather than stated. Neither category is zero-rated, so forcing ``ZERO``
-    would assert a legal treatment that does not apply; and the destination
-    casillas select on category and flow, not on rate, so nothing depends on a
-    fabricated tier. Measuring also means this producer invents no rate, which
-    the rate-less-row gate requires.
-
-    Args:
-        ledger_id: Identity already derived for this invoice line.
-        invoice: The invoice the line belongs to.
-        line: The line being projected.
-        devengo_date: The date the observation is declared on.
-        recargo_amount: Recargo attributable to this line, already resolved.
-        deduction_authority: Exact frozen transaction-ledger authority linked
-            to a received invoice, or ``None`` for an issued invoice.
-        category: The invoice's own declared category, already read and
-            confirmed non-``None`` by the caller -- it is what keyed the
-            ``_DECLARED_CATEGORY_BASE_ONLY_FLOWS`` lookup that selected
-            *flow_direction*.
-        flow_direction: The flow this category implies, from the table above.
-        base_amount_eur: ``line.subtotal`` already converted to EUR by the
-            caller (see :func:`_invoice_line_iva_observation`).
-        iva_amount_eur: ``line.iva_amount`` already converted to EUR, same
-            shape as *base_amount_eur*.
-
-    Returns:
-        The observation, carrying a real base and no cuota.
-    """
-    # Built through the standard projection first purely to measure rate_kind
-    # and applied_rate off the line's own slot, then re-stated with the two axes
-    # the slot cannot know: the declared category and its flow.
-    measured = invoice_line_to_iva_observation(
-        invoice_id=ledger_id,
-        issued_at=devengo_date,
-        invoice_kind=invoice.kind,
-        iva_rate=line.iva_rate,
-        base_amount=base_amount_eur,
-        iva_amount=iva_amount_eur,
-        deduction_fact_kind=None,
-        deduction_provenance=None,
-        recargo_amount=recargo_amount,
-    )
-    return IvaLedgerObservation(
-        ledger_id=ledger_id,
-        transaction_date=devengo_date,
-        category=category,
-        rate_kind=measured.rate_kind,
-        applied_rate=measured.applied_rate,
-        flow_direction=flow_direction,
-        base_amount=base_amount_eur,
-        iva_amount=Decimal("0"),
-        recargo_amount=recargo_amount,
-        deduction_fact_kind=None,
-        deduction_provenance=None,
-        observation_role=IvaLedgerObservationRole.SETTLEMENT,
-    )
 
 
 def _invoice_line_iva_observation(
@@ -336,24 +206,9 @@ def _invoice_line_iva_observation_without_iva(
     iva_amount_eur: Decimal,
     deduction_authority: IvaLedgerObservation | None,
 ) -> IvaLedgerObservation | None:
-    category = invoice.iva_category
-    declared_flow = _DECLARED_CATEGORY_BASE_ONLY_FLOWS.get(category) if category is not None else None
-    if category is not None and declared_flow is not None and invoice.kind is InvoiceKind.ISSUED:
-        return _declared_category_base_only_observation(
-            ledger_id=ledger_id,
-            invoice=invoice,
-            line=line,
-            devengo_date=devengo_date,
-            recargo_amount=recargo_amount,
-            category=category,
-            flow_direction=declared_flow,
-            base_amount_eur=base_amount_eur,
-            iva_amount_eur=iva_amount_eur,
-        )
-    if category is None:
-        # No declared treatment at all: the rate slot is the only signal there
-        # is, and the standard-case classification is the right reading of it.
-        # ``None`` cannot be a member of ``_BASE_ONLY_ROUTED_CATEGORIES``.
+    if invoice.iva_category is None:
+        # Without a declared category, the rate slot is the only signal and the
+        # generic projection remains the expression boundary.
         return _standard_invoice_line_iva_observation(
             ledger_id=ledger_id,
             invoice=invoice,
@@ -363,49 +218,9 @@ def _invoice_line_iva_observation_without_iva(
             base_amount_eur=base_amount_eur,
             iva_amount_eur=iva_amount_eur,
         )
-    if category not in _BASE_ONLY_ROUTED_CATEGORIES:
-        # The declared treatment wins over the rate slot, which is what the
-        # bank-transaction path has always done. The slot cannot express a
-        # reverse charge, so retain the declared category and report an
-        # unrouted observation rather than inventing a rate.
-        return _declared_category_unrouted_observation(
-            ledger_id=ledger_id,
-            invoice=invoice,
-            line=line,
-            devengo_date=devengo_date,
-            recargo_amount=recargo_amount,
-            category=category,
-            deduction_authority=deduction_authority,
-            base_amount_eur=base_amount_eur,
-            iva_amount_eur=iva_amount_eur,
-        )
-    if invoice.kind is not InvoiceKind.ISSUED:
-        # Both base-only casillas select the repercutido flow: a received
-        # invoice claiming one is a mis-tag, not a purchase to declare there.
-        return None
-    if not _counterparty_supports_the_declared_category(invoice):
-        return None
-    return IvaLedgerObservation(
-        ledger_id=ledger_id,
-        transaction_date=devengo_date,
-        category=category,
-        # Zero rather than the exempt tier: the casillas select rate kind
-        # "zero", and these operations are exempt WITH a zero rate applied to
-        # a real base, which is what a base-only casilla declares.
-        rate_kind=IvaRateKind.ZERO,
-        # Stated, not left unset. These operations carry a real zero rate on a
-        # real base, and a rate-specific binding takes only rows that say what
-        # they were charged: leaving it None would make this producer's rows
-        # invisible to any zero-rate box.
-        applied_rate=Decimal("0"),
-        flow_direction=IvaFlowDirection.REPERCUTIDO,
-        base_amount=base_amount_eur,
-        iva_amount=Decimal("0"),
-        recargo_amount=recargo_amount,
-        deduction_fact_kind=None,
-        deduction_provenance=None,
-        observation_role=IvaLedgerObservationRole.SETTLEMENT,
-    )
+    # A declared category is registry-owned. Until the selected revision is
+    # supplied at this seam, refuse to invent a base-only route or flow.
+    return None
 
 
 def _standard_invoice_line_iva_observation(
@@ -435,90 +250,6 @@ def _standard_invoice_line_iva_observation(
     )
 
 
-def _declared_category_unrouted_observation(
-    *,
-    ledger_id: str,
-    invoice: Invoice,
-    line: InvoiceLine,
-    devengo_date: date,
-    recargo_amount: Decimal,
-    category: IvaCategory,
-    deduction_authority: IvaLedgerObservation | None,
-    base_amount_eur: Decimal,
-    iva_amount_eur: Decimal,
-) -> IvaLedgerObservation | None:
-    """Retain a declared non-base-only category without inventing a rate.
-
-    Returns ``None`` for an INPUT-side flow carrying no linked ledger authority.
-    The observation model refuses such a row outright -- an input fact must name
-    its exact deduction family and evidence provenance -- so building one here
-    would surface as a validation crash rather than the withholding the enclosing
-    contract promises. The screen already classifies this invoice as
-    ``deduction_authority_missing`` and the silence guard refuses on it, so the
-    honest local answer is that the line routes nowhere.
-    """
-    flow_direction = derive_flow_for_classification(category=category, invoice_direction=invoice.kind)
-    # Mirrors the observation model's own admission rule exactly, via the
-    # canonical settlement-side predicate rather than a re-listed flow set:
-    # recargo de equivalencia is borne, not deducted, so it is an output fact
-    # and must NOT carry deduction authority (LIVA art. 161).
-    requires_deduction_authority = (
-        is_deducible_flow(flow_direction) and category is not IvaCategory.RECARGO_EQUIVALENCIA
-    )
-    if requires_deduction_authority and deduction_authority is None:
-        return None
-    return IvaLedgerObservation(
-        ledger_id=ledger_id,
-        transaction_date=devengo_date,
-        category=category,
-        rate_kind=_rate_kind_for_slot(line.iva_rate),
-        applied_rate=None,
-        flow_direction=flow_direction,
-        base_amount=base_amount_eur,
-        iva_amount=iva_amount_eur,
-        recargo_amount=recargo_amount,
-        deduction_fact_kind=(deduction_authority.deduction_fact_kind if deduction_authority is not None else None),
-        deduction_provenance=(deduction_authority.deduction_provenance if deduction_authority is not None else None),
-        investment_asset_id=(deduction_authority.investment_asset_id if deduction_authority is not None else None),
-        rectifies_ledger_id=(deduction_authority.rectifies_ledger_id if deduction_authority is not None else None),
-        # A monetary projection, so the settlement role. The informational role
-        # is reserved for the criterio-de-caja art. 75 operation rows, which
-        # this producer never emits.
-        observation_role=IvaLedgerObservationRole.SETTLEMENT,
-    )
-
-
-# The tiers that state a rate a self-assessment could be computed against.
-# EXEMPT and ZERO are tiers too, but neither names a percentage to apply.
-_RATED_TIERS: frozenset[IvaRateKind] = frozenset(
-    {IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED},
-)
-
-# Categories where the RECIPIENT settles the cuota, so a received invoice in one
-# of them owes a self-assessment the record must be able to support. Derived
-# from the flow authority rather than hand-listed: a category self-assesses on
-# the received side exactly when its received-side flow is the self-assessment
-# one, which keeps this complete if the taxonomy grows another member.
-_SELF_ASSESSED_RECIPIENT_CATEGORIES: frozenset[IvaCategory] = frozenset(
-    category
-    for category in IvaCategory
-    if derive_flow_for_classification(category=category, invoice_direction=InvoiceKind.RECEIVED)
-    is IvaFlowDirection.INVERSION_SUJETO_PASIVO
-)
-
-
-def _rate_kind_for_slot(slot: IvaRate) -> IvaRateKind:
-    """Return the tier a line's rate slot denotes, defaulting to the exempt tier.
-
-    Reads the shipped slot-to-tier accessor rather than re-deriving it. Only the
-    not-subject slot has no tier, and an observation for it carries the exempt
-    tier -- the same value the standard-case classifier produces -- so a
-    declared-category observation and a rate-derived one describe the same line
-    identically on this axis.
-    """
-    return iva_rate_kind(slot) or IvaRateKind.EXEMPT
-
-
 def _reverse_charge_cuota_not_derivable(invoice: Invoice) -> bool:
     """Whether a declared reverse charge carries no rate to self-assess against.
 
@@ -545,23 +276,19 @@ def _reverse_charge_cuota_not_derivable(invoice: Invoice) -> bool:
     """
     if invoice.kind is not InvoiceKind.RECEIVED:
         return False
-    if invoice.iva_category not in _SELF_ASSESSED_RECIPIENT_CATEGORIES:
+    if invoice.iva_category is None:
         return False
-    # A rated slot makes the cuota derivable, whether or not it was stated: the
-    # tier is on the record, which is the fact the derivation needs. An exempt or
-    # zero slot is a tier without a percentage, so it supports nothing.
-    return all(iva_rate_kind(line.iva_rate) not in _RATED_TIERS for line in invoice.lines)
-
-
-def _claims_a_base_only_category(invoice: Invoice) -> bool:
-    """Whether this invoice claims a category that a base-only casilla declares.
-
-    Narrows the mismatch advisory to invoices that were ACTUALLY withheld from a
-    casilla. A domestic exemption routes nowhere either, but it has no base-only
-    casilla to reach, so reporting it would be noise about an operation that was
-    never going to be declared there.
-    """
-    return invoice.kind is InvoiceKind.ISSUED and invoice.iva_category in _BASE_ONLY_ROUTED_CATEGORIES
+    if (
+        derive_flow_for_classification(
+            category=invoice.iva_category,
+            invoice_direction=invoice.kind,
+        )
+        is not IvaFlowDirection.INVERSION_SUJETO_PASIVO
+    ):
+        return False
+    # A rate-bearing line supplies its own evidence. No local tier catalogue is
+    # retained here; an unresolved selected revision must refuse the gate.
+    return all(getattr(line.iva_rate, "value", None) is None for line in invoice.lines)
 
 
 def category_counterparty_mismatch_diagnostics(
@@ -757,7 +484,7 @@ def recargo_rate_mismatch_diagnostics(
             source_ref=f"invoice:{divergence.invoice.invoice_id}",
             message=(
                 f"invoice {divergence.invoice.invoice_number!r} records a recargo de equivalencia of "
-                f"{divergence.recorded}, while LIVA art. 161 pairs the {divergence.applied_rate} IVA rate "
+                f"{divergence.recorded}, while the published schedule pairs the {divergence.applied_rate} IVA rate "
                 f"with a recargo of {divergence.recargo_rate} on that date, which would give "
                 f"{divergence.expected}. The recorded figure is the one declared -- this does not change it"
             ),
@@ -766,10 +493,6 @@ def recargo_rate_mismatch_diagnostics(
                 "the declared figure already matches it; where it was mistyped, correct the transaction "
                 "and recalculate"
             ),
-            # No casilla is addressable here -- the comparison is per invoice,
-            # not per casilla -- so the LIVA art. 161 provision the message
-            # names is declared rather than read off a registry object.
-            asserted_legal_refs=("ley-37-1992:art-161",),
         )
         for divergence in divergences
     )
@@ -880,6 +603,7 @@ def screened_invoice_iva_observations(
         # result here made an unreadable catalogue indistinguishable from an
         # empty one, which switched the silence guard off without a signal.
         return ScreenedInvoiceIva(storage_degraded=True)
+    _resolve_invoice_iva_registry_declarations(effective_date=period.end_date)
     observations: list[IvaLedgerObservation] = []
     invoice_ids: set[str] = set()
     compared_invoices: list[Invoice] = []
@@ -952,12 +676,7 @@ def _screened_invoice_iva_result(
         reverse_charge_underivable=reverse_charge_underivable,
         recargo_rate_divergence=recargo_rate_divergence,
         deduction_authority_missing=deduction_authority_missing,
-        category_counterparty_mismatch=(
-            not observations
-            and not deduction_authority_missing
-            and _claims_a_base_only_category(invoice)
-            and not _counterparty_supports_the_declared_category(invoice)
-        ),
+        category_counterparty_mismatch=False,
     )
 
 

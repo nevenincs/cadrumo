@@ -15,3 +15,13 @@ updated_at = 2026-06-10
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Tema sobre el recàrrec per presentació extemporània i els seus terminis."
+
+[language.en]
+short_description = "Topic covering the surcharge for late filing and its deadlines."
+
+[language.hu]
+short_description = "A késedelmes benyújtás pótlékával és határidejével foglalkozó téma."
+

@@ -32,12 +32,12 @@ from collections.abc import Iterator
 from typing import TYPE_CHECKING, ClassVar, override
 
 from ....core.classification.policies import SensitivityClass
+from ....core.secure_object_write import SecureObjectWrite
 from ....domain.filing.errors import FilingValidationError
 from ....domain.filing.schema import ModeloDraft, compute_modelo_draft_id
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ..storage.secure_object_namespaces import FILING_DRAFTS_NAMESPACE
-from ..storage.sql.secure_objects import SecureObjectWrite
 from ._filing_runtime import resolve_filing_repository_bucket_id
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard

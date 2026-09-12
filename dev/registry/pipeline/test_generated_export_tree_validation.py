@@ -367,7 +367,6 @@ def test_generated_tree_validation_module_has_no_legacy_loader_surface() -> None
     )
     forbidden = {
         "bundled_authority",
-        "load_modelo_file",
         "load_modelo_path",
         "resolve_export_layout",
         "copytree",

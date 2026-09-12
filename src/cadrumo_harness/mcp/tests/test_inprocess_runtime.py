@@ -1,6 +1,6 @@
 """Real-behavior coverage for the warm in-process CLI runtime.
 
-Exercises :mod:`cadrumo_harness.mcp._inprocess` against the real ``aeat`` Typer app,
+Exercises :mod:`cadrumo_harness.mcp.inprocess` against the real ``aeat`` Typer app,
 the real registry and real filesystem state. The compiled-cache directory is
 isolated so a user's pre-existing development cache cannot become test authority.
 The runtime's contract is that it runs the genuine CLI pipeline in-process and
@@ -18,14 +18,14 @@ import sys
 import pytest
 
 from .._call_runtime import CallTier
-from .._inprocess import (
+from ..inprocess import (
     CompletedCliRun,
     dispatch_verb_in_process,
     parse_cli_envelope,
     run_cli_in_process,
     tier_runs_in_process,
 )
-from .._tools import build_tool_descriptors
+from ..tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

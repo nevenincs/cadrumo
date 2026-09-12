@@ -14,13 +14,14 @@ import pytest
 
 from ....tests.secure_sql import isolated_runtime_profile
 from ...auth.models import AuthState
-from ...review.models import (
+from ...workflow.review_models import (
     InvoiceReviewRecord,
     LedgerReviewRecord,
 )
 from ..persistence import WorkflowStateRepository
 from ..profile_bucket_scan import list_profile_buckets
-from ..state_models import WorkflowEvent, WorkflowState
+from ..review_models import WorkflowEvent
+from ..state_models import WorkflowState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -15,12 +15,12 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.casilla_id import validated_casilla_id
 from ....core.casilla_value_kind import CasillaValueKind
-from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
+from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...modelo.action_errors import ExternalModeloImportError
 from ...modelo.amendment_actions import amend_modelo_revision
 from ...modelo.calculation_actions import get_calculation_revision
-from ...modelo.tests.import_flow_support import _seed_ready_profile
+from ...modelo.tests.import_flow_support import seed_ready_profile
 from ..filed_data_capture import _CaptureAccumulator
 from ._filed_capture_history_support import (
     _CAPTURED_AT,
@@ -41,7 +41,7 @@ _EXPENSE = validated_casilla_id("02")
 @pytest.fixture
 def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
-        _seed_ready_profile(bucket_id=_PROFILE_ID)
+        seed_ready_profile(bucket_id=_PROFILE_ID)
         yield profile
 
 

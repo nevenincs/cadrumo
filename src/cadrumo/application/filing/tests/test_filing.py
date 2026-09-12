@@ -29,7 +29,7 @@ from ....tests.filing import empty_prior_filing_observations_fingerprint, empty_
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ..conftest import _BUCKET_ID
-from ..draft_construction import _binding_provenance, build_draft
+from ..draft_construction import binding_provenance, build_draft
 from ..draft_review import (
     approve_draft,
     compute_current_approval_basis,
@@ -251,7 +251,7 @@ def test_binding_provenance_rejects_empty_registry_refs() -> None:
 
     snapshot = bundled_authority().snapshot("130", filing_year=2026, period="1T")
     binding = next(item for item in snapshot.revision.bindings if item.legal_refs and item.source_refs)
-    source, legal_refs, source_refs = _binding_provenance(binding)
+    source, legal_refs, source_refs = binding_provenance(binding)
     assert source == binding.source
     assert legal_refs == tuple(binding.legal_refs)
     assert source_refs == tuple(binding.source_refs)
@@ -261,7 +261,7 @@ def test_binding_provenance_rejects_empty_registry_refs() -> None:
         binding.model_copy(update={"source_refs": ()}),
     ):
         with pytest.raises(ModeloBuilderError) as provenance_error:
-            _binding_provenance(corrupted)
+            binding_provenance(corrupted)
         assert (
             provenance_error.value.translated_message
             == "application.filing.build_draft.errors.binding_provenance_missing"
@@ -387,7 +387,7 @@ def test_build_draft_preserves_modelo_131_structured_binding_values() -> None:
             _M131_CASILLA_05: Decimal("500"),
             _M131_CASILLA_08: Decimal("0"),
             _M131_CASILLA_09: Decimal("0"),
-            "modelo-131-2026-resultados-negativos-anteriores": Decimal("0"),
+            "modelo-131-resultados-negativos-anteriores": Decimal("0"),
             _M131_CASILLA_12: Decimal("0"),
             _M131_CASILLA_14: Decimal("0"),
             "modelo-131.dpa.013-016.epigrafe-iae": "722",

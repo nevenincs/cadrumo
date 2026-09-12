@@ -47,20 +47,15 @@ from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
-    FilingInstanceEvidence,
     derive_calculation_revision_id,
 )
 from .....domain.modelos.calculation_revision_m303_evidence import M303Exonerado390FilingEvidence
-from .....domain.modelos.calculation_revision_m303_handoff import M303FilingInstanceEvidence
+from .....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence, M303FilingInstanceEvidence
 from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from .....tests.filing_evidence import regimen_simplificado_filing_evidence
 from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ..modelos_calculation import (
-    _CALCULATION_CATALOGUE_VERSION,
-    _CALCULATION_NAMESPACE,
-    _CALCULATION_OBJECT_KEY,
-    CalculationRevisionCatalogueRepository,
-)
+from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
+from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -371,10 +366,10 @@ def test_calculation_revision_catalogue_dropped_observations_surfaces_at_load(
         repo.save(original)
 
         record = profile.repository.load(
-            _CALCULATION_NAMESPACE,
-            _CALCULATION_OBJECT_KEY,
+            MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+            MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
             expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_CALCULATION_CATALOGUE_VERSION,
+            max_supported_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
         )
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
@@ -386,8 +381,8 @@ def test_calculation_revision_catalogue_dropped_observations_surfaces_at_load(
         assert "observations" in persisted_revision, "fixture must persist observations for the proof to be meaningful"
         del persisted_revision["observations"]
         profile.repository.save(
-            namespace=_CALCULATION_NAMESPACE,
-            object_key=_CALCULATION_OBJECT_KEY,
+            namespace=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+            object_key=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
             classification=record.classification,
             schema_version=record.schema_version,
             written_at=record.written_at,
@@ -409,10 +404,10 @@ def test_calculation_revision_catalogue_dropped_filing_evidence_refuses_at_load(
         original = _populated_catalogue()
         repo.save(original)
         record = profile.repository.load(
-            _CALCULATION_NAMESPACE,
-            _CALCULATION_OBJECT_KEY,
+            MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+            MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
             expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_CALCULATION_CATALOGUE_VERSION,
+            max_supported_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
         )
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
@@ -420,8 +415,8 @@ def test_calculation_revision_catalogue_dropped_filing_evidence_refuses_at_load(
         assert persisted_revision["filing_instance_evidence"] is not None
         del persisted_revision["filing_instance_evidence"]
         profile.repository.save(
-            namespace=_CALCULATION_NAMESPACE,
-            object_key=_CALCULATION_OBJECT_KEY,
+            namespace=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+            object_key=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
             classification=record.classification,
             schema_version=record.schema_version,
             written_at=record.written_at,
@@ -443,10 +438,10 @@ def test_calculation_revision_catalogue_dropped_registry_snapshot_ref_refuses_at
         original = _populated_catalogue()
         repo.save(original)
         record = profile.repository.load(
-            _CALCULATION_NAMESPACE,
-            _CALCULATION_OBJECT_KEY,
+            MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+            MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
             expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_CALCULATION_CATALOGUE_VERSION,
+            max_supported_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
         )
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
@@ -454,8 +449,8 @@ def test_calculation_revision_catalogue_dropped_registry_snapshot_ref_refuses_at
         assert persisted_revision["registry_snapshot_ref"] == _REGISTRY_SNAPSHOT_REF.model_dump(mode="json")
         del persisted_revision["registry_snapshot_ref"]
         profile.repository.save(
-            namespace=_CALCULATION_NAMESPACE,
-            object_key=_CALCULATION_OBJECT_KEY,
+            namespace=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+            object_key=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
             classification=record.classification,
             schema_version=record.schema_version,
             written_at=record.written_at,
@@ -477,10 +472,10 @@ def test_calculation_revision_catalogue_mismatched_parent_registry_snapshot_ref_
         original = _populated_catalogue()
         repo.save(original)
         record = profile.repository.load(
-            _CALCULATION_NAMESPACE,
-            _CALCULATION_OBJECT_KEY,
+            MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+            MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
             expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_CALCULATION_CATALOGUE_VERSION,
+            max_supported_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
         )
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
@@ -488,8 +483,8 @@ def test_calculation_revision_catalogue_mismatched_parent_registry_snapshot_ref_
         mismatched_ref = _REGISTRY_SNAPSHOT_REF.model_copy(update={"revision_id": "wrong-parent-revision"})
         persisted_revision["registry_snapshot_ref"] = mismatched_ref.model_dump(mode="json")
         profile.repository.save(
-            namespace=_CALCULATION_NAMESPACE,
-            object_key=_CALCULATION_OBJECT_KEY,
+            namespace=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+            object_key=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
             classification=record.classification,
             schema_version=record.schema_version,
             written_at=record.written_at,
@@ -514,16 +509,16 @@ def test_calculation_revision_catalogue_wrong_inner_classification_is_localized(
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[CalculationRevisionCatalogue](
-            schema_version=_CALCULATION_CATALOGUE_VERSION,
+            schema_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
             written_at=_CORRUPT_ENVELOPE_WRITTEN_AT,
             classification=SensitivityClass.AUDIT,
             payload=CalculationRevisionCatalogue(),
         )
         profile.repository.save(
-            namespace=_CALCULATION_NAMESPACE,
-            object_key=_CALCULATION_OBJECT_KEY,
+            namespace=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+            object_key=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
             classification=SensitivityClass.FINANCIAL,
-            schema_version=_CALCULATION_CATALOGUE_VERSION,
+            schema_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )
@@ -546,7 +541,7 @@ def test_calculation_revision_catalogue_unsupported_storage_version_is_localized
 
     from ...storage.envelope.contract import Envelope
 
-    stored_schema_version = _CALCULATION_CATALOGUE_VERSION + 1
+    stored_schema_version = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version + 1
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[CalculationRevisionCatalogue](
             schema_version=stored_schema_version,
@@ -555,10 +550,10 @@ def test_calculation_revision_catalogue_unsupported_storage_version_is_localized
             payload=CalculationRevisionCatalogue(),
         )
         profile.repository.save(
-            namespace=_CALCULATION_NAMESPACE,
-            object_key=_CALCULATION_OBJECT_KEY,
+            namespace=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+            object_key=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
             classification=SensitivityClass.FINANCIAL,
-            schema_version=_CALCULATION_CATALOGUE_VERSION,
+            schema_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )
@@ -570,7 +565,7 @@ def test_calculation_revision_catalogue_unsupported_storage_version_is_localized
     assert raised.value.context == {
         "reason": "unsupported_envelope_version",
         "stored_schema_version": stored_schema_version,
-        "max_supported_version": _CALCULATION_CATALOGUE_VERSION,
+        "max_supported_version": MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
     }
 
 
@@ -607,10 +602,10 @@ def test_pre_s58_evidence_less_catalogue_is_rejected_at_encrypted_load(
             payload=legacy_catalogue,
         )
         profile.repository.save(
-            namespace=_CALCULATION_NAMESPACE,
-            object_key=_CALCULATION_OBJECT_KEY,
+            namespace=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+            object_key=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
             classification=SensitivityClass.FINANCIAL,
-            schema_version=_CALCULATION_CATALOGUE_VERSION,
+            schema_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )
@@ -651,10 +646,10 @@ def test_calculation_revision_refuses_ambiguous_lifecycle_instants_at_encrypted_
         repo.save(_populated_catalogue())
 
         record = profile.repository.load(
-            _CALCULATION_NAMESPACE,
-            _CALCULATION_OBJECT_KEY,
+            MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+            MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
             expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_CALCULATION_CATALOGUE_VERSION,
+            max_supported_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
         )
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
@@ -662,8 +657,8 @@ def test_calculation_revision_refuses_ambiguous_lifecycle_instants_at_encrypted_
         assert persisted_revision.get(field), f"fixture must persist {field} for this proof to be meaningful"
         persisted_revision[field] = persisted_instant
         profile.repository.save(
-            namespace=_CALCULATION_NAMESPACE,
-            object_key=_CALCULATION_OBJECT_KEY,
+            namespace=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+            object_key=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
             classification=record.classification,
             schema_version=record.schema_version,
             written_at=record.written_at,

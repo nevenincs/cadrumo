@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 143, sol·licitud del pagament anticipat per família nombrosa o persones amb discapacitat a càrrec"
+
+[language.en]
+short_description = "Modelo 143, request for advance payment of deductions for a large family or a disabled dependant"
+
+[language.hu]
+short_description = "143-as modell: a nagycsaládos vagy fogyatékossággal élő eltartott utáni levonások előlegének kérelme"
+

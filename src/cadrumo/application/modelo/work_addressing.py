@@ -21,7 +21,7 @@ defaults so verify, file, and export commands consume only the lifecycle states
 they are allowed to handle.
 
 See Also:
-    :func:`select_modelo_work_resolution`:
+    :func:`~cadrumo.application.modelo.work_selection.select_modelo_work_resolution`:
         The authoritative pure work selector over one captured catalogue.
     :mod:`~cadrumo.entrypoints.cli._modelo`:
         CLI commands that project operator flags into this facade.
@@ -52,15 +52,6 @@ from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ._work_selection import (
-    ModeloWorkResolution,
-    ModeloWorkSelectionMode,
-    ModeloWorkSelectorRequest,
-    ModeloWorkSelectorState,
-    ModeloWorkUnitCandidate,
-    resolve_modelo_work_bucket,
-    select_modelo_work_resolution,
-)
 from .action_errors import CalculationRevisionNotFoundError, CalculationRevisionStateError, ModeloPreconditionErrorMixin
 from .calculation_actions import get_calculation_revision
 from .preconditions import (
@@ -77,14 +68,15 @@ from .selectors import (
     resolve_modelo_calculation_revision_pick,
 )
 from .work_lifecycle import RevisionParentOperation, create_work_unit, rename_work_unit, require_revision_parent_active
-
-# Keep the public model identities anchored at this facade while their pure
-# selector implementation lives in the private helper module.
-ModeloWorkResolution.__module__ = __name__
-ModeloWorkSelectionMode.__module__ = __name__
-ModeloWorkSelectorRequest.__module__ = __name__
-ModeloWorkSelectorState.__module__ = __name__
-ModeloWorkUnitCandidate.__module__ = __name__
+from .work_selection import (
+    ModeloWorkResolution,
+    ModeloWorkSelectionMode,
+    ModeloWorkSelectorRequest,
+    ModeloWorkSelectorState,
+    ModeloWorkUnitCandidate,
+    resolve_modelo_work_bucket,
+    select_modelo_work_resolution,
+)
 
 
 class ModeloWorkSelectorError(ModeloError):
@@ -1509,15 +1501,10 @@ __all__ = [
     "ModeloWorkNoActiveBucketError",
     "ModeloWorkPeriodTokenError",
     "ModeloWorkRegistryYearMismatchError",
-    "ModeloWorkResolution",
     "ModeloWorkRevisionConflictError",
-    "ModeloWorkSelectionMode",
     "ModeloWorkSelectorContradictionError",
     "ModeloWorkSelectorError",
-    "ModeloWorkSelectorRequest",
-    "ModeloWorkSelectorState",
     "ModeloWorkTarget",
-    "ModeloWorkUnitCandidate",
     "ModeloWorkUnitNotFoundError",
     "ModeloWorkVisibleTargetAmbiguousError",
     "assert_work_target_revision",
@@ -1534,11 +1521,9 @@ __all__ = [
     "resolve_modelo_revision_pick",
     "resolve_modelo_work_address",
     "resolve_modelo_work_address_unit",
-    "resolve_modelo_work_bucket",
     "resolve_modelo_work_target",
     "resolve_modelo_work_unit_for_operator_target",
     "resolve_optional_modelo_work_address",
     "resolve_verifiable_modelo_calculation_revision_address",
-    "select_modelo_work_resolution",
     "work_address_for_modelo_target",
 ]

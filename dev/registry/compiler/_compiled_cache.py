@@ -51,11 +51,9 @@ from typing import Final, NamedTuple, TypeGuard
 from pydantic import BaseModel, TypeAdapter
 
 import cadrumo
-from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.directory_scan import iter_directory, scan_directory
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.paths import select_filesystem_retention_survivors
-from cadrumo.domain.calculations.registry.bindings import selector_model_for_source
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 
 from .loader_cache import registry_disk_cache_max_entries
@@ -136,22 +134,14 @@ class _EmbeddedForeignType(NamedTuple):
 def _compiled_payload_root_models() -> tuple[type[BaseModel], ...]:
     """Return every model an unpickled compiled payload can reconstruct objects from.
 
-    The two schema roots plus every concrete binding-selector model. The selector
-    models are deliberately included because they are NOT reachable from the
-    schema annotations: :attr:`DataBindingDefinition.selector` is typed as an
-    open :class:`~pydantic.BaseModel` and its concrete family model is chosen at
-    validation time from the discriminated-selector table, so an annotation walk
-    from :class:`ModeloDefinition` alone cannot see the IVA / renta / modelo
-    enums those selectors embed -- which is exactly how ``Modelo``,
-    ``IvaCategory`` and their siblings sat unhashed. Enumerating the table
-    through its own public accessor keeps that half DERIVED as well: a new
-    selector family must register there to work at all, so it enrols itself.
+    The two schema roots are now sufficient. Every concrete binding provider
+    model used to be listed separately because the former open ``selector``
+    field hid them from an annotation walk, which is how ``Modelo``,
+    ``IvaCategory`` and their siblings once sat unhashed. :attr:`BindingDefinition.provider`
+    is a closed discriminated union, so the same walk reaches every provider
+    member -- and every enum it embeds -- from :class:`ModeloDefinition` alone.
     """
-    selectors = {
-        model for model in (selector_model_for_source(kind) for kind in BindingSourceKind) if model is not None
-    }
-    ordered = sorted(selectors, key=lambda model: (model.__module__, model.__qualname__))
-    return (ModeloDefinition, RegistryCatalogues, *ordered)
+    return (ModeloDefinition, RegistryCatalogues)
 
 
 def _iter_annotation_types(annotation: object) -> Iterator[type[object]]:

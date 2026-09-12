@@ -8,13 +8,12 @@ from typing import Annotated, Literal
 from pydantic import Field, TypeAdapter, model_validator
 
 from ..errors import RegistryValidationError
+from ..ids import LegalRefId, SourceRefId
 from ..schema_base import (
     DateAxisField,
-    LegalRefId,
     RegistryModel,
     RevisionReviewStatusField,
     SourceCitation,
-    SourceRefId,
 )
 from .schema import (
     BracketFactPayload,

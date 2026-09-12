@@ -25,8 +25,10 @@ from datetime import date
 
 import pytest
 
+from ...calculations.registry.authority import bundled_authority
+from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...calculations.registry.schema_base import DateAxis
 from ..classification import (
-    _CLASSIFICATION_RULES,
     CustomerTaxStatus,
     InvoiceKind,
     IvaInvoiceClassificationCriteria,
@@ -41,6 +43,35 @@ from ..schema import EUMemberState, IvaCategory, IvaRateKind
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _DATE = date(2026, 3, 10)
+
+
+def _classification_fact_entries(*, on: date) -> dict[str, str]:
+    """Resolve the published classification declaration at its filing coordinate."""
+    resolved = bundled_authority().resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="iva-invoice-classification-catalogue",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=on,
+        ),
+    )
+    assert isinstance(resolved, ResolvedMappingFact)
+    entries: dict[str, str] = {}
+    for entry in resolved.payload.entries:
+        assert isinstance(entry.key, str) and isinstance(entry.value, str)
+        entries[entry.key] = entry.value
+    return entries
+
+
+def _classification_rule_consumptions(*, on: date) -> dict[str, frozenset[PartyFact]]:
+    """Read each non-terminal rule's declared party-fact consumption from authority."""
+    entries = _classification_fact_entries(on=on)
+    rule_order = entries["rule_order"].split(",")
+    return {
+        rule_id: frozenset(PartyFact(fact) for fact in entries[f"rule.{rule_id}.consumes"].split(","))
+        for rule_id in rule_order
+        if f"rule.{rule_id}.consumes" in entries
+    }
+
 
 #: A structurally valid German IVA number, and a Spanish CIF for the same party
 #: shape. Both are registrations; the point of every case below is that they are
@@ -177,31 +208,37 @@ class TestEveryBranchDeclaresWhatItConsumes:
     def test_every_rule_consumes_the_establishment(self) -> None:
         """Every predicate reads the residencies, so every row declares the place."""
         undeclared = [
-            rule.rule_id for rule in _CLASSIFICATION_RULES if PartyFact.TERRITORIAL_ESTABLISHMENT not in rule.consumes
+            rule_id
+            for rule_id, consumes in _classification_rule_consumptions(on=_DATE).items()
+            if PartyFact.TERRITORIAL_ESTABLISHMENT not in consumes
         ]
         assert undeclared == []
 
     def test_no_rule_declares_an_empty_or_unknown_consumption(self) -> None:
-        for rule in _CLASSIFICATION_RULES:
-            assert rule.consumes, f"{rule.rule_id} declares no party fact and would demand nothing"
-            assert rule.consumes <= frozenset(PartyFact), rule.rule_id
+        for rule_id, consumes in _classification_rule_consumptions(on=_DATE).items():
+            assert consumes, f"{rule_id} declares no party fact and would demand nothing"
+            assert consumes <= frozenset(PartyFact), rule_id
 
     def test_the_intra_community_branches_are_the_ones_needing_the_identification(self) -> None:
         """The families reported against a NIF-IVA, and no others.
 
-        Named by rule id rather than derived from the same ``consumes`` field
-        under test: deriving the expectation from the declaration would assert
-        the declaration equals itself.
+        The registry predicate independently identifies branches requiring
+        another Member State, so the assertion does not compare ``consumes``
+        to itself.
         """
+        entries = _classification_fact_entries(on=_DATE)
         declaring = {
-            rule.rule_id for rule in _CLASSIFICATION_RULES if PartyFact.IVA_IDENTIFICATION_STATE in rule.consumes
+            rule_id
+            for rule_id, consumes in _classification_rule_consumptions(on=_DATE).items()
+            if PartyFact.IVA_IDENTIFICATION_STATE in consumes
         }
-        assert declaring == {
-            "R10_intra_community_supply",
-            "R11_intra_community_acquisition",
-            "R12_services_b2b_eu_outbound",
-            "R13_services_b2b_eu_inbound",
+        expected = {
+            rule_id
+            for rule_id in entries["rule_order"].split(",")
+            if "identification=other_member_state" in entries.get(f"rule.{rule_id}.predicate", "")
         }
+        assert expected
+        assert declaring == expected
 
     def test_a_domestic_operation_reports_needing_only_the_establishment(self) -> None:
         result = classify_iva(

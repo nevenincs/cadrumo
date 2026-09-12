@@ -20,7 +20,7 @@ This module is the transport adapter over
 and :func:`~application.diagnostics_telemetry.flush_telemetry`. It emits
 :class:`~entrypoints.cli._diagnostics_payloads.TelemetryStatusResult` and
 :class:`~entrypoints.cli._diagnostics_payloads.TelemetryFlushResult`
-through :func:`~entrypoints.cli._common.emit_envelope`.
+through :func:`~entrypoints.cli.common.emit_envelope`.
 
 See Also:
     :func:`~application.diagnostics_telemetry.build_telemetry_status_report`
@@ -39,11 +39,11 @@ import typer
 
 from ...core.i18n.render import tr
 from ...core.telemetry.tier import TelemetryTier
-from ._common import emit_envelope
 from ._diagnostics_payloads import (
     TelemetryFlushResult,
     TelemetryStatusResult,
 )
+from .common import emit_envelope
 
 
 def diagnostics_telemetry_status(
@@ -78,7 +78,9 @@ def diagnostics_telemetry_status(
     )
 
     lines = [
-        tr("cli.diagnostics.telemetry.status.header", default="Remote telemetry posture:"),
+        tr(
+            "cli.diagnostics.telemetry.status.header",
+        ),
         f"opt_in\t{report.opt_in}",
         f"tier\t{report.tier.value}",
         f"gestor_mode\t{report.gestor_mode}",
@@ -89,11 +91,6 @@ def diagnostics_telemetry_status(
         lines.append(
             tr(
                 "cli.diagnostics.telemetry.status.off_hint",
-                default=(
-                    "Telemetry stays fully local by default. To opt in, set the "
-                    "CADRUMO_TELEMETRY_OPT_IN and CADRUMO_TELEMETRY_TIER environment variables "
-                    "(CADRUMO_TELEMETRY_OPT_IN=true, CADRUMO_TELEMETRY_TIER=crash_only or full)."
-                ),
             ),
         )
 
@@ -148,7 +145,6 @@ def diagnostics_telemetry_flush(
     lines = [
         tr(
             "cli.diagnostics.telemetry.flush.header",
-            default="Telemetry payload (dry run, nothing sent):" if dry_run else "Telemetry flush:",
         ),
         f"command\t{preview.payload.command}",
         f"counters\t{preview.payload.counters}",
@@ -167,7 +163,6 @@ def diagnostics_telemetry_flush(
                 code="diagnostics.telemetry.flush.dry_run",
                 message=tr(
                     "cli.diagnostics.telemetry.flush.dry_run_notice",
-                    default="Dry run: this payload was built but nothing was transmitted.",
                 ),
             ),
         )
@@ -178,10 +173,6 @@ def diagnostics_telemetry_flush(
                 code="diagnostics.telemetry.flush.consent_refused",
                 message=tr(
                     "cli.diagnostics.telemetry.flush.consent_refused_notice",
-                    default=(
-                        "Nothing was sent: remote telemetry is off by default (opt-in, tier, gestor "
-                        "mode, or per-invocation acknowledgement refused it)."
-                    ),
                 ),
             ),
         )
@@ -192,7 +183,6 @@ def diagnostics_telemetry_flush(
                 code="diagnostics.telemetry.flush.no_endpoint",
                 message=tr(
                     "cli.diagnostics.telemetry.flush.no_endpoint_notice",
-                    default="Nothing was sent: no CADRUMO_TELEMETRY_ENDPOINT is configured.",
                 ),
             ),
         )

@@ -8,8 +8,6 @@ section = ["liquidacion"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "declaracion-50"
@@ -19,8 +17,6 @@ section = ["liquidacion"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "patrimonio.cuota-a-ingresar"
@@ -33,7 +29,7 @@ semantic_role = "patrimonio_cuota_a_ingresar"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1991:art-30", "ley-19-1991:art-31", "orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 # also printed on 714-Ingreso
 
 
@@ -45,8 +41,6 @@ section = ["regularizacion_declaracion_complementaria"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "declaracion-57"
@@ -56,8 +50,6 @@ section = ["regularizacion_declaracion_complementaria"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 # also printed on 714-Ingreso
 
 [[revisions."2021".casillas]]
@@ -69,7 +61,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1991:art-4-9", "orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 # also printed on 714-09
 
 [[revisions."2021".casillas]]
@@ -81,7 +72,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1991:art-4-9", "orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 # also printed on 714-09
 
 [[revisions."2021".casillas]]
@@ -93,7 +83,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1991:art-4-9", "orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "declaracion-63"
@@ -103,8 +92,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-1"
@@ -115,7 +102,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-207-2022:art-2", "orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-2"
@@ -126,7 +112,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-207-2022:art-2", "orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-3"
@@ -136,8 +121,6 @@ section = ["identificacion"]
 data_type = "ccaa_code"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-4"
@@ -148,7 +131,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-207-2022:art-2", "orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-8"
@@ -158,8 +140,6 @@ section = ["identificacion"]
 data_type = "ccaa_code"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-10"
@@ -169,8 +149,6 @@ section = ["identificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-12"
@@ -180,8 +158,6 @@ section = ["identificacion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-15"
@@ -191,8 +167,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-16"
@@ -202,8 +176,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-17"
@@ -213,8 +185,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-18"
@@ -224,8 +194,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-19"
@@ -235,8 +203,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-20"
@@ -246,8 +212,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-21"
@@ -257,8 +221,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-22"
@@ -268,8 +230,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-23"
@@ -279,8 +239,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-24"
@@ -290,8 +248,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-25"
@@ -301,8 +257,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-26"
@@ -312,8 +266,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-27"
@@ -323,8 +275,6 @@ section = ["identificacion"]
 data_type = "postal_code"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-28"
@@ -334,8 +284,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-29"
@@ -345,8 +293,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-35"
@@ -356,8 +302,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-36"
@@ -367,8 +311,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-37"
@@ -378,8 +320,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-39"
@@ -389,8 +329,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-40"
@@ -400,8 +338,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-41"
@@ -411,8 +347,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-42"
@@ -422,8 +356,6 @@ section = ["identificacion"]
 data_type = "country_code"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 # Recovered from the pre-split revision: neither row carries a bracket
 # number on the record design, so the design-derived sweep above cannot
@@ -461,8 +393,6 @@ section = ["liquidacion"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "declaracion-b"
@@ -472,8 +402,6 @@ section = ["liquidacion"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "declaracion-i"
@@ -483,8 +411,6 @@ section = ["ingreso_devolucion"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "ingreso.forma-de-pago"
@@ -494,8 +420,6 @@ section = ["ingreso_devolucion"]
 data_type = "integer"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "declaracion-negativa"
@@ -505,8 +429,6 @@ section = ["ingreso_devolucion"]
 data_type = "boolean"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion.tipo-declaracion"
@@ -516,8 +438,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion.sexo"
@@ -527,5 +447,3 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]

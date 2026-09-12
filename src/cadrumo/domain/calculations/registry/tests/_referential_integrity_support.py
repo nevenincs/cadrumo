@@ -20,7 +20,7 @@ from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistryValidationError
 from ..reference_checks import check_all_id_references
 from ..schema import (
-    DataBindingDefinition,
+    BindingDefinition,
     FormulaDefinition,
     ModeloDefinition,
     ModeloRevision,
@@ -239,7 +239,7 @@ def _minimal_revision(
     application_links: tuple[ApplicationLinkDefinition, ...] | None = None,
     formulas: tuple[FormulaDefinition, ...] = (),
     parameters: tuple[ParameterDefinition, ...] = (),
-    bindings: tuple[DataBindingDefinition, ...] = (),
+    bindings: tuple[BindingDefinition, ...] = (),
     relations: tuple[RelationDefinition, ...] = (),
     extraction_profiles: tuple[ExtractionProfileDefinition, ...] = (),
     live_cross_references: tuple[LiveCrossReferenceDecision, ...] = (),

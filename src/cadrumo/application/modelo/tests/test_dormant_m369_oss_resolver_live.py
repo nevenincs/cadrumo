@@ -109,7 +109,7 @@ _M369_FR_SERVICES_BINDING_CASILLA: CasillaId = validated_casilla_id("iva.union.f
 _M369_DE_GOODS_BINDING_CASILLA: CasillaId = validated_casilla_id("iva.union.de.goods-distance-cuota")
 
 
-def _workflow_profile() -> TaxpayerProfile:
+def workflow_profile() -> TaxpayerProfile:
     """Return the real profile projection used by the M369 verify/export gates."""
     return TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL)
 
@@ -271,7 +271,7 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     report = verify_modelo_revision(
         result.revision.calculation_revision_id,
         actor="m369-exterior-reviewer",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         transaction_repository=tx_repo,
@@ -286,7 +286,7 @@ def test_m369_exterior_period_calculate_review_export_e2e(
             output_path=output_path,
             actor="m369-exterior-exporter",
         ),
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
     )
@@ -445,7 +445,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
             report = verify_modelo_revision(
                 result.revision.calculation_revision_id,
                 actor="m369-live-operator",
-                workflow_profile=_workflow_profile(),
+                workflow_profile=workflow_profile(),
                 work_unit_repository=wu_repo,
                 calculation_repository=cr_repo,
                 transaction_repository=tx_repo,
@@ -570,7 +570,7 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
     report = verify_modelo_revision(
         result.revision.calculation_revision_id,
         actor="m369-unresolved-operator",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         transaction_repository=tx_repo,
@@ -602,7 +602,7 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
                 output_path=output_path,
                 actor="m369-unresolved-operator",
             ),
-            workflow_profile=_workflow_profile(),
+            workflow_profile=workflow_profile(),
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
         )
@@ -684,7 +684,7 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
     report = verify_modelo_revision(
         result.revision.calculation_revision_id,
         actor="m369-unrouted-operator",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         transaction_repository=tx_repo,
@@ -718,7 +718,7 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
                 output_path=output_path,
                 actor="m369-unrouted-operator",
             ),
-            workflow_profile=_workflow_profile(),
+            workflow_profile=workflow_profile(),
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
         )
@@ -780,7 +780,7 @@ def test_m369_zero_valued_oss_invoice_remains_verifiable(
     report = verify_modelo_revision(
         result.revision.calculation_revision_id,
         actor="m369-zero-operator",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         transaction_repository=tx_repo,

@@ -42,11 +42,17 @@ from ....domain.renta.maritime_exemption import (
     MaritimeExemptionInactiveError,
     MaritimeWorkerFacts,
     ProfileCompletenessError,
-    VesselRegistry,
 )
 from ....domain.user_profile.loader import load_user_profile_schema
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def _rebeca_vessel_registry() -> str:
+    """Return the schema-owned spelling used by the maritime test cases."""
+    values = load_user_profile_schema().field("maritime_worker.vessel_registry").enum_values
+    assert "rebeca" in values
+    return "rebeca"
 
 
 class TestWorkerClassProfileFactAcceptance:
@@ -94,7 +100,7 @@ class TestMaritimeExemptionEnvelopeCarriesLegalRefs:
         result = resolve_maritime_exemption(
             facts=MaritimeWorkerFacts(
                 worker_class="trabajador_del_mar",
-                vessel_registry=VesselRegistry.REBECA,
+                vessel_registry=_rebeca_vessel_registry(),
             ),
             gross_navigation_income=Decimal("30000"),
         )
@@ -109,7 +115,7 @@ class TestMaritimeExemptionEnvelopeCarriesLegalRefs:
         result = resolve_maritime_exemption(
             facts=MaritimeWorkerFacts(
                 worker_class="trabajador_del_mar",
-                vessel_registry=VesselRegistry.REBECA,
+                vessel_registry=_rebeca_vessel_registry(),
             ),
             gross_navigation_income=Decimal("30000"),
         )

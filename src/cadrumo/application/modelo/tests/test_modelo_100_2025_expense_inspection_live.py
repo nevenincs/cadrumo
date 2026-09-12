@@ -36,12 +36,11 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ...aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
-from ...calculations.observations_repository import CalculationObservationRepository
+from ...calculations.observations_repository import APP_FILING_SOURCE_KIND, CalculationObservationRepository
 from ..calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ..filed_revision_observation import APP_FILING_SOURCE_KIND
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -62,7 +61,7 @@ _M100_2024_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: CasillaId = validated_casilla_id
     "1391",
     surface="_M100_2024_NEGATIVE_GENERAL_BASE_CARRY_CASILLA",
 )
-_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-2025-modelo-100-estimacion-directa-es-normal"
+_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
 _M100_SS_BINDING: BindingId = "renta-2025-ledger-expense-0186-deductible"
 _M100_OTHER_EXPENSES_BINDING: BindingId = "renta-2025-ledger-expense-0199-deductible"
 

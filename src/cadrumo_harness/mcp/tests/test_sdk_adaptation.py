@@ -12,8 +12,8 @@ import importlib.util
 
 import pytest
 
-from .._server import build_sdk_tools
-from .._tools import build_tool_descriptors
+from ..server import build_sdk_tools
+from ..tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

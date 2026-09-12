@@ -10,11 +10,11 @@ from ._ledger_corpus_support import (
     _import_corpus,
     _invoke,
     _list_payload,
-    _list_rows,
     _match,
     _oracle_rules,
     _set_group,
 )
+from .ledger_cli import list_ledger_rows_via_cli as _list_rows
 
 __all__ = ["live_fx_isolated_backend"]
 

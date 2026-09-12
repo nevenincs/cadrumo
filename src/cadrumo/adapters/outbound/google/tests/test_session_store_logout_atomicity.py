@@ -29,7 +29,7 @@ import pytest
 from .....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
 from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage.errors import StorageValidationError
-from ....persistence.storage.sql._secure_object_records import SecureObjectDeletion
+from ....persistence.storage.sql.secure_object_records import SecureObjectDeletion
 from .. import session_store
 from ..records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
 

@@ -26,13 +26,14 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ....core.logging import get_logger
+from ....core.secure_object_write import SecureObjectWrite
 from ....domain.invoices.errors import InvoicePersistenceError
 from ....domain.invoices.models import InvoiceCatalogue
 from ..storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:
-    from ..storage.sql.secure_objects import SecureObjectRepository, SecureObjectWrite
+    from ..storage.sql.secure_objects import SecureObjectRepository
 
 _log = get_logger(__name__)
 

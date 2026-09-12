@@ -8,7 +8,7 @@ continuidad_id = "irpf-pf-saldo-negativo-fin-periodo"
 required = false
 input_kind = "computed"
 formula = "modelo-131-saldo-negativo-fin-periodo"
-constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"] }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+additional_source_refs = ["aeat-dr-131-2026"]
 export_exemption_reason = "not_in_record_design"

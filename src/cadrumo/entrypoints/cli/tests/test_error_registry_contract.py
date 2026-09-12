@@ -13,7 +13,7 @@ from collections.abc import Callable
 import pytest
 
 from ....adapters.outbound.aeat.auth.errors import AeatSessionExpiredError
-from ....adapters.outbound.aeat.browser.session import BrowserError
+from ....adapters.outbound.aeat.browser.errors import BrowserError
 from ....application.review.errors import FilterParseError
 from ....core.access_gate.errors import LiveSubmitForbiddenError
 from ....core.config import override_settings

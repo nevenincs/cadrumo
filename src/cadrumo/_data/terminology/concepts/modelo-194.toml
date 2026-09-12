@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 194, declaració informativa anual de retencions sobre capital mobiliari i actius de capital prestat"
+
+[language.en]
+short_description = "Modelo 194, annual information return on withholding from movable capital and borrowed-capital assets"
+
+[language.hu]
+short_description = "194-es modell: ingó tőke és kölcsöntőke-eszközök adólevonásának éves tájékoztató bevallása"
+

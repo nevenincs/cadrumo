@@ -1,40 +1,15 @@
-"""Repository-backed Modelo 151 impatriado Spanish-source income aggregation.
+"""Repository-backed impatriado income ledger mechanics.
 
-This is the ledger projection behind the
-``ledger_impatriado_income_aggregation`` source for Modelo 151 (régimen
-especial de trabajadores desplazados, "Ley Beckham", art. 93 LIRPF). The annual
-entry point :func:`aggregate_impatriado_income_ledger_from_repositories` loads a
-:class:`~domain.transactions.TransactionCatalogue` from the active bucket
-through :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository` and
-delegates to :func:`aggregate_impatriado_income_ledger`.
+The module retains transaction filtering, amount projection, period partitioning,
+typed issue emission, and aggregation mechanics. Target coordinates, selected
+model/revision applicability, source-jurisdiction membership, eligible income
+categories, and binding/legal declarations belong to the selected registry
+revision.
 
-Unlike the Modelo 130 / Modelo 100 actividad-económica income pipeline
-(:mod:`~.renta_income_ledger`), which admits worldwide income into the
-resident-IRPF base (LIRPF art. 8), the impatriado base is legally
-source-scoped: art. 93.2 taxes the impatriado by the IRNR scope rules, so its
-``impatriado.base-liquidable-general`` casilla admits ONLY Spanish-source
-income. The declared per-row ``source_jurisdiction`` axis — which the CLI
-create-boundary gate compels an impatriado profile to supply on every ledger
-row — is finally consumed here:
+TODO(fact-relocation): resolve impatriado ledger targets and jurisdiction applicability from selected registry revisions
 
-- an INCOMING row whose ``source_jurisdiction`` resolves to ``ES`` folds into
-  the impatriado base;
-- a foreign-source row (``source_jurisdiction`` set to any non-``ES`` code) is
-  segregated out of the base and surfaced as a typed
-  :attr:`ImpatriadoIncomeLedgerAggregationIssueReason.BECKHAM_FOREIGN_SOURCE_SEGREGATED`
-  issue carrying the rejected jurisdiction code (art. 93.2 / art. 25.1.f
-  TRLIRNR segregation);
-- a jurisdiction-unresolved row (``source_jurisdiction is None``) is NEVER
-  silently coerced to ``ES``: it fails loud as the same segregation issue with
-  an unresolved-jurisdiction detail (``no-silent-under-declaration``).
-
-The impatriado base admits ``trabajo`` income — the exact income class the M130
-pipeline routes OUT — because the Beckham base is predominantly rendimientos
-del trabajo (nómina). The two pipelines are complementary, not shared.
-
-The savings escala (art. 93.2.e.2º → art. 25.1.f TRLIRNR: the parte del ahorro)
-is out of scope here and blocked on a separate corpus ingest; the base casilla
-is labelled "excluida la parte del ahorro" to keep that deferral honest.
+No target, jurisdiction, category, applicability, or binding identifier is
+declared as a Python fallback.
 """
 
 from __future__ import annotations
@@ -47,16 +22,14 @@ from enum import StrEnum
 from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.casilla_id import CasillaId
 from ...core.country_code import CountryCodeAlpha2
 from ...core.i18n.translatable import Translatable as t
-from ...core.identity import TransactionId
-from ...core.modelo import Modelo
+from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodKind
 from ...core.prose_elision import IssueDetail
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ...domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
 from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from . import _shared_issue_reasons
@@ -65,19 +38,6 @@ from ._models import CasillaAggregation, LedgerAggregationResultBase
 from .business_proportion import business_proportion
 from .currency_predicates import effective_eur_amount, effective_eur_taxable_base, is_non_eur_without_conversion
 from .errors import AggregationPeriodError, AggregationValidationError
-
-# The Modelo 151 base liquidable general (régimen impatriados, excluida la parte
-# del ahorro). The impatriado income aggregation folds Spanish-source income into
-# this single base casilla; the flat 24/47 escala (art. 93.2.e.1º) then computes
-# the cuota íntegra from it.
-_TARGET_CASILLA_IMPATRIADO_BASE: CasillaId = validated_casilla_id(
-    "impatriado.base-liquidable-general",
-    surface="_TARGET_CASILLA_IMPATRIADO_BASE",
-)
-
-# ISO 3166-1 alpha-2 code for Spain. The impatriado base admits only rows whose
-# declared source jurisdiction equals this code (art. 93.2 IRNR scope).
-_SPANISH_SOURCE_JURISDICTION: str = "ES"
 
 
 class ImpatriadoIncomeLedgerAggregationIssueReason(StrEnum):
@@ -89,11 +49,8 @@ class ImpatriadoIncomeLedgerAggregationIssueReason(StrEnum):
     PERSONAL_TRANSACTION = _shared_issue_reasons.PERSONAL_TRANSACTION
     OUTSIDE_PERIOD = _shared_issue_reasons.OUTSIDE_PERIOD
     UNSUPPORTED_PERIOD = "unsupported_period"
-    # art. 93.2 LIRPF / art. 25.1.f TRLIRNR: the impatriado is taxed by IRNR
-    # scope rules, so foreign-source income is segregated OUT of the base
-    # liquidable general. This reason fires for a row whose declared
-    # source_jurisdiction is a non-ES code (foreign-source) OR is unresolved
-    # (None) — an unresolved jurisdiction is NEVER silently coerced to ES.
+    # A source-jurisdiction row outside the selected registry scope, or with
+    # unresolved provenance, is segregated rather than silently admitted.
     BECKHAM_FOREIGN_SOURCE_SEGREGATED = "beckham_foreign_source_segregated"
 
 
@@ -121,17 +78,15 @@ class ImpatriadoIncomeLedgerAggregationIssue(BaseModel):
 
 
 class ImpatriadoIncomeObservation(BaseModel):
-    """One eligible INCOMING Spanish-source income ledger row for the impatriado base.
+    """One eligible INCOMING income ledger row for the selected registry target.
 
-    Carries the typed gross amount and the target casilla id it feeds
-    (``impatriado.base-liquidable-general``). The domain registry resolver sums
-    the fiscally computable ingreso (``taxable_base_amount`` when the row carries
-    an explicit IVA tagging, else ``gross_amount``) across all observations for
-    that casilla.
+    Carries the typed gross amount and selected target casilla. The registry
+    resolver sums the fiscally computable amount (``taxable_base_amount`` when
+    the row carries an explicit IVA tagging, else ``gross_amount``) across the
+    observations for that target.
 
-    ``source_jurisdiction`` is retained on the observation for provenance and is
-    ``"ES"`` by construction: a foreign or unresolved jurisdiction is segregated
-    into an issue before an observation is ever emitted.
+    ``source_jurisdiction`` is retained for provenance after source-scope
+    membership has been resolved by the selected registry revision.
     """
 
     model_config = _STRICT_FROZEN
@@ -147,7 +102,7 @@ class ImpatriadoIncomeObservation(BaseModel):
 class ImpatriadoIncomeLedgerAggregation(
     LedgerAggregationResultBase[ImpatriadoIncomeObservation, ImpatriadoIncomeLedgerAggregationIssue],
 ):
-    """Annual Spanish-source income observations for one Modelo 151 ejercicio.
+    """Annual income observations for one selected filing revision.
 
     ``out_of_window_summary`` is populated by repository-backed date partitions.
     Full-catalogue aggregation keeps row-level issues because every transaction
@@ -161,9 +116,13 @@ def aggregate_impatriado_income_ledger_from_repositories(
     *,
     bucket_id: str,
     period: Period,
+    modelo: str,
+    target_casilla_id: CasillaId,
+    source_jurisdictions: frozenset[str],
+    eligible_income_categories: frozenset[str],
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> ImpatriadoIncomeLedgerAggregation:
-    """Load the transaction catalogue and aggregate annual impatriado Spanish-source income.
+    """Load the transaction catalogue and aggregate annual registry-admitted income.
 
     When no protocol-compatible repository override is supplied, this loader uses
     :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository` scoped to
@@ -183,9 +142,25 @@ def aggregate_impatriado_income_ledger_from_repositories(
     # the unfiltered load so the aggregation's own period validation still
     # raises the same error.
     if period.kind is not PeriodKind.ANNUAL:
-        return aggregate_impatriado_income_ledger(repository.load(), bucket_id=bucket_id, period=period)
+        return aggregate_impatriado_income_ledger(
+            repository.load(),
+            bucket_id=bucket_id,
+            period=period,
+            modelo=modelo,
+            target_casilla_id=target_casilla_id,
+            source_jurisdictions=source_jurisdictions,
+            eligible_income_categories=eligible_income_categories,
+        )
     partition = repository.partition_by_date_range(period.start_date, period.end_date)
-    result = aggregate_impatriado_income_ledger(partition.in_window, bucket_id=bucket_id, period=period)
+    result = aggregate_impatriado_income_ledger(
+        partition.in_window,
+        bucket_id=bucket_id,
+        period=period,
+        modelo=modelo,
+        target_casilla_id=target_casilla_id,
+        source_jurisdictions=source_jurisdictions,
+        eligible_income_categories=eligible_income_categories,
+    )
     out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
         partition.out_of_window,
     )
@@ -199,21 +174,28 @@ def aggregate_impatriado_income_ledger(
     *,
     bucket_id: str,
     period: Period,
+    modelo: str,
+    target_casilla_id: CasillaId,
+    source_jurisdictions: frozenset[str],
+    eligible_income_categories: frozenset[str],
 ) -> ImpatriadoIncomeLedgerAggregation:
-    """Aggregate INCOMING Spanish-source income into Modelo 151 ``impatriado.base-liquidable-general``.
+    """Aggregate INCOMING income into the selected registry target.
 
-    Applies the impatriado source scope over the FULL ejercicio (Jan 1 to Dec 31
-    of ``period.filing_year``): only INCOMING, EUR-denominated rows whose declared
-    ``source_jurisdiction`` resolves to ``ES`` fold into the base. Foreign-source
-    and jurisdiction-unresolved rows are segregated into
-    :attr:`ImpatriadoIncomeLedgerAggregationIssueReason.BECKHAM_FOREIGN_SOURCE_SEGREGATED`
-    issues rather than silently entering (or silently dropping from) the base.
+    Applies the selected source scope over the full annual period. Only rows
+    admitted by the selected registry jurisdiction and category declarations
+    fold into the selected target. Out-of-scope and unresolved rows are
+    segregated into typed issues rather than silently entering or disappearing
+    from the aggregate.
 
     Args:
         transactions: The :class:`TransactionCatalogue` to aggregate.
         bucket_id: Bucket identifier carried through to provenance so the
             aggregation cannot be silently misattributed.
         period: The annual :class:`Period` whose year anchors the window.
+        modelo: Selected registry model identifier.
+        target_casilla_id: Selected registry target identifier.
+        source_jurisdictions: Selected registry source-scope membership.
+        eligible_income_categories: Selected registry income-category membership.
 
     Returns an :class:`ImpatriadoIncomeLedgerAggregation` for the ejercicio.
     ``period`` must be the annual period.
@@ -240,6 +222,9 @@ def aggregate_impatriado_income_ledger(
             transaction,
             window_start=window_start,
             window_end=window_end,
+            target_casilla_id=target_casilla_id,
+            source_jurisdictions=source_jurisdictions,
+            eligible_income_categories=eligible_income_categories,
         )
         if outcome is None:
             continue
@@ -248,9 +233,9 @@ def aggregate_impatriado_income_ledger(
         else:
             observations.append(outcome)
 
-    casilla_aggregation = _impatriado_base_casilla_aggregation(period, observations)
+    casilla_aggregation = _impatriado_base_casilla_aggregation(modelo, period, observations)
     return ImpatriadoIncomeLedgerAggregation(
-        modelo=Modelo.M151.value,
+        modelo=modelo,
         period=period,
         observations=tuple(observations),
         issues=tuple(issues),
@@ -263,19 +248,18 @@ def _classify_impatriado_income_transaction(
     *,
     window_start: date,
     window_end: date,
+    target_casilla_id: CasillaId,
+    source_jurisdictions: frozenset[str],
+    eligible_income_categories: frozenset[str],
 ) -> ImpatriadoIncomeObservation | ImpatriadoIncomeLedgerAggregationIssue | None:
-    """Filter one ledger transaction against the impatriado Spanish-source income scope.
+    """Filter one ledger transaction against the selected registry income scope.
 
-    Returns an :class:`ImpatriadoIncomeObservation` for an eligible ES-source
-    receipt, an :class:`ImpatriadoIncomeLedgerAggregationIssue` for a row that
-    fails a gate (currency, source-jurisdiction segregation, personal, window),
-    or ``None`` for a row this base pipeline does not own (OUTGOING / internal
-    transfer / operator-excluded).
+    Returns an :class:`ImpatriadoIncomeObservation` for an admitted receipt, an
+    :class:`ImpatriadoIncomeLedgerAggregationIssue` for a row that fails a gate,
+    or ``None`` for a row this pipeline does not own.
 
-    The source-jurisdiction gate is the load-bearing art. 93.2 scope: it runs
-    BEFORE the amount/eligibility gates so a foreign-source or unresolved row is
-    always segregated as a typed issue and can never be silently admitted or
-    silently dropped.
+    The source-jurisdiction gate runs before amount/eligibility gates so an
+    out-of-scope or unresolved row is always segregated as a typed issue.
     """
     transaction_id = transaction.transaction_id
 
@@ -288,11 +272,15 @@ def _classify_impatriado_income_transaction(
             detail=f"transaction currency {transaction.raw.currency!r} is not supported for impatriado income",
         )
 
-    source_issue = _impatriado_source_issue(transaction, transaction_id=transaction_id)
+    source_issue = _impatriado_source_issue(
+        transaction,
+        transaction_id=transaction_id,
+        source_jurisdictions=source_jurisdictions,
+    )
     if source_issue is not None:
         return source_issue
 
-    proportion = _impatriado_income_proportion(transaction)
+    proportion = _impatriado_income_proportion(transaction, eligible_income_categories)
     if proportion is None:
         return _impatriado_business_issue(transaction, transaction_id=transaction_id)
     # Use the EUR projection after rejecting unconverted non-EUR rows above, so a
@@ -321,13 +309,14 @@ def _classify_impatriado_income_transaction(
     if taxable_base_amount is not None:
         taxable_base_amount *= proportion
 
+    normalized_jurisdiction = transaction.source_jurisdiction.strip().upper()
     return ImpatriadoIncomeObservation(
         transaction_id=transaction_id,
-        target_casilla_id=_TARGET_CASILLA_IMPATRIADO_BASE,
+        target_casilla_id=target_casilla_id,
         gross_amount=gross_amount,
         taxable_base_amount=taxable_base_amount,
         filing_date=filing_date,
-        source_jurisdiction=_SPANISH_SOURCE_JURISDICTION,
+        source_jurisdiction=normalized_jurisdiction,
     )
 
 
@@ -345,11 +334,9 @@ def _impatriado_source_issue(
     transaction: Transaction,
     *,
     transaction_id: str,
+    source_jurisdictions: frozenset[str],
 ) -> ImpatriadoIncomeLedgerAggregationIssue | None:
-    """Return the art. 93.2 source-jurisdiction segregation issue, if any."""
-    # The impatriado base admits ONLY Spanish-source income. A None jurisdiction
-    # is unresolved provenance, not a resident-general ES default, so it fails
-    # loud as a segregation issue (no-silent-under-declaration).
+    """Return the selected-registry source-jurisdiction issue, if any."""
     declared_jurisdiction = transaction.source_jurisdiction
     if declared_jurisdiction is None:
         return ImpatriadoIncomeLedgerAggregationIssue(
@@ -357,22 +344,18 @@ def _impatriado_source_issue(
             reason=ImpatriadoIncomeLedgerAggregationIssueReason.BECKHAM_FOREIGN_SOURCE_SEGREGATED,
             detail=(
                 "source_jurisdiction is unresolved (None) on an impatriado income row; "
-                "art. 93.2 LIRPF admits only Spanish-source income into the base liquidable "
-                "general and an unresolved jurisdiction is never coerced to ES"
+                "source-scope membership must be resolved from the selected registry revision"
             ),
             rejected_source_jurisdiction=None,
         )
     normalized_jurisdiction = declared_jurisdiction.strip().upper()
-    if normalized_jurisdiction == _SPANISH_SOURCE_JURISDICTION:
+    normalized_source_jurisdictions = {value.strip().upper() for value in source_jurisdictions}
+    if normalized_jurisdiction in normalized_source_jurisdictions:
         return None
     return ImpatriadoIncomeLedgerAggregationIssue(
         transaction_id=transaction_id,
         reason=ImpatriadoIncomeLedgerAggregationIssueReason.BECKHAM_FOREIGN_SOURCE_SEGREGATED,
-        detail=(
-            f"source_jurisdiction {normalized_jurisdiction!r} is foreign-source; "
-            "art. 93.2 LIRPF / art. 25.1.f TRLIRNR segregate it out of the impatriado "
-            "base liquidable general (taxed by IRNR scope rules, not the art. 8 worldwide base)"
-        ),
+        detail=(f"source_jurisdiction {normalized_jurisdiction!r} is outside the selected registry source scope"),
         rejected_source_jurisdiction=normalized_jurisdiction,
     )
 
@@ -392,56 +375,40 @@ def _impatriado_business_issue(
         transaction_id=transaction_id,
         reason=reason,
         detail=(
-            f"business classification {transaction.business_classification.value!r} cannot feed the impatriado base"
+            f"business classification {transaction.business_classification.value!r} cannot feed the selected registry target"
         ),
     )
 
 
-def _impatriado_income_proportion(transaction: Transaction) -> Decimal | None:
-    """Return the share of one row that folds into the impatriado base, or ``None``.
+def _impatriado_income_proportion(
+    transaction: Transaction,
+    eligible_income_categories: frozenset[str],
+) -> Decimal | None:
+    """Return the share of one row admitted by the registry, or ``None``.
 
     The single proportion decision for the row: every money figure the
     observation carries is scaled by this one value, so the gross and the
-    taxable base cannot disagree about how much of the receipt the base admits.
+    taxable base cannot disagree about how much of the receipt the target admits.
 
-    The impatriado base admits both ``trabajo`` (rendimientos del trabajo — the
-    predominant Beckham base, the class the M130 income pipeline routes OUT) and
-    ``actividad_economica`` income at their full magnitude; any other row is
-    admitted only through its business proportion, so a genuinely personal
-    transfer contributes nothing.
-
-    Admitting a categorised row whole is the legally correct answer to a MIXED
-    classification, not merely a convenience. Art. 93.2 LIRPF determines the
-    impatriado's deuda tributaria "con arreglo a las normas establecidas en el
-    texto refundido de la Ley del Impuesto sobre la Renta de no Residentes,
-    para las rentas obtenidas sin mediación de establecimiento permanente", and
-    TRLIRNR art. 24.1 (RDLeg 5/2004, BOE-A-2004-4527) fixes that base as "su
-    importe íntegro ... sin que sean de aplicación los porcentajes
-    multiplicadores ni las reducciones". A usage percentage applied to an
-    ingreso is exactly such a porcentaje multiplicador, so the impatriado base
-    admits the receipt undivided. Resident IRPF agrees from the other side:
-    LIRPF art. 29.2 confines partial affectation to "elementos patrimoniales",
-    reaching the rendimiento through those assets' gastos (art. 28.1), and
-    nothing in arts. 27-30 divides an INGRESO by a usage percentage.
+    Categories selected by the registry are admitted at full magnitude. Other
+    rows are admitted only through their business proportion, so a genuinely
+    personal transfer contributes nothing.
     """
-    if has_employment_irpf_category(
-        transaction.irpf_category,
-        direction=transaction.direction,
-    ) or has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction):
-        # The explicit IRPF income category is the authoritative eligibility gate
-        # for the impatriado base.
+    normalized_category = (
+        transaction.irpf_category.strip().casefold() if transaction.irpf_category is not None else None
+    )
+    normalized_eligible_categories = {value.strip().casefold() for value in eligible_income_categories}
+    if normalized_category in normalized_eligible_categories:
         return Decimal("1")
     return business_proportion(transaction.business_classification, transaction.business_pct)
 
 
 def _computable_impatriado_income_amount(observation: ImpatriadoIncomeObservation) -> Decimal:
-    """Return the fiscally computable ingreso for one observation.
+    """Return the fiscally computable amount for one observation.
 
     IVA-exclusive ``taxable_base_amount`` when the row carries an explicit IVA
-    tagging, falling back to ``gross_amount`` when no base is declared — the same
-    ingresos-íntegros convention the M130 / M100 income aggregation uses, so the
-    projection and the binding resolver agree per the one-aggregation-path
-    discipline.
+    tagging, falling back to ``gross_amount`` when no base is declared. The
+    selected registry binding owns the destination semantics.
     """
     if observation.taxable_base_amount is not None:
         return observation.taxable_base_amount
@@ -449,12 +416,13 @@ def _computable_impatriado_income_amount(observation: ImpatriadoIncomeObservatio
 
 
 def _impatriado_base_casilla_aggregation(
+    modelo: str,
     period: Period,
     observations: Sequence[ImpatriadoIncomeObservation],
 ) -> CasillaAggregation:
     return fold_casilla_observations(
         observations,
-        modelo=Modelo.M151.value,
+        modelo=modelo,
         period=period,
         amount_fn=_computable_impatriado_income_amount,
     )

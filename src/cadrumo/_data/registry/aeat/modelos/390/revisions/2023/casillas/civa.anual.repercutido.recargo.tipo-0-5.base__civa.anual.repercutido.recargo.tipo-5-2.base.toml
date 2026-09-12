@@ -26,7 +26,6 @@ semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier u
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2023"]
 
 # Box [41] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 1,75% - Base imponible [41]' (Pág. 2 offset 1407, length 17).
 [[revisions."2023".casillas]]
@@ -41,7 +40,6 @@ semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier u
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2023"]
 
 # Box [42] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 1,75% - Cuota [42]' (Pág. 2 offset 1424, length 17).
 [[revisions."2023".casillas]]
@@ -56,7 +54,6 @@ semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier u
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2023"]
 
 # Box [43] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Modific. recargo equivalencia - Base imponible [43]' (Pág. 2 offset 1441, length 17).
 [[revisions."2023".casillas]]
@@ -71,7 +68,6 @@ semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier u
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-80", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2023"]
 
 # Box [44] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Modific. recargo equivalencia - Cuota [44]' (Pág. 2 offset 1458, length 17).
 [[revisions."2023".casillas]]
@@ -86,7 +82,6 @@ semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier u
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-80", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2023"]
 
 # Box [45] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Modific. recargo equiv. Concurso acreedores - Base imponible [45]' (Pág. 2 offset 1475, length 17).
 [[revisions."2023".casillas]]
@@ -101,7 +96,6 @@ semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier u
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-80", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2023"]
 
 # Box [46] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Modific. recargo equiv. Concurso acreedores - Cuota [46]' (Pág. 2 offset 1492, length 17).
 [[revisions."2023".casillas]]
@@ -116,7 +110,6 @@ semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier u
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-80", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2023"]
 
 # Box [599] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 1,4% - Base imponible [599]' (Pág. 2 offset 1339, length 17).
 [[revisions."2023".casillas]]
@@ -131,7 +124,6 @@ semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier u
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2023"]
 
 # Box [601] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 5,2% - Base imponible [601]' (Pág. 2 offset 1373, length 17).
 [[revisions."2023".casillas]]
@@ -146,4 +138,3 @@ semantic_role_cardinality_reason = "Distinct recargo de equivalencia rate tier u
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2023"]

@@ -6,5 +6,4 @@ data_type = "boolean"
 semantic_role = "irpf_hijos_menores_unidad_familiar_flag"
 input_kind = "bound"
 binding = "renta-profile-family-minor-children-in-unit"
-legal_refs = ["orden-hac-277-2026:art-3"]
-source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+additional_source_refs = ["aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]

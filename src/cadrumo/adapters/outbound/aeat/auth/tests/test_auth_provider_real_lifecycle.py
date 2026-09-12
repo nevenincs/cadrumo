@@ -34,7 +34,8 @@ from ..clave_movil_support import ClaveMovilApprovalTimeoutError, ClaveMovilFail
 from ..clave_permanente_metadata import ClavePermanenteSessionMetadata
 from ..clave_permanente_support import ClavePermanenteFailureMode
 from ..provider_selection import select_provider
-from ._authenticator_support import SECRET_PASSPHRASE, _build_bundle
+from ._auth_fixtures import SECRET_PASSPHRASE
+from ._authenticator_support import _build_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

@@ -15,10 +15,10 @@ from .capsule_records import ProfileCustodyCapsuleLabel
 from .errors import ProfileCustodyRecordError
 from .filesystem import (
     clear_profile_custody_local_record,
-    ensure_profile_custody_local_directory,
     read_profile_custody_local_record,
     write_profile_custody_local_record,
 )
+from .filesystem_primitives import ensure_profile_custody_local_directory
 from .label_head_models import LABEL_HEAD_MAX_BYTES, ProfileLabelHead, ProfileLabelHeadPendingAdvance
 
 

@@ -1,28 +1,8 @@
-"""Modelo 210 IRNR treaty-rate resolution helpers.
+"""Resolve the Modelo 210 rate through selected registry declarations.
 
-The registry formula runtime computes the filing values and emits typed
-unresolved outcomes when a Modelo 210 rate cannot be applied directly. This
-application helper replays the same single tipo-de-gravamen resolution path over a
-:class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`: it reads the
-``m210-tipo-gravamen-2025`` baseline table, consults the cross-cutting
-``irnr.convenio.override`` governed fact for the profile's
-``country_of_fiscal_residence`` at its explicit devengo coordinate, and returns either a scalar IRNR
-rate or blocking :class:`~ModeloVerificationFinding` records for
-deferred baseline coverage or missing treaty rows.
-
-Base-dependent branches — the ``allocation_domestic_tariff`` pension delegation and
-the pension ``ceiling`` — return ``(None, [])`` because the live base-aware tariff
-path in the registry runtime remains the calculation authority; the sweep keeps the
-runtime-computed effective rate for those.
-
-See Also:
-    :mod:`cadrumo.domain.calculations.registry.formula_runtime`
-        Formula-runtime implementation of ``irnr_resolve_tipo_gravamen`` and the
-        typed M210 unresolved outcomes this application layer converts into findings.
-    :func:`cadrumo.application.modelo.verification_actions.verify_modelo_revision`
-        Verification path that replays this resolver for Modelo 210 observations.
-    :mod:`cadrumo.application.calculations.tests.test_modelo_210_irnr_continuity`
-        Cross-renta enrollment coverage for the registry-backed M210 engine.
+The application boundary only coordinates generic formula metadata, typed
+parameter lookup, and the shared treaty-fact resolver.  Rate tables, income
+selection, applicability, and legal provenance remain registry-owned.
 """
 
 from __future__ import annotations
@@ -33,12 +13,9 @@ from typing import TYPE_CHECKING
 
 from ...core.decimal.constants import ZERO
 from ...core.irnr import ConvenioOverrideKind, TipoRentaIrnr
-from ...domain.calculations.registry.ids import (
-    LegalRefId,
-    SourceRefId,
-)
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import RegistrySnapshot
-from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -48,10 +25,12 @@ from ._m210_convenio_facts import resolve_m210_convenio_override
 
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId
+    from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
     from ...domain.calculations.registry.schema_formula import ParameterDefinition
+    from ...domain.deadlines.models import TaxpayerProfile
 
 
-def _m210_blocking_finding(
+def _rate_finding(
     *,
     casilla_id: CasillaId | None,
     reason_code: str,
@@ -59,13 +38,7 @@ def _m210_blocking_finding(
     legal_refs: tuple[LegalRefId, ...],
     source_refs: tuple[SourceRefId, ...],
 ) -> ModeloVerificationFinding:
-    """Build a BLOCKING_RULE M210 rate finding with the shared severity/kind.
-
-    The returned :class:`~ModeloVerificationFinding` is the
-    application-facing companion to the formula-runtime unresolved outcome:
-    callers surface it to the operator instead of letting an unavailable M210
-    rate silently produce filing output.
-    """
+    """Build the application finding for an unavailable selected rate."""
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
@@ -77,19 +50,40 @@ def _m210_blocking_finding(
     )
 
 
-def _resolve_baseline_rate(
-    baseline_param: ParameterDefinition,
+def _selected_rate_parameters(
+    snapshot: RegistrySnapshot,
+    *,
+    year: int,
+) -> tuple[ParameterDefinition, ParameterDefinition]:
+    """Read rate-parameter identities from the selected formula declaration."""
+    report = RegistryQueryService(bundled_authority()).formulas_for_scope(
+        snapshot.modelo.id,
+        filing_year=year,
+        period=snapshot.period,
+    )
+    formula = next(
+        (row for row in report.rows if row.expression.get("op") == "irnr_resolve_tipo_gravamen"),
+        None,
+    )
+    if formula is None or len(formula.input_parameters) < 2:
+        raise LookupError("selected M210 registry has no complete rate formula declaration")
+
+    parameters = {parameter.id: parameter for parameter in snapshot.revision.parameters}
+    baseline = parameters.get(formula.input_parameters[0])
+    tariff = parameters.get(formula.input_parameters[1])
+    if baseline is None or tariff is None:
+        raise LookupError("selected M210 rate formula references an unavailable parameter")
+    return baseline, tariff
+
+
+def _rate_from_parameter(
+    parameter: ParameterDefinition,
+    *,
     tipo_renta: str,
     year: int,
 ) -> tuple[Decimal | None, bool]:
-    """Find the baseline rate for ``(tipo_renta, year)``.
-
-    Returns ``(rate, ok)``: ``ok`` is False only when a matching bracket was
-    found but its value failed to parse as a :class:`~decimal.Decimal` (the
-    caller then short-circuits to ``(None, [])``). A simply-absent bracket
-    returns ``(None, True)``.
-    """
-    for entry in baseline_param.keyed_brackets:
+    """Return a dated keyed rate and whether its payload was parseable."""
+    for entry in parameter.keyed_brackets:
         if (
             entry.key == tipo_renta
             and entry.valid_from.year <= year
@@ -102,10 +96,19 @@ def _resolve_baseline_rate(
     return None, True
 
 
-def _resolve_convenio_override(
-    snapshot: RegistrySnapshot,
-    baseline_param: ParameterDefinition,
+def _tariff_declared(parameter: ParameterDefinition, *, year: int) -> bool:
+    """Report whether a dated bracket tariff is present in the selected revision."""
+    if parameter.data_type != "bracket_table":
+        return False
+    return any(
+        bracket.valid_from.year <= year and (bracket.valid_to is None or bracket.valid_to.year >= year)
+        for bracket in parameter.brackets
+    )
+
+
+def _treaty_rate(
     *,
+    baseline: ParameterDefinition,
     country_code: str,
     tipo_renta: str,
     year: int,
@@ -113,45 +116,38 @@ def _resolve_convenio_override(
     baseline_rate: Decimal | None,
     casilla_id: CasillaId | None,
 ) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
-    """Resolve the treaty override rate for a treaty-country profile.
-
-    Reads the canonical, provider-selected treaty fact at ``devengo_date`` and branches on the typed
-    :class:`~cadrumo.core.ConvenioOverrideKind`. Emits the
-    ``m210-convenio-rate-missing`` BLOCKING finding when the treaty carries no
-    row for the filed income type. Base-dependent kinds
-    (``allocation_domestic_tariff``, pension ``ceiling``) return ``(None, [])`` so
-    the base-aware tariff branch in the registry runtime remains the calculation
-    authority.
-    """
-    override = None
+    """Resolve the shared dated treaty fact and apply its typed result."""
     try:
-        tipo_enum = TipoRentaIrnr(tipo_renta)
+        income_kind = TipoRentaIrnr(tipo_renta)
     except ValueError:
-        tipo_enum = None
-    if tipo_enum is not None:
-        override = resolve_m210_convenio_override(
+        income_kind = None
+
+    override = (
+        resolve_m210_convenio_override(
             country_code=country_code,
-            tipo_renta=tipo_enum,
+            tipo_renta=income_kind,
             devengo_date=devengo_date,
         )
-
-    legal_refs: tuple[LegalRefId, ...] = tuple(baseline_param.legal_refs)
-    source_refs: tuple[SourceRefId, ...] = tuple(baseline_param.source_refs)
+        if income_kind is not None
+        else None
+    )
+    legal_refs: tuple[LegalRefId, ...] = tuple(baseline.legal_refs)
+    source_refs: tuple[SourceRefId, ...] = tuple(baseline.source_refs)
 
     if override is None:
-        finding = _m210_blocking_finding(
-            casilla_id=casilla_id,
-            reason_code="convenio_rate_missing",
-            message_facts={
-                "country_code": country_code,
-                "tipo_renta_code": tipo_renta,
-                "filing_year": year,
-            },
-            legal_refs=legal_refs,
-            source_refs=source_refs,
-        )
-        return None, [finding]
-
+        return None, [
+            _rate_finding(
+                casilla_id=casilla_id,
+                reason_code="convenio_rate_missing",
+                message_facts={
+                    "country_code": country_code,
+                    "tipo_renta_code": tipo_renta,
+                    "filing_year": year,
+                },
+                legal_refs=legal_refs,
+                source_refs=source_refs,
+            ),
+        ]
     if override.kind is ConvenioOverrideKind.EXEMPT:
         return ZERO, []
     if override.kind is ConvenioOverrideKind.FLAT and override.rate is not None:
@@ -160,22 +156,11 @@ def _resolve_convenio_override(
         if baseline_rate is None:
             return None, []
         return min(baseline_rate, override.rate), []
-    # ALLOCATION_DOMESTIC_TARIFF: base-aware; the runtime tariff branch is authority.
+    # Base-dependent treaty branches remain owned by the registry formula runtime.
     return None, []
 
 
-def _has_live_pension_tariff(snapshot: RegistrySnapshot, year: int) -> bool:
-    """Return whether the snapshot contains an applicable M210 pension tariff table."""
-    for parameter in snapshot.revision.parameters:
-        if parameter.id != "m210-pension-tarifa-2025" or parameter.data_type != "bracket_table":
-            continue
-        return any(
-            bracket.valid_from.year <= year and (bracket.valid_to is None or bracket.valid_to.year >= year)
-            for bracket in parameter.brackets
-        )
-    return False
-
-
+# fact-relocation: M210 rate selection and convenio applicability are resolved through generic registry/fact queries; authored authority publication remains external.
 def resolve_m210_rate(
     profile: TaxpayerProfile,
     tipo_renta: str,
@@ -185,65 +170,34 @@ def resolve_m210_rate(
     devengo_date: date,
     casilla_id: CasillaId | None = None,
 ) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
-    """Resolve the M210 rate for (profile, tipo_renta, year).
-
-    The :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` supplies the
-    ``m210-tipo-gravamen-2025`` baseline table; the
-    :class:`~cadrumo.domain.deadlines.TaxpayerProfile` supplies
-    ``country_of_fiscal_residence`` for treaty lookup. Returns ``(rate,
-    findings)`` where ``findings`` contains blocking
-    :class:`~ModeloVerificationFinding` records when a
-    required rate is deferred or unavailable.
-
-    A profile with no treaty country uses the baseline table. A profile with a
-    treaty country must match a treaty override for ``(country, tipo_renta)``
-    unless the override delegates back to the domestic tariff. The resolver
-    returns no scalar rate for base-dependent branches because those depend on
-    the actual base amount and are computed by the formula runtime.
-
-    See Also:
-        :func:`cadrumo.domain.calculations.registry.formula_runtime_irnr.evaluate_irnr_resolve_tipo_gravamen`
-        ``irnr.convenio.override``
-        :class:`cadrumo.domain.deadlines.TaxpayerProfile`
-    """
-    baseline_param = None
-    for parameter in snapshot.revision.parameters:
-        if parameter.id == "m210-tipo-gravamen-2025":
-            baseline_param = parameter
-            break
-
-    if baseline_param is None:
-        return None, []
-
-    baseline_rate, baseline_ok = _resolve_baseline_rate(baseline_param, tipo_renta, year)
-    if not baseline_ok:
-        return None, []
+    """Resolve the scalar rate or return a typed application finding."""
+    baseline, tariff = _selected_rate_parameters(snapshot, year=year)
+    baseline_rate, parseable = _rate_from_parameter(baseline, tipo_renta=tipo_renta, year=year)
+    if not parseable:
+        raise ValueError("selected M210 rate parameter contains a non-decimal value")
 
     treaty_country = profile.country_of_fiscal_residence
-    if treaty_country is None:
-        if baseline_rate is None:
-            if tipo_renta == TipoRentaIrnr.PENSION.value and _has_live_pension_tariff(snapshot, year):
-                return None, []
-            finding = _m210_blocking_finding(
-                casilla_id=casilla_id,
-                reason_code="baseline_rate_unavailable",
-                message_facts={
-                    "tipo_renta_code": tipo_renta,
-                    "filing_year": year,
-                },
-                legal_refs=tuple(baseline_param.legal_refs),
-                source_refs=tuple(baseline_param.source_refs),
-            )
-            return None, [finding]
-        return baseline_rate, []
+    if treaty_country is not None:
+        return _treaty_rate(
+            baseline=baseline,
+            country_code=treaty_country.upper(),
+            tipo_renta=tipo_renta,
+            year=year,
+            devengo_date=devengo_date,
+            baseline_rate=baseline_rate,
+            casilla_id=casilla_id,
+        )
 
-    return _resolve_convenio_override(
-        snapshot,
-        baseline_param,
-        country_code=treaty_country.upper(),
-        tipo_renta=tipo_renta,
-        year=year,
-        devengo_date=devengo_date,
-        baseline_rate=baseline_rate,
-        casilla_id=casilla_id,
-    )
+    if baseline_rate is not None:
+        return baseline_rate, []
+    if tipo_renta == TipoRentaIrnr.PENSION.value and _tariff_declared(tariff, year=year):
+        return None, []
+    return None, [
+        _rate_finding(
+            casilla_id=casilla_id,
+            reason_code="baseline_rate_unavailable",
+            message_facts={"tipo_renta_code": tipo_renta, "filing_year": year},
+            legal_refs=tuple(baseline.legal_refs),
+            source_refs=tuple(baseline.source_refs),
+        ),
+    ]

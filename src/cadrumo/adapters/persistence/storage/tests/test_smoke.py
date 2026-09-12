@@ -7,23 +7,43 @@ exposes the expected error hierarchy, and that every name in
 
 from __future__ import annotations
 
+import ast
 from importlib import import_module
+from pathlib import Path
 
 import pytest
 
 from .....core import logging
 from .....core.errors.hierarchy import CadrumoError
 from ... import storage as storage_package
-from .. import __all__ as storage_all
-from .. import __doc__ as storage_doc
 from ..errors import RepositoryError, StorageError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
+def _storage_initializer() -> ast.Module:
+    """Parse the storage initializer without consuming its package facade."""
+    path = Path(__file__).resolve().parents[1] / "__init__.py"
+    return ast.parse(path.read_text(encoding="utf-8"))
+
+
+def _storage_exports() -> tuple[str, ...]:
+    assignment = next(
+        node
+        for node in _storage_initializer().body
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "__all__"
+    )
+    value = assignment.value
+    if not isinstance(value, (ast.List, ast.Tuple)) or not all(
+        isinstance(item, ast.Constant) and isinstance(item.value, str) for item in value.elts
+    ):
+        raise AssertionError("storage package __all__ must be a literal string sequence")
+    return tuple(item.value for item in value.elts)
+
+
 def test_smoke_storage() -> None:
     """Assert the subpackage is importable and its conventions hold."""
-    assert storage_doc is not None
+    assert ast.get_docstring(_storage_initializer()) is not None
     assert issubclass(StorageError, CadrumoError)
     assert issubclass(RepositoryError, StorageError)
     # Sanity-check that the substrate's ``get_logger`` hands back a usable
@@ -42,6 +62,7 @@ def test_public_surface_is_complete() -> None:
     and it proves more than a namespace probe: the owning submodule must
     import and must genuinely define the name.
     """
+    storage_all = _storage_exports()
     unresolved = sorted(name for name in storage_all if not hasattr(storage_package, name))
     assert not unresolved, f"missing public exports: {unresolved}"
 

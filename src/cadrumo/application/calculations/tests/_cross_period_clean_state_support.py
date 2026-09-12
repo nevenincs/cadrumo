@@ -23,6 +23,9 @@ from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_RESULTADO_CASILLA as M303_RESULTADO_CASILLA,
+)
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
@@ -66,7 +69,6 @@ from ..cross_period_models import (
     CrossPeriodDependencyRequirement,
     CrossPeriodExpectedMemberSet,
 )
-from ..iva_compensation_casillas import M303_RESULTADO_CASILLA
 from ..observations_repository import CalculationObservationRepository, ObservationSourceKind
 
 _PROFILE_ID = "39039039-0390-4390-8390-390390390390"

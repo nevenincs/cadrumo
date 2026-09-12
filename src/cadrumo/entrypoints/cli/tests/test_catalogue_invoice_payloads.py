@@ -11,7 +11,6 @@ from pydantic import BaseModel, ValidationError
 from ....application.invoices.catalogue_creation import CatalogueInvoiceCreateResult, build_catalogue_invoice
 from ....application.invoices.catalogue_lifecycle import CatalogueInvoiceRemoveResult, CatalogueInvoiceUpdateResult
 from ....domain.iva.classification import InvoiceKind
-from .._command_schema import command_schema_types
 from .._ledger_business_invoice_cli import _catalogue_invoice_payload
 from .._ledger_catalogue_invoice_payloads import (
     BulkInvoiceImportRowFailurePayload,
@@ -21,6 +20,7 @@ from .._ledger_catalogue_invoice_payloads import (
     CatalogueInvoiceRemovePayload,
     CatalogueInvoiceUpdatePayload,
 )
+from ..command_schema import command_schema_types
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

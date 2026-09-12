@@ -1,7 +1,7 @@
 [[revisions."2024".bindings]]
 id = "renta-profile-tax-id"
-source = "profile"
-selector = { profile_key = "identity.tax_id", xsd_path = "/DatosIdentificativos/Declarante/DPNIF_D", dictionary_field = "DPNIF_D" }
+provider = { kind = "profile", profile_key = "identity.tax_id", xsd_path = "/DatosIdentificativos/Declarante/DPNIF_D", dictionary_field = "DPNIF_D" }
+value = { data_type = "text", channel = "text" }
 aggregation = { op = "copy" }
 legal_refs = ["orden-hac-242-2025:art-3"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]

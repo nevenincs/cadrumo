@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._faithfulness import faithfulness_check
+from ..faithfulness import faithfulness_check
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

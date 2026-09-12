@@ -20,11 +20,10 @@ from ....core.aggregation import (
     AggregationCaptureKind,
     BindingAggregation,
     BindingAggregationOp,
-    BindingSourceKind,
     RetencionClave,
 )
 from ....core.period import Period
-from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....tests.secure_sql import isolated_runtime_profile
@@ -52,7 +51,7 @@ _M190_WITHHOLDING_SOURCE_REFS = (
 )
 
 
-def _revision_with(*bindings: DataBindingDefinition) -> ModeloRevision:
+def _revision_with(*bindings: BindingDefinition) -> ModeloRevision:
     return ModeloRevision(
         id="2024-y-siguientes",
         localization_key="test.schema.revision.2024-y-siguientes.label",
@@ -64,11 +63,11 @@ def _revision_with(*bindings: DataBindingDefinition) -> ModeloRevision:
     )
 
 
-def _percepcion_binding() -> DataBindingDefinition:
-    return DataBindingDefinition(
+def _percepcion_binding() -> BindingDefinition:
+    return BindingDefinition(
         id=_PERCEPCION_BINDING_ID,
-        source=BindingSourceKind.WITHHOLDING,
-        selector={"fact": "percepcion_count"},
+        provider={"kind": "withholding", **{"fact": "percepcion_count"}},
+        value={"data_type": "money", "channel": "decimal"},
         aggregation=BindingAggregation(op=BindingAggregationOp.COUNT_DISTINCT),
         legal_refs=_M190_WITHHOLDING_LEGAL_REFS,
         source_refs=_M190_WITHHOLDING_SOURCE_REFS,

@@ -48,7 +48,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @33+17. Cuota íntegra. Regularización reserva de nivelación (Art. 105.6 LIS)
 [[revisions."2024".casillas]]
@@ -60,7 +59,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @50+17. Bonificaciones y deducciones por doble imposición. Cuota íntegra ajustada positiva. Bonificación por rentas obtenidas en Ceuta y Melilla (art. 33 LIS) (pág.11)
 [[revisions."2024".casillas]]
@@ -72,7 +70,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @67+17. Bonificaciones y deducciones por doble imposición. Cuota íntegra ajustada positiva. Bonificaciones por prestación de servicios (art. 34 LIS) (pág. 11)
 [[revisions."2024".casillas]]
@@ -84,7 +81,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @84+17. Bonificaciones y deducciones por doble imposición. Cuota íntegra ajustada positiva. Bonificación de rendimientos por venta bienes corporales producidos en Canarias (art. 26 Ley 19/1994) (pág.11)
 [[revisions."2024".casillas]]
@@ -96,7 +92,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @101+17. Bonificaciones y deducciones por doble imposición. Cuota íntegra ajustada positiva. Bonificación rendimientos por venta bienes corporales producidos en Illes Balears (DA 70.Cinco Ley 31/2022) (pág. 11)
 [[revisions."2024".casillas]]
@@ -108,7 +103,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @118+17. Bonificaciones y deducciones por doble imposición. Cuota íntegra ajustada positiva. Bonificaciones sociedades cooperativas (Ley 20/1990) (pag. 11)
 [[revisions."2024".casillas]]
@@ -120,7 +114,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @135+17. Bonificaciones y deducciones por doble imposición. Cuota íntegra ajustada positiva. Bonificaciones entidades dedicadas al arrendamiento de viviendas (Cap. III Tit. VII LIS) (pág.11)
 [[revisions."2024".casillas]]
@@ -132,7 +125,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @152+17. Bonificaciones y deducciones por doble imposición. Cuota íntegra ajustada positiva. Otras bonificaciones (pág. 11)
 [[revisions."2024".casillas]]
@@ -144,7 +136,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @169+17. Bonificaciones y deducciones por doble imposición. Cuota íntegra ajustada positiva. D.I. DI interna de períodos anteriores aplicada en el ejercicio (art. 30 RDLEG 4/2004) (pág. 12)
 [[revisions."2024".casillas]]
@@ -156,7 +147,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @186+17. Bonifi caciones y deducciones por doble imposición. Cuota íntegra ajustada positiva. DI interna de períodos anteriores aplicada en el periodo (DT 23ª.1 LIS) (pág. 12).
 [[revisions."2024".casillas]]
@@ -168,7 +158,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @203+17. Bonifi caciones y deducciones por doble imposición. Cuota íntegra ajustada positiva. DI interna generada y aplicada en el período (DT 23ª.1 LIS) (pág. 12).
 [[revisions."2024".casillas]]
@@ -180,7 +169,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @220+17. Bonificaciones y deducciones por doble imposición. Cuota íntegra ajustada positiva. DI internacional de períodos anteriores aplicada en el período (arts. 31 y 32 RDLEG 4/2004) (pág. 12)
 [[revisions."2024".casillas]]
@@ -192,7 +180,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @237+17. Bonificaciones y deducciones por doble imposición. Cuota íntegra ajustada positiva. DI internacional de periodos anteriores aplicada en el periodo (art. 31 y 32 LIS) (pág. 12)
 [[revisions."2024".casillas]]
@@ -204,7 +191,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @254+17. Bonificaciones y deducciones por doble imposición. Cuota íntegra ajustada positiva. DI internacional generada y aplicada en el periodo (art. 31 y 32 LIS) (pág. 12)
 [[revisions."2024".casillas]]
@@ -216,7 +202,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @271+17. Bonificaciones y deducciones por doble imposición. Cuota íntegra ajustada positiva. Transparencia fi scal internacional (art. 100.10 LIS) (pág. 10)
 [[revisions."2024".casillas]]
@@ -228,7 +213,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @288+17. Bonificaciones y deducciones por doble imposición. Cuota íntegra ajustada positiva. D.I. Interna intersocietaria al 5/10% (cooperativas) (pág 10)
 [[revisions."2024".casillas]]
@@ -240,7 +224,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @305+17. Bonificaciones y deducciones por doble imposición. Cuota íntegra ajustada positiva. Bonificaciones empresas navieras en Canarias (art. 76 Ley 19/1994) (pág. 11)
 [[revisions."2024".casillas]]
@@ -252,7 +235,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @322+17. Bonificaciones y deducciones por doble imposición. Cuota íntegra ajustada positiva
 [[revisions."2024".casillas]]
@@ -264,7 +246,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @339+17. Otras deducciones, Cuota líquida. Apoyo fiscal a la inversión y otras deducciones.
 [[revisions."2024".casillas]]
@@ -276,7 +257,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @356+17. Otras deducciones. Cuota líquida. Deducción DT 24ª.7 LIS, art. 42 RDLeg.4/2004 (pág. 13)
 [[revisions."2024".casillas]]
@@ -288,7 +268,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @373+17. Otras deducciones. Cuota líquida. Deducciones DT 24ª.1 LIS (pág. 13)
 [[revisions."2024".casillas]]
@@ -300,7 +279,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @390+17. Otras deducciones. Cuota líquida. Deducciones para incentivar det. Actividades (Cap. IV Tit. VI, DT 24ª.3 LIS y art. 27.3 primero Ley 49/2002) (pág. 14, 14 bis)
 [[revisions."2024".casillas]]
@@ -312,7 +290,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @407+17. Otras deducciones. Cuota líquida. Deducción por producciones cinematográficas extranjeras (art. 36.2 LIS) (pág. 14 ter)
 [[revisions."2024".casillas]]
@@ -324,7 +301,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @424+17. Otras deducciones. Cuota líquida. Deducción por producciones cinematográficas extranjeras en Canarias (art 36.2 LIS y DA 14ª Ley 14/1994) pág. 13 ter)
 [[revisions."2024".casillas]]
@@ -336,7 +312,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @441+17. Otras deducciones. Cuota líquida. Deducciones por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) (pág. 14 ter).
 [[revisions."2024".casillas]]
@@ -348,7 +323,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @458+17. Otras deducciones. Cuota líquida.Deducciones I + D + i excluídas del límite art. 39.2 LIS (pág. 14 quinquies)
 [[revisions."2024".casillas]]
@@ -360,7 +334,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @475+17. Otras deducciones. Cuota líquida. Deducción donaciones a entidades sin fines de lucro (Ley 49/2002) (pág. 14 quater)
 [[revisions."2024".casillas]]
@@ -372,7 +345,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @492+17. Otras deducciones. Cuota líquida. Deducciones Inversión Canarias (pág. 13 bis)
 [[revisions."2024".casillas]]
@@ -384,7 +356,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @509+17. Otras deducciones. Cuota líquida. Deducciones específi cas de las entidades sometidas a normativa foral
 [[revisions."2024".casillas]]
@@ -396,7 +367,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @526+17. Otras deducciones. Cuota líquida. Deducción por reversión de medidas temporales DT 37ª.1 LIS (pág. 14 sexies)
 [[revisions."2024".casillas]]
@@ -408,7 +378,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @543+17. Otras deducciones. Cuota líquida. Deducción por reversión de medidas temporales DT 37ª.2 LIS (pág. 14 sexies)
 [[revisions."2024".casillas]]
@@ -420,7 +389,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @560+17. Otras deducciones. Cuota líquida. Cuota líquida mínima (art. 30 bis. LIS)
 [[revisions."2024".casillas]]
@@ -432,7 +400,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @577+17. Otras deducciones. Cuota líquida. Cuota liquida
 [[revisions."2024".casillas]]
@@ -444,7 +411,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @594+17. Cuota del ejercicio a ingresar o a devolver Retenciones e ingresos a cuenta/pagos a cuenta participaciones I.I.C
 [[revisions."2024".casillas]]
@@ -456,7 +422,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @611+17. Cuota del ejercicio a ingresar o a devolver Retenciones e ingresos a cuenta /pagos a cuenta participaciones I.I.C. Imputados por agrupaciones de interés económico y uniones temporales de empresas
 [[revisions."2024".casillas]]
@@ -468,7 +433,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @628+17. Cuota del ejercicio a ingresar o a devolver. Retenciones sobre los premios de determinadas loterías y apuestas
 [[revisions."2024".casillas]]
@@ -480,7 +444,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @645+17. Cuota del período a ingresar o a devolver. Total retenciones e ingresos a cuenta.
 [[revisions."2024".casillas]]
@@ -492,7 +455,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @662+17. Cuota del ejercicio a ingresar o a devolver. Cuota del periodo a ingresar o devolver. Estado
 [[revisions."2024".casillas]]
@@ -504,7 +466,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @679+17. Cuota del ejercicio a ingresar o a devolver. Cuota del periodo a ingresar o devolver. D. Forales/Navarra
 [[revisions."2024".casillas]]
@@ -516,7 +477,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @696+17. Pagos fraccionados. Cuota diferencial. Pago fracionado 1.Estado.
 [[revisions."2024".casillas]]
@@ -528,7 +488,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @713+17. Pagos fraccionados. Cuota diferencial. Pago fracionado 1.D. Forales/Navarra.
 [[revisions."2024".casillas]]
@@ -540,7 +499,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @730+17. Pagos fraccionados. Cuota diferencial. Pago fracionado 2.Estado.
 [[revisions."2024".casillas]]
@@ -552,7 +510,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @747+17. Pagos fraccionados. Cuota diferencial. Pago fracionado 2.D. Forales/Navarra.
 [[revisions."2024".casillas]]
@@ -564,7 +521,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @764+17. Pagos fraccionados. Cuota diferencial. Pago fracionado 3.Estado.
 [[revisions."2024".casillas]]
@@ -576,7 +532,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @781+17. Pagos fraccionados. Cuota diferencial. Pago fracionado 3.D. Forales/Navarra.
 [[revisions."2024".casillas]]
@@ -588,7 +543,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @798+17. Pagos fraccionados. Cuota diferencial. Cuota diferencial. Estado
 [[revisions."2024".casillas]]
@@ -600,7 +554,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @815+17. Cuota diferencial. D. Forales/Navarra
 [[revisions."2024".casillas]]
@@ -612,7 +565,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @832+17. Resultado de la autoliquidación. Incremento por pérdida beneficios fiscales periodos anteriores. Estado.
 [[revisions."2024".casillas]]
@@ -624,7 +576,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @849+17. Resultado de la autoliquidación. Incremento por pérdida beneficios fiscales periodos anteriores.D. Forales/Navarra.
 [[revisions."2024".casillas]]
@@ -636,7 +587,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @866+17. Resultado de la autoliquidación. Intereses de demora. Estado.
 [[revisions."2024".casillas]]
@@ -648,7 +598,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @883+17. Resultado de la autoliquidación. Intereses de demora.D. Forales/Navarra.
 [[revisions."2024".casillas]]
@@ -660,7 +609,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @900+17. Resultado de la autoliquidación. Abono de deducciones I+D+i por insuficiencia de cuota (opción art. 39.2 LIS) (pág. 14 quinquies). TOTAL (Estado + D. Forales/Navarra).
 [[revisions."2024".casillas]]
@@ -672,7 +620,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @917+17. Resultado de la autoliquidación. Abono de deducciones I+D+i por insuficiencia de cuota (opción art. 39.2 LIS) (pág. 14 quinquies). ESTADO
 [[revisions."2024".casillas]]
@@ -684,7 +631,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @934+17. Resultado de la autoliquidación. Abono de deducciones I+D+i por insuficiencia de cuota (opción art. 39.2 LIS) (pág. 14 quinquies). D. FORALES/NAVARRA
 [[revisions."2024".casillas]]
@@ -696,7 +642,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @951+17. Resultado de la autoliquidación. Abono de deducciones por producciones cinematográficas extranjeras (art. 39.3 LIS) (pág. 14 ter). TOTAL (Estado + D. Forales/Navarra)
 [[revisions."2024".casillas]]
@@ -708,7 +653,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @968+17. Resultado de la autoliquidación. Abono de deducciones por producciones cinematográficas extranjeras (art. 39.3 LIS) (pág. 14 ter). ESTADO
 [[revisions."2024".casillas]]
@@ -720,7 +664,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @985+17. Resultado de la autoliquidación. Abono de deducciones por producciones cinematográficas extranjeras (art. 39.3 LIS) (pág. 14 ter). D. FORALES/NAVARRA
 [[revisions."2024".casillas]]
@@ -732,7 +675,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1002+17. Resultado de la autoliquidación. Abono de deducciones por producciones cinematográficas extranjeras en Canarias (art. 39.3 LIS y DA 14ª Ley 19/1994). TOTAL (Estado + D. Forales/Navarra)
 [[revisions."2024".casillas]]
@@ -744,7 +686,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1019+17. Resultado de la autoliquidación. Abono de deducciones por producciones cinematográficas extranjeras en Canarias (art. 39.3 LIS y DA 14ª Ley 19/1994). ESTADO
 [[revisions."2024".casillas]]
@@ -756,7 +697,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1036+17. Resultado de la autoliquidación. Abono de deducciones por producciones cinematográficas extranjeras en Canarias (art. 39.3 LIS y DA 14ª Ley 19/1994). D. FORALES/NAVARRA
 [[revisions."2024".casillas]]
@@ -768,7 +708,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1053+17. Liquidación. Resultado de la autoliquidación. Estado.
 [[revisions."2024".casillas]]
@@ -780,7 +719,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1070+17. Liquidación. Resultado de la autoliquidación. D. Forales/Navarra.
 [[revisions."2024".casillas]]
@@ -792,4 +730,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

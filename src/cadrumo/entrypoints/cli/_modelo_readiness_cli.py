@@ -14,7 +14,6 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...core.period import Period, PeriodError
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.user_profile.errors import ProfileNotFoundError
-from ._common import emit_envelope, no_active_profile_refusal, resolve_cli_precondition_action
 from ._modelo_cli_support import unsupported_local_work_period_refusal
 from ._modelo_payloads import (
     LedgerIssuePayload,
@@ -22,6 +21,7 @@ from ._modelo_payloads import (
     ModeloReadinessMissingRequirementPayload,
     ModeloReadinessResult,
 )
+from .common import emit_envelope, no_active_profile_refusal, resolve_cli_precondition_action
 from .errors import CliRefusedBoundaryError
 
 

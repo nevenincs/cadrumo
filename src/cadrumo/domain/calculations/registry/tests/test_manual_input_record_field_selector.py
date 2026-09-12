@@ -3,7 +3,7 @@
 ``application/modelo/_calculation_modelo_adjustments.py`` (M131 datos-base
 projection) used to read a ``manual_input`` binding's record-field shape via
 ``selector = selector_as_dict(binding); record = selector.get("record")``.
-``ManualInputSelector`` already enforces both shapes at registry build time,
+``ManualInputProvider`` already enforces both shapes at registry build time,
 so in production the ``None`` default meant "this is a casilla-shape
 manual_input binding" -- correct and legitimate. But the raw ``.get()`` cannot
 tell that apart from a genuinely malformed/renamed selector, so if the field
@@ -12,7 +12,7 @@ projecting with no error at all -- indistinguishable from "there are no
 record-field bindings this revision".
 
 :func:`manual_input_record_field_selector` closes that: it validates through
-the same :class:`ManualInputSelector` the registry build gate already uses,
+the same :class:`ManualInputProvider` the registry build gate already uses,
 so a genuinely malformed selector raises, and ``None`` means only "not
 applicable" (non-manual_input, or the casilla shape), never "couldn't read
 it".
@@ -23,29 +23,34 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .....core.aggregation import BindingSourceKind
 from ..binding_selector_utils import (
     ManualInputRecordFieldSelector,
     manual_input_record_field_selector,
 )
+from ..binding_value_contract import BindingDataType, BindingValueChannel, BindingValueContract
 from ..errors import RegistryValidationError
-from ..schema import DataBindingDefinition
+from ..manual_input_selector import ManualInputProvider
+from ..schema import BindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _m131_discapacidad_binding() -> DataBindingDefinition:
+def _m131_discapacidad_binding() -> BindingDefinition:
     """The real Modelo 131 2025 page-1 discapacidad-33 record-field binding."""
-    return DataBindingDefinition.model_validate(
+    return BindingDefinition.model_validate(
         {
             "id": "modelo-131-2025.page1.109-109.discapacidad-33",
-            "source": "manual_input",
-            "selector": {
+            "provider": {
+                "kind": "manual_input",
                 "record": "page_1",
                 "field": "discapacidad-33",
                 "offset": 109,
                 "length": 1,
                 "data_type": "boolean",
+            },
+            "value": {
+                "data_type": "boolean",
+                "channel": "boolean",
             },
             "legal_refs": ("rd-439-2007:art-110",),
             "source_refs": ("aeat-dr-131-2025",),
@@ -72,18 +77,24 @@ def test_a_casilla_shape_manual_input_binding_is_not_applicable() -> None:
     Not a defect and not malformed -- a caller collecting record-field
     projections is meant to skip it, same as a non-manual_input binding.
     """
-    casilla_shape = DataBindingDefinition.model_validate(
+    casilla_shape = BindingDefinition.model_validate(
         {
-            "id": "renta-2025-modelo-100-estimacion-directa-es-normal",
-            "source": "manual_input",
-            "selector": {
+            "id": "renta-modelo-100-estimacion-directa-es-normal",
+            "provider": {
+                "kind": "manual_input",
                 "casilla_id": "0168",
                 "data_type": "boolean",
                 "true_value": "N",
                 "false_value": "S",
             },
-            "aggregation": {"op": "copy"},
-            "typed_enum": "EstimacionDirectaModalidad",
+            "value": {
+                "data_type": "enum",
+                "channel": "enum",
+                "typed_enum": "EstimacionDirectaModalidad",
+            },
+            "aggregation": {
+                "op": "copy",
+            },
             "legal_refs": ("ley-35-2006:art-30",),
             "source_refs": ("aeat-dr-100-2025-dictionary",),
         },
@@ -94,18 +105,24 @@ def test_a_casilla_shape_manual_input_binding_is_not_applicable() -> None:
 
 def test_a_non_manual_input_binding_is_not_applicable() -> None:
     """A profile-sourced binding is never a record-field manual_input selector."""
-    profile = DataBindingDefinition.model_validate(
+    profile = BindingDefinition.model_validate(
         {
             "id": "renta-2025-profile-tax-residence-ccaa",
-            "source": "profile",
-            "selector": {
+            "provider": {
+                "kind": "profile",
                 "profile_model": "TaxResidenceProfile",
                 "field": "ccaa",
                 "xsd_attribute": "codigoCADeclaracion",
                 "dictionary_field": "ZCCAD",
             },
-            "aggregation": {"op": "copy"},
-            "typed_enum": "CCAA",
+            "value": {
+                "data_type": "enum",
+                "channel": "enum",
+                "typed_enum": "CCAA",
+            },
+            "aggregation": {
+                "op": "copy",
+            },
             "legal_refs": ("orden-hac-277-2026:art-3",),
             "source_refs": ("aeat-dr-100-2025-dictionary",),
         },
@@ -117,12 +134,12 @@ def test_a_non_manual_input_binding_is_not_applicable() -> None:
 def test_a_renamed_record_field_key_is_refused_not_silently_read_as_casilla_shape() -> None:
     """The bite proof: a selector shape the model rejects must raise, not vanish.
 
-    ``DataBindingDefinition.model_validate`` already dispatches through
-    ``ManualInputSelector`` at construction time, so a genuinely malformed
+    ``BindingDefinition.model_validate`` already dispatches through
+    ``ManualInputProvider`` at construction time, so a genuinely malformed
     selector cannot reach this function via the normal constructor -- proven
     by the companion assertion below. The residual risk this closes is DRIFT:
     a raw ``dict.get("record")`` reads a string literal with no tie to the
-    model's own field name, so if ``ManualInputSelector`` ever renamed
+    model's own field name, so if ``ManualInputProvider`` ever renamed
     ``record``, construction-time validation would keep passing (it would
     just validate the NEW name) while a raw-dict reader silently, permanently
     read every record-field binding as "casilla shape, not applicable" --
@@ -131,37 +148,41 @@ def test_a_renamed_record_field_key_is_refused_not_silently_read_as_casilla_shap
     for that drifted-schema selector so the fixed function's OWN validation
     (not the constructor's) is what is under test.
     """
-    with pytest.raises(ValidationError, match="violates ManualInputSelector") as excinfo:
-        DataBindingDefinition.model_validate(
+    with pytest.raises(ValidationError, match=r"provider\.manual_input\.recrd") as excinfo:
+        BindingDefinition.model_validate(
             {
                 "id": "modelo-131-2025.page1.109-109.discapacidad-33",
-                "source": "manual_input",
-                "selector": {
-                    "recrd": "page_1",  # deliberate typo of "record"
+                "provider": {
+                    "kind": "manual_input",
+                    "recrd": "page_1",
                     "field": "discapacidad-33",
                     "offset": 109,
                     "length": 1,
                     "data_type": "boolean",
                 },
+                "value": {
+                    "data_type": "boolean",
+                    "channel": "boolean",
+                },
                 "legal_refs": ("rd-439-2007:art-110",),
                 "source_refs": ("aeat-dr-131-2025",),
             },
         )
-    assert "ManualInputSelector" in str(excinfo.value), (
+    assert "Extra inputs are not permitted" in str(excinfo.value), (
         "construction-time gate must be the one refusing the typo -- confirms the "
         "residual risk this fix closes is drift, not malformed-data construction"
     )
 
-    drifted = DataBindingDefinition.model_construct(
+    drifted = BindingDefinition.model_construct(
         id="modelo-131-2025.page1.109-109.discapacidad-33",
-        source=BindingSourceKind.MANUAL_INPUT,
-        selector={
-            "recrd": "page_1",  # the field ManualInputSelector no longer names "record"
-            "field": "discapacidad-33",
-            "offset": 109,
-            "length": 1,
-            "data_type": "boolean",
-        },
+        provider=ManualInputProvider.model_construct(
+            recrd="page_1",  # the field ManualInputProvider no longer names "record"
+            field="discapacidad-33",
+            offset=109,
+            length=1,
+            data_type="boolean",
+        ),
+        value=BindingValueContract(data_type=BindingDataType.BOOLEAN, channel=BindingValueChannel.BOOLEAN),
         legal_refs=("rd-439-2007:art-110",),
         source_refs=("aeat-dr-131-2025",),
     )

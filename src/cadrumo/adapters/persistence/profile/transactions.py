@@ -19,10 +19,8 @@ its secure-object coupling is SQL/crypto-bound; the domain package owns only the
 pure surface — the :class:`~domain.transactions.ImportSummary` record, the
 :func:`~domain.transactions.transaction_object_key` /
 :func:`transaction_index_object_key` key-derivation helpers, and the
-:data:`~adapters.persistence.profile.transactions.TX_BUCKET_NAMESPACE` /
-schema-version constants that name the persisted envelope contract. The
-namespace/version constants are redeclared here as the persisted-envelope
-contract; the strings are preserved to avoid orphaning stored envelopes.
+:data:`~adapters.persistence.storage.secure_object_namespaces.TRANSACTION_CATALOGUE_NAMESPACE`,
+which names the persisted envelope contract.
 
 Writes go through the
 :class:`~adapters.persistence.storage.SecureObjectRepository` atomic
@@ -103,15 +101,13 @@ from ..storage.sql.secure_objects import SecureObjectMigrationTarget
 from .bienes_inversion import BienesInversionIvaRegisterRepository
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ....core.secure_object_write import SecureObjectWrite
     from ..storage.secure_object_namespaces import SecureObjectNamespaceDefinition
-    from ..storage.sql._secure_object_records import SecureObjectDeletion
-    from ..storage.sql.secure_objects import SecureObjectRepository, SecureObjectWrite
+    from ..storage.sql.secure_object_records import SecureObjectDeletion
+    from ..storage.sql.secure_objects import SecureObjectRepository
 
 _log = get_logger(__name__)
 
-_TX_CATALOGUE_VERSION = TRANSACTION_CATALOGUE_NAMESPACE.schema_version
-_TX_CATALOGUE_SENSITIVITY = TRANSACTION_CATALOGUE_NAMESPACE.sensitivity
-TX_BUCKET_NAMESPACE = TRANSACTION_CATALOGUE_NAMESPACE.namespace
 # Row-level projections remain useful for small ledgers and compatibility
 # consumers. At scale the compact count/date-span summary is the canonical
 # diagnostic channel; materialising tens of thousands of Pydantic rows would
@@ -385,7 +381,7 @@ class TransactionCatalogueRepository:
         Raises:
             :class:`~adapters.persistence.storage.ClassificationError`:
                 If a row's inner envelope class is not
-                ``_TX_CATALOGUE_SENSITIVITY``.
+                ``TRANSACTION_CATALOGUE_NAMESPACE.sensitivity``.
             :class:`~adapters.persistence.storage.EnvelopeVersionError`:
                 If a row's inner envelope schema version is higher than the
                 consumer supports.
@@ -408,10 +404,10 @@ class TransactionCatalogueRepository:
         }
         self._require_current_rows(transaction_keys.values())
         migrated = self._objects.migrate_many_atomically(
-            TX_BUCKET_NAMESPACE,
+            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             (index_key, *transaction_keys.values()),
-            expected_class=_TX_CATALOGUE_SENSITIVITY,
-            current_version=_TX_CATALOGUE_VERSION,
+            expected_class=TRANSACTION_CATALOGUE_NAMESPACE.sensitivity,
+            current_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
             validate_upgraded_payloads=self._validate_migrated_catalogue_payloads,
             write_provenance="transaction-catalogue:schema-migration",
         )
@@ -440,7 +436,9 @@ class TransactionCatalogueRepository:
                     exc_info=True,
                 )
                 raise StoredTransactionDriftError(self._bucket_id, exc) from exc
-            if not inner_envelope_classification_is_expected(envelope.classification, _TX_CATALOGUE_SENSITIVITY):
+            if not inner_envelope_classification_is_expected(
+                envelope.classification, TRANSACTION_CATALOGUE_NAMESPACE.sensitivity
+            ):
                 # errors.integrity.integrity_storage_classification is this
                 # adapters/persistence/profile layer's own classification-mismatch
                 # key (shared with buckets.py at this same layer). It is
@@ -454,22 +452,24 @@ class TransactionCatalogueRepository:
                 # which layer owns the message.
                 raise ClassificationError(
                     context={
-                        "namespace": TX_BUCKET_NAMESPACE,
+                        "namespace": TRANSACTION_CATALOGUE_NAMESPACE.namespace,
                         "object_key": transaction_object_key(self._bucket_id, transaction_id),
                         "bucket_id": self._bucket_id,
                         "classification": envelope.classification.value,
-                        "expected": _TX_CATALOGUE_SENSITIVITY.value,
+                        "expected": TRANSACTION_CATALOGUE_NAMESPACE.sensitivity.value,
                     },
                     translated_message="errors.integrity.integrity_storage_classification",
                 )
-            if not inner_envelope_version_is_current(envelope.schema_version, _TX_CATALOGUE_VERSION):
+            if not inner_envelope_version_is_current(
+                envelope.schema_version, TRANSACTION_CATALOGUE_NAMESPACE.schema_version
+            ):
                 raise EnvelopeVersionError(
                     context={
-                        "namespace": TX_BUCKET_NAMESPACE,
+                        "namespace": TRANSACTION_CATALOGUE_NAMESPACE.namespace,
                         "object_key": transaction_object_key(self._bucket_id, transaction_id),
                         "bucket_id": self._bucket_id,
                         "schema_version": envelope.schema_version,
-                        "expected": _TX_CATALOGUE_VERSION,
+                        "expected": TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
                     },
                     translated_message="errors.integrity.integrity_storage_envelope_version",
                 )
@@ -591,7 +591,9 @@ class TransactionCatalogueRepository:
     ) -> None:
         """Validate upgraded transaction rows against reciprocal bienes authority."""
         transaction_payloads = {
-            key: payload for (namespace, key), payload in payloads.items() if namespace == TX_BUCKET_NAMESPACE
+            key: payload
+            for (namespace, key), payload in payloads.items()
+            if namespace == TRANSACTION_CATALOGUE_NAMESPACE.namespace
         }
         transactions = self._validated_migrated_transactions(transaction_payloads)
         register_payload = payloads.get((bienes_definition.namespace, bienes_key))
@@ -632,10 +634,10 @@ class TransactionCatalogueRepository:
             (
                 *(
                     SecureObjectMigrationTarget(
-                        TX_BUCKET_NAMESPACE,
+                        TRANSACTION_CATALOGUE_NAMESPACE.namespace,
                         key,
-                        _TX_CATALOGUE_SENSITIVITY,
-                        _TX_CATALOGUE_VERSION,
+                        TRANSACTION_CATALOGUE_NAMESPACE.sensitivity,
+                        TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
                     )
                     for key in (index_key, *transaction_keys.values())
                 ),
@@ -907,10 +909,10 @@ class TransactionCatalogueRepository:
         object_keys = tuple(transaction_object_key(self._bucket_id, transaction_id) for transaction_id in selected_ids)
         transactions_by_id: dict[str, Transaction] = {}
         records = self._objects.load_many_current(
-            TX_BUCKET_NAMESPACE,
+            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             object_keys,
-            expected_class=_TX_CATALOGUE_SENSITIVITY,
-            current_version=_TX_CATALOGUE_VERSION,
+            expected_class=TRANSACTION_CATALOGUE_NAMESPACE.sensitivity,
+            current_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
             refuse_legacy=self._refuse_targeted_implicit_migration,
         )
         for record in records:
@@ -957,7 +959,7 @@ class TransactionCatalogueRepository:
         if transaction.transaction_id == expected_transaction_id:
             return
         raise SecureObjectRowIdentityError(
-            TX_BUCKET_NAMESPACE,
+            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             expected_identifier=transaction_object_key(self._bucket_id, expected_transaction_id),
         )
 
@@ -1132,13 +1134,13 @@ class TransactionCatalogueRepository:
         comparison (``stored_hashes``) is always fresh; only the
         fresh-serialization side of the diff is skipped for a cache hit.
         """
+        from ....core.secure_object_write import SecureObjectWrite
         from ..storage.crypto.encrypted_columns import secure_object_key_digest
-        from ..storage.sql._secure_object_records import SecureObjectDeletion
-        from ..storage.sql.secure_objects import SecureObjectWrite
+        from ..storage.sql.secure_object_records import SecureObjectDeletion
 
         current_ids = self._load_index_ids()
         incoming_ids = set(catalogue.transactions)
-        stored_hashes = self._objects.namespace_payload_hashes(TX_BUCKET_NAMESPACE)
+        stored_hashes = self._objects.namespace_payload_hashes(TRANSACTION_CATALOGUE_NAMESPACE.namespace)
 
         writes: list[SecureObjectWrite] = []
         for transaction_id, transaction in catalogue.transactions.items():
@@ -1152,10 +1154,10 @@ class TransactionCatalogueRepository:
                 continue
             writes.append(
                 SecureObjectWrite(
-                    namespace=TX_BUCKET_NAMESPACE,
+                    namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
                     object_key=object_key,
-                    classification=_TX_CATALOGUE_SENSITIVITY,
-                    schema_version=_TX_CATALOGUE_VERSION,
+                    classification=TRANSACTION_CATALOGUE_NAMESPACE.sensitivity,
+                    schema_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
                     written_at=transaction.modified_at,
                     payload=payload,
                 ),
@@ -1164,10 +1166,10 @@ class TransactionCatalogueRepository:
         if incoming_ids != current_ids:
             writes.append(
                 SecureObjectWrite(
-                    namespace=TX_BUCKET_NAMESPACE,
+                    namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
                     object_key=transaction_index_object_key(self._bucket_id),
-                    classification=_TX_CATALOGUE_SENSITIVITY,
-                    schema_version=_TX_CATALOGUE_VERSION,
+                    classification=TRANSACTION_CATALOGUE_NAMESPACE.sensitivity,
+                    schema_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
                     written_at=now(),
                     payload=self._serialise_index(incoming_ids),
                 ),
@@ -1175,7 +1177,7 @@ class TransactionCatalogueRepository:
 
         deletions = tuple(
             SecureObjectDeletion(
-                namespace=TX_BUCKET_NAMESPACE,
+                namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
                 hashed_object_key=secure_object_key_digest(transaction_object_key(self._bucket_id, transaction_id)),
             )
             for transaction_id in current_ids - incoming_ids
@@ -1202,8 +1204,10 @@ class TransactionCatalogueRepository:
         keys = tuple(object_keys)
         old = [
             object_key
-            for object_key, schema_version in self._objects.peek_many_schema_versions(TX_BUCKET_NAMESPACE, keys).items()
-            if schema_version != _TX_CATALOGUE_VERSION
+            for object_key, schema_version in self._objects.peek_many_schema_versions(
+                TRANSACTION_CATALOGUE_NAMESPACE.namespace, keys
+            ).items()
+            if schema_version != TRANSACTION_CATALOGUE_NAMESPACE.schema_version
         ]
         if old:
             raise LedgerStorageError("transaction catalogue requires explicit IVA authority migration before read")
@@ -1215,10 +1219,10 @@ class TransactionCatalogueRepository:
 
         index_key = transaction_index_object_key(self._bucket_id)
         record = self._objects.load(
-            TX_BUCKET_NAMESPACE,
+            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             index_key,
-            expected_class=_TX_CATALOGUE_SENSITIVITY,
-            max_supported_version=_TX_CATALOGUE_VERSION,
+            expected_class=TRANSACTION_CATALOGUE_NAMESPACE.sensitivity,
+            max_supported_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
         )
         if record is None:
             return set()
@@ -1228,7 +1232,7 @@ class TransactionCatalogueRepository:
             raise StoredTransactionDriftError(self._bucket_id, exc) from exc
         if require_current and not inner_envelope_version_is_current(
             envelope.schema_version,
-            _TX_CATALOGUE_VERSION,
+            TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
         ):
             raise LedgerStorageError("transaction catalogue requires explicit IVA authority migration before read")
         return set(envelope.payload.transaction_ids)
@@ -1238,9 +1242,9 @@ class TransactionCatalogueRepository:
         from ..storage.envelope.contract import Envelope
 
         envelope = Envelope[_TransactionIndex](
-            schema_version=_TX_CATALOGUE_VERSION,
+            schema_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
             written_at=now(),
-            classification=_TX_CATALOGUE_SENSITIVITY,
+            classification=TRANSACTION_CATALOGUE_NAMESPACE.sensitivity,
             payload=_TransactionIndex(transaction_ids=tuple(sorted(transaction_ids))),
         )
         return envelope.model_dump_json().encode(UTF_8_ENCODING)
@@ -1255,9 +1259,9 @@ class TransactionCatalogueRepository:
         from ..storage.envelope.contract import Envelope
 
         envelope = Envelope[Transaction](
-            schema_version=_TX_CATALOGUE_VERSION,
+            schema_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
             written_at=transaction.modified_at,
-            classification=_TX_CATALOGUE_SENSITIVITY,
+            classification=TRANSACTION_CATALOGUE_NAMESPACE.sensitivity,
             payload=transaction,
         )
         return envelope.model_dump_json().encode(UTF_8_ENCODING)

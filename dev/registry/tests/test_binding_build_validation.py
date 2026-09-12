@@ -20,7 +20,7 @@ Anti-tautology proofs (the gate is not trivially rejecting everything):
   * a WELL-FORMED binding of each family passes the dispatch validator
     (``validate_binding_selector_shape`` returns ``[]``); and
   * the malformed binding is a CONSTRUCTIBLE
-    :class:`DataBindingDefinition` — pydantic accepts the model, so the
+    :class:`BindingDefinition` — pydantic accepts the model, so the
     rejection is the build GATE's lifted op/fact invariant, not a schema-level
     refusal that would fire regardless of the build path.
 """
@@ -35,7 +35,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.bindings import validate_binding_selector_shape
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import (
-    DataBindingDefinition,
+    BindingDefinition,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
@@ -60,7 +60,7 @@ def _committed_modelo_130() -> tuple[ModeloDefinition, RegistryCatalogues]:
     return _committed_modelo("130")
 
 
-def _inject_binding(modelo: ModeloDefinition, replacement: DataBindingDefinition) -> ModeloDefinition:
+def _inject_binding(modelo: ModeloDefinition, replacement: BindingDefinition) -> ModeloDefinition:
     """Replace the first M130 binding with ``replacement`` and return the mutated modelo.
 
     Reusing an existing binding's id, legal_refs, and source_refs keeps the
@@ -79,8 +79,8 @@ def _build_binding(
     source: str,
     selector: dict[str, object],
     op: BindingAggregationOp,
-    base: DataBindingDefinition | None = None,
-) -> DataBindingDefinition:
+    base: BindingDefinition | None = None,
+) -> BindingDefinition:
     """Build a binding of ``source`` reusing the first M130 binding's id and grounding."""
     if base is None:
         modelo, _catalogues = _committed_modelo_130()
@@ -288,7 +288,7 @@ def test_binding_family_build_gate_contract(
     assert validate_binding_selector_shape(well_formed) == [], f"well-formed {source} binding must pass the build gate"
 
     malformed = _build_binding(source=source, selector=malformed_selector, op=malformed_op, base=base)
-    assert isinstance(malformed, DataBindingDefinition)
+    assert isinstance(malformed, BindingDefinition)
     assert str(malformed.source) == source
     mutated = _inject_binding(modelo, malformed)
 

@@ -26,17 +26,19 @@ from ...domain.calculations.registry.query_reports import (
 )
 from ...domain.calculations.registry.support_matrix import ModeloEntry
 from ...domain.user_profile.errors import ProfileNotFoundError
-from ._common import resolve_notice_action
+from ._modelo_bindings_payloads import BindingListRowPayload
 from ._modelo_payloads import (
-    BindingListRowPayload,
     CasillaRowPayload,
     DataInventoryCasillaPayload,
-    ModeloPortalCompatibilityRefPayload,
-    ModeloRenamePayload,
-    ModeloRowPayload,
-    ModeloSupportMatrixEntryPayload,
 )
 from ._modelo_rendering import binding_encoded_option_lines, binding_encoded_option_payloads
+from ._modelo_support_matrix_payloads import (
+    ModeloPortalCompatibilityRefPayload,
+    ModeloRenamePayload,
+    ModeloSupportMatrixEntryPayload,
+)
+from .common import resolve_notice_action
+from .modelo_aux_payloads import ModeloRowPayload
 
 
 def data_inventory_casilla_payload(entry: DataInventoryCasilla) -> DataInventoryCasillaPayload:
@@ -78,7 +80,6 @@ def _profile_requirement_notice(checklist: DataInventoryChecklist) -> Notice | N
             code="modelo.requires.no_active_profile",
             message=tr(
                 "cli.app.modelo.requires.no_active_profile",
-                default="No active profile is set, so profile-dependent coefficients (e.g. home-office usage ratio) could not be checked for gaps.",
             ),
             context={"modelo": str(checklist.modelo)},
         )
@@ -91,7 +92,6 @@ def _profile_requirement_notice(checklist: DataInventoryChecklist) -> Notice | N
         code="modelo.requires.missing_profile_coefficient",
         message=tr(
             "cli.app.modelo.requires.missing_profile_coefficient",
-            default="The active profile has not set the following coefficient(s) needed for this modelo: {missing}.",
             missing=missing,
         ),
         context={"modelo": str(checklist.modelo), "missing_bindings": binding_ids},
@@ -163,7 +163,6 @@ def _relation_input_guidance_lines(rows: tuple[ModeloBindingQueryRow, ...]) -> t
         "relation_guidance\t"
         + tr(
             "cli.app.modelo.bindings.relation_input_guidance",
-            default="Some bindings below are fed by registry relations (cross-modelo or cross-period fold-ins), not direct --binding values. Supply each with --relation RELATION_ID=VALUE before calculating.",
         )
     ]
     for row in relation_fed:
@@ -172,7 +171,6 @@ def _relation_input_guidance_lines(rows: tuple[ModeloBindingQueryRow, ...]) -> t
                 "relation_input\t"
                 + tr(
                     "cli.app.modelo.bindings.relation_input_channel",
-                    default="{binding_id}\tfed by relation {relation_id}\tuse --relation {relation_id}=VALUE",
                     binding_id=str(row.binding_id),
                     relation_id=str(relation_id),
                 )
@@ -224,7 +222,7 @@ def _binding_list_rows_for_report(
     merged_rows: list[BindingListRowPayload] = []
     text_rows: list[str] = []
     for row in rows:
-        readiness = tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[row.source])
+        readiness = tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[row.provider.kind])
         encoded_options = binding_encoded_option_payloads(row.encoded_options)
         merged_rows.append(
             BindingListRowPayload(
@@ -233,7 +231,7 @@ def _binding_list_rows_for_report(
                 filing_year=report.filing_year,
                 period=report.period,
                 binding_id=row.binding_id,
-                source=row.source,
+                source=row.provider.kind,
                 readiness=readiness,
                 typed_enum=row.typed_enum,
                 input_channel=row.input_channel,
@@ -245,7 +243,7 @@ def _binding_list_rows_for_report(
             )
         )
         text_rows.append(
-            f"{report.code}\t{report.revision}\t{report.period or '-'}\t{row.binding_id}\t{row.source}\t{readiness}\t{row.typed_enum or '-'}\t{row.input_channel}\t{row.borrador_capable}"
+            f"{report.code}\t{report.revision}\t{report.period or '-'}\t{row.binding_id}\t{row.provider.kind}\t{readiness}\t{row.typed_enum or '-'}\t{row.input_channel}\t{row.borrador_capable}"
         )
         text_rows.extend(binding_encoded_option_lines(row.binding_id, encoded_options))
     if missing:

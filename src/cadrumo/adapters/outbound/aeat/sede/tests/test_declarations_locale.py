@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 
 from ......core.i18n.render import tr
-from ..declarations import _parse_listbox
+from .._declarations_listbox import _parse_listbox
 from ..errors import SedeNavigationError, SedeParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

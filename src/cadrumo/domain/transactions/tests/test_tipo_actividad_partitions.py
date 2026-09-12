@@ -18,13 +18,17 @@ from typing import cast
 import pytest
 
 from ....core.tipos_actividad import TipoActividad
-from ...calculations.registry.authority import ValidatedRegistryAuthority
-from ...calculations.registry.facts.resolution import ResolvedEntitySetFact, ResolvedScalarFact
+from ...calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from ...calculations.registry.facts.resolution import (
+    MappingFactQuery,
+    ResolvedEntitySetFact,
+    ResolvedMappingFact,
+    ResolvedScalarFact,
+)
 from ...calculations.registry.facts.schema import EntitySetFactPayload, FactOwnership, ScalarFactPayload
 from ...calculations.registry.schema_base import DateAxis
 from ..errors import TransactionValidationError
 from ..tipo_actividad_partitions import (
-    _ART_95_SELECTORS,
     _typed_code_set,
     load_tipo_actividad_selectors,
     resolve_tipo_actividad_selector,
@@ -32,6 +36,32 @@ from ..tipo_actividad_partitions import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _art_95_selector_ids(
+    *,
+    authority: ValidatedRegistryAuthority,
+    effective_date: date,
+) -> tuple[str, ...]:
+    """Read the article-95 selector cohort from the registry's M036 catalogue fact."""
+    resolved = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="m036-activity-selector-catalogue",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
+        ),
+    )
+    assert isinstance(resolved, ResolvedMappingFact)
+    selector_ids = tuple(
+        entry.value
+        for entry in resolved.payload.entries
+        if isinstance(entry.key, str)
+        and entry.key.startswith("selector.rirpf-art-95:")
+        and entry.key.endswith(".entity_set_fact_id")
+        and isinstance(entry.value, str)
+    )
+    assert selector_ids
+    return selector_ids
 
 
 def test_every_partition_is_declared_including_the_one_no_code_selects() -> None:
@@ -43,18 +73,27 @@ def test_every_partition_is_declared_including_the_one_no_code_selects() -> None
     no codes keeps the gap where a reader looks for the mapping; dropping the
     entry would make the file read as a complete partition of art. 95.
     """
-    selectors = load_tipo_actividad_selectors(effective_date=date(2026, 4, 1))
-    engorde = "rirpf-art-95:selector-m036-actividades-ganaderas-engorde-porcino-avicultura"
+    authority = bundled_authority()
+    selector_ids = _art_95_selector_ids(authority=authority, effective_date=date(2026, 4, 1))
+    selectors = load_tipo_actividad_selectors(selector_ids, effective_date=date(2026, 4, 1), authority=authority)
+    empty_selector_ids = tuple(fact_id for fact_id, codes in selectors.items() if not codes)
 
-    assert set(selectors) == set(_ART_95_SELECTORS)
-    assert selectors[engorde] == frozenset()
-    assert all(codes for fact_id, codes in selectors.items() if fact_id != engorde)
+    assert set(selectors) == set(selector_ids)
+    assert len(empty_selector_ids) == 1
+    assert selectors[empty_selector_ids[0]] == frozenset()
+    assert all(codes for fact_id, codes in selectors.items() if fact_id != empty_selector_ids[0])
 
 
 def test_no_code_selects_two_partitions() -> None:
     """A code selects at most one partition, so a rate lookup cannot be ambiguous."""
+    authority = bundled_authority()
+    selector_ids = _art_95_selector_ids(authority=authority, effective_date=date(2026, 4, 1))
     selected = [
-        code for codes in load_tipo_actividad_selectors(effective_date=date(2026, 4, 1)).values() for code in codes
+        code
+        for codes in load_tipo_actividad_selectors(
+            selector_ids, effective_date=date(2026, 4, 1), authority=authority
+        ).values()
+        for code in codes
     ]
 
     assert len(selected) == len(set(selected))
@@ -62,7 +101,13 @@ def test_no_code_selects_two_partitions() -> None:
 
 def test_every_selected_code_is_a_real_modelo_036_code() -> None:
     """Selectors draw from the closed code set, never a free-form token."""
-    for codes in load_tipo_actividad_selectors(effective_date=date(2026, 4, 1)).values():
+    authority = bundled_authority()
+    selector_ids = _art_95_selector_ids(authority=authority, effective_date=date(2026, 4, 1))
+    for codes in load_tipo_actividad_selectors(
+        selector_ids,
+        effective_date=date(2026, 4, 1),
+        authority=authority,
+    ).values():
         assert all(isinstance(code, TipoActividad) for code in codes)
 
 

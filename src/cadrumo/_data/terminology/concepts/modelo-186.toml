@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 186, declaració informativa de naixements i defuncions"
+
+[language.en]
+short_description = "Modelo 186, information return on births and deaths"
+
+[language.hu]
+short_description = "186-os modell: születések és halálesetek tájékoztató bevallása"
+

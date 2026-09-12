@@ -8,8 +8,11 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....core.aggregation import BindingAggregationOp, BindingSourceKind
-from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from .....core.aggregation import BindingAggregationOp
+from .....core.iva_deduction_fact import (
+    IvaDeductionEvidenceAuthority,
+    IvaDeductionFactKind,
+)
 from ....iva.flow import IvaFlowDirection
 from ....iva.schema import (
     IvaCashAccountingTreatment,
@@ -18,15 +21,20 @@ from ....iva.schema import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
+from ..binding_value_contract import (
+    BindingDataType,
+    BindingValueChannel,
+    BindingValueContract,
+)
 from ..errors import RegistryValidationError
 from ..ledger_iva_bindings import (
     IvaLedgerObservation,
-    _IvaLedgerSelector,
+    LedgerIvaProvider,
     resolve_ledger_iva_aggregation_binding_values,
     unsupported_ledger_iva_observations,
     validate_ledger_iva_aggregation_binding_definition,
 )
-from ..schema import DataBindingDefinition, ModeloRevision
+from ..schema import BindingDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
 from ._ledger_iva_aggregation_support import (
     _M303_AUTOREPERCUTIDO_INTERIOR_DEDUCIBLE_CASILLA,
@@ -42,13 +50,15 @@ from ._ledger_iva_aggregation_support import (
     _with_selector,
 )
 
+_MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_validate_accepts_canonical_iva_repercutido_binding() -> None:
     binding = _binding()
     assert binding.id == "modelo-303-iva-repercutido-general-cuota"
-    assert binding.selector, "binding must declare a selector for validation to be meaningful"
+    assert binding.provider, "binding must declare a selector for validation to be meaningful"
     result = validate_ledger_iva_aggregation_binding_definition(binding)
     assert result is None
 
@@ -80,7 +90,7 @@ def test_validate_rejects_wrong_source_kind() -> None:
         validate_ledger_iva_aggregation_binding_definition(binding)
 
 
-def _article_filter_binding(**selector_updates: object) -> DataBindingDefinition:
+def _article_filter_binding(**selector_updates: object) -> BindingDefinition:
     selector: dict[str, object] = {
         "categories": (IvaCategory.DOMESTIC_EXEMPT,),
         "exemption_articles": (IvaExemptionArticle.ART_20_UNO_14,),
@@ -95,16 +105,16 @@ def _article_filter_binding(**selector_updates: object) -> DataBindingDefinition
         ),
     }
     selector.update(selector_updates)
-    return DataBindingDefinition(
+    return BindingDefinition(
         id="test-art-20-base",
-        source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        selector=_IvaLedgerSelector.model_validate(selector),
+        provider=LedgerIvaProvider.model_validate(selector),
+        value=_MONEY_VALUE,
         legal_refs=("ley-37-1992:art-20",),
         source_refs=("test-source",),
     )
 
 
-def _minimal_revision_with_bindings(*bindings: DataBindingDefinition) -> ModeloRevision:
+def _minimal_revision_with_bindings(*bindings: BindingDefinition) -> ModeloRevision:
     return ModeloRevision(
         id="test-revision",
         localization_key="test.schema.revision.test-revision.label",

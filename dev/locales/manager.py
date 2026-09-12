@@ -21,7 +21,6 @@ from cadrumo.core.i18n.render import extract_placeholders
 from cadrumo.core.logging import get_logger
 from cadrumo.core.product_identity import normalise_product_identity_references
 
-from ._registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
 from ._revision_drift import RevisionMoveCandidate, classify_revision_moves
 from ._subtree_move import (
     LocaleMoveConflict,
@@ -325,10 +324,10 @@ class LocaleManager:
            :mod:`locales._command_spec_scanner`.
         5. Registry scanner — keys declared as data by a committed registry
            rather than by a Python call site: named literally by the category
-           profile registry, and derived from declared structure by the
-           user-profile schema. The first three paths read Python source
-           only, so these were invisible to every parity check and sat
-           unresolved in all four catalogues. See
+           profile fact, and derived from declared structure by the user-profile
+           and Modelo schemas. The first three paths read Python source only,
+           so these were invisible to every parity check and sat unresolved in
+           all four catalogues. See
            :mod:`locales._registry_scanner`.
 
         Dynamic namespaces (open-ended f-string and concatenation forms)
@@ -340,6 +339,7 @@ class LocaleManager:
 
         from ._ast_scanner import scan_source_tree
         from ._command_spec_scanner import scan_command_spec_keys
+        from ._registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
         from .fstring_registry import get_registered_keys
 
         if self._codebase_keys is not None:

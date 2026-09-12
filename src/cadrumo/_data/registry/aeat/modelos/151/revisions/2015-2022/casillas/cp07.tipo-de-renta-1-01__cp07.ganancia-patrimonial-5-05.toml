@@ -24,7 +24,6 @@ semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Descripción de la ganancia patrimonial
 [[revisions."2015-2022".casillas]]
@@ -38,7 +37,6 @@ semantic_role = "m151_descripcion-de-la-ganancia-patrimonial"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
@@ -52,7 +50,6 @@ semantic_role = "m151_naturaleza-2"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia patrimonial [3]
 [[revisions."2015-2022".casillas]]
@@ -66,7 +63,6 @@ semantic_role = "m151_ganancia-patrimonial-3"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Retención o ingreso a cuenta [4]
 [[revisions."2015-2022".casillas]]
@@ -80,7 +76,6 @@ semantic_role = "m151_retencion-o-ingreso-a-cuenta-4"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -94,7 +89,6 @@ semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Descripción de la ganancia patrimonial
 [[revisions."2015-2022".casillas]]
@@ -108,7 +102,6 @@ semantic_role = "m151_descripcion-de-la-ganancia-patrimonial"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
@@ -122,7 +115,6 @@ semantic_role = "m151_naturaleza-2"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia patrimonial [3]
 [[revisions."2015-2022".casillas]]
@@ -136,7 +128,6 @@ semantic_role = "m151_ganancia-patrimonial-3"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Retención o ingreso a cuenta [4]
 [[revisions."2015-2022".casillas]]
@@ -150,7 +141,6 @@ semantic_role = "m151_retencion-o-ingreso-a-cuenta-4"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -164,7 +154,6 @@ semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Descripción de la ganancia patrimonial
 [[revisions."2015-2022".casillas]]
@@ -178,7 +167,6 @@ semantic_role = "m151_descripcion-de-la-ganancia-patrimonial"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Naturaleza [2]
 [[revisions."2015-2022".casillas]]
@@ -192,7 +180,6 @@ semantic_role = "m151_naturaleza-2"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia patrimonial [3]
 [[revisions."2015-2022".casillas]]
@@ -206,7 +193,6 @@ semantic_role = "m151_ganancia-patrimonial-3"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Retención o ingreso a cuenta [4]
 [[revisions."2015-2022".casillas]]
@@ -220,7 +206,6 @@ semantic_role = "m151_retencion-o-ingreso-a-cuenta-4"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: RESTO. Ganancia patrimonial [3]
 [[revisions."2015-2022".casillas]]
@@ -233,7 +218,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: RESTO. Retención o ingreso a cuenta [4]
 [[revisions."2015-2022".casillas]]
@@ -246,7 +230,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Total ganancias patrimoniales [5]
 [[revisions."2015-2022".casillas]]
@@ -259,7 +242,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Total retencion o ingresos a cuenta [6]
 [[revisions."2015-2022".casillas]]
@@ -272,7 +254,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -286,7 +267,6 @@ semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Descripción del elemento patrimonial
 [[revisions."2015-2022".casillas]]
@@ -300,7 +280,6 @@ semantic_role = "m151_descripcion-del-elemento-patrimonial"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de transmisión
 [[revisions."2015-2022".casillas]]
@@ -314,7 +293,6 @@ semantic_role = "m151_fecha-de-transmision"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de adquisición
 [[revisions."2015-2022".casillas]]
@@ -328,7 +306,6 @@ semantic_role = "m151_fecha-de-adquisicion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de transmisión [2]
 [[revisions."2015-2022".casillas]]
@@ -342,7 +319,6 @@ semantic_role = "m151_valor-de-transmision-2"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de adquisición [3]
 [[revisions."2015-2022".casillas]]
@@ -356,7 +332,6 @@ semantic_role = "m151_valor-de-adquisicion-3"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Diferencia [4]
 [[revisions."2015-2022".casillas]]
@@ -370,7 +345,6 @@ semantic_role = "m151_diferencia-4"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia patrimonial [5]
 [[revisions."2015-2022".casillas]]
@@ -384,7 +358,6 @@ semantic_role = "m151_ganancia-patrimonial-5"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -398,7 +371,6 @@ semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Descripción del elemento patrimonial
 [[revisions."2015-2022".casillas]]
@@ -412,7 +384,6 @@ semantic_role = "m151_descripcion-del-elemento-patrimonial"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de transmisión
 [[revisions."2015-2022".casillas]]
@@ -426,7 +397,6 @@ semantic_role = "m151_fecha-de-transmision"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de adquisición
 [[revisions."2015-2022".casillas]]
@@ -440,7 +410,6 @@ semantic_role = "m151_fecha-de-adquisicion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de transmisión [2]
 [[revisions."2015-2022".casillas]]
@@ -454,7 +423,6 @@ semantic_role = "m151_valor-de-transmision-2"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de adquisición [3]
 [[revisions."2015-2022".casillas]]
@@ -468,7 +436,6 @@ semantic_role = "m151_valor-de-adquisicion-3"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Diferencia [4]
 [[revisions."2015-2022".casillas]]
@@ -482,7 +449,6 @@ semantic_role = "m151_diferencia-4"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia patrimonial [5]
 [[revisions."2015-2022".casillas]]
@@ -496,7 +462,6 @@ semantic_role = "m151_ganancia-patrimonial-5"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -510,7 +475,6 @@ semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Descripción del elemento patrimonial
 [[revisions."2015-2022".casillas]]
@@ -524,7 +488,6 @@ semantic_role = "m151_descripcion-del-elemento-patrimonial"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de transmisión
 [[revisions."2015-2022".casillas]]
@@ -538,7 +501,6 @@ semantic_role = "m151_fecha-de-transmision"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de adquisición
 [[revisions."2015-2022".casillas]]
@@ -552,7 +514,6 @@ semantic_role = "m151_fecha-de-adquisicion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de transmisión [2]
 [[revisions."2015-2022".casillas]]
@@ -566,7 +527,6 @@ semantic_role = "m151_valor-de-transmision-2"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de adquisición [3]
 [[revisions."2015-2022".casillas]]
@@ -580,7 +540,6 @@ semantic_role = "m151_valor-de-adquisicion-3"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Diferencia [4]
 [[revisions."2015-2022".casillas]]
@@ -594,7 +553,6 @@ semantic_role = "m151_diferencia-4"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia patrimonial [5]
 [[revisions."2015-2022".casillas]]
@@ -608,7 +566,6 @@ semantic_role = "m151_ganancia-patrimonial-5"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -622,7 +579,6 @@ semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Descripción del elemento patrimonial
 [[revisions."2015-2022".casillas]]
@@ -636,7 +592,6 @@ semantic_role = "m151_descripcion-del-elemento-patrimonial"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de transmisión
 [[revisions."2015-2022".casillas]]
@@ -650,7 +605,6 @@ semantic_role = "m151_fecha-de-transmision"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de adquisición
 [[revisions."2015-2022".casillas]]
@@ -664,7 +618,6 @@ semantic_role = "m151_fecha-de-adquisicion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de transmisión [2]
 [[revisions."2015-2022".casillas]]
@@ -678,7 +631,6 @@ semantic_role = "m151_valor-de-transmision-2"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de adquisición [3]
 [[revisions."2015-2022".casillas]]
@@ -692,7 +644,6 @@ semantic_role = "m151_valor-de-adquisicion-3"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Diferencia [4]
 [[revisions."2015-2022".casillas]]
@@ -706,7 +657,6 @@ semantic_role = "m151_diferencia-4"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia patrimonial [5]
 [[revisions."2015-2022".casillas]]
@@ -720,7 +670,6 @@ semantic_role = "m151_ganancia-patrimonial-5"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -734,7 +683,6 @@ semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Descripción del elemento patrimonial
 [[revisions."2015-2022".casillas]]
@@ -748,7 +696,6 @@ semantic_role = "m151_descripcion-del-elemento-patrimonial"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de transmisión
 [[revisions."2015-2022".casillas]]
@@ -762,7 +709,6 @@ semantic_role = "m151_fecha-de-transmision"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de adquisición
 [[revisions."2015-2022".casillas]]
@@ -776,7 +722,6 @@ semantic_role = "m151_fecha-de-adquisicion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de transmisión [2]
 [[revisions."2015-2022".casillas]]
@@ -790,7 +735,6 @@ semantic_role = "m151_valor-de-transmision-2"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de adquisición [3]
 [[revisions."2015-2022".casillas]]
@@ -804,7 +748,6 @@ semantic_role = "m151_valor-de-adquisicion-3"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Diferencia [4]
 [[revisions."2015-2022".casillas]]
@@ -818,7 +761,6 @@ semantic_role = "m151_diferencia-4"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia patrimonial [5]
 [[revisions."2015-2022".casillas]]
@@ -832,4 +774,3 @@ semantic_role = "m151_ganancia-patrimonial-5"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]

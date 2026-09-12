@@ -168,7 +168,7 @@ def _activity_start_date_for_period(period_token: str) -> date:
     return date(_YEAR, 4, 1)
 
 
-def _workflow_profile(*, redeme_enrolled: bool, activity_start_date: date) -> TaxpayerProfile:
+def workflow_profile(*, redeme_enrolled: bool, activity_start_date: date) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAX_ID,
         iva_regime=IVARegime.GENERAL,
@@ -282,7 +282,7 @@ def _calculate_negative_period(
     verification = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator",
-        workflow_profile=_workflow_profile(
+        workflow_profile=workflow_profile(
             redeme_enrolled=redeme_enrolled,
             activity_start_date=_activity_start_date_for_period(period_token),
         ),
@@ -324,7 +324,7 @@ def _file_period(
     file_modelo_revision(
         calculation_revision_id,
         actor="operator",
-        workflow_profile=_workflow_profile(
+        workflow_profile=workflow_profile(
             redeme_enrolled=redeme_enrolled,
             activity_start_date=_activity_start_date_for_period(work_unit.period.code),
         ),
@@ -343,7 +343,7 @@ def _file_period(
     return resolve_modelo_result_disposition(
         work_unit=work_unit,
         revision=revision,
-        workflow_profile=_workflow_profile(
+        workflow_profile=workflow_profile(
             redeme_enrolled=redeme_enrolled,
             activity_start_date=_activity_start_date_for_period(work_unit.period.code),
         ),

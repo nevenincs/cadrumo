@@ -13,9 +13,9 @@ from dataclasses import replace
 
 import pytest
 
-from cadrumo.application.filing.tests._export_support import (
-    _m151_producer_snapshot,
-    _modelo_151_export_coordinate_draft,
+from cadrumo.application.filing.tests.export_support import (
+    m151_producer_snapshot,
+    modelo_151_export_coordinate_draft,
 )
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.modelo import Modelo
@@ -52,8 +52,8 @@ def _m151_entry() -> FilingExportLiveProofEntry:
         design_epoch="2023",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "0A"),
-        draft=_modelo_151_export_coordinate_draft(),
-        producer_snapshot=_m151_producer_snapshot(),
+        draft=modelo_151_export_coordinate_draft(),
+        producer_snapshot=m151_producer_snapshot(),
         expected_payload_sha256="0" * 64,
         expected_emitted_bytes=1,
         official_offset_probes=(FilingExportOfficialOffsetProbe(record_id=_FIRST_RECORD, field_id=_FIRST_FIELD),),

@@ -20,7 +20,7 @@ from cadrumo.domain.calculations.registry.remote_state_guard import (
     assert_remote_operation_allowed,
     remote_state_policy_from_cross_reference,
 )
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkSurface
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -239,9 +239,9 @@ def test_modelo_100_payments_retentions_construct_covers_classified_payment_memb
     assert set(payments_retentions.bindings) == expected_bindings
     assert set(payments_retentions.relations) == expected_relations
     assert set(payments_retentions.dependency_classifications) == expected_classifications
-    assert "renta-2025-base-liquidable-negativa-general-anterior" not in payments_retentions.bindings
+    assert "renta-base-liquidable-negativa-general-anterior" not in payments_retentions.bindings
     assert (
-        "renta-2025-base-liquidable-negativa-general-anterior"
+        "renta-base-liquidable-negativa-general-anterior"
         in snapshot.constructs["renta-anexo-c-base-liquidable-negativa-general"].bindings
     )
 
@@ -249,7 +249,7 @@ def test_modelo_100_payments_retentions_construct_covers_classified_payment_memb
 def test_modelo_100_economic_activities_construct_pins_estimacion_directa_binding() -> None:
     snapshot = _modelo_100_snapshot()
     economic_activities = snapshot.constructs["renta-economic-activities"]
-    assert "renta-2025-modelo-100-estimacion-directa-es-normal" in economic_activities.bindings
+    assert "renta-modelo-100-estimacion-directa-es-normal" in economic_activities.bindings
     assert {"1479", "1553", "1577"}.issubset(economic_activities.casilla_ids)
 
 
@@ -273,7 +273,7 @@ _CASILLA_TO_PROFILE_BINDING: Mapping[CasillaId, str] = _binding_map_by_casilla(
     ("DPNIF_D", "renta-2025-profile-tax-id"),
     ("DP_APENOM_D", "renta-2025-profile-display-name"),
     ("ZCCAD", "renta-2025-profile-tax-residence-ccaa"),
-    ("TIPOTRIBUTACION", "renta-2025-profile-declaration-type"),
+    ("TIPOTRIBUTACION", "renta-profile-declaration-type"),
     ("SEXO_D", "renta-2025-profile-taxpayer-sex"),
     ("ECIVIL", "renta-2025-profile-marital-status"),
     ("DPFNAC_D", "renta-2025-profile-taxpayer-birth-date"),
@@ -288,7 +288,7 @@ _CASILLA_TO_PROFILE_BINDING: Mapping[CasillaId, str] = _binding_map_by_casilla(
     ("RESIDENTEUE", "renta-2025-profile-spouse-eu-eea-resident"),
     ("ZRUE2", "renta-2025-profile-spouse-eu-eea-country"),
     ("HIJOSUE", "renta-2025-profile-family-descendants-eu-eea-deduction"),
-    ("PH18", "renta-2025-profile-family-minor-children-in-unit"),
+    ("PH18", "renta-profile-family-minor-children-in-unit"),
     ("NIFDLG", "renta-2025-family-descendant-tax-id"),
     ("APENOMDLG", "renta-2025-family-descendant-display-name"),
     ("FNACDLG", "renta-2025-family-descendant-birth-date"),
@@ -311,7 +311,7 @@ Adding a new profile-bound casilla means adding one row here.
 
 _PROFILE_KEY_BINDINGS: tuple[str, ...] = (
     "renta-2025-profile-tax-id",
-    "renta-2025-profile-declaration-type",
+    "renta-profile-declaration-type",
     "renta-2025-profile-taxpayer-sex",
     "renta-2025-profile-marital-status",
     "renta-2025-profile-taxpayer-birth-date",
@@ -325,7 +325,7 @@ _PROFILE_KEY_BINDINGS: tuple[str, ...] = (
     "renta-2025-profile-spouse-eu-eea-resident",
     "renta-2025-profile-spouse-eu-eea-country",
     "renta-2025-profile-family-descendants-eu-eea-deduction",
-    "renta-2025-profile-family-minor-children-in-unit",
+    "renta-profile-family-minor-children-in-unit",
 )
 """Bindings whose selector carries a single ``profile_key`` (vs ``profile_keys`` tuple)."""
 
@@ -369,7 +369,7 @@ def test_modelo_100_personal_family_profile_bindings_target_profile_schema() -> 
     _assert_family_row_selectors(bindings_by_id, casillas_by_id)
 
 
-def _assert_profile_bindings_present(bindings_by_id: Mapping[str, DataBindingDefinition]) -> None:
+def _assert_profile_bindings_present(bindings_by_id: Mapping[str, BindingDefinition]) -> None:
     """Every casilla-mapped profile binding is declared on the snapshot."""
     missing = set(_CASILLA_TO_PROFILE_BINDING.values()) - bindings_by_id.keys()
     assert not missing, f"missing profile bindings: {sorted(missing)}"
@@ -396,7 +396,7 @@ def _assert_casillas_are_bound_input(casillas_by_id: Mapping[CasillaId, CasillaD
 
 
 def _assert_selector_profile_keys(
-    bindings_by_id: Mapping[str, DataBindingDefinition],
+    bindings_by_id: Mapping[str, BindingDefinition],
     *,
     profile_keys: set[str],
 ) -> None:
@@ -410,7 +410,7 @@ def _assert_selector_profile_keys(
         assert not unknown, f"{binding_id}: selector profile_keys outside known set: {sorted(unknown)}"
 
 
-def _assert_spouse_joint_gating(bindings_by_id: Mapping[str, DataBindingDefinition]) -> None:
+def _assert_spouse_joint_gating(bindings_by_id: Mapping[str, BindingDefinition]) -> None:
     """Spouse-only bindings gate on declaration type 2 (joint)."""
     for binding_id in _SPOUSE_REQUIRED_BINDINGS:
         selector = selector_as_dict(bindings_by_id[binding_id])
@@ -422,7 +422,7 @@ def _assert_spouse_joint_gating(bindings_by_id: Mapping[str, DataBindingDefiniti
         )
 
 
-def _assert_eu_eea_gating(bindings_by_id: Mapping[str, DataBindingDefinition]) -> None:
+def _assert_eu_eea_gating(bindings_by_id: Mapping[str, BindingDefinition]) -> None:
     """The two EU-EEA bindings chain their gating predicates correctly."""
     eu_resident_selector = selector_as_dict(bindings_by_id["renta-2025-profile-spouse-eu-eea-resident"])
     assert eu_resident_selector["required_when_profile_key"] == "renta_spouse.non_resident_irpf"
@@ -432,7 +432,7 @@ def _assert_eu_eea_gating(bindings_by_id: Mapping[str, DataBindingDefinition]) -
     assert eu_country_selector["required_when_value"] == "true"
 
 
-def _assert_tax_residence_selector(bindings_by_id: Mapping[str, DataBindingDefinition]) -> None:
+def _assert_tax_residence_selector(bindings_by_id: Mapping[str, BindingDefinition]) -> None:
     """The tax-residence-ccaa binding's selector targets the TaxResidenceProfile model."""
     selector = selector_as_dict(bindings_by_id["renta-2025-profile-tax-residence-ccaa"])
     assert selector["profile_model"] == "TaxResidenceProfile"
@@ -440,7 +440,7 @@ def _assert_tax_residence_selector(bindings_by_id: Mapping[str, DataBindingDefin
 
 
 def _assert_family_row_selectors(
-    bindings_by_id: Mapping[str, DataBindingDefinition],
+    bindings_by_id: Mapping[str, BindingDefinition],
     casillas_by_id: Mapping[CasillaId, CasillaDefinition],
 ) -> None:
     """Family-row bindings address a repeating collection + field pair on RentaFamilyProfile."""
@@ -501,7 +501,7 @@ def test_modelo_100_constructs_declare_their_revision_members() -> None:
 
     assert set(_members_of_kind(dependencies, "binding")) == filed_dependency_binding_ids
     assert set(_members_of_kind(dependencies, "relation")) == {relation.id for relation in revision.relations}
-    assert "renta-2025-modelo-100-estimacion-directa-es-normal" in _members_of_kind(economic_activities, "binding")
+    assert "renta-modelo-100-estimacion-directa-es-normal" in _members_of_kind(economic_activities, "binding")
 
 
 def test_modelo_100_renta_section_constructs_classify_registered_relation_sources() -> None:

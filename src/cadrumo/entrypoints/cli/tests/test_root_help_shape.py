@@ -28,13 +28,13 @@ from ._profile_storage_fixtures import isolated_profile_storage
 
 __all__ = ["isolated_profile_storage"]
 
-from .... import __version__
 from ....application.operator_surface.help import build_help_document
 from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import Settings, load_settings
 from ....core.config_support import SecretStoreBackend
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
+from ....core.package_version import PACKAGE_VERSION as __version__
 from ....core.product_identity import PRODUCT_IDENTITY
 from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.user_profile import register_minimal_profile

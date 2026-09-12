@@ -20,7 +20,7 @@ import pytest
 
 from ...core.errors.error_codes import render_error_text
 from ...domain.retention.errors import RetentionFloorError
-from .._bucket_deletion_contracts import BucketDeletionFingerprint
+from ..bucket_deletion_contracts import BucketDeletionFingerprint
 from ..config_reset import _refuse_erase_inside_the_retention_floor
 from ..config_reset_models import (
     ConfigResetRetentionDecision,

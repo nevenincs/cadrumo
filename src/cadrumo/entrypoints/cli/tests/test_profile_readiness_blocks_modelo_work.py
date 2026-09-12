@@ -191,7 +191,7 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
             "--format", "json", "app", "modelo", "work", "calculate",
             "--modelo", "100", "--year", "2025", "--period", "0A",
             "--casilla", "0003=27000", "--casilla", "0102=8400",
-            "--binding", "renta-2025-base-liquidable-negativa-general-anterior=0",
+            "--binding", "renta-base-liquidable-negativa-general-anterior=0",
         ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
@@ -272,8 +272,8 @@ def test_economic_activity_m100_still_requires_the_direct_estimation_modality() 
             "app", "modelo", "work", "calculate",
             "--modelo", "100", "--year", "2025", "--period", "0A",
             "--casilla", "0003=27000",
-            "--binding", "renta-2025-base-liquidable-negativa-general-anterior=0",
+            "--binding", "renta-base-liquidable-negativa-general-anterior=0",
         ],
     )  # fmt: skip
     assert calculated.exit_code == 2, calculated.output
-    assert "renta-2025-modelo-100-estimacion-directa-es-normal" in calculated.output
+    assert "renta-modelo-100-estimacion-directa-es-normal" in calculated.output

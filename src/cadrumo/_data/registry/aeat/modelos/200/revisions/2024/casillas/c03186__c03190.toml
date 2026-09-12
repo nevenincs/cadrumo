@@ -7,7 +7,6 @@ semantic_role = "is_correccion_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-102"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03187"
 number = "03187"
@@ -17,7 +16,6 @@ semantic_role = "is_erd_libertad_amortizacion_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-102"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03188"
 number = "03188"
@@ -27,7 +25,6 @@ semantic_role = "is_erd_libertad_amortizacion_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-102"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03189"
 number = "03189"
@@ -37,7 +34,6 @@ semantic_role = "is_erd_libertad_amortizacion_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-102"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "03190"
 number = "03190"
@@ -47,4 +43,3 @@ semantic_role = "is_erd_libertad_amortizacion_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-102"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.calculations.relation_prefill import _absent_bound_carry_diagnostics
+from ....application.calculations import relation_prefill
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.relations import relation_source_requirements
 from .._modelo_rendering import source_diagnostic_notice
@@ -57,7 +57,7 @@ def _m200_bound_carry_diagnostics():
         "this gate needs at least two same-modelo carries on the M200 revision to compare; "
         f"found {sorted(self_carries)}"
     )
-    return _absent_bound_carry_diagnostics(
+    return relation_prefill._absent_bound_carry_diagnostics(
         unresolved_relation_ids=self_carries,
         requirements_by_relation=requirements_by_relation,
         relation_target_binding=target_binding,

@@ -19,9 +19,8 @@ casilla-side payloads (``CasillaRowPayload`` in
 
 See Also:
     :mod:`~entrypoints.cli._modelo_payloads`
-        Re-imports every class from this module so existing
-        ``from ._modelo_payloads import BindingListRowPayload`` (etc.) call
-        sites keep resolving unchanged.
+        Holds the remaining modelo payload families; bindings payloads are
+        consumed directly from this focused module.
 """
 
 from __future__ import annotations

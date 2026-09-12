@@ -8,7 +8,7 @@ from typing import ClassVar, override
 
 from textual.widgets import DataTable, Static
 
-from ....core.identity import TransactionId
+from ....core.identity.transaction_ids import TransactionId
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
 from .models import LedgerFlowState

@@ -1,7 +1,6 @@
 """Import-light root package for Cadrumo.
 
-The package root exposes only the distribution ``__version__``. Concrete
-capabilities live behind layer facades: :mod:`core` for shared primitives
+Concrete capabilities live behind layer facades: :mod:`core` for shared primitives
 and runtime context, :mod:`domain` for business authorities,
 :mod:`application` for use-case orchestration, :mod:`adapters` for
 inbound, outbound, and persistence infrastructure, and :mod:`entrypoints`
@@ -12,6 +11,10 @@ materialise browser/PDF integrations. The ``pikepdf._core`` bridge logger is
 silenced via the ``loggers`` block in
 :func:`core.logging.configure_logging` rather than by bootstrap-time side
 effects here, keeping logger policy in one auditable location.
+
+The root deliberately exports no runtime symbols. Import the canonical
+defining module for each capability instead of treating this package as a
+barrel; this keeps importing ``cadrumo`` inert.
 
 See Also:
     :mod:`core.resources`
@@ -24,4 +27,6 @@ See Also:
         Backend-owned capability contract for operator and automation surfaces.
 """
 
-__version__ = "0.5.1"
+from __future__ import annotations
+
+__all__: tuple[str, ...] = ()

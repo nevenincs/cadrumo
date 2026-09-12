@@ -6,6 +6,10 @@ from dataclasses import dataclass
 from typing import Literal, cast
 
 from ...core.aggregation import BindingSourceKind
+from ...domain.calculations.registry.binding_provider_registration import (
+    BINDING_PROVIDER_REGISTRATIONS,
+    RouteOwnership,
+)
 from ..aggregation.atribucion_member import AtribucionMemberSourceResolver
 from ..aggregation.foreign_assets import ForeignAssetsAggregationSourceResolver
 from ..aggregation.inventory import InventorySourceResolver
@@ -286,8 +290,81 @@ def validate_calculation_route_resolver_ownership(
 
 validate_calculation_route_resolver_ownership(CALCULATION_ROUTE_RESOLVER_OWNERSHIP)
 
-CALCULATION_ROUTE_ENROLLED_SOURCES = frozenset(
-    source for row in CALCULATION_ROUTE_RESOLVER_OWNERSHIP for source in row.owned_sources
+MESH_ONLY_SOURCES: frozenset[BindingSourceKind] = frozenset(
+    {BindingSourceKind.BORRADOR, BindingSourceKind.IVA_WALLET_DECISION},
+)
+"""The two routed sources no registry row may declare.
+
+They own a resolver but are absent from the binding provider union on purpose:
+an AEAT borrador value and a wallet decision arrive at runtime, so "not a
+registry binding source" is a type error rather than a hand-written refusal.
+They are therefore the only sources the route may own without a registration.
+"""
+
+
+def _route_owner_by_source(
+    ownership: tuple[CalculationRouteOwnership, ...],
+) -> dict[BindingSourceKind, tuple[str, CalculationRouteStage]]:
+    return {source_kind: (row.resolver_id, row.stage) for row in ownership for source_kind in row.owned_sources}
+
+
+def _require_registered_route_agreement(
+    routed: dict[BindingSourceKind, tuple[str, CalculationRouteStage]],
+) -> None:
+    for kind, registration in BINDING_PROVIDER_REGISTRATIONS.items():
+        declared = routed.get(kind)
+        if isinstance(registration.route, RouteOwnership):
+            expected = (registration.route.resolver_id, registration.route.stage)
+            if declared is None:
+                raise RuntimeError(f"binding provider {kind.value!r} claims route owner {expected!r} but is unrouted")
+            if declared != expected:
+                raise RuntimeError(
+                    f"binding provider {kind.value!r} declares route {expected!r} "
+                    f"but the calculation route owns it at {declared!r}",
+                )
+            continue
+        if declared is not None:
+            raise RuntimeError(
+                f"binding provider {kind.value!r} declares no runtime owner but the calculation "
+                f"route owns it at {declared!r}",
+            )
+
+
+def _require_no_unregistered_route_sources(
+    routed: dict[BindingSourceKind, tuple[str, CalculationRouteStage]],
+) -> None:
+    unregistered = frozenset(routed) - frozenset(BINDING_PROVIDER_REGISTRATIONS)
+    if unregistered != MESH_ONLY_SOURCES:
+        raise RuntimeError(
+            "the calculation route may own exactly the mesh-only sources without a binding registration; "
+            f"found {sorted(kind.value for kind in unregistered)}",
+        )
+
+
+def validate_calculation_route_against_binding_registrations(
+    ownership: tuple[CalculationRouteOwnership, ...],
+) -> frozenset[BindingSourceKind]:
+    """Refuse any disagreement between the route table and the registration table.
+
+    The binding registrations are the enrollment authority and carry each kind's
+    resolver id and stage; the route table is where those resolvers actually
+    live. Only this module sees both, because the domain registration table must
+    not import application code, so the join is asserted here at import time and
+    a drift in either direction -- a registration naming a route that does not
+    exist, a deferred kind that turns out to be routed, or a routed source with
+    no registration at all -- refuses before anything resolves.
+
+    Returns the enrolled source set, so the published constant cannot be built
+    from an unverified table.
+    """
+    routed = _route_owner_by_source(ownership)
+    _require_registered_route_agreement(routed)
+    _require_no_unregistered_route_sources(routed)
+    return frozenset(routed)
+
+
+CALCULATION_ROUTE_ENROLLED_SOURCES = validate_calculation_route_against_binding_registrations(
+    CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
 )
 CALCULATION_ROUTE_PRE_MESH_SOURCES = frozenset(
     source for row in CALCULATION_ROUTE_RESOLVER_OWNERSHIP if row.stage == "pre_mesh" for source in row.owned_sources
@@ -317,10 +394,12 @@ __all__ = [
     "CALCULATION_ROUTE_RESOLVER_OWNERSHIP",
     "DESIGN_CONSTANT_RESOLVER_ID",
     "MANUAL_INPUT_RESOLVER_ID",
+    "MESH_ONLY_SOURCES",
     "CalculationRouteDesignConstantOwnership",
     "CalculationRouteManualOwnership",
     "CalculationRouteResolverOwnership",
     "CalculationRouteStage",
     "require_calculation_route_resolver",
+    "validate_calculation_route_against_binding_registrations",
     "validate_calculation_route_resolver_ownership",
 ]

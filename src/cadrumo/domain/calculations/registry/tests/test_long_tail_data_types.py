@@ -13,7 +13,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ....deadlines.festivos import CalendarCCAA
-from ..schema import (
+from ..schema_scalars import (
     BicString,
     CalendarDate,
     CCAACode,

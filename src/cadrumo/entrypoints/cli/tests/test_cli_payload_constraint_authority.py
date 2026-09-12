@@ -70,7 +70,7 @@ RECONCILED_MODULES: frozenset[str] = frozenset(
         "_app_live_justificante_payloads.py",
         "_app_live_borrador_payloads.py",
         "_app_live_notifications_payloads.py",
-        "config/_profile_list_payloads.py",
+        "config/profile_list_payloads.py",
         "_config_bucket_history_payloads.py",
         "_diagnostics_payloads.py",
         "ledger_business_payloads.py",
@@ -81,16 +81,16 @@ RECONCILED_MODULES: frozenset[str] = frozenset(
         "_modelo_spreadsheet_payloads.py",
         "_modelo_work_wizard_payloads.py",
         "_app_live_iva_wallet_payloads.py",
-        "config/_storage_payloads.py",
+        "config/storage_payloads.py",
         "config/_archive_reconcile_payloads.py",
-        "config/_check_payloads.py",
-        "config/_provision_payloads.py",
+        "config/check_payloads.py",
+        "config/provision_payloads.py",
         "_ledger_counterparty_payloads.py",
         "_payloads_modelo_reconcile.py",
         "_registry_payloads.py",
         "_ledger_rule_payloads.py",
         "config/_censo_payloads.py",
-        "config/_collab_payloads.py",
+        "config/collab_payloads.py",
         "config/_google_credential_source_payloads.py",
         "_root_payloads.py",
         "_ledger_ratios_payloads.py",
@@ -110,7 +110,7 @@ RECONCILED_MODULES: frozenset[str] = frozenset(
 # there is no backend model they could restate, so projecting them elsewhere
 # would invent a domain concept rather than honour one.
 EXEMPT_MODULES: dict[str, str] = {
-    "_verb_input_schema.py": (
+    "verb_input_schema.py": (
         "the verb input schema describes the CLI's own parameter grammar; "
         "no application or domain model declares a command's leaf key"
     ),

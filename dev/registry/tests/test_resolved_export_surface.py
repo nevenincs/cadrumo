@@ -14,7 +14,7 @@ from datetime import date
 
 import pytest
 
-from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.filing_projection_ref import (
     M303ProrrataActivityProjectionField,
@@ -23,7 +23,7 @@ from cadrumo.core.filing_projection_ref import (
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
@@ -31,7 +31,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     ExportRecordDefinition,
 )
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingSelector
+from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingProvider
 
 from ..maintenance_support import resolved_export_casillas, resolved_export_endpoints, resolved_export_fields
 
@@ -84,7 +84,7 @@ def _projection_field() -> ExportFieldDefinition:
 
 
 def _three_path_revision() -> ModeloRevision:
-    selector = WithholdingSelector.model_validate(
+    selector = WithholdingProvider.model_validate(
         {
             "fact": "row_field",
             "record": "perceptor",
@@ -92,10 +92,10 @@ def _three_path_revision() -> ModeloRevision:
             "grouping": "per_perceptor",
         }
     )
-    binding = DataBindingDefinition(
+    binding = BindingDefinition(
         id="binding.rows",
-        source=BindingSourceKind.WITHHOLDING,
-        selector=selector,
+        provider=selector,
+        value={"data_type": "money", "channel": "row_set", "row_grouping": "withholding"},
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),

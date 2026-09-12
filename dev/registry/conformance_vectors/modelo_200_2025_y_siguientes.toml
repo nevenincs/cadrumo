@@ -26,7 +26,7 @@ layout_ids = ["generated-modelo-200-2025-y-siguientes-fichero"]
 # a synthetic NON-ZERO magnitude deliberately, so the cuota chain is actually
 # exercised; a zero here would render a degenerate base and prove far less.
 "00501" = "100000"
-"modelo-200-2024-profile-new-entity-flag" = "0"
+"modelo-200-profile-new-entity-flag" = "0"
 # INCN of the preceding 12 months. NOT a neutral zero: this value selects the
 # tipo de gravamen branch outright. Below one million euros LIS DT 44a gives
 # the transitional microempresa scale (21%/22% for 2025); below ten million it
@@ -35,11 +35,11 @@ layout_ids = ["generated-modelo-200-2025-y-siguientes-fichero"]
 # the GENERAL art. 29 rate of 25% apply. This value clears that ceiling, so the
 # general branch is the one exercised, and it is coherent with the declared
 # 00501 result.
-"modelo-200-2024-profile-incn-prior-12-months" = "12000000"
-"modelo-200-2024-profile-tributacion-estado-porcentaje" = "100"
-"modelo-200-2024-bin-pendiente-ejercicios-anteriores" = "0"
-"modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores" = "0"
-"modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores" = "0"
+"modelo-200-profile-incn-prior-12-months" = "12000000"
+"modelo-200-profile-tributacion-estado-porcentaje" = "100"
+"modelo-200-bin-pendiente-ejercicios-anteriores" = "0"
+"modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores" = "0"
+"modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores" = "0"
 "modelo-200-2024-rel-202-pagos-fraccionados" = "0"
 "modelo-200-2024-rel-202-pagos-fraccionados-40-2" = "0"
 "modelo-200-2024-rel-self-bin-pendiente-anterior" = "0"

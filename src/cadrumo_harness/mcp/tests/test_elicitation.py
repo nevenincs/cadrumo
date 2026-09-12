@@ -21,7 +21,7 @@ from .._elicitation import (
     refusal_message,
     resolve_confirm_route,
 )
-from .._hitl import ConfirmationPolicy
+from ..hitl import ConfirmationPolicy
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -16,3 +16,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 037, declaració censal simplificada d'alta, modificació i baixa, avui substituïda pel model 036"
+
+[language.en]
+short_description = "Modelo 037, simplified census registration, amendment, and deregistration return, now superseded by Modelo 036"
+
+[language.hu]
+short_description = "037-es modell: egyszerűsített bejelentés a cenzusba való bejelentkezésről, módosításról és kijelentkezésről, amelyet ma a 036-os modell vált fel"
+

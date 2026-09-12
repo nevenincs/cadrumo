@@ -41,7 +41,7 @@ from .....tests.inventory import FIXTURES_DIR as _FIXTURES_ROOT
 from .....tests.justificante_parse_cache import parse_committed_justificante_fixture
 from .....tests.pdf_fixtures import text_pdf_bytes
 from ...pdf.source_provenance import source_pdf_reference_path
-from .._parsers.text_extraction import _TEXT_CACHE, extract_text
+from .._parsers.text_extraction import TEXT_CACHE, extract_text
 from ..parser import parse_justificante, parse_justificante_bytes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -355,11 +355,11 @@ class TestParserDispatch:
         assert exc_info.value.missing == ("source_pdf",)
 
     def test_extract_text_cache_key_omits_source_path(self, modelo_130_pdf: Path) -> None:
-        _TEXT_CACHE.clear()
+        TEXT_CACHE.clear()
 
         text = extract_text(modelo_130_pdf, JustificanteParserBackend.PDFPLUMBER)
 
-        rendered_keys = repr(tuple(_TEXT_CACHE.keys()))
+        rendered_keys = repr(tuple(TEXT_CACHE.keys()))
         assert text
         assert modelo_130_pdf.name not in rendered_keys
         assert str(modelo_130_pdf.resolve()) not in rendered_keys

@@ -47,10 +47,10 @@ from ....domain.calculations.registry.tests.registry_observations import registr
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
-    CalculationRevisionAmendmentKind,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ....domain.modelos.filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,

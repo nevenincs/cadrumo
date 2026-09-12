@@ -30,7 +30,7 @@ from ....domain.modelos.row_models import (
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
 )
-from ...operations.registry import _strict_model_json_schema, _validate_credential_free_schema
+from ...operations.registry_schema_validation import strict_model_json_schema, validate_credential_free_schema
 from ..edit_models import ModeloEditDetailRowIntentKind
 from ..edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR, detail_row_natural_key
 from ..operation_definitions import (
@@ -380,13 +380,13 @@ def test_the_credential_free_check_still_refuses_a_free_form_key_field() -> None
         natural_key: Annotated[str, Field(min_length=1, max_length=256)]
 
     with pytest.raises(ValueError, match="forbidden security meaning"):
-        _validate_credential_free_schema(_strict_model_json_schema(AddressCarryingTheJoinedKey))
+        validate_credential_free_schema(strict_model_json_schema(AddressCarryingTheJoinedKey))
 
 
 def test_the_admitted_request_type_carries_the_detail_row_family() -> None:
     """The real registered request type is admitted WITH detail rows on it."""
-    schema = _strict_model_json_schema(ModeloEditApplyOperationRequestV1)
-    _validate_credential_free_schema(schema)
+    schema = strict_model_json_schema(ModeloEditApplyOperationRequestV1)
+    validate_credential_free_schema(schema)
 
     submission = ModeloEditApplySubmissionV1.model_fields
     assert "detail_row_intents" in submission

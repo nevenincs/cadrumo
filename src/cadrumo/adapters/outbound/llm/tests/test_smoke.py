@@ -1,5 +1,8 @@
 """Smoke tests for the :mod:`cadrumo.adapters.outbound.llm` subpackage."""
 
+import ast
+from pathlib import Path
+
 import pytest
 
 from ..cache import LLMCache
@@ -14,9 +17,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 def test_llm_package_initializer_is_inert() -> None:
     """The package namespace does not bind a second public surface."""
-    from .. import __all__ as llm_all
-
-    assert llm_all == ()
+    initializer = Path(__file__).resolve().parents[1] / "__init__.py"
+    tree = ast.parse(initializer.read_text(encoding="utf-8"))
+    all_assignment = next(
+        node
+        for node in tree.body
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "__all__"
+    )
+    assert isinstance(all_assignment.value, ast.Tuple)
+    assert not all_assignment.value.elts
 
 
 def test_smoke_llm_key_symbols_are_importable() -> None:

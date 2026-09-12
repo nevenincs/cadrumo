@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .._restore_cli import RestorePassphraseSecrets, RestoreRecoverySecrets
+from ..restore_cli import RestorePassphraseSecrets, RestoreRecoverySecrets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

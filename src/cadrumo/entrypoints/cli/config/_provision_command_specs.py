@@ -40,7 +40,7 @@ def _handler(name: str) -> LazyBinding:
 def _schema(name: str, identity: str) -> ResultSchemaSpec:
     return ResultSchemaSpec(
         SchemaState.TARGET,
-        target=DeferredTarget("._provision_payloads", name, __package__),
+        target=DeferredTarget(".provision_payloads", name, __package__),
         identity=identity,
     )
 

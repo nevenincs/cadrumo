@@ -38,11 +38,20 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.application.overview.home import HOME_ACTION_REASON_CODES
+from cadrumo.application.user_profile.validation import PROFILE_VALIDATION_ISSUE_CODES
+from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
+from cadrumo.application.wizard.widgets import WIZARD_VALIDATION_REASON_CODES
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.errors.error_codes import ERROR_CONTEXT_LABEL_KEYS
+from cadrumo.domain.auth.apoderamientos.catalogue import load_default_catalogue
 from cadrumo.domain.user_profile.values import ProfileSetupState
+from dev.docs.terminology_handbook.topics import load_topic_catalogue
 
+from .. import _registry_scanner
 from .._ast_scanner import scan_namespace_markers, scan_source_tree
 from .._paths import SRC_DIR
+from .._registry_scanner import LocaleRegistryEnumerationError, scan_detail_row_fields
 from ..fstring_registry import get_registered_keys
 from ..manager import LocaleManager, locale_catalogue_source
 from ..wizard_translation_audit import wizard_descriptor_keys
@@ -84,58 +93,7 @@ def _catalogue_payload(locale: str) -> dict[str, object]:
 #
 # This allowlist ratchets: adding a line is a reviewed edit that must state why
 # the namespace is genuinely open-ended.
-OPEN_ENDED_NAMESPACES: dict[str, str] = {
-    "tui.home.reason": (
-        "tui.home.reason.{item.reason_code} -- the reason code travels on a "
-        "projected workbench item, not an enum the scanner can import, and the "
-        "call site is written to survive that: it renders the key, compares the "
-        "result against the key, and falls back to the generic action line when "
-        "nothing resolved. An unregistered code degrades to honest copy rather "
-        "than to a leaked identifier, so the space cannot be closed at import "
-        "time and does not need to be."
-    ),
-    "profile.keys": (
-        "profile.keys.{question.profile_key} — keyed by the wizard question's "
-        "profile fact path (application/wizard/compiler.py). The fact-path "
-        "space is the open-ended profile schema, not a bounded enum."
-    ),
-    "profile.validation": (
-        "profile.validation.{issue.code} — keyed by profile-readiness issue "
-        "codes surfaced at runtime (application/modelo/profile_readiness_gate.py). "
-        "Issue codes are raised ad hoc by the readiness gate, not a bounded enum."
-    ),
-    "errors.context_labels": (
-        "errors.context_labels.{key} — keyed by context dict keys in error formatting "
-        "(_text_context_label in core/errors/_registry.py). Context keys are open-ended."
-    ),
-    "cli.registry.metrics": (
-        "cli.registry.metrics.{key} — keyed by runtime registry-metric names "
-        "(entrypoints/cli/registry.py). Metric keys are computed from live "
-        "registry state, not a bounded enum."
-    ),
-    "cli.config.auth.apoderado.scope": (
-        "cli.config.auth.apoderado.scope.{code} — keyed by apoderado scope "
-        "catalogue codes (entrypoints/cli/config/_apoderado.py). The scope "
-        "vocabulary is loaded from data, not a bounded import-time enum."
-    ),
-    "sheets.detalle.headers": (
-        "sheets.detalle.headers.{row_field} — keyed by binding row-field names "
-        "with a tr(..., default=binding.id) fallback "
-        "(application/storage/calc_sheets/engine.py). The header space is "
-        "binding-driven and the default makes a catalogue leaf optional."
-    ),
-    "topic": (
-        "topic.{slug}.title / topic.{slug}.body — keyed by topic slugs loaded "
-        "from the bundled topic data files (core/topics/__init__.py). Slugs are "
-        "data-driven, not a bounded import-time enum."
-    ),
-    "wizard.errors": (
-        "wizard.errors.{reason} — keyed by ad-hoc reason tokens passed at "
-        "widget-validation call sites (application/wizard/widgets.py). The "
-        "reason strings are literals chosen per call site, authored directly in "
-        "the catalogues, not a bounded import-time enum."
-    ),
-}
+OPEN_ENDED_NAMESPACES: dict[str, str] = {}
 
 
 def _marker_prefix(marker: str) -> str:
@@ -230,6 +188,52 @@ def test_allowlist_entries_are_live_and_reasoned() -> None:
         "OPEN_ENDED_NAMESPACES prefix(es) are now registry-covered; drop the "
         f"allowlist entry and rely on the registration: {redundant}"
     )
+
+
+def test_dynamic_family_registrations_match_their_producer_sources() -> None:
+    """Every formerly-unbounded family expands from its real producer set."""
+    profile_keys = {
+        question.profile_key
+        for flow in WIZARD_FLOWS
+        for section in flow.sections
+        for question in section.questions
+        if question.profile_key is not None
+    }
+    scope_codes = {scope.code.lower() for scope in load_default_catalogue().scopes}
+    topic_slugs = {topic.slug for topic in load_topic_catalogue().topics}
+    expected = {
+        "cli.config.auth.apoderado.scope": {f"cli.config.auth.apoderado.scope.{value}" for value in scope_codes},
+        "errors.context_labels": {f"errors.context_labels.{value}" for value in ERROR_CONTEXT_LABEL_KEYS},
+        "profile.keys": {f"profile.keys.{value}" for value in profile_keys},
+        "profile.validation": {f"profile.validation.{value}" for value in PROFILE_VALIDATION_ISSUE_CODES},
+        "sheets.detalle.headers": {f"sheets.detalle.headers.{value}" for value in scan_detail_row_fields()},
+        "topic": {
+            *(f"topic.{value}.title" for value in topic_slugs),
+            *(f"topic.{value}.body" for value in topic_slugs),
+        },
+        "tui.home.reason": {f"tui.home.reason.{value}" for value in HOME_ACTION_REASON_CODES},
+        "wizard.errors": {f"wizard.errors.{value}" for value in WIZARD_VALIDATION_REASON_CODES},
+    }
+    registered = frozenset(get_registered_keys())
+    for prefix, source_keys in expected.items():
+        actual = {key for key in registered if key.startswith(f"{prefix}.")}
+        assert actual == source_keys, (
+            f"{prefix} registration diverged from its producer source; "
+            f"missing={sorted(source_keys - actual)}, extra={sorted(actual - source_keys)}"
+        )
+
+
+def test_registry_row_field_enumeration_reports_invalid_source(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
+    """A malformed registry source is a discovery failure, never an empty set."""
+    bad_source = tmp_path / "broken.toml"
+    bad_source.write_text("[broken\n", encoding="utf-8")
+    monkeypatch.setattr(_registry_scanner, "bundled_path", lambda *_parts: tmp_path)
+    scan_detail_row_fields.cache_clear()
+    try:
+        with pytest.raises(LocaleRegistryEnumerationError, match="cannot enumerate"):
+            scan_detail_row_fields()
+    finally:
+        scan_detail_row_fields.cache_clear()
 
 
 # ---------------------------------------------------------------------------

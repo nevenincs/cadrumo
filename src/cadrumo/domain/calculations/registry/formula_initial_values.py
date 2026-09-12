@@ -29,12 +29,13 @@ from ....core.casilla_id import CasillaId
 from ....core.decimal.constants import ZERO
 from .binding_selector_utils import selector_as_dict as _binding_selector_as_dict
 from .binding_targets import bound_casilla_binding_ids
+from .binding_temporal import SameTargetContext
 from .bindings import CasillaObservation, CasillaObservationValueKind, resolve_bound_casilla_binding_value
-from .bindings_previous_filing import PreviousModeloSelector
+from .bindings_previous_filing import PreviousFilingProvider
 from .casilla_membership import casillas_by_id
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .schema import DataBindingDefinition, ModeloRevision
+from .schema import BindingDefinition, ModeloRevision
 from .schema_input_kind import InputKind
 from .schema_surfaces import CasillaDefinition
 
@@ -160,7 +161,7 @@ def binding_values_with_absent_by_design_defaults(
 
     The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` binding
     declarations are inspected through
-    :class:`~cadrumo.domain.calculations.registry.DataBindingDefinition` so
+    :class:`~cadrumo.domain.calculations.registry.BindingDefinition` so
     previous-filing and relation-prefill slots can default only when the
     selected target period has no required source period.
     """
@@ -192,7 +193,7 @@ def _equivalent_binding_groups(
 
 
 def _can_default_absent_binding(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     *,
     resolved: Mapping[BindingId, Decimal],
     equivalent_groups_by_binding: Mapping[BindingId, tuple[BindingId, ...]],
@@ -259,9 +260,9 @@ _OBSERVATION_BACKED_SLOT_SOURCES = OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 
 def _observation_backed_bindings_for_bound_casilla(
     casilla: CasillaDefinition,
-    bindings_by_id: Mapping[BindingId, DataBindingDefinition],
-) -> tuple[DataBindingDefinition, ...]:
-    """Return bound :class:`~cadrumo.domain.calculations.registry.DataBindingDefinition` slots."""
+    bindings_by_id: Mapping[BindingId, BindingDefinition],
+) -> tuple[BindingDefinition, ...]:
+    """Return bound :class:`~cadrumo.domain.calculations.registry.BindingDefinition` slots."""
     if casilla.input_kind != InputKind.BOUND:
         return ()
     return tuple(
@@ -276,7 +277,7 @@ def _reject_smuggled_previous_filing_inputs(
     inputs: Mapping[CasillaId, Decimal],
     *,
     casillas: Mapping[CasillaId, CasillaDefinition],
-    bindings_by_id: Mapping[BindingId, DataBindingDefinition],
+    bindings_by_id: Mapping[BindingId, BindingDefinition],
     binding_values: Mapping[BindingId, Decimal],
 ) -> None:
     """Require observation-backed bound casillas to enter through bindings."""
@@ -301,7 +302,7 @@ def _reject_inconsistent_previous_filing_projections(
     inputs: Mapping[CasillaId, Decimal],
     *,
     casillas: Mapping[CasillaId, CasillaDefinition],
-    bindings_by_id: Mapping[BindingId, DataBindingDefinition],
+    bindings_by_id: Mapping[BindingId, BindingDefinition],
     binding_values: Mapping[BindingId, Decimal],
 ) -> None:
     """Reject mismatches between input projections and binding source values."""
@@ -335,7 +336,7 @@ def _initial_values_for_casillas(
     casillas: tuple[CasillaDefinition, ...],
     *,
     inputs: Mapping[CasillaId, Decimal],
-    bindings_by_id: Mapping[BindingId, DataBindingDefinition],
+    bindings_by_id: Mapping[BindingId, BindingDefinition],
     binding_values: Mapping[BindingId, Decimal],
     target_period: str,
 ) -> tuple[dict[CasillaId, Decimal], frozenset[CasillaId]]:
@@ -362,7 +363,7 @@ def _initial_value_for_casilla(
     casilla: CasillaDefinition,
     *,
     inputs: Mapping[CasillaId, Decimal],
-    bindings_by_id: Mapping[BindingId, DataBindingDefinition],
+    bindings_by_id: Mapping[BindingId, BindingDefinition],
     binding_values: Mapping[BindingId, Decimal],
     target_period: str,
 ) -> tuple[Decimal, bool]:
@@ -383,7 +384,7 @@ def _initial_value_for_casilla(
     )
 
 
-def _binding_is_absent_by_design(binding: DataBindingDefinition, *, target_period: str) -> bool:
+def _binding_is_absent_by_design(binding: BindingDefinition, *, target_period: str) -> bool:
     """Decide whether a missing bound slot is structural for ``target_period``."""
     # A relation_prefill slot legitimately blanks when no prior filing exists to
     # fold in (the relation resolver returns no value and the operator fills it
@@ -395,7 +396,7 @@ def _binding_is_absent_by_design(binding: DataBindingDefinition, *, target_perio
     if binding.source != BindingSourceKind.PREVIOUS_FILING:
         return False
     try:
-        selector = PreviousModeloSelector.model_validate(_binding_selector_as_dict(binding))
+        selector = PreviousFilingProvider.model_validate(_binding_selector_as_dict(binding))
     except ValueError:
         return False
     if not _previous_filing_selector_has_period_anchor(selector):
@@ -403,11 +404,6 @@ def _binding_is_absent_by_design(binding: DataBindingDefinition, *, target_perio
     return selector.required_period_anchors_for_target(target_period) == ()
 
 
-def _previous_filing_selector_has_period_anchor(selector: PreviousModeloSelector) -> bool:
+def _previous_filing_selector_has_period_anchor(selector: PreviousFilingProvider) -> bool:
     """Check whether a previous-filing selector is anchored to target periods."""
-    return (
-        selector.period is not None
-        or bool(selector.source_periods)
-        or selector.source_period_offset_from_target is not None
-        or selector.prior_quarter_expanding_span
-    )
+    return not isinstance(selector.temporal, SameTargetContext)

@@ -26,17 +26,16 @@ claimed to cover, which is a deliberate authoring act with an author attached.
 from __future__ import annotations
 
 import json
+import tomllib
 from pathlib import Path
 from typing import cast
 
 import pytest
 
-from ....core.resources.bundled_data import bundled_path
-from ....domain.calculations.registry.authority import bundled_authority
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SCHEMA_ROOT = ("corpus", "aeat_official", "einvoice_record_schemas")
+_DATA_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _as_mapping(value: object) -> dict[str, object]:
@@ -45,7 +44,7 @@ def _as_mapping(value: object) -> dict[str, object]:
 
 
 def _manifest() -> dict[str, object]:
-    path = Path(bundled_path(*_SCHEMA_ROOT)) / "manifest.json"
+    path = _DATA_ROOT.joinpath(*_SCHEMA_ROOT, "manifest.json")
     loaded: object = json.loads(path.read_text(encoding="utf-8"))
     return _as_mapping(loaded)
 
@@ -75,12 +74,18 @@ def _asserted_through() -> int:
 
 def _master_supported_filing_years() -> tuple[int, ...]:
     """Return the years the one writable master declaration carries."""
-    declaration = bundled_authority().catalogues.supported_filing_years
-    assert declaration is not None, (
+    path = _DATA_ROOT / "registry" / "aeat" / "legal" / "supported-filing-years.toml"
+    payload = tomllib.loads(path.read_text(encoding="utf-8"))
+    declaration = payload.get("supported_filing_years")
+    assert isinstance(declaration, dict), (
         "the bundled registry declares no supported_filing_years catalogue; "
         "this gate has no master window to measure against"
     )
-    return tuple(declaration.years)
+    years = declaration.get("years")
+    assert isinstance(years, list) and all(isinstance(year, int) for year in years), (
+        "supported_filing_years.years must be a list of filing years"
+    )
+    return tuple(cast(list[int], years))
 
 
 def test_the_snapshot_is_asserted_current_through_the_whole_filing_window() -> None:

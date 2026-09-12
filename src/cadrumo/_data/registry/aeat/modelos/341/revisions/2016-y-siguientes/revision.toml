@@ -1,4 +1,7 @@
 [revisions."2016-y-siguientes"]
+predecessor = "2005-2015"
+casilla_source_refs = ["aeat-dr-341-2016"]
+reviewed_against = "2005-2015"
 authority_grade = "applicability"
 # Modelo 341 autoliquidación/solicitud del IVA, approved by orden-min-2000-12-15-m341 art
 # 1 with its plazo grounded verbatim in orden-min-2000-12-15-m341 art 2.

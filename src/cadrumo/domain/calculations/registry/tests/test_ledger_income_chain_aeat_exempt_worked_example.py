@@ -79,19 +79,17 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.aggregation.renta_income_ledger import aggregate_renta_m100_income_ledger
-from cadrumo.core.aggregation import LedgerIncomeGrounding
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.domain.iva.components import category_cuota_is_zero_by_law
-from cadrumo.domain.iva.schema import IvaCategory
-from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-
-from .....tests.registry_snapshot import build_snapshot
+from .....application.aggregation.renta_income_ledger import aggregate_renta_m100_income_ledger
+from .....core.aggregation import LedgerIncomeGrounding
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
+from .....core.resources.bundled_data import bundled_path
+from ....iva.classification import InvoiceKind
+from ....iva.components import category_cuota_is_zero_by_law
+from ....iva.schema import IvaCategory
+from ....transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....transactions.models import Transaction, TransactionCatalogue
+from ....transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
@@ -106,6 +104,7 @@ from ._scenarios import (
     assert_registry_scenario_matches,
     run_registry_calculation_scenario,
 )
+from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -196,20 +195,20 @@ _NON_LEDGER_INGRESO_INPUTS: dict[CasillaId, Decimal] = {
 }
 
 _BASE_BINDINGS: dict[str, Decimal] = {
-    "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
-    "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
-    "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
-    "renta-2024-profile-incremento-guarderia": Decimal("0"),
-    "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
-    "renta-2024-profile-descendientes-guarderia": Decimal("0"),
-    "renta-2024-profile-marriage-full-year": Decimal("0"),
-    "renta-2024-profile-marriage-month-start": Decimal("0"),
-    "renta-2024-profile-marriage-month-end": Decimal("0"),
-    "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
-    "renta-2024-profile-declaration-type": Decimal("1"),
-    "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
-    "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-193-retenciones-anuales": Decimal("0"),
+    "renta-profile-guarderia-gastos-reales": Decimal("0"),
+    "renta-profile-incremento-guarderia": Decimal("0"),
+    "renta-profile-cotizaciones-ss-madre": Decimal("0"),
+    "renta-profile-descendientes-guarderia": Decimal("0"),
+    "renta-profile-marriage-full-year": Decimal("0"),
+    "renta-profile-marriage-month-start": Decimal("0"),
+    "renta-profile-marriage-month-end": Decimal("0"),
+    "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+    "renta-profile-declaration-type": Decimal("1"),
+    "renta-profile-family-minor-children-in-unit": Decimal("0"),
+    "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
 }
 
 _RELATIONS: dict[str, Decimal] = {

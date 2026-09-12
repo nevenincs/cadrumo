@@ -168,7 +168,7 @@ def test_m100_pagos_fraccionados_scopes_out_mutually_exclusive_m131(tmp_path: Pa
 
 def test_m100_zero_prior_negative_base_carry_scopes_previous_filing_evidence(tmp_path: Path) -> None:
     """An explicit zero prior BIN does not require prior M100 evidence."""
-    zero_binding = "renta-2025-base-liquidable-negativa-general-anterior"
+    zero_binding = "renta-base-liquidable-negativa-general-anterior"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")
         verdict = _evaluate_clean_state(

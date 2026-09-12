@@ -15,7 +15,6 @@ semantic_role = "filing_year"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-hac-96-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-185-procedure-2003"]
 
 [[revisions."2003-2025".casillas]]
 id = "decl.tipo-declaracion"
@@ -27,4 +26,3 @@ semantic_role = "tipo_declaracion"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-hac-96-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-185-procedure-2003"]

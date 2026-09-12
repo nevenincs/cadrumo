@@ -22,7 +22,7 @@ from ....domain.modelos.filing_repository import upsert_filing_record
 from ....tests.inventory import FIXTURES_DIR
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
-from .._overview import local_calendar_filing_evidence
+from .._overview_evidence import local_calendar_filing_evidence
 from ._overview_calendar_support import (
     _SOURCE_URL,
     PRIMARY_PROFILE_ID,

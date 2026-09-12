@@ -9,14 +9,13 @@ from pydantic import AnyHttpUrl, ValidationError
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....tests.aeat_literal_fixtures import manual_practicos_url
+from ..ids import ManualId, ManualPart
 from ..schema import (
     Chapter,
     FetchedManualPart,
     LLMProvenance,
     Manual,
     ManualCasillaReference,
-    ManualId,
-    ManualPart,
     Paragraph,
     Rule,
     RuleKind,

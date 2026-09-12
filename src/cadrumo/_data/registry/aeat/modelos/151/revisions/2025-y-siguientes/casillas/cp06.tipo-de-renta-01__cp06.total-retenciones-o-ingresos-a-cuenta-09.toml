@@ -20,7 +20,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ingresos íntegros [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -34,7 +34,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Gastos de personal [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -48,7 +48,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Gastos de aprovisionamiento de materiales y de suministros [04]
 [[revisions."2025-y-siguientes".casillas]]
@@ -62,7 +62,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Rendimiento neto: positivo [05]
 [[revisions."2025-y-siguientes".casillas]]
@@ -76,7 +76,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Rendimiento neto: negativo [07]
 [[revisions."2025-y-siguientes".casillas]]
@@ -90,7 +90,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Rentención o ingreso a cuenta [06]
 [[revisions."2025-y-siguientes".casillas]]
@@ -104,7 +104,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Actividad: Código y tipo de actividad [10]
 [[revisions."2025-y-siguientes".casillas]]
@@ -118,7 +118,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Actividad: Grupo o epígrafe IAE [11]
 [[revisions."2025-y-siguientes".casillas]]
@@ -132,7 +132,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Datos adicionales (actividad emprendedora. Rendimiento íntegro obtenido y gravado en el extranjero [12]
 [[revisions."2025-y-siguientes".casillas]]
@@ -146,7 +146,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Datos adicionales (actividad emprendedora. Impuesto satisfecho en el extranjero [13]
 [[revisions."2025-y-siguientes".casillas]]
@@ -160,7 +160,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
@@ -174,7 +174,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ingresos íntegros [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -188,7 +188,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Gastos de personal [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -202,7 +202,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Gastos de aprovisionamiento de materiales y de suministros [04]
 [[revisions."2025-y-siguientes".casillas]]
@@ -216,7 +216,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Rendimiento neto: positivo [05]
 [[revisions."2025-y-siguientes".casillas]]
@@ -230,7 +230,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Rendimiento neto: negativo [07]
 [[revisions."2025-y-siguientes".casillas]]
@@ -244,7 +244,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Rentención o ingreso a cuenta [06]
 [[revisions."2025-y-siguientes".casillas]]
@@ -258,7 +258,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Actividad: Código y tipo de actividad [10]
 [[revisions."2025-y-siguientes".casillas]]
@@ -272,7 +272,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Actividad: Grupo o epígrafe IAE [11]
 [[revisions."2025-y-siguientes".casillas]]
@@ -286,7 +286,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Datos adicionales (actividad emprendedora. Rendimiento íntegro obtenido y gravado en el extranjero [12]
 [[revisions."2025-y-siguientes".casillas]]
@@ -300,7 +300,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Datos adicionales (actividad emprendedora. Impuesto satisfecho en el extranjero [13]
 [[revisions."2025-y-siguientes".casillas]]
@@ -314,7 +314,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
@@ -328,7 +328,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ingresos íntegros [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -342,7 +342,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Gastos de personal [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -356,7 +356,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Gastos de aprovisionamiento de materiales y de suministros [04]
 [[revisions."2025-y-siguientes".casillas]]
@@ -370,7 +370,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Rendimiento neto: positivo [05]
 [[revisions."2025-y-siguientes".casillas]]
@@ -384,7 +384,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Rendimiento neto: negativo [07]
 [[revisions."2025-y-siguientes".casillas]]
@@ -398,7 +398,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Rentención o ingreso a cuenta [06]
 [[revisions."2025-y-siguientes".casillas]]
@@ -412,7 +412,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Actividad: Código y tipo de actividad [10]
 [[revisions."2025-y-siguientes".casillas]]
@@ -426,7 +426,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Actividad: Grupo o epígrafe IAE [11]
 [[revisions."2025-y-siguientes".casillas]]
@@ -440,7 +440,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Datos adicionales (actividad emprendedora. Rendimiento íntegro obtenido y gravado en el extranjero [12]
 [[revisions."2025-y-siguientes".casillas]]
@@ -454,7 +454,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Datos adicionales (actividad emprendedora. Impuesto satisfecho en el extranjero [13]
 [[revisions."2025-y-siguientes".casillas]]
@@ -468,7 +468,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
@@ -482,7 +482,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ingresos íntegros [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -496,7 +496,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Gastos de personal [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -510,7 +510,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Gastos de aprovisionamiento de materiales y de suministros [04]
 [[revisions."2025-y-siguientes".casillas]]
@@ -524,7 +524,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Rendimiento neto: positivo [05]
 [[revisions."2025-y-siguientes".casillas]]
@@ -538,7 +538,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Rendimiento neto: negativo [07]
 [[revisions."2025-y-siguientes".casillas]]
@@ -552,7 +552,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Rentención o ingreso a cuenta [06]
 [[revisions."2025-y-siguientes".casillas]]
@@ -566,7 +566,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Actividad: Código y tipo de actividad [10]
 [[revisions."2025-y-siguientes".casillas]]
@@ -580,7 +580,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Actividad: Grupo o epígrafe IAE [11]
 [[revisions."2025-y-siguientes".casillas]]
@@ -594,7 +594,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Datos adicionales (actividad emprendedora. Rendimiento íntegro obtenido y gravado en el extranjero [12]
 [[revisions."2025-y-siguientes".casillas]]
@@ -608,7 +608,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Datos adicionales (actividad emprendedora. Impuesto satisfecho en el extranjero [13]
 [[revisions."2025-y-siguientes".casillas]]
@@ -622,7 +622,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: RESTO. Rendimiento neto: positivo [05]
 [[revisions."2025-y-siguientes".casillas]]
@@ -636,7 +636,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: RESTO. Rendimiento neto: negativo [07]
 [[revisions."2025-y-siguientes".casillas]]
@@ -650,7 +650,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: RESTO. Rentención o ingreso a cuenta [06]
 [[revisions."2025-y-siguientes".casillas]]
@@ -664,7 +664,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Total rendimientos netos positivos [08]
 [[revisions."2025-y-siguientes".casillas]]
@@ -678,7 +678,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Total retenciones o ingresos a cuenta [09]
 [[revisions."2025-y-siguientes".casillas]]
@@ -692,4 +692,4 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]

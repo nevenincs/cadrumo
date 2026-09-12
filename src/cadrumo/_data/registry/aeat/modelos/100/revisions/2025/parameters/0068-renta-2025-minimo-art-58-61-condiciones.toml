@@ -57,3 +57,20 @@ value = "0.5"
 date_axis = "filing_period"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
+
+[[revisions."2025".parameters]]
+id = "renta-2025-minimo-descendientes-named-detail-limit"
+data_type = "integer"
+unit = "diagnostic_items"
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["mínimo por descendientes"]
+
+[[revisions."2025".parameters.values]]
+value = "3"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31

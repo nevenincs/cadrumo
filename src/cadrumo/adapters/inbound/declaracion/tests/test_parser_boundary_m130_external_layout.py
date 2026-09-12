@@ -26,6 +26,7 @@ from .....tests.fixtures.external_layout_candidates.models import (
     load_external_layout_candidate,
 )
 from .....tests.inventory import FIXTURES_DIR
+from .._parsers.pdfplumber_backend import extract_pages_text
 from ..parser import (
     _classify_target,
     _extract_pages_words,
@@ -34,7 +35,6 @@ from ..parser import (
     _PdfWord,
     _printed_box_numbers,
     _select_extraction_profile,
-    extract_pages_text,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

@@ -27,6 +27,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....domain.deadlines.models import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
+from ....domain.filing.errors import FilingExportError
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScope,
@@ -44,7 +45,7 @@ from ....domain.submission.models import ModeloDraftStatus
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ...aggregation.m303_arrivals import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
 from ..draft_construction import build_draft
-from ..export import FilingExportError, export_draft
+from ..export import export_draft
 from ..producer_snapshot import (
     FilingElectionFacts,
     FilingProducerSnapshotError,

@@ -22,13 +22,13 @@ from .....domain.contribuyente.inventory.records import (
     ValuationMethod,
 )
 from .....tests.secure_sql import TestRuntimeProfile
-from ...tests.runtime_profile_fixture import _runtime_profile
+from ...tests.runtime_profile_fixture import default_bucket_runtime_profile_fixture
 from ..inventory import InventoryLedgerRepository, record_movement
 from ._inventory_acquisition_fixture import (
     acquisition_for as _acquisition_for,
 )
 
-__all__ = ["_runtime_profile"]
+_runtime_profile = default_bucket_runtime_profile_fixture()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

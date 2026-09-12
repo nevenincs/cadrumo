@@ -35,7 +35,7 @@ from ....core.operator_action_enums import (
 )
 from ....core.optional_extras import MissingOptionalExtraError, OptionalExtra
 from ....tests.secure_sql import isolated_profile_storage_root
-from .._common import CliPolicyRefusalProjection, attach_cli_policy_refusal_projection
+from ..common import CliPolicyRefusalProjection, attach_cli_policy_refusal_projection
 from ..errors import CliRefusedBoundaryError, command_error_boundary
 from ._english_locale_fixture import english_locale_fixture
 from .cli_runner import invoke_cached_cli, invoke_typer_app, semantic_cli_output

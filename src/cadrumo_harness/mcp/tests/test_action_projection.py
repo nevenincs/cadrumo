@@ -18,9 +18,9 @@ from .._action_capabilities import (
     build_mcp_action_input_schemas,
     resolve_mcp_action_capabilities,
 )
-from .._server import build_sdk_tools
-from .._tools import build_tool_descriptors
 from ..command_surface import command_surface
+from ..server import build_sdk_tools
+from ..tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

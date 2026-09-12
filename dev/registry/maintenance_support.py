@@ -63,7 +63,6 @@ from .compiler.identity import (
 )
 from .compiler.loader import (
     load_modelo_directory,
-    load_modelo_file,
 )
 from .compiler.loader_fingerprints import (
     collect_registry_tree_fingerprints as collect_registry_identity_fingerprints,
@@ -356,10 +355,13 @@ def audit_registry_oracle_bindings(
 
 
 def load_modelo_path(path: Path) -> ModeloDefinition:
-    """Load a :class:`ModeloDefinition` from either supported on-disk layout."""
+    """Load a :class:`ModeloDefinition` from its directory-mode source tree."""
     resolved = path.resolve()
     if resolved.is_file():
-        return load_modelo_file(resolved)
+        raise RegistryLoadError(
+            f"{resolved}: single-file modelos are not a supported layout; "
+            "a modelo source is a directory containing manifest.toml",
+        )
     if resolved.is_dir():
         return load_modelo_directory(resolved)
     raise RegistryLoadError(f"{resolved}: modelo source does not exist")

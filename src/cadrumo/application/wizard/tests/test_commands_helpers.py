@@ -28,7 +28,7 @@ from typer.testing import CliRunner
 from ....core.i18n.translatable import Translatable as tr
 from ..commands import (
     _CCAA_CHOICE_VALUES,
-    _SETUP_OPTION_INFOS,
+    SETUP_OPTION_INFOS,
     _canonical_from_flag_value,
     _flag_name,
     _format_missing_flags,
@@ -102,7 +102,7 @@ def test_tax_residence_ccaa_option_uses_short_metavar() -> None:
     are not shown in the metavar bracket.
     """
 
-    option = _SETUP_OPTION_INFOS["tax-residence-ccaa"]
+    option = SETUP_OPTION_INFOS["tax-residence-ccaa"]
 
     assert option.metavar == "CCAA"
     assert option.show_choices is False

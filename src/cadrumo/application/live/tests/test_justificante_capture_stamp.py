@@ -7,9 +7,9 @@ from datetime import UTC, datetime
 import pytest
 
 from ....tests.profile_capsule import set_active_test_profile_facts
-from ...tests.profile_backend_fixtures import _isolated_backend
+from ...tests.profile_backend_fixtures import isolated_backend
 
-__all__ = ["_isolated_backend"]
+__all__ = ["isolated_backend"]
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.justificante import JustificanteRepository

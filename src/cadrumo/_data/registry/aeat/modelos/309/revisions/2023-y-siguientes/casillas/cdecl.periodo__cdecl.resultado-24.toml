@@ -14,7 +14,6 @@ continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_offi
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
@@ -26,7 +25,6 @@ semantic_role = "declaracion_tipo_309"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.nombre"
@@ -38,7 +36,6 @@ semantic_role = "declarante_nombre_309"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.transmitente-nif"
@@ -52,7 +49,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.transmitente-apellidos"
@@ -64,7 +60,6 @@ semantic_role = "transmitente_apellidos"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.transmitente-nombre"
@@ -76,7 +71,6 @@ semantic_role = "transmitente_nombre"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.transmitente-pais"
@@ -88,7 +82,6 @@ semantic_role = "transmitente_pais"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.situacion-tributaria"
@@ -100,7 +93,6 @@ semantic_role = "situacion_tributaria"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.hecho-imponible"
@@ -112,7 +104,6 @@ semantic_role = "hecho_imponible"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.vehiculo-marca"
@@ -126,7 +117,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.vehiculo-tipo"
@@ -140,7 +130,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.vehiculo-modelo"
@@ -154,7 +143,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.vehiculo-bastidor"
@@ -168,7 +156,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.vehiculo-clasificacion"
@@ -182,7 +169,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.embarcacion-fabricante"
@@ -196,7 +182,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.embarcacion-tipo"
@@ -210,7 +195,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.embarcacion-identificacion"
@@ -224,7 +208,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.embarcacion-eslora"
@@ -238,7 +221,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.aeronave-fabricante"
@@ -252,7 +234,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.aeronave-marca"
@@ -266,7 +247,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.aeronave-serie"
@@ -280,7 +260,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.aeronave-ano"
@@ -294,7 +273,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.aeronave-peso"
@@ -308,7 +286,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.complementaria"
@@ -323,7 +300,6 @@ continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_offi
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.justificante-anterior"
@@ -338,7 +314,6 @@ continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_offi
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.iban"
@@ -353,7 +328,6 @@ continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_offi
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.transmitente-nif-iva"
@@ -368,7 +342,6 @@ continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_offi
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.adjudicatario-nif"
@@ -383,7 +356,6 @@ continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_offi
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.adjudicatario-apellidos"
@@ -398,7 +370,6 @@ continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_offi
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.adjudicatario-nombre"
@@ -413,7 +384,6 @@ continuidad_evidence = "Same unprinted field: src/cadrumo/_data/corpus/aeat_offi
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.rg-base-01"
@@ -424,12 +394,11 @@ data_type = "money"
 semantic_role = "rg_base_01"
 continuidad_id = "rg-base-01"
 continuidad_origin = "seeded"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design regimen general base imponible [01].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.rg-tipo-02"
@@ -444,7 +413,6 @@ continuidad_origin = "seeded"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.rg-cuota-03"
@@ -455,12 +423,11 @@ data_type = "money"
 semantic_role = "rg_cuota_03"
 continuidad_id = "rg-cuota-03"
 continuidad_origin = "seeded"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design regimen general cuota [03].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.rg-base-25"
@@ -469,12 +436,11 @@ form_number = "25"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_base_25"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design regimen general base imponible [25].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.rg-tipo-26"
@@ -487,7 +453,6 @@ semantic_role = "rg_tipo_26"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.rg-cuota-27"
@@ -496,12 +461,11 @@ form_number = "27"
 section = ["declarante", "liquidacion"]
 data_type = "money"
 semantic_role = "rg_cuota_27"
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design regimen general cuota [27].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.rg-base-04"
@@ -513,12 +477,11 @@ semantic_role = "rg_base_04"
 continuidad_id = "rg-base-04"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [04]: 2018-2022 form_number 04 equals 2023-y-siguientes form_number 04; same semantic_role and data_type. Designs print [04] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 35 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:81 M30901 campo 38. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design regimen general base imponible [04].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.rg-tipo-05"
@@ -534,7 +497,6 @@ continuidad_evidence = "Same printed box [05]: 2018-2022 form_number 05 equals 2
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.rg-cuota-06"
@@ -546,12 +508,11 @@ semantic_role = "rg_cuota_06"
 continuidad_id = "rg-cuota-06"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [06]: 2018-2022 form_number 06 equals 2023-y-siguientes form_number 06; same semantic_role and data_type. Designs print [06] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 37 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:83 M30901 campo 40. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design regimen general cuota [06].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.rg-base-07"
@@ -563,12 +524,11 @@ semantic_role = "rg_base_07"
 continuidad_id = "rg-base-07"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [07]: 2018-2022 form_number 07 equals 2023-y-siguientes form_number 07; same semantic_role and data_type. Designs print [07] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 38 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:84 M30901 campo 41. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design regimen general base imponible [07].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.rg-tipo-08"
@@ -584,7 +544,6 @@ continuidad_evidence = "Same printed box [08]: 2018-2022 form_number 08 equals 2
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.rg-cuota-09"
@@ -596,12 +555,11 @@ semantic_role = "rg_cuota_09"
 continuidad_id = "rg-cuota-09"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [09]: 2018-2022 form_number 09 equals 2023-y-siguientes form_number 09; same semantic_role and data_type. Designs print [09] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 40 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:86 M30901 campo 43. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design regimen general cuota [09].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.re-base-10"
@@ -613,12 +571,11 @@ semantic_role = "re_base_10"
 continuidad_id = "re-base-10"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [10]: 2018-2022 form_number 10 equals 2023-y-siguientes form_number 10; same semantic_role and data_type. Designs print [10] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 41 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:87 M30901 campo 44. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design recargo equivalencia base imponible [10].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.re-tipo-11"
@@ -634,7 +591,6 @@ continuidad_evidence = "Same printed box [11]: 2018-2022 form_number 11 equals 2
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.re-cuota-12"
@@ -646,12 +602,11 @@ semantic_role = "re_cuota_12"
 continuidad_id = "re-cuota-12"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [12]: 2018-2022 form_number 12 equals 2023-y-siguientes form_number 12; same semantic_role and data_type. Designs print [12] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 43 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:89 M30901 campo 46. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design recargo equivalencia cuota [12].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.re-base-13"
@@ -663,12 +618,11 @@ semantic_role = "re_base_13"
 continuidad_id = "re-base-13"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [13]: 2018-2022 form_number 13 equals 2023-y-siguientes form_number 13; same semantic_role and data_type. Designs print [13] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 44 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:90 M30901 campo 47. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design recargo equivalencia base imponible [13].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.re-tipo-14"
@@ -684,7 +638,6 @@ continuidad_evidence = "Same printed box [14]: 2018-2022 form_number 14 equals 2
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.re-cuota-15"
@@ -696,12 +649,11 @@ semantic_role = "re_cuota_15"
 continuidad_id = "re-cuota-15"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [15]: 2018-2022 form_number 15 equals 2023-y-siguientes form_number 15; same semantic_role and data_type. Designs print [15] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 46 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:92 M30901 campo 49. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design recargo equivalencia cuota [15].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.re-base-16"
@@ -713,12 +665,11 @@ semantic_role = "re_base_16"
 continuidad_id = "re-base-16"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [16]: 2018-2022 form_number 16 equals 2023-y-siguientes form_number 16; same semantic_role and data_type. Designs print [16] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 47 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:93 M30901 campo 50. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design recargo equivalencia base imponible [16].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.re-tipo-17"
@@ -734,7 +685,6 @@ continuidad_evidence = "Same printed box [17]: 2018-2022 form_number 17 equals 2
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.re-cuota-18"
@@ -746,12 +696,11 @@ semantic_role = "re_cuota_18"
 continuidad_id = "re-cuota-18"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [18]: 2018-2022 form_number 18 equals 2023-y-siguientes form_number 18; same semantic_role and data_type. Designs print [18] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 49 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:95 M30901 campo 52. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design recargo equivalencia cuota [18].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.re-base-19"
@@ -763,12 +712,11 @@ semantic_role = "re_base_19"
 continuidad_id = "re-base-19"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [19]: 2018-2022 form_number 19 equals 2023-y-siguientes form_number 19; same semantic_role and data_type. Designs print [19] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 50 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:96 M30901 campo 53. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design recargo equivalencia base imponible [19].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.re-tipo-20"
@@ -784,7 +732,6 @@ continuidad_evidence = "Same printed box [20]: 2018-2022 form_number 20 equals 2
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.re-cuota-21"
@@ -796,12 +743,11 @@ semantic_role = "re_cuota_21"
 continuidad_id = "re-cuota-21"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [21]: 2018-2022 form_number 21 equals 2023-y-siguientes form_number 21; same semantic_role and data_type. Designs print [21] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 52 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:98 M30901 campo 55. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design recargo equivalencia cuota [21].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.cuota-devengada-22"
@@ -813,13 +759,12 @@ semantic_role = "cuota_devengada_22"
 continuidad_id = "cuota-devengada-22"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [22]: 2018-2022 form_number 22 equals 2023-y-siguientes form_number 22; same semantic_role and data_type. Designs print [22] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 53 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:99 M30901 campo 56. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design total cuota devengada [22]: the design's own sum of the eight cuota casillas.
 required = true
 input_kind = "computed"
 formula = "modelo-309-cuota-devengada-total"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.a-deducir-23"
@@ -831,12 +776,11 @@ semantic_role = "a_deducir_23"
 continuidad_id = "a-deducir-23"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [23]: 2018-2022 form_number 23 equals 2023-y-siguientes form_number 23; same semantic_role and data_type. Designs print [23] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 54 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:100 M30901 campo 57. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design a deducir [23].
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.resultado-24"
@@ -848,10 +792,9 @@ semantic_role = "resultado_24"
 continuidad_id = "resultado-24"
 continuidad_origin = "grounded"
 continuidad_evidence = "Same printed box [24]: 2018-2022 form_number 24 equals 2023-y-siguientes form_number 24; same semantic_role and data_type. Designs print [24] at src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls M30901 campo 55 and src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls.extracted.md:101 M30901 campo 58. Span moved: [25]-[27] inserted after [03] (lines 78-80)."
-constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
 # Design resultado a ingresar [24]: the design's own [22]-[23].
 required = true
 input_kind = "computed"
 formula = "modelo-309-resultado"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2023"]

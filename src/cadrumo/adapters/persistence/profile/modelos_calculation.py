@@ -45,6 +45,7 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.identity.tax_id import SubjectTaxId
 from ....core.logging import get_logger
 from ....core.modelo import Modelo
+from ....core.secure_object_write import SecureObjectWrite
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -64,13 +65,9 @@ from ..storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATAL
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ..storage.sql.secure_objects import SecureObjectRepository, SecureObjectWrite
+    from ..storage.sql.secure_objects import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
-_CALCULATION_NAMESPACE = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace
-_CALCULATION_OBJECT_KEY = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key()
-_CALCULATION_CATALOGUE_VERSION = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version
-_CALCULATION_CATALOGUE_SENSITIVITY = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.sensitivity
 _CALCULATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_calculation_revision_persistence"
 
 
@@ -178,10 +175,10 @@ class CalculationRevisionCatalogueRepository:
 
         try:
             record = self._objects.load(
-                _CALCULATION_NAMESPACE,
-                _CALCULATION_OBJECT_KEY,
-                expected_class=_CALCULATION_CATALOGUE_SENSITIVITY,
-                max_supported_version=_CALCULATION_CATALOGUE_VERSION,
+                MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+                MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
+                expected_class=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.sensitivity,
+                max_supported_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
             )
         except (ClassificationError, EnvelopeVersionError) as exc:
             raise_catalogue_integrity_error(
@@ -212,11 +209,13 @@ class CalculationRevisionCatalogueRepository:
                 translated_message=_CALCULATION_PERSISTENCE_MESSAGE,
                 context={"reason": "invalid_payload"},
             )
-        if not inner_envelope_classification_is_expected(envelope.classification, _CALCULATION_CATALOGUE_SENSITIVITY):
+        if not inner_envelope_classification_is_expected(
+            envelope.classification, MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.sensitivity
+        ):
             _LOGGER.error(
                 "calculation-revision catalogue classification mismatch",
                 extra={
-                    "expected_classification": _CALCULATION_CATALOGUE_SENSITIVITY.value,
+                    "expected_classification": MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.sensitivity.value,
                     "actual_classification": envelope.classification.value,
                 },
             )
@@ -225,16 +224,18 @@ class CalculationRevisionCatalogueRepository:
                 translated_message=_CALCULATION_PERSISTENCE_MESSAGE,
                 context={
                     "reason": "classification_mismatch",
-                    "expected_classification": _CALCULATION_CATALOGUE_SENSITIVITY.value,
+                    "expected_classification": MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.sensitivity.value,
                     "actual_classification": envelope.classification.value,
                 },
             )
-        if not inner_envelope_version_is_current(envelope.schema_version, _CALCULATION_CATALOGUE_VERSION):
+        if not inner_envelope_version_is_current(
+            envelope.schema_version, MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version
+        ):
             _LOGGER.error(
                 "calculation-revision catalogue envelope version unsupported",
                 extra={
                     "stored_schema_version": envelope.schema_version,
-                    "max_supported_version": _CALCULATION_CATALOGUE_VERSION,
+                    "max_supported_version": MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
                 },
             )
             raise CalculationRevisionPersistenceError(
@@ -243,7 +244,7 @@ class CalculationRevisionCatalogueRepository:
                 context={
                     "reason": "unsupported_envelope_version",
                     "stored_schema_version": envelope.schema_version,
-                    "max_supported_version": _CALCULATION_CATALOGUE_VERSION,
+                    "max_supported_version": MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
                 },
             )
         # Post-roundtrip coverage gate: every loaded revision's bundled

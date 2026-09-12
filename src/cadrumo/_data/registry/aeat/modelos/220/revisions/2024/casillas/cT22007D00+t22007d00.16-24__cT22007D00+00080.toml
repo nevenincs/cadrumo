@@ -53,7 +53,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @25+9 An. Eliminación de dividendos internos (1).N.I.F. de la Entidad que percibió el dividendo
 [[revisions."2024".casillas]]
@@ -65,7 +64,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @34+4 Num. Eliminación de dividendos internos (1).Ejercicio de cuyo beneficio procede el dividendo
 [[revisions."2024".casillas]]
@@ -77,7 +75,6 @@ data_type = "year"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @38+17 N. Eliminación de dividendos internos (1).Dividendo eliminado
 [[revisions."2024".casillas]]
@@ -89,7 +86,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1966+17 N. OTRAS CORRECCIONES A LA SUMA DE BASES IMPONIBLES: Eliminación de dividendos internos no exentos del grupo fiscal(*). Total [00080]
 [[revisions."2024".casillas]]
@@ -101,4 +97,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

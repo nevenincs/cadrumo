@@ -30,6 +30,11 @@ from ...core.i18n.translatable import Translatable as t
 from ...core.logging import LogExtra, get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
+from ...domain.calculations.registry.invoice_bindings import (
+    CollectibleInvoiceProvider,
+    M347ThirdPartyOperationProvider,
+    PayableInvoiceProvider,
+)
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ...domain.modelos.codes import ModeloCode
 from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
@@ -45,7 +50,7 @@ from .modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from .retenciones import RetencionesAggregation, RetencionObservation
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.schema import DataBindingDefinition, ModeloDefinition
+    from ...domain.calculations.registry.schema import BindingDefinition, ModeloDefinition
 
 LOGGER = get_logger(__name__)
 
@@ -269,14 +274,14 @@ class PerModeloAggregationResult(BaseModel):
         return self
 
 
-def _counterpart_binding(binding: DataBindingDefinition) -> bool:
+def _counterpart_binding(binding: BindingDefinition) -> bool:
     """Return whether a canonical invoice binding declares the M349 counterpart shape."""
-    if binding.source is BindingSourceKind.M347_THIRD_PARTY_OPERATION:
+    provider = binding.provider
+    if isinstance(provider, M347ThirdPartyOperationProvider):
         return True
-    if binding.source not in {BindingSourceKind.PAYABLE_INVOICE, BindingSourceKind.COLLECTIBLE_INVOICE}:
+    if not isinstance(provider, PayableInvoiceProvider | CollectibleInvoiceProvider):
         return False
-    grouping: object = getattr(binding.selector, "grouping", None)
-    return grouping in {"operator_clave", "operator_clave_period"}
+    return provider.grouping in {"operator_clave", "operator_clave_period"}
 
 
 def _provider_for_modelo_definition(modelo: ModeloDefinition) -> PerModeloAggregationContributor | None:

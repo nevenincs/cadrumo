@@ -54,7 +54,7 @@ _OPERATION_ID = OptionSpec(
 
 
 def _handler(name: str) -> LazyBinding:
-    return LazyBinding.available(DeferredTarget("._reset_cli", name, __package__))
+    return LazyBinding.available(DeferredTarget(".reset_cli", name, __package__))
 
 
 CONFIG_RESET_COMMAND_SPECS = (

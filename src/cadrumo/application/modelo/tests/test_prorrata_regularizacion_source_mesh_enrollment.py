@@ -36,8 +36,10 @@ from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRe
 from ....core.resources.bundled_data import bundled_path
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_RESULTADO_CASILLA,
+)
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
-from ....domain.iva_compensation.filed_derivation import M303_COMPENSATION_RESULTADO_CASILLA
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry

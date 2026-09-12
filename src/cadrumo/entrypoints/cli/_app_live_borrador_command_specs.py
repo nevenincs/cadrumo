@@ -13,7 +13,6 @@ from ._app_live_command_spec_support import (
     _METADATA_POLICY,
     _REQUIRED_FILING_YEAR_OPTION,
     NO_RESULT_SCHEMA,
-    _key,
 )
 from .command_spec import (
     ArgumentSpec,
@@ -29,6 +28,9 @@ from .command_spec import (
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
+)
+from .command_spec import (
+    translation_key as _key,
 )
 
 LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (

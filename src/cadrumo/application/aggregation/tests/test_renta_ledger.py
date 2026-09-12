@@ -17,11 +17,11 @@ from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterR
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from ....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.i18n.translatable import Translatable as tr
 from ....core.period import Period
-from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.categories.profile import CategoryProfile
 from ....domain.categories.proportionality import (
@@ -64,16 +64,19 @@ from .renta_income_aggregation_support import _period
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _m100_renta_expense_binding(binding_id: str, casilla_id: str) -> DataBindingDefinition:
-    return DataBindingDefinition(
+def _m100_renta_expense_binding(binding_id: str, casilla_id: str) -> BindingDefinition:
+    return BindingDefinition(
         id=binding_id,
-        source=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
-        selector={
-            "modelo": "100",
-            "period": "0A",
-            "target_casilla_id": casilla_id,
-            "fact": "deductible_amount_sum",
+        provider={
+            "kind": "ledger_renta_gastos_estimacion_directa_aggregation",
+            **{
+                "modelo": "100",
+                "period": "0A",
+                "target_casilla_id": casilla_id,
+                "fact": "deductible_amount_sum",
+            },
         },
+        value={"data_type": "money", "channel": "decimal"},
         aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
         legal_refs=("ley-35-2006:art-28", "ley-35-2006:art-30"),
         source_refs=("aeat-renta-2025-manual-parte1",),

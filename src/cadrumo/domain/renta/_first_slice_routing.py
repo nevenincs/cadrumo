@@ -30,9 +30,16 @@ construction.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
+from datetime import date
+from enum import Enum
+from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.schema_base import DateAxis
 from ..categories.spending_category import SpendingCategory
 
 FIRST_SLICE_EXPENSE_CASILLAS: Mapping[SpendingCategory, CasillaId] = {
@@ -243,4 +250,53 @@ is silently unrouted (``no-silent-under-declaration``,
 """
 
 
-__all__ = ["FIRST_SLICE_EXPENSE_CASILLAS"]
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+
+
+def resolve_first_slice_expense_routing(
+    *,
+    category_type: type[Enum],
+    casilla_factory: Callable[[object], CasillaId],
+    model_code: str,
+    fact_id: str,
+    effective_date: date,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> dict[Enum, CasillaId]:
+    """Resolve one dated routing map from the selected registry authority."""
+    selected_authority = authority or bundled_authority()
+    RegistryQueryService(selected_authority).describe_modelo(model_code, as_of=effective_date)
+    resolved = selected_authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id=fact_id,
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise TypeError("first-slice routing declaration must resolve as a mapping fact")
+
+    routing: dict[Enum, CasillaId] = {}
+    for entry in resolved.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            raise TypeError("first-slice routing entries must be string-to-string")
+        prefix, separator, member_name = entry.key.partition(".")
+        if separator != "." or prefix != "selector":
+            continue
+        try:
+            category = category_type[member_name]
+        except KeyError as exc:
+            raise ValueError(f"registry routing names unknown category member {member_name!r}") from exc
+        if category in routing:
+            raise ValueError(f"registry routing repeats category member {member_name!r}")
+        routing[category] = casilla_factory(entry.value)
+
+    expected = set(category_type)
+    if set(routing) != expected:
+        missing = sorted(member.name for member in expected - set(routing))
+        extra = sorted(member.name for member in set(routing) - expected)
+        raise ValueError(f"registry routing coverage mismatch; missing={missing!r}, extra={extra!r}")
+    return routing
+
+
+__all__ = ["FIRST_SLICE_EXPENSE_CASILLAS", "resolve_first_slice_expense_routing"]

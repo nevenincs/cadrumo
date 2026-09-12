@@ -3,7 +3,7 @@
 Generates the standard directory skeleton a new modelo revision needs
 (``manifest.toml``, ``revisions/<revision-id>/{revision.toml, casillas/,
 formulas/, bindings/, completeness_manifest/, verification_expectations/,
-export_layouts/, extraction_profiles/, application_links/}``) and
+extraction_profiles/, application_links/}``) in edition-delta shape, and
 surfaces the contributor checklist for taking the scaffold calc-grade.
 
 Run via ``python -m dev.registry.newmodelo scaffold <modelo_id> <revision_id>``

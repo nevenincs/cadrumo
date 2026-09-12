@@ -5,840 +5,840 @@
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.13-17.tipo-y-cierre"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-envelope", field = "tipo-y-cierre", offset = 13, length = 5, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-envelope", field = "tipo-y-cierre", offset = 13, length = 5, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.9-13.regimen"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "regimen", offset = 9, length = 5, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "regimen", offset = 9, length = 5, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.14-14.categoria"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "categoria", offset = 14, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "categoria", offset = 14, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.15-15.tipo-de-pago"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "tipo-de-pago", offset = 15, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "tipo-de-pago", offset = 15, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.16-37.nrc-pago"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "nrc-pago", offset = 16, length = 22, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "nrc-pago", offset = 16, length = 22, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.38-54.importe-pagado"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "importe-pagado", offset = 38, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "importe-pagado", offset = 38, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.56-57.1-declarante-pais"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "1-declarante-pais", offset = 56, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "1-declarante-pais", offset = 56, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.73-87.1-declarante-numero-de-operador-en-el-regimen-neuoss"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "1-declarante-numero-de-operador-en-el-regimen-neuoss", offset = 73, length = 15, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "1-declarante-numero-de-operador-en-el-regimen-neuoss", offset = 73, length = 15, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.213-216.2-ejercicio-y-periodo-ejercicio"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "2-ejercicio-y-periodo-ejercicio", offset = 213, length = 4, data_type = "integer" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "2-ejercicio-y-periodo-ejercicio", offset = 213, length = 4, data_type = "integer" }
+value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.217-217.2-ejercicio-y-periodo-tipo-de-periodo"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "2-ejercicio-y-periodo-tipo-de-periodo", offset = 217, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "2-ejercicio-y-periodo-tipo-de-periodo", offset = 217, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.218-219.2-ejercicio-y-periodo-periodo"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "2-ejercicio-y-periodo-periodo", offset = 218, length = 2, data_type = "integer" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "2-ejercicio-y-periodo-periodo", offset = 218, length = 2, data_type = "integer" }
+value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.220-220.2-ejercicio-y-periodo-declaracion-sin-actividad"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "2-ejercicio-y-periodo-declaracion-sin-actividad", offset = 220, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "2-ejercicio-y-periodo-declaracion-sin-actividad", offset = 220, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.221-222.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-1"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-1", offset = 221, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-1", offset = 221, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.223-227.3-prestaciones-de-servicios-tipo-de-iva-1"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-1", offset = 223, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-1", offset = 223, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.228-228.3-prestaciones-de-servicios-tipo-iva-1"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-1", offset = 228, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-1", offset = 228, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.229-245.3-prestaciones-de-servicios-base-imponible-1"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-1", offset = 229, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-1", offset = 229, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.246-262.3-prestaciones-de-servicios-cuota-iva-1"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-1", offset = 246, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-1", offset = 246, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.263-264.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-2"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-2", offset = 263, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-2", offset = 263, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.265-269.3-prestaciones-de-servicios-tipo-de-iva-2"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-2", offset = 265, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-2", offset = 265, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.270-270.3-prestaciones-de-servicios-tipo-iva-2"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-2", offset = 270, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-2", offset = 270, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.271-287.3-prestaciones-de-servicios-base-imponible-2"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-2", offset = 271, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-2", offset = 271, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.288-304.3-prestaciones-de-servicios-cuota-iva-2"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-2", offset = 288, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-2", offset = 288, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.305-306.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-3"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-3", offset = 305, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-3", offset = 305, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.307-311.3-prestaciones-de-servicios-tipo-de-iva-3"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-3", offset = 307, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-3", offset = 307, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.312-312.3-prestaciones-de-servicios-tipo-iva-3"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-3", offset = 312, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-3", offset = 312, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.313-329.3-prestaciones-de-servicios-base-imponible-3"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-3", offset = 313, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-3", offset = 313, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.330-346.3-prestaciones-de-servicios-cuota-iva-3"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-3", offset = 330, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-3", offset = 330, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.347-348.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-4"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-4", offset = 347, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-4", offset = 347, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.349-353.3-prestaciones-de-servicios-tipo-de-iva-4"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-4", offset = 349, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-4", offset = 349, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.354-354.3-prestaciones-de-servicios-tipo-iva-4"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-4", offset = 354, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-4", offset = 354, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.355-371.3-prestaciones-de-servicios-base-imponible-4"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-4", offset = 355, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-4", offset = 355, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.372-388.3-prestaciones-de-servicios-cuota-iva-4"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-4", offset = 372, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-4", offset = 372, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.389-390.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-5"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-5", offset = 389, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-5", offset = 389, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.391-395.3-prestaciones-de-servicios-tipo-de-iva-5"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-5", offset = 391, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-5", offset = 391, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.396-396.3-prestaciones-de-servicios-tipo-iva-5"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-5", offset = 396, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-5", offset = 396, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.397-413.3-prestaciones-de-servicios-base-imponible-5"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-5", offset = 397, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-5", offset = 397, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.414-430.3-prestaciones-de-servicios-cuota-iva-5"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-5", offset = 414, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-5", offset = 414, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.431-432.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-6"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-6", offset = 431, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-6", offset = 431, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.433-437.3-prestaciones-de-servicios-tipo-de-iva-6"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-6", offset = 433, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-6", offset = 433, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.438-438.3-prestaciones-de-servicios-tipo-iva-6"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-6", offset = 438, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-6", offset = 438, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.439-455.3-prestaciones-de-servicios-base-imponible-6"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-6", offset = 439, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-6", offset = 439, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.456-472.3-prestaciones-de-servicios-cuota-iva-6"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-6", offset = 456, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-6", offset = 456, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.473-474.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-7"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-7", offset = 473, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-7", offset = 473, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.475-479.3-prestaciones-de-servicios-tipo-de-iva-7"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-7", offset = 475, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-7", offset = 475, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.480-480.3-prestaciones-de-servicios-tipo-iva-7"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-7", offset = 480, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-7", offset = 480, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.481-497.3-prestaciones-de-servicios-base-imponible-7"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-7", offset = 481, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-7", offset = 481, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.498-514.3-prestaciones-de-servicios-cuota-iva-7"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-7", offset = 498, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-7", offset = 498, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.515-516.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-8"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-8", offset = 515, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-8", offset = 515, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.517-521.3-prestaciones-de-servicios-tipo-de-iva-8"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-8", offset = 517, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-8", offset = 517, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.522-522.3-prestaciones-de-servicios-tipo-iva-8"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-8", offset = 522, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-8", offset = 522, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.523-539.3-prestaciones-de-servicios-base-imponible-8"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-8", offset = 523, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-8", offset = 523, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.540-556.3-prestaciones-de-servicios-cuota-iva-8"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-8", offset = 540, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-8", offset = 540, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.557-558.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-9"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-9", offset = 557, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-9", offset = 557, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.559-563.3-prestaciones-de-servicios-tipo-de-iva-9"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-9", offset = 559, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-9", offset = 559, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.564-564.3-prestaciones-de-servicios-tipo-iva-9"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-9", offset = 564, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-9", offset = 564, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.565-581.3-prestaciones-de-servicios-base-imponible-9"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-9", offset = 565, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-9", offset = 565, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.582-598.3-prestaciones-de-servicios-cuota-iva-9"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-9", offset = 582, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-9", offset = 582, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.599-600.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-10"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-10", offset = 599, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-10", offset = 599, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.601-605.3-prestaciones-de-servicios-tipo-de-iva-10"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-10", offset = 601, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-10", offset = 601, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.606-606.3-prestaciones-de-servicios-tipo-iva-10"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-10", offset = 606, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-10", offset = 606, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.607-623.3-prestaciones-de-servicios-base-imponible-10"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-10", offset = 607, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-10", offset = 607, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.624-640.3-prestaciones-de-servicios-cuota-iva-10"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-10", offset = 624, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-10", offset = 624, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.641-642.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-11"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-11", offset = 641, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-11", offset = 641, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.643-647.3-prestaciones-de-servicios-tipo-de-iva-11"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-11", offset = 643, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-11", offset = 643, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.648-648.3-prestaciones-de-servicios-tipo-iva-11"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-11", offset = 648, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-11", offset = 648, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.649-665.3-prestaciones-de-servicios-base-imponible-11"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-11", offset = 649, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-11", offset = 649, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.666-682.3-prestaciones-de-servicios-cuota-iva-11"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-11", offset = 666, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-11", offset = 666, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.683-684.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-12"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-12", offset = 683, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-12", offset = 683, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.685-689.3-prestaciones-de-servicios-tipo-de-iva-12"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-12", offset = 685, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-12", offset = 685, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.690-690.3-prestaciones-de-servicios-tipo-iva-12"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-12", offset = 690, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-12", offset = 690, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.691-707.3-prestaciones-de-servicios-base-imponible-12"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-12", offset = 691, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-12", offset = 691, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.708-724.3-prestaciones-de-servicios-cuota-iva-12"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-12", offset = 708, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-12", offset = 708, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.725-726.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-13"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-13", offset = 725, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-13", offset = 725, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.727-731.3-prestaciones-de-servicios-tipo-de-iva-13"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-13", offset = 727, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-13", offset = 727, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.732-732.3-prestaciones-de-servicios-tipo-iva-13"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-13", offset = 732, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-13", offset = 732, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.733-749.3-prestaciones-de-servicios-base-imponible-13"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-13", offset = 733, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-13", offset = 733, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.750-766.3-prestaciones-de-servicios-cuota-iva-13"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-13", offset = 750, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-13", offset = 750, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.767-768.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-14"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-14", offset = 767, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-14", offset = 767, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.769-773.3-prestaciones-de-servicios-tipo-de-iva-14"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-14", offset = 769, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-14", offset = 769, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.774-774.3-prestaciones-de-servicios-tipo-iva-14"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-14", offset = 774, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-14", offset = 774, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.775-791.3-prestaciones-de-servicios-base-imponible-14"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-14", offset = 775, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-14", offset = 775, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.792-808.3-prestaciones-de-servicios-cuota-iva-14"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-14", offset = 792, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-14", offset = 792, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.809-810.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-15"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-15", offset = 809, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-15", offset = 809, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.811-815.3-prestaciones-de-servicios-tipo-de-iva-15"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-15", offset = 811, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-15", offset = 811, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.816-816.3-prestaciones-de-servicios-tipo-iva-15"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-15", offset = 816, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-15", offset = 816, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.817-833.3-prestaciones-de-servicios-base-imponible-15"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-15", offset = 817, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-15", offset = 817, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.834-850.3-prestaciones-de-servicios-cuota-iva-15"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-15", offset = 834, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-15", offset = 834, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.851-852.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-16"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-16", offset = 851, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-16", offset = 851, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.853-857.3-prestaciones-de-servicios-tipo-de-iva-16"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-16", offset = 853, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-16", offset = 853, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.858-858.3-prestaciones-de-servicios-tipo-iva-16"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-16", offset = 858, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-16", offset = 858, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.859-875.3-prestaciones-de-servicios-base-imponible-16"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-16", offset = 859, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-16", offset = 859, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.876-892.3-prestaciones-de-servicios-cuota-iva-16"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-16", offset = 876, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-16", offset = 876, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.893-894.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-17"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-17", offset = 893, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-17", offset = 893, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.895-899.3-prestaciones-de-servicios-tipo-de-iva-17"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-17", offset = 895, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-17", offset = 895, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.900-900.3-prestaciones-de-servicios-tipo-iva-17"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-17", offset = 900, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-17", offset = 900, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.901-917.3-prestaciones-de-servicios-base-imponible-17"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-17", offset = 901, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-17", offset = 901, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.918-934.3-prestaciones-de-servicios-cuota-iva-17"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-17", offset = 918, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-17", offset = 918, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.935-936.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-18"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-18", offset = 935, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-18", offset = 935, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.937-941.3-prestaciones-de-servicios-tipo-de-iva-18"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-18", offset = 937, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-18", offset = 937, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.942-942.3-prestaciones-de-servicios-tipo-iva-18"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-18", offset = 942, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-18", offset = 942, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.943-959.3-prestaciones-de-servicios-base-imponible-18"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-18", offset = 943, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-18", offset = 943, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.960-976.3-prestaciones-de-servicios-cuota-iva-18"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-18", offset = 960, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-18", offset = 960, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.977-978.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-19"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-19", offset = 977, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-19", offset = 977, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.979-983.3-prestaciones-de-servicios-tipo-de-iva-19"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-19", offset = 979, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-19", offset = 979, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.984-984.3-prestaciones-de-servicios-tipo-iva-19"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-19", offset = 984, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-19", offset = 984, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.985-1001.3-prestaciones-de-servicios-base-imponible-19"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-19", offset = 985, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-19", offset = 985, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.1002-1018.3-prestaciones-de-servicios-cuota-iva-19"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-19", offset = 1002, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-19", offset = 1002, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.1019-1020.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-20"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-20", offset = 1019, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-20", offset = 1019, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.1021-1025.3-prestaciones-de-servicios-tipo-de-iva-20"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-20", offset = 1021, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-20", offset = 1021, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.1026-1026.3-prestaciones-de-servicios-tipo-iva-20"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-20", offset = 1026, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-20", offset = 1026, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.1027-1043.3-prestaciones-de-servicios-base-imponible-20"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-20", offset = 1027, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-20", offset = 1027, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.1044-1060.3-prestaciones-de-servicios-cuota-iva-20"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-20", offset = 1044, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-20", offset = 1044, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.1061-1062.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-21"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-21", offset = 1061, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-21", offset = 1061, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.1063-1067.3-prestaciones-de-servicios-tipo-de-iva-21"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-21", offset = 1063, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-21", offset = 1063, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.1068-1068.3-prestaciones-de-servicios-tipo-iva-21"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-21", offset = 1068, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-21", offset = 1068, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.1069-1085.3-prestaciones-de-servicios-base-imponible-21"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-21", offset = 1069, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-base-imponible-21", offset = 1069, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.1086-1102.3-prestaciones-de-servicios-cuota-iva-21"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-21", offset = 1086, length = 17, data_type = "money" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-cuota-iva-21", offset = 1086, length = 17, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.1103-1104.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-22"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-22", offset = 1103, length = 2, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-22", offset = 1103, length = 2, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.1105-1109.3-prestaciones-de-servicios-tipo-de-iva-22"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-22", offset = 1105, length = 5, data_type = "decimal", decimals = 2 }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-de-iva-22", offset = 1105, length = 5, data_type = "decimal", decimals = 2 }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-fichero.1110-1110.3-prestaciones-de-servicios-tipo-iva-22"
-source = "manual_input"
-selector = { record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-22", offset = 1110, length = 1, data_type = "text" }
+provider = { kind = "manual_input", record = "modelo-369-exterior-t36901", field = "3-prestaciones-de-servicios-tipo-iva-22", offset = 1110, length = 1, data_type = "text" }
+value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]

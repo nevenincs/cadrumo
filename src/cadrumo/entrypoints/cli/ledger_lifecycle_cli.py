@@ -34,7 +34,6 @@ from ...core.time.clock import now
 from ...domain.attachments.enums import AttachmentSource, DocumentLinkSource
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ...domain.transactions.errors import TransactionValidationError
-from ._common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
 from ._decimal_parsing import parse_decimal_amount
 from ._ledger_support import (
     emit_update_result,
@@ -42,6 +41,7 @@ from ._ledger_support import (
     ledger_validation_bad,
     resolve_id,
 )
+from .common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
 
 if TYPE_CHECKING:
     from ...adapters.outbound.llm.suggestions import LLMSplitSuggestion

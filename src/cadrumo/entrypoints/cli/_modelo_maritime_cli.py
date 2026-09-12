@@ -34,10 +34,10 @@ from ...core.errors.error_codes import resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.renta.errors import RentaValidationError
-from ._common import activate_subcommand_output_language, emit_envelope
 from ._modelo_behavior_support import require_active_profile
 from ._modelo_cli_support import bad_parameter_from_error, optional_decimal_option
 from ._modelo_payloads import CasillaObservationPayload, WorkPreviewMaritimeExemptionResult
+from .common import activate_subcommand_output_language, emit_envelope
 
 
 def _parse_maritime_amounts(

@@ -16,7 +16,11 @@ family.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, InstanceOf, NonNegativeInt, field_validator, model_validator
 
@@ -31,7 +35,14 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import IsoDateString
 from ...core.period import Period
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.schema_base import DateAxis
 from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 
 def _retenciones_source_kind(value: object) -> BindingSourceKind:
@@ -146,40 +157,56 @@ class RetencionesAggregation(BaseModel):
         return self
 
 
-_MODELO_111_SCHEMES: frozenset[RetencionScheme] = frozenset(
-    {
-        RetencionScheme.WORK_INCOME,
-        RetencionScheme.WORK_INCOME_DIRECTOR,
-        RetencionScheme.ECONOMIC_ACTIVITY,
-        RetencionScheme.PROFESSIONAL,
-        RetencionScheme.PRIZE,
-    },
-)
+@dataclass(frozen=True, slots=True)
+class _RetencionesRegistryCatalogue:
+    """Generic projection of the selected withholding scheme declarations."""
 
-_MODELO_115_SCHEMES: frozenset[RetencionScheme] = frozenset(
-    {
-        RetencionScheme.URBAN_RENTAL,
-    },
-)
+    model_schemes: Mapping[str, frozenset[RetencionScheme]]
 
-_MODELO_123_SCHEMES: frozenset[RetencionScheme] = frozenset(
-    {
-        RetencionScheme.CAPITAL_INTEREST,
-        RetencionScheme.CAPITAL_DIVIDEND,
-        RetencionScheme.CAPITAL_OTHER,
-    },
-)
 
-# Modelo 180/190/193 are annual summaries of 115/111/123 respectively;
-# they consume the same observation set widened over a full year period.
-_MODELO_SCHEME_CATALOGUE: dict[str, frozenset[RetencionScheme]] = {
-    Modelo.M111.value: _MODELO_111_SCHEMES,
-    Modelo.M115.value: _MODELO_115_SCHEMES,
-    Modelo.M123.value: _MODELO_123_SCHEMES,
-    Modelo.M180.value: _MODELO_115_SCHEMES,
-    Modelo.M190.value: _MODELO_111_SCHEMES,
-    Modelo.M193.value: _MODELO_123_SCHEMES,
-}
+# fact-relocation: selected withholding scheme declarations are consumed through RegistryQueryService and the dated mapping fact
+def _registry_retenciones_catalogue(
+    effective_date: date,
+    *,
+    modelo: str,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> _RetencionesRegistryCatalogue:
+    """Resolve the selected modelo's scheme catalogue without a Python fallback."""
+    selected_authority = authority or bundled_authority()
+    RegistryQueryService(selected_authority).describe_modelo(modelo, as_of=effective_date)
+    resolved = selected_authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="m111-m115-m123-withholding-scheme-catalogue",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise TypeError("withholding scheme declarations must resolve as a mapping fact")
+    model_schemes: dict[str, frozenset[RetencionScheme]] = {}
+    prefix = "modelo."
+    suffix = ".schemes"
+    for entry in resolved.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            raise TypeError("withholding scheme mapping entries must be string-to-string")
+        if not entry.key.startswith(prefix) or not entry.key.endswith(suffix):
+            continue
+        model_id = entry.key[len(prefix) : -len(suffix)].strip()
+        if not model_id or model_id in model_schemes:
+            raise ValueError(f"duplicate or empty withholding scheme declaration key {entry.key!r}")
+        tokens = tuple(token.strip() for token in entry.value.split(",") if token.strip())
+        if not tokens:
+            raise ValueError(f"withholding scheme declaration {entry.key!r} is empty")
+        try:
+            schemes = frozenset(RetencionScheme(token) for token in tokens)
+        except ValueError as exc:
+            raise ValueError(f"withholding scheme declaration {entry.key!r} contains an unknown scheme") from exc
+        if len(schemes) != len(tokens):
+            raise ValueError(f"withholding scheme declaration {entry.key!r} contains duplicate schemes")
+        model_schemes[model_id] = schemes
+    if modelo not in model_schemes:
+        raise ValueError(f"withholding scheme catalogue has no declaration for modelo {modelo!r}")
+    return _RetencionesRegistryCatalogue(model_schemes=model_schemes)
 
 
 def _aggregate_for_modelo(
@@ -195,10 +222,11 @@ def _aggregate_for_modelo(
     income schemes, and annual summaries 180/190/193 reuse the matching
     quarterly scheme catalogue over an annual period.
     """
+    registry_catalogue = _registry_retenciones_catalogue(period.end_date, modelo=modelo)
     filtered = filter_observations_for_modelo(
         observations,
         modelo=modelo,
-        catalogue=_MODELO_SCHEME_CATALOGUE,
+        catalogue=registry_catalogue.model_schemes,
         attribute_fn=lambda obs: obs.scheme,
         aggregator_label="retenciones aggregator",
     )

@@ -381,7 +381,7 @@ def _m() -> Any:
     """
     import importlib
 
-    return importlib.import_module("cadrumo.domain.deadlines.models")
+    return importlib.import_module("..domain.deadlines.models", package="cadrumo.core")
 
 
 # ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the entity-type module
@@ -391,7 +391,7 @@ def _e() -> Any:
     """Return the module that defines the taxpayer entity-type axes (lazy)."""
     import importlib
 
-    return importlib.import_module("cadrumo.domain.contribuyente.entity_type")
+    return importlib.import_module("..domain.contribuyente.entity_type", package="cadrumo.core")
 
 
 # ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the renta-code module
@@ -401,7 +401,7 @@ def _p() -> Any:
     """Return the renta-code module that owns the profile enums (lazy)."""
     import importlib
 
-    return importlib.import_module("cadrumo.domain.contribuyente.renta_codes")
+    return importlib.import_module("..domain.contribuyente.renta_codes", package="cadrumo.core")
 
 
 # ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the CCAA enum class object;
@@ -411,7 +411,7 @@ def _ccaa() -> Any:
     """Return the CCAA enum class (lazy)."""
     import importlib
 
-    return importlib.import_module("cadrumo.domain.contribuyente.ccaa").CCAA
+    return importlib.import_module("..domain.contribuyente.ccaa", package="cadrumo.core").CCAA
 
 
 # ---------------------------------------------------------------------------

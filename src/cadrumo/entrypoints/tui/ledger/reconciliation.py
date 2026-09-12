@@ -8,7 +8,8 @@ from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Static
 
 from ....application.ledger.workspace import LedgerInvoiceReconciliationRefV1
-from ....core.identity import InvoiceId, TransactionId
+from ....core.identity.hex_ids import InvoiceId
+from ....core.identity.transaction_ids import TransactionId
 from ....core.invoice_link import LinkInconsistencyDirection
 from ..components.widgets import ContentDataTable
 from .controller import LedgerWorkspaceController, ledger_copy

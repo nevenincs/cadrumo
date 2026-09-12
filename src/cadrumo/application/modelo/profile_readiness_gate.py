@@ -57,7 +57,7 @@ from ..user_profile.preflight import (
 )
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import projection_for_taxpayer, record_to_path_values
-from ..user_profile.validation import ProfileValidationService
+from ..user_profile.validation import MODELO_WORK_PROFILE_BASELINE_MISSING_CODE, ProfileValidationService
 from .action_errors import ModeloProfileReadinessError
 
 _PROFILE_ACTIVITY_START_PATH = "censo.activity_start_date"
@@ -177,7 +177,7 @@ def modelo_work_profile_baseline_validation_issues(record: UserProfileRecord) ->
     return tuple(
         ProfileValidationIssue(
             severity=BaseSeverity.ERROR,
-            code="modelo_work_profile_baseline_missing",
+            code=MODELO_WORK_PROFILE_BASELINE_MISSING_CODE,
             path=path,
             message=f"modelo work profile baseline field {path} is missing",
         )

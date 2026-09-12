@@ -15,7 +15,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.nuevo-usado"
@@ -25,7 +24,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.lugar-adquisicion"
@@ -35,7 +33,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.fecha-primera-matriculacion"
@@ -45,7 +42,6 @@ data_type = "date"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-marca"
@@ -55,7 +51,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-modelo-tipo"
@@ -65,7 +60,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-bastidor"
@@ -75,7 +69,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-clasificacion"
@@ -85,7 +78,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-categoria-ce"
@@ -95,7 +87,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-emisiones-co2"
@@ -105,7 +96,6 @@ data_type = "integer"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-epigrafe"
@@ -115,7 +105,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.kilometros-horas-uso"
@@ -125,7 +114,6 @@ data_type = "integer"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-itv-serie"
@@ -135,7 +123,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-itv-tipo-tarjeta"
@@ -145,7 +132,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-motor"
@@ -155,7 +141,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-cilindrada"
@@ -165,7 +150,6 @@ data_type = "integer"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.embarcacion-fabricante"
@@ -175,7 +159,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.embarcacion-modelo"
@@ -185,7 +168,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.embarcacion-identificacion"
@@ -195,7 +177,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.embarcacion-eslora"
@@ -205,7 +186,6 @@ data_type = "decimal"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.aeronave-fabricante"
@@ -215,7 +195,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.aeronave-modelo"
@@ -225,7 +204,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.aeronave-serie"
@@ -235,7 +213,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.aeronave-ano-fabricacion"
@@ -245,7 +222,6 @@ data_type = "integer"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.aeronave-peso-maximo-despegue"
@@ -255,7 +231,6 @@ data_type = "integer"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-codigo-itv"
@@ -265,7 +240,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "liq.base-imponible"
@@ -275,7 +249,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "liq.base-imponible-reducida"
@@ -285,7 +258,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "liq.tipo"
@@ -295,7 +267,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "liq.cuota"
@@ -305,7 +276,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "liq.deduccion-lineal"
@@ -315,7 +285,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "liq.cuota-a-ingresar"
@@ -325,7 +294,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "liq.a-deducir"
@@ -335,7 +303,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "liq.resultado"
@@ -345,7 +312,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "decl.justificante-anterior"
@@ -355,7 +321,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "decl.causa-hecho-imponible"
@@ -365,7 +330,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "introductor.nif"
@@ -375,7 +339,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "introductor.nombre"
@@ -385,7 +348,6 @@ data_type = "name"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.vehiculo-observaciones"
@@ -395,7 +357,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]
 
 [[revisions."2008-y-siguientes".casillas]]
 id = "cmt.embarcacion-observaciones"
@@ -405,4 +366,3 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-576-2008"]

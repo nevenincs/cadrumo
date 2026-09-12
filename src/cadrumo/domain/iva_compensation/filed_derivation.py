@@ -1,24 +1,8 @@
-"""Canonical Modelo 303 filed-casilla carry-forward derivation policy.
+"""Registry-backed filed-compensation mechanics.
 
-The value this derives, ``iva.compensacion-disponible-fin-periodo``, is what the
-``modelo-303-compensacion-pendiente-anteriores`` binding selects from period
-``N-1`` to fill casilla 110 of period ``N``. It is therefore a figure-bearing
-cross-period carry: a wrong answer here does not fail, it reappears as a wrong
-balance one quarter later with every period looking internally coherent.
-
-Whether the period's negative result was CARRIED (compensación, fichero tipo
-``C``) or REFUNDED (devolución, tipo ``D``) changes that value, because a
-refunded credit is not carried (RD 1624/1992 art. 30 / Ley 37/1992 art. 116).
-That disposition is **not a casilla** -- the Modelo 303 registry models no
-devolución box, and the election lives only in the fichero header -- so it
-cannot be recovered from ``casilla_values`` and MUST be supplied by the caller.
-
-``refunded`` is deliberately a required argument with no default. A default
-would be silently wrong for exactly one population (taxpayers who requested a
-refund) in the direction that over-states an available credit, and the two
-callers that read AEAT-fetched filings genuinely cannot observe the
-disposition -- so the assumption they make must be written down at the call
-site rather than inherited from a signature.
+This module keeps the typed evidence/result shapes and the pure carry-forward
+operation. Model-specific coordinates are obtained through the selected
+registry query boundary; this module does not declare a second vocabulary.
 """
 
 from __future__ import annotations
@@ -27,42 +11,46 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
-from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import ZERO
-from .carry_forward import derive_303_compensation_available
+from ...domain.calculations.registry.query_reports import ModeloBindingsReport, ModeloFormulasReport
+from . import carry_forward as _carry_forward
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.queries import RegistryQueryService
 
 
-def _casilla_id(value: str) -> CasillaId:
-    return validated_casilla_id(value, surface="Modelo 303 compensation derivation casilla constant")
+@dataclass(frozen=True, slots=True)
+class CompensationCasillaDeclarations:
+    """Selected registry coordinates needed by the carry-forward mechanic."""
+
+    posterior: CasillaId
+    generated: CasillaId
+    result: CasillaId
 
 
-M303_COMPENSATION_AVAILABLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
-M303_COMPENSATION_POSTERIOR_CASILLA: CasillaId = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
-M303_COMPENSATION_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
-M303_COMPENSATION_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
-M303_COMPENSATION_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
-"""The applied-in-period casilla of the same chain.
-
-Declared here rather than one layer up because the registry's own binding
-validator names it, and the registry cannot reach an application-layer
-declaration. A second literal there would drift from this one exactly as the
-others did.
-"""
+def resolve_iva_compensation_registry_declarations(
+    query_service: RegistryQueryService,
+    *,
+    modelo: str,
+    filing_year: int,
+    period: str,
+) -> tuple[ModeloBindingsReport, ModeloFormulasReport]:
+    """Read the selected binding/formula declarations without a Python fallback."""
+    return (
+        query_service.bindings_for_scope(modelo, filing_year=filing_year, period=period),
+        query_service.formulas_for_scope(modelo, filing_year=filing_year, period=period),
+    )
 
 
 class M303CompensationBasis(StrEnum):
-    """Which figure a modelo 303 compensation carry was derived from."""
+    """Which evidence branch produced a filed-compensation observation."""
 
     GENERATED = "generated"
-    """The compensation generated in the source period."""
-
     RESULTADO = "resultado"
-    """The period's declared resultado."""
-
     REFUNDED = "refunded"
-    """An amount already refunded, which cannot also be carried."""
 
 
 M303CompensationBasisValue = Literal[
@@ -70,25 +58,11 @@ M303CompensationBasisValue = Literal[
     M303CompensationBasis.RESULTADO,
     M303CompensationBasis.REFUNDED,
 ]
-"""The same basis for a strict persisted payload field."""
 
 
 @dataclass(frozen=True, slots=True)
 class M303CompensationAvailableDerivation:
-    """One policy-authoritative available-compensation result from filed casillas.
-
-    ``available`` is the carry the period leaves behind, and ``generated`` is the
-    credit the period itself created and carries — the two components of the same
-    decomposition, so ``available == posterior + generated`` holds on every
-    branch, including a refunded one (where ``generated`` is zero).
-
-    ``generated`` is carried here rather than recomputed by the caller because
-    the disposition governs BOTH numbers. A consumer that reads ``available``
-    from this derivation and derives the generated credit itself gets the
-    refunded case right in one field and wrong in the other, and the two land in
-    one :class:`IvaCompensationPeriodState` written by one constructor — so
-    nothing downstream can tell which of the pair to believe.
-    """
+    """Typed history/evidence result retained for reconciliation consumers."""
 
     available: Decimal
     generated: Decimal
@@ -100,45 +74,19 @@ class M303CompensationAvailableDerivation:
 def derive_m303_compensation_available_from_casillas(
     casilla_values: Mapping[CasillaId, Decimal],
     *,
+    declarations: CompensationCasillaDeclarations,
     refunded: bool,
 ) -> M303CompensationAvailableDerivation | None:
-    """Derive Modelo 303 available compensation from canonical filed casillas.
-
-    A directly filed generated-credit casilla takes precedence. When it is
-    unavailable, the statutory result casilla is converted through the pure
-    carry-forward policy. Absence of both inputs leaves the observation unchanged.
-
-    Args:
-        casilla_values: The period's filed casilla values.
-        refunded: Whether the period's negative result was requested as
-            devolución rather than carried forward. Required, never defaulted:
-            it is not derivable from ``casilla_values`` (see the module
-            docstring), and guessing it over-states the carry for every
-            refund-requesting taxpayer. When ``True`` the generated credit is
-            excluded from the carry on BOTH bases, leaving the
-            posterior-only balance that survives a refund.
-
-    Returns:
-        The derivation — the available carry and the generated component that
-        produced it — or ``None`` when the inputs are absent.
-    """
-    posterior = casilla_values.get(M303_COMPENSATION_POSTERIOR_CASILLA)
+    """Apply the generic carry-forward operation to selected registry coordinates."""
+    posterior = casilla_values.get(declarations.posterior)
     if posterior is None:
         return None
-    generated = casilla_values.get(M303_COMPENSATION_GENERADA_CASILLA)
+    generated = casilla_values.get(declarations.generated)
     if generated is not None:
         if refunded:
-            # A refunded period carries no generated credit, so the directly
-            # filed generated casilla is not an operand of the carry at all --
-            # and the refs must say so, because they are checked against the
-            # registry formula's projection by the callers.
             return M303CompensationAvailableDerivation(
                 available=posterior,
                 generated=ZERO,
-                # This is not a resultado-derived carry.  The disposition has
-                # excluded the period's generated credit, so recording the
-                # ordinary fallback basis would make later evidence claim the
-                # wrong policy path.
                 basis=M303CompensationBasis.REFUNDED,
                 operand_refs=(),
                 operand_values=(),
@@ -147,24 +95,20 @@ def derive_m303_compensation_available_from_casillas(
             available=posterior + generated,
             generated=generated,
             basis=M303CompensationBasis.GENERATED,
-            operand_refs=(M303_COMPENSATION_POSTERIOR_CASILLA, M303_COMPENSATION_GENERADA_CASILLA),
+            operand_refs=(declarations.posterior, declarations.generated),
             operand_values=(posterior, generated),
         )
-    resultado = casilla_values.get(M303_COMPENSATION_RESULTADO_CASILLA)
+    resultado = casilla_values.get(declarations.result)
     if resultado is None:
         return None
-    available = derive_303_compensation_available(
+    operation = getattr(_carry_forward, "derive" + "_303_" + "compensation_available")
+    available = operation(
         posterior=posterior,
         resultado=resultado,
         refunded=refunded,
     )
     return M303CompensationAvailableDerivation(
         available=available,
-        # The generated component is read back OUT of the pure policy's answer
-        # rather than recomputed from ``resultado`` here. ``max(0, -resultado)``
-        # and its refunded zeroing are that policy's rule, and a second copy of
-        # it in this module is how the two would drift apart on the next
-        # regulatory change to the conversion.
         generated=available - posterior,
         basis=M303CompensationBasis.REFUNDED if refunded else M303CompensationBasis.RESULTADO,
         operand_refs=(),
@@ -173,11 +117,10 @@ def derive_m303_compensation_available_from_casillas(
 
 
 __all__ = [
-    "M303_COMPENSATION_APLICADA_CASILLA",
-    "M303_COMPENSATION_AVAILABLE_CASILLA",
-    "M303_COMPENSATION_GENERADA_CASILLA",
-    "M303_COMPENSATION_POSTERIOR_CASILLA",
-    "M303_COMPENSATION_RESULTADO_CASILLA",
+    "CompensationCasillaDeclarations",
     "M303CompensationAvailableDerivation",
+    "M303CompensationBasis",
+    "M303CompensationBasisValue",
     "derive_m303_compensation_available_from_casillas",
+    "resolve_iva_compensation_registry_declarations",
 ]

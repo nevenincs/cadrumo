@@ -7,7 +7,6 @@ semantic_role = "is_deduccion_di_interna_dt231_detalle"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-23"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "01596"
 number = "01596"
@@ -17,7 +16,6 @@ semantic_role = "is_deduccion_di_interna_tipo_gravamen"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-23"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "01597"
 number = "01597"
@@ -27,7 +25,6 @@ semantic_role = "is_deduccion_di_interna_dt231_detalle"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-23"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "01598"
 number = "01598"
@@ -37,7 +34,6 @@ semantic_role = "is_deduccion_di_interna_dt231_detalle"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-23"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "01599"
 number = "01599"
@@ -47,4 +43,3 @@ semantic_role = "is_deduccion_di_interna_total"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-23"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

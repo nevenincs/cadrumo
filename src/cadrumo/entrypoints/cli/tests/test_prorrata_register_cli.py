@@ -29,12 +29,12 @@ from ....domain.prorrata_register.register import (
     ProrrataRegisterEntry,
     SectorDefinition,
 )
+from ....tests.cli_envelope import unwrap_cli_result as _json
 from ....tests.secure_sql import isolated_runtime_profile
 from .._prorrata_register_cli import _entry_payload
 from ._cli_surface_profile_fixture import _isolated_backend
 from ._cli_surface_support import (
     _invoke,
-    _json,
 )
 
 __all__ = ["_isolated_backend"]

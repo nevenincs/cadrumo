@@ -32,10 +32,11 @@ import pytest
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
+from ....domain.contribuyente.renta_codes import FiscalResidency
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ..verification_actions import evaluate_verification_predicates
-from ._verification_substance_support import _workflow_profile
+from ..verification_predicates import evaluate_verification_predicates
+from .verification_substance_support import workflow_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -92,7 +93,7 @@ def test_m210_advisory_fires_when_rendimientos_positive_but_base_zero() -> None:
         _BASE_IMPONIBLE: Decimal("0"),
     }
 
-    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+    findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
 
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
@@ -108,7 +109,7 @@ def test_m210_advisory_silent_when_base_imponible_present() -> None:
         _BASE_IMPONIBLE: Decimal("4500.00"),
     }
 
-    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+    findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
     assert findings == []
 
 
@@ -126,9 +127,9 @@ def test_m210_advisory_silent_when_no_rendimientos() -> None:
     }
     absent: dict[CasillaId, Decimal] = {}
 
-    assert evaluate_verification_predicates((predicate,), explicit_zero, _workflow_profile()) == []
-    assert evaluate_verification_predicates((predicate,), negative, _workflow_profile()) == []
-    assert evaluate_verification_predicates((predicate,), absent, _workflow_profile()) == []
+    assert evaluate_verification_predicates((predicate,), explicit_zero, workflow_profile()) == []
+    assert evaluate_verification_predicates((predicate,), negative, workflow_profile()) == []
+    assert evaluate_verification_predicates((predicate,), absent, workflow_profile()) == []
 
 
 def _m210_inmobiliaria_advisory_predicate() -> VerificationPredicateDefinition:
@@ -154,7 +155,7 @@ def test_m210_inmobiliaria_advisory_fires_when_tipo_renta_inmobiliaria_and_base_
     casilla_values: dict[CasillaId, Decimal] = {_BASE_IMPONIBLE: Decimal("0")}
     text_values: dict[CasillaId, str] = {_TIPO_RENTA: "inmobiliaria"}
 
-    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile(), text_values)
+    findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile(), text_values)
 
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
@@ -168,7 +169,7 @@ def test_m210_inmobiliaria_advisory_silent_when_base_imponible_present() -> None
     casilla_values: dict[CasillaId, Decimal] = {_BASE_IMPONIBLE: Decimal("2200.50")}
     text_values: dict[CasillaId, str] = {_TIPO_RENTA: "inmobiliaria"}
 
-    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile(), text_values)
+    findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile(), text_values)
     assert findings == []
 
 
@@ -180,9 +181,9 @@ def test_m210_inmobiliaria_advisory_silent_when_tipo_renta_is_not_inmobiliaria()
     general_text: dict[CasillaId, str] = {_TIPO_RENTA: "general"}
     no_text_values: dict[CasillaId, Decimal] = {_BASE_IMPONIBLE: Decimal("0")}
 
-    assert evaluate_verification_predicates((predicate,), general_zero_base, _workflow_profile(), general_text) == []
+    assert evaluate_verification_predicates((predicate,), general_zero_base, workflow_profile(), general_text) == []
     # No text_values at all (tipo_renta unresolved) also holds trivially.
-    assert evaluate_verification_predicates((predicate,), no_text_values, _workflow_profile()) == []
+    assert evaluate_verification_predicates((predicate,), no_text_values, workflow_profile()) == []
 
 
 def _non_eea_irnr_profile() -> TaxpayerProfile:

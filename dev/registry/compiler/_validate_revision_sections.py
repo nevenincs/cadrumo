@@ -38,7 +38,6 @@ from ._validate_completeness import emit_completeness_gate_failures as _emit_com
 from ._validate_dependency_sections import (
     validate_dependency_classification_section,
     validate_filing_schedule_section,
-    validate_relation_section,
 )
 from ._validate_export_exemption import (
     modelo_publishes_a_record_design,
@@ -63,6 +62,7 @@ from ._validate_surfaces import (
 from ._validate_valid_from_ejercicio_convention import validate_valid_from_ejercicio_convention
 from .validate_applicability_section import validate_applicability_section
 from .validate_authority_grade import validate_authority_grade_section
+from .validate_bindings import validate_binding_registration_section
 from .validate_evidence import EvidenceValidator
 from .validate_export_layout_coverage import validate_export_layout_record_coverage
 from .validate_exports import validate_export_layout_section
@@ -126,7 +126,6 @@ def _validate_revision_surface_sections(
             casilla_by_id=context.casilla_by_id,
             bindings=context.bindings,
             parameters=context.parameters,
-            relations=context.relations,
             legal_refs=legal_refs,
             source_refs=source_refs,
             evidence=evidence,
@@ -150,23 +149,13 @@ def _validate_revision_surface_sections(
             evidence=evidence,
         ),
     )
-    failures.extend(
-        validate_relation_section(
-            prefix=prefix,
-            revision=revision,
-            bindings=context.bindings,
-            binding_by_id=context.binding_by_id,
-            legal_refs=legal_refs,
-            source_refs=source_refs,
-            evidence=evidence,
-        ),
-    )
+    failures.extend(validate_binding_registration_section(prefix=prefix, revision=revision))
     failures.extend(
         validate_dependency_classification_section(
             prefix=prefix,
             revision=revision,
             construct_by_id=context.construct_by_id,
-            relation_by_id=context.relation_by_id,
+            binding_by_id=context.binding_by_id,
             legal_refs=legal_refs,
             source_refs=source_refs,
             evidence=evidence,

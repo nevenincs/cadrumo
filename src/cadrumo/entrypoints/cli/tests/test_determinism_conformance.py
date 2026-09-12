@@ -49,8 +49,9 @@ from ....domain.transactions.enums import TransactionDirection
 from ....tests.env_scope import scoped_cwd
 from ....tests.golden_comparison import canonicalise, differing_field_names, differing_paths, mask_document
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .._command_schema import command_schema_types
-from .._ledger_payloads import EvidenceAddResult, LedgerAddResult
+from .._ledger_payloads import LedgerAddResult
+from ..command_schema import command_schema_types
+from ..ledger_business_payloads import EvidenceAddResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

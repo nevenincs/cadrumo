@@ -6,8 +6,8 @@
 # inside the régimen predicate.
 [[revisions."2025".bindings]]
 id = "renta-profile-anualidades-sin-minimo-descendientes"
-source = "profile"
-selector = { profile_key = "renta_family.anualidades_sin_minimo_descendientes_2025" }
+provider = { kind = "profile", profile_key = "renta_family.anualidades_sin_minimo_descendientes_2025" }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-64"]
 source_refs = ["lirpf-cuota-chain-authority"]

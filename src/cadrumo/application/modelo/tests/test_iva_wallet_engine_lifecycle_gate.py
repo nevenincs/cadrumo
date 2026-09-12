@@ -36,7 +36,7 @@ from ._iva_wallet_engine_support import (
     _wallet_observation,
     _work_unit_and_revision_for_wallet_gate,
     _work_unit_repositories_with_modelo_303_work_unit,
-    _workflow_profile,
+    workflow_profile,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -90,7 +90,7 @@ def test_grounded_first_period_zero_decision_feeds_real_modelo_303_engine_and_li
         verification = verify_modelo_revision(
             revision.calculation_revision_id,
             actor="operator",
-            workflow_profile=_workflow_profile(taxpayer_nif).model_copy(
+            workflow_profile=workflow_profile(taxpayer_nif).model_copy(
                 update={"activity_start_date": date(2026, 1, 1)},
             ),
             settings=ready_clave_settings(taxpayer_nif),

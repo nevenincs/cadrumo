@@ -30,7 +30,7 @@ import pytest
 from ......core.classification.policies import SensitivityClass
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import SecureObjectUnreadableError
-from .._secure_object_records import SecureObjectUnreadable
+from ..secure_object_records import SecureObjectUnreadable
 from ._secure_objects_support import (
     _repo_at,
 )

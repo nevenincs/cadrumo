@@ -115,11 +115,11 @@ def _extract_pages_text_with_pdfium(pdf_path: Path) -> tuple[str, ...] | None:
     resolved = pdf_path.resolve()
     fingerprint = path_stat_fingerprint(resolved)
     content_digest = sha256_file(resolved)
-    return _extract_pages_text_with_pdfium_cached(*fingerprint, content_digest)
+    return extract_pages_text_with_pdfium_cached(*fingerprint, content_digest)
 
 
 @lru_cache(maxsize=256)
-def _extract_pages_text_with_pdfium_cached(
+def extract_pages_text_with_pdfium_cached(
     path: str,
     byte_count: int,
     modified_ns: int,
@@ -139,14 +139,14 @@ def _extract_pages_text_with_pdfium_cached(
     return pages
 
 
-_PDFIUM_BYTES_CACHE: dict[str, tuple[str, ...]] = {}
+PDFIUM_BYTES_CACHE: dict[str, tuple[str, ...]] = {}
 
 
-def _extract_pages_text_with_pdfium_from_bytes(pdf_bytes: bytes) -> tuple[str, ...] | None:
+def extract_pages_text_with_pdfium_from_bytes(pdf_bytes: bytes) -> tuple[str, ...] | None:
     """Return canary-validated pypdfium2 page text for in-memory PDF bytes."""
     digest = sha256_hex(pdf_bytes)
-    if digest in _PDFIUM_BYTES_CACHE:
-        return _PDFIUM_BYTES_CACHE[digest]
+    if digest in PDFIUM_BYTES_CACHE:
+        return PDFIUM_BYTES_CACHE[digest]
 
     pages = _pdfium_pages_text(pdf_bytes, source_label="bytes")
     if pages is None or not any(pages):
@@ -156,10 +156,10 @@ def _extract_pages_text_with_pdfium_from_bytes(pdf_bytes: bytes) -> tuple[str, .
         return None
 
     result = pages
-    if len(_PDFIUM_BYTES_CACHE) >= 256:
-        first_key = next(iter(_PDFIUM_BYTES_CACHE))
-        _PDFIUM_BYTES_CACHE.pop(first_key, None)
-    _PDFIUM_BYTES_CACHE[digest] = result
+    if len(PDFIUM_BYTES_CACHE) >= 256:
+        first_key = next(iter(PDFIUM_BYTES_CACHE))
+        PDFIUM_BYTES_CACHE.pop(first_key, None)
+    PDFIUM_BYTES_CACHE[digest] = result
     return result
 
 
@@ -175,7 +175,7 @@ def extract_pages_text_from_bytes(pdf_bytes: bytes, *, source_label: str = "in-m
         DeclaracionParseError: When no extractable text can be read from the
             supplied PDF bytes.
     """
-    fast_pages = _extract_pages_text_with_pdfium_from_bytes(pdf_bytes)
+    fast_pages = extract_pages_text_with_pdfium_from_bytes(pdf_bytes)
     if fast_pages is not None:
         return fast_pages
     return _extract_pages_text_from_bytes_impl(

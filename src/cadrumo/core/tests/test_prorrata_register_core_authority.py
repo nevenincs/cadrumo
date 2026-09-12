@@ -3,6 +3,7 @@ from __future__ import annotations
 import ast
 import importlib
 from collections.abc import Mapping
+from importlib.util import resolve_name
 from pathlib import Path
 
 import pytest
@@ -14,8 +15,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _ENUMS = ("ProrrataProvisionalProvenance", "ProrrataRegisterRegime")
 _FACADES = (
-    ("cadrumo.domain.prorrata_register", "src/cadrumo/domain/prorrata_register/__init__.py"),
-    ("cadrumo.application.prorrata_register", "src/cadrumo/application/prorrata_register/__init__.py"),
+    ("...domain.prorrata_register", "src/cadrumo/domain/prorrata_register/__init__.py"),
+    ("...application.prorrata_register", "src/cadrumo/application/prorrata_register/__init__.py"),
 )
 
 
@@ -34,8 +35,9 @@ def test_prorrata_register_enums_are_public_only_from_core(source_tree_ast: Mapp
     assert ProrrataProvisionalProvenance.__module__ == "cadrumo.core.prorrata_register"
     assert ProrrataRegisterRegime.__module__ == "cadrumo.core.prorrata_register"
 
-    for module_name, relative_path in _FACADES:
-        facade = importlib.import_module(module_name)
+    for relative_module_name, relative_path in _FACADES:
+        module_name = resolve_name(relative_module_name, __package__)
+        facade = importlib.import_module(relative_module_name, package=__package__)
         assert all(not hasattr(facade, enum_name) for enum_name in _ENUMS), module_name
         assert all(enum_name not in facade.__all__ for enum_name in _ENUMS), module_name
 

@@ -37,10 +37,10 @@ from typer.core import TyperGroup, TyperOption
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from .._common import emit_envelope
 from .._modelo_payloads import WorkCreateResult
 from .._modelo_rendering import work_unit_payload
 from .._modelo_work_lifecycle_cli import _emit_work_create_result
+from ..common import emit_envelope
 from ._english_locale_fixture import english_locale_fixture
 from .cli_runner import cadrumo_click_command, invoke_cached_cli, semantic_cli_output
 

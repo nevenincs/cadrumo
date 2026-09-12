@@ -17,7 +17,7 @@ import typer
 
 from ...application.live.expedientes import capture_expedientes_bulk
 from ._app_live_auth_preflight import emit_live_auth_preflight, metric_line
-from ._common import active_bucket_id_or_refuse, emit_envelope, resolve_pull_year_range
+from .common import active_bucket_id_or_refuse, emit_envelope, resolve_pull_year_range
 
 
 class _ExpedientesRowDict(TypedDict):

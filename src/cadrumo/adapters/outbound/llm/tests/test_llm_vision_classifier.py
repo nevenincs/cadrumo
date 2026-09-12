@@ -12,10 +12,10 @@ from .....application.ledger.llm_classification import ResolvedEvidence, classif
 from .....application.provisioning import (
     AcceleratorReading,
     HardwareProfile,
-    ProvisioningPreconditionCondition,
     SystemMemoryReading,
     probe_hardware_profile,
 )
+from .....application.provisioning_contracts import ProvisioningPreconditionCondition
 from .....core.config import load_settings
 from .....core.hardware import AcceleratorKind
 from .....core.image_media_type import ImageMediaType

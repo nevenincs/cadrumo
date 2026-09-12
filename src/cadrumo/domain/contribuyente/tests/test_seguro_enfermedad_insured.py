@@ -19,11 +19,11 @@ from datetime import date
 
 import pytest
 
+from ...calculations.registry.authority import bundled_authority
+from ...calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
+from ...calculations.registry.schema_base import DateAxis
 from ..descendant import DescendantInfo
-from ..seguro_enfermedad_insured import (
-    DISCAPACIDAD_MINIMUM_GRADE,
-    count_seguro_enfermedad_insured,
-)
+from ..seguro_enfermedad_insured import count_seguro_enfermedad_insured
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -92,7 +92,15 @@ def test_the_art_72_threshold_partitions_the_limbs(grado: int | None, expected: 
 
 
 def test_the_threshold_is_the_one_art_72_states() -> None:
-    assert DISCAPACIDAD_MINIMUM_GRADE == 33
+    resolved = bundled_authority().resolve_governed_fact(
+        ScalarFactQuery(
+            fact_id="rirpf-art-72-disability-minimum-grade",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date(2025, 12, 31),
+        ),
+    )
+    assert isinstance(resolved, ResolvedScalarFact)
+    assert resolved.payload.value == 33
 
 
 def test_a_child_who_does_not_cohabit_is_outside_the_article() -> None:

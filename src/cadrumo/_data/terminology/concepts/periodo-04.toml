@@ -15,3 +15,13 @@ updated_at = 2026-06-10
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Període mensual de abril (codi 04)."
+
+[language.en]
+short_description = "April monthly period (code 04)."
+
+[language.hu]
+short_description = "áprilisi havi időszak (04-es kód)."
+

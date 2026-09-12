@@ -25,11 +25,12 @@ import time
 
 import pytest
 
-from .. import _inprocess
-from .._inprocess import warm_capture_holder_age
+import cadrumo_harness.mcp.inprocess as inprocess
+
 from .._settings import override_mcp_settings
-from .._tools import McpToolDescriptor, build_tool_descriptors
 from .._transport import McpTransport, _attested_cli_executable, _run_tool
+from ..inprocess import warm_capture_holder_age
+from ..tools import McpToolDescriptor, build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -56,16 +57,16 @@ def test_wedged_warm_transport_degrades_to_subprocess_then_recovers() -> None:
         # Reproduce a warm worker that acquired the capture and overran its ceiling:
         # hold the REAL capture lock and set the REAL holder timestamp exactly as
         # run_cli_in_process does, then keep it held (the wedge) until released.
-        _inprocess._CAPTURE_LOCK.acquire()
-        with _inprocess._STATE_LOCK:
-            _inprocess._HOLDER_SINCE = time.monotonic()
+        inprocess._CAPTURE_LOCK.acquire()
+        with inprocess._STATE_LOCK:
+            inprocess._HOLDER_SINCE = time.monotonic()
         holding.set()
         try:
             release.wait(timeout=30.0)
         finally:
-            with _inprocess._STATE_LOCK:
-                _inprocess._HOLDER_SINCE = None
-            _inprocess._CAPTURE_LOCK.release()
+            with inprocess._STATE_LOCK:
+                inprocess._HOLDER_SINCE = None
+            inprocess._CAPTURE_LOCK.release()
 
     worker = threading.Thread(target=_wedged_worker, name="test-wedged-holder", daemon=True)
     worker.start()

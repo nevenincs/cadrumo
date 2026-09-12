@@ -17,10 +17,12 @@ from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeduct
 from ....core.period import Period
 from ....core.result_disposition import derive_result_disposition, result_disposition_casilla_ids
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.binding_temporal import FilingYearOffset
 from ....domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
 )
+from ....domain.calculations.registry.bindings_previous_filing import PreviousFilingProvider
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
@@ -39,8 +41,6 @@ from ..bienes_inversion_regularizacion import BienesInversionRegularizacionSourc
 from ..binding_prefill import (
     _iva_compensation_history_observation,
     _observation_from_iva_compensation_history,
-    _selector_periods,
-    _selector_year_delta,
     extract_modelo_303_local_iva_compensation_recurrence,
     resolve_bindings_from_local_store,
 )
@@ -469,11 +469,12 @@ def test_binding_prefill_type_error_round_trips_through_build_error_envelope() -
     assert envelope.retryable is False
 
 
-def test_selector_year_delta_raises_binding_prefill_type_error_for_invalid_type() -> None:
-    with pytest.raises(BindingPrefillTypeError, match="filing_year_delta"):
-        _selector_year_delta([])
+def test_previous_filing_provider_exposes_typed_year_and_period_contract() -> None:
+    provider = PreviousFilingProvider(
+        source_modelo="100",
+        source_casilla_id="resultado",
+        temporal=FilingYearOffset(years=-1, source_periods=("0A",), max_years=1),
+    )
 
-
-def test_selector_periods_raises_binding_prefill_type_error_for_invalid_type() -> None:
-    with pytest.raises(BindingPrefillTypeError, match="source_periods"):
-        _selector_periods(42)
+    assert provider.uniform_filing_year_delta == -1
+    assert provider.required_periods == ("0A",)

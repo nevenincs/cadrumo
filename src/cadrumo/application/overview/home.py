@@ -28,6 +28,23 @@ from .calendar_models import (
     OverviewPeriodState,
 )
 
+HOME_REASON_BLOCKED_DEPENDENCY: str = "blocked_dependency"
+HOME_REASON_BLOCKED_EVIDENCE: str = "blocked_evidence"
+HOME_REASON_BLOCKED_REVIEW: str = "blocked_review"
+HOME_REASON_DECLARATION_NEEDS_REVIEW: str = "declaration_needs_review"
+HOME_REASON_EVIDENCE_MISSING: str = "evidence_missing"
+HOME_REASON_LEDGER_CLASSIFICATION_PENDING: str = "ledger_classification_pending"
+
+HOME_ACTION_REASON_CODES: tuple[str, ...] = (
+    HOME_REASON_BLOCKED_DEPENDENCY,
+    HOME_REASON_BLOCKED_EVIDENCE,
+    HOME_REASON_BLOCKED_REVIEW,
+    HOME_REASON_DECLARATION_NEEDS_REVIEW,
+    HOME_REASON_EVIDENCE_MISSING,
+    HOME_REASON_LEDGER_CLASSIFICATION_PENDING,
+)
+"""Complete finite vocabulary for Home next-action reason labels."""
+
 
 class HomeAvailability(StrEnum):
     """Whether one Home zone can make an authoritative claim."""

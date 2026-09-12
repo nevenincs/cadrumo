@@ -45,6 +45,7 @@ from ...core.i18n.translatable import Translatable as tr
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.time.clock import now
+from ..submission.models import ModeloDraftStatus
 from .protocols import (
     CasillaCollection,
     CasillaSchemaProvider,
@@ -52,7 +53,6 @@ from .protocols import (
 )
 from .schema import (
     ModeloDraft,
-    ModeloDraftStatus,
     ModeloValidationFinding,
     ModeloValueKind,
 )

@@ -26,6 +26,7 @@ from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.bindings import (
     IvaCompensationAnnualPartitionRequirement,
     RegistryModeloObservation,
@@ -34,6 +35,18 @@ from ...domain.calculations.registry.bindings import (
 from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_APLICADA_CASILLA as M303_COMPENSACION_APLICADA_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_AVAILABLE_CASILLA as M303_DISPONIBLE_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_GENERADA_CASILLA as M303_GENERADA_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_POSTERIOR_CASILLA as M303_POSTERIOR_CASILLA,
+)
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
@@ -51,12 +64,6 @@ from ..aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
-from .iva_compensation_casillas import (
-    M303_COMPENSACION_APLICADA_CASILLA,
-    M303_DISPONIBLE_CASILLA,
-    M303_GENERADA_CASILLA,
-    M303_POSTERIOR_CASILLA,
-)
 from .m303_carry_ingress import M303CarryIngressError, validate_normalized_m303_carry_observation_envelope
 from .observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 from .revision_carry_gate import revision_carry_outcome
@@ -309,6 +316,7 @@ def _partition_provenance(
                 "iva-compensation-annual-partition"
             ),
             parent_source_ref=None,
+            terminal_origin=TerminalOriginClass.FILED_MODELO_CASILLA,
             source_modelo=requirement.source_modelo,
             source_filing_year=envelope.observation.filing_year,
             source_periods=requirement.source_periods,

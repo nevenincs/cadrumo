@@ -38,15 +38,17 @@ from ....domain.calculations.registry.formula_runtime import RegistryCalculation
 from ....domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
+from ....domain.contribuyente.renta_codes import FiscalResidency
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind
 from .._m210_convenio_facts import resolve_m210_convenio_override
 from .._m210_rate import resolve_m210_rate
-from .._verification_predicates import _evaluate_applicability_filter, evaluate_predicate_expression
 from ..action_errors import ModeloApplicabilityFilterError
-from ..verification_actions import (
-    _evaluate_verification_predicates,
-    _m210_unresolved_outcome_findings,
+from ..verification_actions import m210_unresolved_outcome_findings
+from ..verification_predicates import (
+    _evaluate_applicability_filter,
+    evaluate_predicate_expression,
+    evaluate_verification_predicates,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -285,7 +287,7 @@ def test_m210_unresolved_outcome_findings_passes_through_empty_outcomes(
 ) -> None:
     """No typed unresolved outcomes means no M210 verification finding."""
 
-    findings = _m210_unresolved_outcome_findings(
+    findings = m210_unresolved_outcome_findings(
         (),
         profile=_irnr_profile("GB"),
         snapshot=m210_snapshot,
@@ -303,7 +305,7 @@ def test_m210_unresolved_outcome_findings_emits_convenio_missing_finding(
     """A typed convenio-missing outcome emits the missing-row finding."""
 
     outcome = _unresolved_rate_outcome(RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING)
-    findings = _m210_unresolved_outcome_findings(
+    findings = m210_unresolved_outcome_findings(
         (outcome,),
         profile=_irnr_profile("ZW"),
         snapshot=m210_snapshot,
@@ -327,7 +329,7 @@ def test_m210_unresolved_outcome_findings_emits_unknown_tipo_finding(
         tipo_renta="royalty",
         country="",
     )
-    findings = _m210_unresolved_outcome_findings(
+    findings = m210_unresolved_outcome_findings(
         (outcome,),
         profile=_resident_profile(),
         snapshot=m210_snapshot,
@@ -346,7 +348,7 @@ def test_m210_unresolved_outcome_findings_omits_finding_when_rate_resolves(
 ) -> None:
     """A typed outcome paired with a resolvable Convenio row emits no finding."""
 
-    findings = _m210_unresolved_outcome_findings(
+    findings = m210_unresolved_outcome_findings(
         (
             _unresolved_rate_outcome(
                 RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING,
@@ -456,7 +458,7 @@ def test_representante_predicate_emits_blocking_finding_via_evaluator() -> None:
         representante_fiscal_nif=None,
     )
 
-    findings = _evaluate_verification_predicates((predicate,), {}, profile)
+    findings = evaluate_verification_predicates((predicate,), {}, profile)
 
     assert len(findings) == 1
     finding = findings[0]

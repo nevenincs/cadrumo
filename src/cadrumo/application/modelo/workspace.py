@@ -2,7 +2,7 @@
 
 This module owns the one ordering-critical sequence every Workspace read must
 follow: capture WORK exactly once, derive the REGISTRY coordinate only from
-that captured :class:`~.work_addressing.ModeloWorkResolution`, then evaluate
+that captured :class:`~.work_selection.ModeloWorkResolution`, then evaluate
 the requested and stored revision axes independently against the SAME
 REGISTRY capture through the sole pure assertion,
 :func:`~.work_addressing.assert_work_target_revision`. Neither axis may ever
@@ -37,25 +37,24 @@ from ...domain.calculations.registry.modelo_localization import (
     revision_locale_key,
 )
 from ...domain.calculations.registry.schema import (
-    DataBindingDefinition,
+    BindingDefinition,
     FormulaDefinition,
-    ParameterDefinition,
     SchemaFamilyDispositionDeclaration,
 )
-from ...domain.calculations.registry.schema_formula import FormulaExpression
+from ...domain.calculations.registry.schema_formula import FormulaExpression, ParameterDefinition
 from ...domain.calculations.registry.schema_surfaces import RelationDefinition
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ._work_selection import (
-    ModeloWorkResolution,
-    ModeloWorkSelectionMode,
-    ModeloWorkSelectorRequest,
-)
 from .work_addressing import (
     ModeloExactWorkUnitTarget,
     ModeloVisibleFilingTarget,
     diverging_work_target_revision_axes,
+)
+from .work_selection import (
+    ModeloWorkResolution,
+    ModeloWorkSelectionMode,
+    ModeloWorkSelectorRequest,
 )
 from .workspace_models import (
     ModeloWorkspaceBaselineV1,
@@ -752,17 +751,17 @@ def static_inspection_casilla_schema_records(
 
 def binding_schema_records(
     binding_ids: frozenset[BindingId],
-    bindings: tuple[DataBindingDefinition, ...],
+    bindings: tuple[BindingDefinition, ...],
     relations: tuple[RelationDefinition, ...],
 ) -> tuple[ModeloWorkspaceSchemaRecordV1, ...]:
     """Build one schema record per binding identity, sorted for stable pagination.
 
     Narrowed from ``inspection: RegistryRevisionInspection`` to the raw
-    tuples it read internally -- ``DataBindingDefinition`` and
+    tuples it read internally -- ``BindingDefinition`` and
     ``RelationDefinition`` are the identical type on both
     ``RegistryRevisionInspection`` and ``RegistrySnapshot.revision``, so this
     is ONE shared implementation both admissions call, never two copies that
-    could drift. Unlike a casilla, ``DataBindingDefinition`` IS retained
+    could drift. Unlike a casilla, ``BindingDefinition`` IS retained
     whole by both admissions, so ``legal_refs`` is the binding's own real
     (possibly empty) tuple, never ``None`` -- the absence rule applies
     only where an admission genuinely carries no such data. The

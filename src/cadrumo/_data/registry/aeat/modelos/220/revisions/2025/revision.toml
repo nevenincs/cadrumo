@@ -1,4 +1,6 @@
 [revisions."2025"]
+predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["orden-hac-529-2026:art-6-3"], source_refs = ["boe-modelo-220-2025-form"] } }
+casilla_source_refs = ["boe-modelo-220-2025-form", "aeat-dr-220-2025"]
 authority_grade = "applicability"
 # Modelo 220 declaración anual del Impuesto sobre Sociedades del grupo fiscal en
 # régimen de consolidación fiscal. Orden HAC/529/2026
@@ -85,24 +87,3 @@ layout; on the filing-capability worklist, which its gate states is a backlog an
 defect to suppress. Scope stays inspection_only. NOT CLAIMED -- independent_check_coverage \
 is n/a: NO CLAIM, not zero. NOT CLAIMED -- locales complete but not audited for accuracy."""
 reviewed_at = 2026-08-22
-
-[revisions."2025".family_dispositions.casilla_continuidad_evolutions]
-reason = """
-CasillaContinuidadEvolutionDefinition requires from_revision != to_revision. Revision '2025' of \
-modelo 220 DOES have a strictly-earlier sibling ('2024'), so a within-modelo continuity transition is \
-structurally possible here. None is declared because the two eras are not a renumbering of one another: at the \
-2024/2025 boundary AEAT's record designs move 4,524 of 7,466 shared boxes, add 216 and remove 130, and the \
-record set changes 137 -> 141. Asserting continuity across that would claim an identity the designs \
-contradict, and this revision declares only declaration-header casillas in any case. The family is empty on a \
-reviewed judgement, not by omission.
-"""
-legal_refs = [
-    "orden-hac-529-2026:art-6-3",
-    "orden-hac-529-2026:df-segunda",
-    "ley-27-2014:art-124",
-]
-source_refs = [
-    "boe-modelo-220-2025-form",
-    "aeat-dr-220-2025",
-    "aeat-modelo-200-manual-2025",
-]

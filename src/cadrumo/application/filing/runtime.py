@@ -46,7 +46,6 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field
 
-from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.identity.tax_id import SubjectTaxId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -64,13 +63,14 @@ from ...domain.calculations.registry.ids import (
     RevisionId,
     SourceRefId,
 )
+from ...domain.calculations.registry.profile_bindings import ProfileProvider
 from ...domain.calculations.registry.rate_box_partition import (
     RateBoxPartition,
     derive_rate_box_partitions,
 )
 from ...domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ...domain.calculations.registry.schema import (
-    DataBindingDefinition,
+    BindingDefinition,
     FormulaDefinition,
     ModeloDefinition,
     ModeloRevision,
@@ -277,7 +277,7 @@ class RegistryModeloSubview:
     Empty for every revision declaring no rate-specific binding, which is every
     revision until a modelo splits a tier casilla into its box and total layers.
     """
-    profile_export_bindings: tuple[DataBindingDefinition, ...] = ()
+    profile_export_bindings: tuple[BindingDefinition, ...] = ()
     """Profile bindings that declare an address on the exported record.
 
     Deliberately NOT every profile binding: only those carrying a
@@ -614,7 +614,7 @@ def _schema_provider_for_authority(
         )
     return RegistrySchemaAccessor(
         collections={modelo_id: collection_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
-        subviews={modelo_id: _subview_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
+        subviews={modelo_id: subview_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
         snapshots=snapshots,
         sources=dict(authority.catalogues.sources),
         evidence=authority.evidence,
@@ -781,7 +781,7 @@ def collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColle
     )
 
 
-def _subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryModeloSubview:
+def subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryModeloSubview:
     reconciliation_total_casilla_ids = fold_reconciliation_total_casilla_ids(
         snapshot.revision.verification_expectations,
     )
@@ -822,7 +822,7 @@ def _subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryModeloSubview:
     )
 
 
-def _is_profile_export_binding(binding: DataBindingDefinition) -> bool:
+def _is_profile_export_binding(binding: BindingDefinition) -> bool:
     """Whether ``binding`` names a profile fact addressable on the exported record.
 
     ``dictionary_field`` is the discriminator because it is what gives a binding
@@ -830,9 +830,7 @@ def _is_profile_export_binding(binding: DataBindingDefinition) -> bool:
     has no export address at all, which is the same distinction
     ``_is_calculation_only_profile_binding`` draws on the calculation side.
     """
-    return (
-        binding.source == BindingSourceKind.PROFILE and getattr(binding.selector, "dictionary_field", None) is not None
-    )
+    return isinstance(binding.provider, ProfileProvider) and binding.provider.dictionary_field is not None
 
 
 def _casilla_schema(
@@ -889,4 +887,5 @@ __all__ = [
     "collection_from_snapshot",
     "filing_profile_from_taxpayer",
     "registry_value_type",
+    "subview_from_snapshot",
 ]

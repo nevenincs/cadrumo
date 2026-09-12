@@ -73,7 +73,7 @@ from ..producer_snapshot import (
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
 )
-from ..runtime import RegistrySchemaAccessor, _subview_from_snapshot, collection_from_snapshot
+from ..runtime import RegistrySchemaAccessor, collection_from_snapshot, subview_from_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -258,7 +258,7 @@ def _schema_provider_for_snapshot(snapshot: RegistrySnapshot) -> RegistrySchemaA
     modelo_id = snapshot.modelo.id
     return RegistrySchemaAccessor(
         collections={modelo_id: collection_from_snapshot(snapshot)},
-        subviews={modelo_id: _subview_from_snapshot(snapshot)},
+        subviews={modelo_id: subview_from_snapshot(snapshot)},
         snapshots={modelo_id: snapshot},
         sources=snapshot.sources,
     )

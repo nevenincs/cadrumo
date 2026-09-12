@@ -20,14 +20,17 @@ from ...core.result_disposition import ResultDisposition, result_disposition_is_
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
-from ...domain.calculations.registry.runtime_graph import expression_casilla_refs
-from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.calculations.registry.temporal import select_revision
-from ...domain.iva_compensation.filed_derivation import (
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_GENERADA_CASILLA,
     M303_COMPENSATION_POSTERIOR_CASILLA,
     M303_COMPENSATION_RESULTADO_CASILLA,
+)
+from ...domain.calculations.registry.runtime_graph import expression_casilla_refs
+from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.temporal import select_revision
+from ...domain.iva_compensation.filed_derivation import (
+    CompensationCasillaDeclarations,
     M303CompensationAvailableDerivation,
     derive_m303_compensation_available_from_casillas,
 )
@@ -307,6 +310,11 @@ def _normalize_carry_observation(
         values.pop(M303_COMPENSATION_GENERADA_CASILLA, None)
     derivation = derive_m303_compensation_available_from_casillas(
         values,
+        declarations=CompensationCasillaDeclarations(
+            posterior=M303_COMPENSATION_POSTERIOR_CASILLA,
+            generated=M303_COMPENSATION_GENERADA_CASILLA,
+            result=M303_COMPENSATION_RESULTADO_CASILLA,
+        ),
         refunded=result_disposition_is_refund(disposition),
     )
     if derivation is None:
@@ -336,7 +344,7 @@ def _normalize_carry_observation(
         period=observation.period,
     )
     casillas = casillas_by_id(revision)
-    formula_id = _resolve_available_compensation_formula_id(revision, derivation)
+    formula_id = resolve_available_compensation_formula_id(revision, derivation)
 
     available = CasillaObservation(
         casilla_id=M303_COMPENSATION_AVAILABLE_CASILLA,
@@ -414,7 +422,7 @@ def _require_supplied_pair_matches_derivation(
         )
 
 
-def _resolve_available_compensation_formula_id(
+def resolve_available_compensation_formula_id(
     revision: ModeloRevision,
     derivation: M303CompensationAvailableDerivation,
 ) -> str | None:
@@ -485,5 +493,6 @@ __all__ = [
     "M303_DECLARATION_TYPE_HEADER_KEY",
     "M303CarryIngressError",
     "normalize_m303_carry_observation_envelope",
+    "resolve_available_compensation_formula_id",
     "validate_normalized_m303_carry_observation_envelope",
 ]

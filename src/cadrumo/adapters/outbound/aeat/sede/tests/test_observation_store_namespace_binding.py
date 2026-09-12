@@ -40,7 +40,7 @@ from .....persistence.storage.secure_object_namespaces import (
 )
 from .....persistence.storage.sql.orm import SecureObjectRow
 from .....persistence.storage.sql.session import session_scope
-from .._iva_compensation_wallet_parsing import WALLET_URL
+from ..iva_compensation_wallet_parsing import WALLET_URL
 from ..observation_store import FiledDeclaracionObservationStore
 from ..schema import (
     FiledDeclaracionArtefact,

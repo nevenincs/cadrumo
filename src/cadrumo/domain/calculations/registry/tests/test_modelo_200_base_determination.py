@@ -35,9 +35,8 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-
+from .....core.authority_grade import RegistryAuthorityGrade
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_input_kind import InputKind
 from ._published_authority import artifact_snapshot
@@ -83,12 +82,12 @@ def _calculate(inputs: dict[CasillaId, Decimal]):
         inputs=inputs,
         enum_binding_values={_DISPATCH_BINDING: "sl"},
         binding_values={
-            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
-            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
-            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+            "modelo-200-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
+            "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={
             "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),

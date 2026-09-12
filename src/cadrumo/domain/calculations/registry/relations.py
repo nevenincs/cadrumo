@@ -1,60 +1,74 @@
-"""Relation helpers for cross-model registry dependencies.
+"""Cross-filing fold requirements and values for relation-prefill bindings.
 
-Resolves cross-modelo source requirements and materialises relation values
-for a :class:`~cadrumo.domain.calculations.registry.ModeloRevision` filing.
-Relations declare which source filings and output casillas must be available
-before the target modelo can be calculated.
+A ``relation_prefill`` binding declares a fold from another modelo's filed
+values -- or from an earlier period of this one -- into a slot of the target
+filing. This module turns those declarations into the source requirements that
+must be satisfied before the target modelo can be calculated, and resolves the
+folded values once the source observations are available.
+
+The fold used to be declared by a separate relation family keyed by its own
+identifier. It is now the binding's own provider, so the binding id is the key
+everywhere: one declaration, one identity, one inheritance rule.
 
 See Also:
     :mod:`cadrumo.domain.calculations.registry.bindings_previous_filing`
         Same requirement record reused by direct previous-filing carries.
     :mod:`cadrumo.domain.calculations.registry.observation_fold`
         Observation fold helpers used to gather source casilla values.
-    :mod:`cadrumo.domain.calculations.registry.relation_aggregation`
-        Canonical relation aggregation resolver used by this module.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import TYPE_CHECKING, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core.aggregation import RelationAggregationOp
+from ....core.aggregation import BindingAggregationOp, BindingSourceKind, RelationAggregationOp
 from ....core.casilla_id import CasillaId
+from ....core.filing_year import FilingYear
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period, RegistrySelectorPeriodCode
+from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import unique_tuple
+from .binding_temporal import binding_applies_to_period
 from .errors import RegistryValidationError
-from .ids import BindingId, LegalRefId, ModeloId, RelationId, SourceRefId
+from .ids import BindingId, LegalRefId, ModeloId, SourceRefId
 from .observation_fold import gather_observed_requirement_values
-from .period_offset_math import apply_period_offset
-from .relation_aggregation import relation_aggregation_op
 from .relation_dependency import (
     RelationDependencyRole,
     RelationDependencyRoleField,
     RelationDependencyTreatment,
     RelationDependencyTreatmentField,
 )
-from .schema import ModeloRevision, filing_period_from_scope
-from .schema_surfaces import RelationDefinition
+from .relation_prefill_bindings import RelationPrefillProvider
+from .schema_base import filing_period_from_scope
 
 if TYPE_CHECKING:
     from .bindings import RegistryModeloObservation
-from ....core.filing_year import FilingYear
+    from .schema import BindingDefinition, ModeloRevision
 
 __all__ = [
     "RegistryFoldRequirement",
-    "derive_offset_source_period",
+    "relation_prefill_bindings_for_period",
     "relation_requirement_index",
     "relation_source_requirements",
     "resolve_relation_values",
     "resolve_relation_values_from_observations",
     "source_presence_gaps",
 ]
+
+#: The two folds an observation-backed requirement can perform. A binding may
+#: declare any :class:`~core.aggregation.BindingAggregationOp`, but only these
+#: two describe folding matched source FILINGS; a row-emitting or counting op
+#: on a cross-filing fold is a declaration error rather than a fold this module
+#: can perform, so it is refused instead of coerced.
+_FOLD_OPS: Mapping[BindingAggregationOp, RelationAggregationOp] = {
+    BindingAggregationOp.COPY: RelationAggregationOp.COPY,
+    BindingAggregationOp.SUM: RelationAggregationOp.SUM,
+}
 
 
 def source_presence_gaps(
@@ -78,17 +92,15 @@ def source_presence_gaps(
 class RegistryFoldRequirement(BaseModel):
     """One source-filing requirement for a cross-filing fold-in.
 
-    The single unified requirement record for both fold-in mechanisms: a
-    cross-modelo relation fold (``relation_ids`` / ``target_bindings`` populated)
-    and a same-modelo direct ``previous_filing`` carry (``binding_ids``
-    populated). Both the source-period and source-casilla axes are PLURAL so the
-    record is a superset of the two prior shapes: a relation requirement fans
-    plural ``periods`` against a single ``source_casilla_ids`` member, while a
+    The single unified requirement record for both fold mechanisms: a
+    cross-modelo ``relation_prefill`` fold (``target_bindings`` populated) and
+    a same-modelo direct ``previous_filing`` carry (``binding_ids`` populated).
+    Both the source-period and source-casilla axes are PLURAL so the record is
+    a superset of the two shapes: a relation-prefill requirement fans plural
+    ``periods`` against a single ``source_casilla_ids`` member, while a
     ``previous_filing`` requirement carries a single ``periods`` member against
     plural ``source_casilla_ids``. ``legal_refs`` and ``source_refs`` retain the
-    originating relation/binding grounding for operator diagnostics. Each
-    producer emits a single-element tuple where its cardinality is one; no value
-    shifts, only the record TYPE unifies.
+    originating binding's grounding for operator diagnostics.
 
     Consumed by :func:`relation_source_requirements`,
     :func:`resolve_relation_values_from_observations`, and
@@ -105,14 +117,13 @@ class RegistryFoldRequirement(BaseModel):
     required_source_casilla_ids: tuple[CasillaId, ...] | None = None
     source_presence_groups: tuple[tuple[CasillaId, ...], ...] = ()
     binding_ids: tuple[BindingId, ...] = ()
-    relation_ids: tuple[RelationId, ...] = ()
     target_bindings: tuple[BindingId, ...] = ()
-    # Both fold-in producers already resolve these from an already-typed
-    # source (RelationDefinition.dependency_role, a relation's resolved
-    # aggregation op, DependencyClassificationDefinition.treatment); the
-    # same-modelo previous_filing producer legitimately has no relation or
-    # aggregation to report, hence the optional shape rather than a magic
-    # empty-string sentinel.
+    # Both fold producers resolve these from an already-typed source (the
+    # provider's dependency_role, the binding's aggregation op,
+    # DependencyClassificationDefinition.treatment); the same-modelo
+    # previous_filing producer legitimately has no dependency role or fold op to
+    # report, hence the optional shape rather than a magic empty-string
+    # sentinel.
     dependency_role: RelationDependencyRoleField | None = None
     dependency_treatment: RelationDependencyTreatmentField | None = None
     aggregation_op: RelationAggregationOp | None = None
@@ -159,20 +170,21 @@ class RegistryFoldRequirement(BaseModel):
 
 
 @dataclass(slots=True)
-class _RelationRequirementBucket:
-    relation_ids: set[RelationId]
-    target_bindings: set[BindingId]
-    legal_refs: set[LegalRefId]
-    source_refs: set[SourceRefId]
+class _FoldRequirementBucket:
+    """Collect the bindings and grounding one requirement key accumulates."""
+
+    target_bindings: set[BindingId] = field(default_factory=set)
+    legal_refs: set[LegalRefId] = field(default_factory=set)
+    source_refs: set[SourceRefId] = field(default_factory=set)
 
 
 #: Same closed vocabularies as :attr:`RegistryFoldRequirement.dependency_role`
 #: and :attr:`RegistryFoldRequirement.dependency_treatment` -- the grouping key
 #: below carries the exact values those fields are ultimately built from
-#: (:attr:`RelationDefinition.dependency_role`,
+#: (:attr:`RelationPrefillProvider.dependency_role`,
 #: :attr:`~cadrumo.domain.calculations.registry.DependencyClassificationDefinition.treatment`),
 #: so it is typed to match rather than widened to a bare ``str``.
-type _RelationRequirementKey = tuple[
+type _FoldRequirementKey = tuple[
     str,
     int,
     tuple[str, ...],
@@ -183,23 +195,52 @@ type _RelationRequirementKey = tuple[
 ]
 
 
+def relation_prefill_bindings_for_period(
+    revision: ModeloRevision,
+    *,
+    period: str | None = None,
+) -> tuple[tuple[BindingDefinition, RelationPrefillProvider], ...]:
+    """Return this revision's relation-prefill bindings applicable to a period.
+
+    The binding's own ``applicability`` is what scopes it now; the relation's
+    ``target_periods`` moved there in the same change that folded the relation
+    into the provider, so period scoping has one home rather than two.
+    """
+    return tuple(
+        (binding, binding.provider)
+        for binding in revision.bindings
+        if binding.source is BindingSourceKind.RELATION_PREFILL
+        and isinstance(binding.provider, RelationPrefillProvider)
+        and binding_applies_to_period(binding.applicability, period)
+    )
+
+
+def _fold_op(binding: BindingDefinition) -> RelationAggregationOp:
+    """Return the observation-fold op a relation-prefill binding declares."""
+    declared = binding_aggregation_op(binding)
+    fold = _FOLD_OPS.get(declared)
+    if fold is None:
+        raise RegistryValidationError(
+            f"relation_prefill binding {binding.id!r} declares aggregation op {declared.value!r}, "
+            "which does not fold matched source filings",
+            context={"binding_id": str(binding.id), "op": declared.value},
+        )
+    return fold
+
+
 def relation_requirement_index(
     requirements: Iterable[RegistryFoldRequirement],
-) -> dict[RelationId, RegistryFoldRequirement]:
-    """Index canonical fold requirements by every relation they satisfy.
+) -> dict[BindingId, RegistryFoldRequirement]:
+    """Index canonical fold requirements by every target binding they satisfy.
 
     ``relation_source_requirements`` deliberately coalesces source filings that
-    satisfy more than one relation. Consumers nevertheless need a direct
-    relation-id lookup to project the one requirement's source identity,
+    satisfy more than one binding. Consumers nevertheless need a direct
+    binding-id lookup to project the one requirement's source identity,
     treatment, and grounding. Keeping that fan-out here means every consumer
     gets the same requirement object instead of reconstructing partial metadata
     with a local comprehension.
-
-    The requirement producer sorts its rows deterministically, and this retains
-    its established last-row-wins behavior for an invalid duplicate relation id
-    until the registry validator reports that structural fault.
     """
-    return {relation_id: requirement for requirement in requirements for relation_id in requirement.relation_ids}
+    return {binding_id: requirement for requirement in requirements for binding_id in requirement.target_bindings}
 
 
 def relation_source_requirements(
@@ -208,93 +249,100 @@ def relation_source_requirements(
     filing_year: int,
     period: str,
 ) -> tuple[RegistryFoldRequirement, ...]:
-    """Return requirement records needed to resolve relations for a filing.
+    """Return requirement records needed to resolve relation prefills for a filing.
 
     Args:
         revision: The
             :class:`~cadrumo.domain.calculations.registry.ModeloRevision` whose
-            relation declarations to inspect.
-        filing_year: Target filing year; combined with each relation's source
-            offset to derive the expected source-modelo filing year.
-        period: Target period token; filters relations by ``target_periods``
-            and seeds the source-period derivation.
+            relation-prefill bindings to inspect.
+        filing_year: Target filing year; combined with each provider's temporal
+            member to derive the expected source-modelo filing year.
+        period: Target period token; filters bindings by applicability and
+            seeds the source-period derivation.
 
     Returns:
         :class:`~cadrumo.domain.calculations.registry.RegistryFoldRequirement`
         rows keyed by source modelo/year/period and source casilla.
     """
-    grouped = _group_relation_requirements(revision, filing_year=filing_year, period=period)
+    grouped = _group_fold_requirements(revision, filing_year=filing_year, period=period)
     return tuple(_registry_fold_requirement(key, values) for key, values in sorted(grouped.items()))
 
 
-def _group_relation_requirements(
+def _group_fold_requirements(
     revision: ModeloRevision,
     *,
     filing_year: int,
     period: str,
-) -> dict[_RelationRequirementKey, _RelationRequirementBucket]:
+) -> dict[_FoldRequirementKey, _FoldRequirementBucket]:
     classifications_by_source = {
         classification.source_modelo: classification for classification in revision.dependency_classifications
     }
-    grouped: dict[_RelationRequirementKey, _RelationRequirementBucket] = {}
-    for relation in revision.relations:
-        if relation.target_periods and period not in relation.target_periods:
-            continue
-        classification = classifications_by_source.get(relation.source_modelo)
+    grouped: dict[_FoldRequirementKey, _FoldRequirementBucket] = {}
+    for binding, provider in relation_prefill_bindings_for_period(revision, period=period):
+        classification = classifications_by_source.get(provider.source_modelo)
         if classification is None:
             raise RegistryValidationError(
-                f"relation {relation.id!r} source modelo {relation.source_modelo!r} has no dependency classification",
+                f"relation_prefill binding {binding.id!r} source modelo {provider.source_modelo!r} "
+                "has no dependency classification",
             )
-        source_year, source_periods = _relation_requirement_source_scope(
-            relation,
-            filing_year=filing_year,
-            period=period,
-        )
-        if source_year is None:
-            continue
-        key = (
-            relation.source_modelo,
-            source_year,
-            tuple(source_periods),
-            relation.source_casilla_id,
-            relation.dependency_role,
-            classification.treatment,
-            relation_aggregation_op(relation).value,
-        )
-        bucket = grouped.setdefault(
-            key,
-            _RelationRequirementBucket(
-                relation_ids=set(),
-                target_bindings=set(),
-                legal_refs=set(),
-                source_refs=set(),
-            ),
-        )
-        bucket.relation_ids.add(relation.id)
-        bucket.target_bindings.add(relation.target_binding)
-        bucket.legal_refs.update(relation.legal_refs)
-        bucket.source_refs.update(relation.source_refs)
+        for source_year, source_periods in _anchors_by_source_year(provider, filing_year=filing_year, period=period):
+            key = (
+                provider.source_modelo,
+                source_year,
+                source_periods,
+                _single_source_casilla(binding, provider),
+                provider.dependency_role,
+                classification.treatment,
+                _fold_op(binding).value,
+            )
+            bucket = grouped.setdefault(key, _FoldRequirementBucket())
+            bucket.target_bindings.add(binding.id)
+            bucket.legal_refs.update(binding.legal_refs)
+            bucket.source_refs.update(binding.source_refs)
     return grouped
 
 
-def _relation_requirement_source_scope(
-    relation: RelationDefinition,
+def _single_source_casilla(binding: BindingDefinition, provider: RelationPrefillProvider) -> CasillaId:
+    """Return the one source casilla a relation-prefill fold reads.
+
+    The fold matches one source casilla per requirement; a provider declaring
+    several would silently collapse to the first, so the shape is refused here
+    rather than reinterpreted.
+    """
+    declared = provider.declared_source_casilla_ids
+    if len(declared) != 1:
+        raise RegistryValidationError(
+            f"relation_prefill binding {binding.id!r} must read exactly one source casilla",
+            context={"binding_id": str(binding.id), "source_casilla_ids": ",".join(declared)},
+        )
+    return declared[0]
+
+
+def _anchors_by_source_year(
+    provider: RelationPrefillProvider,
     *,
     filing_year: int,
     period: str,
-) -> tuple[int | None, tuple[str, ...]]:
-    if relation.source_period_offset_from_target is not None:
-        derived = _derive_offset_source_anchor(relation, target_period=period)
-        if derived is None:
-            return None, ()
-        period_year_delta, source_period = derived
-        return _relation_source_year(relation, filing_year=filing_year) + period_year_delta, (source_period,)
-    return _relation_source_year(relation, filing_year=filing_year), relation.source_periods or (period,)
+) -> tuple[tuple[int, tuple[str, ...]], ...]:
+    """Group the provider's anchors into ``(source year, periods)`` pairs.
+
+    Most temporal members produce anchors sharing one year delta, but the
+    period offset can straddle a year boundary, so the grouping is derived
+    rather than assumed. An empty result is a scope-out: the member names no
+    source window for this target period, and the caller must not substitute
+    one.
+    """
+    by_year: dict[int, list[str]] = {}
+    for year_delta, source_period in provider.required_period_anchors_for_target(period):
+        periods = by_year.setdefault(filing_year + year_delta, [])
+        if source_period not in periods:
+            periods.append(source_period)
+    return tuple((year, tuple(periods)) for year, periods in sorted(by_year.items()))
 
 
 def _registry_fold_requirement(
-    key: _RelationRequirementKey,
-    values: _RelationRequirementBucket,
+    key: _FoldRequirementKey,
+    values: _FoldRequirementBucket,
 ) -> RegistryFoldRequirement:
     (
         source_modelo,
@@ -315,7 +363,6 @@ def _registry_fold_requirement(
         ),
         periods=source_periods,
         source_casilla_ids=(source_casilla_id,),
-        relation_ids=tuple(sorted(values.relation_ids)),
         target_bindings=tuple(sorted(values.target_bindings)),
         dependency_role=dependency_role,
         dependency_treatment=dependency_treatment,
@@ -327,46 +374,47 @@ def _registry_fold_requirement(
 
 def resolve_relation_values(
     revision: ModeloRevision,
-    external_outputs: Mapping[RelationId, Decimal | tuple[Decimal, ...]],
+    external_outputs: Mapping[BindingId, Decimal | tuple[Decimal, ...]],
     *,
     period: str | None = None,
-) -> dict[RelationId, Decimal]:
-    """Resolve typed relation values from caller-supplied external outputs.
+) -> dict[BindingId, Decimal]:
+    """Resolve relation-prefill values from caller-supplied external outputs.
 
-    ``external_outputs`` is keyed by relation id. Aggregation defaults to copy;
-    ``{"op": "sum"}`` sums tuple values for annual summaries.
+    ``external_outputs`` is keyed by target binding id. ``copy`` folds one
+    Decimal through unchanged; ``sum`` adds the tuple of matched per-period
+    values.
 
     Args:
         revision: The
             :class:`~cadrumo.domain.calculations.registry.ModeloRevision` whose
-            relation definitions are resolved against the supplied external
-            outputs.
-        external_outputs: Caller-supplied per-relation values keyed by
-            :class:`~cadrumo.domain.calculations.registry.RelationId`; a
+            relation-prefill bindings are resolved against the supplied outputs.
+        external_outputs: Caller-supplied per-binding values keyed by
+            :class:`~cadrumo.domain.calculations.registry.BindingId`; a
             :class:`decimal.Decimal` under ``copy`` aggregation or a tuple of
             Decimals under ``sum``.
-        period: Optional period token; restricts active relations to those
-            whose ``target_periods`` set contains it.
+        period: Optional period token; restricts active bindings to those whose
+            applicability admits it.
     """
-    relations = tuple(_active_relations(revision, period=period))
-    relation_ids = {relation.id for relation in relations}
-    unknown = sorted(set(external_outputs).difference(relation_ids))
+    active = relation_prefill_bindings_for_period(revision, period=period)
+    binding_ids = {binding.id for binding, _ in active}
+    unknown = sorted(set(external_outputs).difference(binding_ids))
     if unknown:
-        raise RegistryValidationError(f"unknown relation ids: {unknown!r}")
-    resolved: dict[RelationId, Decimal] = {}
-    for relation in relations:
-        if relation.id not in external_outputs:
-            raise RegistryValidationError(f"missing relation value for {relation.id!r}")
-        raw_value = external_outputs[relation.id]
-        op = relation_aggregation_op(relation)
-        if op == RelationAggregationOp.COPY:
+        raise RegistryValidationError(f"unknown relation-prefill binding ids: {unknown!r}")
+    resolved: dict[BindingId, Decimal] = {}
+    for binding, _ in active:
+        if binding.id not in external_outputs:
+            raise RegistryValidationError(f"missing relation-prefill value for {binding.id!r}")
+        raw_value = external_outputs[binding.id]
+        if _fold_op(binding) is RelationAggregationOp.COPY:
             if not isinstance(raw_value, Decimal):
-                raise RegistryValidationError(f"relation {relation.id!r} copy requires one Decimal")
-            resolved[relation.id] = raw_value
+                raise RegistryValidationError(f"relation-prefill binding {binding.id!r} copy requires one Decimal")
+            resolved[binding.id] = raw_value
         else:
             if not isinstance(raw_value, tuple):
-                raise RegistryValidationError(f"relation {relation.id!r} sum requires a tuple of Decimal values")
-            resolved[relation.id] = sum(raw_value, Decimal("0"))
+                raise RegistryValidationError(
+                    f"relation-prefill binding {binding.id!r} sum requires a tuple of Decimal values",
+                )
+            resolved[binding.id] = sum(raw_value, Decimal("0"))
     return resolved
 
 
@@ -376,119 +424,39 @@ def resolve_relation_values_from_observations(
     *,
     filing_year: int,
     period: str,
-) -> dict[RelationId, Decimal]:
-    """Resolve relation values from normalized filed-declaration observations.
+) -> dict[BindingId, Decimal]:
+    """Resolve relation-prefill values from normalized filed-declaration observations.
 
     Args:
         revision: The
             :class:`~cadrumo.domain.calculations.registry.ModeloRevision` whose
-            relation declarations to resolve.
+            relation-prefill bindings to resolve.
         observations: Filed-declaration
             :class:`~cadrumo.domain.calculations.registry.RegistryModeloObservation`
-            rows that supply the source values each relation consumes.
-        filing_year: Target filing year; combined with each relation's source
-            offset to match observation rows.
-        period: Target period token whose relation requirements drive
-            observation matching.
+            rows that supply the source values each fold consumes.
+        filing_year: Target filing year; combined with each provider's temporal
+            member to match observation rows.
+        period: Target period token whose requirements drive observation
+            matching.
 
     Returns:
-        Resolved :class:`~cadrumo.domain.calculations.registry.RelationId` values
+        Resolved :class:`~cadrumo.domain.calculations.registry.BindingId` values
         suitable for
         :func:`cadrumo.domain.calculations.registry.formula_runtime.calculate_registry_snapshot`.
     """
     available = tuple(observations)
-    external_outputs: dict[RelationId, Decimal | tuple[Decimal, ...]] = {}
+    external_outputs: dict[BindingId, Decimal | tuple[Decimal, ...]] = {}
     for requirement in relation_source_requirements(revision, filing_year=filing_year, period=period):
         values = gather_observed_requirement_values(requirement, available)
         raw_value: Decimal | tuple[Decimal, ...]
         if requirement.aggregation_op == "copy":
             if len(values) != 1:
                 raise RegistryValidationError(
-                    f"relation requirement {requirement.relation_ids!r} copy aggregation requires one observation",
+                    f"fold requirement {requirement.target_bindings!r} copy aggregation requires one observation",
                 )
             raw_value = values[0]
         else:
             raw_value = values
-        for relation_id in requirement.relation_ids:
-            external_outputs[relation_id] = raw_value
+        for binding_id in requirement.target_bindings:
+            external_outputs[binding_id] = raw_value
     return resolve_relation_values(revision, external_outputs, period=period)
-
-
-def materialize_relation_binding_values(
-    revision: ModeloRevision,
-    relation_values: Mapping[RelationId, Decimal],
-    *,
-    period: str | None = None,
-) -> dict[BindingId, Decimal]:
-    """Copy resolved relation values into their declared target bindings.
-
-    Relation ids remain the canonical formula-runtime keys. This helper is an
-    additive bridge for registry rows that also declare ``target_binding`` so
-    bound casillas can consume a relation-backed value without duplicating
-    relation resolution in the application layer.
-
-    Args:
-        revision: The
-            :class:`~cadrumo.domain.calculations.registry.ModeloRevision` whose
-            relation-to-binding mappings are used to populate the returned dict.
-        relation_values: Already-resolved relation id to Decimal mapping.
-        period: Optional period token; restricts active relations to those
-            whose ``target_periods`` set contains it.
-
-    Returns:
-        Target :class:`~cadrumo.domain.calculations.registry.BindingId` values for
-        relation-backed bound casillas.
-    """
-    values: dict[BindingId, Decimal] = {}
-    for relation in _active_relations(revision, period=period):
-        if relation.id not in relation_values:
-            continue
-        value = relation_values[relation.id]
-        existing = values.get(relation.target_binding)
-        if existing is not None and existing != value:
-            raise RegistryValidationError(
-                f"target binding {relation.target_binding!r} receives conflicting relation values",
-            )
-        values[relation.target_binding] = value
-    return values
-
-
-def _active_relations(revision: ModeloRevision, *, period: str | None) -> tuple[RelationDefinition, ...]:
-    if period is None:
-        return revision.relations
-    return tuple(
-        relation for relation in revision.relations if not relation.target_periods or period in relation.target_periods
-    )
-
-
-def _relation_source_year(relation: RelationDefinition, *, filing_year: int) -> int:
-    selector = relation.source_revision_selector
-    if selector.year is not None:
-        return selector.year
-    return filing_year + (selector.filing_year_delta or 0)
-
-
-def derive_offset_source_period(relation: RelationDefinition, *, target_period: str) -> str | None:
-    """Return the source period selected by a relation's period offset."""
-    anchor = _derive_offset_source_anchor(relation, target_period=target_period)
-    return None if anchor is None else anchor[1]
-
-
-def _derive_offset_source_anchor(relation: RelationDefinition, *, target_period: str) -> tuple[int, str] | None:
-    """Apply ``source_period_offset_from_target`` to a target period code.
-
-    Supports quarterly period codes (``1T``..``4T``), pago-fraccionado period
-    codes used by modelo 202 (``1P``..``3P``), and zero-padded monthly codes
-    (``01``..``12``). Delegates arithmetic to
-    :func:`_period_offset_math.apply_period_offset`.
-    """
-    offset = relation.source_period_offset_from_target
-    if offset is None:
-        return None
-    try:
-        return apply_period_offset(offset, target_period=target_period)
-    except RegistryValidationError as exc:
-        raise RegistryValidationError(
-            f"relation {relation.id!r} source_period_offset_from_target "
-            f"cannot interpret target period {target_period!r}",
-        ) from exc

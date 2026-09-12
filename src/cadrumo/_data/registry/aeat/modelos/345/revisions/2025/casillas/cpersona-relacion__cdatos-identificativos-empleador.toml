@@ -18,7 +18,7 @@ semantic_role = "m345_persona_relacion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-1"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 # Registro de tipo 1, campo 8. Positions 108-120, numerico de 13 posiciones.
 # "El numero identificativo que habra de figurar, sera un numero secuencial cuyos
@@ -32,7 +32,7 @@ semantic_role = "m345_numero_identificativo_declaracion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-1"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 # Registro de tipo 1, campo 9. Positions 121-122, alfabetico de 2 posiciones:
 # 121 declaracion complementaria ("C"), 122 declaracion sustitutiva ("S").
@@ -47,7 +47,7 @@ semantic_role_cardinality_reason = "One combined 'Declaracion complementaria / s
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-1"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 # Registro de tipo 1, campo 10. Positions 123-135, numerico de 13 posiciones.
 # Only carries content when campo 9 declares "C" or "S".
@@ -60,7 +60,7 @@ semantic_role = "m345_numero_identificativo_anterior"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-1"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 # Registro de tipo 2, campo 6. Positions 27-35, alfanumerico de 9 posiciones.
 # "Si el declarado es menor de 14 anos, se consignara en este campo el numero de
@@ -75,7 +75,7 @@ semantic_role = "m345_representante_legal_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-3"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 # Registro de tipo 2, campo 19. Positions 272-320, alfanumerico de 49 posiciones,
 # "DATOS IDENTIFICATIVOS DEL EMPLEADOR QUE SEA PROMOTOR O TOMADOR DEL SISTEMA DE
@@ -96,4 +96,4 @@ semantic_role = "m345_datos_identificativos_empleador"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-528-2023:art-unico"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
+additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528"]

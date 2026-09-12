@@ -56,13 +56,14 @@ from pathlib import Path
 
 import pytest
 
+from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 from ....core.casilla_id import CasillaId
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -82,7 +83,6 @@ from .._reconcile_casilla import (
     CasillaDivergenceKind,
     detect_casilla_divergences,
 )
-from .._reconcile_population import _CARRY_SOURCE_KINDS as _PRODUCTION_CARRY_SOURCE_KINDS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -131,7 +131,7 @@ _EMPTY_BUCKET_AMOUNT = Decimal("0")
 #: would keep passing after production widened or narrowed the set, so the test
 #: would silently stop selecting the subject the production rule selects — and it
 #: would agree with itself while disagreeing with the code under test.
-_CARRY_SOURCE_KINDS = _PRODUCTION_CARRY_SOURCE_KINDS
+_CARRY_SOURCE_KINDS = OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 
 
 @pytest.fixture
@@ -156,7 +156,7 @@ def _law_resolved_revision() -> ModeloRevision:
     return bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=_PERIOD_CODE).revision
 
 
-def _subject_casilla(revision: ModeloRevision) -> tuple[CasillaDefinition, DataBindingDefinition]:
+def _subject_casilla(revision: ModeloRevision) -> tuple[CasillaDefinition, BindingDefinition]:
     """Return the casilla the comparison is opened on, and the binding that opens it.
 
     Chosen structurally rather than by hardcoded id: the lowest-ordered
@@ -165,7 +165,7 @@ def _subject_casilla(revision: ModeloRevision) -> tuple[CasillaDefinition, DataB
     while a carry binding would be evidence read back out of the filed store the
     comparison is measuring against.
     """
-    bindings_by_id: dict[BindingId, DataBindingDefinition] = {binding.id: binding for binding in revision.bindings}
+    bindings_by_id: dict[BindingId, BindingDefinition] = {binding.id: binding for binding in revision.bindings}
     for casilla in sorted(revision.casillas, key=lambda definition: definition.id):
         if casilla.input_kind is InputKind.INFORMATIONAL or casilla.binding is None:
             continue

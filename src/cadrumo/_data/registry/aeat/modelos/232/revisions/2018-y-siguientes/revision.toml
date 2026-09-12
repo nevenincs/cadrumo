@@ -1,4 +1,8 @@
 [revisions."2018-y-siguientes"]
+binding_source_refs = ["aeat-dr-232-2018"]
+predecessor = "2016-2017"
+casilla_source_refs = ["aeat-dr-232-2018"]
+reviewed_against = "2016-2017"
 # Prepared and reviewed by an agent against the bundled diseno de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather
@@ -50,24 +54,6 @@ source_refs = [
     "aeat-modelo-232-procedure",
     "boe-modelo-232-2017-form",
 ]
-
-[revisions."2018-y-siguientes".family_dispositions.relations]
-reason = "Modelo 232 declares calculation_class = \"informative\". validate_informative_class_invariant hard-refuses any revision of an informative-class modelo that declares a non-empty relations family -- cross-model relations feed a filing-grade calculation this modelo does not perform. The relations family cannot be populated for this modelo by registry construction."
-legal_refs = [
-    "ley-27-2014:art-18",
-    "rd-634-2015:art-13",
-    "orden-hfp-816-2017:art-1",
-    "orden-hfp-816-2017:art-2",
-    "orden-hfp-816-2017:art-3",
-    "ley-27-2014:art-19",
-    "ley-58-2003:art-93",
-]
-source_refs = [
-    "aeat-dr-232-2018",
-    "aeat-modelo-232-procedure",
-    "boe-modelo-232-2017-form",
-]
-
 [revisions."2018-y-siguientes".family_dispositions.projection_endpoints]
 reason = """
 A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (generated-modelo-232-2018-y-siguientes-fichero) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this \

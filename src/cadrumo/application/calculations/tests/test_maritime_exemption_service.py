@@ -16,9 +16,10 @@ from decimal import Decimal
 
 import pytest
 
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.queries import RegistryQueryService
 from ....domain.renta.errors import RentaValidationError
 from ....domain.renta.maritime_exemption import (
-    RENTA_EXENTA_CASILLA,
     MaritimeExemptionInactiveError,
     MaritimeWorkerFacts,
     ProfileCompletenessError,
@@ -35,6 +36,18 @@ _ART_7P_LEGAL_REFS = ("ley-35-2006:art-7",)
 _REBECA_LEGAL_REFS = ("ley-19-1994:art-75",)
 _ART_7P_SOURCE_REFS = ("boe-lirpf-statutory-facts",)
 _REBECA_SOURCE_REFS = ("boe-ley-19-1994-art-75-statutory-facts",)
+
+
+def _registry_target_for(observation) -> str:
+    rows = RegistryQueryService(bundled_authority()).formulas_for_scope("100", filing_year=2025, period="0A").rows
+    targets = {
+        row.target_casilla_id
+        for row in rows
+        if set(observation.legal_refs).issubset(row.legal_refs)
+        and set(observation.source_refs).issubset(row.source_refs)
+    }
+    assert len(targets) == 1
+    return next(iter(targets))
 
 
 class TestResolveMaritimeExemptionArt7p:
@@ -81,7 +94,7 @@ class TestResolveMaritimeExemptionArt7p:
             annual_salary=Decimal("36500"),
             qualifying_days=100,
         )
-        assert result.observations[0].casilla_id == RENTA_EXENTA_CASILLA
+        assert result.observations[0].casilla_id == _registry_target_for(result.observations[0])
 
     def test_cap_applied_at_60100_eur(self) -> None:
         """Registry-authoritative cap: 60,100 EUR per Ley 35/2006 Art. 7.p)."""
@@ -98,7 +111,7 @@ class TestResolveMaritimeExemptionArt7p:
             annual_salary=Decimal("36500"),
             qualifying_days=100,
         )
-        assert result.casilla_values[RENTA_EXENTA_CASILLA] == result.observations[0].value
+        assert result.casilla_values[_registry_target_for(result.observations[0])] == result.observations[0].value
 
     def test_raises_when_salary_missing_for_eligible_profile(self) -> None:
         with pytest.raises(RentaValidationError) as excinfo:

@@ -25,12 +25,11 @@ from typing import (
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic.fields import FieldInfo
 
-from ...core.aggregation import BindingSourceKind
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import content_hash_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.calculations.registry.bindings import selector_model_for_source
+from ...domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
 from ...domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
@@ -277,16 +276,15 @@ def _generate_manifest_from_roots(roots: tuple[_Root, ...]) -> ModeloWorkspaceFi
 def _selector_roots() -> tuple[_Root, ...]:
     """Return the admission-agnostic selector roots.
 
-    Purely a function of :class:`BindingSourceKind`, never of a specific
+    Purely a function of the provider enrollment authority, never of a specific
     snapshot or inspection instance, so both admissions share the identical
-    set.
+    set. Mesh-only source kinds name no registry-declarable provider and are
+    absent from the enrollment table by construction.
     """
-    roots: list[_Root] = []
-    for source in BindingSourceKind:
-        selector_model = selector_model_for_source(source)
-        if selector_model is not None:
-            roots.append((f"selector.{source.value}", selector_model))
-    return tuple(roots)
+    return tuple(
+        (f"selector.{kind.value}", registration.provider_model)
+        for kind, registration in BINDING_PROVIDER_REGISTRATIONS.items()
+    )
 
 
 def _sorted_unique_roots(roots: list[_Root]) -> tuple[_Root, ...]:

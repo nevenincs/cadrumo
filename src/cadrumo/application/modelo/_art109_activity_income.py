@@ -25,7 +25,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
-from typing import Final
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.decimal.constants import ZERO
@@ -34,41 +33,87 @@ from ...core.period import Period
 from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
-from ...domain.calculations.registry.temporal import select_revision
+from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ...domain.transactions.irpf_categories import IRPF_CATEGORY_ACTIVIDAD_ECONOMICA, IRPF_CATEGORY_TRABAJO
+from ...domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
 from ...domain.transactions.volumen_ingresos import counts_toward_art_109_activity_income
 
-_ART_109_THRESHOLD_PARAMETER_ID = "irpf.art_109_retained_income_exemption_ratio"
-_ART_109_EXEMPT_ACTIVITIES_SELECTOR: Final[str] = (
-    "rd-439-2007-art-109:selector-m036-actividades-exencion-pago-fraccionado"
-)
-"""Activities Art. 109 exempts: profesionales (ap. 2), agricolas y ganaderas
-(ap. 3), forestales (ap. 4). An empresario is in none of them and gets no
-exemption, which is why this is a declared set rather than "any actividad".
-"""
+# Registry-owned ratio, activity entity sets, category applicability, and source
+# references remain in canonical versioned registry/facts TOML.  The selected
+# declarations are resolved below; evidence folding mechanics remain local.
 
-_ART_109_BASE_NET_OF_SUBVENCIONES_SELECTOR: Final[str] = (
-    "rd-439-2007-art-109:selector-m036-actividades-base-neta-de-subvenciones"
-)
-"""The apartado 3 and 4 activities whose base is measured *con excepcion de las
-subvenciones corrientes y de capital y de las indemnizaciones*. Apartado 2 carries
-no such exclusion, so a profesional's base keeps every receipt.
-"""
-_PROVEN_ACTIVITY_STATES = frozenset({BusinessClassification.BUSINESS, BusinessClassification.MIXED})
-_UNRESOLVED_ACTIVITY_STATES = frozenset(
-    {
-        BusinessClassification.NOT_YET_PROCESSED,
-        BusinessClassification.PROCESSED_UNCLASSIFIED,
-        BusinessClassification.SKIPPED_BY_RULE,
-        BusinessClassification.FAILED_VALIDATION,
-    },
-)
+
+def _art109_registry_declarations(
+    *,
+    filing_year: int,
+    period: Period,
+) -> tuple[object, str, str]:
+    """Resolve the selected Art. 109 ratio and activity selectors."""
+    authority = bundled_authority()
+    query_service = RegistryQueryService(authority)
+    context = query_service._resolve_revision_for_scope(
+        str(Modelo.M130),
+        filing_year=filing_year,
+        period=period.registry_token,
+    )
+    ratio_parameters = tuple(
+        parameter
+        for parameter in context.revision.parameters
+        if parameter.data_type == "ratio" and any("109" in str(legal_ref) for legal_ref in parameter.legal_refs)
+    )
+    if len(ratio_parameters) != 1:
+        raise RegistryValidationError(
+            f"selected Modelo 130 revision {context.revision.id} does not declare one Art. 109 ratio parameter",
+        )
+
+    resolved_catalogue = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="m036-activity-selector-catalogue",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=period.end_date,
+        ),
+    )
+    if not isinstance(resolved_catalogue, ResolvedMappingFact):
+        raise RegistryValidationError("the activity selector catalogue is not a mapping fact")
+    selector_ids: dict[str, str] = {}
+    for entry in resolved_catalogue.payload.entries:
+        key = str(entry.key)
+        if not key.endswith(".entity_set_fact_id") or "art-109" not in key:
+            continue
+        selector_ids["exempt" if "exencion" in key else "net"] = str(entry.value)
+    if set(selector_ids) != {"exempt", "net"}:
+        raise RegistryValidationError("the activity selector catalogue has no complete Art. 109 selector pair")
+    return ratio_parameters[0], selector_ids["exempt"], selector_ids["net"]
+
+
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
 
 
 class Art109ActivityIncomeCoverageStatus(StrEnum):
@@ -120,12 +165,12 @@ def derive_art109_activity_income_coverage_for_work_unit(
 
 
 def art_109_retained_income_threshold(*, filing_year: int, period: Period) -> Decimal:
-    """Return the Art. 109 retained-income ratio the registry grounds for this filing.
+    """Return the Art. 109 retained-income ratio selected for this filing.
 
     The ratio is regulatory data, versioned by filing year plus revision, so it
     is read from the Modelo 130 revision that governs ``(filing_year, period)``
-    rather than inlined here. RD 439/2007 art. 109 establishes it, and the
-    parameter carries that citation.
+    rather than inlined here. The selected registry declaration carries its
+    legal and source grounding.
 
     Args:
         filing_year: The filing year whose revision declares the parameter.
@@ -140,20 +185,11 @@ def art_109_retained_income_threshold(*, filing_year: int, period: Period) -> De
             threshold parameter. Refusing is correct: answering from a default
             would apply an ungrounded ratio to a real filing decision.
     """
-    # Read through the validated authority: a filing-grade value comes from the
-    # published snapshot, not from a raw tree load that reaches the same TOML
-    # without the validation every other filing-grade reader relies on. This is
-    # a correctness change, not a speed one -- both paths cost about the same
-    # per call, and the authority is slower to build the first time.
-    definition = bundled_authority().modelo(Modelo.M130.value)
-    revision = select_revision(definition, filing_year=filing_year, period=period.registry_token)
-    for parameter in revision.parameters:
-        if parameter.id == _ART_109_THRESHOLD_PARAMETER_ID:
-            return resolve_parameter(parameter, {"filing_period": period.end_date})
-    raise RegistryValidationError(
-        f"modelo 130 revision {revision.id} declares no {_ART_109_THRESHOLD_PARAMETER_ID!r}; "
-        "the Art. 109 retained-income threshold has no grounded value to apply",
+    parameter, _exempt_selector, _net_selector = _art109_registry_declarations(
+        filing_year=filing_year,
+        period=period,
     )
+    return resolve_parameter(parameter, {"filing_period": period.end_date})
 
 
 def derive_art109_activity_income_coverage(
@@ -174,11 +210,21 @@ def derive_art109_activity_income_coverage(
     if not period.has_date_span():
         return _insufficient("period_without_date_span")
 
-    threshold = art_109_retained_income_threshold(filing_year=period.filing_year, period=period)
-    exempt_activities = tipo_actividad_code_set(_ART_109_EXEMPT_ACTIVITIES_SELECTOR, effective_date=period.end_date)
-    net_of_subvenciones_activities = tipo_actividad_code_set(
-        _ART_109_BASE_NET_OF_SUBVENCIONES_SELECTOR,
+    parameter, exempt_selector, net_selector = _art109_registry_declarations(
+        filing_year=period.filing_year,
+        period=period,
+    )
+    threshold = resolve_parameter(parameter, {"filing_period": period.end_date})
+    authority = bundled_authority()
+    exempt_activities = tipo_actividad_code_set(
+        exempt_selector,
         effective_date=period.end_date,
+        authority=authority,
+    )
+    net_of_subvenciones_activities = tipo_actividad_code_set(
+        net_selector,
+        effective_date=period.end_date,
+        authority=authority,
     )
     numerator = ZERO
     denominator = ZERO
@@ -230,9 +276,9 @@ def _is_current_period_candidate(transaction: Transaction, *, period: Period) ->
 def _classify_current_period_row(transaction: Transaction, *, period: Period) -> _RowKind:
     if not _is_current_period_candidate(transaction, period=period):
         return _RowKind.IGNORE
-    if transaction.irpf_category == IRPF_CATEGORY_TRABAJO:
+    if has_employment_irpf_category(transaction.irpf_category, direction=transaction.direction):
         return _RowKind.IGNORE
-    if transaction.irpf_category == IRPF_CATEGORY_ACTIVIDAD_ECONOMICA:
+    if has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction):
         return _RowKind.ACTIVITY_INCOME
     if transaction.business_classification is BusinessClassification.PERSONAL:
         return _RowKind.IGNORE

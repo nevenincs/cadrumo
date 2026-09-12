@@ -12,8 +12,6 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.identity.hex_ids import InvoiceId
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -23,6 +21,10 @@ from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.invoices.service import link_transaction
 from ...domain.transactions.models import TransactionCatalogue
 from ...domain.transactions.service import link_invoice
+from ..ledger.protocols import (
+    InvoiceCatalogueCoCommitWriterProtocol,
+    TransactionCatalogueCoCommitWriterProtocol,
+)
 
 
 class InvoiceTransactionLinkResult(BaseModel):
@@ -83,8 +85,8 @@ def link_invoice_transaction_repositories(
     # rationale: both repositories are concrete because this writer calls the
     # adapter-only co-commit escape hatches (to_secure_object_write /
     # save_with_secure_object_writes), absent from the domain protocols.
-    invoice_repository: InvoiceCatalogueRepository | None = None,
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    invoice_repository: InvoiceCatalogueCoCommitWriterProtocol | None = None,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None = None,
     extra_writes: tuple[SecureObjectWrite, ...] = (),
 ) -> InvoiceTransactionLinkResult:
     """Persist a bidirectional invoice link as one all-or-nothing write.
@@ -105,26 +107,32 @@ def link_invoice_transaction_repositories(
         invoice_id: Identifier of the invoice to link.
         transaction_id: Identifier of the transaction to link, resolved to its
             canonical catalogue form before linking.
-        invoice_repository: The concrete :class:`InvoiceCatalogueRepository`,
-            constructed for ``bucket_id`` when omitted.
-        transaction_repository: The concrete
-            :class:`TransactionCatalogueRepository`, constructed for
-            ``bucket_id`` when omitted.
+        invoice_repository: The invoice-catalogue co-commit port supplied by
+            the composition root. The application layer does not construct a
+            persistence adapter when it is omitted.
+        transaction_repository: The transaction-catalogue co-commit port
+            supplied by the composition root. The application layer does not
+            construct a persistence adapter when it is omitted.
         extra_writes: Further secure-object upserts to commit in the same
             unit of work as the link, such as the caller's bucket-event
             history. Treated as opaque: this service commits them atomically
             with the two catalogues but never inspects or constructs them, so
             the invoice layer stays free of event-history concerns.
 
-    Both repositories are the concrete adapters rather than the domain
-    protocols, because this writer calls the co-commit escape hatches the
-    protocols do not declare.
+    Both repositories are application-owned co-commit ports. Their concrete
+    secure-object implementations are supplied by an outer composition root;
+    this module owns only the atomic linkage orchestration.
 
     Returns an :class:`InvoiceTransactionLinkResult` with the updated
     invoice and transaction catalogues after the link is written.
     """
-    invoices_repo = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
-    transactions_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
+    if invoice_repository is None or transaction_repository is None:
+        raise InvoiceLinkError(
+            "invoice and transaction repository ports are required for atomic linkage",
+            context={"bucket_id": bucket_id},
+        )
+    invoices_repo = invoice_repository
+    transactions_repo = transaction_repository
     # The invoice catalogue is a SINGLETON row, so its write is revisioned: an
     # unguarded one rewrites the whole catalogue over any invoice another caller
     # added between this read and the batch. The transaction store writes a row

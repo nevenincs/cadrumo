@@ -16,15 +16,16 @@ from dataclasses import dataclass
 
 import pytest
 
-from .....application.filing.draft_construction import _binding_provenance
+from .....application.filing.draft_construction import binding_provenance
 from .....application.modelo.calculation_actions import assert_no_novel_source_kinds
 from .....application.modelo.calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
 from .....core.aggregation import BindingSourceKind
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....domain.filing.errors import ModeloBuilderError
 from ..authority import bundled_authority
-from ..bindings import selector_model_for_source, validate_binding_selector_shape
-from ..schema import DataBindingDefinition, ModeloRevision
+from ..binding_provider_registration import RouteOwnership, provider_model_for, registration_for
+from ..bindings import validate_binding_selector_shape
+from ..schema import BindingDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -45,7 +46,7 @@ class _FilingGradeBinding:
     revision_id: str
     filing_year: int
     period: str
-    binding: DataBindingDefinition
+    binding: BindingDefinition
 
 
 def _representative_scope(period_selector: PeriodSelector) -> tuple[int, str]:
@@ -104,7 +105,10 @@ def _source_route_violations(records: tuple[_FilingGradeBinding, ...]) -> list[s
     for record in records:
         source = record.binding.source
         identity = f"{record.modelo_id}/{record.revision_id}/{record.binding.id}/{source.value}"
-        if source not in CALCULATION_ROUTE_ENROLLED_SOURCES:
+        if (
+            isinstance(registration_for(source).route, RouteOwnership)
+            and source not in CALCULATION_ROUTE_ENROLLED_SOURCES
+        ):
             violations.append(f"{identity}: source has no route resolver")
     return violations
 
@@ -118,8 +122,9 @@ def test_every_filing_grade_binding_has_a_validated_selector_and_calculation_bou
     assert records, "filing-grade revision corpus yielded no bindings"
     violations: list[str] = []
     for record in records:
-        if selector_model_for_source(record.binding.source) is None:
-            violations.append(f"{record.modelo_id}/{record.revision_id}/{record.binding.id}: no selector model")
+        provider_model = provider_model_for(record.binding.source)
+        if not isinstance(record.binding.provider, provider_model):
+            violations.append(f"{record.modelo_id}/{record.revision_id}/{record.binding.id}: provider model mismatch")
         diagnostics = validate_binding_selector_shape(record.binding)
         if diagnostics:
             violations.append(
@@ -132,14 +137,15 @@ def test_every_filing_grade_binding_has_a_validated_selector_and_calculation_bou
 
 
 def test_selector_gate_bites_when_a_live_filing_binding_is_routed_to_the_wrong_family() -> None:
-    """Selector dispatch cannot be weakened into a source-agnostic pass-through."""
+    """The provider discriminator cannot be changed without changing its member."""
     records = _filing_grade_bindings()
     target = next(
         record.binding for record in records if record.binding.source is BindingSourceKind.LEDGER_IVA_AGGREGATION
     )
-    mutated = target.model_copy(update={"source": BindingSourceKind.MANUAL_INPUT})
+    mutated_provider = target.provider.model_copy(update={"kind": BindingSourceKind.MANUAL_INPUT})
+    mutated = target.model_copy(update={"provider": mutated_provider})
 
-    assert validate_binding_selector_shape(mutated)
+    assert not isinstance(mutated.provider, provider_model_for(mutated.source))
 
 
 def test_every_filing_grade_binding_source_is_enrolled() -> None:
@@ -153,7 +159,7 @@ def test_filing_binding_provenance_is_copied_verbatim_from_validated_authority()
     """Filing values inherit non-empty typed provenance from each binding declaration."""
     records = _filing_grade_bindings()
     for record in records:
-        source, legal_refs, source_refs = _binding_provenance(record.binding)
+        source, legal_refs, source_refs = binding_provenance(record.binding)
         assert source is record.binding.source
         assert legal_refs == record.binding.legal_refs
         assert source_refs == record.binding.source_refs
@@ -162,5 +168,5 @@ def test_filing_binding_provenance_is_copied_verbatim_from_validated_authority()
 
     ungrounded = records[0].binding.model_copy(update={"legal_refs": ()})
     with pytest.raises(ModeloBuilderError) as raised:
-        _binding_provenance(ungrounded)
+        binding_provenance(ungrounded)
     assert raised.value.translated_message == "application.filing.build_draft.errors.binding_provenance_missing"

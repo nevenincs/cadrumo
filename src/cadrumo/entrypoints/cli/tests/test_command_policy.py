@@ -9,12 +9,11 @@ from typing import cast
 
 import pytest
 
+from ....application.operator_surface.command_ports import CommandCapabilityClass
 from .._command_policy import (
     CommandExecutionPolicy,
-    CommandWriteRouteValue,
 )
-from .._command_schema import CommandCapabilityClass
-from ..command_spec import Capability, CommandWriteRoute, SideEffect
+from ..command_spec import Capability, CommandWriteRoute, CommandWriteRouteValue, SideEffect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

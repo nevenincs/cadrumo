@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.user_profile.overview import _MASK_KEYWORDS
+from ....application.user_profile.overview import MASK_KEYWORDS
 from ....core.logging import SCRUB_FIELD_PATTERNS
 from ....core.redaction.rules import ALWAYS_REDACT_KEY_TERMS
 from ..remote_state_outcomes import (
@@ -74,7 +74,7 @@ def test_profile_overview_mask_keywords_compose_the_shared_base() -> None:
     their own profile — while ``core.logging`` and the live diagnostics both
     already knew to redact it.
     """
-    assert ALWAYS_REDACT_KEY_TERMS <= _MASK_KEYWORDS
+    assert ALWAYS_REDACT_KEY_TERMS <= MASK_KEYWORDS
 
 
 def test_profile_overview_mask_keywords_keep_their_own_domain_specific_additions() -> None:
@@ -87,8 +87,8 @@ def test_profile_overview_mask_keywords_keep_their_own_domain_specific_additions
     deliberately NOT promoted to the base, where it would match ``header_key`` and
     ``producer_key`` across the whole tree.
     """
-    assert _MASK_KEYWORDS - ALWAYS_REDACT_KEY_TERMS
-    assert "key" in _MASK_KEYWORDS
+    assert MASK_KEYWORDS - ALWAYS_REDACT_KEY_TERMS
+    assert "key" in MASK_KEYWORDS
     assert "key" not in ALWAYS_REDACT_KEY_TERMS
 
 

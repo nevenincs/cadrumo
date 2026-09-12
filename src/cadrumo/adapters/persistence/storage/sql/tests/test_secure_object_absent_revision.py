@@ -3,7 +3,7 @@
 The lineage gate and the record contract used to disagree about this row. The
 gate reported ``revision_id is None`` CONSISTENT -- documented as an older,
 readable shape -- and then the codec built
-:class:`~.._secure_object_records.SecureObjectRecord`, whose ``revision_id`` is
+:class:`~..secure_object_records.SecureObjectRecord`, whose ``revision_id`` is
 typed as an exactly-64-character digest, out of ``str(None)``. So the shape the
 gate admitted could not survive the record it was admitted for: the single-row
 surface surfaced a raw Pydantic ``ValidationError`` from inside the codec, and
@@ -29,7 +29,7 @@ import pytest
 from ......core.classification.policies import SensitivityClass
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import SecureObjectUnreadableError
-from .._secure_object_records import SecureObjectRecord, SecureObjectUnreadable
+from ..secure_object_records import SecureObjectRecord, SecureObjectUnreadable
 from ..secure_objects import SecureObjectRepository
 from ._secure_objects_support import (
     _repo_at,

@@ -23,40 +23,87 @@ record's own ``required`` flag, checked by the renderer.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from datetime import date
+
 from ...core.filing_projection_ref import FilingProjectionRef
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from .producer_snapshot import FilingProducerSnapshot, Modelo296ProfileFacts
 from .projection import FilingProjectionPlan, FilingProjectionValue, FilingRecordRenderContext
 
 __all__ = ["build_m296_filing_projection_plan"]
 
-#: ``projection_kind`` -> the row collection on :class:`Modelo296ProfileFacts` serving it.
-_M296_COLLECTION_BY_KIND: dict[str, str] = {
-    "m296_perceptor": "perceptor_rows",
-    "m296_perceptor_intereses": "perceptor_intereses_rows",
-    "m296_anexo_pago": "anexo_pago_rows",
-    "m296_anexo_certificado": "anexo_certificado_rows",
-}
+
+def _registry_m296_projection_catalogue(
+    effective_date: date,
+    *,
+    period: str | None = None,
+) -> Mapping[str, str]:
+    """Resolve detail-row collections from the selected registry authority."""
+    authority = bundled_authority()
+    query_service = RegistryQueryService(authority)
+    if period is None:
+        query_service.describe_modelo("296", as_of=effective_date)
+    else:
+        query_service.describe_modelo_for_scope(
+            "296",
+            filing_year=effective_date.year,
+            period=period,
+            as_of=effective_date,
+        )
+    resolved = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="modelo-296-detail-collection-mapping",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise TypeError("Modelo 296 detail collections must resolve as a mapping fact")
+    prefix = "modelo.296.projection."
+    suffix = ".collection"
+    collection_by_kind: dict[str, str] = {}
+    for entry in resolved.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            raise TypeError("Modelo 296 projection declarations must be string-to-string")
+        if not entry.key.startswith(prefix) or not entry.key.endswith(suffix):
+            continue
+        kind = entry.key[len(prefix) : -len(suffix)]
+        collection = entry.value.strip()
+        if not kind.strip() or not collection or kind in collection_by_kind:
+            raise ValueError(f"duplicate or empty Modelo 296 collection declaration {entry.key!r}")
+        collection_by_kind[kind] = collection
+    if not collection_by_kind:
+        raise ValueError("Modelo 296 projection mapping contains no collection declarations")
+    return collection_by_kind
 
 
-def _rows_for(profile: object, kind: str) -> tuple[object, ...]:
+def _rows_for(
+    profile: object,
+    kind: str,
+    *,
+    collection_by_kind: Mapping[str, str],
+) -> tuple[object, ...]:
     """Return the rows a projection kind draws on, empty when the filing carries none."""
     if not isinstance(profile, Modelo296ProfileFacts):
         return ()
-    collection = _M296_COLLECTION_BY_KIND.get(kind)
+    collection = collection_by_kind.get(kind)
     if collection is None:
         return ()
     return tuple(getattr(profile, collection, ()) or ())
 
 
 def _m296_field_name(reference: FilingProjectionRef) -> str:
-    """Return the row-attribute name carried by a supported M296 reference."""
-    match reference.projection_kind:
-        case "m296_perceptor" | "m296_perceptor_intereses" | "m296_anexo_pago" | "m296_anexo_certificado":
-            return reference.field.value
-        case _:
-            raise ValueError(f"unsupported modelo 296 projection kind {reference.projection_kind!r}")
+    """Return the row-attribute name carried by a registry projection reference."""
+    field_name = getattr(reference.field, "value", reference.field)
+    if not isinstance(field_name, str) or not field_name:
+        raise ValueError("Modelo 296 projection reference has no row field")
+    return field_name
 
 
 def build_m296_filing_projection_plan(
@@ -67,6 +114,16 @@ def build_m296_filing_projection_plan(
 ) -> FilingProjectionPlan:
     """Project one record occurrence per row, for every modelo 296 detail family."""
     profile = producer_snapshot.model_profile
+    filing_period = registry_snapshot.filing_period
+    effective_date = (
+        filing_period.end_date
+        if filing_period is not None and filing_period.has_date_span()
+        else date(registry_snapshot.filing_year, 12, 31)
+    )
+    collection_by_kind = _registry_m296_projection_catalogue(
+        effective_date,
+        period=str(registry_snapshot.period),
+    )
     contexts: list[FilingRecordRenderContext] = []
     values: list[FilingProjectionValue] = []
 
@@ -80,7 +137,7 @@ def build_m296_filing_projection_plan(
             # collection sets the depth" ambiguous, and silently answering it would be the
             # same class of guess this module exists to remove.
             raise ValueError(f"modelo 296 record {record.id!r} mixes projection kinds {sorted(kinds)}")
-        rows = _rows_for(profile, kinds.pop())
+        rows = _rows_for(profile, kinds.pop(), collection_by_kind=collection_by_kind)
         for occurrence, row in enumerate(rows, 1):
             contexts.append(
                 FilingRecordRenderContext(

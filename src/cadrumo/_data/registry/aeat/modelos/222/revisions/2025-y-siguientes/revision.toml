@@ -1,4 +1,5 @@
 [revisions."2025-y-siguientes"]
+casilla_source_refs = ["aeat-dr-222-2025"]
 authority_grade = "calculation"
 # Modelo 222 pago fraccionado del Impuesto sobre Sociedades en régimen de
 # consolidación fiscal. The model is approved by Orden HFP/227/2017 art 2
@@ -90,18 +91,3 @@ The rate boxes 17, 21, 24, 62 and 65 (19/20 or 5/7 of the tipo de gravamen by ci
 negocios) stay filer input, as does the minimum [33]. NOT CLAIMED -- filing: the \
 relationship families are unresolved and Modelo 220 group data has no binding."""
 reviewed_at = 2026-09-11
-
-[revisions."2025-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = """
-CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2025-y-siguientes' of modelo 222 has no strictly-earlier sibling revision of this modelo (valid_from 2025-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
-transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."""
-legal_refs = [
-    "orden-hfp-227-2017:art-2",
-    "orden-hfp-227-2017:art-5",
-    "ley-27-2014:art-40",
-]
-source_refs = [
-    "aeat-modelo-202-instructions",
-    "boe-modelo-202-base-order",
-    "aeat-dr-222-2025",
-]

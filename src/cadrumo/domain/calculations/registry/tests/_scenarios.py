@@ -15,11 +15,10 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from cadrumo.core.aggregation import BindingSourceKind
-from cadrumo.core.casilla_id import CasillaId
-from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from cadrumo.core.period import Period
-
+from .....core.aggregation import BindingSourceKind
+from .....core.casilla_id import CasillaId
+from .....core.models import STRICT_FROZEN_CONFIG
+from .....core.period import Period
 from ..authority import bundled_authority
 from ..errors import RegistrySnapshotError, RegistryValidationError
 from ..formula_runtime import (

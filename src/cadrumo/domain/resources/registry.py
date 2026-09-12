@@ -42,7 +42,7 @@ class ResourceRegistry:
 
     def clear(self) -> None:
         """Clear every Repository's Identity Map."""
-        from ...core.resources._repository import ResourceRepository
+        from ...core.resources.repository import ResourceRepository
 
         for attr in self.__dataclass_fields__:
             value = getattr(self, attr)

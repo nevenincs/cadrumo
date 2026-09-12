@@ -24,9 +24,9 @@ from ._bienes_inversion_payloads import (
     BienesInversionListResult,
     BienInversionRecordPayload,
 )
-from ._common import active_bucket_id_or_refuse as _register_bucket_id
-from ._common import bad, emit_envelope
 from ._decimal_parsing import parse_decimal_amount
+from .common import active_bucket_id_or_refuse as _register_bucket_id
+from .common import bad, emit_envelope
 
 
 def _parse_kind(raw: BienInversionKind) -> BienInversionKind:
@@ -41,7 +41,6 @@ def _parse_disposal_regime(raw: str) -> BienInversionDisposalRegime:
         raise bad(
             tr(
                 "cli.app.ledger.bienes_inversion.unknown_disposal_regime",
-                default="Unknown disposal regime {regime!r}; accepted: {accepted}",
                 regime=raw,
                 accepted=accepted,
             ),
@@ -96,7 +95,6 @@ def bienes_inversion_declare(
         raise bad(
             tr(
                 "cli.app.ledger.bienes_inversion.disposal_requires_both",
-                default="--disposal-year and --disposal-regime must be supplied together.",
             ),
         ) from exc
     record = outcome.record

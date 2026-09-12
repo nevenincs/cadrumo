@@ -14,7 +14,7 @@ from datetime import date
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from ..runtime import RegistryModeloSubview, _subview_from_snapshot, build_runtime_schema_provider
+from ..runtime import RegistryModeloSubview, build_runtime_schema_provider, subview_from_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -25,7 +25,7 @@ def test_subview_projects_revision_completeness_manifest() -> None:
     snapshot = bundled_authority().snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
     assert snapshot.revision.completeness_manifest is not None
 
-    subview = _subview_from_snapshot(snapshot)
+    subview = subview_from_snapshot(snapshot)
 
     assert subview.has_completeness_manifest()
     assert subview.completeness_manifest == snapshot.revision.completeness_manifest

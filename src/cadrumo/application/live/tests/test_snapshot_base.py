@@ -11,7 +11,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from ....adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.secure_object_namespaces import TEST_SNAPSHOT_BASE_PROBE_NAMESPACE
-from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRecord, SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_object_records import SecureObjectRecord
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.classification.policies import SensitivityClass
 from ....core.errors.hierarchy import CadrumoError
 from ....core.hashing import content_hash_hex

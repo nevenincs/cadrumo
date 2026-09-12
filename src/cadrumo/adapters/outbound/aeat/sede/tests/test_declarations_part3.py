@@ -288,7 +288,8 @@ def test_register_capture_empty_nif_carries_translated_message() -> None:
     from typing import cast
 
     from ..._playwright import BrowserContext, Page
-    from ..declarations import Declaracion, DeclaracionesRegisterSession
+    from ..declarations import DeclaracionesRegisterSession
+    from ..declarations_schema import Declaracion
     from ..errors import SedeNavigationError
 
     session = _whitespace_nif_session()

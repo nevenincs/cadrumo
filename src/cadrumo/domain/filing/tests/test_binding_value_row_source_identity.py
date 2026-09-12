@@ -17,11 +17,11 @@ from ....core.period import Period
 from ....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ...calculations.row_source_identity import RowSourceIdentity
+from ...submission.models import ModeloDraftStatus
 from ..errors import FilingValidationError
 from ..schema import (
     ModeloBindingValue,
     ModeloDraft,
-    ModeloDraftStatus,
     ModeloValueKind,
     compute_modelo_draft_id,
     registry_schema_version,

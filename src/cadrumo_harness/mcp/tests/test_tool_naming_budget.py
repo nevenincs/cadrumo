@@ -13,13 +13,13 @@ from __future__ import annotations
 
 import pytest
 
-from .._dispatch import (
+from ..dispatch import (
     TOOL_NAME_BUDGET,
     command_key_for_tool,
     prefixed_tool_name_length,
     tool_name_for_command,
 )
-from .._tools import build_tool_descriptors
+from ..tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

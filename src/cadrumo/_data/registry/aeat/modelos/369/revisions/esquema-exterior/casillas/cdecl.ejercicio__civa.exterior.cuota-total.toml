@@ -6,8 +6,6 @@ data_type = "year"
 semantic_role = "filing_year"
 required = true
 input_kind = "informational"
-legal_refs = ["orden-hac-610-2021:art-1"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".casillas]]
 id = "decl.periodo"
@@ -18,7 +16,6 @@ semantic_role = "filing_period"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-hac-610-2021:art-2"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".casillas]]
 id = "iva.exterior.de.services-cuota"
@@ -30,7 +27,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-369-exterior-de-external-services-21pct"
 legal_refs = ["ley-37-1992:art-163-octiesdecies", "orden-hac-610-2021:art-1"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-exterior".casillas]]
 id = "iva.exterior.cuota-total"
@@ -47,10 +43,8 @@ legal_refs = [
     "ley-37-1992:art-163-vicies",
     "orden-hac-610-2021:art-1",
 ]
-source_refs = ["aeat-dr-369-2021"]
 # This schema's record design carries no total-cuota position: the design
 # prints per-destination base and cuota detail rows only. Verified across
 # every sheet of this schema. Not filed_via_binding_field -- that would
 # assert the value IS written, and no binding writes it either.
 export_exemption_reason = "not_in_record_design"
-

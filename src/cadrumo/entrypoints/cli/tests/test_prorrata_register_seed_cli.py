@@ -34,8 +34,9 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....domain.prorrata_register.register import ProrrataRegisterEntry
+from ....tests.cli_envelope import unwrap_cli_result as _json
 from ._cli_surface_profile_fixture import _isolated_backend
-from ._cli_surface_support import _invoke, _json
+from ._cli_surface_support import _invoke
 
 __all__ = ["_isolated_backend"]
 

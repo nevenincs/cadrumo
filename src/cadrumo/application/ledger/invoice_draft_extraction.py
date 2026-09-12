@@ -87,6 +87,7 @@ from ...adapters.persistence.storage.runtime_repository import secure_object_rep
 from ...core.capabilities import ServiceCapability
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
+from ...core.config_support import LLMProvider
 from ...core.document_shape import PDF_CONTAINER_SHAPES, STRUCTURED_DOCUMENT_SHAPES
 from ...core.external_constants import XML_MIME_TYPE
 from ...core.image_media_type import ImageMediaType, detect_image_media_type
@@ -122,7 +123,6 @@ from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdi
 
 if TYPE_CHECKING:
     from ...adapters.outbound.llm.consent import EvidenceConsentToken
-    from ...adapters.outbound.llm.models import LLMProvider
 
 __all__ = ["extract_invoice_draft_from_evidence"]
 

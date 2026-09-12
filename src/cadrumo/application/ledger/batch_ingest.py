@@ -460,7 +460,8 @@ def _assess_model_load_contention_once(
     unsafe about attempting it, and the extractor's own refusal names the
     provisioning verb far more precisely than a guess made here could.
     """
-    from ...application.provisioning import assess_model_load_contention, select_model_for_role
+    from ...application.provisioning import select_model_for_role
+    from ...application.provisioning_runtime import assess_model_load_contention
     from ...core.model_catalogue import ModelRole
 
     for role in (ModelRole.TEXT_EXTRACTION, ModelRole.VISION_TRANSCRIPTION):

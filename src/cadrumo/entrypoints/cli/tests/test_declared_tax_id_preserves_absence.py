@@ -19,7 +19,7 @@ import pytest
 
 from ....application.user_profile.projections import projection_for_taxpayer
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from .._common import declared_tax_id
+from ..common import declared_tax_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

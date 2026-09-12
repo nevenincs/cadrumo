@@ -15,3 +15,13 @@ updated_at = 2026-08-07
 
 [language.es]
 short_description = "Tipo impositivo superreducido del IVA, aplicable a los bienes y servicios de primera necesidad que la ley enumera de forma tasada (LIVA art. 91.Dos)."
+
+[language.ca]
+short_description = "Tipus superreduït de l'IVA per als béns i serveis de primera necessitat de l'article 91.Dos de la LIVA"
+
+[language.en]
+short_description = "Super-reduced VAT rate for essential goods and services listed in Article 91(2) of the LIVA"
+
+[language.hu]
+short_description = "A LIVA 91. cikkének (2) bekezdésében felsorolt alapvető termékek és szolgáltatások kiemelten kedvezményes áfakulcsa"
+

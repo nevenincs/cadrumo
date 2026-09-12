@@ -18,6 +18,7 @@ from __future__ import annotations
 import importlib
 import subprocess
 import sys
+from importlib.util import resolve_name
 
 import pytest
 
@@ -32,13 +33,17 @@ _FORBIDDEN_IN_CHILD: tuple[str, ...] = (
     # The HTML corpus reader, reached through the core facade.
     "bs4",
     # Persistence subsystems the child performs no I/O against.
-    "cadrumo.adapters.persistence.storage.blob_store",
-    "cadrumo.adapters.persistence.storage.envelope",
-    "cadrumo.adapters.persistence.storage.sql",
-    "cadrumo.adapters.persistence.storage.master_key",
+    "...blob_store",
+    "...envelope",
+    "...sql",
+    "...master_key",
     # The capsule machinery: the child is handed framed bytes, never a capsule.
-    "cadrumo.adapters.persistence.storage.custody.capsule",
+    "..capsule",
 )
+
+
+def _resolved_target(target: str) -> str:
+    return resolve_name(target, __package__) if target.startswith(".") else target
 
 
 def _child_modules(prelude: str = "") -> frozenset[str]:
@@ -77,7 +82,7 @@ def test_kdf_worker_child_excludes_the_heavy_persistence_graph() -> None:
         "so the exclusions below would pass vacuously"
     )
 
-    present = sorted(name for name in _FORBIDDEN_IN_CHILD if name in modules)
+    present = sorted(_resolved_target(target) for target in _FORBIDDEN_IN_CHILD if _resolved_target(target) in modules)
     assert present == [], (
         f"the supervised key-derivation child imported {present}. Every wrap and unwrap "
         "spawns this interpreter to perform one Argon2id hash, so an eager import "
@@ -118,10 +123,11 @@ def test_every_forbidden_target_still_resolves() -> None:
     """
     unresolvable: list[str] = []
     for target in _FORBIDDEN_IN_CHILD:
+        resolved_target = _resolved_target(target)
         try:
-            importlib.import_module(target)
+            importlib.import_module(target, package=__package__)
         except ImportError:
-            unresolvable.append(target)
+            unresolvable.append(resolved_target)
 
     assert not unresolvable, (
         f"these forbidden import targets no longer resolve: {unresolvable}. A prohibition on a "

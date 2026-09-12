@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 233, declaració informativa de despeses de custòdia en llars d'infants autoritzades"
+
+[language.en]
+short_description = "Modelo 233, information return on childcare costs at authorized nurseries and centres"
+
+[language.hu]
+short_description = "233-as modell: engedélyezett bölcsődékben és gyermekközpontokban felmerült gyermekfelügyeleti költségek tájékoztató bevallása"
+

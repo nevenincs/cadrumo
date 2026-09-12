@@ -41,11 +41,17 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from datetime import date
 from typing import Final
 
 from pydantic import BaseModel, Field
 
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.schema_base import DateAxis
 from .schema import IvaCategory
 
 __all__ = [
@@ -91,44 +97,56 @@ class RegimeLegend(BaseModel):
     expects_repercutido_line: bool = True
 
 
-REGIME_LEGENDS: Final[tuple[RegimeLegend, ...]] = (
-    RegimeLegend(
-        phrase="inversión del sujeto pasivo",
-        provision="art-6.1.m",
-        declares=IvaCategory.DOMESTIC_REVERSE_CHARGE,
-        expects_repercutido_line=False,
-    ),
-    RegimeLegend(
-        phrase="facturación por el destinatario",
-        provision="art-6.1.l",
-        declares=None,
-    ),
-    RegimeLegend(
-        phrase="régimen especial de las agencias de viajes",
-        provision="art-6.1.n",
-        declares=None,
-    ),
-    RegimeLegend(
-        phrase="régimen especial de los bienes usados",
-        provision="art-6.1.o",
-        declares=None,
-    ),
-    RegimeLegend(
-        phrase="régimen especial de los objetos de arte",
-        provision="art-6.1.o",
-        declares=None,
-    ),
-    RegimeLegend(
-        phrase="régimen especial de las antigüedades y objetos de colección",
-        provision="art-6.1.o",
-        declares=None,
-    ),
-    RegimeLegend(
-        phrase="régimen especial del criterio de caja",
-        provision="art-6.1.p",
-        declares=None,
-    ),
-)
+def _registry_regime_legend_declarations() -> Mapping[str, str]:
+    """Resolve the dated statutory regime-legend catalogue."""
+    authority = bundled_authority()
+    model_report = RegistryQueryService(authority).describe_modelo("303")
+    resolved = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="iva-regime-legend-catalogue",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date.today(),
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise ValueError("IVA regime legend catalogue must resolve as a mapping fact")
+    del model_report
+    return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
+
+
+def _required_legend_declaration(declarations: Mapping[str, str], key: str) -> str:
+    try:
+        return declarations[key]
+    except KeyError as exc:
+        raise ValueError(f"IVA regime legend declaration is missing: {key}") from exc
+
+
+def _registry_regime_legends() -> tuple[RegimeLegend, ...]:
+    declarations = _registry_regime_legend_declarations()
+    order = _required_legend_declaration(declarations, "legend_order").split(",")
+    legends: list[RegimeLegend] = []
+    for ordinal in order:
+        prefix = f"legend.{ordinal}"
+        declared_value = _required_legend_declaration(declarations, f"{prefix}.declares")
+        try:
+            category = None if declared_value == "none" else IvaCategory(declared_value)
+        except ValueError as exc:
+            raise ValueError(f"unknown IVA regime legend category: {declared_value}") from exc
+        expects_value = _required_legend_declaration(declarations, f"{prefix}.expects_repercutido_line")
+        if expects_value not in {"true", "false"}:
+            raise ValueError(f"invalid IVA regime legend line expectation: {expects_value}")
+        legends.append(
+            RegimeLegend(
+                phrase=_required_legend_declaration(declarations, f"{prefix}.phrase"),
+                provision=_required_legend_declaration(declarations, f"{prefix}.provision"),
+                declares=category,
+                expects_repercutido_line=expects_value == "true",
+            )
+        )
+    return tuple(legends)
+
+
+REGIME_LEGENDS: Final[tuple[RegimeLegend, ...]] = _registry_regime_legends()
 """Every mention RD 1619/2012 art. 6.1 fixes as a literal phrase, in its order.
 
 The mentions under art. 6.1.o are three separate phrases in the regulation rather

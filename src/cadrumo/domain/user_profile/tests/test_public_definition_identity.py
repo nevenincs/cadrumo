@@ -143,7 +143,7 @@ def test_public_definition_inventory_is_exhaustive_and_identity_preserving() -> 
     for module_name, expected_names in PUBLIC_DEFINITIONS.items():
         module_path = _PACKAGE_ROOT / f"{module_name}.py"
         assert _defined_public_names(module_path) == set(expected_names), module_name
-        module = importlib.import_module(f"{_PACKAGE}.{module_name}")
+        module = importlib.import_module(f".{module_name}", package=_PACKAGE)
         for symbol_name in expected_names:
             value = getattr(module, symbol_name)
             assert module.__dict__[symbol_name] is value
@@ -153,7 +153,7 @@ def test_public_definition_inventory_is_exhaustive_and_identity_preserving() -> 
 
 def test_package_namespace_is_inert() -> None:
     """The structural package root imports, exports, and lazily resolves nothing."""
-    package = importlib.import_module(_PACKAGE)
+    package = importlib.import_module(".", package=_PACKAGE)
     assert package.__all__ == []
     tree = ast.parse((_PACKAGE_ROOT / "__init__.py").read_text(encoding="utf-8"))
     assert not [

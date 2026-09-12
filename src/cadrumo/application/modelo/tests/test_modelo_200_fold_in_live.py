@@ -20,7 +20,7 @@ never on the operator's live calculate.
   stock casilla ``00670`` ("pendiente de aplicación a principio del período").
   Relation ``modelo-200-2024-rel-self-bin-pendiente-anterior`` (``source_casilla_id =
   '00671'``) drives binding
-  ``modelo-200-2024-bin-pendiente-ejercicios-anteriores`` (``copy``), which casilla
+  ``modelo-200-bin-pendiente-ejercicios-anteriores`` (``copy``), which casilla
   ``00670`` (``input_kind = bound``) consumes.
 * **Dotaciones-deterioro self-carry** (LIS art. 13, a dotación whose deducibility
   conditions are not yet met stays pending), tracked SEPARATELY per condition-state
@@ -80,12 +80,11 @@ from ....domain.calculations.registry.tests.registry_observations import (
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ...calculations.observations_repository import CalculationObservationRepository
+from ...calculations.observations_repository import APP_FILING_SOURCE_KIND, CalculationObservationRepository
 from ..calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ..filed_revision_observation import APP_FILING_SOURCE_KIND
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

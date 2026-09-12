@@ -99,6 +99,7 @@ from .ids import (
     RelationId,
     SourceRefId,
 )
+from .relations import relation_prefill_bindings_for_period
 from .runtime_graph import formula_evaluation_order
 from .schema import FormulaDefinition, ModeloRevision, RegistrySnapshot
 from .schema_formula import FormulaExpression, ParameterDefinition
@@ -489,7 +490,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
             date-aware ops; ``filing_period`` defaults to the snapshot's typed
             calculation filing date when present, otherwise its year-end.
         binding_values: Optional resolved numeric binding values keyed by
-            :class:`~domain.calculations.registry.DataBindingDefinition`
+            :class:`~domain.calculations.registry.BindingDefinition`
             id; Decimal-only.
         enum_binding_values: Optional string-valued bindings (e.g. profile
             CCAA) keyed by binding id; consumed by enum-routed ops.
@@ -550,7 +551,7 @@ def _evaluate_formula_target(
     operand_casilla_refs: list[CasillaId] = []
     operand_values: list[Decimal] = []
     try:
-        value = _evaluate_expression(
+        value = evaluate_expression(
             formula.expression,
             values=state.values,
             binding_values=resolved.resolved_bindings,
@@ -670,11 +671,7 @@ def _validate_external_value_ids(
 ) -> None:
     revision = snapshot.revision
     binding_ids = {binding.id for binding in revision.bindings}
-    relation_ids = {
-        relation.id
-        for relation in revision.relations
-        if not relation.target_periods or snapshot.period in relation.target_periods
-    }
+    relation_ids = {binding.id for binding, _ in relation_prefill_bindings_for_period(revision, period=snapshot.period)}
     _reject_unknown_external_values(resolved_bindings, binding_ids, "binding")
     _reject_unknown_external_values(resolved_relations, relation_ids, "relation")
     _reject_unknown_external_values(
@@ -723,7 +720,7 @@ def _validate_operand_casilla_refs(
             )
 
 
-def _evaluate_expression(
+def evaluate_expression(
     expression: FormulaExpression,
     *,
     values: Mapping[CasillaId, Decimal],
@@ -742,11 +739,11 @@ def _evaluate_expression(
     filing_year: int = 0,
     text_values: Mapping[CasillaId, str] | None = None,
 ) -> Decimal:
-    """Build the shared :class:`_EvalContext` for one formula tree and evaluate it.
+    """Build the shared :class:`EvalContext` for one formula tree and evaluate it.
 
     The entry point from loose arguments: it normalises the optional channels
     and constructs the context once. Recursive re-entry goes through
-    :func:`_evaluate_with_ctx`, which carries that same context object forward
+    :func:`evaluate_with_context`, which carries that same context object forward
     instead of rebuilding it.
 
     Returns:
@@ -755,7 +752,7 @@ def _evaluate_expression(
     resolved_enum_bindings: Mapping[BindingId, str] = enum_binding_values or dict[BindingId, str]()
     resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or dict[BindingId, date]()
     resolved_text_values: Mapping[CasillaId, str] = text_values or dict[CasillaId, str]()
-    ctx = _EvalContext(
+    ctx = EvalContext(
         values=values,
         binding_values=binding_values,
         parameters=parameters,
@@ -772,17 +769,17 @@ def _evaluate_expression(
         filing_year=filing_year,
         text_values=resolved_text_values,
     )
-    return _evaluate_with_ctx(expression, ctx)
+    return evaluate_with_context(expression, ctx)
 
 
 @dataclass(frozen=True, slots=True)
-class _EvalContext:
+class EvalContext:
     """Bundles the runtime sinks + maps threaded through every recursive call.
 
     Frozen and slotted. Exactly one instance is built per formula tree, by
-    :func:`_evaluate_expression`, and handed by reference to every per-op
+    :func:`evaluate_expression`, and handed by reference to every per-op
     evaluator and every recursive re-entry through
-    :func:`_evaluate_with_ctx`; the tree is walked without rebuilding it.
+    :func:`evaluate_with_context`; the tree is walked without rebuilding it.
     The three list sinks (operand_refs, operand_casilla_refs, operand_values)
     ARE mutated in place — they accumulate evaluation provenance for the
     explainability surface, and passing the one context object by reference is
@@ -806,7 +803,7 @@ class _EvalContext:
     text_values: Mapping[CasillaId, str] = field(default_factory=lambda: dict[CasillaId, str]())
 
 
-def _evaluate_with_ctx(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+def evaluate_with_context(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
     """Evaluate one expression node against ``ctx``, recursing into its args.
 
     The dispatcher proper: leaf, specialised per-op evaluator, or generic
@@ -818,14 +815,14 @@ def _evaluate_with_ctx(expression: FormulaExpression, ctx: _EvalContext) -> Deci
         return _evaluate_leaf(expression, ctx)
     op = expression.op
     require_formula_operator_arity(op, len(expression.args))
-    evaluator = _SPECIALIZED_EXPRESSION_EVALUATORS.get(op)
+    evaluator = SPECIALIZED_EXPRESSION_EVALUATORS.get(op)
     if evaluator is not None:
         return evaluator(expression, ctx)
-    args = [_evaluate_with_ctx(arg, ctx) for arg in expression.args]
+    args = [evaluate_with_context(arg, ctx) for arg in expression.args]
     return _evaluate_args_op(op, args)
 
 
-def _evaluate_lookup_bracket(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+def _evaluate_lookup_bracket(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
     if len(expression.args) != 2:
         raise RegistryValidationError("formula op 'lookup_bracket' expects 2 args")
     bracket_arg = expression.args[1]
@@ -838,14 +835,14 @@ def _evaluate_lookup_bracket(expression: FormulaExpression, ctx: _EvalContext) -
         raise RegistryValidationError(
             f"parameter {bracket_arg.parameter!r} must declare data_type='bracket_table' to be used by lookup_bracket",
         )
-    base = _evaluate_with_ctx(expression.args[0], ctx)
+    base = evaluate_with_context(expression.args[0], ctx)
     ctx.operand_refs.append(bracket_arg.parameter)
     result = _resolve_bracket(bracket_param, base, ctx.date_context)
     ctx.operand_values.append(result)
     return result
 
 
-def _evaluate_lookup_bracket_by_ccaa(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+def _evaluate_lookup_bracket_by_ccaa(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
     if len(expression.args) != 3:
         raise RegistryValidationError("formula op 'lookup_bracket_by_ccaa' expects 3 args")
     binding_arg = expression.args[1]
@@ -876,7 +873,7 @@ def _evaluate_lookup_bracket_by_ccaa(expression: FormulaExpression, ctx: _EvalCo
             f"parameter {bracket_param_id!r} must declare data_type='bracket_table' "
             f"to be used by lookup_bracket_by_ccaa",
         )
-    base = _evaluate_with_ctx(expression.args[0], ctx)
+    base = evaluate_with_context(expression.args[0], ctx)
     ctx.operand_refs.append(binding_arg.binding)
     ctx.operand_refs.append(bracket_param_id)
     result = _resolve_bracket(bracket_param, base, ctx.date_context)
@@ -884,7 +881,7 @@ def _evaluate_lookup_bracket_by_ccaa(expression: FormulaExpression, ctx: _EvalCo
     return result
 
 
-def _evaluate_lookup_parameter_by_entity_type(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+def _evaluate_lookup_parameter_by_entity_type(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
     """Dispatch a scalar parameter lookup by an enum binding (e.g. entity_type → tipo gravamen for IS modelo 200).
 
     Three args: args[0] is unused (placeholder for symmetry with the
@@ -938,7 +935,7 @@ def _evaluate_lookup_parameter_by_entity_type(expression: FormulaExpression, ctx
     return _resolve_scalar_parameter(scalar_param_id, ctx, op=op)
 
 
-def _evaluate_lookup_bracket_by_entity_type(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+def _evaluate_lookup_bracket_by_entity_type(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
     """Dispatch a bracket-table lookup by an entity-type enum binding.
 
     Mirrors :func:`_evaluate_lookup_parameter_by_entity_type` but routes
@@ -1007,7 +1004,7 @@ def _evaluate_lookup_bracket_by_entity_type(expression: FormulaExpression, ctx: 
             translated_message="errors.calc.dispatch_parameter_kind",
             context={"parameter_id": bracket_param_id, "op": op},
         )
-    base = _evaluate_with_ctx(expression.args[0], ctx)
+    base = evaluate_with_context(expression.args[0], ctx)
     ctx.operand_refs.append(binding_arg.binding)
     ctx.operand_refs.append(bracket_param_id)
     result = _resolve_bracket(bracket_param, base, ctx.date_context)
@@ -1015,7 +1012,7 @@ def _evaluate_lookup_bracket_by_entity_type(expression: FormulaExpression, ctx: 
     return result
 
 
-def _evaluate_if_then_else(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+def _evaluate_if_then_else(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
     """Short-circuit: evaluate the predicate first, then only the selected branch.
 
     Eager evaluation of both branches would surface false-branch
@@ -1024,12 +1021,12 @@ def _evaluate_if_then_else(expression: FormulaExpression, ctx: _EvalContext) -> 
     """
     if len(expression.args) != 3:
         raise RegistryValidationError("formula op 'if_then_else' expects 3 args")
-    predicate_value = _evaluate_with_ctx(expression.args[0], ctx)
+    predicate_value = evaluate_with_context(expression.args[0], ctx)
     selected_branch = expression.args[1] if predicate_value != ZERO else expression.args[2]
-    return _evaluate_with_ctx(selected_branch, ctx)
+    return evaluate_with_context(selected_branch, ctx)
 
 
-def _evaluate_age_at_year_end(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+def _evaluate_age_at_year_end(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
     """Compute age at the fiscal year-end from a date-channel binding.
 
     Expects exactly one arg which must be a ``date_binding`` leaf — the
@@ -1065,7 +1062,7 @@ def _evaluate_age_at_year_end(expression: FormulaExpression, ctx: _EvalContext) 
     return age
 
 
-def _evaluate_binding_leaf(binding_id: BindingId, ctx: _EvalContext) -> Decimal:
+def _evaluate_binding_leaf(binding_id: BindingId, ctx: EvalContext) -> Decimal:
     """Resolve one numeric binding leaf and append its provenance reference."""
     if binding_id not in ctx.binding_values:
         if binding_id in ctx.unresolved_binding_ids:
@@ -1081,22 +1078,6 @@ def _evaluate_binding_leaf(binding_id: BindingId, ctx: _EvalContext) -> Decimal:
     return value
 
 
-def _evaluate_relation_leaf(relation_id: RelationId, ctx: _EvalContext) -> Decimal:
-    """Resolve one numeric relation leaf and append its provenance reference."""
-    if relation_id not in ctx.relation_values:
-        if relation_id in ctx.unresolved_relation_ids:
-            raise _UnresolvedFormulaDependencyError((relation_id,))
-        raise RegistryValidationError(
-            f"relation {relation_id!r} has no supplied value",
-            translated_message="errors.calc.relation_value_missing",
-            context={"relation_id": relation_id},
-        )
-    value = ctx.relation_values[relation_id]
-    ctx.operand_refs.append(relation_id)
-    ctx.operand_values.append(value)
-    return value
-
-
 def _reject_date_binding_leaf(binding_id: BindingId) -> None:
     """Reject a date channel used without its age operation."""
     raise RegistryValidationError(
@@ -1107,7 +1088,7 @@ def _reject_date_binding_leaf(binding_id: BindingId) -> None:
     )
 
 
-def _evaluate_leaf(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+def _evaluate_leaf(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
     if expression.literal is not None:
         return expression.literal
     if expression.casilla_id is not None:
@@ -1118,16 +1099,14 @@ def _evaluate_leaf(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
         _reject_date_binding_leaf(expression.date_binding)
     if expression.parameter is not None:
         return _resolve_scalar_parameter(expression.parameter, ctx, op="formula_parameter")
-    if expression.relation is not None:
-        return _evaluate_relation_leaf(expression.relation, ctx)
     raise RegistryValidationError(
         "empty formula expression",
         translated_message="errors.calc.empty_expression",
     )
 
 
-_FormulaExpressionEvaluator = Callable[[FormulaExpression, _EvalContext], Decimal]
-_SPECIALIZED_EXPRESSION_EVALUATORS: dict[str, _FormulaExpressionEvaluator] = {
+_FormulaExpressionEvaluator = Callable[[FormulaExpression, EvalContext], Decimal]
+SPECIALIZED_EXPRESSION_EVALUATORS: dict[str, _FormulaExpressionEvaluator] = {
     "lookup_bracket": _evaluate_lookup_bracket,
     "lookup_bracket_by_ccaa": _evaluate_lookup_bracket_by_ccaa,
     "m100_resolve_renta_inmobiliaria_imputada": _m100.evaluate_m100_resolve_renta_inmobiliaria_imputada,
@@ -1149,6 +1128,3 @@ _SPECIALIZED_EXPRESSION_EVALUATORS: dict[str, _FormulaExpressionEvaluator] = {
     ),
     "m100_resolve_eo_agraria_indices_correctores": _m100.evaluate_m100_resolve_eo_agraria_indices_correctores,
 }
-
-
-EvalContext = _EvalContext

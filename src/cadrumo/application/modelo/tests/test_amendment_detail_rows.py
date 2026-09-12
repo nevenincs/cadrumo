@@ -22,11 +22,8 @@ from decimal import Decimal
 import pytest
 
 from ....domain.modelos.calculation_revision import derive_calculation_revision_id
-from ....domain.modelos.row_models import (
-    DETAIL_ROW_BEARING_MODELOS,
-    Modelo347ContraparteRow,
-    ModeloDetailRow,
-)
+from ....domain.modelos.row_models import Modelo347ContraparteRow, ModeloDetailRow
+from .._calculation_modelo_adjustments import detail_row_declaration_modelos
 from ..action_errors import AmendmentDetailRowsRequiredError
 from ..amendment_actions import _require_amendment_detail_rows
 
@@ -68,14 +65,14 @@ def _counterparty() -> Modelo347ContraparteRow:
     )
 
 
-@pytest.mark.parametrize("modelo", sorted(DETAIL_ROW_BEARING_MODELOS))
+@pytest.mark.parametrize("modelo", sorted(detail_row_declaration_modelos()))
 def test_a_row_bearing_modelo_refuses_an_amendment_that_omits_its_rows(modelo: str) -> None:
     """Silence is not a nil declaration; the two amendment kinds read it apart."""
     with pytest.raises(AmendmentDetailRowsRequiredError):
         _require_amendment_detail_rows(modelo=modelo, supplied=None)
 
 
-@pytest.mark.parametrize("modelo", sorted(DETAIL_ROW_BEARING_MODELOS))
+@pytest.mark.parametrize("modelo", sorted(detail_row_declaration_modelos()))
 def test_an_explicitly_empty_set_is_an_answer_and_is_accepted(modelo: str) -> None:
     """Declaring that the period had no counterparts is a statement, not silence."""
     assert _require_amendment_detail_rows(modelo=modelo, supplied=[]) == ()

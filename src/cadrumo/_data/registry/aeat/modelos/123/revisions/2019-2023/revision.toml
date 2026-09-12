@@ -1,4 +1,5 @@
 [revisions."2019-2023"]
+casilla_source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
 authority_grade = "filing"
 valid_from = 2019-01-01
 valid_to = 2023-12-31
@@ -17,26 +18,6 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
-
-[revisions."2019-2023".family_dispositions.casilla_continuidad_evolutions]
-reason = """
-CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2019-2023' of modelo 123 has no strictly-earlier sibling revision of this modelo (valid_from 2019-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; \
-the casilla_continuidad_evolutions family is empty by construction, not by omission."""
-legal_refs = [
-    "ley-35-2006:art-25",
-    "ley-35-2006:art-99",
-    "orden-eha-3435-2007:anexo-ii",
-    "rd-439-2007:art-108",
-    "rd-439-2007:art-90",
-    "ley-35-2006:art-101",
-]
-source_refs = [
-    "aeat-dr-123-2019-2023-v13",
-    "aeat-dr-123-2019-2023-v13-form-text",
-    "aeat-modelo-123-procedure",
-    "boe-modelo-123-2007-form",
-    "boe-modelo-123-2007-form-text",
-]
 
 [revisions."2019-2023".family_dispositions.projection_endpoints]
 reason = """
@@ -76,12 +57,5 @@ source_refs = ["aeat-modelo-123-procedure", "boe-modelo-123-2007-form"]
 reason = """
 A dependency classification declares which OTHER modelo's filing a value here derives from, and modelo 123 derives from none. It reports the retenciones the retenedor itself practised on rendimientos del capital mobiliario in the period, from its own payment records rather than folded in from another return. The dependency runs the OTHER way: modelo 193 is the annual resumen that summarises the 123 filings of the year, so it is 193 that classifies a dependency on 123. Nothing upstream of 123 \
 exists to classify, so the family is inapplicable by this modelo's position in the chain."""
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90", "rd-439-2007:art-108", "ley-35-2006:art-101"]
-source_refs = ["aeat-modelo-123-procedure", "boe-modelo-123-2007-form"]
-
-[revisions."2019-2023".family_dispositions.relations]
-reason = """
-A relation folds a value from ANOTHER modelo's revision into this one's calculation. Modelo 123 folds in nothing: every input casilla is entered by the retenedor from its own payment records, and its formulas aggregate those inputs and subtract the prior autoliquidacion of this same modelo and period -- a within-revision reference, which is a formula over its own casillas and not a cross-model relation. The annual reconciliation with modelo 193 runs in the opposite direction and is that modelo's \
-to declare."""
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-modelo-123-procedure", "boe-modelo-123-2007-form"]

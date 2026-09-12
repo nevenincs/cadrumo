@@ -14,16 +14,16 @@ from pydantic import ValidationError
 from sqlalchemy import event
 
 from ......core.classification.policies import SensitivityClass
+from ......core.secure_object_write import SecureObjectWrite
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import SecureObjectRevisionConflictError, StorageValidationError
+from ...namespace_taxonomy import StorageCustodyDisposition, StorageNamespaceScope
 from ...secure_object_namespaces import (
     SecureObjectNamespaceDefinition,
-    StorageCustodyDisposition,
     StorageHierarchyRegistry,
-    StorageNamespaceScope,
 )
-from .._secure_object_records import SecureObjectRecord, SecureObjectUnreadable
-from ..secure_objects import SecureObjectNamespaceIntegrity, SecureObjectRepository, SecureObjectWrite
+from ..secure_object_records import SecureObjectNamespaceIntegrity, SecureObjectRecord, SecureObjectUnreadable
+from ..secure_objects import SecureObjectRepository
 from ._secure_objects_support import (
     _ephemeral_secure_repo,
     _ephemeral_secure_repo_at,
@@ -223,7 +223,7 @@ def test_list_records_only_emits_warning_when_unreadable_rows_exist(
 def test_iter_all_records_raw_yields_every_row_without_decryption(tmp_path: Path) -> None:
     """The raw iterator returns on-wire ciphertext + metadata across namespaces."""
 
-    from ..secure_objects import SecureObjectRawRow
+    from ..secure_object_records import SecureObjectRawRow
 
     with _ephemeral_secure_repo(tmp_path, "raw.db") as (_, _, repo):
         now = datetime.now(UTC)

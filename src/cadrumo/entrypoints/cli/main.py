@@ -37,19 +37,19 @@ from ...core.storage_taxonomy import StorageCategory as _StorageCategory
 from ...core.storage_taxonomy_locations import storage_location as _storage_location
 from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
 from ._command_runtime import build_command_app as _build_command_app
-from ._common import attach_cli_policy_verdict, resolve_cli_precondition_action
 from ._framework_localisation import (
     localise_help_section_headers as _localise_help_section_headers,
 )
 from ._framework_localisation import (
     localise_typer_parse_error_messages as _localise_typer_parse_error_messages,
 )
-from ._operator_surface_reconciliation import current_operator_surface_reconciliation
 from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
 from ._stdio import disable_rich_cli_rendering as disable_rich_cli_rendering
 from .command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
+from .common import attach_cli_policy_verdict, resolve_cli_precondition_action
 from .errors import decorate_typer_app as _decorate_typer_app
 from .language_argv import apply_language_argv_to_environment as _apply_language_argv_to_environment
+from .operator_surface_reconciliation import current_operator_surface_reconciliation
 
 # Force UTF-8 on stdout / stderr before any echo, log, or Rich console
 # instantiation. Default Windows terminals expose cp1252; emoji,
@@ -94,7 +94,7 @@ def _declared_execution_policy_for_cli_path(
 
 
 def _execution_policy_from_spec(spec: CommandSpec) -> _CommandExecutionPolicy:
-    from ._command_schema import CommandCapabilityClass
+    from ...application.operator_surface.command_ports import CommandCapabilityClass
 
     declared = spec.policy
     return _CommandExecutionPolicy(
@@ -300,8 +300,8 @@ def _emit_command_surface_manifest() -> None:
     therefore remain authoritative in the CLI composition root without making
     the harness import a sibling entrypoint.
     """
-    from ._command_schema import command_registration_projection, command_schema_refs, command_schema_type
-    from ._verb_input_schema import build_verb_input_schemas, is_exposable_command
+    from .command_schema import command_registration_projection, command_schema_refs, command_schema_type
+    from .verb_input_schema import build_verb_input_schemas, is_exposable_command
 
     references = command_schema_refs()
     command_keys = tuple(reference.command for reference in references)

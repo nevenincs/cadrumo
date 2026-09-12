@@ -24,10 +24,9 @@ from ....domain.calculations.registry.schema_input_kind import InputKind
 from .. import _edit_execution, revision_persistence
 from .. import edit_models as _edit_models
 from .. import edit_services as _edit_services
-from ..edit_contract import ModeloEditCompatibilityTupleV1
+from ..edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationResultReceiptV1
 from ..edit_models import (
     ModeloEditBaselineV1,
-    ModeloEditMutationResultReceiptV1,
     ModeloEditStaleBaselineRefusalV1,
 )
 

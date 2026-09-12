@@ -11,7 +11,6 @@ binding = "modelo-130-actividad-economica-ingresos-cumulative"
 # ESTABLISH actividad-económica income: art-27 (concept of rendimientos de
 # actividades económicas) and art-28 (reglas generales de cálculo).
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-27", "ley-35-2006:art-28"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "02"
@@ -26,7 +25,6 @@ binding = "modelo-130-actividad-economica-gastos-cumulative"
 # ESTABLISH deductible gastos in estimación directa: art-28 (reglas generales)
 # and art-30 (estimación directa, gastos fiscalmente deducibles).
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-28", "ley-35-2006:art-30"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "03"
@@ -49,7 +47,6 @@ formula = "modelo-130-rendimiento-neto"
 # LIRPF establishing articles art-28 (reglas generales) and art-30 (estimación
 # directa).
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-28", "ley-35-2006:art-30"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "04"
@@ -62,7 +59,6 @@ input_kind = "computed"
 formula = "modelo-130-pago-fraccionado-directa"
 constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-130-instructions"] }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "05"
@@ -70,7 +66,7 @@ number = "05"
 section = ["actividades_economicas_estimacion_directa"]
 data_type = "money"
 semantic_role = "pago_fraccionado_previo"
-constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"], source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"] }
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"] }
 required = false
 # Same-ejercicio carry of prior-quarter pagos fraccionados (AEAT
 # instrucciones casilla 05): SUM max(0, prior casilla 07_q) - SUM prior
@@ -80,7 +76,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-130-pagos-fraccionados-anteriores"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "06"
@@ -88,11 +83,10 @@ number = "06"
 section = ["actividades_economicas_estimacion_directa"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"
-constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"], source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"] }
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"] }
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "07"
@@ -104,7 +98,6 @@ required = false
 input_kind = "computed"
 formula = "modelo-130-resultado-apartado-i"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "08"
@@ -115,7 +108,6 @@ semantic_role = "irpf_pf_volumen_ingresos_trimestre"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "09"
@@ -123,12 +115,11 @@ number = "09"
 section = ["actividades_agricolas_ganaderas_forestales_pesqueras"]
 data_type = "money"
 semantic_role = "irpf_pf_importe"
-constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"], source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"] }
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"] }
 required = false
 input_kind = "computed"
 formula = "modelo-130-pago-fraccionado-agrario"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "10"
@@ -136,11 +127,10 @@ number = "10"
 section = ["actividades_agricolas_ganaderas_forestales_pesqueras"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"
-constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"], source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"] }
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"] }
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "11"
@@ -152,7 +142,6 @@ required = false
 input_kind = "computed"
 formula = "modelo-130-resultado-apartado-ii"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "12"
@@ -164,7 +153,6 @@ required = false
 input_kind = "computed"
 formula = "modelo-130-suma-parciales"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "13"
@@ -176,7 +164,6 @@ required = false
 input_kind = "computed"
 formula = "modelo-130-minoracion-rendimientos-netos"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "14"
@@ -188,7 +175,6 @@ required = false
 input_kind = "computed"
 formula = "modelo-130-neto-tras-minoracion"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "15"
@@ -201,7 +187,6 @@ input_kind = "computed"
 formula = "modelo-130-resultados-negativos-anteriores-cap"
 constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-130-instructions"] }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "16"
@@ -212,7 +197,6 @@ semantic_role = "deduccion_vivienda_habitual"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "17"
@@ -224,7 +208,6 @@ required = false
 input_kind = "computed"
 formula = "modelo-130-diferencia"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "18"
@@ -235,7 +218,6 @@ semantic_role = "resultado_anteriores_autoliquidaciones"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "19"
@@ -247,7 +229,6 @@ required = false
 input_kind = "computed"
 formula = "modelo-130-resultado-final"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 # -----------------------------------------------------------------------------
 # Prior-quarter negative-result carry-forward. AEAT Modelo 130 instructions
@@ -271,5 +252,4 @@ input_kind = "computed"
 formula = "modelo-130-saldo-negativo-fin-periodo"
 constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-130-instructions"] }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 export_exemption_reason = "not_in_record_design"

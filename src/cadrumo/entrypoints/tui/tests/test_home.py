@@ -7,8 +7,6 @@ from pathlib import Path
 from typing import cast
 
 import pytest
-from dev.tui.harness.frame import geometry_band, screen_text
-from dev.tui.harness.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from textual.containers import VerticalScroll
 from textual.widgets import DataTable, Static
 
@@ -17,6 +15,8 @@ from ....core.external_constants import OutputLanguage
 from ..components.host import ScreenHostApp
 from ..components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
 from ..home import HomeScreen
+from .frame import geometry_band, screen_text
+from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

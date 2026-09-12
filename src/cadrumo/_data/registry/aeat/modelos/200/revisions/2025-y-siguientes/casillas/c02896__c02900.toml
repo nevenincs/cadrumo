@@ -7,7 +7,6 @@ semantic_role = "is_correccion_revalorizaciones_contables_art17_1_permanente_dis
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-17"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02897"
 number = "02897"
@@ -17,7 +16,6 @@ semantic_role = "is_correccion_revalorizaciones_contables_art17_1_temporaria_eje
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-17"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02898"
 number = "02898"
@@ -27,7 +25,6 @@ semantic_role = "is_correccion_revalorizaciones_contables_art17_1_temporaria_ant
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-17"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02899"
 number = "02899"
@@ -37,7 +34,6 @@ semantic_role = "is_correccion_revalorizaciones_contables_art17_1_saldo_inicial"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-17"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02900"
 number = "02900"
@@ -47,4 +43,3 @@ semantic_role = "is_correccion_revalorizaciones_contables_art17_1_saldo_final"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-17"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]

@@ -38,7 +38,7 @@ from ._adapter_utils import landed_origin as _landed_origin
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
 )
-from ._browser_constants import navigation_timeout_ms as get_navigation_timeout_ms
+from ._browser_constants import navigation_timeout_ms
 from .declarations_remote import assert_read_browser_action as _remote_assert_read_browser_action
 from .declarations_remote import assert_read_http as _remote_assert_read_http
 from .declarations_remote import extract_csv_from_url as _extract_csv_from_url
@@ -236,7 +236,7 @@ async def capture_row_pdf_artefact(
         ) from exc
 
     try:
-        await cotejo_page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=get_navigation_timeout_ms())
+        await cotejo_page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=navigation_timeout_ms())
     except PlaywrightError as exc:
         raise SedeNavigationError(
             f"PDF artefact page did not settle for {declaration.expediente_id!r}: {exc}",

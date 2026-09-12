@@ -20,6 +20,9 @@ from typing import TypedDict
 
 import pytest
 
+from ....adapters.persistence.storage.secure_object_namespaces import (
+    LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
+)
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
@@ -28,9 +31,9 @@ from ..justificante import (
     JustificanteCaptureSnapshot,
     JustificanteCaptureSnapshotRepository,
     JustificanteCaptureSnapshotService,
-    SnapshotLifecycleState,
     derive_justificante_capture_snapshot_id,
 )
+from ..snapshot_base import SnapshotLifecycleState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -198,10 +201,7 @@ def test_dropped_superseded_pointer_surfaces_at_load(tmp_path: Path) -> None:
     from sqlalchemy import select
 
     from ....adapters.persistence.storage.sql.orm import SecureObjectRow
-    from ..justificante import (
-        JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
-        justificante_capture_snapshot_object_key,
-    )
+    from ..justificante import justificante_capture_snapshot_object_key
 
     bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
@@ -222,7 +222,7 @@ def test_dropped_superseded_pointer_surfaces_at_load(tmp_path: Path) -> None:
 
         object_key = justificante_capture_snapshot_object_key(bucket_id, predecessor.snapshot_id)
         stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
+            SecureObjectRow.namespace == LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE.namespace,
             SecureObjectRow.object_key == object_key,
         )
 

@@ -7,4 +7,3 @@ semantic_role = "is_reserva_inversiones_illes_balears_importe"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-31-2022:da-70"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]

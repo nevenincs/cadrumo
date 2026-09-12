@@ -13,7 +13,7 @@ from collections.abc import Callable
 from ....core.casilla_id import CasillaId
 from .bindings import binding_source_casilla_ids, binding_source_modelo
 from .runtime_graph import expression_casilla_refs
-from .schema import DataBindingDefinition, ModeloRevision
+from .schema import BindingDefinition, ModeloRevision
 from .schema_surfaces import CasillaDefinition
 
 # ---------------------------------------------------------------------------
@@ -82,7 +82,7 @@ the same columns.
 """
 
 
-def _binding_is_cross_modelo(binding: DataBindingDefinition, modelo_id: str) -> bool:
+def _binding_is_cross_modelo(binding: BindingDefinition, modelo_id: str) -> bool:
     """Return whether a binding names a foreign source modelo.
 
     A binding is *cross-modelo* when its typed selector helper reports a
@@ -131,16 +131,6 @@ def _visit_binding_closure_tokens(
             visit_token(token)
 
 
-def _visit_relation_closure_tokens(
-    revision: ModeloRevision,
-    modelo_id: str,
-    visit_token: Callable[[CasillaId], None],
-) -> None:
-    for relation in revision.relations:
-        if relation.source_modelo == modelo_id:
-            visit_token(relation.source_casilla_id)
-
-
 def _walk_calculation_closure(
     revision: ModeloRevision,
     modelo_id: str,
@@ -154,8 +144,8 @@ def _walk_calculation_closure(
     ``calculation_closure_record_design_metadata``; ``visit_endpoint`` receives every
     formula/binding endpoint casilla and ``visit_token`` every referenced
     casilla token (formula targets, transitive expression refs,
-    verification-expectation operands, and within-modelo binding/relation
-    selectors).
+    verification-expectation operands, and within-modelo binding source
+    coordinates).
     """
     for casilla in revision.casillas:
         if casilla.formula is not None or casilla.binding is not None:
@@ -163,7 +153,6 @@ def _walk_calculation_closure(
     _visit_formula_closure_tokens(revision, visit_token)
     _visit_expectation_closure_tokens(revision, visit_token)
     _visit_binding_closure_tokens(revision, modelo_id, visit_token)
-    _visit_relation_closure_tokens(revision, modelo_id, visit_token)
 
 
 def calculation_closure_casilla_ids(revision: ModeloRevision, modelo_id: str) -> frozenset[CasillaId]:

@@ -6,11 +6,11 @@ import inspect
 
 import pytest
 
-from ..._command_schema import command_registration_metadata
+from ...command_schema import command_registration_metadata
 from ...command_spec import MachineSecretChannelKind, OptionSpec, ProfileAuthenticationPosture
 from ...command_specs import COMMAND_GRAPH
-from .._passphrase import PassphraseChangeSecrets, passphrase_change
 from .._spec_policies import ENCRYPTED_DESTRUCTIVE, STATE_FREE
+from ..passphrase import PassphraseChangeSecrets, passphrase_change
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

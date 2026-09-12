@@ -55,13 +55,13 @@ _SOURCE_REFS = (
 _BASE_BINDINGS = {
     # The production profile resolver supplies this predicate as 1/0 from
     # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
-    "renta-2025-profile-has-economic-activity": Decimal("1"),
-    "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+    "renta-profile-has-economic-activity": Decimal("1"),
+    "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
     "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
-    "renta-2025-profile-marriage-full-year": Decimal("0"),
-    "renta-2025-profile-marriage-month-start": Decimal("0"),
-    "renta-2025-profile-marriage-month-end": Decimal("0"),
-    "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+    "renta-profile-marriage-full-year": Decimal("0"),
+    "renta-profile-marriage-month-start": Decimal("0"),
+    "renta-profile-marriage-month-end": Decimal("0"),
+    "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
 }
 
 _REL = {
@@ -92,9 +92,9 @@ def _scenario(
         inputs={},
         binding_values={
             **_BASE_BINDINGS,
-            "renta-2025-profile-declaration-type": declaration_type,
-            "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count": eligible_count,
-            "renta-2025-profile-unidad-familiar-otros-miembros-base": unidad_familiar_otros_miembros_base,
+            "renta-profile-declaration-type": declaration_type,
+            "renta-profile-madrid-nacimiento-adopcion-eligible-count": eligible_count,
+            "renta-profile-unidad-familiar-otros-miembros-base": unidad_familiar_otros_miembros_base,
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": ccaa},
         relation_values=_REL,

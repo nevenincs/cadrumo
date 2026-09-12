@@ -89,6 +89,15 @@ _NO_PREDECESSOR_TABLE_KEY: Final = "none"
 _INHERITED_SECTION: Final = "casillas"
 _RETIREMENT_SECTION: Final = "casilla_continuidad_evolutions"
 _EDITION_SOURCE_DEFAULT_FIELD: Final = "casilla_source_refs"
+#: The family sections that lift a shared ``source_refs`` onto the manifest the
+#: same way casillas do, each with the manifest key that carries its default.
+#: Declared as a pair so a section can never be defaulted from another
+#: family's grounding: a modelo's bindings cite its record design, its formulas
+#: the approving orden's instructions, and the two are different documents.
+_FAMILY_SOURCE_DEFAULT_FIELDS: Final[tuple[tuple[str, str], ...]] = (
+    ("bindings", "binding_source_refs"),
+    ("formulas", "formula_source_refs"),
+)
 _EDITION_ORDEN_FIELD: Final = "orden_aplicabilidad"
 _ROW_SOURCE_FIELD: Final = "source_refs"
 _ROW_SOURCE_ADDITIONS_FIELD: Final = "additional_source_refs"
@@ -112,14 +121,6 @@ REVISION_GOVERNANCE_FIELDS = _REVISION_GOVERNANCE_FIELDS
 REVISION_MANIFEST_ONLY_FIELDS = _REVISION_MANIFEST_ONLY_FIELDS
 type _RegistryPathFingerprint = tuple[str, int, int, str]
 type _RegistryPathFingerprints = tuple[_RegistryPathFingerprint, ...]
-
-
-@lru_cache(maxsize=256)
-def _load_modelo_file_cached(path: str, byte_count: int, modified_ns: int, content_digest: str) -> ModeloDefinition:
-    del byte_count, modified_ns, content_digest
-    source_path = Path(path)
-    data = freeze_toml(read_toml(source_path, error_factory=RegistryLoadError))
-    return _build_modelo_definition_from_data(source_path, data)
 
 
 def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, object]) -> ModeloDefinition:
@@ -585,7 +586,14 @@ def _lineage_label(lineage: str | None) -> str:
 def _apply_edition_reference_defaults(context: str, table: Mapping[str, object]) -> Mapping[str, object]:
     """Fill the edition's declared reference defaults into the casilla rows that state none.
 
-    Two defaults, both declared once on the edition's manifest:
+    Three families, each defaulted from its own manifest key: ``casillas``
+    from ``casilla_source_refs``, ``bindings`` from ``binding_source_refs``, and
+    ``formulas`` from ``formula_source_refs``. The member-side rule is one rule
+    for all three; only the casilla family also defaults a ``constraints``
+    table and a ``legal_refs``.
+
+    Two defaults for the casilla family, both declared once on the edition's
+    manifest:
 
     - ``casilla_source_refs`` becomes the ``source_refs`` of every casilla row,
       and of every row's ``constraints`` table, that states no ``source_refs``.
@@ -621,16 +629,57 @@ def _apply_edition_reference_defaults(context: str, table: Mapping[str, object])
     """
     source_default = as_toml_array(table.get(_EDITION_SOURCE_DEFAULT_FIELD)) or ()
     orden_default = as_toml_array(table.get(_EDITION_ORDEN_FIELD)) or ()
+    filled: dict[str, object] = {}
     rows = as_toml_array(table.get(_INHERITED_SECTION, ()))
-    if not rows:
-        return table
-    defaulted = tuple(
-        _default_row_references(context, row, source_default=source_default, orden_default=orden_default)
-        for row in rows
+    if rows:
+        defaulted = tuple(
+            _default_row_references(context, row, source_default=source_default, orden_default=orden_default)
+            for row in rows
+        )
+        if any(new is not old for new, old in zip(defaulted, rows, strict=True)):
+            filled[_INHERITED_SECTION] = defaulted
+    for section, default_field in _FAMILY_SOURCE_DEFAULT_FIELDS:
+        section_rows = as_toml_array(table.get(section, ()))
+        if not section_rows:
+            continue
+        family_default = as_toml_array(table.get(default_field)) or ()
+        defaulted = tuple(
+            _default_family_row_references(
+                f"{context}: {section}", row, source_default=family_default, default_field=default_field
+            )
+            for row in section_rows
+        )
+        if any(new is not old for new, old in zip(defaulted, section_rows, strict=True)):
+            filled[section] = defaulted
+    return {**table, **filled} if filled else table
+
+
+def _default_family_row_references(
+    context: str,
+    row: object,
+    *,
+    source_default: tuple[object, ...],
+    default_field: str,
+) -> object:
+    """Return one binding or formula row with the edition's family default filled in.
+
+    The casilla rule without the parts casillas alone have: these families carry
+    no ``constraints`` table to default alongside the row, and no
+    ``orden_aplicabilidad`` default -- the approving ordenes ground a box's
+    existence, not a binding's record position -- so a family row's
+    ``legal_refs`` stays exactly as authored.
+    """
+    table = _as_toml_table(row)
+    if table is None:
+        return row
+    filled = _defaulted_references(
+        f"{context} {_row_id(table)!r}",
+        table,
+        source_default=source_default,
+        orden_default=(),
+        default_field=default_field,
     )
-    if all(new is old for new, old in zip(defaulted, rows, strict=True)):
-        return table
-    return {**table, _INHERITED_SECTION: defaulted}
+    return row if filled is table else filled
 
 
 def _default_row_references(
@@ -662,11 +711,12 @@ def _defaulted_references(
     *,
     source_default: tuple[object, ...],
     orden_default: tuple[object, ...],
+    default_field: str = _EDITION_SOURCE_DEFAULT_FIELD,
 ) -> Mapping[str, object]:
     """Return one row or constraints table with its references resolved, or ``table`` itself when nothing changes."""
     updates: dict[str, object] = {}
     if _ROW_SOURCE_ADDITIONS_FIELD in table:
-        updates[_ROW_SOURCE_FIELD] = _extended_source_default(subject, table, source_default)
+        updates[_ROW_SOURCE_FIELD] = _extended_source_default(subject, table, source_default, default_field)
     elif source_default and _ROW_SOURCE_FIELD not in table:
         updates[_ROW_SOURCE_FIELD] = source_default
     if orden_default and _ROW_LEGAL_FIELD not in table:
@@ -681,6 +731,7 @@ def _extended_source_default(
     subject: str,
     table: Mapping[str, object],
     source_default: tuple[object, ...],
+    default_field: str = _EDITION_SOURCE_DEFAULT_FIELD,
 ) -> tuple[object, ...]:
     """Return the edition default followed by the table's additions, each reference once, the default first.
 
@@ -690,13 +741,13 @@ def _extended_source_default(
     if _ROW_SOURCE_FIELD in table:
         raise RegistryLoadError(
             f"{subject} states both {_ROW_SOURCE_FIELD} and {_ROW_SOURCE_ADDITIONS_FIELD}; {_ROW_SOURCE_FIELD} "
-            f"replaces the edition's {_EDITION_SOURCE_DEFAULT_FIELD} whole while {_ROW_SOURCE_ADDITIONS_FIELD} "
+            f"replaces the edition's {default_field} whole while {_ROW_SOURCE_ADDITIONS_FIELD} "
             "extends it, so state one of them",
         )
     if not source_default:
         raise RegistryLoadError(
             f"{subject} states {_ROW_SOURCE_ADDITIONS_FIELD}, but the edition declares no "
-            f"{_EDITION_SOURCE_DEFAULT_FIELD} for them to extend; state {_ROW_SOURCE_FIELD} instead",
+            f"{default_field} for them to extend; state {_ROW_SOURCE_FIELD} instead",
         )
     additions = as_toml_array(table.get(_ROW_SOURCE_ADDITIONS_FIELD))
     if not additions or not all(isinstance(item, str) for item in additions):
@@ -1076,53 +1127,38 @@ def _load_modelo_manifest(resolved: Path) -> dict[str, object]:
     if "revisions" in manifest_data:
         raise RegistryLoadError(
             f"{manifest_path}: directory-mode manifest must not declare [revisions]; "
-            f"revision data lives in revisions/<id>.toml",
+            "revision data lives in revisions/<id>/revision.toml",
         )
     return manifest_data
 
 
 def _load_modelo_revisions(resolved: Path) -> dict[str, object]:
-    """Read every ``revisions/*.toml`` and merge into one ``{revision_id: raw}`` map.
+    """Merge every ``revisions/<id>/`` fragment directory into one ``{revision_id: raw}`` map.
 
-    A missing ``revisions/`` directory returns an empty dict; the
-    caller raises if no revisions land. Each per-file ``[revisions.X]``
-    payload is added to the merged map under its id, rejecting
-    inline ``[modelo]`` declarations, local catalogues, and any
-    duplicate ``revision_id`` across files.
+    A missing ``revisions/`` directory returns an empty dict; the caller raises
+    if no revisions land. Each revision directory contributes its
+    ``revision.toml`` metadata plus its section fragments under the directory's
+    own id.
     """
     revisions_dir = resolved / "revisions"
     if not revisions_dir.is_dir():
         return {}
     merged_revisions: dict[str, object] = {}
-    for path in scan_directory(revisions_dir, pattern="*.toml"):
-        _merge_revision_file(path, merged_revisions)
+    for path in scan_directory(revisions_dir, select=DirectoryEntryKind.FILES):
+        raise RegistryLoadError(
+            f"{path}: revision files are not a supported layout; "
+            "each revision must be a revisions/<id>/ directory containing revision.toml",
+        )
     for path in scan_directory(revisions_dir, select=DirectoryEntryKind.DIRECTORIES):
         _merge_revision_directory(path, merged_revisions)
     return merged_revisions
-
-
-def _merge_revision_file(path: Path, merged_revisions: dict[str, object]) -> None:
-    """Validate one revisions/*.toml file and append its revisions into ``merged_revisions``."""
-    rev_data = freeze_toml(read_toml(path, error_factory=RegistryLoadError))
-    _reject_local_catalogues(path, rev_data)
-    if "modelo" in rev_data:
-        raise RegistryLoadError(f"{path}: revision file must not declare [modelo]; that lives in manifest.toml")
-    file_revisions = _as_toml_table(rev_data.get("revisions"))
-    if not file_revisions:
-        raise RegistryLoadError(f"{path}: revision file must declare [revisions.<id>]")
-    for revision_id, raw_revision in file_revisions.items():
-        if revision_id in merged_revisions:
-            raise RegistryLoadError(
-                f"{path}: revision {revision_id!r} already declared in another revisions/*.toml file",
-            )
-        merged_revisions[revision_id] = raw_revision
 
 
 def _merge_revision_directory(path: Path, merged_revisions: dict[str, object]) -> None:
     """Merge a ``revisions/{id}/`` fragment tree into ``merged_revisions``."""
     revision_id = path.name
     if revision_id in merged_revisions:
-        raise RegistryLoadError(f"{path}: revision {revision_id!r} already declared in another revisions/*.toml file")
+        raise RegistryLoadError(f"{path}: revision {revision_id!r} is declared more than once")
     revision_manifest = path / "revision.toml"
     if not revision_manifest.is_file():
         raise RegistryLoadError(f"{path}: revision fragment directory must contain revision.toml")

@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from datetime import date
 
-from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.casilla_id import validated_casilla_id
-from cadrumo.core.classification.policies import SensitivityClass
-from cadrumo.core.tax_domain import TaxDomain
-
+from .....core.authority_grade import RegistryAuthorityGrade
+from .....core.casilla_id import validated_casilla_id
+from .....core.classification.policies import SensitivityClass
+from .....core.tax_domain import TaxDomain
 from ..schema import (
-    DataBindingDefinition,
+    BindingDefinition,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
@@ -66,7 +65,7 @@ def _minimal_catalogues() -> RegistryCatalogues:
 
 
 def _minimal_revision(
-    *, bindings: tuple[DataBindingDefinition, ...] = (), export_layouts: tuple[ExportLayoutDefinition, ...] = ()
+    *, bindings: tuple[BindingDefinition, ...] = (), export_layouts: tuple[ExportLayoutDefinition, ...] = ()
 ) -> ModeloRevision:
     return ModeloRevision(
         id="test-revision",

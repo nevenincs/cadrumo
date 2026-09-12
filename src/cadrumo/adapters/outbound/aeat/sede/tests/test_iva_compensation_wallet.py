@@ -28,7 +28,16 @@ from ......tests.aeat_literal_fixtures import (
 from ...browser.factory import opened_browser_page, shared_playwright_runtime
 from ...browser.profile import Profile
 from .._adapter_utils import is_aeat_auth_gate_redirect
-from .._iva_compensation_wallet_parsing import (
+from ..errors import SedeFailureMode, SedeNavigationError, SedeParseError
+from ..iva_compensation_wallet import (
+    PRE303_PRESENTATION_SERVICE_URL,
+    _assert_read_browser_action,
+    _assert_read_http,
+    _dump_wallet_diagnostic,
+    _wait_for_wallet_execute_initial_shape,
+    assert_wallet_read_landing,
+)
+from ..iva_compensation_wallet_parsing import (
     IVA_COMPENSATION_WALLET_READ_POLICY,
     WALLET_URL,
     _parse_spanish_decimal,
@@ -39,15 +48,6 @@ from .._iva_compensation_wallet_parsing import (
     parse_iva_compensation_wallet_html,
     wallet_execute_gate_status,
     wallet_page_shape_context,
-)
-from ..errors import SedeFailureMode, SedeNavigationError, SedeParseError
-from ..iva_compensation_wallet import (
-    PRE303_PRESENTATION_SERVICE_URL,
-    _assert_read_browser_action,
-    _assert_read_http,
-    _dump_wallet_diagnostic,
-    _wait_for_wallet_execute_initial_shape,
-    assert_wallet_read_landing,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -957,7 +957,7 @@ class TestWalletReadPolicy:
 
     def test_the_wallet_url_names_no_numbered_host(self) -> None:
         """The exported wallet URL must not assert a host the balancer assigns."""
-        from .._iva_compensation_wallet_parsing import WALLET_URL
+        from ..iva_compensation_wallet_parsing import WALLET_URL
 
         external = Settings.external_constants()
         numbered = [

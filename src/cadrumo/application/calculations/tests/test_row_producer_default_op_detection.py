@@ -21,24 +21,29 @@ from ....core.aggregation import BindingAggregation, BindingAggregationOp, Bindi
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ....domain.calculations.registry.errors import RegistryValidationError
-from ....domain.calculations.registry.schema import DataBindingDefinition
+from ....domain.calculations.registry.schema import BindingDefinition
 from ..row_set_assembly import _row_field_lookup
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _rows_default_detail_binding() -> DataBindingDefinition:
+def _rows_default_detail_binding() -> BindingDefinition:
     """A foreign-asset detail binding with no explicit aggregation.
 
     ``foreign_asset`` is a ROWS-default source family, so the binding must be
     detected as a row producer even though ``aggregation`` is ``None``.
     """
 
-    return DataBindingDefinition.model_validate(
+    return BindingDefinition.model_validate(
         {
             "id": "synthetic-detail-row",
-            "source": BindingSourceKind.FOREIGN_ASSET,
-            "selector": {"fact": "row_field", "grouping": "per_foreign_asset", "row_field": "valuation_amount"},
+            "provider": {
+                "kind": BindingSourceKind.FOREIGN_ASSET,
+                "fact": "row_field",
+                "grouping": "per_foreign_asset",
+                "row_field": "valuation_amount",
+            },
+            "value": {"data_type": "money", "channel": "row_set", "row_grouping": "foreign_asset"},
             "aggregation": None,
             "legal_refs": ("ley-7-2012:dt-18",),
             "source_refs": ("aeat-modelo-720",),
@@ -72,11 +77,11 @@ def test_row_field_lookup_detects_none_aggregation_rows_default_binding() -> Non
 
 def test_row_field_lookup_rejects_rows_binding_without_row_set_projection() -> None:
     revision = bundled_authority().modelo("720").revisions["2013-y-siguientes"]
-    malformed_row_binding = DataBindingDefinition.model_validate(
+    malformed_row_binding = BindingDefinition.model_validate(
         {
             "id": "synthetic-row-without-grouping",
-            "source": BindingSourceKind.FOREIGN_ASSET,
-            "selector": {"fact": "row_field", "row_field": "valuation_amount"},
+            "provider": {"kind": BindingSourceKind.FOREIGN_ASSET, "fact": "row_field", "row_field": "valuation_amount"},
+            "value": {"data_type": "money", "channel": "row_set", "row_grouping": "foreign_asset"},
             "aggregation": BindingAggregation(op=BindingAggregationOp.ROWS),
             "legal_refs": ("ley-7-2012:dt-18",),
             "source_refs": ("aeat-modelo-720",),

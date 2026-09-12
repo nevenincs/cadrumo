@@ -41,7 +41,7 @@ from cadrumo.domain.calculations.registry.relations import (
     materialize_relation_binding_values,
     resolve_relation_values_from_observations,
 )
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.iva.deduction_facts import (
     IvaDeductionClassificationProvenance,
@@ -111,15 +111,15 @@ def _modelo_303_revision() -> ModeloRevision:
     return modelo.revisions["2022"]
 
 
-def _binding(binding_id: str = "modelo-303-iva-repercutido-general-cuota") -> DataBindingDefinition:
+def _binding(binding_id: str = "modelo-303-iva-repercutido-general-cuota") -> BindingDefinition:
     return next(item for item in _modelo_303_revision().bindings if item.id == binding_id)
 
 
-def _with_selector(binding: DataBindingDefinition, **updates: object) -> DataBindingDefinition:
+def _with_selector(binding: BindingDefinition, **updates: object) -> BindingDefinition:
     return binding.model_copy(update={"selector": {**selector_as_dict(binding), **updates}})
 
 
-def _with_aggregation(binding: DataBindingDefinition, op: BindingAggregationOp) -> DataBindingDefinition:
+def _with_aggregation(binding: BindingDefinition, op: BindingAggregationOp) -> BindingDefinition:
     return binding.model_copy(update={"aggregation": BindingAggregation(op=op)})
 
 
@@ -217,7 +217,7 @@ def _observation(
     )
 
 
-def _revision_with_bindings(*bindings: DataBindingDefinition) -> ModeloRevision:
+def _revision_with_bindings(*bindings: BindingDefinition) -> ModeloRevision:
     return _modelo_303_revision().model_copy(update={"bindings": bindings})
 
 

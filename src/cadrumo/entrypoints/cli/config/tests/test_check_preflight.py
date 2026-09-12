@@ -95,7 +95,7 @@ def test_config_check_flags_missing_corpus_as_red_preflight_row(tmp_path: Path) 
 def test_config_check_payload_rows_refuse_empty_ids_and_unknown_severity() -> None:
     """The doctor transport preserves canonical dependency and preflight identifiers."""
 
-    from .._check_payloads import CheckDependencyPayload, CheckPreflightPayload
+    from ..check_payloads import CheckDependencyPayload, CheckPreflightPayload
 
     with pytest.raises(ValidationError):
         CheckDependencyPayload(service="", available=True)

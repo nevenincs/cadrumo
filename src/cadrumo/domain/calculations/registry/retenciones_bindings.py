@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Protocol
+from typing import TYPE_CHECKING, Annotated, Literal, Protocol
 
 from pydantic import BaseModel, BeforeValidator
 
@@ -29,8 +29,10 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_selector_utils import selector_against_model
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .ids import BindingId
-from .schema import DataBindingDefinition, ModeloRevision
 from .schema_base import coerce_enum_member, coerce_enum_tuple
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition, ModeloRevision
 
 
 class RetencionesAggregationFact(StrEnum):
@@ -79,7 +81,7 @@ class _RetencionesRollupProtocol(Protocol):
     def total_retencion(self) -> Decimal: ...
 
 
-class _RetencionesAggregationSelector(BaseModel):
+class RetencionesAggregationProvider(BaseModel):
     """Validated form of a ``retenciones_aggregation`` binding selector.
 
     Carries the target casilla id and the scalar fact this source serves. Annual
@@ -90,19 +92,21 @@ class _RetencionesAggregationSelector(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
+    kind: Literal[BindingSourceKind.RETENCIONES_AGGREGATION] = BindingSourceKind.RETENCIONES_AGGREGATION
+
     target_casilla_id: CasillaId
     schemes: Annotated[tuple[RetencionScheme, ...], BeforeValidator(coerce_enum_tuple(RetencionScheme))] = ()
     fact: RetencionesAggregationFactField = RetencionesAggregationFact.PERCEPTOR_COUNT_DISTINCT
 
 
-def validate_retenciones_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
+def validate_retenciones_aggregation_binding(binding: BindingDefinition) -> list[str]:
     """Accumulating registry-build validator for a ``retenciones_aggregation`` binding.
 
-    Validates the selector shape against :class:`_RetencionesAggregationSelector`
+    Validates the selector shape against :class:`RetencionesAggregationProvider`
     (the single build-time contract per ``aeat-registry-bindings``),
     preserving the underlying pydantic field message in the diagnostic.
     """
-    return selector_against_model(binding, _RetencionesAggregationSelector)
+    return selector_against_model(binding, RetencionesAggregationProvider)
 
 
 def resolve_retenciones_aggregation_binding_values(
@@ -119,13 +123,13 @@ def resolve_retenciones_aggregation_binding_values(
     for binding in revision.bindings:
         if binding.source != BindingSourceKind.RETENCIONES_AGGREGATION:
             continue
-        selector = _RetencionesAggregationSelector.model_validate(_selector_as_dict(binding))
+        selector = RetencionesAggregationProvider.model_validate(_selector_as_dict(binding))
         resolved[binding.id] = _retenciones_selector_value(selector, aggregation)
     return resolved
 
 
 def _retenciones_selector_value(
-    selector: _RetencionesAggregationSelector,
+    selector: RetencionesAggregationProvider,
     aggregation: _RetencionesAggregationProtocol,
 ) -> Decimal:
     if not selector.schemes:
@@ -145,10 +149,10 @@ def _retenciones_selector_value(
 
 
 __all__ = [
-    "RetencionesAggregationSelector",
+    "RetencionesAggregationProvider",
     "resolve_retenciones_aggregation_binding_values",
     "validate_retenciones_aggregation_binding",
 ]
 
 
-RetencionesAggregationSelector = _RetencionesAggregationSelector
+RetencionesAggregationProvider = RetencionesAggregationProvider

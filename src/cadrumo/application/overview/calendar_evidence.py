@@ -42,8 +42,8 @@ from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.period import Period as _Period
 from ...domain.calculations.registry.applicability_routes import TaxRoute
-from ..calculations._ports import FiledDeclaracionObservationProtocol
 from ..calculations.observations_repository import ObservationSourceKind
+from ..calculations.ports import FiledDeclaracionObservationProtocol
 from ._calendar_evidence_sources import (
     authenticated_identity_matches_expected as _authenticated_identity_matches_expected,
 )
@@ -197,11 +197,6 @@ def no_aeat_history_notice(
             code=NO_AEAT_HISTORY_NOTICE_CODE,
             message=tr(
                 "overview.no_aeat_history_sociedades",
-                default=(
-                    "This profile holds no filing evidence AEAT confirmed. The automated retrieval sweep "
-                    "cannot fetch Impuesto sobre Sociedades filing history (Modelo 200/202); check it "
-                    "directly at the AEAT sede."
-                ),
             ),
             context={"observation_count": str(len(observation_source_kinds))},
         )
@@ -211,9 +206,6 @@ def no_aeat_history_notice(
         code=NO_AEAT_HISTORY_NOTICE_CODE,
         message=tr(
             "overview.no_aeat_history",
-            default=(
-                "This profile holds no filing evidence AEAT confirmed. Retrieve the filing history AEAT holds for it."
-            ),
         ),
         context={"observation_count": str(len(observation_source_kinds))},
     )

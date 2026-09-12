@@ -87,6 +87,10 @@ from .overview.evidence import (
     build_calendar_evidence_projection,
 )
 from .overview.home import (
+    HOME_REASON_BLOCKED_DEPENDENCY,
+    HOME_REASON_DECLARATION_NEEDS_REVIEW,
+    HOME_REASON_EVIDENCE_MISSING,
+    HOME_REASON_LEDGER_CLASSIFICATION_PENDING,
     HomeAccountSession,
     HomeAvailability,
     HomeDeclarationResume,
@@ -917,18 +921,10 @@ def _home_declarations(
 
 
 _HOME_LEDGER_ACTIONS: Final = (
-    (LedgerWorkspaceArea.CLASSIFICATION, "operator.ledger.classify", "ledger_classification_pending"),
-    (LedgerWorkspaceArea.EVIDENCE, "operator.ledger.evidence.review.list", "evidence_missing"),
+    (LedgerWorkspaceArea.CLASSIFICATION, "operator.ledger.classify", HOME_REASON_LEDGER_CLASSIFICATION_PENDING),
+    (LedgerWorkspaceArea.EVIDENCE, "operator.ledger.evidence.review.list", HOME_REASON_EVIDENCE_MISSING),
 )
-"""Cross-cutting Ledger work Home can offer, in the order it is offered.
-
-Both reason codes are Home's OWN declared vocabulary -- they already exist in
-`tui.home.reason.*` in every locale -- and both actions are catalogue entries
-that take no arguments, so nothing here is invented to make the zone fill.
-Classification comes first because an unclassified entry has no settled tax
-treatment yet, while a missing justificante is a gap in evidence for a
-treatment already chosen.
-"""
+"""Cross-cutting Ledger work Home can offer, in the order it is offered."""
 
 
 def _dependency_blocked_revisions(
@@ -993,7 +989,7 @@ def _home_declaration_actions(
                 # the generic review prompt: "a dependency is blocked" tells
                 # the operator why the work will not close, where "needs
                 # review" invites them to try and find out.
-                reason_code="blocked_dependency" if blocked else "declaration_needs_review",
+                reason_code=(HOME_REASON_BLOCKED_DEPENDENCY if blocked else HOME_REASON_DECLARATION_NEEDS_REVIEW),
                 action=declare_next_action("operator.modelo.work.revisions", work_unit_id=resume.work_unit_id),
                 modelo=resume.modelo,
                 filing_year=resume.filing_year,

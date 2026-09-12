@@ -11,9 +11,9 @@ from pathlib import Path
 import pytest
 
 from .._command_policy import CommandPolicyProjection, policy_projection_is_coherent, project_command_policy
-from .._hitl import ConfirmationPolicy, confirmation_for_policy
-from .._tools import build_tool_descriptors
 from ..command_surface import command_surface
+from ..hitl import ConfirmationPolicy, confirmation_for_policy
+from ..tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -58,8 +58,8 @@ def test_descriptor_policy_consumption_imports_nothing() -> None:
     script = """
 import json
 import sys
-from cadrumo_harness.mcp._hitl import confirmation_for_policy
-from cadrumo_harness.mcp._tools import build_tool_descriptors
+from cadrumo_harness.mcp.hitl import confirmation_for_policy
+from cadrumo_harness.mcp.tools import build_tool_descriptors
 descriptors = build_tool_descriptors()
 target = next(item for item in descriptors if item.command_key == 'config.profile.list')
 before = set(sys.modules)

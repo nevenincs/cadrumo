@@ -37,19 +37,13 @@ from .....domain.attachments.errors import AttachmentPersistenceError, Attachmen
 from .....domain.attachments.models import Attachment
 from .....tests.attribute_scope import scoped_attribute
 from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from ..attachment import (
-    _ATTACHMENT_BLOB_NAMESPACE,
-    _ATTACHMENT_BLOB_SENSITIVITY,
-    _ATTACHMENT_BLOB_VERSION,
-    _ATTACHMENT_MANIFEST_NAMESPACE,
-    AttachmentStore,
-    resolve_attachment_store,
-)
+from ..attachment import AttachmentStore, resolve_attachment_store
 from ..crypto.encrypted_columns import (
     decrypt_secure_object_payload,
     encrypt_secure_object_payload,
     secure_object_payload_aad,
 )
+from ..secure_object_namespaces import ATTACHMENT_BLOB_NAMESPACE, ATTACHMENT_MANIFEST_NAMESPACE
 from ..sql.engine import get_engine
 from ..sql.orm import SecureObjectRow
 from ..sql.session import session_scope
@@ -102,7 +96,7 @@ def _encrypt_row_content(row: SecureObjectRow, content: bytes) -> bytes:
 
 def _manifest_row_statement(attachment_id: str) -> Any:
     return select(SecureObjectRow).where(
-        SecureObjectRow.namespace == _ATTACHMENT_MANIFEST_NAMESPACE,
+        SecureObjectRow.namespace == ATTACHMENT_MANIFEST_NAMESPACE.namespace,
         SecureObjectRow.object_key == attachment_id,
     )
 
@@ -221,19 +215,19 @@ def test_attachment_store_put_file_deduplicates_by_digest(tmp_path: Path) -> Non
 
         first_digest, first_size = store.put_file(source_file)
         first_record = store._objects_repo().load(
-            _ATTACHMENT_BLOB_NAMESPACE,
+            ATTACHMENT_BLOB_NAMESPACE.namespace,
             first_digest,
-            expected_class=_ATTACHMENT_BLOB_SENSITIVITY,
-            max_supported_version=_ATTACHMENT_BLOB_VERSION,
+            expected_class=ATTACHMENT_BLOB_NAMESPACE.sensitivity,
+            max_supported_version=ATTACHMENT_BLOB_NAMESPACE.schema_version,
         )
         assert first_record is not None
 
         second_digest, second_size = store.put_file(source_file)
         second_record = store._objects_repo().load(
-            _ATTACHMENT_BLOB_NAMESPACE,
+            ATTACHMENT_BLOB_NAMESPACE.namespace,
             second_digest,
-            expected_class=_ATTACHMENT_BLOB_SENSITIVITY,
-            max_supported_version=_ATTACHMENT_BLOB_VERSION,
+            expected_class=ATTACHMENT_BLOB_NAMESPACE.sensitivity,
+            max_supported_version=ATTACHMENT_BLOB_NAMESPACE.schema_version,
         )
         assert second_record is not None
 

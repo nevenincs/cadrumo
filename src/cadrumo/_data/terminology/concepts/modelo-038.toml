@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 038, declaració informativa d'operacions realitzades per entitats inscrites en registres públics"
+
+[language.en]
+short_description = "Modelo 038, information return on operations carried out by entities registered in public registers"
+
+[language.hu]
+short_description = "038-as modell: a nyilvános nyilvántartásokban bejegyzett szervezetek műveleteinek tájékoztató bevallása"
+

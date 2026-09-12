@@ -25,8 +25,10 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.bindings import CasillaObservation
+from ....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_RESULTADO_CASILLA,
+)
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.iva_compensation.filed_derivation import M303_COMPENSATION_RESULTADO_CASILLA
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

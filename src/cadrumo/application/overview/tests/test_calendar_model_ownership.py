@@ -40,8 +40,8 @@ _PUBLIC_CALENDAR_MODEL_NAMES = frozenset(
 
 def test_calendar_dtos_are_publicly_owned_by_models_not_builder_module() -> None:
     """The public DTO surface resolves directly to its defining module."""
-    overview = import_module("cadrumo.application.overview")
-    calendar_builder = import_module("cadrumo.application.overview.calendar")
+    overview = import_module("..", package=__package__)
+    calendar_builder = import_module("..calendar", package=__package__)
 
     assert set(overview.__all__) >= _PUBLIC_CALENDAR_MODEL_NAMES
     assert set(_calendar_models.__all__) >= _PUBLIC_CALENDAR_MODEL_NAMES

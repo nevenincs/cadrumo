@@ -22,8 +22,8 @@ from pathlib import Path
 
 import pytest
 
+from ...storage_path_definitions import LOGIN_THROTTLE_FILENAME
 from ..login_throttle import (
-    LOGIN_THROTTLE_FILENAME,
     LOGIN_THROTTLE_SCHEMA_VERSION,
     THROTTLE_BACKOFF_CAP_SECONDS,
     LoginThrottleState,

@@ -17,9 +17,8 @@ import pytest
 
 # Importing the renta package registers the first-slice routing cross-domain
 # snapshot check required by Modelo 100 parity scenarios run via _scenarios.
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.resources.bundled_data import bundled_path
-
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.resources.bundled_data import bundled_path
 from ._published_authority import artifact_components
 from ._scenarios import (
     RegistryCalculationScenario,
@@ -147,7 +146,7 @@ def _base_2025_inputs() -> dict[CasillaId, Decimal]:
         # renta-2025-minimo-contribuyente-base-2025 (state and per-CCAA
         # autonomic), and cannot be supplied as inputs.
         # 0513 and 0514 are now computed via the mínimo por descendientes
-        # engine (renta-2025-profile-minimo-descendientes-estatal binding)
+        # engine (renta-profile-minimo-descendientes-estatal binding)
         # and cannot be supplied
         # as inputs; see the binding_values entry in _scenario_2025.
         _C0515: Decimal("0"),
@@ -199,21 +198,21 @@ def _scenario_2025(
         period="0A",
         inputs=inputs,
         binding_values={
-            "renta-2025-profile-has-economic-activity": Decimal("0"),
-            "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+            "renta-profile-has-economic-activity": Decimal("0"),
+            "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
             "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             # declaration_type = 1 (individual) → 0461 = 0 by default in all base scenarios
-            "renta-2025-profile-declaration-type": Decimal("1"),
-            "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
+            "renta-profile-declaration-type": Decimal("1"),
+            "renta-profile-family-minor-children-in-unit": Decimal("0"),
             # not married → marriage casillas = 0
-            "renta-2025-profile-marriage-full-year": Decimal("0"),
-            "renta-2025-profile-marriage-month-start": Decimal("0"),
-            "renta-2025-profile-marriage-month-end": Decimal("0"),
+            "renta-profile-marriage-full-year": Decimal("0"),
+            "renta-profile-marriage-month-start": Decimal("0"),
+            "renta-profile-marriage-month-end": Decimal("0"),
             # BIN-pendiente fresh-filer baseline (2025 binding).
-            "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
             # aggregate is zero (Option A engine).
-            "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values=_RELATION_ZERO_VALUES_2025,
@@ -339,21 +338,21 @@ def test_base_liquidable_general_applies_reductions() -> None:
         period="0A",
         inputs=base_inputs,
         binding_values={
-            "renta-2025-profile-has-economic-activity": Decimal("0"),
-            "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+            "renta-profile-has-economic-activity": Decimal("0"),
+            "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
             "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             # declaration_type = 2 (conjunta) + minor_children_in_unit = 0 → 0461 = 3400
-            "renta-2025-profile-declaration-type": Decimal("2"),
-            "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
+            "renta-profile-declaration-type": Decimal("2"),
+            "renta-profile-family-minor-children-in-unit": Decimal("0"),
             # married full year (required by marriage-axis formulas in revision)
-            "renta-2025-profile-marriage-full-year": Decimal("1"),
-            "renta-2025-profile-marriage-month-start": Decimal("0"),
-            "renta-2025-profile-marriage-month-end": Decimal("0"),
+            "renta-profile-marriage-full-year": Decimal("1"),
+            "renta-profile-marriage-month-start": Decimal("0"),
+            "renta-profile-marriage-month-end": Decimal("0"),
             # Anexo C opening pending balance for the applied €1,000 amount.
-            "renta-2025-base-liquidable-negativa-general-anterior": Decimal("1000"),
+            "renta-base-liquidable-negativa-general-anterior": Decimal("1000"),
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
             # aggregate is zero (Option A engine).
-            "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values=_RELATION_ZERO_VALUES_2025,

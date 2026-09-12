@@ -142,6 +142,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 import tomllib
 from collections import Counter, defaultdict
@@ -255,25 +256,34 @@ def _bundled_registry_root() -> Path:
     return Path(bundled_path("registry", "aeat")).resolve()
 
 
+_YEAR_RANGE: Final = re.compile(r"(?<![0-9])(\d{4})-(\d{4})(?![0-9])")
+
+
 def _edition_token_in(identifier: str, edition_id: str) -> str | None:
     """Return the edition token an identifier carries, or ``None``.
 
-    Whole-token rather than substring, and only the edition's OWN numeric
+    Whole-token rather than substring, and only the edition's OWN year
     segments: ``modelo-303-2025-reconciliation`` carries its edition while
     ``rd-1624-1992:art-71`` carries a norm's year, and a bare four-digit
     substring test reports both. Measured against this corpus the difference is
     the whole finding: a substring test reports 897 identifiers, almost all of
     them legal references embedded in a name, where the token test reports 6.
 
-    The matched token is returned rather than a boolean so the finding names
-    what it matched on. A short numeric segment such as the ``09`` of
-    ``2024-desde-09-y-3t`` is weaker evidence than a four-digit year, and a
-    reader judging a finding needs to see which one it was.
+    Two refinements keep the detector honest on the residue the collapse
+    leaves. A numeric token counts only when it is a four-digit year: the
+    ``09`` of ``2024-desde-09-y-3t`` is a period, and an identifier naming
+    ``dr303-09`` names a box. And a year inside a ``NNNN-NNNN`` range that is
+    not the edition id itself -- ``page_02.2001-2017`` in edition ``2016-2017``
+    -- is an offset or validity range carried by the box, not the edition
+    restating itself, so it is not a finding.
     """
     if edition_id in identifier:
         return edition_id
-    segments = set(identifier.replace(":", "-").split("-"))
-    matches = [segment for segment in edition_id.split("-") if segment.isdigit() and segment in segments]
+    ranged = {year for pair in _YEAR_RANGE.findall(identifier) if "-".join(pair) != edition_id for year in pair}
+    segments = set(identifier.replace(":", "-").replace(".", "-").split("-")) - ranged
+    matches = [
+        segment for segment in edition_id.split("-") if len(segment) == 4 and segment.isdigit() and segment in segments
+    ]
     return max(matches, key=len) if matches else None
 
 

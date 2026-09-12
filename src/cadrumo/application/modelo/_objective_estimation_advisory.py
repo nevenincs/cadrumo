@@ -2,8 +2,8 @@
 
 The verification path calls this helper for each revision :class:`WorkUnit` and
 workflow :class:`TaxpayerProfile`. It applies only to objective-estimation
-profiles for Modelo 100 and Modelo 131 in the settled official-source range
-(filing years 2016-2026). For those years, the helper compares the
+profiles for the registry-declared settled official-source range. For those
+years, the helper compares the
 profile-declared prior-year objective-estimation volumes against dated governed
 fact thresholds and emits non-blocking
 :class:`ModeloVerificationFinding` warnings when a declared volume exceeds a
@@ -26,8 +26,14 @@ from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
 from ...core.decimal.coercion import coerce_decimal_strict
-from ...core.modelo import Modelo
-from ...domain.calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
+from ...domain.calculations.registry.facts.resolution import (
+    EntitySetFactQuery,
+    MappingFactQuery,
+    ResolvedEntitySetFact,
+    ResolvedMappingFact,
+    ResolvedScalarFact,
+    ScalarFactQuery,
+)
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.deadlines.models import IrpfEstimationRegime, TaxpayerProfile
 from ...domain.modelos.errors import ModeloValidationError
@@ -41,31 +47,11 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
     from ...domain.modelos.work_unit import WorkUnit
 
-_SETTLED_YEAR_MIN = 2016
-_SETTLED_YEAR_MAX = 2026
-_AFFECTED_MODELOS = frozenset({Modelo.M100.value, Modelo.M131.value})
-_FACT_BY_PROFILE_FIELD = (
-    (
-        "objective_estimation_prior_year_gross_income_eur",
-        "lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur",
-        "rendimientos integros del conjunto de actividades economicas",
-    ),
-    (
-        "objective_estimation_prior_year_invoice_gross_income_eur",
-        "lirpf-dt-32:eo-exclusion-rendimientos-factura-eur",
-        "rendimientos integros de operaciones con obligacion de factura",
-    ),
-    (
-        "objective_estimation_prior_year_agri_livestock_forest_gross_eur",
-        "lirpf-art-31:eo-exclusion-rendimientos-agricolas-ganaderos-forestales-eur",
-        "rendimientos integros de actividades agricolas, ganaderas y forestales",
-    ),
-    (
-        "objective_estimation_prior_year_purchases_eur",
-        "lirpf-dt-32:eo-exclusion-compras-eur",
-        "volumen de compras en bienes y servicios",
-    ),
-)
+
+_OBJECTIVE_ESTIMATION_SETTLED_MIN_FACT_ID = "lirpf-objective-estimation-settled-year-min"
+_OBJECTIVE_ESTIMATION_SETTLED_MAX_FACT_ID = "lirpf-objective-estimation-settled-year-max"
+_OBJECTIVE_ESTIMATION_MODEL_SCOPE_FACT_ID = "modelo-objective-estimation-advisory-scope"
+_OBJECTIVE_ESTIMATION_APPLICABILITY_MAP_FACT_ID = "lirpf-objective-estimation-exclusion-applicability-map"
 
 
 def _objective_estimation_exclusion_advisory_findings(
@@ -100,18 +86,48 @@ def _objective_estimation_exclusion_advisory_findings(
         :class:`TaxpayerProfile`:
             Owns the profile fields read by the advisory.
     """
+    # fact-relocation: objective-estimation scope and applicability are resolved through registry authority; authored fact publication remains external.
     modelo = str(getattr(work_unit.modelo, "value", work_unit.modelo))
-    if modelo not in _AFFECTED_MODELOS:
-        return ()
     if not _uses_objective_estimation(profile):
         return ()
-    if not _SETTLED_YEAR_MIN <= work_unit.filing_year <= _SETTLED_YEAR_MAX:
+
+    settled_year_min_fact = _resolve_objective_estimation_threshold(
+        fact_id=_OBJECTIVE_ESTIMATION_SETTLED_MIN_FACT_ID,
+        filing_year=work_unit.filing_year,
+        authority=authority,
+    )
+    settled_year_max_fact = _resolve_objective_estimation_threshold(
+        fact_id=_OBJECTIVE_ESTIMATION_SETTLED_MAX_FACT_ID,
+        filing_year=work_unit.filing_year,
+        authority=authority,
+    )
+    settled_year_min = _as_integer(
+        settled_year_min_fact.payload.value,
+        _OBJECTIVE_ESTIMATION_SETTLED_MIN_FACT_ID,
+    )
+    settled_year_max = _as_integer(
+        settled_year_max_fact.payload.value,
+        _OBJECTIVE_ESTIMATION_SETTLED_MAX_FACT_ID,
+    )
+    if not settled_year_min <= work_unit.filing_year <= settled_year_max:
         return ()
 
+    affected_modelos_fact = _resolve_objective_estimation_model_scope(
+        filing_year=work_unit.filing_year,
+        authority=authority,
+    )
+    if modelo not in affected_modelos_fact.payload.entities:
+        return ()
+
+    profile_field_fact_map = _resolve_objective_estimation_profile_fact_map(
+        filing_year=work_unit.filing_year,
+        authority=authority,
+    )
     declared_values = tuple(
         (profile_field, fact_id, getattr(profile, profile_field))
-        for profile_field, fact_id, _label in _FACT_BY_PROFILE_FIELD
+        for profile_field, fact_id in _profile_field_fact_pairs(profile_field_fact_map)
     )
+
     if all(raw_value is None for *_prefix, raw_value in declared_values):
         return ()
 
@@ -152,6 +168,126 @@ def _uses_objective_estimation(profile: TaxpayerProfile) -> bool:
     return profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
 
 
+def _resolve_objective_estimation_model_scope(
+    *,
+    filing_year: int,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> ResolvedEntitySetFact:
+    """Resolve the Modelo scope entity set at the filing-period coordinate."""
+    from ...domain.calculations.registry.errors import RegistryError
+
+    if authority is None:
+        from ...domain.calculations.registry.authority import bundled_authority
+
+        authority = bundled_authority()
+    try:
+        resolved = authority.resolve_governed_fact(
+            EntitySetFactQuery(
+                fact_id=_OBJECTIVE_ESTIMATION_MODEL_SCOPE_FACT_ID,
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=date(filing_year, 12, 31),
+            ),
+        )
+    except RegistryError as exc:
+        raise ModeloValidationError(
+            translated_message="errors.error.error_modelos_validation",
+            context={
+                "fact_id": _OBJECTIVE_ESTIMATION_MODEL_SCOPE_FACT_ID,
+                "filing_year": filing_year,
+                "fact_resolved": False,
+            },
+        ) from exc
+    if not isinstance(resolved, ResolvedEntitySetFact):
+        raise ModeloValidationError(
+            translated_message="errors.error.error_modelos_validation",
+            context={
+                "fact_id": _OBJECTIVE_ESTIMATION_MODEL_SCOPE_FACT_ID,
+                "filing_year": filing_year,
+                "fact_entity_set": False,
+            },
+        )
+    if not resolved.legal_refs:
+        raise ModeloValidationError(
+            translated_message="errors.error.error_modelos_validation",
+            context={
+                "fact_id": _OBJECTIVE_ESTIMATION_MODEL_SCOPE_FACT_ID,
+                "filing_year": filing_year,
+                "fact_legal_refs": False,
+            },
+        )
+    return resolved
+
+
+def _resolve_objective_estimation_profile_fact_map(
+    *,
+    filing_year: int,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> ResolvedMappingFact:
+    """Resolve the profile-field to threshold-fact mapping from registry authority."""
+    from ...domain.calculations.registry.errors import RegistryError
+
+    if authority is None:
+        from ...domain.calculations.registry.authority import bundled_authority
+
+        authority = bundled_authority()
+    try:
+        resolved = authority.resolve_governed_fact(
+            MappingFactQuery(
+                fact_id=_OBJECTIVE_ESTIMATION_APPLICABILITY_MAP_FACT_ID,
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=date(filing_year, 12, 31),
+            ),
+        )
+    except RegistryError as exc:
+        raise ModeloValidationError(
+            translated_message="errors.error.error_modelos_validation",
+            context={
+                "fact_id": _OBJECTIVE_ESTIMATION_APPLICABILITY_MAP_FACT_ID,
+                "filing_year": filing_year,
+                "fact_resolved": False,
+            },
+        ) from exc
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise ModeloValidationError(
+            translated_message="errors.error.error_modelos_validation",
+            context={
+                "fact_id": _OBJECTIVE_ESTIMATION_APPLICABILITY_MAP_FACT_ID,
+                "filing_year": filing_year,
+                "fact_mapping": False,
+            },
+        )
+    if not resolved.legal_refs:
+        raise ModeloValidationError(
+            translated_message="errors.error.error_modelos_validation",
+            context={
+                "fact_id": _OBJECTIVE_ESTIMATION_APPLICABILITY_MAP_FACT_ID,
+                "filing_year": filing_year,
+                "fact_legal_refs": False,
+            },
+        )
+    return resolved
+
+
+def _profile_field_fact_pairs(resolved: ResolvedMappingFact) -> tuple[tuple[str, str], ...]:
+    """Extract profile-field/fact-id pairs while ignoring descriptive label entries."""
+    pairs: list[tuple[str, str]] = []
+    for entry in resolved.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            raise ModeloValidationError(
+                translated_message="errors.error.error_modelos_validation",
+                context={"fact_id": resolved.fact_id, "fact_mapping_entries": False},
+            )
+        if entry.key.endswith(".label"):
+            continue
+        pairs.append((entry.key, entry.value))
+    if not pairs:
+        raise ModeloValidationError(
+            translated_message="errors.error.error_modelos_validation",
+            context={"fact_id": resolved.fact_id, "fact_mapping_entries": False},
+        )
+    return tuple(pairs)
+
+
 def _resolve_objective_estimation_threshold(
     *,
     fact_id: str,
@@ -189,6 +325,15 @@ def _resolve_objective_estimation_threshold(
             context={"fact_id": fact_id, "filing_year": filing_year, "fact_legal_refs": False},
         )
     return resolved
+
+
+def _as_integer(value: object, surface: str) -> int:
+    if type(value) is int:
+        return value
+    raise ModeloValidationError(
+        translated_message="errors.error.error_modelos_validation",
+        context={"surface": surface, "integer_valid": False},
+    )
 
 
 def _as_decimal(value: object, surface: str) -> Decimal:

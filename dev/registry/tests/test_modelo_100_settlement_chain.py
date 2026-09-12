@@ -161,26 +161,26 @@ _RELATION_VALUES_2024: dict[RelationId, Decimal] = {
 
 def _binding_values() -> dict[BindingId, Decimal]:
     return {
-        "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
-        "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
-        "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
+        "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-193-retenciones-anuales": Decimal("0"),
         # declaration_type = 1 (individual) → 0461 computed = 0
-        "renta-2024-profile-declaration-type": Decimal("1"),
-        "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
+        "renta-profile-declaration-type": Decimal("1"),
+        "renta-profile-family-minor-children-in-unit": Decimal("0"),
         # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
-        "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
-        "renta-2024-profile-incremento-guarderia": Decimal("0"),
-        "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
-        "renta-2024-profile-descendientes-guarderia": Decimal("0"),
+        "renta-profile-guarderia-gastos-reales": Decimal("0"),
+        "renta-profile-incremento-guarderia": Decimal("0"),
+        "renta-profile-cotizaciones-ss-madre": Decimal("0"),
+        "renta-profile-descendientes-guarderia": Decimal("0"),
         **_m100_2024_deduccion_maternidad_bindings(),
-        "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
-        "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
-        "renta-2024-profile-marriage-full-year": Decimal("0"),
-        "renta-2024-profile-marriage-month-start": Decimal("0"),
-        "renta-2024-profile-marriage-month-end": Decimal("0"),
+        "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        "renta-profile-marriage-full-year": Decimal("0"),
+        "renta-profile-marriage-month-start": Decimal("0"),
+        "renta-profile-marriage-month-end": Decimal("0"),
         # BIN-pendiente fresh-filer baseline.
-        "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
     }
 
 

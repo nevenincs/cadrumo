@@ -36,7 +36,7 @@ from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import binding_row_set_selector
 from .errors import RegistryValidationError
 from .ids import ExportFieldId
-from .schema import DataBindingDefinition
+from .schema import BindingDefinition
 from .schema_exports import ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition
 
 __all__ = ["derive_casilla_export_refs", "export_field_casilla_id", "layout_fields_in_emission_order"]
@@ -63,7 +63,7 @@ def export_field_casilla_id(
     record: ExportRecordDefinition,
     field: ExportFieldDefinition,
     *,
-    bindings: Mapping[str, DataBindingDefinition],
+    bindings: Mapping[str, BindingDefinition],
 ) -> CasillaId | None:
     """Return the casilla ``field`` of ``record`` resolves to, or ``None`` when it resolves to none.
 
@@ -100,7 +100,7 @@ def export_field_casilla_id(
 
 def derive_casilla_export_refs(
     export_layouts: Iterable[ExportLayoutDefinition],
-    bindings: Iterable[DataBindingDefinition],
+    bindings: Iterable[BindingDefinition],
 ) -> dict[CasillaId, tuple[ExportFieldId, ...]]:
     """Return every addressed casilla's export field ids, in the order its layout emits them.
 

@@ -65,6 +65,9 @@ from ..conformance.loader_directory_mode_support import (
 from ..conformance.loader_directory_mode_support import (
     standard_revision_preamble_text as _standard_revision_preamble_text,
 )
+from ..conformance.loader_directory_mode_support import (
+    write_fragmented_modelo as _write_fragmented_modelo,
+)
 from ._loader_cache_support import REGISTRY_DISK_CACHE_DIR_ENV_VAR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -320,7 +323,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
     """The per-session cache-isolation fixture must not purge the bundled disk pickle.
 
     Regression proof for a real defect: an earlier version of
-    ``_isolate_registry_caches`` (``src/cadrumo/conftest.py``) purged EVERY
+    ``_isolate_registry_caches`` (``dev/registry/conftest.py``) purged EVERY
     ``cadrumo_registry_*.pkl`` unconditionally at session start. Under
     pytest-xdist, ``scope="session"`` means "per worker process" -- there is
     no single controlling session spanning all workers -- so every worker's
@@ -342,7 +345,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
     window raced a sibling worker's AST scan of the same directory,
     surfacing as a transient ``FileNotFoundError`` in an unrelated gate. The
     scratch package instead carries its OWN ``conftest.py`` re-exporting the
-    real ``src/cadrumo/conftest.py`` autouse fixture by absolute import, so the
+    real ``dev/registry/conftest.py`` autouse fixture by absolute import, so the
     spawned session is still governed by the SAME fixture a real xdist
     worker's own test file would load -- the proof is unweakened, only its
     location moved off the walked tree.
@@ -367,7 +370,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
         "# Re-exports the real session-scoped autouse cache-isolation fixture so this\n"
         "# out-of-tree scratch package, invoked as its own pytest session, is governed\n"
         "# by the identical fixture a real xdist worker's own src/cadrumo test file loads.\n"
-        "from cadrumo.conftest import _isolate_registry_caches as _isolate_registry_caches\n",
+        "from dev.registry.conftest import _isolate_registry_caches as _isolate_registry_caches\n",
         encoding="utf-8",
     )
     scratch_module_path = scratch_pkg / "test_touch_bundled_registry.py"
@@ -489,9 +492,10 @@ def test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest(tmp_path
     )
     modelos_dir = registry_root / "modelos"
     modelos_dir.mkdir()
-    (modelos_dir / "999.toml").write_text(
-        _standard_manifest_text("Synthetic disk-cache isolation test") + "\n" + _standard_revision_preamble_text(),
-        encoding="utf-8",
+    _write_fragmented_modelo(
+        modelos_dir / "999",
+        manifest_text=_standard_manifest_text("Synthetic disk-cache isolation test"),
+        revisions={"2025": _standard_revision_preamble_text()},
     )
     assert is_bundled_registry_root(registry_root.resolve()) is False
 

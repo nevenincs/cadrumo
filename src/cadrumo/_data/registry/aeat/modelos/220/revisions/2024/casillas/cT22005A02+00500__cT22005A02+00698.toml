@@ -63,7 +63,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @33+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. OTROS INGRESOS Y GASTOS RECONOCIDOS. [00383]
 [[revisions."2024".casillas]]
@@ -75,7 +74,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @50+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Activos financieros disponibles para la venta. [00384]
 [[revisions."2024".casillas]]
@@ -87,7 +85,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @67+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Activos financieros disponibles para la ventaGanancias y pérdidas por valoración. [00385]
 [[revisions."2024".casillas]]
@@ -99,7 +96,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @84+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Activos financieros disponibles para la venta Importes transferidos a la cuenta de pérdidas y ganancias. [00386]
 [[revisions."2024".casillas]]
@@ -111,7 +107,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @101+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Activos financieros disponibles para la venta Otras reclasificaciones. [00387]
 [[revisions."2024".casillas]]
@@ -123,7 +118,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @118+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Cobertura de los flujos de efectivo. [00388]
 [[revisions."2024".casillas]]
@@ -135,7 +129,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @135+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Cobertura de los flujos de efectivo. Ganancias y pérdidas por valoración. [00389]
 [[revisions."2024".casillas]]
@@ -147,7 +140,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @152+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Cobertura de los flujos de efectivo. Importes transferidos a la cuenta de pérdidas y ganancias. [00390]
 [[revisions."2024".casillas]]
@@ -159,7 +151,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @169+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Cobertura de los flujos de efectivo. Importes transferidos al valor inicial de las partidas cubiertas. [00391]
 [[revisions."2024".casillas]]
@@ -171,7 +162,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @186+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Cobertura de los flujos de efectivo. Otras reclasifi caciones. [00392]
 [[revisions."2024".casillas]]
@@ -183,7 +173,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @203+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Coberturas de inversiones netas en negocios en el extranjero. [00393]
 [[revisions."2024".casillas]]
@@ -195,7 +184,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @220+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Coberturas de inversiones netas en negocios en el extranjero. Ganancias y pérdidas por valoración. [00394]
 [[revisions."2024".casillas]]
@@ -207,7 +195,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @237+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Coberturas de inversiones netas en negocios en el extranjero. Importes transferidos a la cuenta de pérdidas y ganancias. [00395]
 [[revisions."2024".casillas]]
@@ -219,7 +206,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @254+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Coberturas de inversiones netas en negocios en el extranjero. Otras reclasificaciones. [00396]
 [[revisions."2024".casillas]]
@@ -231,7 +217,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @271+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Diferencias de cambio y conversión. [00397]
 [[revisions."2024".casillas]]
@@ -243,7 +228,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @288+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Diferencias de cambio y conversión. Ganancias y pérdidas por valoración. [00398]
 [[revisions."2024".casillas]]
@@ -255,7 +239,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @305+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Diferencias de cambio y conversión. Importes transferidos a la cuenta de pérdidas y ganancias. [00399]
 [[revisions."2024".casillas]]
@@ -267,7 +250,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @322+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Diferencias de cambio y conversión. Otras reclasificaciones. [00400]
 [[revisions."2024".casillas]]
@@ -279,7 +261,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @339+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Corrección de asimetrías contables. [00401]
 [[revisions."2024".casillas]]
@@ -291,7 +272,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @356+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Corrección de asimetrías contables. Ganancias y pérdidas por valoración. [00402]
 [[revisions."2024".casillas]]
@@ -303,7 +283,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @373+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Corrección de asimetrías contables. Importes transferidos a la cuenta de pérdidas y ganancias. [00403]
 [[revisions."2024".casillas]]
@@ -315,7 +294,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @390+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Corrección de asimetrías contables. Otras reclasifi caciones. [00404]
 [[revisions."2024".casillas]]
@@ -327,7 +305,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @407+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Activos mantenidos para la venta. [00405]
 [[revisions."2024".casillas]]
@@ -339,7 +316,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @424+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Activos mantenidos para la venta. Ganancias y pérdidas por valoración. [00406]
 [[revisions."2024".casillas]]
@@ -351,7 +327,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @441+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Activos mantenidos para la venta. Importes transferidos a la cuenta de pérdidas y ganancias. [00407]
 [[revisions."2024".casillas]]
@@ -363,7 +338,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @458+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Activos mantenidos para la venta. Otras reclasificaciones. [00408]
 [[revisions."2024".casillas]]
@@ -375,7 +349,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @475+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Ganancias / (pérdidas) actuariales por retribuciones a largo plazo al personal. [00409]
 [[revisions."2024".casillas]]
@@ -387,7 +360,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @492+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Entidades valoradas por puesta en equivalencia. [00730]
 [[revisions."2024".casillas]]
@@ -399,7 +371,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @509+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Entidades valoradas por puesta en equivalencia. Ganancias y pérdidas por valoración. [00731]
 [[revisions."2024".casillas]]
@@ -411,7 +382,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @526+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Entidades valoradas por puesta en equivalencia. Importes transferidos a la cuenta de pérdidas y ganancias. [00732]
 [[revisions."2024".casillas]]
@@ -423,7 +393,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @543+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Entidades valoradas por puesta en equivalencia. Otras reclasificaciones. [00733]
 [[revisions."2024".casillas]]
@@ -435,7 +404,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @560+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Otros ingresos y gastos reconocidos. [00410]
 [[revisions."2024".casillas]]
@@ -447,7 +415,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @577+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. Impuesto sobre beneficios. [00411]
 [[revisions."2024".casillas]]
@@ -459,7 +426,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @594+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. TOTAL DE INGRESOS Y GASTOS CONSOLIDADOS RECONOCIDOS. [00412]
 [[revisions."2024".casillas]]
@@ -471,7 +437,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @611+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. TOTAL DE INGRESOS Y GASTOS CONSOLIDADOS RECONOCIDOS. Atribuidos a la entidad dominante. [00697]
 [[revisions."2024".casillas]]
@@ -483,7 +448,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @628+17 N. ESTADO DE INGRESOS Y GASTOS RECONOCIDOS CONSOLIDADO EN EL EJERCICIO. TOTAL DE INGRESOS Y GASTOS CONSOLIDADOS RECONOCIDOS. Atribuidos a socios externos. [00698]
 [[revisions."2024".casillas]]
@@ -495,4 +459,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

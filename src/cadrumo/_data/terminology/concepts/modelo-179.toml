@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 179, declaració informativa anual de la cessió d'ús d'habitatges amb finalitats turístiques"
+
+[language.en]
+short_description = "Modelo 179, annual information return on the transfer or use of tourist accommodation"
+
+[language.hu]
+short_description = "179-es modell: a turisztikai célú lakóingatlan-használat átadásának éves tájékoztató bevallása"
+

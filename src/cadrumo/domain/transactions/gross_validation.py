@@ -11,11 +11,10 @@ from ..iva.schema import IvaCategory
 from .enums import TransactionDirection
 from .errors import TransactionValidationError
 from .irpf_categories import (
-    PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING,
-    RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING,
     has_activity_irpf_category,
     has_non_work_irpf_category,
     has_rent_irpf_category,
+    is_net_paid_related_category,
 )
 from .retencion_facts import maximum_supported_activity_retencion_rate
 
@@ -90,7 +89,7 @@ def _outgoing_professional_withholding_is_supported(
     """Recognise an outgoing professional-service row settled net of withholding."""
     if (
         direction is not TransactionDirection.OUTGOING
-        or category_id not in PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING
+        or not is_net_paid_related_category(category_id)
         or not has_activity_irpf_category(irpf_category, direction=direction)
         or reconstituted <= expected
     ):
@@ -116,7 +115,7 @@ def _outgoing_rent_withholding_is_supported(
     """Recognise an outgoing rent row settled net of withholding."""
     return (
         direction is TransactionDirection.OUTGOING
-        and category_id in RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING
+        and is_net_paid_related_category(category_id)
         and has_rent_irpf_category(irpf_category, direction=direction)
         and reconstituted > expected
     )
@@ -253,9 +252,7 @@ def gross_mismatch_detail(
     if reconstituted <= expected:
         return ""
     if direction == TransactionDirection.OUTGOING:
-        if category_id in RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING:
-            return ""
-        if category_id in PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING:
+        if is_net_paid_related_category(category_id):
             return ""
         return ""
     if direction == TransactionDirection.INCOMING:

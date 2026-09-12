@@ -12,11 +12,10 @@ number = "256-268"
 section = ["perceptor", "percepcion"]
 data_type = "money"
 semantic_role = "payee_incapacidad_dineraria_percepcion"
-constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.incapacidad-dineraria-retenciones"
@@ -26,11 +25,10 @@ number = "269-281"
 section = ["perceptor", "percepcion"]
 data_type = "money"
 semantic_role = "payee_incapacidad_dineraria_retenciones"
-constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.incapacidad-especie-valoracion"
@@ -40,11 +38,10 @@ number = "283-295"
 section = ["perceptor", "percepcion"]
 data_type = "money"
 semantic_role = "payee_incapacidad_especie_valoracion"
-constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.incapacidad-especie-ingresos-a-cuenta"
@@ -54,11 +51,10 @@ number = "296-308"
 section = ["perceptor", "percepcion"]
 data_type = "money"
 semantic_role = "payee_incapacidad_especie_ingresos_a_cuenta"
-constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.incapacidad-especie-repercutidos"
@@ -68,11 +64,10 @@ number = "309-321"
 section = ["perceptor", "percepcion"]
 data_type = "money"
 semantic_role = "payee_incapacidad_especie_repercutidos"
-constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.complemento-ayuda-infancia"
@@ -85,7 +80,6 @@ semantic_role = "payee_complemento_ayuda_infancia"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-forales-estatal"
@@ -95,11 +89,10 @@ number = "323-335"
 section = ["perceptor", "percepcion"]
 data_type = "money"
 semantic_role = "payee_retenciones_forales_estatal"
-constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-forales-navarra"
@@ -109,11 +102,10 @@ number = "336-348"
 section = ["perceptor", "percepcion"]
 data_type = "money"
 semantic_role = "payee_retenciones_forales_navarra"
-constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-forales-araba"
@@ -123,11 +115,10 @@ number = "349-361"
 section = ["perceptor", "percepcion"]
 data_type = "money"
 semantic_role = "payee_retenciones_forales_araba"
-constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-forales-gipuzkoa"
@@ -137,11 +128,10 @@ number = "362-374"
 section = ["perceptor", "percepcion"]
 data_type = "money"
 semantic_role = "payee_retenciones_forales_gipuzkoa"
-constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-forales-bizkaia"
@@ -151,8 +141,7 @@ number = "375-387"
 section = ["perceptor", "percepcion"]
 data_type = "money"
 semantic_role = "payee_retenciones_forales_bizkaia"
-constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]

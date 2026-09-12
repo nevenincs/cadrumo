@@ -50,7 +50,6 @@ from ...core.period import Period, PeriodError
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecord
-from ._common import declared_tax_id, emit_envelope
 from ._modelo_cli_support import (
     bad_parameter_from_error,
     parse_casilla_override,
@@ -72,6 +71,7 @@ from ._modelo_rendering import (
     verification_report_lines,
     verification_report_payload,
 )
+from .common import declared_tax_id, emit_envelope
 
 
 def _work_unit_id(raw: str) -> str:

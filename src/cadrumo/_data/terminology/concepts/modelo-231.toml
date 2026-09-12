@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 231, declaració d'informació país per país"
+
+[language.en]
+short_description = "Modelo 231, country-by-country report"
+
+[language.hu]
+short_description = "231-es modell: országonkénti jelentés"
+

@@ -39,14 +39,13 @@ from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ...domain.modelos.work_unit import WorkUnit
-from ._common import resolve_notice_action
+from .common import resolve_notice_action
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.sede.observation_store import (
-        FiledDeclaracionObservation,
         FiledDeclaracionObservationStore,
     )
-    from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact
+    from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
     from ...domain.calculations.registry.applicability_routes import TaxRoute
     from ...domain.user_profile.values import UserProfileRecord
 
@@ -195,11 +194,6 @@ def local_modelo_work_units(bucket_id: str) -> tuple[tuple[WorkUnit, ...], Notic
             code="overview.work_units_degraded",
             message=tr(
                 "cli.overview.local_work_units_unavailable",
-                default=(
-                    "Local Modelo work-unit state could not be loaded; this overview is "
-                    "derived from the deadline schedule and may over-report an in-progress "
-                    "draft as still due or omit older in-progress drafts."
-                ),
             ),
             context={},
         )

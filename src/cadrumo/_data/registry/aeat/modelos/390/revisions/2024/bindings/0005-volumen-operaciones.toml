@@ -30,7 +30,8 @@
 
 [[revisions."2024".bindings]]
 id = "modelo-390-volumen-entregas-intracomunitarias-base"
-source = "ledger_iva_aggregation"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_supply"], rate_kinds = ["zero"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-25", "ley-37-1992:art-121", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
@@ -38,20 +39,13 @@ source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-
 source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 
-[revisions."2024".bindings.selector]
-categories = ["intra_community_supply"]
-rate_kinds = ["zero"]
-flow_direction = "repercutido"
-fact = "base_amount_sum"
-
-observation_roles = ["settlement"]
-cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions."2024".bindings.aggregation]
 op = "sum"
 
 [[revisions."2024".bindings]]
 id = "modelo-390-volumen-exportaciones-exentas-base"
-source = "ledger_iva_aggregation"
+provider = { kind = "ledger_iva_aggregation", categories = ["export_third_country_zero_rated", "export_assimilated_zero_rated"], rate_kinds = ["zero"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-21", "ley-37-1992:art-22", "ley-37-1992:art-121", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
@@ -59,13 +53,5 @@ source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-
 source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 
-[revisions."2024".bindings.selector]
-categories = ["export_third_country_zero_rated", "export_assimilated_zero_rated"]
-rate_kinds = ["zero"]
-flow_direction = "repercutido"
-fact = "base_amount_sum"
-
-observation_roles = ["settlement"]
-cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions."2024".bindings.aggregation]
 op = "sum"

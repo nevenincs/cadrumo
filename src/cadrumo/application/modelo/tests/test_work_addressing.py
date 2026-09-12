@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -30,11 +31,6 @@ from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_wor
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from .._work_selection import (
-    ModeloWorkSelectorRequest,
-    ModeloWorkSelectorState,
-    select_modelo_work_resolution,
-)
 from ..action_errors import CalculationRevisionNotFoundError
 from ..selectors import ModeloCalculationRevisionSelector
 from ..work_addressing import (
@@ -52,6 +48,11 @@ from ..work_addressing import (
 from ..work_lifecycle import (
     create_work_unit,
     discard_work_unit,
+)
+from ..work_selection import (
+    ModeloWorkSelectorRequest,
+    ModeloWorkSelectorState,
+    select_modelo_work_resolution,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -679,7 +680,7 @@ def test_distinct_storage_roots_cannot_compare_their_coordinates(tmp_path: Path)
 
 def test_work_capture_contract_is_owned_by_its_defining_module() -> None:
     """Every capture symbol is defined here and bound nowhere in the package namespace."""
-    from .. import __init__ as modelo_namespace
+    modelo_namespace = sys.modules[__package__.rsplit(".", 1)[0]]
 
     for owned in (
         ModeloWorkCapture,

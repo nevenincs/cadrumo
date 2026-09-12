@@ -115,7 +115,7 @@ def _render_rows_for_record(
                 occurrence=occurrence,
             ),
         )
-        for occurrence, row in enumerate(_record_render_rows(record, binding_values, casilla_values), 1)
+        for occurrence, row in enumerate(record_render_rows(record, binding_values, casilla_values), 1)
     )
 
 
@@ -146,7 +146,7 @@ def _render_record_bytes(
     return f"{text}{line_ending}".encode(record.encoding)
 
 
-def _record_render_rows(
+def record_render_rows(
     record: ExportRecordDefinition,
     binding_values: dict[tuple[BindingId, int | None], object],
     casilla_values: dict[CasillaId, object],
@@ -369,6 +369,7 @@ __all__ = [
     "m303_no_activity_marker",
     "preflight_projection_plan",
     "projection_field_value",
+    "record_render_rows",
     "render_layout_records",
     "render_record",
 ]

@@ -7,7 +7,6 @@ semantic_role = "is_reserva_nivelacion_incumplimiento"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-105"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01605"
 number = "01605"
@@ -17,7 +16,6 @@ semantic_role = "is_reserva_nivelacion_incumplimiento"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-105"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01606"
 number = "01606"
@@ -27,4 +25,3 @@ semantic_role = "is_reserva_nivelacion_incumplimiento"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-105"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]

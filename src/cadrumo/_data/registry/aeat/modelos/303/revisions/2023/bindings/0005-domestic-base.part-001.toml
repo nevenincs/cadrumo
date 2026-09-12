@@ -13,7 +13,8 @@
 
 [[revisions.2023.bindings]]
 id = "modelo-303-iva-repercutido-general-base"
-source = "ledger_iva_aggregation"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general"], rate_kinds = ["general"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
@@ -21,20 +22,13 @@ source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-
 source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
-[revisions.2023.bindings.selector]
-categories = ["domestic_general"]
-rate_kinds = ["general"]
-flow_direction = "repercutido"
-fact = "base_amount_sum"
-
-observation_roles = ["settlement"]
-cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2023.bindings.aggregation]
 op = "sum"
 
 [[revisions.2023.bindings]]
 id = "modelo-303-iva-repercutido-reducido-base"
-source = "ledger_iva_aggregation"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reduced"], rate_kinds = ["reduced"], applied_rates = ["0.10"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
@@ -42,21 +36,13 @@ source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-
 source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
-[revisions.2023.bindings.selector]
-categories = ["domestic_reduced"]
-rate_kinds = ["reduced"]
-applied_rates = ["0.10"]
-flow_direction = "repercutido"
-fact = "base_amount_sum"
-
-observation_roles = ["settlement"]
-cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2023.bindings.aggregation]
 op = "sum"
 
 [[revisions.2023.bindings]]
 id = "modelo-303-iva-repercutido-super-reducido-base"
-source = "ledger_iva_aggregation"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], applied_rates = ["0.04"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
@@ -64,21 +50,13 @@ source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-
 source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
-[revisions.2023.bindings.selector]
-categories = ["domestic_super_reduced"]
-rate_kinds = ["super_reduced"]
-applied_rates = ["0.04"]
-flow_direction = "repercutido"
-fact = "base_amount_sum"
-
-observation_roles = ["settlement"]
-cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2023.bindings.aggregation]
 op = "sum"
 
 [[revisions.2023.bindings]]
 id = "modelo-303-iva-soportado-interiores-base"
-source = "ledger_iva_aggregation"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
@@ -86,13 +64,5 @@ source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-
 source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
-[revisions.2023.bindings.selector]
-categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"]
-rate_kinds = ["general", "reduced", "super_reduced"]
-flow_direction = "soportado"
-fact = "base_amount_sum"
-
-observation_roles = ["settlement"]
-cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2023.bindings.aggregation]
 op = "sum"

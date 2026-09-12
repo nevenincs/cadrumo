@@ -33,8 +33,8 @@ from ....core.directory_scan import iter_directory
 from ....core.product_identity import PRODUCT_IDENTITY
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_location
-from ._sessionless_root_fixtures import _sessionless_root
 from .cli_runner import invoke_cached_cli
+from .sessionless_root_fixtures import _sessionless_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

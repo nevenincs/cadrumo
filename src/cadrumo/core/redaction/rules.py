@@ -202,7 +202,7 @@ _PREFIXED_IDENTITY_SEPARATOR = r"[ .\-]?"
 # 12345678Z" was redacted to "for examplesha256:..." and the operator's sentence
 # lost a word boundary. Found by running the shipped locale catalogues through
 # the funnel, not by reading the regex.
-_NIF_PATTERN = r"\b(?:[XYZxyz])?\d{7,8}[A-Za-z]\b"
+NIF_PATTERN = r"\b(?:[XYZxyz])?\d{7,8}[A-Za-z]\b"
 
 # The separator-bearing spelling, which a printed invoice and an OCR reading
 # both produce. It also matches the unbroken form, harmlessly: the ungated arm
@@ -388,7 +388,7 @@ _DEFAULT_RULES: Mapping[str, _RedactionRule] = MappingProxyType(
     {
         "nif-hash": _RedactionRule(
             name="nif-hash",
-            pattern=_NIF_PATTERN,
+            pattern=NIF_PATTERN,
             strategy=_RedactionStrategy.SHA256_PREFIX,
         ),
         "nif-separated-hash": _RedactionRule(

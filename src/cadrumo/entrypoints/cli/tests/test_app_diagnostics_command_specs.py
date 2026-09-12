@@ -6,7 +6,8 @@ import pytest
 from typer.testing import CliRunner
 
 from .._app_diagnostics_command_specs import DIAGNOSTICS_COMMAND_SPECS
-from .._command_runtime import build_command_subtree, resolve_deferred_target
+from .._command_runtime import build_command_subtree
+from .._command_target import resolve_deferred_target
 from .._root_command_specs import ROOT_COMMAND_SPECS
 from ..command_spec import CommandSpecGraph, SchemaState
 

@@ -81,7 +81,7 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
             _OUTPUT_LANGUAGE,
         ),
         policy=ENCRYPTED_DESTRUCTIVE,
-        handler=LazyBinding.available(DeferredTarget("._passphrase", "passphrase_change", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".passphrase", "passphrase_change", __package__)),
         result_schema=_schema("ConfigPassphraseChangeResult", "config.passphrase.change"),
         machine_secret=MachineSecretSpec(
             (
@@ -93,7 +93,7 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
                         MachineSecretFieldSpec("new_passphrase_confirmation"),
                     ),
                     DeferredTarget(
-                        "._passphrase",
+                        ".passphrase",
                         "PassphraseChangeSecrets",
                         __package__,
                     ),

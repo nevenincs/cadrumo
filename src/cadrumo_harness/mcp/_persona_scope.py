@@ -299,12 +299,6 @@ def handoff_denial_message(*, persona: AgentPersona, command_key: str) -> str:
         command=command_key,
         persona=persona.value,
         owner=AgentPersona.VERIFIER.value,
-        default=(
-            "'{command}' is the irreversible filing-handoff boundary, owned by "
-            "the '{owner}' persona; the '{persona}' persona is structurally "
-            "denied it. Hand the verified work unit to the verifier session to "
-            "produce the export or record marker."
-        ),
     )
 
 

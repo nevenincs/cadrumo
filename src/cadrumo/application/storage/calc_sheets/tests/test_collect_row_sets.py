@@ -14,10 +14,10 @@ from itertools import pairwise
 
 import pytest
 
-from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.errors import RegistryValidationError
-from .....domain.calculations.registry.schema import DataBindingDefinition
+from .....domain.calculations.registry.schema import BindingDefinition
 from ..engine import collect_row_sets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -96,10 +96,10 @@ def test_collect_row_sets_returns_empty_for_revision_without_row_producers() -> 
 
 def test_collect_row_sets_rejects_rows_binding_without_row_set_projection() -> None:
     revision = bundled_authority().modelo("130").revisions["2019-y-siguientes"]
-    malformed_row_binding = DataBindingDefinition(
+    malformed_row_binding = BindingDefinition(
         id="synthetic-row-without-grouping",
-        source=BindingSourceKind.COLLECTIBLE_INVOICE,
-        selector={"fact": "row_field", "row_field": "country_code"},
+        provider={"kind": "collectible_invoice", **{"fact": "row_field", "row_field": "country_code"}},
+        value={"data_type": "money", "channel": "decimal"},
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=("ley-37-1992:art-1",),
         source_refs=("aeat-dr-349",),

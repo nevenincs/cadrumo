@@ -38,11 +38,11 @@ from ...identifiers import canonical_decimal_string as _canonical_decimal_string
 
 if TYPE_CHECKING:
     from ._anexo_d_records import InventoryAnexoDResult as _InventoryAnexoDResult
-    from ._closing_authority_records import InventoryClosingAuthorityDecision as _InventoryClosingAuthorityDecision
-    from ._closing_authority_records import InventoryClosingAuthorityRecord as _InventoryClosingAuthorityRecord
-    from ._closing_authority_records import InventoryClosingConflictDiagnostic as _InventoryClosingConflictDiagnostic
-    from ._closing_authority_records import InventoryClosingResolution as _InventoryClosingResolution
-    from ._closing_authority_records import PriorAuthoritativeClosingLink as _PriorAuthoritativeClosingLink
+    from .closing_authority_records import InventoryClosingAuthorityDecision as _InventoryClosingAuthorityDecision
+    from .closing_authority_records import InventoryClosingAuthorityRecord as _InventoryClosingAuthorityRecord
+    from .closing_authority_records import InventoryClosingConflictDiagnostic as _InventoryClosingConflictDiagnostic
+    from .closing_authority_records import InventoryClosingResolution as _InventoryClosingResolution
+    from .closing_authority_records import PriorAuthoritativeClosingLink as _PriorAuthoritativeClosingLink
 
     type InventoryAnexoDResult = _InventoryAnexoDResult
     type InventoryClosingAuthorityDecision = _InventoryClosingAuthorityDecision
@@ -487,7 +487,7 @@ class PhysicalClosingObservation(BaseModel):
 
 
 def _load_closing_authority_models() -> tuple[Any, ...]:
-    from . import _closing_authority_records as _closing
+    from . import closing_authority_records as _closing
 
     models = (
         _closing.InventoryClosingAuthorityDecision,

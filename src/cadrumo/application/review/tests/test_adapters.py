@@ -42,10 +42,10 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
-from .._adapters import drafts_pending, invoices_pending, transactions_pending
 from ..enums import ReviewSeverity
 from ..errors import ReviewSourceLoadError
 from ..models import FindingReviewItem, InvoiceReviewItem, TransactionReviewItem
+from ..source_adapters import drafts_pending, invoices_pending, transactions_pending
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

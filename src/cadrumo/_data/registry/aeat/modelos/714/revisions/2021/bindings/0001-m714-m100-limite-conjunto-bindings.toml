@@ -9,8 +9,9 @@
 # here is the standing legal articles, which are year-appropriate on their own.
 [[revisions."2021".bindings]]
 id = "m714-m100-base-imponible-general"
-source = "relation_prefill"
-selector = { source_modelo = "100", source_casilla_id = "0435" }
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "direct_calculation", source_modelo = "100", source_casilla_id = "0435", temporal = { kind = "same_filing_year_periods", source_periods = ["0A"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-19-1991:art-31", "ley-35-2006:art-48"]
 source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
@@ -21,8 +22,9 @@ required_text = ["Modelo 714", "Impuesto sobre el Patrimonio"]
 
 [[revisions."2021".bindings]]
 id = "m714-m100-base-imponible-ahorro"
-source = "relation_prefill"
-selector = { source_modelo = "100", source_casilla_id = "0460" }
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "direct_calculation", source_modelo = "100", source_casilla_id = "0460", temporal = { kind = "same_filing_year_periods", source_periods = ["0A"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-19-1991:art-31", "ley-35-2006:art-49"]
 source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
@@ -33,8 +35,9 @@ required_text = ["Modelo 714", "Impuesto sobre el Patrimonio"]
 
 [[revisions."2021".bindings]]
 id = "m714-m100-cuota-integra-estatal"
-source = "relation_prefill"
-selector = { source_modelo = "100", source_casilla_id = "0545" }
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "direct_calculation", source_modelo = "100", source_casilla_id = "0545", temporal = { kind = "same_filing_year_periods", source_periods = ["0A"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-19-1991:art-31", "ley-35-2006:art-63"]
 source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
@@ -45,8 +48,9 @@ required_text = ["Modelo 714", "Impuesto sobre el Patrimonio"]
 
 [[revisions."2021".bindings]]
 id = "m714-m100-cuota-integra-autonomica"
-source = "relation_prefill"
-selector = { source_modelo = "100", source_casilla_id = "0546" }
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "direct_calculation", source_modelo = "100", source_casilla_id = "0546", temporal = { kind = "same_filing_year_periods", source_periods = ["0A"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-19-1991:art-31", "ley-35-2006:art-74"]
 source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]

@@ -103,7 +103,6 @@ from ..domain.calculations.registry.ids import RevisionId
 from ..domain.deadlines.engine import DeadlineEngine, compute_obligation_schedule
 from ..domain.deadlines.models import ObligationStatus, Schedule, TaxpayerProfile
 from ..domain.modelos.work_unit import WorkUnitState
-from ._state_projection_auth import ProjectionAuthReadiness, build_auth_readiness
 from ._state_projection_readiness import (
     one_line_error_message,
     readiness_binding_input_channel,
@@ -117,6 +116,7 @@ from .ledger.preflight import (
     preflight_ledger_tax_readiness,
 )
 from .operator_actions.models import PreconditionVerdict
+from .state_projection_auth import ProjectionAuthReadiness, build_auth_readiness
 from .user_profile.commands import ProfilePreflightReport, ProfilePreflightRequirement
 from .workflow.profile_health import ActiveProfileHealth, assess_active_profile_health
 from .workflow.state_models import WorkflowState

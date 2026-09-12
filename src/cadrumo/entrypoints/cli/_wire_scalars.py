@@ -53,7 +53,7 @@ def enum_value_text(enum_cls: type[StrEnum]) -> Any:
 def _validate_iso_date(value: str) -> str:
     """Return ``value`` when it is a real, extended-form ISO-8601 calendar day.
 
-    Delegates to the canonical :func:`~cadrumo.core.parsing.require_iso8601_date`
+    Delegates to the canonical :func:`~cadrumo.core.parsing.dates.require_iso8601_date`
     rather than :meth:`datetime.date.fromisoformat` directly: the latter also
     accepts the compact ``YYYYMMDD`` form, which cannot round-trip through the
     domain records (e.g. :class:`~cadrumo.domain.contribuyente.inventory.MovementRecord`)

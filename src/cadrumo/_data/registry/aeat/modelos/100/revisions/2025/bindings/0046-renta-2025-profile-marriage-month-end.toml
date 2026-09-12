@@ -1,7 +1,7 @@
 [[revisions."2025".bindings]]
 id = "renta-profile-marriage-month-end"
-source = "profile"
-selector = { profile_key = "renta_taxpayer.marriage_month_end" }
+provider = { kind = "profile", profile_key = "renta_taxpayer.marriage_month_end" }
+value = { data_type = "integer", channel = "integer" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-82"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form", "aeat-renta-2025-manual-parte1"]

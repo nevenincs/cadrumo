@@ -8,7 +8,7 @@ counterparty, the exact defect this module guards against. This module
 proves the repoint against BOTH real bundled revisions
 (``2025-y-siguientes`` and ``2011-2024``, since the underlying defect names no
 revision qualifier) and the real production entry points:
-:func:`resolve_invoice_binding_row_values` and :func:`_record_render_rows`.
+:func:`resolve_invoice_binding_row_values` and :func:`record_render_rows`.
 
 It also proves the quarterly-desagregación property the repoint's own
 condition required before ``repeat`` could be declared: each row's four
@@ -239,7 +239,7 @@ def test_clave_c_uses_its_own_lower_floor_alongside_the_general_one(revision_id:
 @pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
 def test_binding_rows_rendering_emits_one_occurrence_per_counterparty(revision_id: str) -> None:
     """The renderer itself, not just the resolver, emits every distinct counterparty row."""
-    from ..record_renderer import _record_render_rows
+    from ..record_renderer import record_render_rows
 
     revision = _revision(revision_id)
     record = _declarado_record(revision)
@@ -273,7 +273,7 @@ def test_binding_rows_rendering_emits_one_occurrence_per_counterparty(revision_i
 
     resolved = resolve_invoice_binding_row_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
     binding_values: dict[tuple[BindingId, int | None], object] = dict(resolved.items())
-    rendered = _record_render_rows(record, binding_values, {})
+    rendered = record_render_rows(record, binding_values, {})
 
     assert len({row.row_index for row in rendered}) == 3
 

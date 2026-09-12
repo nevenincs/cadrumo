@@ -1,7 +1,7 @@
 """Previous-filing source validation helpers.
 
 Validates that every ``previous_filing``
-:class:`~cadrumo.domain.calculations.registry.DataBindingDefinition` declared on a
+:class:`~cadrumo.domain.calculations.registry.BindingDefinition` declared on a
 :class:`~cadrumo.domain.calculations.registry.ModeloDefinition` resolves to a
 known source modelo and that its declared
 :class:`~cadrumo.core.CasillaId` values exist in the
@@ -23,7 +23,7 @@ from collections.abc import Iterable, Mapping
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.domain.calculations.registry.bindings_previous_filing import previous_filing_source_reference
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloDefinition
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloDefinition
 
 from ._validate_source_casilla_ids import source_casilla_id_reference_failure
 
@@ -60,14 +60,14 @@ def validate_previous_filing_binding_closure(
 
 
 def _validate_previous_filing_binding(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     *,
     binding_scope: str,
     modelos_by_id: Mapping[str, ModeloDefinition],
 ) -> list[str]:
     """Validate one previous-filing binding against its source modelo.
 
-    The supplied :class:`~cadrumo.domain.calculations.registry.DataBindingDefinition`
+    The supplied :class:`~cadrumo.domain.calculations.registry.BindingDefinition`
     is parsed by
     :func:`cadrumo.domain.calculations.registry.bindings_previous_filing.previous_filing_source_reference`,
     then each matching source revision is checked through

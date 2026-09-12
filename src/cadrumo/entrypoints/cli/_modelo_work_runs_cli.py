@@ -48,7 +48,6 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.json_contract import ResolvedPreconditionAction
 from ._action_rendering import resolved_precondition_action_json_cell
-from ._common import activate_subcommand_output_language, emit_envelope, resolve_cli_precondition_action
 from ._modelo_behavior_support import resolve_optional_cli_period
 from ._modelo_cli_support import (
     bad_parameter_from_error,
@@ -56,10 +55,11 @@ from ._modelo_cli_support import (
     validate_calculation_revision_id,
     validate_work_unit_id,
 )
-from ._modelo_payloads import (
+from ._modelo_payloads import WorkResumeResult
+from .common import activate_subcommand_output_language, emit_envelope, resolve_cli_precondition_action
+from .modelo_aux_payloads import (
     WorkflowRunPayload,
     WorkflowRunSummaryPayload,
-    WorkResumeResult,
     WorkRunDetailsResult,
     WorkRunResult,
     WorkRunsResult,

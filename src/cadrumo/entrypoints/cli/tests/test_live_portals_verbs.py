@@ -16,7 +16,7 @@ from ....domain.portals.errors import PortalRegistryInvariant, portal_integrity_
 from ....domain.portals.registry import PORTAL_REGISTRY
 from .. import _app_live_portals_cli as portals_cli_module
 from .._app_live_portals_cli import _project_portal_refusal
-from .._common import cli_policy_refusal_projection
+from ..common import cli_policy_refusal_projection
 from .cli_runner import invoke_cached_cli
 
 # INTENTIONAL: integration because it exercises the portals CLI surface over the static

@@ -40,13 +40,13 @@ import asyncio
 import sys
 from typing import TYPE_CHECKING
 
-from .. import __version__
 from ..core.async_cleanup import close_async_resources
 from ..core.config import Settings
 from ..core.errors.hierarchy import SiteHealthError, SiteHealthState
 from ..core.i18n.render import tr
 from ..core.logging import default_log_file_path, get_logger
 from ..core.operator_action_enums import NoRecoveryOutcome
+from ..core.package_version import PACKAGE_VERSION as __version__
 from ..core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ..core.requirement import Requirement, RequirementValue
 from ..core.time.clock import now
@@ -358,35 +358,36 @@ def render_config_repair_text(report: _ConfigRepairReport) -> str:
     renderer remains a diagnosis-only view.
     """
     lines = [
-        f"{tr('cli.diagnostics.repair.overall_label', default='Overall')}\t{report.overall}",
-        (
-            f"{tr('cli.diagnostics.repair.version_label', default='Version')}\t"
-            f"{report.package_name} {report.package_version}"
-        ),
-        f"{tr('cli.diagnostics.repair.python_label', default='Python')}\t{report.python_version}",
-        f"{tr('cli.diagnostics.repair.logs_label', default='Logs')}\t{report.log_file}",
+        f"{tr('cli.diagnostics.repair.overall_label')}\t{report.overall}",
+        (f"{tr('cli.diagnostics.repair.version_label')}\t{report.package_name} {report.package_version}"),
+        f"{tr('cli.diagnostics.repair.python_label')}\t{report.python_version}",
+        f"{tr('cli.diagnostics.repair.logs_label')}\t{report.log_file}",
     ]
     if report.setup is not None:
         lines.append(
-            f"{tr('cli.diagnostics.repair.profile_label', default='Profile')}\t{report.setup.active_profile or '-'} "
+            f"{tr('cli.diagnostics.repair.profile_label')}\t{report.setup.active_profile or '-'} "
             f"({report.setup.profile_present_keys}/{report.setup.profile_total_keys})",
         )
-        lines.append(f"{tr('cli.diagnostics.repair.auth_label', default='Auth')}\t{report.setup.auth_provider or '-'}")
-    lines.append(tr("cli.diagnostics.repair.checks_heading", default="Checks"))
+        lines.append(f"{tr('cli.diagnostics.repair.auth_label')}\t{report.setup.auth_provider or '-'}")
+    lines.append(
+        tr(
+            "cli.diagnostics.repair.checks_heading",
+        )
+    )
     for check in report.checks:
         scope = (
             ""
             if check.status == _DiagnosticStatus.OK or check.audience == _DiagnosticAudience.OPERATOR
-            else f" [{tr('cli.diagnostics.repair.audience_internal', default='internal application issue')}]"
+            else f" [{tr('cli.diagnostics.repair.audience_internal')}]"
         )
         lines.append(f"{check.status}\t{check.name}\t{check.summary}{scope}")
         if check.detail:
-            lines.append(f"{tr('cli.diagnostics.repair.detail_label', default='Detail')}\t{check.detail}")
+            lines.append(f"{tr('cli.diagnostics.repair.detail_label')}\t{check.detail}")
         for finding in check.findings:
             tag = _finding_tag(finding)
-            lines.append(f"{tr('cli.diagnostics.repair.finding_label', default='-')}\t{tag}{finding.summary}")
+            lines.append(f"{tr('cli.diagnostics.repair.finding_label')}\t{tag}{finding.summary}")
             if finding.detail:
-                lines.append(f"  {tr('cli.diagnostics.repair.detail_label', default='Detail')}\t{finding.detail}")
+                lines.append(f"  {tr('cli.diagnostics.repair.detail_label')}\t{finding.detail}")
     return "\n".join(lines) + "\n"
 
 
@@ -406,9 +407,9 @@ def _repair_safe_wizard_status(
 def _finding_tag(finding: _DiagnosticFinding) -> str:
     """Return the requirement prefix rendered ahead of a finding summary."""
     if finding.requirement == "required":
-        return f"{tr('cli.diagnostics.repair.finding_required', default='required')}: "
+        return f"{tr('cli.diagnostics.repair.finding_required')}: "
     if finding.requirement == "optional":
-        return f"{tr('cli.diagnostics.repair.finding_optional', default='optional')}: "
+        return f"{tr('cli.diagnostics.repair.finding_optional')}: "
     return ""
 
 
@@ -426,7 +427,7 @@ def _probe_secure_objects_integrity() -> _SecureObjectIntegrityReport:
     from ..adapters.persistence.storage.runtime_repository import (
         secure_object_repository_for_active_bucket_or_default_route,
     )
-    from ..adapters.persistence.storage.sql.secure_objects import SecureObjectNamespaceIntegrity
+    from ..adapters.persistence.storage.sql.secure_object_records import SecureObjectNamespaceIntegrity
 
     try:
         repo = secure_object_repository_for_active_bucket_or_default_route()
@@ -496,7 +497,6 @@ def _secure_objects_integrity_check(report: _SecureObjectIntegrityReport) -> _Di
         status=_DiagnosticStatus.WARN,
         summary=tr(
             "cli.diagnostics.summary.secure_objects_unreadable",
-            default="%{unreadable} unreadable row(s), %{readable} readable row(s)",
             unreadable=report.unreadable_total,
             readable=report.readable_total,
         ),
@@ -566,7 +566,9 @@ def _profile_unavailable_check(health: ActiveProfileHealth) -> _DiagnosticCheck:
     return _DiagnosticCheck(
         name="profile.readiness",
         status=_DiagnosticStatus.WARN,
-        summary=tr("cli.diagnostics.summary.profile_none", default="No profile configured"),
+        summary=tr(
+            "cli.diagnostics.summary.profile_none",
+        ),
         precondition_verdict=_required_profile_health_verdict(health),
     )
 
@@ -676,7 +678,6 @@ def _profile_check(
         status=_DiagnosticStatus.OK,
         summary=tr(
             "cli.diagnostics.summary.profile_keys_set",
-            default="Profile keys set: %{present}/%{total}",
             present=report.profile_present_keys,
             total=report.profile_total_keys,
         ),
@@ -702,7 +703,6 @@ def _profile_not_ready_check(
         status=_DiagnosticStatus.WARN,
         summary=tr(
             "cli.diagnostics.summary.profile_missing_fields",
-            default="Profile is missing %{count} required field(s): %{fields}",
             count=len(findings),
             fields=", ".join(finding.summary for finding in findings),
         ),
@@ -828,7 +828,6 @@ def _auth_check(report: WizardStatusReport) -> _DiagnosticCheck:
             status=_DiagnosticStatus.WARN,
             summary=tr(
                 "cli.diagnostics.summary.auth_no_session",
-                default="Authentication provider %{provider} has no ready session",
                 provider=report.auth_provider,
             ),
             precondition_verdict=diagnostic_action_verdict(
@@ -844,7 +843,6 @@ def _auth_check(report: WizardStatusReport) -> _DiagnosticCheck:
         status=_DiagnosticStatus.OK,
         summary=tr(
             "cli.diagnostics.summary.auth_session_ready",
-            default="Authentication provider %{provider} has a ready session",
             provider=report.auth_provider,
         ),
     )

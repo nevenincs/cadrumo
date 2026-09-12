@@ -19,11 +19,14 @@ from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 from ....core.casilla_id import CasillaId
 from .errors import RegistryValidationError
-from .schema import ModeloRevision
 from .schema_surfaces import CasillaDefinition
+
+if TYPE_CHECKING:
+    from .schema import ModeloRevision
 
 
 def duplicate_casilla_ids(casilla_ids: Iterable[CasillaId]) -> tuple[CasillaId, ...]:

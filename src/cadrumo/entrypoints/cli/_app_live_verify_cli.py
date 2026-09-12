@@ -21,7 +21,7 @@ from ...core.i18n.render import tr
 from ...core.identity.tax_id import tax_id_identity_token
 from ...core.identity_check_verdict import IdentityCheckVerdict, IdentityCheckVerdictValue
 from ...core.time.clock import now
-from ._common import active_bucket_id_or_refuse, emit_envelope
+from .common import active_bucket_id_or_refuse, emit_envelope
 
 
 class _VerifyRow(TypedDict):

@@ -9,7 +9,7 @@ semantic_role_cardinality_reason = "Modelo 345 current declarant NIF slot is uni
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-2"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "ejercicio-declaracion"
@@ -22,7 +22,7 @@ semantic_role_cardinality_reason = "Modelo 345 current exercise slot is unique t
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-4", "orden-hac-1430-2025:df-unica"]
-source_refs = ["aeat-dr-345-2025", "aeat-modelo-345-deadlines", "boe-modelo-345-2025-amendment-hac-1430"]
+additional_source_refs = ["aeat-modelo-345-deadlines", "boe-modelo-345-2025-amendment-hac-1430"]
 
 [[revisions."2025".casillas]]
 id = "declarante-razon-social"
@@ -33,7 +33,7 @@ semantic_role = "m345_declarante_razon_social"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-2"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "total-declarados"
@@ -44,7 +44,7 @@ semantic_role = "m345_total_declarados"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-3"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "importe-total-aportaciones"
@@ -55,7 +55,7 @@ semantic_role = "m345_importe_total_aportaciones"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-3"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "declarado-nif"
@@ -66,7 +66,7 @@ semantic_role = "m345_declarado_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-2", "orden-hfp-823-2022:art-3"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "declarado-nombre"
@@ -77,7 +77,7 @@ semantic_role = "m345_declarado_nombre"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-2", "orden-hfp-823-2022:art-3"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "anio-nacimiento"
@@ -88,7 +88,7 @@ semantic_role = "m345_anio_nacimiento"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-3"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "codigo-provincia"
@@ -99,7 +99,7 @@ semantic_role = "m345_codigo_provincia"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-3"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "clave"
@@ -114,12 +114,7 @@ legal_refs = [
     "orden-hfp-528-2023:art-unico",
     "orden-hac-1504-2024:art-octavo",
 ]
-source_refs = [
-    "aeat-dr-345-2025",
-    "boe-modelo-345-base-order",
-    "boe-modelo-345-2023-amendment-hfp-528",
-    "boe-modelo-345-2024-amendment-hac-1504",
-]
+additional_source_refs = ["boe-modelo-345-base-order", "boe-modelo-345-2023-amendment-hfp-528", "boe-modelo-345-2024-amendment-hac-1504"]
 
 [[revisions."2025".casillas]]
 id = "subclave"
@@ -134,12 +129,7 @@ legal_refs = [
     "orden-hfp-1397-2023:art-sexto",
     "orden-hac-1504-2024:art-octavo",
 ]
-source_refs = [
-    "aeat-dr-345-2025",
-    "boe-modelo-345-2023-amendment-hfp-528",
-    "boe-modelo-345-2023-amendment-hfp-1397",
-    "boe-modelo-345-2024-amendment-hac-1504",
-]
+additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528", "boe-modelo-345-2023-amendment-hfp-1397", "boe-modelo-345-2024-amendment-hac-1504"]
 
 [[revisions."2025".casillas]]
 id = "beneficiario-nif"
@@ -150,7 +140,7 @@ semantic_role = "m345_beneficiario_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-3"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "importe"
@@ -161,7 +151,7 @@ semantic_role = "m345_importe"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-3"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "datos-adicionales-claves-abc"
@@ -171,7 +161,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-3", "orden-hfp-528-2023:art-unico"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order", "boe-modelo-345-2023-amendment-hfp-528"]
+additional_source_refs = ["boe-modelo-345-base-order", "boe-modelo-345-2023-amendment-hfp-528"]
 
 [[revisions."2025".casillas]]
 id = "plan-pensiones-denominacion"
@@ -181,9 +171,9 @@ data_type = "text"
 semantic_role = "m345_plan_pensiones_denominacion"
 required = false
 input_kind = "manual"
-constraints = { max_length = 40, legal_refs = ["orden-hfp-823-2022:art-3"], source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"] }
+constraints = { max_length = 40, legal_refs = ["orden-hfp-823-2022:art-3"], additional_source_refs = ["boe-modelo-345-base-order"] }
 legal_refs = ["orden-hfp-823-2022:art-3"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "fondo-pensiones-numero-registro"
@@ -193,9 +183,9 @@ data_type = "text"
 semantic_role = "m345_fondo_pensiones_numero_registro"
 required = false
 input_kind = "manual"
-constraints = { max_length = 5, legal_refs = ["orden-hfp-823-2022:art-3"], source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"] }
+constraints = { max_length = 5, legal_refs = ["orden-hfp-823-2022:art-3"], additional_source_refs = ["boe-modelo-345-base-order"] }
 legal_refs = ["orden-hfp-823-2022:art-3"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "fondo-pensiones-nif"
@@ -205,9 +195,9 @@ data_type = "nif"
 semantic_role = "m345_fondo_pensiones_nif"
 required = false
 input_kind = "manual"
-constraints = { max_length = 9, legal_refs = ["orden-hfp-823-2022:art-3"], source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"] }
+constraints = { max_length = 9, legal_refs = ["orden-hfp-823-2022:art-3"], additional_source_refs = ["boe-modelo-345-base-order"] }
 legal_refs = ["orden-hfp-823-2022:art-3"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "entidad-aseguradora-nif"
@@ -217,9 +207,9 @@ data_type = "nif"
 semantic_role = "m345_entidad_aseguradora_nif"
 required = false
 input_kind = "manual"
-constraints = { max_length = 9, legal_refs = ["orden-hfp-823-2022:art-3"], source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"] }
+constraints = { max_length = 9, legal_refs = ["orden-hfp-823-2022:art-3"], additional_source_refs = ["boe-modelo-345-base-order"] }
 legal_refs = ["orden-hfp-823-2022:art-3"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "datos-adicionales-clave-i"
@@ -229,7 +219,7 @@ data_type = "integer"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-3"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "pias-fecha-primera-prima"
@@ -240,7 +230,7 @@ semantic_role = "m345_pias_fecha_primera_prima"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-823-2022:art-3"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "pias-importe-acumulado"
@@ -250,9 +240,9 @@ data_type = "money"
 semantic_role = "m345_pias_importe_acumulado"
 required = false
 input_kind = "manual"
-constraints = { sign = "non_negative", max_value = "240000", legal_refs = ["orden-hfp-823-2022:art-3"], source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"] }
+constraints = { sign = "non_negative", max_value = "240000", legal_refs = ["orden-hfp-823-2022:art-3"], additional_source_refs = ["boe-modelo-345-base-order"] }
 legal_refs = ["orden-hfp-823-2022:art-3"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "datos-adicionales-clave-m"
@@ -262,7 +252,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-528-2023:art-unico"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
+additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528"]
 
 [[revisions."2025".casillas]]
 id = "pepp-denominacion"
@@ -272,9 +262,9 @@ data_type = "text"
 semantic_role = "m345_pepp_denominacion"
 required = false
 input_kind = "manual"
-constraints = { max_length = 40, legal_refs = ["orden-hfp-528-2023:art-unico"], source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"] }
+constraints = { max_length = 40, legal_refs = ["orden-hfp-528-2023:art-unico"], additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528"] }
 legal_refs = ["orden-hfp-528-2023:art-unico"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
+additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528"]
 
 [[revisions."2025".casillas]]
 id = "pepp-numero-inscripcion"
@@ -284,9 +274,9 @@ data_type = "text"
 semantic_role = "m345_pepp_numero_inscripcion"
 required = false
 input_kind = "manual"
-constraints = { max_length = 40, legal_refs = ["orden-hfp-528-2023:art-unico"], source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"] }
+constraints = { max_length = 40, legal_refs = ["orden-hfp-528-2023:art-unico"], additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528"] }
 legal_refs = ["orden-hfp-528-2023:art-unico"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
+additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528"]
 
 [[revisions."2025".casillas]]
 id = "pepp-cuenta-subcuenta"
@@ -296,9 +286,9 @@ data_type = "text"
 semantic_role = "m345_pepp_cuenta_subcuenta"
 required = false
 input_kind = "manual"
-constraints = { max_length = 1, enum = ["C", "S"], legal_refs = ["orden-hfp-528-2023:art-unico"], source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"] }
+constraints = { max_length = 1, enum = ["C", "S"], legal_refs = ["orden-hfp-528-2023:art-unico"], additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528"] }
 legal_refs = ["orden-hfp-528-2023:art-unico"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
+additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528"]
 
 [[revisions."2025".casillas]]
 id = "rendimientos-trabajo-superiores-60000"
@@ -313,12 +303,7 @@ legal_refs = [
     "orden-hac-1504-2024:art-octavo",
     "orden-hac-1430-2025:art-septimo",
 ]
-source_refs = [
-    "aeat-dr-345-2025",
-    "boe-modelo-345-2023-amendment-hfp-528",
-    "boe-modelo-345-2024-amendment-hac-1504",
-    "boe-modelo-345-2025-amendment-hac-1430",
-]
+additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528", "boe-modelo-345-2024-amendment-hac-1504", "boe-modelo-345-2025-amendment-hac-1430"]
 
 [[revisions."2025".casillas]]
 id = "empleador-nif"
@@ -329,7 +314,7 @@ semantic_role = "m345_empleador_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-528-2023:art-unico"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
+additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528"]
 
 [[revisions."2025".casillas]]
 id = "empleador-nombre"
@@ -340,7 +325,7 @@ semantic_role = "m345_empleador_nombre"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-528-2023:art-unico"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
+additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528"]
 
 [[revisions."2025".casillas]]
 id = "devoluciones-excesos"
@@ -351,5 +336,4 @@ semantic_role = "m345_devoluciones_excesos"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-528-2023:art-unico"]
-source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
-
+additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528"]

@@ -1,11 +1,7 @@
 """Strict tests for the BOE-prescribed Modelo 100 first-slice routing.
 
-Three boundaries get coverage:
+Two boundaries get coverage:
 
-* The two re-exports (the ``_ledger_expenses`` constant and the
-  canonical ``_first_slice_routing`` constant) are the SAME object.
-  This guards against a future regression where a copy-edit
-  silently forks the table and the two paths drift.
 * Every casilla id the routing table targets is a real casilla on
   the modelo-100 registry. This is the cross-domain referential-
   integrity property the snapshot-time gate enforces.
@@ -29,20 +25,8 @@ from ...categories.spending_category import SpendingCategory
 from .._first_slice_routing import (
     FIRST_SLICE_EXPENSE_CASILLAS,
 )
-from ..ledger_expenses import RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-
-def test_ledger_expenses_re_export_is_the_canonical_table() -> None:
-    """``RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS`` IS the canonical mapping.
-
-    Using ``is`` rather than ``==`` guards against any future code
-    path that silently copies the table — a copy would equal the
-    original but a divergent later edit would not be caught.
-    """
-
-    assert RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS is FIRST_SLICE_EXPENSE_CASILLAS
 
 
 def test_first_slice_target_casillas_is_closed_set() -> None:
@@ -119,10 +103,10 @@ def test_first_slice_check_is_registered_with_the_registry_validator() -> None:
     ``renta``).
     """
 
-    from ...calculations.registry.validate_cross_domain_snapshot import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+    from ...calculations.registry.validate_cross_domain_snapshot import registered_cross_domain_check_identities
     from ..first_slice_routing_integrity import check_first_slice_routing
 
-    assert check_first_slice_routing in _CROSS_DOMAIN_SNAPSHOT_CHECKS
+    assert check_first_slice_routing.__module__ in registered_cross_domain_check_identities()
 
 
 def test_registered_check_fires_through_the_snapshot_build_gate() -> None:

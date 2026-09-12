@@ -73,7 +73,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f006"
 kind = "binding"
-binding = "modelo-232-2016.page_02.13-62.paraiso-operacion-1-descripcion"
+binding = "modelo-232.page_02.13-62.paraiso-operacion-1-descripcion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -86,7 +86,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f007"
 kind = "binding"
-binding = "modelo-232-2016.page_02.63-122.paraiso-operacion-1-persona"
+binding = "modelo-232.page_02.63-122.paraiso-operacion-1-persona"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -111,7 +111,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f009"
 kind = "binding"
-binding = "modelo-232-2016.page_02.143-143.paraiso-operacion-1-fjo"
+binding = "modelo-232.page_02.143-143.paraiso-operacion-1-fjo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -124,7 +124,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f010"
 kind = "binding"
-binding = "modelo-232-2016.page_02.144-145.paraiso-operacion-1-clave-pais"
+binding = "modelo-232.page_02.144-145.paraiso-operacion-1-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -137,7 +137,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f011"
 kind = "binding"
-binding = "modelo-232-2016.page_02.146-162.paraiso-operacion-1-importe"
+binding = "modelo-232.page_02.146-162.paraiso-operacion-1-importe"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -150,7 +150,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f012"
 kind = "binding"
-binding = "modelo-232-2016.page_02.163-212.paraiso-operacion-2-descripcion"
+binding = "modelo-232.page_02.163-212.paraiso-operacion-2-descripcion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -163,7 +163,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f013"
 kind = "binding"
-binding = "modelo-232-2016.page_02.213-272.paraiso-operacion-2-persona"
+binding = "modelo-232.page_02.213-272.paraiso-operacion-2-persona"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -188,7 +188,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f015"
 kind = "binding"
-binding = "modelo-232-2016.page_02.293-293.paraiso-operacion-2-fjo"
+binding = "modelo-232.page_02.293-293.paraiso-operacion-2-fjo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -201,7 +201,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f016"
 kind = "binding"
-binding = "modelo-232-2016.page_02.294-295.paraiso-operacion-2-clave-pais"
+binding = "modelo-232.page_02.294-295.paraiso-operacion-2-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -214,7 +214,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f017"
 kind = "binding"
-binding = "modelo-232-2016.page_02.296-312.paraiso-operacion-2-importe"
+binding = "modelo-232.page_02.296-312.paraiso-operacion-2-importe"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -227,7 +227,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f018"
 kind = "binding"
-binding = "modelo-232-2016.page_02.313-362.paraiso-operacion-3-descripcion"
+binding = "modelo-232.page_02.313-362.paraiso-operacion-3-descripcion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -240,7 +240,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f019"
 kind = "binding"
-binding = "modelo-232-2016.page_02.363-422.paraiso-operacion-3-persona"
+binding = "modelo-232.page_02.363-422.paraiso-operacion-3-persona"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -265,7 +265,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f021"
 kind = "binding"
-binding = "modelo-232-2016.page_02.443-443.paraiso-operacion-3-fjo"
+binding = "modelo-232.page_02.443-443.paraiso-operacion-3-fjo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -278,7 +278,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f022"
 kind = "binding"
-binding = "modelo-232-2016.page_02.444-445.paraiso-operacion-3-clave-pais"
+binding = "modelo-232.page_02.444-445.paraiso-operacion-3-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -291,7 +291,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f023"
 kind = "binding"
-binding = "modelo-232-2016.page_02.446-462.paraiso-operacion-3-importe"
+binding = "modelo-232.page_02.446-462.paraiso-operacion-3-importe"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -304,7 +304,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f024"
 kind = "binding"
-binding = "modelo-232-2016.page_02.463-512.paraiso-operacion-4-descripcion"
+binding = "modelo-232.page_02.463-512.paraiso-operacion-4-descripcion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -317,7 +317,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f025"
 kind = "binding"
-binding = "modelo-232-2016.page_02.513-572.paraiso-operacion-4-persona"
+binding = "modelo-232.page_02.513-572.paraiso-operacion-4-persona"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -342,7 +342,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f027"
 kind = "binding"
-binding = "modelo-232-2016.page_02.593-593.paraiso-operacion-4-fjo"
+binding = "modelo-232.page_02.593-593.paraiso-operacion-4-fjo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -355,7 +355,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f028"
 kind = "binding"
-binding = "modelo-232-2016.page_02.594-595.paraiso-operacion-4-clave-pais"
+binding = "modelo-232.page_02.594-595.paraiso-operacion-4-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -368,7 +368,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f029"
 kind = "binding"
-binding = "modelo-232-2016.page_02.596-612.paraiso-operacion-4-importe"
+binding = "modelo-232.page_02.596-612.paraiso-operacion-4-importe"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -381,7 +381,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f030"
 kind = "binding"
-binding = "modelo-232-2016.page_02.613-662.paraiso-operacion-5-descripcion"
+binding = "modelo-232.page_02.613-662.paraiso-operacion-5-descripcion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -394,7 +394,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f031"
 kind = "binding"
-binding = "modelo-232-2016.page_02.663-722.paraiso-operacion-5-persona"
+binding = "modelo-232.page_02.663-722.paraiso-operacion-5-persona"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -419,7 +419,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f033"
 kind = "binding"
-binding = "modelo-232-2016.page_02.743-743.paraiso-operacion-5-fjo"
+binding = "modelo-232.page_02.743-743.paraiso-operacion-5-fjo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -432,7 +432,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f034"
 kind = "binding"
-binding = "modelo-232-2016.page_02.744-745.paraiso-operacion-5-clave-pais"
+binding = "modelo-232.page_02.744-745.paraiso-operacion-5-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -445,7 +445,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f035"
 kind = "binding"
-binding = "modelo-232-2016.page_02.746-762.paraiso-operacion-5-importe"
+binding = "modelo-232.page_02.746-762.paraiso-operacion-5-importe"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -458,7 +458,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f036"
 kind = "binding"
-binding = "modelo-232-2016.page_02.763-812.paraiso-operacion-6-descripcion"
+binding = "modelo-232.page_02.763-812.paraiso-operacion-6-descripcion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -471,7 +471,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f037"
 kind = "binding"
-binding = "modelo-232-2016.page_02.813-872.paraiso-operacion-6-persona"
+binding = "modelo-232.page_02.813-872.paraiso-operacion-6-persona"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -496,7 +496,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f039"
 kind = "binding"
-binding = "modelo-232-2016.page_02.893-893.paraiso-operacion-6-fjo"
+binding = "modelo-232.page_02.893-893.paraiso-operacion-6-fjo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -509,7 +509,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f040"
 kind = "binding"
-binding = "modelo-232-2016.page_02.894-895.paraiso-operacion-6-clave-pais"
+binding = "modelo-232.page_02.894-895.paraiso-operacion-6-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -522,7 +522,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f041"
 kind = "binding"
-binding = "modelo-232-2016.page_02.896-912.paraiso-operacion-6-importe"
+binding = "modelo-232.page_02.896-912.paraiso-operacion-6-importe"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -535,7 +535,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f042"
 kind = "binding"
-binding = "modelo-232-2016.page_02.913-962.paraiso-operacion-7-descripcion"
+binding = "modelo-232.page_02.913-962.paraiso-operacion-7-descripcion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -548,7 +548,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f043"
 kind = "binding"
-binding = "modelo-232-2016.page_02.963-1022.paraiso-operacion-7-persona"
+binding = "modelo-232.page_02.963-1022.paraiso-operacion-7-persona"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -573,7 +573,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f045"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1043-1043.paraiso-operacion-7-fjo"
+binding = "modelo-232.page_02.1043-1043.paraiso-operacion-7-fjo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -586,7 +586,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f046"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1044-1045.paraiso-operacion-7-clave-pais"
+binding = "modelo-232.page_02.1044-1045.paraiso-operacion-7-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -599,7 +599,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f047"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1046-1062.paraiso-operacion-7-importe"
+binding = "modelo-232.page_02.1046-1062.paraiso-operacion-7-importe"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -612,7 +612,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f048"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1063-1112.paraiso-operacion-8-descripcion"
+binding = "modelo-232.page_02.1063-1112.paraiso-operacion-8-descripcion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -625,7 +625,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f049"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1113-1172.paraiso-operacion-8-persona"
+binding = "modelo-232.page_02.1113-1172.paraiso-operacion-8-persona"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -650,7 +650,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f051"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1193-1193.paraiso-operacion-8-fjo"
+binding = "modelo-232.page_02.1193-1193.paraiso-operacion-8-fjo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -663,7 +663,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f052"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1194-1195.paraiso-operacion-8-clave-pais"
+binding = "modelo-232.page_02.1194-1195.paraiso-operacion-8-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -676,7 +676,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f053"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1196-1212.paraiso-operacion-8-importe"
+binding = "modelo-232.page_02.1196-1212.paraiso-operacion-8-importe"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -689,7 +689,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f054"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1213-1262.paraiso-operacion-9-descripcion"
+binding = "modelo-232.page_02.1213-1262.paraiso-operacion-9-descripcion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -702,7 +702,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f055"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1263-1322.paraiso-operacion-9-persona"
+binding = "modelo-232.page_02.1263-1322.paraiso-operacion-9-persona"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -727,7 +727,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f057"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1343-1343.paraiso-operacion-9-fjo"
+binding = "modelo-232.page_02.1343-1343.paraiso-operacion-9-fjo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -740,7 +740,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f058"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1344-1345.paraiso-operacion-9-clave-pais"
+binding = "modelo-232.page_02.1344-1345.paraiso-operacion-9-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -753,7 +753,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f059"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1346-1362.paraiso-operacion-9-importe"
+binding = "modelo-232.page_02.1346-1362.paraiso-operacion-9-importe"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -766,7 +766,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f060"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1363-1412.paraiso-operacion-10-descripcion"
+binding = "modelo-232.page_02.1363-1412.paraiso-operacion-10-descripcion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -779,7 +779,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f061"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1413-1472.paraiso-operacion-10-persona"
+binding = "modelo-232.page_02.1413-1472.paraiso-operacion-10-persona"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -804,7 +804,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f063"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1493-1493.paraiso-operacion-10-fjo"
+binding = "modelo-232.page_02.1493-1493.paraiso-operacion-10-fjo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -817,7 +817,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f064"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1494-1495.paraiso-operacion-10-clave-pais"
+binding = "modelo-232.page_02.1494-1495.paraiso-operacion-10-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -830,7 +830,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f065"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1496-1512.paraiso-operacion-10-importe"
+binding = "modelo-232.page_02.1496-1512.paraiso-operacion-10-importe"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -843,7 +843,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f066"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1513-1562.paraiso-operacion-11-descripcion"
+binding = "modelo-232.page_02.1513-1562.paraiso-operacion-11-descripcion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -856,7 +856,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f067"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1563-1622.paraiso-operacion-11-persona"
+binding = "modelo-232.page_02.1563-1622.paraiso-operacion-11-persona"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -881,7 +881,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f069"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1643-1643.paraiso-operacion-11-fjo"
+binding = "modelo-232.page_02.1643-1643.paraiso-operacion-11-fjo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -894,7 +894,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f070"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1644-1645.paraiso-operacion-11-clave-pais"
+binding = "modelo-232.page_02.1644-1645.paraiso-operacion-11-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -907,7 +907,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f071"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1646-1662.paraiso-operacion-11-importe"
+binding = "modelo-232.page_02.1646-1662.paraiso-operacion-11-importe"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -920,7 +920,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f072"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1663-1712.paraiso-operacion-12-descripcion"
+binding = "modelo-232.page_02.1663-1712.paraiso-operacion-12-descripcion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -933,7 +933,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f073"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1713-1772.paraiso-operacion-12-persona"
+binding = "modelo-232.page_02.1713-1772.paraiso-operacion-12-persona"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -958,7 +958,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f075"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1793-1793.paraiso-operacion-12-fjo"
+binding = "modelo-232.page_02.1793-1793.paraiso-operacion-12-fjo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -971,7 +971,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f076"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1794-1795.paraiso-operacion-12-clave-pais"
+binding = "modelo-232.page_02.1794-1795.paraiso-operacion-12-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -984,7 +984,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f077"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1796-1812.paraiso-operacion-12-importe"
+binding = "modelo-232.page_02.1796-1812.paraiso-operacion-12-importe"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -997,7 +997,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f078"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1813-1813.paraiso-valor-1-tipo"
+binding = "modelo-232.page_02.1813-1813.paraiso-valor-1-tipo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1010,7 +1010,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f079"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1814-1873.paraiso-valor-1-entidad"
+binding = "modelo-232.page_02.1814-1873.paraiso-valor-1-entidad"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1035,7 +1035,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f081"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1894-1895.paraiso-valor-1-clave-pais"
+binding = "modelo-232.page_02.1894-1895.paraiso-valor-1-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1048,7 +1048,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f082"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1896-1912.paraiso-valor-1-valor-adquisicion"
+binding = "modelo-232.page_02.1896-1912.paraiso-valor-1-valor-adquisicion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1061,7 +1061,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f083"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1913-1917.paraiso-valor-1-porcentaje-participacion"
+binding = "modelo-232.page_02.1913-1917.paraiso-valor-1-porcentaje-participacion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1074,7 +1074,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f084"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1918-1918.paraiso-valor-2-tipo"
+binding = "modelo-232.page_02.1918-1918.paraiso-valor-2-tipo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1087,7 +1087,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f085"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1919-1978.paraiso-valor-2-entidad"
+binding = "modelo-232.page_02.1919-1978.paraiso-valor-2-entidad"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1112,7 +1112,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f087"
 kind = "binding"
-binding = "modelo-232-2016.page_02.1999-2000.paraiso-valor-2-clave-pais"
+binding = "modelo-232.page_02.1999-2000.paraiso-valor-2-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1125,7 +1125,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f088"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2001-2017.paraiso-valor-2-valor-adquisicion"
+binding = "modelo-232.page_02.2001-2017.paraiso-valor-2-valor-adquisicion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1138,7 +1138,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f089"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2018-2022.paraiso-valor-2-porcentaje-participacion"
+binding = "modelo-232.page_02.2018-2022.paraiso-valor-2-porcentaje-participacion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1151,7 +1151,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f090"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2023-2023.paraiso-valor-3-tipo"
+binding = "modelo-232.page_02.2023-2023.paraiso-valor-3-tipo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1164,7 +1164,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f091"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2024-2083.paraiso-valor-3-entidad"
+binding = "modelo-232.page_02.2024-2083.paraiso-valor-3-entidad"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1189,7 +1189,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f093"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2104-2105.paraiso-valor-3-clave-pais"
+binding = "modelo-232.page_02.2104-2105.paraiso-valor-3-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1202,7 +1202,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f094"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2106-2122.paraiso-valor-3-valor-adquisicion"
+binding = "modelo-232.page_02.2106-2122.paraiso-valor-3-valor-adquisicion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1215,7 +1215,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f095"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2123-2127.paraiso-valor-3-porcentaje-participacion"
+binding = "modelo-232.page_02.2123-2127.paraiso-valor-3-porcentaje-participacion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1228,7 +1228,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f096"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2128-2128.paraiso-valor-4-tipo"
+binding = "modelo-232.page_02.2128-2128.paraiso-valor-4-tipo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1241,7 +1241,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f097"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2129-2188.paraiso-valor-4-entidad"
+binding = "modelo-232.page_02.2129-2188.paraiso-valor-4-entidad"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1266,7 +1266,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f099"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2209-2210.paraiso-valor-4-clave-pais"
+binding = "modelo-232.page_02.2209-2210.paraiso-valor-4-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1279,7 +1279,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f100"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2211-2227.paraiso-valor-4-valor-adquisicion"
+binding = "modelo-232.page_02.2211-2227.paraiso-valor-4-valor-adquisicion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1292,7 +1292,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f101"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2228-2232.paraiso-valor-4-porcentaje-participacion"
+binding = "modelo-232.page_02.2228-2232.paraiso-valor-4-porcentaje-participacion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1305,7 +1305,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f102"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2233-2233.paraiso-valor-5-tipo"
+binding = "modelo-232.page_02.2233-2233.paraiso-valor-5-tipo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1318,7 +1318,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f103"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2234-2293.paraiso-valor-5-entidad"
+binding = "modelo-232.page_02.2234-2293.paraiso-valor-5-entidad"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1343,7 +1343,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f105"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2314-2315.paraiso-valor-5-clave-pais"
+binding = "modelo-232.page_02.2314-2315.paraiso-valor-5-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1356,7 +1356,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f106"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2316-2332.paraiso-valor-5-valor-adquisicion"
+binding = "modelo-232.page_02.2316-2332.paraiso-valor-5-valor-adquisicion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1369,7 +1369,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f107"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2333-2337.paraiso-valor-5-porcentaje-participacion"
+binding = "modelo-232.page_02.2333-2337.paraiso-valor-5-porcentaje-participacion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1382,7 +1382,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f108"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2338-2338.paraiso-valor-6-tipo"
+binding = "modelo-232.page_02.2338-2338.paraiso-valor-6-tipo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1395,7 +1395,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f109"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2339-2398.paraiso-valor-6-entidad"
+binding = "modelo-232.page_02.2339-2398.paraiso-valor-6-entidad"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1420,7 +1420,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f111"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2419-2420.paraiso-valor-6-clave-pais"
+binding = "modelo-232.page_02.2419-2420.paraiso-valor-6-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1433,7 +1433,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f112"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2421-2437.paraiso-valor-6-valor-adquisicion"
+binding = "modelo-232.page_02.2421-2437.paraiso-valor-6-valor-adquisicion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1446,7 +1446,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f113"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2438-2442.paraiso-valor-6-porcentaje-participacion"
+binding = "modelo-232.page_02.2438-2442.paraiso-valor-6-porcentaje-participacion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1459,7 +1459,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f114"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2443-2443.paraiso-valor-7-tipo"
+binding = "modelo-232.page_02.2443-2443.paraiso-valor-7-tipo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1472,7 +1472,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f115"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2444-2503.paraiso-valor-7-entidad"
+binding = "modelo-232.page_02.2444-2503.paraiso-valor-7-entidad"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1497,7 +1497,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f117"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2524-2525.paraiso-valor-7-clave-pais"
+binding = "modelo-232.page_02.2524-2525.paraiso-valor-7-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1510,7 +1510,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f118"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2526-2542.paraiso-valor-7-valor-adquisicion"
+binding = "modelo-232.page_02.2526-2542.paraiso-valor-7-valor-adquisicion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1523,7 +1523,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f119"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2543-2547.paraiso-valor-7-porcentaje-participacion"
+binding = "modelo-232.page_02.2543-2547.paraiso-valor-7-porcentaje-participacion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1536,7 +1536,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f120"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2548-2548.paraiso-valor-8-tipo"
+binding = "modelo-232.page_02.2548-2548.paraiso-valor-8-tipo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1549,7 +1549,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f121"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2549-2608.paraiso-valor-8-entidad"
+binding = "modelo-232.page_02.2549-2608.paraiso-valor-8-entidad"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1574,7 +1574,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f123"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2629-2630.paraiso-valor-8-clave-pais"
+binding = "modelo-232.page_02.2629-2630.paraiso-valor-8-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1587,7 +1587,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f124"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2631-2647.paraiso-valor-8-valor-adquisicion"
+binding = "modelo-232.page_02.2631-2647.paraiso-valor-8-valor-adquisicion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1600,7 +1600,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f125"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2648-2652.paraiso-valor-8-porcentaje-participacion"
+binding = "modelo-232.page_02.2648-2652.paraiso-valor-8-porcentaje-participacion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1613,7 +1613,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f126"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2653-2653.paraiso-valor-9-tipo"
+binding = "modelo-232.page_02.2653-2653.paraiso-valor-9-tipo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1626,7 +1626,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f127"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2654-2713.paraiso-valor-9-entidad"
+binding = "modelo-232.page_02.2654-2713.paraiso-valor-9-entidad"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1651,7 +1651,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f129"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2734-2735.paraiso-valor-9-clave-pais"
+binding = "modelo-232.page_02.2734-2735.paraiso-valor-9-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1664,7 +1664,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f130"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2736-2752.paraiso-valor-9-valor-adquisicion"
+binding = "modelo-232.page_02.2736-2752.paraiso-valor-9-valor-adquisicion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1677,7 +1677,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f131"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2753-2757.paraiso-valor-9-porcentaje-participacion"
+binding = "modelo-232.page_02.2753-2757.paraiso-valor-9-porcentaje-participacion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1690,7 +1690,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f132"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2758-2758.paraiso-valor-10-tipo"
+binding = "modelo-232.page_02.2758-2758.paraiso-valor-10-tipo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1703,7 +1703,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f133"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2759-2818.paraiso-valor-10-entidad"
+binding = "modelo-232.page_02.2759-2818.paraiso-valor-10-entidad"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1728,7 +1728,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f135"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2839-2840.paraiso-valor-10-clave-pais"
+binding = "modelo-232.page_02.2839-2840.paraiso-valor-10-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1741,7 +1741,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f136"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2841-2857.paraiso-valor-10-valor-adquisicion"
+binding = "modelo-232.page_02.2841-2857.paraiso-valor-10-valor-adquisicion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1754,7 +1754,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f137"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2858-2862.paraiso-valor-10-porcentaje-participacion"
+binding = "modelo-232.page_02.2858-2862.paraiso-valor-10-porcentaje-participacion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1767,7 +1767,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f138"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2863-2863.paraiso-valor-11-tipo"
+binding = "modelo-232.page_02.2863-2863.paraiso-valor-11-tipo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1780,7 +1780,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f139"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2864-2923.paraiso-valor-11-entidad"
+binding = "modelo-232.page_02.2864-2923.paraiso-valor-11-entidad"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1805,7 +1805,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f141"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2944-2945.paraiso-valor-11-clave-pais"
+binding = "modelo-232.page_02.2944-2945.paraiso-valor-11-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1818,7 +1818,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f142"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2946-2962.paraiso-valor-11-valor-adquisicion"
+binding = "modelo-232.page_02.2946-2962.paraiso-valor-11-valor-adquisicion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1831,7 +1831,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f143"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2963-2967.paraiso-valor-11-porcentaje-participacion"
+binding = "modelo-232.page_02.2963-2967.paraiso-valor-11-porcentaje-participacion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1844,7 +1844,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f144"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2968-2968.paraiso-valor-12-tipo"
+binding = "modelo-232.page_02.2968-2968.paraiso-valor-12-tipo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1857,7 +1857,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f145"
 kind = "binding"
-binding = "modelo-232-2016.page_02.2969-3028.paraiso-valor-12-entidad"
+binding = "modelo-232.page_02.2969-3028.paraiso-valor-12-entidad"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1882,7 +1882,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f147"
 kind = "binding"
-binding = "modelo-232-2016.page_02.3049-3050.paraiso-valor-12-clave-pais"
+binding = "modelo-232.page_02.3049-3050.paraiso-valor-12-clave-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1895,7 +1895,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f148"
 kind = "binding"
-binding = "modelo-232-2016.page_02.3051-3067.paraiso-valor-12-valor-adquisicion"
+binding = "modelo-232.page_02.3051-3067.paraiso-valor-12-valor-adquisicion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1908,7 +1908,7 @@ record_identity = "DR23202"
 [[entries]]
 export_field_id = "m232-2016.dr23202.f149"
 kind = "binding"
-binding = "modelo-232-2016.page_02.3068-3072.paraiso-valor-12-porcentaje-participacion"
+binding = "modelo-232.page_02.3068-3072.paraiso-valor-12-porcentaje-participacion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]

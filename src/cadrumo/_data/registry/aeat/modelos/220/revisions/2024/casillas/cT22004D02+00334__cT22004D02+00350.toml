@@ -72,7 +72,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @33+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Otros gastos técnicos (+ ó -). Variación del deterioro por insolvencias (+ ó -). [00335]
 [[revisions."2024".casillas]]
@@ -84,7 +83,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @50+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Otros gastos técnicos (+ ó -). Variación del deterioro del inmovilizado (+ ó -). [00336]
 [[revisions."2024".casillas]]
@@ -96,7 +94,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @67+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Otros gastos técnicos (+ ó -). Otros. [00337]
 [[revisions."2024".casillas]]
@@ -108,7 +105,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @84+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. [00338]
 [[revisions."2024".casillas]]
@@ -120,7 +116,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @101+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Gastos de gestión del inmovilizado material y de las inversiones. [00339]
 [[revisions."2024".casillas]]
@@ -132,7 +127,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @118+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Gastos de gestión del inmovilizado material y de las inversiones. Gastos del inmovilizado material y de las inversiones inmobiliarias. [00340]
 [[revisions."2024".casillas]]
@@ -144,7 +138,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @135+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Gastos de gestión del inmovilizado material y de las inversiones. Gastos de inversiones y cuentas financieras. [00341]
 [[revisions."2024".casillas]]
@@ -156,7 +149,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @152+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Correcciones de valor del inmovilizado material y de las inversiones. [00342]
 [[revisions."2024".casillas]]
@@ -168,7 +160,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @169+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Correcciones de valor del inmovilizado material y de las inversiones. Amortización del inmovilizado material y de las inversiones inmobiliarias. [00343]
 [[revisions."2024".casillas]]
@@ -180,7 +171,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @186+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Correcciones de valor del inmovilizado material y de las inversiones. Deterioro del inmovilizado material y de las inversiones inmobiliarias. [00344]
 [[revisions."2024".casillas]]
@@ -192,7 +182,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @203+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Correcciones de valor del inmovilizado material y de las inversiones. Deterioro de inversiones financieras. [00345]
 [[revisions."2024".casillas]]
@@ -204,7 +193,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @220+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Pérdidas procedentes del inmovilizado material y de las inversiones. [00346]
 [[revisions."2024".casillas]]
@@ -216,7 +204,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @237+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Pérdidas procedentes del inmovilizado material y de las inversiones. Del inmovilizado material y de las inversiones inmobiliarias. [00347]
 [[revisions."2024".casillas]]
@@ -228,7 +215,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @254+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Pérdidas procedentes del inmovilizado material y de las inversiones. De las inversiones financieras. [00348]
 [[revisions."2024".casillas]]
@@ -240,7 +226,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @271+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Gastos de entidades incluidas en la consolidación. [00715]
 [[revisions."2024".casillas]]
@@ -252,7 +237,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @288+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Gastos de entidades incluidas en la consolidación. Participación en pérdidas de entidades puestas en equivalencia. [00716]
 [[revisions."2024".casillas]]
@@ -264,7 +248,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @305+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Gastos de entidades incluidas en la consolidación. Pérdidas por enajenación de participaciones en sociedades puestas en equivalencia. [00717]
 [[revisions."2024".casillas]]
@@ -276,7 +259,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @322+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos del inmovilizado material y de las inversiones. Pérdidas por la enajenación de participaciones en sociedades consolidadas. [00658]
 [[revisions."2024".casillas]]
@@ -288,7 +270,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @339+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Gastos de inversiones afectas a seguros en los que el tomador asume el riesgo de la inversión. [00349]
 [[revisions."2024".casillas]]
@@ -300,7 +281,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @356+17 N. CUENTA TÉCNICA SEGURO DE VIDA. Subtotal (Resultado de la cuenta técnica del seguro de vida). [00350]
 [[revisions."2024".casillas]]
@@ -312,4 +292,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

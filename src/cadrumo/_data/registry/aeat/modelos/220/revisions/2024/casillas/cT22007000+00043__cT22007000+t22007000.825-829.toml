@@ -83,7 +83,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @33+17 N. Grupos de Cooperativas: Suma de B.I. individuales por resultados cooperativos. (Pag. 7A) [00047]
 [[revisions."2024".casillas]]
@@ -95,7 +94,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @50+17 N. Grupos de Cooperativas: Suma de B.I. individuales por resultados extracooperativos. (Pag. 7A) [00048]
 [[revisions."2024".casillas]]
@@ -107,7 +105,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @67+17 N. Grupos con entidades navieras en régimen especial: Suma de BI en función del tonelaje, determinadas en estimación objetiva (Pág. 7A)(*) [00049]
 [[revisions."2024".casillas]]
@@ -119,7 +116,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @84+17 N. Suma del 50% de las bases imponibles negativas individuales del período, no integradas DA19ª LIS. Régimen General (Pág. 7A) [01263]
 [[revisions."2024".casillas]]
@@ -131,7 +127,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @101+17 N. Suma del 50% de las bases imponibles negativas individuales del período, no integradas DA19ª LIS. Régimen especial de buques y empresas navieras en Canarias (Pág. 7A) [01264]
 [[revisions."2024".casillas]]
@@ -143,7 +138,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @118+17 N. Suma de bases imponibles negativas individuales de períodos anteriores integradas DA19ª LIS. Régimen General (Pág. 7A bis) [01021]
 [[revisions."2024".casillas]]
@@ -155,7 +149,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @135+17 N. Suma de bases imponibles negativas de períodos anteriores integradas DA19ª LIS. Régimen especial de buques y empresas navieras en Canarias (Pág. 7A bis) [01935]
 [[revisions."2024".casillas]]
@@ -167,7 +160,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @152+17 N. Correcciones a la suma de bases imponibles por diferimiento de resultados internos:(**). Total eliminación de resultados por operaciones internas. (Pág. 7C) [03241]
 [[revisions."2024".casillas]]
@@ -179,7 +171,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @169+17 N. Correcciones a la suma de bases imponibles por diferimiento de resultados internos:(**). Total incorporación de resultados por operaciones internas. (Pág. 7C) [03242]
 [[revisions."2024".casillas]]
@@ -191,7 +182,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @186+17 N. Total correcciones a la suma de bases imponibles por diferimiento de resultados internos [00079]
 [[revisions."2024".casillas]]
@@ -203,7 +193,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @203+17 N. Otras correcciones a la suma de bases imponibles:(**). Eliminación de dividendos internos del grupo fi scal (Pág. 7D) [00080]
 [[revisions."2024".casillas]]
@@ -215,7 +204,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @220+17 N. Otras correcciones a la suma de bases imponibles:(**). Incorporación de deterioros de valor de participaciones en fondos propios de entidades del grupo fiscal, eliminados en períodos anteriores (Pág. 7E) [00082]
 [[revisions."2024".casillas]]
@@ -227,7 +215,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @237+17 N. Otras correcciones a la suma de bases imponibles:(**). Grupos de Cooperativas: Eliminaciones de "retornos intragrupo", "ayudas económicas intragrupo" y "resultados distribuidos por la entidad cabeza del grupo" (RD 1345/1992) (Pág. 7G) [00083]
 [[revisions."2024".casillas]]
@@ -239,7 +226,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @254+17 N. Otras correcciones a la suma de bases imponibles:(**). Otras correcciones a la suma de bases imponibles individuales o a la base imponible del grupo fiscal (Pág. 7H) [00085]
 [[revisions."2024".casillas]]
@@ -251,7 +237,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @271+17 N. Otras correcciones a la suma de bases imponibles:(**). Total otras correcciones a la suma de bases imponibles [00086]
 [[revisions."2024".casillas]]
@@ -263,7 +248,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @288+17 N. Base imponible previa del grupo [00225]
 [[revisions."2024".casillas]]
@@ -275,7 +259,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @305+17 Num. Pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) a los que se refiere el art. 11.12 LIS y dotaciones de la DT 33ª.1 LIS. Aumento [02542]
 [[revisions."2024".casillas]]
@@ -287,7 +270,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @322+17 Num. Pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) a los que se refiere el art. 11.12 LIS. Disminución [02543]
 [[revisions."2024".casillas]]
@@ -299,7 +281,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @339+17 Num. Aplicación del límite del art. 11.12 LIS (art. 62.1 e) LIS). Aumento [02544]
 [[revisions."2024".casillas]]
@@ -311,7 +292,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @356+17 Num. Aplicación del límite del art. 11.12 LIS (art. 62.1 e) LIS). Disminución [00291]
 [[revisions."2024".casillas]]
@@ -323,7 +303,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @373+17 Num. Dotaciones a que hace referencia el art. 11.12 LIS de períodos anteriores a la incorporación al grupo (art. 67 d) y 74.3 d) LIS)(***) [00398]
 [[revisions."2024".casillas]]
@@ -335,7 +314,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @390+17 N. Base imponible del grupo, previa a la aplicación de las reservas de capitalización y a la compensación de bases imponibles negativas de períodos anteriores [00550]
 [[revisions."2024".casillas]]
@@ -347,7 +325,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @407+17 Num. Reserva de capitalización(***) [02963]
 [[revisions."2024".casillas]]
@@ -359,7 +336,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @424+17 Num. Reserva de capitalización de entidades de períodos anteriores a la incorporación al grupo aplicadas (art. 67 c) y y 74.3 c) LIS)(***) [03140]
 [[revisions."2024".casillas]]
@@ -371,7 +347,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @441+17 Num. Base imponible y cuota íntegra del grupo: - Compensación de bases imponibles negativas del grupo de períodos anteriores (Pág. 7K)(***) [00362]
 [[revisions."2024".casillas]]
@@ -383,7 +358,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @458+17 Num. Base imponible y cuota íntegra del grupo: - Compensación de bases imponibles negativas de entidades de períodos anteriores a la incorporación al grupo (art. 67 e) y 74.3 e) LIS) (Pág. 7L)(***) [00547]
 [[revisions."2024".casillas]]
@@ -395,7 +369,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @475+17 N. Base imponible y cuota íntegra del grupo: Base imponible del grupo [00552]
 [[revisions."2024".casillas]]
@@ -407,7 +380,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @492+17 Num. Reserva de nivelación. Aumento [02545]
 [[revisions."2024".casillas]]
@@ -419,7 +391,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @509+17 Num. Reserva de nivelación. Disminución [02546]
 [[revisions."2024".casillas]]
@@ -431,7 +402,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @526+17 Num. Reserva de nivelación de entidades de períodos anteriores a la incorporación al grupo (art. 67 f) y y 74.3 f) LIS) [02547]
 [[revisions."2024".casillas]]
@@ -443,7 +413,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @543+17 N. :- Grupos de Cooperativas: Suma de BI individuales menos eliminaciones por resultados cooperativos [00553]
 [[revisions."2024".casillas]]
@@ -455,7 +424,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @560+17 N. :- Grupos de Cooperativas: Suma de BI individuales menos eliminaciones por resultados extracooperativos [00554]
 [[revisions."2024".casillas]]
@@ -467,7 +435,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @577+5 Num. Tipo de gravamen (%) [00558]
 [[revisions."2024".casillas]]
@@ -479,7 +446,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @582+17 N. Suma de cuotas íntegras de las cooperativas del grupo [00560]
 [[revisions."2024".casillas]]
@@ -491,7 +457,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @599+17 Num. Pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS a los que se refiere el art. 11.12 LIS). Aumento [02548]
 [[revisions."2024".casillas]]
@@ -503,7 +468,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @616+17 Num. Pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS a los que se refiere el art. 11.12 LIS). Disminución [02549]
 [[revisions."2024".casillas]]
@@ -515,7 +479,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @633+17 Num. Aplicación límite art. 11.12 LIS y DA 7ª Ley 20/90. Aumento [02890]
 [[revisions."2024".casillas]]
@@ -527,7 +490,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @650+17 Num. Aplicación límite art. 11.12 LIS y DA 7ª Ley 20/90. Disminución [00540]
 [[revisions."2024".casillas]]
@@ -539,7 +501,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @667+17 Num. Dotaciones a que hace referencia el art. 11.12 LIS y DA 7ª Ley 20/90, de períodos anteriores a que la entidad se incorporara al grupo(***) [00541]
 [[revisions."2024".casillas]]
@@ -551,7 +512,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @684+17 Num. Grupos de Cooperativas: Compensación de cuotas negativas del grupo de períodos anteriores (Pág. 7K bis)(***) [00363]
 [[revisions."2024".casillas]]
@@ -563,7 +523,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @701+17 Num. Grupos de Cooperativas: Compensación de cuotas negativas de entidades de períodos anteriores a la incorporación al grupo (Pág. 7L bis)(***) [00561]
 [[revisions."2024".casillas]]
@@ -575,7 +534,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @718+17 Num. Reserva de nivelación. Aumento [02891]
 [[revisions."2024".casillas]]
@@ -587,7 +545,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @735+17 Num. Reserva de nivelación. Disminución [02892]
 [[revisions."2024".casillas]]
@@ -599,7 +556,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @752+17 Num. Reserva de nivelación de entidades de períodos anteriores a la incorporación al grupo. [02893]
 [[revisions."2024".casillas]]
@@ -611,7 +567,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @769+17 N. Cuota íntegra del grupo [00562]
 [[revisions."2024".casillas]]
@@ -623,7 +578,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @786+17 N. Tramo base imponible 1
 [[revisions."2024".casillas]]
@@ -635,7 +589,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @803+5 N. Tramo de tipo de gravamen 1 (tres enteros, dos decimales)
 [[revisions."2024".casillas]]
@@ -647,7 +600,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @808+17 N. Tramo base imponible 2
 [[revisions."2024".casillas]]
@@ -659,7 +611,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @825+5 N. Tramo de tipo de gravamen 2 (tres enteros, dos decimales)
 [[revisions."2024".casillas]]
@@ -671,4 +622,3 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

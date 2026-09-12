@@ -308,7 +308,7 @@ def test_calculate_works_when_cwd_is_not_the_repo_root(
 def test_work_unit_creation_refuses_unresolvable_registry_snapshot(repos: Repos) -> None:
     """An unsupported filing coordinate is rejected before calculation state exists."""
 
-    from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+    from ....domain.calculations.registry.errors import NoRevisionForPeriodError
 
     wu_repo, _, _, _, _ = repos
     # Modelo 130 at year 2010 predates the registry's earliest revision

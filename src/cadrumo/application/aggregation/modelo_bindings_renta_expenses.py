@@ -11,6 +11,7 @@ from __future__ import annotations
 from typing import ClassVar
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
     resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
     unsupported_ledger_renta_gastos_estimacion_directa_observations,
@@ -158,6 +159,7 @@ def _renta_observation_provenance(
             lineage_role=CalculationSourceLineageRole.PRIMARY,
             source_ref=f"transaction:{observation.transaction_id}",
             parent_source_ref=None,
+            terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
         ),
     ]
     if observation.invoice_id is not None:
@@ -170,6 +172,7 @@ def _renta_observation_provenance(
                 lineage_role=CalculationSourceLineageRole.PRIMARY,
                 source_ref=f"purchase-invoice-evidence:{observation.invoice_id}",
                 parent_source_ref=None,
+                terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
             ),
         )
     return tuple(provenance)

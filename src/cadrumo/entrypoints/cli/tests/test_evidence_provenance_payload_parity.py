@@ -22,11 +22,12 @@ from decimal import Decimal
 
 import pytest
 
+from ....application.ledger.invoice_draft_payloads import EvidenceExtractResult
 from ....application.ledger.invoice_draft_records import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
-from .._command_schema import command_schema_types
-from ..ledger_business_payloads import EvidenceConfirmResult, EvidenceExtractResult
+from ..command_schema import command_schema_types
+from ..ledger_business_payloads import EvidenceConfirmResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

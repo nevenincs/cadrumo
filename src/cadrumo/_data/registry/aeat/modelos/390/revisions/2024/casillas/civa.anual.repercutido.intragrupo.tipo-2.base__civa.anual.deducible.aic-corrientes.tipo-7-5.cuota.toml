@@ -31,7 +31,6 @@ semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [672] - '5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 2% - Cuota [672]' (offset 302, length 17).
 [[revisions."2024".casillas]]
@@ -48,7 +47,6 @@ semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [673] - '5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 7,5% - Base imponible [673]' (offset 387, length 17).
 [[revisions."2024".casillas]]
@@ -65,7 +63,6 @@ semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [674] - '5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 7,5% - Cuota [674]' (offset 404, length 17).
 [[revisions."2024".casillas]]
@@ -82,7 +79,6 @@ semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [675] - '5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 2% - Base imponible [675]' (offset 523, length 17).
 [[revisions."2024".casillas]]
@@ -99,7 +95,6 @@ semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a d
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [676] - '5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 2% - Cuota [676]' (offset 540, length 17).
 [[revisions."2024".casillas]]
@@ -116,7 +111,6 @@ semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a d
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [677] - '5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 7,5% - Base imponible [677]' (offset 625, length 17).
 [[revisions."2024".casillas]]
@@ -133,7 +127,6 @@ semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a d
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [678] - '5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 7,5% - Cuota [678]' (offset 642, length 17).
 [[revisions."2024".casillas]]
@@ -150,7 +143,6 @@ semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a d
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [679] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 2% - Base imponible [679]' (offset 761, length 17).
 [[revisions."2024".casillas]]
@@ -167,7 +159,6 @@ semantic_role_cardinality_reason = "Regimen especial de bienes usados is a disti
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [680] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 2% - Cuota [680]' (offset 778, length 17).
 [[revisions."2024".casillas]]
@@ -184,7 +175,6 @@ semantic_role_cardinality_reason = "Regimen especial de bienes usados is a disti
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [681] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 7,5% - Base imponible [681]' (offset 863, length 17).
 [[revisions."2024".casillas]]
@@ -201,7 +191,6 @@ semantic_role_cardinality_reason = "Regimen especial de bienes usados is a disti
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [682] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 7,5% - Cuota [682]' (offset 880, length 17).
 [[revisions."2024".casillas]]
@@ -218,7 +207,6 @@ semantic_role_cardinality_reason = "Regimen especial de bienes usados is a disti
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [695] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 2% - Base imponible [695]' (offset 13, length 17).
 [[revisions."2024".casillas]]
@@ -235,7 +223,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [696] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 2% - Cuota [696]' (offset 30, length 17).
 [[revisions."2024".casillas]]
@@ -252,7 +239,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [697] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 7,5% - Base imponible [697]' (offset 115, length 17).
 [[revisions."2024".casillas]]
@@ -269,7 +255,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [698] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 7,5% - Cuota [698]' (offset 132, length 17).
 [[revisions."2024".casillas]]
@@ -286,7 +271,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [745] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 2% - Base imponible [745]' (offset 251, length 17).
 [[revisions."2024".casillas]]
@@ -303,7 +287,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [746] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 2% - Cuota [746]' (offset 268, length 17).
 [[revisions."2024".casillas]]
@@ -320,7 +303,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [747] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 7,5% - Base imponible [747]' (offset 353, length 17).
 [[revisions."2024".casillas]]
@@ -337,7 +319,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [748] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 7,5% - Cuota [748]' (offset 370, length 17).
 [[revisions."2024".casillas]]
@@ -354,7 +335,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [749] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 2% - Base imponible [749]' (offset 489, length 17).
 [[revisions."2024".casillas]]
@@ -371,7 +351,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [750] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 2% - Cuota [750]' (offset 506, length 17).
 [[revisions."2024".casillas]]
@@ -388,7 +367,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [751] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 7,5% - Base imponible [751]' (offset 591, length 17).
 [[revisions."2024".casillas]]
@@ -405,7 +383,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [752] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 7,5% - Cuota [752]' (offset 608, length 17).
 [[revisions."2024".casillas]]
@@ -422,7 +399,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [753] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 2% - Base imponible [753]' (offset 727, length 17).
 [[revisions."2024".casillas]]
@@ -439,7 +415,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [754] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 2% - Cuota [754]' (offset 744, length 17).
 [[revisions."2024".casillas]]
@@ -456,7 +431,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [755] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 7,5% - Base imponible [755]' (offset 829, length 17).
 [[revisions."2024".casillas]]
@@ -473,7 +447,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [756] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 7,5% - Cuota [756]' (offset 846, length 17).
 [[revisions."2024".casillas]]
@@ -490,7 +463,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [757] - '5. Operaciones Reg. Gral. - IVA deducible - Import. bienes corrientes - Tipo 2% - Base imponible [757]' (offset 965, length 17).
 [[revisions."2024".casillas]]
@@ -507,7 +479,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [758] - '5. Operaciones Reg. Gral. - IVA deducible - Import. bienes corrientes - Tipo 2% - Cuota [758]' (offset 982, length 17).
 [[revisions."2024".casillas]]
@@ -524,7 +495,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [759] - '5. Operaciones Reg. Gral. - IVA deducible - Import. bienes corrientes - Tipo 7,5% - Base imponible [759]' (offset 1067, length 17).
 [[revisions."2024".casillas]]
@@ -541,7 +511,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [760] - '5. Operaciones Reg. Gral. - IVA deducible - Import. bienes corrientes - Tipo 7,5% - Cuota [760]' (offset 1084, length 17).
 [[revisions."2024".casillas]]
@@ -558,7 +527,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [761] - '5. Operaciones Reg. Gral. - IVA deducible - Importacion bienes inversion - Tipo 2% - Base imponible [761]' (offset 1203, length 17).
 [[revisions."2024".casillas]]
@@ -575,7 +543,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [762] - '5. Operaciones Reg. Gral. - IVA deducible - Importacion bienes inversion - Tipo 2% - Cuota [762]' (offset 1220, length 17).
 [[revisions."2024".casillas]]
@@ -592,7 +559,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [763] - '5. Operaciones Reg. Gral. - IVA deducible - Importacion bienes inversion - Tipo 7,5% - Base imponible [763]' (offset 1305, length 17).
 [[revisions."2024".casillas]]
@@ -609,7 +575,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [764] - '5. Operaciones Reg. Gral. - IVA deducible - Importacion bienes inversion - Tipo 7,5% - Cuota [764]' (offset 1322, length 17).
 [[revisions."2024".casillas]]
@@ -626,7 +591,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [765] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 2% - Base imponible [765]' (offset 1441, length 17).
 [[revisions."2024".casillas]]
@@ -643,7 +607,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [766] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 2% - Cuota [766]' (offset 1458, length 17).
 [[revisions."2024".casillas]]
@@ -660,7 +623,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [767] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 7,5% - Base imponible [767]' (offset 1543, length 17).
 [[revisions."2024".casillas]]
@@ -677,7 +639,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]
 
 # Box [768] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 7,5% - Cuota [768]' (offset 1560, length 17).
 [[revisions."2024".casillas]]
@@ -694,4 +655,3 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
-source_refs = ["aeat-dr-390-2024"]

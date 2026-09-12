@@ -35,8 +35,8 @@ from ......core.config import Settings
 from ......tests.aeat_literal_fixtures import LANDED_ORIGIN_CARTERA_CUOTAS_PATH_FIXTURE
 from .. import _adapter_utils, _declarations_fetch, iva_compensation_wallet
 from .._adapter_utils import landed_origin
-from .._iva_compensation_wallet_parsing import WALLET_URL
 from ..errors import SedeNavigationError
+from ..iva_compensation_wallet_parsing import WALLET_URL
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

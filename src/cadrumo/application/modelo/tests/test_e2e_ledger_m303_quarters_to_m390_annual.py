@@ -468,7 +468,7 @@ def _store_irene_sl_profile(secure_objects: SecureObjectRepository) -> None:
     )
 
 
-def _workflow_profile() -> TaxpayerProfile:
+def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAX_ID,
         iva_regime=IVARegime.GENERAL,
@@ -480,7 +480,7 @@ def _workflow_profile() -> TaxpayerProfile:
     )
 
 
-def _irene_workflow_profile() -> TaxpayerProfile:
+def _ireneworkflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_IRENE_TAX_ID,
         entity_type=EntityType.LEGAL_ENTITY,
@@ -584,7 +584,7 @@ def test_persisted_m303_ledger_revision_verifies_and_refuses_withdrawn_export(
     report = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         settings=ready_clave_settings(_TAX_ID),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -610,7 +610,7 @@ def test_persisted_m303_ledger_revision_verifies_and_refuses_withdrawn_export(
                 output_path=output_path,
                 actor="operator",
             ),
-            workflow_profile=_workflow_profile(),
+            workflow_profile=workflow_profile(),
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
             filing_repository=filing_repo,
@@ -686,7 +686,7 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_withdrawn_export
         filing_year=_IRENE_YEAR,
         facts_by_period=_IRENE_QUARTER_FACTS,
     )
-    workflow_profile = _irene_workflow_profile()
+    workflow_profile = _ireneworkflow_profile()
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)

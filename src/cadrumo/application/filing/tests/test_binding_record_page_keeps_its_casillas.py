@@ -25,7 +25,7 @@ import pytest
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
-from ..record_renderer import _record_render_rows
+from ..record_renderer import record_render_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -58,7 +58,7 @@ def _a_binding_id(record: ExportRecordDefinition) -> str:
 
 def test_apartado_11_casillas_alone_keep_the_page(pagina_siete: ExportRecordDefinition) -> None:
     """Operaciones especificas with no prorrata still files pagina 7."""
-    rows = _record_render_rows(
+    rows = record_render_rows(
         pagina_siete,
         {},
         {_a_casilla_id(pagina_siete): Decimal("1234.56")},
@@ -69,7 +69,7 @@ def test_apartado_11_casillas_alone_keep_the_page(pagina_siete: ExportRecordDefi
 
 def test_prorrata_bindings_alone_keep_the_page(pagina_siete: ExportRecordDefinition) -> None:
     """The binding channel on its own is still sufficient, as before."""
-    rows = _record_render_rows(
+    rows = record_render_rows(
         pagina_siete,
         {(_a_binding_id(pagina_siete), None): "G"},
         {},
@@ -84,13 +84,13 @@ def test_a_page_carrying_neither_is_left_out(pagina_siete: ExportRecordDefinitio
     Without this the fix would read as "always emit", which would put a page of
     bare identifier constants into every fichero.
     """
-    rows = _record_render_rows(pagina_siete, {}, {})
+    rows = record_render_rows(pagina_siete, {}, {})
 
     assert rows == ()
 
 
 def test_an_empty_string_is_not_a_value(pagina_siete: ExportRecordDefinition) -> None:
     """An empty casilla is absence, matching the binding channel's own test."""
-    rows = _record_render_rows(pagina_siete, {}, {_a_casilla_id(pagina_siete): ""})
+    rows = record_render_rows(pagina_siete, {}, {_a_casilla_id(pagina_siete): ""})
 
     assert rows == ()

@@ -2,7 +2,7 @@
 
 Walks :class:`~cadrumo.domain.calculations.registry.FormulaExpression` trees
 declared on a :class:`~cadrumo.domain.calculations.registry.ModeloRevision` to
-extract casilla, binding, parameter, relation, and date-binding references, and
+extract casilla, binding, parameter, and date-binding references, and
 produces topologically sorted evaluation orders for the formula engine.
 
 See Also:
@@ -18,11 +18,14 @@ See Also:
 from __future__ import annotations
 
 from graphlib import TopologicalSorter
+from typing import TYPE_CHECKING
 
 from ....core.casilla_id import CasillaId
-from .ids import BindingId, ParameterId, RelationId
-from .schema import ModeloRevision
+from .ids import BindingId, ParameterId
 from .schema_formula import FormulaExpression
+
+if TYPE_CHECKING:
+    from .schema import ModeloRevision
 
 # These walkers are pure O(expression-node) traversals and intentionally
 # carry NO memoization. A prior implementation keyed a module-global cache
@@ -43,17 +46,6 @@ def expression_casilla_refs(expression: FormulaExpression) -> tuple[CasillaId, .
     """
     refs: list[CasillaId] = []
     _collect_casilla_refs(expression, refs)
-    return tuple(refs)
-
-
-def expression_relation_refs(expression: FormulaExpression) -> tuple[RelationId, ...]:
-    """Return all :class:`~cadrumo.domain.calculations.registry.RelationId` refs.
-
-    The input is a validated
-    :class:`~cadrumo.domain.calculations.registry.FormulaExpression` tree.
-    """
-    refs: list[RelationId] = []
-    _collect_relation_refs(expression, refs)
     return tuple(refs)
 
 
@@ -100,13 +92,6 @@ def _collect_casilla_refs(expression: FormulaExpression, refs: list[CasillaId]) 
         refs.append(expression.casilla_id)
     for arg in expression.args:
         _collect_casilla_refs(arg, refs)
-
-
-def _collect_relation_refs(expression: FormulaExpression, refs: list[RelationId]) -> None:
-    if expression.relation is not None:
-        refs.append(expression.relation)
-    for arg in expression.args:
-        _collect_relation_refs(arg, refs)
 
 
 def _collect_binding_refs(expression: FormulaExpression, refs: list[BindingId]) -> None:

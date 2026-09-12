@@ -8,7 +8,7 @@ from pydantic_core import ValidationError
 
 from ...command_spec import OptionSpec
 from .._auth_command_specs import AUTH_COMMAND_SPECS
-from .._certificate import CertificateSecretSetSecrets
+from ..certificate import CertificateSecretSetSecrets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

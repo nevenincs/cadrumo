@@ -17,11 +17,11 @@ from ...core.aeat_csv import normalise_aeat_csv
 from ...core.identity.tax_id import same_tax_identifier
 from ...core.period import Period as _Period
 from ...domain.modelos.filing_record import is_justificante_backed_external_evidence
-from ..calculations._ports import FiledDeclaracionObservationProtocol
 from ..calculations.observations_repository import (
     ObservationSourceKind,
     is_official_aeat_observation_source,
 )
+from ..calculations.ports import FiledDeclaracionObservationProtocol
 from .calendar_models import (
     OverviewAeatSubmissionState,
     OverviewCalendarEvent,
@@ -49,17 +49,17 @@ class _CalculationObservationEvidenceInput:
     aeat_reference_id: str
 
 
-def _justificantes_by_csv(justificantes: tuple[Justificante, ...]) -> dict[str, tuple[Justificante, ...]]:
+def justificantes_by_csv(justificantes: tuple[Justificante, ...]) -> dict[str, tuple[Justificante, ...]]:
     """Index loaded justificante metadata by CSV/reference identifier."""
     grouped: dict[str, list[Justificante]] = {}
     for justificante in justificantes:
         csv = justificante.csv.strip()
         if csv:
-            grouped.setdefault(_justificante_csv_key(csv), []).append(justificante)
+            grouped.setdefault(justificante_csv_key(csv), []).append(justificante)
     return {key: tuple(values) for key, values in grouped.items()}
 
 
-def _justificante_csv_key(csv: str) -> str:
+def justificante_csv_key(csv: str) -> str:
     """Return the canonical lookup key for AEAT CSV identifiers.
 
     Delegates to the one comparison form rather than restating it. This site
@@ -70,7 +70,7 @@ def _justificante_csv_key(csv: str) -> str:
     return normalise_aeat_csv(csv)
 
 
-def _filing_evidence_from_modelo_record(
+def filing_evidence_from_modelo_record(
     record: ModeloRecord,
     *,
     justificantes_by_csv: Mapping[str, tuple[Justificante, ...]],
@@ -79,14 +79,14 @@ def _filing_evidence_from_modelo_record(
     """Project one local Modelo filing record into calendar evidence."""
     if record.status.value.lower() != "vigente":
         return None
-    return _filing_axes_from_modelo_record(
+    return filing_axes_from_modelo_record(
         record,
         justificantes_by_csv=justificantes_by_csv,
         expected_tax_id=expected_tax_id,
     )
 
 
-def _filing_axes_from_modelo_record(
+def filing_axes_from_modelo_record(
     record: ModeloRecord,
     *,
     justificantes_by_csv: Mapping[str, tuple[Justificante, ...]],
@@ -158,7 +158,7 @@ def _modelo_record_verified_justificante(
     expected = (expected_tax_id or "").strip()
     if not expected:
         return None
-    candidates = justificantes_by_csv.get(_justificante_csv_key(reference_id), ())
+    candidates = justificantes_by_csv.get(justificante_csv_key(reference_id), ())
     matching = tuple(
         justificante
         for justificante in candidates
@@ -205,7 +205,7 @@ def _local_filing_state_from_modelo_record(record: ModeloRecord) -> OverviewLoca
     return OverviewLocalFilingState.READY_TO_FILE
 
 
-def _filing_evidence_from_observed_event(
+def filing_evidence_from_observed_event(
     event: OverviewCalendarEvent,
     *,
     expected_tax_id: str | None,
@@ -215,12 +215,12 @@ def _filing_evidence_from_observed_event(
         return None
     if event.modelo is None or event.filing_year is None or event.period is None:
         return None
-    if event.status is not None and not _is_active_aeat_filing_status(event.status):
+    if event.status is not None and not is_active_aeat_filing_status(event.status):
         return None
     state = event.aeat_submission_state
     if state is None:
         return None
-    if not _authenticated_identity_matches_expected(event.authenticated_identity, expected_tax_id):
+    if not authenticated_identity_matches_expected(event.authenticated_identity, expected_tax_id):
         return None
     return OverviewCalendarFilingEvidence(
         modelo=event.modelo,
@@ -237,7 +237,7 @@ def _filing_evidence_from_observed_event(
     )
 
 
-def _authenticated_identity_matches_expected(
+def authenticated_identity_matches_expected(
     authenticated_identity: str | None,
     expected_tax_id: str | None,
 ) -> bool:
@@ -246,7 +246,7 @@ def _authenticated_identity_matches_expected(
     return same_tax_identifier(authenticated_identity, expected_tax_id)
 
 
-def _filing_evidence_from_filed_declaration_observation(
+def filing_evidence_from_filed_declaration_observation(
     observation: FiledDeclaracionObservationProtocol,
     *,
     expected_tax_id: str | None,
@@ -262,7 +262,7 @@ def _filing_evidence_from_filed_declaration_observation(
     """
     if expected_tax_id and not same_tax_identifier(observation.authenticated_identity, expected_tax_id):
         return None
-    if not _is_active_aeat_filing_status(observation.status):
+    if not is_active_aeat_filing_status(observation.status):
         return None
     verified_csv = _filed_declaration_verified_csv(
         observation,
@@ -314,12 +314,12 @@ def _is_verified_justificante_artefact(
     return kind == "justificante_pdf" and storage_ref is not None and storage_ref in verified_artefact_refs
 
 
-def _is_active_aeat_filing_status(status: str | None) -> bool:
+def is_active_aeat_filing_status(status: str | None) -> bool:
     """Return whether an AEAT register row represents the current accepted filing."""
     return (status or "").strip().upper() == "ALTA"
 
 
-def _filing_evidence_from_calculation_observation(
+def filing_evidence_from_calculation_observation(
     payload: ObservationEnvelopePayload,
     *,
     expected_tax_id: str | None,
@@ -374,7 +374,7 @@ def _calculation_observation_evidence_input(
     source_metadata = payload.source_metadata
     if not is_official_aeat_observation_source(source_kind) or not source_metadata:
         return None
-    if not _is_active_aeat_filing_status(str(source_metadata.get("aeat_register_status", "")).strip()):
+    if not is_active_aeat_filing_status(str(source_metadata.get("aeat_register_status", "")).strip()):
         return None
     aeat_reference_id = str(source_metadata.get("aeat_expediente_id") or "").strip()
     if not aeat_reference_id:
@@ -428,7 +428,7 @@ def _calculation_observation_verified_justificante(
     if not expected:
         return None
     for csv in _metadata_justificante_csv_candidates(source_metadata):
-        candidates = justificantes_by_csv.get(_justificante_csv_key(csv), ())
+        candidates = justificantes_by_csv.get(justificante_csv_key(csv), ())
         matching = tuple(
             justificante
             for justificante in candidates
@@ -446,7 +446,7 @@ def _calculation_observation_verified_justificante(
     return None
 
 
-def _filing_evidence_from_justificante_capture_snapshot(
+def filing_evidence_from_justificante_capture_snapshot(
     snapshot: JustificanteCaptureSnapshot,
     *,
     justificantes_by_csv: Mapping[str, tuple[Justificante, ...]],
@@ -498,7 +498,7 @@ def _capture_snapshot_verified_justificante(
     expected_tax_id: str | None,
 ) -> Justificante | None:
     expected = (expected_tax_id or "").strip()
-    candidates = justificantes_by_csv.get(_justificante_csv_key(snapshot.csv), ())
+    candidates = justificantes_by_csv.get(justificante_csv_key(snapshot.csv), ())
     matching = tuple(
         justificante
         for justificante in candidates
@@ -532,17 +532,6 @@ def _metadata_justificante_csv_candidates(source_metadata: Mapping[str, object])
 def _period_from_registry_token(filing_year: int, registry_token: str) -> _Period:
     return _Period.from_year_and_code(filing_year, registry_token)
 
-
-authenticated_identity_matches_expected = _authenticated_identity_matches_expected
-filing_axes_from_modelo_record = _filing_axes_from_modelo_record
-filing_evidence_from_calculation_observation = _filing_evidence_from_calculation_observation
-filing_evidence_from_filed_declaration_observation = _filing_evidence_from_filed_declaration_observation
-filing_evidence_from_justificante_capture_snapshot = _filing_evidence_from_justificante_capture_snapshot
-filing_evidence_from_modelo_record = _filing_evidence_from_modelo_record
-filing_evidence_from_observed_event = _filing_evidence_from_observed_event
-is_active_aeat_filing_status = _is_active_aeat_filing_status
-justificante_csv_key = _justificante_csv_key
-justificantes_by_csv = _justificantes_by_csv
 
 __all__ = [
     "authenticated_identity_matches_expected",

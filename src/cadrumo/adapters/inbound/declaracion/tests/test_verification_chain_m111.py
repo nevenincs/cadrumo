@@ -32,11 +32,10 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.casilla_id import validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....tests.inventory import FIXTURES_DIR
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M111,
-    CasillaId,
     _calculate_engine_values_from_inputs,
     _decimal_inputs_from_extracted_values,
     _parse_extracted_declaracion_values,

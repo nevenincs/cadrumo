@@ -47,14 +47,16 @@ from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.lineage_models import (
+    TransactionEditLineageEntry,
+    TransactionEvidenceProvenanceEntry,
+    TransactionLifecycleLineageEntry,
+)
 from ...domain.transactions.m210_income_classification import M210IncomeClassification
 from ...domain.transactions.model_validation import validate_business_pct_coupling
 from ...domain.transactions.models import (
     BucketTransactionRef,
     Transaction,
-    TransactionEditLineageEntry,
-    TransactionEvidenceProvenanceEntry,
-    TransactionLifecycleLineageEntry,
 )
 from ...domain.transactions.repository import ImportSummary
 from ..export.tabular import ExportSerializationFormat, verify_export_metadata

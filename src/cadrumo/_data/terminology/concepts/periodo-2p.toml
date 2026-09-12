@@ -15,3 +15,13 @@ updated_at = 2026-06-10
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Segon període de pagament fraccionat (codi 2P)."
+
+[language.en]
+short_description = "Second instalment-payment period (code 2P)."
+
+[language.hu]
+short_description = "Második részletfizetési időszak (2P kód)."
+

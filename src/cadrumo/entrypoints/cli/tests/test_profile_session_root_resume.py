@@ -48,7 +48,7 @@ from ....core.time.clock import now as _now
 from ....tests.os_keychain_hook import require_os_credential_store
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
-from .._common import cli_policy_refusal_projection
+from ..common import cli_policy_refusal_projection
 from ..errors import CliRefusedBoundaryError, suspend_error_boundary
 from .cli_runner import cadrumo_click_command, invoke_cached_cli, semantic_cli_output
 

@@ -7,13 +7,11 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.aggregation import BindingAggregationOp, BindingSourceKind
-from cadrumo.core.casilla_id import CasillaId
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.deadlines.errors import DeadlineValidationError
-from cadrumo.domain.deadlines.festivos import shift_deadline
-
-from .....tests.registry_snapshot import build_snapshot
+from .....core.aggregation import BindingAggregationOp, BindingSourceKind
+from .....core.casilla_id import CasillaId
+from .....core.resources.bundled_data import bundled_path
+from ....deadlines.errors import DeadlineValidationError
+from ....deadlines.festivos import shift_deadline
 from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
@@ -26,6 +24,7 @@ from ._published_authority import (
     artifact_snapshot,
 )
 from .registry_observations import registry_grounded_modelo_observation
+from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

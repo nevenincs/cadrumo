@@ -32,7 +32,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import clear_output_language_cache
 
 from .._elicitation import ConfirmRoute, confirmation_request, refusal_message
-from .._tools import build_tool_descriptors
+from ..tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

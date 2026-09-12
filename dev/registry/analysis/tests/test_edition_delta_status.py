@@ -266,6 +266,33 @@ class TestEditionKeyedIdentifiers:
         )
         assert "edition_keyed_identifier" in _kinds(tmp_path)
 
+    def test_a_two_digit_period_token_is_not_an_edition_key(self, tmp_path: Path) -> None:
+        """``09`` in ``2024-desde-09-y-3t`` is a period; an identifier naming box 09 is not keyed."""
+        _write_edition(
+            tmp_path,
+            "999",
+            "2024-desde-09-y-3t",
+            manifest='casilla_source_refs = ["src-a"]',
+            casillas='[[revisions."2024-desde-09-y-3t".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+            formulas='[[revisions."2024-desde-09-y-3t".formulas]]\nid = "modelo-999-dr999-09-projection"\n',
+        )
+        assert "edition_keyed_identifier" not in _kinds(tmp_path)
+
+    def test_a_year_inside_an_offset_range_is_not_an_edition_key(self, tmp_path: Path) -> None:
+        """``2001-2017`` in edition ``2016-2017`` is a range the box carries, not the edition."""
+        _write_edition(
+            tmp_path,
+            "999",
+            "2016-2017",
+            manifest='casilla_source_refs = ["src-a"]',
+            casillas='[[revisions."2016-2017".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+            formulas=(
+                '[[revisions."2016-2017".formulas]]\nid = "modelo-999.page_02.2001-2017.valor"\n\n'
+                '[[revisions."2016-2017".formulas]]\nid = "modelo-999-2017-total"\n'
+            ),
+        )
+        assert _kinds(tmp_path).count("edition_keyed_identifier") == 1
+
     def test_a_legal_reference_year_inside_an_identifier_is_not_named(self, tmp_path: Path) -> None:
         """The defect a substring sweep produces: 1992 is a norm's year, not this edition."""
         _write_edition(

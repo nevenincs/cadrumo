@@ -15,14 +15,33 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from .....core.aggregation import (
+    BindingAggregation,
+    BindingAggregationOp,
+)
 from .....core.casilla_id import validated_casilla_id
 from .....domain.iva.flow import IvaFlowDirection
-from .....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
-from ..rate_box_partition import derive_rate_box_partitions, rate_box_coverage_shortfalls
-from ..schema import DataBindingDefinition, ModeloRevision
+from .....domain.iva.schema import (
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
+from ..binding_value_contract import (
+    BindingDataType,
+    BindingValueChannel,
+    BindingValueContract,
+)
+from ..ledger_iva_bindings import LedgerIvaProvider
+from ..rate_box_partition import (
+    derive_rate_box_partitions,
+    rate_box_coverage_shortfalls,
+)
+from ..schema import BindingDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
 from ..schema_surfaces import CasillaDefinition
+
+_MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -40,7 +59,7 @@ def _binding(
     applied_rates: tuple[Decimal, ...] | None,
     fact: str = "iva_amount_sum",
     rate_kind: IvaRateKind = IvaRateKind.SUPER_REDUCED,
-) -> DataBindingDefinition:
+) -> BindingDefinition:
     selector: dict[str, object] = {
         "categories": (IvaCategory.DOMESTIC_SUPER_REDUCED,),
         "rate_kinds": (rate_kind,),
@@ -55,10 +74,10 @@ def _binding(
     }
     if applied_rates is not None:
         selector["applied_rates"] = applied_rates
-    return DataBindingDefinition(
+    return BindingDefinition(
         id=binding_id,
-        source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        selector=selector,
+        provider=LedgerIvaProvider.model_validate(selector),
+        value=_MONEY_VALUE,
         aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
         legal_refs=_LEGAL,
         source_refs=_SOURCE,
@@ -81,7 +100,7 @@ def _casilla(casilla_id: str, *, number: str, binding: str, exports: bool) -> Ca
 
 def _revision(
     *,
-    bindings: tuple[DataBindingDefinition, ...],
+    bindings: tuple[BindingDefinition, ...],
     casillas: tuple[CasillaDefinition, ...],
 ) -> ModeloRevision:
     return ModeloRevision(

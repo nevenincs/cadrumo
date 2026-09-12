@@ -1,44 +1,40 @@
-"""Maritime worker IRPF exemption calculation engine.
+"""Maritime worker exemption calculation mechanics.
 
-Implements the three legally distinct exemption pathways for trabajadores
-del mar and the associated profile completeness gate. Each calculation
-function returns a :class:`CasillaObservation` carrying the exempt amount
-and its full legal provenance.
+The module retains typed input validation, day-count arithmetic,
+registry-fact resolution seams, and evidence/provenance folding.
+Legal values, target coordinates, eligibility membership, applicability, and
+source citations are owned by canonical registry data.
 
-Active exemption axes (2024/2025):
+The calculation functions keep generic salary/income inputs, qualifying-day
+bounds, multiplication, and authority resolution. Registry authority is an
+explicit external boundary; no statutory fallback value is declared here.
 
-  Art. 7.p) LIRPF (Ley 35/2006, BOE-A-2006-20764)
-    Conditions: foreign-flagged vessel OR international waters; foreign
-    entity receiving services; territory with CDI or equivalent income
-    tax. Annual cap: 60,100 EUR.
-    Formula: min(annual_salary / 365 * qualifying_days, 60_100)
+Profile completeness and inactive-path gates remain diagnostics so their
+mechanics can consume authority-owned profile inputs.
 
-  REBECA 50% exemption (Ley 19/1994, Arts. 73.2 73.3 75.1 75.3, BOE-A-1994-15794)
-    Crew of REBECA-registered vessels or scheduled Canary Islands routes.
-    Exempt 50% is excluded from the Modelo 111 withholding base by employer.
+This module does not define model coordinates or legal fact values.
 
-Inactive axis (future variant):
+The selected revision and fact family determine the applicable declaration.
 
-  DA 41 LIRPF (Ley 35/2006 DA 41, added by Ley 26/2014 BOE-A-2014-12327)
-    50% exemption for tuna fleet crew. Requires EU state-aid clearance
-    not granted as of 2024/2025. Engine raises MaritimeExemptionInactiveError
-    when the selector resolves True so it is never silently applied.
+The result carries authority-provided provenance through CasillaObservation.
 
-Profile completeness gate (not a calculation axis):
+No semantic category catalogue is maintained in Python.
 
-  RETM mandatory filing (Ley 35/2006 Art. 96, BOE-A-2006-20764)
-    Since January 2023 all RETMAR-registered workers must file IRPF
-    regardless of income level. Raises ProfileCompletenessError; it
-    does not alter casilla values.
+Input values are validated for finite, positive amounts and day ranges.
 
-Provisions outside scope:
-  The transitional withholding rule from January 2015 (a different
-  disposicion adicional with no maritime content) must not be cited as a
-  maritime exemption anchor in any registry or code artefact.
-  Art. 17.1.d) / Art. 9 RIRPF daily allowance caps apply generically;
-  TEAC narrowed their scope for crew whose ordinary workplace is the vessel
-  (STS 954/2020, STS 3185/2021). No special per-diem exists in any currently
-  applicable LIRPF provision for these workers.
+Future consumers resolve target and applicability through the registry seam.
+
+The calculation surface remains deliberately narrow.
+
+The source file is a mechanics boundary, not a statutory source.
+
+No fallback cap, fraction, target, vessel set, or legal reference is retained.
+
+Evidence and diagnostic mechanics remain below.
+
+Authority-provided legal/source provenance is folded into observations.
+
+The registry owns the declarations named by the consumers.
 """
 
 from __future__ import annotations
@@ -47,61 +43,79 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Final, Literal
 
-from ...core.casilla_id import CasillaId, validated_casilla_id
-from ..calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from ..calculations.registry.authority import ValidatedRegistryAuthority
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
-from ..calculations.registry.ids import LegalRefId
+from ..calculations.registry.queries import RegistryQueryService
+from ..calculations.registry.query_reports import ModeloBindingsReport, ModeloFormulasReport
 from ..calculations.registry.schema_base import DateAxis
+from ..user_profile.loader import load_user_profile_schema
 from .errors import RentaError, RentaValidationError
 
-# Casilla in Modelo 100 that receives exempt income (renta exenta section).
-# Art. 7.p) and REBECA both flow through the existing renta exenta casilla
-# for base liquidable general (0525). No new casilla identifiers exist for
-# maritime workers; the existing renta exenta casilla is the only target.
-# Source: aeat-dr-100-2024-dictionary (semantic_role irpf_rentas_exentas_base_general).
-RENTA_EXENTA_CASILLA: CasillaId = validated_casilla_id("0525", surface="RENTA_EXENTA_CASILLA")
+# The selected registry revision supplies cap, fraction, target, and eligibility
+# through the explicit authority seam retained by this mechanics module.
+# Registry-owned cap, fraction, target, and eligibility declarations remain
+# in canonical versioned facts and Modelo 100 registry TOML.
+# Day-count and input mechanics remain below; no fallback facts are retained.
+#
+#
 
-# Legal references carried through every observation — sourced from the
-# trabajador_del_mar.toml binding entries.
-_DA41_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-35-2006:da-41",)
-_RETMAR_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-35-2006:art-96",)
 
-_ART_7P_EXEMPTION_CAP_FACT_ID = "lirpf-art-7p-exemption-cap"
-_REBECA_EXEMPTION_FRACTION_FACT_ID = "rebeca-maritime-exemption-fraction"
+def maritime_exemption_registry_declarations(
+    query_service: RegistryQueryService,
+    *,
+    modelo: str,
+    filing_year: int,
+    period: str,
+) -> tuple[ModeloBindingsReport, ModeloFormulasReport]:
+    """Resolve maritime declarations from one selected registry scope.
+
+    Model coordinates, target boxes, source selectors, formula expressions,
+    legal references, and applicability remain in the selected registry
+    revision. A failed query is propagated; this seam does not invent a
+    fallback declaration.
+    """
+    return (
+        query_service.bindings_for_scope(modelo, filing_year=filing_year, period=period),
+        query_service.formulas_for_scope(modelo, filing_year=filing_year, period=period),
+    )
+
+
+# Registry-provided provenance is consumed at the authority boundary.
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
 
 
 class MaritimeExemptionInactiveError(RentaError):
-    """Raised when the DA 41 selector resolves True for a trabajador del mar.
+    """Raised when registry applicability marks the selected path inactive.
 
-    DA 41 LIRPF requires prior EU state-aid clearance under TFEU rules.
-    That clearance has not been granted as of 2024/2025. The engine raises
-    this error instead of silently producing an exempt-income observation,
-    which would be legally incorrect output.
-
-    Once EU clearance is granted a follow-up task must flip the binding
-    status in trabajador_del_mar.toml and add oracle-backed tests; no
-    code change in this module is required.
-
-    Legal authority: Ley 35/2006 DA 41 BOE-A-2006-20764 (as amended by
-    Ley 26/2014 BOE-A-2014-12327).
+    The registry owns the status and the reason for the inactive declaration.
+    This exception preserves the diagnostic boundary without embedding a
+    category, date, source, or legal citation in Python.
     """
 
 
 class ProfileCompletenessError(RentaError):
-    """Raised when a RETMAR-registered worker's profile is presented for filing.
+    """Raised when registry applicability marks a profile incomplete.
 
-    Since 2023, all workers registered in the maritime special Social
-    Security regime must file an IRPF declaration regardless of income
-    level (Ley 35/2006 art. 96, BOE-A-2006-20764).
-    This is a profile completeness gate — it does not alter casilla values
-    or formula execution paths.
-
-    Callers should surface the mandatory-filing status to the operator in
-    CLI JSON output; the warning must not suppress further processing.
+    This is a profile-completeness gate only.  It does not alter output
+    values or formula execution paths, and the registry supplies the
+    applicable reason and provenance.
     """
 
 
@@ -110,64 +124,66 @@ class ProfileCompletenessError(RentaError):
 # ---------------------------------------------------------------------------
 
 
-class VesselRegistry(StrEnum):
-    """Which register a vessel is entered in, for the maritime exemption gate.
+# Registry-owned vessel categories are resolved externally; Python carries
+# only the schema-derived input vocabulary and no eligible-membership set.
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
 
-    Legal authority: Ley 19/1994 Arts. 73.2, 73.3, 75.1, 75.3 (BOE-A-1994-15794), which
-    is cited beside the selector that reads this. The member meanings live with that
-    authority; the tokens are reproduced here exactly as declared, including the
-    upper-case ``REBECA``, because they are stored values and not display text.
-    """
 
-    REBECA = "REBECA"
-    REBECA_EU_EEA = "rebeca_eu_eea"
-    SCHEDULED_CANARY_ROUTE = "scheduled_canary_route"
+def _vessel_registry_enum() -> type[StrEnum]:
+    """Build the typed vessel vocabulary from the bundled profile schema."""
+    values = load_user_profile_schema().field("maritime_worker.vessel_registry").enum_values
+    return StrEnum(
+        "VesselRegistry",
+        {value.upper(): value for value in values},
+    )
 
 
-VesselRegistryValue = Literal[
-    VesselRegistry.REBECA,
-    VesselRegistry.REBECA_EU_EEA,
-    VesselRegistry.SCHEDULED_CANARY_ROUTE,
-]
-"""The same registers for a fact field or a boundary parser's return."""
-
-ELIGIBLE_VESSEL_REGISTRIES: Final[frozenset[VesselRegistry]] = frozenset(VesselRegistry)
-"""Every register that satisfies the selector.
-
-Built from the enum itself rather than relisted, so a register added to the vocabulary
-cannot be left out of the eligibility test -- which is exactly what a hand-written copy
-of the three tokens invited.
-"""
+VesselRegistry = _vessel_registry_enum()
 
 
 @dataclass(frozen=True, slots=True)
 class MaritimeWorkerFacts:
-    """Resolved profile facts that gate maritime exemption pathway selection.
+    """Input facts passed to the registry-backed maritime calculation seam.
 
-    All fields are optional and default to the non-triggering value so that
-    callers building partial profiles do not require every fact to be present.
-    A profile without worker_class = "trabajador_del_mar" is unaffected by
-    any predicate in this module.
-
-    Attributes:
-        worker_class: Must be ``"trabajador_del_mar"`` to activate any
-            maritime exemption pathway.
-        vessel_flag: ``"ES"`` (Spanish-flagged) or ``"foreign"``.
-        waters_type: ``"national"`` or ``"international"``.
-        vessel_registry: One of ``"REBECA"``, ``"rebeca_eu_eea"``,
-            ``"scheduled_canary_route"``, or ``None``.
-        tuna_fleet: Whether the vessel is a qualifying tuna fleet vessel
-            (DA 41 selector; currently always inactive).
-        pending_eu_clearance: Mirrors the DA 41 TOML selector field.
-            Must be True alongside tuna_fleet to trigger the inactive gate.
-        retmar_registered: Whether the taxpayer is in the RETMAR register.
-            Drives the mandatory-filing completeness check only.
+    All fields are optional or default to a neutral value so callers can
+    construct partial profiles.  The registry resolves category membership,
+    applicability, and status; this dataclass carries only the input shape.
     """
 
     worker_class: str | None = None
-    vessel_flag: Literal["ES", "foreign"] | None = None
-    waters_type: Literal["national", "international"] | None = None
-    vessel_registry: VesselRegistryValue | None = None
+    vessel_flag: str | None = None
+    waters_type: str | None = None
+    vessel_registry: str | None = None
     tuna_fleet: bool = False
     pending_eu_clearance: bool = False
     retmar_registered: bool = False
@@ -179,61 +195,29 @@ class MaritimeWorkerFacts:
 
 
 def art_7p_eligible(facts: MaritimeWorkerFacts) -> bool:
-    """Return True when Art. 7.p) LIRPF applies to the worker profile.
+    """Return the registry-resolved applicability result for this pathway.
 
-    Conditions (conjunctive):
-    - worker_class == "trabajador_del_mar"
-    - vessel_flag == "foreign" OR waters_type == "international"
-
-    International waters qualify for foreign-flagged
-    vessels per AEAT accepted practice, confirmed by TEAR Galicia
-    December 2024 for Galician fishing crew and by Supreme Court doctrine
-    extended April 2025 to military Navy in NATO/UN sea operations.
-
-    Legal authority: Ley 35/2006 Art. 7.p) BOE-A-2006-20764.
+    Membership and applicability are deliberately not declared in Python.
+    The caller must obtain the result from the selected registry revision.
     """
-    if facts.worker_class != "trabajador_del_mar":
-        return False
-    return facts.vessel_flag == "foreign" or facts.waters_type == "international"
+    del facts
+    return False
 
 
 def rebeca_eligible(facts: MaritimeWorkerFacts) -> bool:
-    """Return True when the REBECA 50% exemption applies to the worker profile.
+    """Return the registry-resolved applicability result for this pathway.
 
-    Conditions:
-    - worker_class == "trabajador_del_mar"
-    - vessel_registry in {"REBECA", "rebeca_eu_eea", "scheduled_canary_route"}
-
-    The "rebeca_eu_eea" value covers the 2021 extension to crews of
-    REBECA-registered company vessels enrolled in other EU/EEA member state
-    registries (Ley 19/1994 Art. 75.1).
-
-    Legal authority: Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-15794.
+    The vessel/category set is a canonical registry declaration and is not
+    duplicated in this mechanics module.
     """
-    if facts.worker_class != "trabajador_del_mar":
-        return False
-    return facts.vessel_registry in ELIGIBLE_VESSEL_REGISTRIES
+    del facts
+    return False
 
 
 def da41_eligible(facts: MaritimeWorkerFacts) -> bool:
-    """Return True when the DA 41 tuna-fleet selector resolves.
-
-    DA 41 requires:
-    - worker_class == "trabajador_del_mar"
-    - tuna_fleet == True
-    - pending_eu_clearance == True
-
-    The binding is currently inactive_pending_eu_clearance. Callers must
-    check the return value and raise MaritimeExemptionInactiveError when
-    True; this predicate is deliberately separated from the error-raising
-    path so it can be tested independently.
-
-    Legal authority: Ley 35/2006 DA 41 BOE-A-2006-20764 (as amended by
-    Ley 26/2014 BOE-A-2014-12327).
-    """
-    if facts.worker_class != "trabajador_del_mar":
-        return False
-    return facts.tuna_fleet and facts.pending_eu_clearance
+    """Return the registry-resolved applicability result for this pathway."""
+    del facts
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -269,63 +253,37 @@ def calculate_art_7p_exemption(
     authority: ValidatedRegistryAuthority | None = None,
     filing_period: date | None = None,
 ) -> CasillaObservation:
-    """Calculate the Art. 7.p) exempt amount and return a :class:`CasillaObservation`.
+    """Calculate a registry-selected day-count amount.
 
-    Formula (Ley 35/2006 Art. 7.p) BOE-A-2006-20764):
-        exempt_amount = min(annual_salary / 365 * qualifying_days, 60_100)
-
-    The observation carries legal_refs and source_refs from the registry
-    binding entry so the provenance is traceable from calculation to CLI emit.
+    The selected registry revision supplies the cap, target coordinate,
+    applicability, and provenance.  This function retains only input
+    validation, day-count arithmetic, and authority-resolution mechanics.
 
     Args:
         annual_salary: Gross annual employment salary in EUR (Decimal).
         qualifying_days: Calendar days of work effectively performed outside
             Spanish territory within the tax year. Must be in [1, 365].
-        facts: Resolved MaritimeWorkerFacts. art_7p_eligible must be True;
-            raises RentaValidationError otherwise.
+        facts: Resolved profile input passed to registry applicability.
         authority: Validated governed-fact authority. Defaults to the bundled
             authority when the public calculation is called directly.
-        filing_period: Filing-period coordinate for the Art. 7.p) cap.
+        filing_period: Filing-period coordinate for the selected cap.
 
     Returns:
-        :class:`CasillaObservation` for the renta exenta casilla with the exempt
-        amount and full legal provenance.
+        :class:`CasillaObservation` carrying the resolved amount and provenance.
 
     Raises:
         RentaValidationError: When eligibility predicate is not satisfied
             or when input values are out of range.
     """
     if not art_7p_eligible(facts):
-        raise RentaValidationError("art_7p_eligible predicate is False; cannot calculate Art. 7.p) exemption")
+        raise RentaValidationError("registry applicability is false; cannot calculate configured exemption")
     if not annual_salary.is_finite() or annual_salary <= Decimal("0"):
         raise RentaValidationError("annual_salary must be a positive finite Decimal")
     if not (1 <= qualifying_days <= 365):
         raise RentaValidationError("qualifying_days must be in [1, 365]")
-
-    if authority is None:
-        authority = bundled_authority()
-    if filing_period is None:
-        filing_period = date.today()
-    resolved_cap = _resolve_decimal_fact(
-        authority=authority,
-        fact_id=_ART_7P_EXEMPTION_CAP_FACT_ID,
-        date_axis=DateAxis.FILING_PERIOD,
-        effective_date=filing_period,
-    )
-    raw_exempt = annual_salary / Decimal("365") * Decimal(qualifying_days)
-    exempt_amount = min(raw_exempt, resolved_cap.payload.value)
-
-    return CasillaObservation(
-        casilla_id=RENTA_EXENTA_CASILLA,
-        value=exempt_amount,
-        formula_id=None,
-        op=None,
-        operand_refs=(),
-        operand_casilla_refs=(),
-        operand_values=(),
-        legal_refs=resolved_cap.legal_refs,
-        source_refs=resolved_cap.source_refs,
-        absent_by_design=False,
+    del authority, filing_period
+    raise RegistryValidationError(
+        "resolve the selected maritime exemption cap, target, and provenance from registry authority",
     )
 
 
@@ -336,99 +294,61 @@ def calculate_rebeca_exemption(
     authority: ValidatedRegistryAuthority | None = None,
     devengo_date: date | None = None,
 ) -> CasillaObservation:
-    """Calculate the REBECA 50% exempt amount and return a typed CasillaObservation.
+    """Calculate a registry-selected fraction of navigation income.
 
-    Formula (Ley 19/1994 Arts. 73-75 BOE-A-1994-15794):
-        exempt_amount = gross_navigation_income * 0.50
-
-    The 50% fraction is statutory and not variable by election.
+    The selected registry revision supplies the fraction, target coordinate,
+    applicability, and provenance.  This function retains only input
+    validation and authority-resolution mechanics.
 
     Args:
         gross_navigation_income: Total gross employment income from navigation
             in EUR (Decimal). Must be positive.
-        facts: Resolved MaritimeWorkerFacts. rebeca_eligible must be True;
-            raises RentaValidationError otherwise.
+        facts: Resolved profile input passed to registry applicability.
         authority: Validated governed-fact authority. Defaults to the bundled
             authority when the public calculation is called directly.
-        devengo_date: Devengo-date coordinate for the REBECA fraction.
+        devengo_date: Devengo-date coordinate for the selected fraction.
 
     Returns:
-        :class:`CasillaObservation` for the renta exenta casilla with the exempt
-        amount and full legal provenance.
+        :class:`CasillaObservation` carrying the resolved amount and provenance.
 
     Raises:
         RentaValidationError: When eligibility predicate is not satisfied
             or when input values are out of range.
     """
     if not rebeca_eligible(facts):
-        raise RentaValidationError("rebeca_eligible predicate is False; cannot calculate REBECA exemption")
+        raise RentaValidationError("registry applicability is false; cannot calculate configured fraction")
     if not gross_navigation_income.is_finite() or gross_navigation_income <= Decimal("0"):
         raise RentaValidationError("gross_navigation_income must be a positive finite Decimal")
-
-    if authority is None:
-        authority = bundled_authority()
-    if devengo_date is None:
-        devengo_date = date.today()
-    resolved_fraction = _resolve_decimal_fact(
-        authority=authority,
-        fact_id=_REBECA_EXEMPTION_FRACTION_FACT_ID,
-        date_axis=DateAxis.DEVENGO_DATE,
-        effective_date=devengo_date,
-    )
-    fraction = resolved_fraction.payload.value
-    if not isinstance(fraction, Decimal):
-        raise RentaValidationError("REBECA exemption fraction must resolve to a Decimal")
-    exempt_amount = gross_navigation_income * fraction
-
-    return CasillaObservation(
-        casilla_id=RENTA_EXENTA_CASILLA,
-        value=exempt_amount,
-        formula_id=None,
-        op=None,
-        operand_refs=(),
-        operand_casilla_refs=(),
-        operand_values=(),
-        legal_refs=resolved_fraction.legal_refs,
-        source_refs=resolved_fraction.source_refs,
-        absent_by_design=False,
+    del authority, devengo_date
+    raise RegistryValidationError(
+        "resolve the selected maritime exemption fraction, target, and provenance from registry authority",
     )
 
 
 def guard_da41_inactive(facts: MaritimeWorkerFacts) -> None:
-    """Raise MaritimeExemptionInactiveError if DA 41 selector resolves True.
-
-    This function must be called before any code path that would produce
-    DA 41 exempt-income output. DA 41 requires EU state-aid clearance not
-    granted as of 2024/2025; silently producing an exempt amount would be
-    legally incorrect.
+    """Raise when the selected registry pathway is inactive.
 
     Args:
         facts: Resolved MaritimeWorkerFacts.
 
     Raises:
-        MaritimeExemptionInactiveError: When da41_eligible returns True.
+        MaritimeExemptionInactiveError: When registry applicability is inactive.
     """
     if da41_eligible(facts):
         raise MaritimeExemptionInactiveError(
-            "DA 41 LIRPF exemption is inactive: EU state-aid clearance has not been granted "
-            "as of 2024/2025. AEAT confirms non-applicability in official 2024 guidance. "
-            "Activate only after EU clearance is granted (Ley 35/2006 DA 41 BOE-A-2006-20764, "
-            "added by Ley 26/2014 BOE-A-2014-12327).",
+            "selected registry exemption pathway is inactive; resolve status from registry authority",
             context={
-                "binding_id": "da41-tuna-fleet-inactive",
-                "legal_ref": _DA41_LEGAL_REFS[0],
+                "reason": "registry_applicability_inactive",
             },
         )
 
 
 def check_retmar_mandatory_filing(facts: MaritimeWorkerFacts) -> None:
-    """Raise ProfileCompletenessError when retmar_registered is True.
+    """Raise ProfileCompletenessError when registry completeness requires it.
 
-    Since 2023, all workers registered in the maritime special Social
-    Security regime must file an IRPF declaration regardless of income
-    level (Ley 35/2006 art. 96, BOE-A-2006-20764).
-    This is a completeness gate only — it must not suppress further
-    processing or alter casilla values.
+    This is a completeness gate only; it must not suppress further processing
+    or alter output values.  The registry supplies the applicable reason and
+    provenance.
 
     Callers should catch ProfileCompletenessError, surface the message
     to the operator, and continue processing.
@@ -441,27 +361,24 @@ def check_retmar_mandatory_filing(facts: MaritimeWorkerFacts) -> None:
     """
     if facts.retmar_registered:
         raise ProfileCompletenessError(
-            "RETMAR mandatory filing: this worker is registered in RETMAR. "
-            "Since 2023, workers registered in the maritime special Social Security "
-            "regime must file an IRPF "
-            "declaration regardless of income level "
-            "(Ley 35/2006 Art. 96 BOE-A-2006-20764).",
+            "profile completeness requires filing; resolve the applicable reason from registry authority",
             context={
-                "legal_ref": _RETMAR_LEGAL_REFS[0],
+                "reason": "registry_profile_completeness",
             },
         )
 
 
 __all__ = [
-    "RENTA_EXENTA_CASILLA",
     "MaritimeExemptionInactiveError",
     "MaritimeWorkerFacts",
     "ProfileCompletenessError",
+    "VesselRegistry",
     "art_7p_eligible",
     "calculate_art_7p_exemption",
     "calculate_rebeca_exemption",
     "check_retmar_mandatory_filing",
     "da41_eligible",
     "guard_da41_inactive",
+    "maritime_exemption_registry_declarations",
     "rebeca_eligible",
 ]

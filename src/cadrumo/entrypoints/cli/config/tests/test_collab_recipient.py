@@ -9,7 +9,7 @@ proven to be the exact key
 :mod:`~entrypoints.cli.tests.test_modelo_review_package_recipient_encryption_verb`.
 
 See Also:
-    :mod:`~entrypoints.cli.config._collab`
+    :mod:`~entrypoints.cli.config.collab`
         Command handlers for the ``config collab recipient`` surface.
     :class:`~application.modelo.RecipientFingerprintRegistryRepository`
         Encrypted active-bucket registry the CLI delegates to.
@@ -17,11 +17,11 @@ See Also:
         Public-key trust record projected by ``add`` and ``list``.
     :func:`~application.modelo.public_key_hex_from_raw_bytes`
         Application validator for raw X25519 public-key bytes.
-    :class:`~entrypoints.cli.config._collab_payloads.ConfigCollabRecipientAddResult`
+    :class:`~entrypoints.cli.config.collab_payloads.ConfigCollabRecipientAddResult`
         JSON result schema asserted after ``recipient add``.
-    :class:`~entrypoints.cli.config._collab_payloads.ConfigCollabRecipientListResult`
+    :class:`~entrypoints.cli.config.collab_payloads.ConfigCollabRecipientListResult`
         JSON result schema asserted after ``recipient list``.
-    :class:`~entrypoints.cli.config._collab_payloads.ConfigCollabRecipientRemoveResult`
+    :class:`~entrypoints.cli.config.collab_payloads.ConfigCollabRecipientRemoveResult`
         JSON result schema asserted after ``recipient remove``.
     :func:`~tests.cli_runner.invoke_typer_app`
         Real Typer runner used to exercise the config root.
@@ -164,7 +164,7 @@ def test_recipient_payload_refuses_an_arbitrary_fingerprint() -> None:
 
     from datetime import UTC, datetime
 
-    from .._collab_payloads import RecipientFingerprintRowPayload
+    from ..collab_payloads import RecipientFingerprintRowPayload
 
     with pytest.raises(ValidationError, match="fingerprint_sha256"):
         RecipientFingerprintRowPayload(

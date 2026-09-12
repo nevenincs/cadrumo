@@ -1,7 +1,7 @@
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-repercutido-general-cuota"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_general"], rate_kinds = ["general"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general"], rate_kinds = ["general"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -12,8 +12,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-repercutido-reducido-cuota"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_reduced"], rate_kinds = ["reduced"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reduced"], rate_kinds = ["reduced"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -24,8 +24,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-repercutido-super-reducido-cuota"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -36,8 +36,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-soportado-interiores-cuota"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -51,8 +51,8 @@ required_text = ["modelo 390"]
 # imports. Selects import_third_country soportado lines across the rate tiers.
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-soportado-importaciones-cuota"
-source = "ledger_iva_aggregation"
-selector = { categories = ["import_third_country"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["import_third_country"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -63,8 +63,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-prorrata-regularizacion-anual"
-source = "prorrata_regularizacion"
-selector = { source_modelo = "303", source_casilla_ids = ["iva.cuota-deducible-total", "iva.prorrata-volumen-con-derecho", "iva.prorrata-volumen-total", "iva.prorrata-porcentaje"], source_periods = ["1T", "2T", "3T", "4T"], regularizacion_output = "modelo_390_regularizacion_anual" }
+provider = { kind = "prorrata_regularizacion", source_modelo = "303", source_casilla_ids = ["iva.cuota-deducible-total", "iva.prorrata-volumen-con-derecho", "iva.prorrata-volumen-total", "iva.prorrata-porcentaje"], source_periods = ["1T", "2T", "3T", "4T"], regularizacion_output = "modelo_390_regularizacion_anual" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
@@ -74,8 +74,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-bienes-inversion-regularizacion-casilla-63"
-source = "bienes_inversion_regularizacion"
-selector = { source_modelo = "303", regularizacion_output = "modelo_390_casilla_63" }
+provider = { kind = "bienes_inversion_regularizacion", source_modelo = "303", regularizacion_output = "modelo_390_casilla_63" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
@@ -92,8 +92,8 @@ required_text = ["modelo 390"]
 # categories too.
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-autorepercutido-intracomunitaria-cuota"
-source = "ledger_iva_aggregation"
-selector = { categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -123,8 +123,8 @@ required_text = ["modelo 390"]
 # 2023-y-siguientes and 2009-y-siguientes fixes).
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-recargo-equivalencia-general-cuota"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_general"], rate_kinds = ["general"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general"], rate_kinds = ["general"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -135,8 +135,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-recargo-equivalencia-reducido-cuota"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_reduced"], rate_kinds = ["reduced"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reduced"], rate_kinds = ["reduced"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -147,8 +147,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-iva-recargo-equivalencia-super-reducido-cuota"
-source = "ledger_iva_aggregation"
-selector = { categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -166,8 +166,9 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-prev-303-cuota-devengada-total"
-source = "relation_prefill"
-selector = { source_modelo = "303", source_casilla_id = "iva.cuota-devengada-total" }
+provider = { kind = "relation_prefill", relation_kind = "annual_summary", dependency_role = "periodic_to_annual_summary", source_modelo = "303", source_casilla_id = "iva.cuota-devengada-total", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -178,8 +179,9 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-prev-303-cuota-deducible-total"
-source = "relation_prefill"
-selector = { source_modelo = "303", source_casilla_id = "iva.cuota-deducible-total" }
+provider = { kind = "relation_prefill", relation_kind = "annual_summary", dependency_role = "periodic_to_annual_summary", source_modelo = "303", source_casilla_id = "iva.cuota-deducible-total", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -190,8 +192,9 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-prev-303-resultado-regimen-general"
-source = "relation_prefill"
-selector = { source_modelo = "303", source_casilla_id = "iva.resultado-regimen-general" }
+provider = { kind = "relation_prefill", relation_kind = "annual_summary", dependency_role = "periodic_to_annual_summary", source_modelo = "303", source_casilla_id = "iva.resultado-regimen-general", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -202,8 +205,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-prev-303-compensacion-ultimo-periodo"
-source = "iva_compensation_annual_partition"
-selector = { source_modelo = "303", source_casilla_ids = ["iva.compensacion-generada-periodo", "iva.compensacion-aplicada-periodo", "iva.compensacion-disponible-fin-periodo", "iva.compensacion-pendiente-periodos-posteriores"], source_periods = ["1T", "2T", "3T", "4T"], partition_output = "last_period_amount" }
+provider = { kind = "iva_compensation_annual_partition", source_modelo = "303", source_casilla_ids = ["iva.compensacion-generada-periodo", "iva.compensacion-aplicada-periodo", "iva.compensacion-disponible-fin-periodo", "iva.compensacion-pendiente-periodos-posteriores"], source_periods = ["1T", "2T", "3T", "4T"], partition_output = "last_period_amount" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
@@ -213,8 +216,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2024".bindings]]
 id = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97"
-source = "iva_compensation_annual_partition"
-selector = { source_modelo = "303", source_casilla_ids = ["iva.compensacion-generada-periodo", "iva.compensacion-aplicada-periodo", "iva.compensacion-disponible-fin-periodo", "iva.compensacion-pendiente-periodos-posteriores"], source_periods = ["1T", "2T", "3T", "4T"], partition_output = "generated_not_in_last_amount" }
+provider = { kind = "iva_compensation_annual_partition", source_modelo = "303", source_casilla_ids = ["iva.compensacion-generada-periodo", "iva.compensacion-aplicada-periodo", "iva.compensacion-disponible-fin-periodo", "iva.compensacion-pendiente-periodos-posteriores"], source_periods = ["1T", "2T", "3T", "4T"], partition_output = "generated_not_in_last_amount" }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 

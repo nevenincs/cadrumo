@@ -41,16 +41,14 @@ from .....domain.transactions.enums import BusinessClassification, TransactionDi
 from .....domain.transactions.errors import StoredTransactionDriftError
 from .....domain.transactions.models import Transaction, TransactionCatalogue, derive_transaction_id
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from .....domain.transactions.repository import transaction_object_key
 from .....tests.secure_sql import isolated_runtime_profile
 from ...storage.bucket.directory_layout import bucket_paths
 from ...storage.errors import ClassificationError, EnvelopeVersionError, SecureObjectRowIdentityError
-from ...storage.sql.secure_objects import SecureObjectRawRow, SecureObjectRepository
-from ..transactions import (
-    _TX_CATALOGUE_VERSION,
-    TX_BUCKET_NAMESPACE,
-    TransactionCatalogueRepository,
-    transaction_object_key,
-)
+from ...storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
+from ...storage.sql.secure_object_records import SecureObjectRawRow
+from ...storage.sql.secure_objects import SecureObjectRepository
+from ..transactions import TransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -108,13 +106,12 @@ def _transaction_secure_row(
     transaction_id: str,
 ) -> SecureObjectRawRow:
     from ...storage.crypto.encrypted_columns import secure_object_key_digest
-    from ..transactions import TX_BUCKET_NAMESPACE, transaction_object_key
 
     object_digest = secure_object_key_digest(transaction_object_key(bucket_id, transaction_id))
     rows = [
         row
         for row in repository.iter_all_records_raw()
-        if row.namespace == TX_BUCKET_NAMESPACE and row.object_key == object_digest
+        if row.namespace == TRANSACTION_CATALOGUE_NAMESPACE.namespace and row.object_key == object_digest
     ]
     assert len(rows) == 1
     return rows[0]
@@ -234,16 +231,16 @@ def test_transaction_catalogue_refuses_foreign_payload_rekeyed_under_an_indexed_
         indexed_key = transaction_object_key(profile.bucket_id, indexed.transaction_id)
         foreign_key = transaction_object_key(profile.bucket_id, foreign.transaction_id)
         indexed_record = profile.repository.load(
-            TX_BUCKET_NAMESPACE,
+            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             indexed_key,
             expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_TX_CATALOGUE_VERSION,
+            max_supported_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
         )
         foreign_record = profile.repository.load(
-            TX_BUCKET_NAMESPACE,
+            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             foreign_key,
             expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_TX_CATALOGUE_VERSION,
+            max_supported_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
         )
         assert indexed_record is not None
         assert foreign_record is not None
@@ -252,7 +249,7 @@ def test_transaction_catalogue_refuses_foreign_payload_rekeyed_under_an_indexed_
         # foreign envelope remains valid for its own derived transaction ID but
         # is deliberately written under the indexed row's natural key.
         profile.repository.save(
-            namespace=TX_BUCKET_NAMESPACE,
+            namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             object_key=indexed_key,
             classification=indexed_record.classification,
             schema_version=indexed_record.schema_version,
@@ -286,8 +283,6 @@ def test_transaction_catalogue_load_uses_json_mode_for_derived_id_roundtrip(
 ) -> None:
     import json as _json
 
-    from ..transactions import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
-
     created = datetime(2024, 4, 14, 9, 30, tzinfo=UTC)
     modified = datetime(2024, 6, 1, 16, 45, tzinfo=UTC)
     transaction = Transaction.model_validate(
@@ -312,10 +307,10 @@ def test_transaction_catalogue_load_uses_json_mode_for_derived_id_roundtrip(
 
         object_key = transaction_object_key(profile.bucket_id, transaction.transaction_id)
         record = profile.repository.load(
-            TX_BUCKET_NAMESPACE,
+            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             object_key,
             expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_TX_CATALOGUE_VERSION,
+            max_supported_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
         )
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
@@ -416,8 +411,6 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
 
     import json as _json
 
-    from ..transactions import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         mixed_txn = _transaction(
@@ -432,10 +425,10 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
 
         object_key = transaction_object_key(profile.bucket_id, mixed_txn.transaction_id)
         record = profile.repository.load(
-            TX_BUCKET_NAMESPACE,
+            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             object_key,
             expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_TX_CATALOGUE_VERSION,
+            max_supported_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
         )
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
@@ -445,7 +438,7 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
         )
         del txn_dict["business_pct"]
         profile.repository.save(
-            namespace=TX_BUCKET_NAMESPACE,
+            namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             object_key=object_key,
             classification=record.classification,
             schema_version=record.schema_version,
@@ -472,8 +465,6 @@ def test_transaction_catalogue_inner_classification_mismatch_is_structured(
 
     import json as _json
 
-    from ..transactions import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         txn = _transaction(
@@ -486,17 +477,17 @@ def test_transaction_catalogue_inner_classification_mismatch_is_structured(
 
         object_key = transaction_object_key(profile.bucket_id, txn.transaction_id)
         record = profile.repository.load(
-            TX_BUCKET_NAMESPACE,
+            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             object_key,
             expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_TX_CATALOGUE_VERSION,
+            max_supported_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
         )
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
         assert envelope["classification"] == SensitivityClass.FINANCIAL.value
         envelope["classification"] = SensitivityClass.AUDIT.value
         profile.repository.save(
-            namespace=TX_BUCKET_NAMESPACE,
+            namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             object_key=object_key,
             classification=record.classification,
             schema_version=record.schema_version,
@@ -509,7 +500,7 @@ def test_transaction_catalogue_inner_classification_mismatch_is_structured(
 
     assert exc_info.value.translated_message == "errors.integrity.integrity_storage_classification"
     assert exc_info.value.context == {
-        "namespace": TX_BUCKET_NAMESPACE,
+        "namespace": TRANSACTION_CATALOGUE_NAMESPACE.namespace,
         "object_key": object_key,
         "bucket_id": profile.bucket_id,
         "classification": SensitivityClass.AUDIT.value,
@@ -524,8 +515,6 @@ def test_transaction_catalogue_inner_schema_version_mismatch_is_structured(
 
     import json as _json
 
-    from ..transactions import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         txn = _transaction(
@@ -538,17 +527,17 @@ def test_transaction_catalogue_inner_schema_version_mismatch_is_structured(
 
         object_key = transaction_object_key(profile.bucket_id, txn.transaction_id)
         record = profile.repository.load(
-            TX_BUCKET_NAMESPACE,
+            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             object_key,
             expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_TX_CATALOGUE_VERSION,
+            max_supported_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
         )
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
-        assert envelope["schema_version"] == _TX_CATALOGUE_VERSION
-        envelope["schema_version"] = _TX_CATALOGUE_VERSION + 1
+        assert envelope["schema_version"] == TRANSACTION_CATALOGUE_NAMESPACE.schema_version
+        envelope["schema_version"] = TRANSACTION_CATALOGUE_NAMESPACE.schema_version + 1
         profile.repository.save(
-            namespace=TX_BUCKET_NAMESPACE,
+            namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             object_key=object_key,
             classification=record.classification,
             schema_version=record.schema_version,
@@ -561,11 +550,11 @@ def test_transaction_catalogue_inner_schema_version_mismatch_is_structured(
 
     assert exc_info.value.translated_message == "errors.integrity.integrity_storage_envelope_version"
     assert exc_info.value.context == {
-        "namespace": TX_BUCKET_NAMESPACE,
+        "namespace": TRANSACTION_CATALOGUE_NAMESPACE.namespace,
         "object_key": object_key,
         "bucket_id": profile.bucket_id,
-        "schema_version": _TX_CATALOGUE_VERSION + 1,
-        "expected": _TX_CATALOGUE_VERSION,
+        "schema_version": TRANSACTION_CATALOGUE_NAMESPACE.schema_version + 1,
+        "expected": TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
     }
 
 
@@ -614,8 +603,6 @@ def test_transaction_catalogue_rejects_missing_source_jurisdiction_key(
 
     import json as _json
 
-    from ..transactions import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         spanish_txn = Transaction.model_validate(
@@ -632,10 +619,10 @@ def test_transaction_catalogue_rejects_missing_source_jurisdiction_key(
 
         object_key = transaction_object_key(profile.bucket_id, spanish_txn.transaction_id)
         record = profile.repository.load(
-            TX_BUCKET_NAMESPACE,
+            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             object_key,
             expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_TX_CATALOGUE_VERSION,
+            max_supported_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
         )
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
@@ -645,7 +632,7 @@ def test_transaction_catalogue_rejects_missing_source_jurisdiction_key(
         )
         del txn_dict["source_jurisdiction"]
         profile.repository.save(
-            namespace=TX_BUCKET_NAMESPACE,
+            namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             object_key=object_key,
             classification=record.classification,
             schema_version=record.schema_version,
@@ -705,8 +692,6 @@ def test_transaction_catalogue_rejects_missing_group_label_key(
 
     import json as _json
 
-    from ..transactions import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         labelled = Transaction.model_validate(
@@ -723,10 +708,10 @@ def test_transaction_catalogue_rejects_missing_group_label_key(
 
         object_key = transaction_object_key(profile.bucket_id, labelled.transaction_id)
         record = profile.repository.load(
-            TX_BUCKET_NAMESPACE,
+            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             object_key,
             expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_TX_CATALOGUE_VERSION,
+            max_supported_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
         )
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
@@ -736,7 +721,7 @@ def test_transaction_catalogue_rejects_missing_group_label_key(
         )
         del txn_dict["group_label"]
         profile.repository.save(
-            namespace=TX_BUCKET_NAMESPACE,
+            namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             object_key=object_key,
             classification=record.classification,
             schema_version=record.schema_version,
@@ -849,8 +834,6 @@ def test_transaction_catalogue_rejects_missing_created_at_key(
 
     import json as _json
 
-    from ..transactions import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         created = datetime(2024, 4, 14, 9, 30, tzinfo=UTC)
@@ -871,10 +854,10 @@ def test_transaction_catalogue_rejects_missing_created_at_key(
 
         object_key = transaction_object_key(profile.bucket_id, stamped.transaction_id)
         record = profile.repository.load(
-            TX_BUCKET_NAMESPACE,
+            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             object_key,
             expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_TX_CATALOGUE_VERSION,
+            max_supported_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
         )
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
@@ -884,7 +867,7 @@ def test_transaction_catalogue_rejects_missing_created_at_key(
         )
         del txn_dict["created_at"]
         profile.repository.save(
-            namespace=TX_BUCKET_NAMESPACE,
+            namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             object_key=object_key,
             classification=record.classification,
             schema_version=record.schema_version,
@@ -907,11 +890,8 @@ def test_transaction_timestamp_witness_rejects_missing_modified_at_from_decoded_
     import json as _json
 
     from ..transactions import (
-        _TX_CATALOGUE_VERSION,
-        TX_BUCKET_NAMESPACE,
         _decode_persisted_transaction_row,
         _validate_persisted_transaction_timestamps,
-        transaction_object_key,
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
@@ -933,10 +913,10 @@ def test_transaction_timestamp_witness_rejects_missing_modified_at_from_decoded_
 
         object_key = transaction_object_key(profile.bucket_id, stamped.transaction_id)
         record = profile.repository.load(
-            TX_BUCKET_NAMESPACE,
+            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             object_key,
             expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_TX_CATALOGUE_VERSION,
+            max_supported_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
         )
         assert record is not None
         decoded = _decode_persisted_transaction_row(record.payload)
@@ -955,7 +935,7 @@ def test_transaction_timestamp_witness_rejects_missing_modified_at_from_decoded_
         assert "modified_at" in str(witness_exc.value)
 
         profile.repository.save(
-            namespace=TX_BUCKET_NAMESPACE,
+            namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             object_key=object_key,
             classification=record.classification,
             schema_version=record.schema_version,
@@ -985,8 +965,6 @@ def test_transaction_catalogue_negative_amount_payload_rejected_at_load(
 
     import json as _json
 
-    from ..transactions import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         txn = _transaction(
@@ -1000,10 +978,10 @@ def test_transaction_catalogue_negative_amount_payload_rejected_at_load(
 
         object_key = transaction_object_key(profile.bucket_id, txn.transaction_id)
         record = profile.repository.load(
-            TX_BUCKET_NAMESPACE,
+            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             object_key,
             expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_TX_CATALOGUE_VERSION,
+            max_supported_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
         )
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
@@ -1013,7 +991,7 @@ def test_transaction_catalogue_negative_amount_payload_rejected_at_load(
         )
         txn_dict["raw"]["amount"] = "-100.00"
         profile.repository.save(
-            namespace=TX_BUCKET_NAMESPACE,
+            namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             object_key=object_key,
             classification=record.classification,
             schema_version=record.schema_version,
@@ -1137,8 +1115,6 @@ def test_loaded_envelope_bytes_equal_fresh_serialization_of_the_same_instance(
     skip-behaviour.
     """
 
-    from ..transactions import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         txn = _transaction(
@@ -1151,10 +1127,10 @@ def test_loaded_envelope_bytes_equal_fresh_serialization_of_the_same_instance(
 
         object_key = transaction_object_key(profile.bucket_id, txn.transaction_id)
         stored_record = profile.repository.load(
-            TX_BUCKET_NAMESPACE,
+            TRANSACTION_CATALOGUE_NAMESPACE.namespace,
             object_key,
             expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_TX_CATALOGUE_VERSION,
+            max_supported_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
         )
         assert stored_record is not None
 

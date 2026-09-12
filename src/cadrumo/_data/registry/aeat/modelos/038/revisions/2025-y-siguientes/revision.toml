@@ -1,4 +1,7 @@
 [revisions."2025-y-siguientes"]
+predecessor = "2024-desde-06"
+casilla_source_refs = ["enrolled-modelo-038-procedure"]
+reviewed_against = "2024-desde-06"
 authority_grade = "applicability"
 # The 2024 amendment remains in force and AEAT continues to require its
 # vigente design. The pre-June 2024 design remains unselected: the acquired
@@ -20,22 +23,3 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = "agent: applicability-grade review; 12/12 deadline windows verified against the calendar and orden HAC/66/2002 art 6; the 2024 design applies from June 2024 and has no stated terminus; full-Diseno coverage is not claimed"
 reviewed_at = 2026-08-25
-
-[revisions."2025-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = """
-The earlier registered revision begins in June 2024 but declares only generic
-header casillas. The separately acquired historical PDF is intentionally not
-selected for the unevidenced earlier interval, so no cross-revision casilla
-identity is asserted. The family is empty by that evidence boundary, not by
-omission."""
-legal_refs = [
-    "orden-hac-66-2002:art-1",
-    "orden-hac-66-2002:art-6",
-    "orden-hac-646-2024:art-1",
-    "orden-hac-646-2024:df-unica",
-    "ley-58-2003:art-93",
-]
-source_refs = [
-    "enrolled-modelo-038-procedure",
-    "aeat-dr-038-2024",
-]

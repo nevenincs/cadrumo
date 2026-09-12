@@ -18,7 +18,6 @@ semantic_role = "numero_justificante"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-185-2026"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.periodo"
@@ -29,7 +28,6 @@ semantic_role = "periodo"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-185-2026"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.total-registros"
@@ -40,7 +38,6 @@ semantic_role = "total_registros"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-185-2026"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "declarado.nif"
@@ -52,7 +49,6 @@ semantic_role = "declarado_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-185-2026"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "declarado.nombre"
@@ -64,7 +60,6 @@ semantic_role = "declarado_nombre"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-185-2026"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "declarado.numero-afiliacion"
@@ -76,7 +71,6 @@ semantic_role = "numero_afiliacion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-185-2026"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "declarado.pluriactividad"
@@ -88,7 +82,6 @@ semantic_role = "pluriactividad"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-185-2026"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "declarado.situacion-mes"
@@ -100,7 +93,6 @@ semantic_role = "situacion_mes"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-185-2026"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "declarado.regimen-cotizacion-mes"
@@ -112,7 +104,6 @@ semantic_role = "regimen_cotizacion_mes"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-185-2026"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "declarado.dias-alta-mes"
@@ -124,7 +115,6 @@ semantic_role = "dias_alta_mes"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-185-2026"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "declarado.tipo-jornada-mes"
@@ -136,7 +126,6 @@ semantic_role = "tipo_jornada_mes"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-185-2026"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "declarado.situacion-mes-1"
@@ -148,7 +137,6 @@ semantic_role = "situacion_mes"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-185-2026"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "declarado.regimen-cotizacion-mes-1"
@@ -160,7 +148,6 @@ semantic_role = "regimen_cotizacion_mes"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-185-2026"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "declarado.dias-alta-mes-1"
@@ -172,7 +159,6 @@ semantic_role = "dias_alta_mes"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-185-2026"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "declarado.tipo-jornada-mes-1"
@@ -184,7 +170,6 @@ semantic_role = "tipo_jornada_mes"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-185-2026"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "declarado.situacion-mes-2"
@@ -196,7 +181,6 @@ semantic_role = "situacion_mes"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-185-2026"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "declarado.regimen-cotizacion-mes-2"
@@ -208,7 +192,6 @@ semantic_role = "regimen_cotizacion_mes"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-185-2026"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "declarado.dias-alta-mes-2"
@@ -220,7 +203,6 @@ semantic_role = "dias_alta_mes"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-185-2026"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "declarado.tipo-jornada-mes-2"
@@ -232,4 +214,3 @@ semantic_role = "tipo_jornada_mes"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-185-2026"]

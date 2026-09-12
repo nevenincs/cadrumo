@@ -17,9 +17,11 @@ import pytest
 
 from ......core.config import Settings
 from .._kdf_attestation import parse_ready_attestation
+from .._kdf_codec import KDF_FRAME_CONTROL, KDF_FRAME_HEADER, KDF_FRAME_MAGIC, KDF_FRAME_VERSION, read_kdf_frame
 from .._kdf_process import apply_posix_worker_limits, worker_environment
 from .._kdf_process import terminate_process_tree as _terminate_process_tree
 from .._kdf_windows_job import _WindowsJob
+from .._kdf_worker_supervision import _SupervisedKdfWorker
 from ..errors import (
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
@@ -27,22 +29,16 @@ from ..errors import (
     ProfileCustodyRefusedError,
 )
 from ..kdf_supervision import (
-    KDF_FRAME_CONTROL,
-    KDF_FRAME_HEADER,
-    KDF_FRAME_MAGIC,
-    KDF_FRAME_VERSION,
     PROFILE_CUSTODY_KDF_CALIBRATION_VERSION,
     ProfileCustodyKdfCalibration,
     ProfileCustodyKdfResources,
     _posix_memory_bytes,
     _select_profile_kdf_calibration,
-    _SupervisedKdfWorker,
     calibrate_profile_kdf,
     fixed_profile_kdf_fallback,
     profile_kdf_grid,
     profile_kdf_is_eligible,
     profile_kdf_lease,
-    read_kdf_frame,
     unlock_profile_custody,
     unlock_profile_custody_recovery_material,
     wrap_profile_custody_password_material,

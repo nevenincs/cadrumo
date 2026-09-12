@@ -43,8 +43,6 @@ from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.renta.maritime_exemption import (
     MaritimeWorkerFacts,
     ProfileCompletenessError,
-    VesselRegistry,
-    VesselRegistryValue,
 )
 from ..calculations.maritime_exemption_service import MaritimeExemptionResult
 from ..workflow.persistence import workflow_state_repository
@@ -110,16 +108,16 @@ def _waters_type(value: str | None) -> Literal["national", "international"] | No
 
 def _vessel_registry(
     value: str | None,
-) -> VesselRegistryValue | None:
-    match value:
-        case "REBECA":
-            return VesselRegistry.REBECA
-        case "rebeca_eu_eea":
-            return VesselRegistry.REBECA_EU_EEA
-        case "scheduled_canary_route":
-            return VesselRegistry.SCHEDULED_CANARY_ROUTE
-        case _:
-            return None
+) -> str | None:
+    """Pass through the schema-validated registry token.
+
+    Vessel-register membership is authority data, not a Python enum. The
+    profile write boundary already validates this field against the bundled
+    user-profile schema; retaining the token here lets the calculation seam
+    resolve membership from the selected registry without copying that
+    vocabulary into the application adapter.
+    """
+    return value
 
 
 def maritime_facts_from_active_profile() -> MaritimeWorkerFacts:

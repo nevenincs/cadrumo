@@ -13,7 +13,6 @@ semantic_role = "gasto_contributor_nif"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "gasto.nombre"
@@ -28,7 +27,6 @@ semantic_role = "gasto_contributor_nombre"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "gasto.nif-representante"
@@ -43,7 +41,6 @@ semantic_role = "representante_legal_nif"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "gasto.importe"
@@ -56,7 +53,6 @@ data_type = "money"
 semantic_role = "gasto_importe_anual"
 # Design positions 195-207: the annual gastos de administracion y deposito.
 required = true
-constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]

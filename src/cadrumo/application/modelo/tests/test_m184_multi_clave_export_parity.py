@@ -7,7 +7,7 @@ capital inmobiliario -- either truncated to one clave or collided the two
 rows into one during the two-source union. This module proves both defects
 are gone against the REAL bundled registry revision and the real production
 code paths: :func:`resolve_atribucion_binding_row_values`,
-:func:`_record_render_rows`, and :func:`union_detail_rows_by_identity`.
+:func:`record_render_rows`, and :func:`union_detail_rows_by_identity`.
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ from ....domain.calculations.registry.export import derive_export_layouts_from_b
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
 from ....domain.modelos.row_models import Modelo184MemberRow
-from ...filing.record_renderer import _record_render_rows
+from ...filing.record_renderer import record_render_rows
 from ...filing.record_types import RecordRenderRow
 from .._calculation_modelo_adjustments import union_detail_rows_by_identity
 from ..action_errors import ModeloAggregationBindingError
@@ -66,7 +66,7 @@ def _render_rows(
     so the wider parameter type is genuine, not an aliased view.
     """
     binding_values: dict[tuple[BindingId, int | None], object] = dict(resolved.items())
-    return _record_render_rows(record, binding_values, casilla_values)
+    return record_render_rows(record, binding_values, casilla_values)
 
 
 class _ObservationExtras(TypedDict, total=False):

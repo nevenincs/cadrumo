@@ -7,7 +7,6 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01705"
 number = "01705"
@@ -17,7 +16,6 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01706"
 number = "01706"
@@ -27,4 +25,3 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]

@@ -29,9 +29,18 @@ part_of_speech = "noun"
 
 [language.en]
 short_description = "A handle over one calculation of a single modelo, year, period, and revision."
+definition = "An identifier for one calculation of a model for a given year, period, and revision. The application records each return a person prepares as a work unit, allowing its state to be followed through calculation, verification, and filing."
+scope_note = "An internal concept in the application's search and calculation machinery, documented for the development RAG. It is not a taxpayer-facing tax term and therefore remains outside the glossary."
+
 
 [language.ca]
 short_description = "L'identificador d'un calcul concret d'un model, any, periode i revisio."
+definition = "Identificador d'un únic càlcul d'un model per a un any, període i revisió determinats. L'aplicació registra cada declaració que la persona prepara com una work unit, cosa que li permet seguir-ne l'estat al llarg del flux de càlcul, verificació i presentació."
+scope_note = "Concepte intern de la maquinària de cerca i càlcul de l'aplicació; es documenta per al RAG de desenvolupament, no és un terme tributari adreçat al contribuent i per això queda fora del glossari."
+
 
 [language.hu]
 short_description = "Egy modell, év, időszak és revízió egyetlen számításának azonosítója."
+definition = "Egy modell meghatározott évéhez, időszakához és revíziójához tartozó egyetlen számítás azonosítója. Az alkalmazás minden előkészített bevallást work unitként rögzít, így annak állapota a számítás, ellenőrzés és benyújtás folyamatán keresztül követhető."
+scope_note = "Az alkalmazás keresési és számítási gépezetének belső fogalma, amelyet a fejlesztési RAG számára dokumentálunk. Nem adózóknak szóló adóügyi kifejezés, ezért kívül marad a szójegyzéken."
+

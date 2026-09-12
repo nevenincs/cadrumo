@@ -46,7 +46,7 @@ from ...core.period import Period
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import (
-    DataBindingDefinition,
+    BindingDefinition,
     RegistrySnapshot,
 )
 from ...domain.modelos.errors import ModeloError
@@ -183,7 +183,7 @@ def _load_active_borrador_snapshot(
 
 def _assert_borrador_bindings_allowed(
     snapshot: Borrador100Snapshot,
-    eligible_bindings: dict[BindingId, DataBindingDefinition],
+    eligible_bindings: dict[BindingId, BindingDefinition],
 ) -> None:
     """Refuse snapshot values not marked ``aeat_prefilled`` by the registry."""
     unknown_or_forbidden = sorted(set(snapshot.binding_values) - set(eligible_bindings))
@@ -197,7 +197,7 @@ def _assert_borrador_bindings_allowed(
 def _resolve_borrador_binding_values(
     snapshot: Borrador100Snapshot,
     *,
-    eligible_bindings: dict[BindingId, DataBindingDefinition],
+    eligible_bindings: dict[BindingId, BindingDefinition],
     caller_owned: set[BindingId],
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
     """Project eligible snapshot values, leaving explicit caller values in control."""
@@ -207,7 +207,7 @@ def _resolve_borrador_binding_values(
         if binding_id in caller_owned:
             continue
         binding = eligible_bindings[binding_id]
-        if binding.typed_enum is not None:
+        if binding.value.typed_enum is not None:
             enum_values[binding_id] = str(raw_value).strip()
             continue
         decimal_values[binding_id] = _decimal_value(binding_id, raw_value)
@@ -241,6 +241,11 @@ def _borrador_resolution(
                 lineage_role=CalculationSourceLineageRole.PRIMARY,
                 source_ref=f"borrador:{snapshot.snapshot_id}:binding:{binding_id}",
                 parent_source_ref=None,
+                # No terminal origin: ``borrador`` is a mesh-only source with no
+                # provider registration, so no declared expectation exists for a
+                # resolved class to be audited against. The snapshot is AEAT's
+                # own prefill, not a terminal fact this product holds.
+                terminal_origin=None,
                 fingerprint=snapshot_fingerprint,
             )
             for binding_id in sourced
@@ -424,7 +429,7 @@ def _assert_registry_snapshot_axis(
         )
 
 
-def _borrador_capable_bindings(registry_snapshot: RegistrySnapshot) -> dict[BindingId, DataBindingDefinition]:
+def _borrador_capable_bindings(registry_snapshot: RegistrySnapshot) -> dict[BindingId, BindingDefinition]:
     return {binding.id: binding for binding in registry_snapshot.revision.bindings if binding.aeat_prefilled is True}
 
 

@@ -8,14 +8,14 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.binding_selector_utils import BindingFixedExportSelector
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.manual_input_selector import ManualInputProvider
 from cadrumo.domain.calculations.registry.reference_checks import check_all_id_references
 from cadrumo.domain.calculations.registry.schema import (
-    DataBindingDefinition,
+    BindingDefinition,
     FormulaDefinition,
     ModeloDefinition,
     ModeloRevision,
@@ -156,12 +156,14 @@ def test_bound_casilla_without_binding_definition_fails_snapshot_integrity() -> 
 
 def test_bound_casilla_dangling_alternate_binding_fails_snapshot_integrity() -> None:
     """Alternate bound-casilla source slots are first-class binding references."""
-    binding = DataBindingDefinition(
+    binding = BindingDefinition(
         id="test.binding",
-        source=BindingSourceKind.MANUAL_INPUT,
-        selector=BindingFixedExportSelector(
-            record="DPA", field="test", offset=1, length=1, data_type=CasillaDataType.INTEGER
+        provider=ManualInputProvider.model_validate(
+            BindingFixedExportSelector(
+                record="DPA", field="test", offset=1, length=1, data_type=CasillaDataType.INTEGER
+            ).model_dump(),
         ),
+        value={"data_type": "integer", "channel": "integer"},
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
     )
@@ -387,12 +389,14 @@ def test_dangling_parameter_source_refs() -> None:
 def test_dangling_binding_source_refs() -> None:
     """binding.source_refs referencing a SourceRefId absent from snapshot.sources raises."""
     _extra = "aeat-dr-binding-v1"
-    binding = DataBindingDefinition(
+    binding = BindingDefinition(
         id="test.binding",
-        source=BindingSourceKind.MANUAL_INPUT,
-        selector=BindingFixedExportSelector(
-            record="DPA", field="test", offset=1, length=1, data_type=CasillaDataType.INTEGER
+        provider=ManualInputProvider.model_validate(
+            BindingFixedExportSelector(
+                record="DPA", field="test", offset=1, length=1, data_type=CasillaDataType.INTEGER
+            ).model_dump(),
         ),
+        value={"data_type": "integer", "channel": "integer"},
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID, _extra),
     )

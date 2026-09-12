@@ -23,7 +23,7 @@ from ....domain.calculations.registry.schema_references import RegistrySnapshotR
 from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.schema import ModeloDraft, ModeloValue, ModeloValueKind, registry_schema_version
 from ....domain.submission.models import ModeloDraftStatus
-from ..export import _format_field, _projection_field_value
+from .._record_field_renderer import format_field, projection_field_value
 from ..export_verification import _mismatched_casilla_ids
 from ..runtime import RegistrySchemaAccessor, build_runtime_schema_provider
 
@@ -151,7 +151,7 @@ def _two_record_layout() -> ExportLayoutDefinition:
 
 def _render_one(record: ExportRecordDefinition, value: object) -> str:
     field = record.fields[0]
-    return _format_field(field, value)
+    return format_field(field, value)
 
 
 @pytest.mark.parametrize(
@@ -235,7 +235,7 @@ def test_projection_field_refuses_a_context_free_render_instead_of_blanking() ->
     projection field to reach disk as a blank slot behind a valid digest.
     """
     with pytest.raises(FilingExportValidationError, match="requires a snapshot-owned render context"):
-        _projection_field_value(_projection_field(), None, {})
+        projection_field_value(_projection_field(), None, {})
 
 
 def test_projection_field_without_a_reference_refuses_before_the_context_check() -> None:
@@ -243,4 +243,4 @@ def test_projection_field_without_a_reference_refuses_before_the_context_check()
     field = _projection_field().model_copy(update={"projection_ref": None})
 
     with pytest.raises(FilingExportValidationError, match="must declare projection_ref"):
-        _projection_field_value(field, None, {})
+        projection_field_value(field, None, {})

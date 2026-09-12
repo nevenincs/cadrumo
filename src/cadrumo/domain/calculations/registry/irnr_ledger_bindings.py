@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Sequence
 from decimal import Decimal
-from typing import Literal, Protocol
+from typing import TYPE_CHECKING, Literal, Protocol
 
 from pydantic import BaseModel
 
@@ -29,11 +29,13 @@ from .binding_selector_utils import invariant_diagnostics, selector_against_mode
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .schema import DataBindingDefinition, ModeloRevision
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition, ModeloRevision
 
 __all__ = [
     "IrnrIncomeObservationProtocol",
-    "_IrnrLedgerIncomeSelector",
+    "LedgerIrnrIncomeProvider",
     "resolve_ledger_irnr_income_aggregation_binding_values",
     "unsupported_ledger_irnr_income_observations",
     "validate_ledger_irnr_income_aggregation_binding",
@@ -41,10 +43,12 @@ __all__ = [
 ]
 
 
-class _IrnrLedgerIncomeSelector(BaseModel):
+class LedgerIrnrIncomeProvider(BaseModel):
     """Validated selector for a Modelo 210 gross-income ledger binding."""
 
     model_config = STRICT_FROZEN_CONFIG
+
+    kind: Literal[BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION] = BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION
 
     modelo: Literal[Modelo.M210] = Modelo.M210
     target_casilla_id: CasillaId
@@ -56,16 +60,16 @@ _IRNR_GROSS_INCOME_CASILLAS: frozenset[CasillaId] = frozenset(
 )
 
 
-def _irnr_ledger_income_selector(binding: DataBindingDefinition) -> _IrnrLedgerIncomeSelector:
+def _irnr_ledger_income_selector(binding: BindingDefinition) -> LedgerIrnrIncomeProvider:
     try:
-        return _IrnrLedgerIncomeSelector.model_validate(_selector_as_dict(binding))
+        return LedgerIrnrIncomeProvider.model_validate(_selector_as_dict(binding))
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed ledger_irnr_income_aggregation selector: {exc}",
         ) from exc
 
 
-def validate_ledger_irnr_income_aggregation_binding_definition(binding: DataBindingDefinition) -> None:
+def validate_ledger_irnr_income_aggregation_binding_definition(binding: BindingDefinition) -> None:
     """Validate a ``ledger_irnr_income_aggregation`` binding definition."""
     if binding.source != BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION:
         raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_irnr_income_aggregation source")
@@ -81,9 +85,9 @@ def validate_ledger_irnr_income_aggregation_binding_definition(binding: DataBind
         )
 
 
-def validate_ledger_irnr_income_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
+def validate_ledger_irnr_income_aggregation_binding(binding: BindingDefinition) -> list[str]:
     """Validate a ``ledger_irnr_income_aggregation`` binding at registry-build time."""
-    failures = selector_against_model(binding, _IrnrLedgerIncomeSelector)
+    failures = selector_against_model(binding, LedgerIrnrIncomeProvider)
     if failures:
         return failures
     return invariant_diagnostics(
@@ -108,7 +112,7 @@ class IrnrIncomeObservationProtocol(Protocol):
 
 
 def _irnr_income_build_matcher(
-    selector: _IrnrLedgerIncomeSelector,
+    selector: LedgerIrnrIncomeProvider,
 ) -> Callable[[IrnrIncomeObservationProtocol], bool]:
     target_casilla_id = selector.target_casilla_id
 
@@ -120,7 +124,7 @@ def _irnr_income_build_matcher(
 
 def _irnr_income_aggregate(
     matched: Sequence[IrnrIncomeObservationProtocol],
-    selector: _IrnrLedgerIncomeSelector,
+    selector: LedgerIrnrIncomeProvider,
 ) -> Decimal:
     del selector  # single declared fact (gross_income_sum); nothing to dispatch on
     return sum((observation.gross_income_amount for observation in matched), Decimal("0"))

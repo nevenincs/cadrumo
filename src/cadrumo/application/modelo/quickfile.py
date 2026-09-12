@@ -56,7 +56,8 @@ from ...core.product_identity import AeatProductSoftwareIdentity
 from ...core.refund_election import RefundElection
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.deadlines.models import TaxpayerProfile
-from ...domain.modelos.calculation_revision import CalculationRevision, FilingInstanceEvidence
+from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ...domain.modelos.verification_report import VerificationReport
 from ...domain.modelos.work_unit import WorkUnit
 from .calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision

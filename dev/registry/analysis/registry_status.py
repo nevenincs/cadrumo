@@ -11,8 +11,12 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority_artifact_path
+from cadrumo.domain.calculations.registry.authority import (
+    ValidatedRegistryAuthority,
+    bundled_authority_artifact_path,
+)
 
+from ..compiler.validate_bindings import unreferenced_binding_advisories
 from ..conformance.cli import load_bundled_runtime_authority, validate_registry
 from ..maintenance_support import OracleEnvironment
 from ..parity.maintenance import audit_registry_oracles
@@ -33,6 +37,15 @@ class RegistryStatus:
     authority_recorded_digest: str | None
     authority_candidate_digest: str | None
     loadable: bool
+    unreferenced_bindings: tuple[tuple[str, int], ...]
+    """Per-modelo count of bindings no typed consumer names.
+
+    An advisory axis, not a lifecycle failure: the authored corpus still
+    carries such rows, and the compiler deliberately reports rather than
+    refuses them. Surfacing the count per modelo is what keeps the residue
+    measurable instead of invisible -- an advisory nothing prints is
+    indistinguishable from an advisory nothing raises.
+    """
     details: tuple[str, ...]
 
 
@@ -138,6 +151,12 @@ def collect_registry_status(
         loadable = False
         details.append(f"LOADABLE: {type(error).__name__}: {error}")
 
+    unreferenced_bindings = _unreferenced_binding_counts(authority)
+    if unreferenced_bindings:
+        total = sum(count for _, count in unreferenced_bindings)
+        modelos = ", ".join(f"{modelo}={count}" for modelo, count in unreferenced_bindings)
+        details.append(f"UNREFERENCED-BINDINGS: {total} binding(s) named by no typed consumer ({modelos})")
+
     return RegistryStatus(
         valid=valid,
         oracles=oracles,
@@ -147,8 +166,35 @@ def collect_registry_status(
         authority_recorded_digest=recorded_digest,
         authority_candidate_digest=candidate_digest,
         loadable=loadable,
+        unreferenced_bindings=unreferenced_bindings,
         details=tuple(details),
     )
+
+
+def _unreferenced_binding_counts(authority: ValidatedRegistryAuthority | None) -> tuple[tuple[str, int], ...]:
+    """Count, per modelo, the bindings the compiler's advisory names.
+
+    Read through the same :func:`unreferenced_binding_advisories` the compiler
+    owns rather than recounted here, so the report and the validator can never
+    disagree about what counts as unreferenced. Returns nothing when the
+    registry failed validity: an unloadable authority has no bindings to speak
+    about, which is not the same as having none unreferenced.
+    """
+    if authority is None:
+        return ()
+    counts: list[tuple[str, int]] = []
+    for modelo in authority.modelos:
+        advisories = tuple(
+            advisory
+            for revision_id, revision in modelo.revisions.items()
+            for advisory in unreferenced_binding_advisories(
+                prefix=f"modelo {modelo.id} revision {revision_id}",
+                revision=revision,
+            )
+        )
+        if advisories:
+            counts.append((str(modelo.id), len(advisories)))
+    return tuple(sorted(counts))
 
 
 def _payload(status: RegistryStatus, *, blocking: bool) -> dict[str, object]:
@@ -163,6 +209,7 @@ def _payload(status: RegistryStatus, *, blocking: bool) -> dict[str, object]:
         "runtime_loadability": "passed" if status.loadable else "failed",
         "target_currentness": "passed" if blocking_target_count == 0 else "failed",
         "target_coverage": "partial" if target_counts["unreadable"] else "passed",
+        "binding_reference_coverage": "partial" if status.unreferenced_bindings else "passed",
     }
     failed_lanes = sorted(lane for lane, state in lanes.items() if state == "failed")
     partial_lanes = sorted(lane for lane, state in lanes.items() if state == "partial")
@@ -240,6 +287,10 @@ def _payload(status: RegistryStatus, *, blocking: bool) -> dict[str, object]:
             "status": status.authority,
             "recorded_identity_digest": status.authority_recorded_digest,
             "candidate_identity_digest": status.authority_candidate_digest,
+        },
+        "unreferenced_bindings": {
+            "total": sum(count for _, count in status.unreferenced_bindings),
+            "by_modelo": dict(status.unreferenced_bindings),
         },
         "details": list(status.details),
         "actions": actions,

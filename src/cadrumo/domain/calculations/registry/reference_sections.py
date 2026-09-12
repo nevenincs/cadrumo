@@ -105,7 +105,7 @@ def check_export_layout_refs(checker: IdReferenceChecker, revision: ModeloRevisi
 
 
 def check_binding_selector_shapes(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
-    """Validate selectors for sources with a registered discriminated shape.
+    """Validate each binding's provider against its family's build-time invariants.
 
     Args:
         checker: The reference checker whose failures list accumulates

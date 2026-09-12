@@ -736,7 +736,6 @@ bindings = [
     "modelo-200-profile-legal-entity-form",
     "modelo-200-bin-pendiente-ejercicios-anteriores",
 ]
-relations = ["modelo-200-2024-rel-202-pagos-fraccionados", "modelo-200-2024-rel-self-bin-pendiente-anterior"]
 dependency_classifications = ["modelo-200-2024-dep-202-instalments", "modelo-200-2024-dep-self-bin-pendiente"]
 workbook_parity_refs = ["modelo-200-2024-dr-xls"]
 live_cross_references = ["modelo-200-2024-static-documentation"]

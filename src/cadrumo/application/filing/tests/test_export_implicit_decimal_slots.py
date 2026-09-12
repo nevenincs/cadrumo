@@ -53,7 +53,7 @@ from pydantic import ValidationError
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.fixed_width_codec import parse_fixed_width_export_field
 from ....domain.calculations.registry.schema_exports import ExportFieldDefinition
-from ..export import _format_field
+from .._record_field_renderer import format_field
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -122,7 +122,7 @@ def test_width_10_unit_count_slot_carries_no_decimal_point() -> None:
     """
     field = _field(_NUMERO_UNIDADES)
 
-    rendered = _format_field(field, Decimal("1234.56"))
+    rendered = format_field(field, Decimal("1234.56"))
 
     assert rendered == "0000123456"
     assert len(rendered) == 10
@@ -134,7 +134,7 @@ def test_width_10_slot_scales_a_fractional_unit_count() -> None:
     """A half-unit módulo is 8 integer digits plus 2 decimal digits, not ``'12.5'``."""
     field = _field(_NUMERO_UNIDADES)
 
-    rendered = _format_field(field, Decimal("12.5"))
+    rendered = format_field(field, Decimal("12.5"))
 
     assert rendered == "0000001250"
     assert "." not in rendered
@@ -144,7 +144,7 @@ def test_width_5_percentage_slot_renders_at_its_declared_scale() -> None:
     """Campo 10, "3 enteros y 2 decimales": 2 % is written ``'00200'``, not ``'00002'``."""
     field = _field(_PORCENTAJE_INGRESO_A_CUENTA)
 
-    rendered = _format_field(field, Decimal("2"))
+    rendered = format_field(field, Decimal("2"))
 
     assert rendered == "00200"
     assert len(rendered) == 5
@@ -161,7 +161,7 @@ def test_width_6_index_slot_uses_its_own_five_decimal_scale() -> None:
     """
     field = _field(_INDICE_DE_CUOTA)
 
-    rendered = _format_field(field, Decimal("1"))
+    rendered = format_field(field, Decimal("1"))
 
     assert rendered == "100000"
     assert rendered != "000100", "rendered at money's two decimals instead of the field's five"
@@ -175,8 +175,8 @@ def test_two_slots_of_different_width_and_scale_disagree_on_the_same_value() -> 
     the scale from the slot width -- or applied one fixed scale everywhere --
     these two renderings could not both be right.
     """
-    indice = _format_field(_field(_INDICE_DE_CUOTA), Decimal("1"))
-    porcentaje = _format_field(_field(_PORCENTAJE_INGRESO_A_CUENTA), Decimal("1"))
+    indice = format_field(_field(_INDICE_DE_CUOTA), Decimal("1"))
+    porcentaje = format_field(_field(_PORCENTAJE_INGRESO_A_CUENTA), Decimal("1"))
 
     assert indice == "100000"
     assert porcentaje == "00100"
@@ -195,7 +195,7 @@ def test_implicit_decimal_slots_survive_a_write_read_cycle(field_id: str, value:
     """The parser restores the point by shifting at the declared scale."""
     field = _field(field_id)
 
-    rendered = _format_field(field, value)
+    rendered = format_field(field, value)
 
     assert parse_fixed_width_export_field(field, rendered) == value
 

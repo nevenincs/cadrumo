@@ -11,7 +11,7 @@ strings.
 Keep the three axes separate:
 
 - :class:`BindingAggregationOp` governs how a
-  ``DataBindingDefinition.aggregation`` folds selected binding values.
+  ``BindingDefinition.aggregation`` folds selected binding values.
 - :class:`RelationAggregationOp` governs cross-modelo relation fold-ins.
 - :class:`RowSetGroupingKind` is the downstream row-assembly grouping axis, not
   a binding ``source`` token; use
@@ -36,7 +36,7 @@ class BindingAggregationOp(StrEnum):
 
     A binding's ``aggregation.op`` selects how the resolver folds the selected
     source values into the bound casilla value. The members below are the
-    complete set declared on a ``DataBindingDefinition.aggregation`` across the
+    complete set declared on a ``BindingDefinition.aggregation`` across the
     registry authoring tree; relation aggregation (``copy``/``sum`` on a
     ``RelationDefinition``) and formula-expression operators are a separate,
     unrelated axis and are not modelled here.
@@ -64,7 +64,7 @@ class BindingAggregationOp(StrEnum):
 
 
 class BindingAggregation(BaseModel):
-    """Typed aggregation rule carried by a registry ``DataBindingDefinition``.
+    """Typed aggregation rule carried by a registry ``BindingDefinition``.
 
     Placed in :mod:`core` (cross-layer home) because the domain registry
     schema declares the field and the application/adapter layers read it; the
@@ -106,7 +106,7 @@ class RelationAggregationOp(StrEnum):
     unchanged (the default when a relation declares no aggregation), and
     :attr:`SUM` adds the matched per-period source values (annual summaries). This
     is a deliberately separate axis from :class:`BindingAggregationOp` (which
-    governs ``DataBindingDefinition`` folds and carries the binding-only ``rows``
+    governs ``BindingDefinition`` folds and carries the binding-only ``rows``
     / ``count_distinct`` / ``prior_pagos_fraccionados`` members); the two are not
     interchanged. The complete set declared across the registry relation tree is
     ``copy`` and ``sum``.
@@ -230,7 +230,7 @@ class CalculationSourceLineageRole(StrEnum):
 class BindingSourceKind(StrEnum):
     """The single canonical closed set of binding/source-mesh tokens.
 
-    Every :class:`~domain.calculations.registry.DataBindingDefinition`
+    Every :class:`~domain.calculations.registry.BindingDefinition`
     declares exactly one ``source`` drawn from the registry-declared subset of
     this enum. The same enum also carries mesh-only source decisions such as
     :attr:`BORRADOR` and :attr:`IVA_WALLET_DECISION`, which are resolved before a
@@ -241,7 +241,7 @@ class BindingSourceKind(StrEnum):
 
     BEHAVIOUR-PRESERVING LIFT: every member's string VALUE equals the source
     token that was previously a bare string (or a :class:`RowSetGroupingKind`
-    member) in the ``DataBindingDefinition.source`` Literal. Those tokens live in
+    member) in the ``BindingDefinition.source`` Literal. Those tokens live in
     registry TOML and may be persisted; a :class:`~enum.StrEnum` serialises to its
     value, so folding the mixed Literal onto this enum changes the static type
     without changing any stored or compared string (the modelo-enum-hardening
@@ -346,7 +346,7 @@ class BindingSourceKind(StrEnum):
     # regularisation path are proven end to end.
     PRORRATA_REGULARIZACION = "prorrata_regularizacion"
     # Mesh-only sourcing decisions with NO registry binding declaration. Both are
-    # resolved by a pre-mesh gate, not a registry `DataBindingDefinition.source`:
+    # resolved by a pre-mesh gate, not a registry `BindingDefinition.source`:
     # `borrador` materialises the Modelo 100 borrador prefill
     # (Modelo100BorradorSourceResolver) and `iva_wallet_decision` carries the M303
     # IVA-wallet compensación decision (IvaWalletDecisionSourceResolver). They are
@@ -559,7 +559,7 @@ it in here silently widens two registry validation guards.
 class BindingTypedEnumKind(StrEnum):
     """The closed set of substrate enum-class names a binding value bridges.
 
-    A :class:`~domain.calculations.registry.DataBindingDefinition` whose
+    A :class:`~domain.calculations.registry.BindingDefinition` whose
     value bridges a closed-membership substrate axis declares ``typed_enum`` =
     one of these members. Each value is the NAME of the closed enum class a
     consumer routes the binding value through:
@@ -569,10 +569,12 @@ class BindingTypedEnumKind(StrEnum):
     - ``ESTIMACION_DIRECTA_MODALIDAD`` (``"EstimacionDirectaModalidad"``) —
       Modelo 100 estimación-directa modality.
     - ``LEGAL_ENTITY_FORM`` (``"LegalEntityForm"``) — Modelo 200 legal form.
+    - ``RENTAL_REDUCTION_ART_23_2_TIER`` (``"RentalReductionArt232Tier"``) —
+      Modelo 100 reducción por arrendamiento de vivienda tier (LIRPF Art. 23.2).
 
     BEHAVIOUR-PRESERVING LIFT: every member's string VALUE equals the
     annotation token that was previously a bare ``str`` in
-    ``DataBindingDefinition.typed_enum``. Those tokens live in registry TOML and
+    ``BindingDefinition.typed_enum``. Those tokens live in registry TOML and
     flow through operator-facing surfaces (``bindings list`` table, the
     :class:`~domain.calculations.registry._query_reports.ModeloBindingQueryRow`
     projection, the borrador resolver, the Sheets-pull router); a
@@ -584,7 +586,7 @@ class BindingTypedEnumKind(StrEnum):
     Declared in :mod:`core` as a closed value set per the architecture
     contract; the loader hydrates the registry TOML's raw token to its member at
     the schema boundary (see
-    :meth:`~domain.calculations.registry.DataBindingDefinition._coerce_typed_enum`).
+    :meth:`~domain.calculations.registry.BindingDefinition._coerce_typed_enum`).
     It is the closed-set *annotation* on the binding, distinct from the engine
     ``input_channel`` (how a formula consumes the value); a binding may carry a
     ``typed_enum`` yet still be a numeric ``decimal`` channel.
@@ -594,6 +596,7 @@ class BindingTypedEnumKind(StrEnum):
     CCAA = "CCAA"
     ESTIMACION_DIRECTA_MODALIDAD = "EstimacionDirectaModalidad"
     LEGAL_ENTITY_FORM = "LegalEntityForm"
+    RENTAL_REDUCTION_ART_23_2_TIER = "RentalReductionArt232Tier"
 
 
 class LedgerIncomeGrounding(StrEnum):

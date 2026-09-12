@@ -46,7 +46,11 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         detail=(
             "revisions/<revision-id>/revision.toml: valid_from/valid_to, period_selector, "
             "legal_refs, source_refs, and the mandatory orden_aplicabilidad citing the "
-            "Orden(es) ministeriales that approve or amend this revision's form."
+            "Orden(es) ministeriales that approve or amend this revision's form. Declare "
+            "the edition's two delta defaults here too: predecessor, the sibling edition "
+            "this one is authored relative to (omitted only by a first edition, which "
+            "states every row itself), and casilla_source_refs, the default source "
+            "grounding the loader fills into every casilla row stating none."
         ),
     ),
     ChecklistItem(
@@ -54,8 +58,12 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         detail=(
             "revisions/<revision-id>/casillas/*.toml: one CasillaDefinition per box, each "
             "carrying legal_refs to the specific binding provision that establishes it "
-            "(aeat-calculation-grounding), not just the framework article, and "
-            "source_refs to the AEAT Diseño / procedure that defines its number/segment."
+            "(aeat-calculation-grounding), not just the framework article. A row restates "
+            "none of its edition's defaults: no source_refs equal to casilla_source_refs "
+            "(cite only the surplus, through additional_source_refs), no legal_refs equal "
+            "to orden_aplicabilidad, and no edition year inside a formula or binding id -- "
+            "an id names what it computes, and an inherited row keeps the id it was "
+            "authored with."
         ),
     ),
     ChecklistItem(
@@ -69,7 +77,7 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
     ChecklistItem(
         title="Author bindings for every data-sourced casilla",
         detail=(
-            "revisions/<revision-id>/bindings/*.toml: a DataBindingDefinition per casilla "
+            "revisions/<revision-id>/bindings/*.toml: a BindingDefinition per casilla "
             "fed from the ledger, profile, counterpart, or another modelo. Use the single "
             "canonical BindingSourceKind taxonomy (aeat-registry-bindings) and "
             "enroll a new source resolver in the live calculate mesh "
@@ -105,8 +113,8 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
             "(modelo-export-mirrors-official-structure); every required, representable casilla "
             "must be exportable, not silently blank. Generation is the supported path because a "
             "generated field carries the design row it came from, so a shipped value can be "
-            "shown to derive from the document it cites. Hand-authoring an export_layouts "
-            "fragment instead is the DECLARED EXCEPTION: state on the revision why the design "
+            "shown to derive from the document it cites. Hand-authoring an export fragment "
+            "instead is the DECLARED EXCEPTION: state on the revision why the design "
             "could not drive a generation, because a transcription and a derivation are "
             "otherwise indistinguishable once shipped."
         ),
@@ -114,7 +122,7 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
     ChecklistItem(
         title="Declare the scale of every monetary export field",
         detail=(
-            "revisions/<revision-id>/export_layouts/*.toml and the owning render profile: a "
+            "revisions/<revision-id>/export/*.toml and the owning render profile: a "
             "fixed-width record carries no decimal point, so a monetary amount is emitted as "
             "digits and how many of them are cents must be decided somewhere. The money wire "
             "type scales inside the codec and the decimal wire type refuses without a declared "

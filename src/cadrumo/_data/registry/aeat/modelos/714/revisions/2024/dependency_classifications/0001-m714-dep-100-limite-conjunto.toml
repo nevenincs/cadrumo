@@ -23,11 +23,11 @@ id = "m714-dep-100-limite-conjunto"
 source_modelo = "100"
 treatment = "direct_annual_settlement"
 target_constructs = ["m714-patrimonio-calculation"]
-relation_refs = [
-    "m714-rel-100-base-imponible-general",
-    "m714-rel-100-base-imponible-ahorro",
-    "m714-rel-100-cuota-integra-estatal",
-    "m714-rel-100-cuota-integra-autonomica",
+binding_refs = [
+    "m714-m100-base-imponible-general",
+    "m714-m100-base-imponible-ahorro",
+    "m714-m100-cuota-integra-estatal",
+    "m714-m100-cuota-integra-autonomica",
 ]
 legal_refs = [
     "ley-19-1991:art-31",

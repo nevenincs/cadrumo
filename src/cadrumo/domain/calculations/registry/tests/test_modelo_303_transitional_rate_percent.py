@@ -50,9 +50,9 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.domain.period import Period, calculation_filing_date
-
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
+from ....period import calculation_filing_date
 from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..errors import RegistryValidationError

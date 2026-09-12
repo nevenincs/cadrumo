@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 490, autoliquidació de l'impost sobre determinats serveis digitals"
+
+[language.en]
+short_description = "Modelo 490, self-assessment of the digital services tax"
+
+[language.hu]
+short_description = "490-es modell: egyes digitális szolgáltatások adójának önadózása"
+

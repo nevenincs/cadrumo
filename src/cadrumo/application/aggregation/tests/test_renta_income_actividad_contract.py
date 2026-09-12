@@ -14,11 +14,11 @@ __all__ = ["secure_objects"]
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from ....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
 )
-from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.transactions.enums import BusinessClassification
@@ -61,11 +61,14 @@ def _m130_renta_income_binding(
     *,
     fact: str,
     legal_refs: tuple[str, ...],
-) -> DataBindingDefinition:
-    return DataBindingDefinition(
+) -> BindingDefinition:
+    return BindingDefinition(
         id=binding_id,
-        source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-        selector={"modelo": "130", "target_casilla_id": "01", "fact": fact},
+        provider={
+            "kind": "ledger_renta_income_aggregation",
+            **{"modelo": "130", "target_casilla_id": "01", "fact": fact},
+        },
+        value={"data_type": "money", "channel": "decimal"},
         aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
         legal_refs=legal_refs,
         source_refs=_M130_INCOME_SOURCE_REFS,

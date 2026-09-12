@@ -32,10 +32,10 @@ from ....domain.modelos.row_models import Modelo349OperadorRow
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.submission.models import ModeloDraftStatus
 from ....tests.registry_snapshot import build_snapshot
-from ...filing.draft_construction import _filing_binding_values
+from ...filing.draft_construction import filing_binding_values
 from .._calculation_helpers import build_typed_observations
+from .._calculation_modelo_adjustments import suppress_m349_row_field_template_outputs
 from .._revision_replay_inputs import _m349_detail_row_replay_inputs
-from ..calculation_actions import _suppress_m349_row_field_template_outputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -137,7 +137,7 @@ def _calculated_revision(
     input_values = {casilla_id: str(value) for casilla_id, value in inputs.items()}
     binding_overrides = {binding_id: str(value) for binding_id, value in binding_values.items()}
     detail_rows = (row,)
-    casilla_values, observations = _suppress_m349_row_field_template_outputs(
+    casilla_values, observations = suppress_m349_row_field_template_outputs(
         work_unit=work_unit,
         revision=snapshot.revision,
         casilla_values=raw_casilla_values,
@@ -190,7 +190,7 @@ def _approved_draft(
     )
     replay_inputs = _m349_detail_row_replay_inputs(revision=revision, work_unit=work_unit)
     bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings}
-    binding_values = tuple(_filing_binding_values(replay_inputs, bindings_by_id))
+    binding_values = tuple(filing_binding_values(replay_inputs, bindings_by_id))
     casilla_provenance = tuple(
         ModeloCasillaProvenance(
             casilla_id=casilla.id,

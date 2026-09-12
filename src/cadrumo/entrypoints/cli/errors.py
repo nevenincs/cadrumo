@@ -599,7 +599,7 @@ def active_profile_label_for_error() -> str | None:
     cycle with :mod:`_common`, which imports this module.
     """
     try:
-        from ._common import active_profile_label
+        from .common import active_profile_label
 
         return active_profile_label()
     except Exception:  # identity resolution must never break error emit
@@ -704,7 +704,7 @@ def render_error_payload(
     if action is not None:
         text = _render_precondition_action_text(text, command=command, action=action)
     if authentication_notices:
-        from ._common import notice_lines
+        from .common import notice_lines
 
         text = "\n".join((*notice_lines(authentication_notices), text))
     if notice is None:
@@ -813,7 +813,7 @@ def emit_error_and_exit(error: CadrumoError) -> Never:
     error document; the sandbox indicator rides both output modes via
     :func:`render_error_payload`.
     """
-    from ._common import cli_policy_refusal_projection, project_cli_policy_refusal
+    from .common import cli_policy_refusal_projection, project_cli_policy_refusal
 
     projection = cli_policy_refusal_projection(error)
     if projection is None:
@@ -1045,7 +1045,7 @@ def _project_stored_data_drift(error: StoredProfileDriftError, callback: Callabl
 def _project_former_product_state(error: Exception, callback: Callable[..., object]) -> CadrumoError:
     """Emit a former-product-state refusal as stderr-only output."""
     from ...application.profile_preconditions import FormerProductDetectionScope, former_product_state_verdict
-    from ._common import attach_cli_policy_verdict
+    from .common import attach_cli_policy_verdict
 
     return attach_cli_policy_verdict(
         CliRefusedBoundaryError(str(error)),
@@ -1059,7 +1059,7 @@ def _project_cadrumo_error(error: CadrumoError, callback: Callable[..., object])
         cli_exception_envelope_view,
         nested_terminal_precondition_verdict,
     )
-    from ._common import attach_cli_policy_verdict
+    from .common import attach_cli_policy_verdict
 
     if isinstance(error, ActiveProfilePointerError):
         verdict = _active_profile_pointer_error_verdict(error)
@@ -1178,7 +1178,7 @@ def _project_validation_error(error: ValidationError, callback: Callable[..., ob
     )
     boundary = CliValidationBoundaryError(error)
     from ...application.cli_exception_preconditions import nested_terminal_precondition_verdict
-    from ._common import attach_cli_policy_verdict
+    from .common import attach_cli_policy_verdict
 
     verdict = nested_terminal_precondition_verdict(error)
     if verdict is None:

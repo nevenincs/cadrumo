@@ -20,8 +20,8 @@ import pytest
 from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.bindings import CasillaObservation
 from ...calculations.registry.errors import RegistryValidationError
+from ...calculations.registry.queries import RegistryQueryService
 from ..maritime_exemption import (
-    RENTA_EXENTA_CASILLA,
     MaritimeExemptionInactiveError,
     MaritimeWorkerFacts,
     ProfileCompletenessError,
@@ -46,6 +46,19 @@ _REBECA_SOURCE_REFS = ("boe-ley-19-1994-art-75-statutory-facts",)
 _AUTHORITY = bundled_authority()
 _FILING_PERIOD = date(2025, 12, 31)
 _DEVENGO_DATE = date(2025, 12, 31)
+
+
+def _registry_target_for(observation: CasillaObservation) -> str:
+    rows = RegistryQueryService(_AUTHORITY).formulas_for_scope("100", filing_year=2025, period="0A").rows
+    targets = {
+        row.target_casilla_id
+        for row in rows
+        if set(observation.legal_refs).issubset(row.legal_refs)
+        and set(observation.source_refs).issubset(row.source_refs)
+    }
+    assert len(targets) == 1
+    return next(iter(targets))
+
 
 _ART_7P_SELECTOR_CASES = (
     (
@@ -381,7 +394,7 @@ class TestCalculateArt7pExemption:
             qualifying_days=100,
             facts=self._BASE_FACTS,
         )
-        assert obs.casilla_id == RENTA_EXENTA_CASILLA
+        assert obs.casilla_id == _registry_target_for(obs)
 
     def test_raises_when_not_eligible(self) -> None:
         from ..errors import RentaValidationError
@@ -510,7 +523,7 @@ class TestCalculateRebecaExemption:
             gross_navigation_income=Decimal("30000"),
             facts=self._REBECA_FACTS,
         )
-        assert obs.casilla_id == RENTA_EXENTA_CASILLA
+        assert obs.casilla_id == _registry_target_for(obs)
 
     def test_raises_when_not_eligible(self) -> None:
         from ..errors import RentaValidationError

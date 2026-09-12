@@ -1,4 +1,5 @@
 [revisions."2013-2022"]
+casilla_source_refs = ["boe-dr-270-2013-2022", "enrolled-modelo-270-procedure"]
 authority_grade = "applicability"
 # Modelo 270 declaración informativa, approved by orden-hap-2368-2013 art 1
 # with its plazo grounded verbatim in orden-hap-2368-2013 art 3.
@@ -24,18 +25,3 @@ complete Tipo 1 and Tipo 2 500-position records. This revision is bounded to the
 2013--2022 ejercicio window that source governs; it does not claim the 2023 \
 PERIODO shift or the 2025 province terminology amendment."""
 reviewed_at = 2026-08-21
-
-[revisions."2013-2022".family_dispositions.casilla_continuidad_evolutions]
-reason = """
-No predecessor exists for the first declared Modelo 270 epoch. The 2023 successor \
-moves export slots but does not rename, split, merge, or retire a casilla identity, so \
-there is no casilla continuity evolution to declare."""
-legal_refs = [
-    "orden-hap-2368-2013:art-1",
-    "orden-hap-2368-2013:art-3",
-    "ley-58-2003:art-93",
-]
-source_refs = [
-    "enrolled-modelo-270-procedure",
-    "boe-dr-270-2013-2022",
-]

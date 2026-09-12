@@ -48,7 +48,7 @@ from .test_modelo_303_deductible_evidence_gate import (
     _BUCKET_ID,
     _TAX_ID,
     _calculate_irene_revision,
-    _workflow_profile,
+    workflow_profile,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -150,7 +150,7 @@ def _verify(revision_id: str, repos: _Repos) -> VerificationReport:
     return verify_modelo_revision(
         revision_id,
         actor="operator",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         settings=ready_clave_settings(_TAX_ID),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,

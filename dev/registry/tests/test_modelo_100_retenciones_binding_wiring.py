@@ -7,8 +7,8 @@ The binding value was accepted without error but never reached the formula engin
 so 0609 (total pagos a cuenta) and 0610 (cuota diferencial) were computed wrong.
 
 Binding-to-casilla plumbing contract (not a formula derivation):
-  - binding ``renta-2024-modelo-111-retenciones-periodicas`` → casilla 0596
-  - binding ``renta-2024-modelo-123-retenciones-periodicas`` → casilla 0597
+  - binding ``renta-modelo-111-retenciones-periodicas`` → casilla 0596
+  - binding ``renta-modelo-123-retenciones-periodicas`` → casilla 0597
 
 The expected value for 0596 / 0597 IS the binding value by definition — the
 binding declares ``aggregation.op = "sum"`` over the previous-filing source and
@@ -76,33 +76,33 @@ def _base_binding_values(
     m193: Decimal | None = None,
 ) -> dict[BindingId, Decimal]:
     values: dict[BindingId, Decimal] = {
-        "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        "renta-2024-profile-declaration-type": Decimal("1"),
-        "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
+        "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        "renta-profile-declaration-type": Decimal("1"),
+        "renta-profile-family-minor-children-in-unit": Decimal("0"),
         # Art. 81.1 LIRPF maternity deduction: zero in these retenciones scenarios,
         # which declare no qualifying descendant.
         **_m100_2024_deduccion_maternidad_bindings(),
         # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
-        "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
-        "renta-2024-profile-incremento-guarderia": Decimal("0"),
-        "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
-        "renta-2024-profile-descendientes-guarderia": Decimal("0"),
-        "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
-        "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
-        "renta-2024-profile-marriage-full-year": Decimal("0"),
-        "renta-2024-profile-marriage-month-start": Decimal("0"),
-        "renta-2024-profile-marriage-month-end": Decimal("0"),
+        "renta-profile-guarderia-gastos-reales": Decimal("0"),
+        "renta-profile-incremento-guarderia": Decimal("0"),
+        "renta-profile-cotizaciones-ss-madre": Decimal("0"),
+        "renta-profile-descendientes-guarderia": Decimal("0"),
+        "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        "renta-profile-marriage-full-year": Decimal("0"),
+        "renta-profile-marriage-month-start": Decimal("0"),
+        "renta-profile-marriage-month-end": Decimal("0"),
         # BIN-pendiente fresh-filer baseline.
-        "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
     }
     if m111 is not None:
-        values["renta-2024-modelo-111-retenciones-periodicas"] = m111
+        values["renta-modelo-111-retenciones-periodicas"] = m111
     if certificado_trabajo is not None:
-        values["renta-2024-certificado-trabajo-retenciones"] = certificado_trabajo
+        values["renta-certificado-trabajo-retenciones"] = certificado_trabajo
     if m123 is not None:
-        values["renta-2024-modelo-123-retenciones-periodicas"] = m123
+        values["renta-modelo-123-retenciones-periodicas"] = m123
     if m193 is not None:
-        values["renta-2024-modelo-193-retenciones-anuales"] = m193
+        values["renta-modelo-193-retenciones-anuales"] = m193
     return values
 
 
@@ -117,28 +117,28 @@ def _base_binding_values_2025(
     values: dict[BindingId, Decimal] = {
         # The production profile resolver supplies this predicate as 1/0 from
         # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
-        "renta-2025-profile-has-economic-activity": Decimal("1"),
-        "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        "renta-profile-has-economic-activity": Decimal("1"),
+        "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
-        "renta-2025-profile-declaration-type": Decimal("1"),
-        "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
-        "renta-2025-profile-marriage-full-year": Decimal("0"),
-        "renta-2025-profile-marriage-month-start": Decimal("0"),
-        "renta-2025-profile-marriage-month-end": Decimal("0"),
-        "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
-        "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
-        "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
+        "renta-profile-declaration-type": Decimal("1"),
+        "renta-profile-family-minor-children-in-unit": Decimal("0"),
+        "renta-profile-marriage-full-year": Decimal("0"),
+        "renta-profile-marriage-month-start": Decimal("0"),
+        "renta-profile-marriage-month-end": Decimal("0"),
+        "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
     if m111 is not None:
-        values["renta-2025-modelo-111-retenciones-periodicas"] = m111
+        values["renta-modelo-111-retenciones-periodicas"] = m111
     if m190 is not None:
         values["renta-2025-modelo-190-retenciones-anuales"] = m190
     if certificado_trabajo is not None:
-        values["renta-2025-certificado-trabajo-retenciones"] = certificado_trabajo
+        values["renta-certificado-trabajo-retenciones"] = certificado_trabajo
     if m123 is not None:
-        values["renta-2025-modelo-123-retenciones-periodicas"] = m123
+        values["renta-modelo-123-retenciones-periodicas"] = m123
     if m193 is not None:
-        values["renta-2025-modelo-193-retenciones-anuales"] = m193
+        values["renta-modelo-193-retenciones-anuales"] = m193
     return values
 
 
@@ -272,7 +272,7 @@ def test_m193_annual_retenciones_binding_populates_2025_casilla_0597(
 
     assert result.values[_M100_RETENCIONES_M123_CASILLA] == annual_retenciones, (
         f"casilla 0597 = {result.values[_M100_RETENCIONES_M123_CASILLA]!r}; expected {annual_retenciones!r} "
-        "from equivalent binding renta-2025-modelo-193-retenciones-anuales."
+        "from equivalent binding renta-modelo-193-retenciones-anuales."
     )
     assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == annual_retenciones
     observation = next(obs for obs in result.observations if obs.casilla_id == _M100_RETENCIONES_M123_CASILLA)
@@ -296,7 +296,7 @@ def test_conflicting_2025_m123_and_m193_retenciones_refuse_before_calculation(
 
 
 def test_m123_retenciones_binding_populates_casilla_0597(m100_2024_snapshot: RegistrySnapshot) -> None:
-    """Binding renta-2024-modelo-123-retenciones-periodicas must land in casilla 0597.
+    """Binding renta-modelo-123-retenciones-periodicas must land in casilla 0597.
 
     Regression guard for Sergio round-13 C3: with the 2024 casilla missing
     ``input_kind = "bound"`` and ``binding = "..."``, the engine skipped 0597
@@ -318,9 +318,9 @@ def test_m123_retenciones_binding_populates_casilla_0597(m100_2024_snapshot: Reg
 
     assert result.values[_M100_RETENCIONES_M123_CASILLA] == m123_retenciones, (
         f"casilla 0597 = {result.values[_M100_RETENCIONES_M123_CASILLA]!r}; expected {m123_retenciones!r} "
-        f"from binding renta-2024-modelo-123-retenciones-periodicas. "
+        f"from binding renta-modelo-123-retenciones-periodicas. "
         "Check 2024/casillas/c0597.toml: must have "
-        'input_kind = "bound" and binding = "renta-2024-modelo-123-retenciones-periodicas".'
+        'input_kind = "bound" and binding = "renta-modelo-123-retenciones-periodicas".'
     )
 
 
@@ -341,7 +341,7 @@ def test_m193_annual_retenciones_binding_populates_2024_casilla_0597(
 
     assert result.values[_M100_RETENCIONES_M123_CASILLA] == annual_retenciones, (
         f"casilla 0597 = {result.values[_M100_RETENCIONES_M123_CASILLA]!r}; expected {annual_retenciones!r} "
-        "from equivalent binding renta-2024-modelo-193-retenciones-anuales."
+        "from equivalent binding renta-modelo-193-retenciones-anuales."
     )
     assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == annual_retenciones
     observation = next(obs for obs in result.observations if obs.casilla_id == _M100_RETENCIONES_M123_CASILLA)
@@ -365,7 +365,7 @@ def test_conflicting_2024_m123_and_m193_retenciones_refuse_before_calculation(
 
 
 def test_m111_retenciones_binding_populates_casilla_0596(m100_2024_snapshot: RegistrySnapshot) -> None:
-    """Binding renta-2024-modelo-111-retenciones-periodicas must land in casilla 0596.
+    """Binding renta-modelo-111-retenciones-periodicas must land in casilla 0596.
 
     M111 (trabajo retenciones) shares the same structural gap as M123:
     without ``input_kind = "bound"`` + ``binding`` on casilla 0596, the
@@ -384,9 +384,9 @@ def test_m111_retenciones_binding_populates_casilla_0596(m100_2024_snapshot: Reg
 
     assert result.values[_M100_RETENCIONES_M111_CASILLA] == m111_retenciones, (
         f"casilla 0596 = {result.values[_M100_RETENCIONES_M111_CASILLA]!r}; expected {m111_retenciones!r} "
-        f"from binding renta-2024-modelo-111-retenciones-periodicas. "
+        f"from binding renta-modelo-111-retenciones-periodicas. "
         "Check 2024/casillas/c0596.toml: must have "
-        'input_kind = "bound" and binding = "renta-2024-modelo-111-retenciones-periodicas".'
+        'input_kind = "bound" and binding = "renta-modelo-111-retenciones-periodicas".'
     )
 
 
@@ -412,7 +412,7 @@ def test_m123_retenciones_flows_into_0609_total_pagos_a_cuenta(m100_2024_snapsho
     # 0609 = sum of all retenciones operands; only 0597 is non-zero here.
     assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == m123_retenciones, (
         f"casilla 0609 = {result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA]!r}; expected {m123_retenciones!r}. "
-        "With only renta-2024-modelo-123-retenciones-periodicas supplied "
+        "With only renta-modelo-123-retenciones-periodicas supplied "
         "and all other retenciones operands zero, "
         "0609 (total pagos a cuenta) must equal the M123 binding value."
     )

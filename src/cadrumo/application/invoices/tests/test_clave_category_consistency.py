@@ -17,7 +17,8 @@ from __future__ import annotations
 import pytest
 
 from ....core.aggregation import IntracomOperationType
-from ....domain.iva.classification import InvoiceKind, IvaCategory
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import IvaCategory
 from ..source_resolver import (
     _CLAVE_BY_KIND_AND_CATEGORY,
     _IVA_CATEGORY_BY_OPERATION_TYPE,

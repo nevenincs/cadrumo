@@ -621,7 +621,7 @@ def test_a_harness_refusal_is_told_apart_from_a_harness_crash() -> None:
         "harness `open form --size 80x50 --theme dark` exited 1\n"
         "Traceback (most recent call last):\n"
         '  File "<frozen runpy>", line 198, in _run_module_as_main\n'
-        "NameError: name 'InventorySelector' is not defined."
+        "NameError: name 'InventoryProvider' is not defined."
     )
 
     assert classify(refusal) is FrameFailureKind.REFUSED

@@ -873,7 +873,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f068"
 kind = "binding"
-binding = "modelo-232-2016.page_01.749-763.matriz-nif"
+binding = "modelo-232.page_01.749-763.matriz-nif"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -886,7 +886,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f069"
 kind = "binding"
-binding = "modelo-232-2016.page_01.764-823.matriz-razon-social"
+binding = "modelo-232.page_01.764-823.matriz-razon-social"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -899,7 +899,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f070"
 kind = "binding"
-binding = "modelo-232-2016.page_01.824-838.vinculada-metodo-1-nif"
+binding = "modelo-232.page_01.824-838.vinculada-metodo-1-nif"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -912,7 +912,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f071"
 kind = "binding"
-binding = "modelo-232-2016.page_01.839-839.vinculada-metodo-1-fjo"
+binding = "modelo-232.page_01.839-839.vinculada-metodo-1-fjo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -925,7 +925,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f072"
 kind = "binding"
-binding = "modelo-232-2016.page_01.840-899.vinculada-metodo-1-razon-social"
+binding = "modelo-232.page_01.840-899.vinculada-metodo-1-razon-social"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -950,7 +950,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f074"
 kind = "binding"
-binding = "modelo-232-2016.page_01.920-921.vinculada-metodo-1-provincia-pais"
+binding = "modelo-232.page_01.920-921.vinculada-metodo-1-provincia-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -963,7 +963,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f075"
 kind = "binding"
-binding = "modelo-232-2016.page_01.922-922.vinculada-metodo-1-tipo-vinculacion"
+binding = "modelo-232.page_01.922-922.vinculada-metodo-1-tipo-vinculacion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -976,7 +976,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f076"
 kind = "binding"
-binding = "modelo-232-2016.page_01.923-939.vinculada-metodo-1-importe"
+binding = "modelo-232.page_01.923-939.vinculada-metodo-1-importe"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -989,7 +989,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f077"
 kind = "binding"
-binding = "modelo-232-2016.page_01.940-954.vinculada-metodo-2-nif"
+binding = "modelo-232.page_01.940-954.vinculada-metodo-2-nif"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1002,7 +1002,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f078"
 kind = "binding"
-binding = "modelo-232-2016.page_01.955-955.vinculada-metodo-2-fjo"
+binding = "modelo-232.page_01.955-955.vinculada-metodo-2-fjo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1015,7 +1015,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f079"
 kind = "binding"
-binding = "modelo-232-2016.page_01.956-1015.vinculada-metodo-2-razon-social"
+binding = "modelo-232.page_01.956-1015.vinculada-metodo-2-razon-social"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1040,7 +1040,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f081"
 kind = "binding"
-binding = "modelo-232-2016.page_01.1036-1037.vinculada-metodo-2-provincia-pais"
+binding = "modelo-232.page_01.1036-1037.vinculada-metodo-2-provincia-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1053,7 +1053,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f082"
 kind = "binding"
-binding = "modelo-232-2016.page_01.1038-1038.vinculada-metodo-2-tipo-vinculacion"
+binding = "modelo-232.page_01.1038-1038.vinculada-metodo-2-tipo-vinculacion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1066,7 +1066,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f083"
 kind = "binding"
-binding = "modelo-232-2016.page_01.1039-1055.vinculada-metodo-2-importe"
+binding = "modelo-232.page_01.1039-1055.vinculada-metodo-2-importe"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1079,7 +1079,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f084"
 kind = "binding"
-binding = "modelo-232-2016.page_01.1056-1070.vinculada-metodo-3-nif"
+binding = "modelo-232.page_01.1056-1070.vinculada-metodo-3-nif"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1092,7 +1092,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f085"
 kind = "binding"
-binding = "modelo-232-2016.page_01.1071-1071.vinculada-metodo-3-fjo"
+binding = "modelo-232.page_01.1071-1071.vinculada-metodo-3-fjo"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1105,7 +1105,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f086"
 kind = "binding"
-binding = "modelo-232-2016.page_01.1072-1131.vinculada-metodo-3-razon-social"
+binding = "modelo-232.page_01.1072-1131.vinculada-metodo-3-razon-social"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1130,7 +1130,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f088"
 kind = "binding"
-binding = "modelo-232-2016.page_01.1152-1153.vinculada-metodo-3-provincia-pais"
+binding = "modelo-232.page_01.1152-1153.vinculada-metodo-3-provincia-pais"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1143,7 +1143,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f089"
 kind = "binding"
-binding = "modelo-232-2016.page_01.1154-1154.vinculada-metodo-3-tipo-vinculacion"
+binding = "modelo-232.page_01.1154-1154.vinculada-metodo-3-tipo-vinculacion"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]
@@ -1156,7 +1156,7 @@ record_identity = "DR23201"
 [[entries]]
 export_field_id = "m232-2016.dr23201.f090"
 kind = "binding"
-binding = "modelo-232-2016.page_01.1155-1171.vinculada-metodo-3-importe"
+binding = "modelo-232.page_01.1155-1171.vinculada-metodo-3-importe"
 legal_refs = ["orden-hfp-816-2017:art-1"]
 source_refs = ["aeat-dr-232-2016"]
 [entries.anchor]

@@ -50,7 +50,7 @@ from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from .binding_targets import casillas_by_binding
 from .ids import BindingId
 from .ledger_iva_bindings import iva_ledger_selector
-from .schema import DataBindingDefinition, ModeloRevision
+from .schema import BindingDefinition, ModeloRevision
 from .schema_base import RegistryModel
 
 __all__ = [
@@ -132,7 +132,7 @@ def _rate_kind_names(value: object) -> tuple[str, ...]:
     return tuple(str(getattr(kind, "value", kind)) for kind in value)
 
 
-def _iva_selector_axes(binding: DataBindingDefinition) -> Mapping[str, object]:
+def _iva_selector_axes(binding: BindingDefinition) -> Mapping[str, object]:
     """Return one ledger-IVA binding's selector axes, defaults resolved.
 
     Parsed through the family's own selector model rather than read off the
@@ -147,7 +147,7 @@ def _iva_selector_axes(binding: DataBindingDefinition) -> Mapping[str, object]:
 
 def _partition_for_rate_box_group(
     *,
-    members: Sequence[tuple[DataBindingDefinition, Mapping[str, object]]],
+    members: Sequence[tuple[BindingDefinition, Mapping[str, object]]],
     casillas_by_binding: Mapping[BindingId, Sequence[CasillaId]],
     exports: Mapping[CasillaId, bool],
 ) -> RateBoxPartition | None:
@@ -251,13 +251,13 @@ def derive_rate_box_partitions(revision: ModeloRevision) -> tuple[RateBoxPartiti
 
 def _ledger_iva_bindings_by_partition_key(
     revision: ModeloRevision,
-) -> dict[tuple[tuple[str, str], ...], list[tuple[DataBindingDefinition, Mapping[str, object]]]]:
+) -> dict[tuple[tuple[str, str], ...], list[tuple[BindingDefinition, Mapping[str, object]]]]:
     """Group the revision's ledger-IVA bindings by their non-rate selector identity.
 
     The rate axis is excluded from the key, which is what makes a rate-pinned
     binding and its rate-blind sibling land in the same group.
     """
-    grouped: dict[tuple[tuple[str, str], ...], list[tuple[DataBindingDefinition, Mapping[str, object]]]] = {}
+    grouped: dict[tuple[tuple[str, str], ...], list[tuple[BindingDefinition, Mapping[str, object]]]] = {}
     for binding in revision.bindings:
         if binding.source is not BindingSourceKind.LEDGER_IVA_AGGREGATION:
             continue
@@ -268,8 +268,8 @@ def _ledger_iva_bindings_by_partition_key(
 
 def _unscreened_reason(
     *,
-    rated: list[tuple[DataBindingDefinition, Mapping[str, object]]],
-    blind: list[tuple[DataBindingDefinition, Mapping[str, object]]],
+    rated: list[tuple[BindingDefinition, Mapping[str, object]]],
+    blind: list[tuple[BindingDefinition, Mapping[str, object]]],
     casillas_by_binding: Mapping[BindingId, Sequence[CasillaId]],
     exports: Mapping[CasillaId, bool],
 ) -> str | None:
