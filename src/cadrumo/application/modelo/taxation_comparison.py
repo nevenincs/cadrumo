@@ -139,7 +139,7 @@ class TaxationComparisonResult(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     filing_year: int
-    modelo: str = Modelo.M100.value
+    modelo: str = Modelo("100").value
     revision: str
 
     # Cuota resultante autoliquidación (casilla 0595) for each path.

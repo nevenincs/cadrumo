@@ -53,10 +53,10 @@ import pytest
 from pydantic import BaseModel, ValidationError
 from sqlalchemy import Engine, select
 
+from ......adapters.persistence.storage.tests.secure_sql import mutate_encrypted_secure_object_json
 from ......core.classification.policies import SensitivityClass
 from ......core.config import override_settings
 from ......tests.master_key import EphemeralMasterKeyProvider
-from ......adapters.persistence.storage.tests.secure_sql import mutate_encrypted_secure_object_json
 from ...errors import ClassificationError
 from ...sql.engine import create_engine_from_settings, dispose_engine
 from ...sql.orm import Base, SecureObjectRow

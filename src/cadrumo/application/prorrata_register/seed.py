@@ -118,7 +118,7 @@ def evaluate_carried_prior_definitiva_seed(
     for source in _prior_settlement_observations(repository, prior_year=prior_year):
         revision_outcome = revision_carry_outcome(
             RegistrySnapshotRef(
-                modelo=Modelo.M303.value,
+                modelo=Modelo("303").value,
                 revision_id=source.stamped_revision_id,
                 modelo_year=source.source_filing_year,
                 period=source.source_period,
@@ -216,7 +216,7 @@ def _seed_from_source(
         source_observation_ref=_source_observation_ref(source),
         source_registry_snapshot_refs=(
             RegistrySnapshotRef(
-                modelo=Modelo.M303.value,
+                modelo=Modelo("303").value,
                 revision_id=source.stamped_revision_id,
                 modelo_year=source.source_filing_year,
                 period=source.source_period,
@@ -225,7 +225,7 @@ def _seed_from_source(
     )
     return ProrrataPriorDefinitivaSeed(
         entry=entry,
-        source_modelo=Modelo.M303.value,
+        source_modelo=Modelo("303").value,
         source_filing_year=source.source_filing_year,
         source_period=source.source_period,
         source_casilla_id=_PRORRATA_PORCENTAJE_CASILLA,
@@ -323,7 +323,7 @@ def _registry_revision_divergence_finding(
             f"{detail}. Re-file or re-capture {source.source_filing_year} {source.source_period} "
             "so the observation is stamped under the law-determined registry revision."
         ),
-        source_modelo=Modelo.M303.value,
+        source_modelo=Modelo("303").value,
         source_filing_year=source.source_filing_year,
         source_period=source.source_period,
         stamped_revision_id=source.stamped_revision_id,
@@ -332,7 +332,7 @@ def _registry_revision_divergence_finding(
 
 
 def _source_observation_ref(source: _PriorSettlementObservation) -> str:
-    return f"{Modelo.M303.value}:{source.source_filing_year}:{source.source_period}"
+    return f"{Modelo('303').value}:{source.source_filing_year}:{source.source_period}"
 
 
 def _prior_settlement_observations(
@@ -341,7 +341,7 @@ def _prior_settlement_observations(
     prior_year: int,
 ) -> tuple[_PriorSettlementObservation, ...]:
     observations: list[_PriorSettlementObservation] = []
-    for payload in repository.iter_modelo(Modelo.M303.value):
+    for payload in repository.iter_modelo(Modelo("303").value):
         observation = payload.observation
         if observation.filing_year != prior_year:
             continue

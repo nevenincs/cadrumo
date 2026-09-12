@@ -300,9 +300,9 @@ def _not_applicable_source_modelos_for_bucket(snapshot: RegistrySnapshot, bucket
 
     estimation_regime = str(values.get("irpf.estimation_regime") or "").strip()
     if estimation_regime in _DIRECT_ESTIMATION_REGIMES:
-        return candidates & frozenset({str(Modelo.M131)})
+        return candidates & frozenset({str(Modelo("131"))})
     if estimation_regime == "objetiva":
-        return candidates & frozenset({str(Modelo.M130)})
+        return candidates & frozenset({str(Modelo("130"))})
     return frozenset[str]()
 
 
@@ -554,7 +554,7 @@ def _unresolved_relation_value(
     modelo_202_first_year_cuota: bool,
     not_applicable_source_modelos: frozenset[str],
 ) -> RelationValue:
-    if modelo_202_first_year_cuota and requirement is not None and requirement.source_modelo == str(Modelo.M202):
+    if modelo_202_first_year_cuota and requirement is not None and requirement.source_modelo == str(Modelo("202")):
         return RelationValue(
             relation=binding.id,
             value=Decimal("0"),
@@ -1148,7 +1148,7 @@ def _relation_prefill_context_inputs(
         m111_no_retenciones_periods=m111_no_retenciones_periods_for_bucket(bucket_id),
         not_applicable_source_modelos=_not_applicable_source_modelos_for_bucket(snapshot, bucket_id),
         modelo_202_first_year_cuota=(
-            str(context.modelo) == str(Modelo.M200)
+            str(context.modelo) == str(Modelo("200"))
             and _first_year_modalidad_cuota_no_m202(
                 bucket_id,
                 filing_year=context.filing_year,

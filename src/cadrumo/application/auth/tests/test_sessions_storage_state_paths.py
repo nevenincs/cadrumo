@@ -31,11 +31,11 @@ from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.auth import session_store
 from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import override_settings
 from ....core.directory_scan import DirectoryEntryKind, scan_directory
 from ....tests.profile_capsule import open_test_profile_session
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...wizard import compiler as _wizard  # noqa: F401  (compiler import seeds the ProfileKey registry)
 from ..operator import configure_operator_auth, logout_operator_auth, reset_operator_auth

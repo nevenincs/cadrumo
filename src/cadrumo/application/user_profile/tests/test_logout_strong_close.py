@@ -35,10 +35,10 @@ from ....adapters.persistence.storage.master_key.active_session import (
     current_active_bucket_session,
 )
 from ....adapters.persistence.storage.master_key.login_throttle import login_throttle_path, record_login_failure
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.bucket_pointer import read_pointer
 from ....core.profile_session import ProfileSessionRefusalReason
 from ....core.time.clock import now as _now
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..login_session import (
     bind_resumed_profile_session,
     login_profile,

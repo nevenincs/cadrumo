@@ -29,7 +29,6 @@ from ...application.ledger.actions_manual import (
     ledger_transaction_tracking_payload,
     summarize_manual_transactions,
 )
-from ..ledger_action_composition import compose_ledger_action_ports
 from ...application.ledger.list_query import LLM_DECISION_EVENT_TYPES
 from ...application.ledger.models import LedgerExportCommand
 from ...application.ledger.review_projection import ledger_transaction_review_status
@@ -53,6 +52,7 @@ from ...domain.categories.spending_category import CATEGORY_FAMILY_MEMBERS, Spen
 from ...domain.invoices.service import LinkInconsistency
 from ...domain.transactions.irpf_categories import ledger_irpf_category_catalogue
 from ...domain.transactions.models import Transaction
+from ..ledger_action_composition import compose_ledger_action_ports
 from ._decimal_parsing import optional_decimal_text
 from ._ledger_list import project_ledger_list
 from ._ledger_support import ledger_cli_no_recovery
@@ -704,7 +704,7 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
         readiness_issues = read_ledger_readiness(
             bucket_id=transaction_repository.bucket_id,
             period=report.period,
-        ports=ports,
+            ports=ports,
         )
         lines.extend(_ledger_status_readiness_issue_line(issue) for issue in readiness_issues)
     from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository

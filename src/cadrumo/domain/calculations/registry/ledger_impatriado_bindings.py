@@ -112,7 +112,7 @@ class LedgerImpatriadoIncomeProvider(BaseModel):
         BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION
     )
 
-    modelo: Literal[Modelo.M151] = Modelo.M151
+    modelo: Literal[Modelo("151")] = Modelo("151")
     target_casilla_id: CasillaId
     fact: ImpatriadoLedgerIncomeFact
 

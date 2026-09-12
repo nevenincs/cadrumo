@@ -178,7 +178,7 @@ from .schema_formula import (
     FormulaExpression,
     ParameterDefinition,
 )
-from .schema_references import LegalReference, PeriodSelector, SourceReference
+from .schema_references import LegalReference, SourceReference
 from .schema_revision_members import (
     ApplicabilityRuleDefinition as _ApplicabilityRuleDefinition,
 )

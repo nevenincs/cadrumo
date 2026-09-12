@@ -6,10 +6,9 @@ import base64
 from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Protocol
+from typing import Protocol, Self
 
 from pydantic import BaseModel, Field, model_validator
-from typing_extensions import Self
 
 from ...core.hashing import sha256_hex
 from ...core.identity.bucket import BucketId
@@ -166,7 +165,9 @@ class VisionClassifier(Protocol):
         self, transaction: Transaction, *, evidence_images: tuple[EvidenceImage, ...]
     ) -> LLMClassificationResponse: ...
 
-    def propose_split(self, transaction: Transaction, *, evidence_images: tuple[EvidenceImage, ...]) -> LLMSplitResponse: ...
+    def propose_split(
+        self, transaction: Transaction, *, evidence_images: tuple[EvidenceImage, ...]
+    ) -> LLMSplitResponse: ...
 
 
 @dataclass(frozen=True)
@@ -182,7 +183,15 @@ class LLMClassificationPorts:
 
 
 __all__ = [
-    "EvidenceImage", "LLMClassificationPorts", "LLMClassificationSuggestion", "LLMSaturatedSuggestion",
-    "LLMSplitApplyResult", "LLMSplitChildSuggestion", "LLMSplitSuggestion", "LLMSuggestionRejectionResult",
-    "OperatorIvaDerivationResult", "ResolvedEvidenceInput", "VisionClassifier",
+    "EvidenceImage",
+    "LLMClassificationPorts",
+    "LLMClassificationSuggestion",
+    "LLMSaturatedSuggestion",
+    "LLMSplitApplyResult",
+    "LLMSplitChildSuggestion",
+    "LLMSplitSuggestion",
+    "LLMSuggestionRejectionResult",
+    "OperatorIvaDerivationResult",
+    "ResolvedEvidenceInput",
+    "VisionClassifier",
 ]

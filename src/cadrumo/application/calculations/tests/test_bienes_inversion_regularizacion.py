@@ -12,6 +12,7 @@ from typing import Any, cast, override
 import pytest
 
 from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ....core.aggregation import BindingSourceKind
 from ....core.directory_scan import scan_directory
 from ....core.period import Period
@@ -38,7 +39,6 @@ from ....domain.calculations.registry.bindings import (
 )
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_base import ThresholdComparison
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation.source_mesh import CalculationSourceContext
 from ..bienes_inversion_regularizacion import (
     BienesInversionRegularizacionSourceResolver,

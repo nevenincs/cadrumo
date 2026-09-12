@@ -1,27 +1,14 @@
-"""Boundary tests for registry public imports and private module ownership.
+"""Registry ownership proofs not covered by the repository import gate.
 
-The cross-package raw-registry-orchestration check this module carried
-(``test_production_code_does_not_import_raw_registry_orchestration``, guarding
-``build_snapshot`` / ``load_registry_tree``) is superseded by the
-project-wide ratcheting import-hygiene gate,
-``src/cadrumo/tests/test_import_hygiene_gate.py`` (backed by
-the import-hygiene scanner and its checked-in baseline). Its
-former allowlist
-(``authority.py``, both package ``__init__.py`` files,
-``_imputacion_parameters.py``, ``_recargo_equivalencia.py``) is now empty in
-practice: none
-of those sites still import the raw orchestration symbols cross-package, and
-the general gate now enforces the boundary for every package, not just the
-registry. The checks below (positive facade-content assertions and the
-absolute-import / intra-package-test-boundary checks) are NOT import-hygiene
-duplicates and remain the registry package's own authority.
+Repository-wide dependency direction, private cross-package access, package
+facades, and aliases are owned by ``just check-import-boundaries``.  The checks
+here retain registry-specific defining-module and test-boundary guarantees.
 """
 
 from __future__ import annotations
 
 import ast
 import importlib
-from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -50,8 +37,6 @@ from ..schema_surfaces import CasillaContinuidadEvolutionDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_PRIVATE_REGISTRY_PREFIX = "cadrumo.domain.calculations.registry._"
-_REGISTRY_SOURCE_ROOT = REPO_ROOT / "src" / "cadrumo"
 #: The directory the modelo registry TESTS live in. It named the registry
 #: package instead, and `scan_directory` is non-recursive by default, so the
 #: census below matched 0 files where it should match 40 -- a boundary gate
@@ -70,7 +55,6 @@ _REGISTRY_TEST_ROOT = _REGISTRY_PACKAGE_ROOT / "tests"
 #: Floor for that census. An empty scan and a compliant tree report the same
 #: green, which is precisely how this sat unnoticed.
 _MINIMUM_MODELO_REGISTRY_TESTS = 30
-_PROJECT_PYTHON_ROOTS = (REPO_ROOT / "src", REPO_ROOT / "dev")
 _LEDGER_BINDING_PUBLIC_NAMES = (
     "IvaLedgerObservation",
     "OssIossLedgerObservation",
@@ -149,63 +133,6 @@ def test_registry_package_marker_is_inert() -> None:
     assert not any(hasattr(registry, name) for name in _LEDGER_BINDING_PUBLIC_NAMES)
 
 
-def test_source_tree_does_not_use_absolute_registry_private_imports() -> None:
-    offenders = sorted(
-        f"{path.relative_to(REPO_ROOT)} imports {module_name}"
-        for path in scan_directory(_REGISTRY_SOURCE_ROOT, pattern="*.py", recursive=True)
-        for module_name in _absolute_registry_private_imports(path)
-    )
-
-    assert offenders == []
-
-
-#: The modules allowed to bind the package namespace, keyed by path with the
-#: reason. Asserting a namespace exports nothing requires binding it, so a module
-#: that PROVES the inertness cannot be read as consuming it.
-#:
-#: This table held ONE entry while four files bound the namespace, because the
-#: matcher above could not see a relative import and so reported the other three
-#: as clean. Every entry here states the same reason, which is the point: the
-#: exemption is for proving inertness and for nothing else.
-_INERTNESS_PROOF_REASON = (
-    "Binds the package solely to assert that it exports nothing -- the inertness "
-    "this gate exists to protect. There is no way to check that property without "
-    "importing the namespace it is a property of."
-)
-_FACADE_BINDING_EXEMPTIONS: Mapping[str, str] = {
-    "src/cadrumo/domain/calculations/registry/tests/test_aeat_nif_iva_oracle.py": _INERTNESS_PROOF_REASON,
-    "src/cadrumo/domain/calculations/registry/tests/test_authority.py": _INERTNESS_PROOF_REASON,
-    "src/cadrumo/domain/calculations/registry/tests/test_modelo_applicability.py": _INERTNESS_PROOF_REASON,
-    "src/cadrumo/domain/calculations/registry/tests/test_remote_authority_canonicalisation.py": (
-        _INERTNESS_PROOF_REASON
-    ),
-}
-
-
-def test_project_consumers_do_not_import_the_inert_registry_package_facade() -> None:
-    """Every project consumer must name a defining registry module directly."""
-    offenders = sorted(
-        f"{path.relative_to(REPO_ROOT)} imports the registry package facade"
-        for root in _PROJECT_PYTHON_ROOTS
-        for path in scan_directory(root, pattern="*.py", recursive=True)
-        if path.relative_to(REPO_ROOT).as_posix() not in _FACADE_BINDING_EXEMPTIONS
-        and _imports_registry_package_facade(path)
-    )
-
-    assert offenders == []
-
-
-def test_every_facade_binding_exemption_still_binds_the_facade() -> None:
-    """An exemption that no longer describes a real binding is slack, not permission."""
-    stale = sorted(
-        relative
-        for relative in _FACADE_BINDING_EXEMPTIONS
-        if not _imports_registry_package_facade(REPO_ROOT / relative)
-    )
-
-    assert stale == [], f"exemption(s) no longer bind the package facade; remove them: {stale}"
-
-
 def test_modelo_registry_tests_use_public_registry_api_boundaries() -> None:
     scanned = scan_directory(_REGISTRY_TEST_ROOT, pattern="test_modelo_*_registry.py", require_root=True)
     assert len(scanned) >= _MINIMUM_MODELO_REGISTRY_TESTS, (
@@ -220,90 +147,6 @@ def test_modelo_registry_tests_use_public_registry_api_boundaries() -> None:
     )
 
     assert offenders == []
-
-
-def _absolute_registry_private_imports(path: Path) -> tuple[str, ...]:
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    imports: list[str] = []
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            imports.extend(alias.name for alias in node.names if alias.name.startswith(_PRIVATE_REGISTRY_PREFIX))
-            continue
-        if (
-            isinstance(node, ast.ImportFrom)
-            and node.level == 0
-            and node.module is not None
-            and node.module.startswith(_PRIVATE_REGISTRY_PREFIX)
-        ):
-            imports.append(node.module)
-    return tuple(imports)
-
-
-#: Dotted path of the inert package namespace this gate protects.
-_REGISTRY_PACKAGE = "cadrumo.domain.calculations.registry"
-
-#: Directory backing that package, read to tell a SUBMODULE import apart from a
-#: facade-symbol import. ``from .. import export_parse`` names a module and is
-#: the canonical way to reach one; ``from .. import parse_export_payload`` names
-#: a symbol and is the re-export this gate forbids. Both are ``ImportFrom``
-#: nodes resolving to the same package, so the names have to be classified.
-_REGISTRY_PACKAGE_DIR = REPO_ROOT / "src" / "cadrumo" / "domain" / "calculations" / "registry"
-
-
-def _registry_submodule_names() -> frozenset[str]:
-    return frozenset(
-        {path.stem for path in _REGISTRY_PACKAGE_DIR.glob("*.py") if path.stem != "__init__"}
-        | {path.name for path in _REGISTRY_PACKAGE_DIR.iterdir() if path.is_dir()},
-    )
-
-
-def _dotted_package(path: Path) -> tuple[str, ...]:
-    """Return the dotted package a source file lives in, or empty when unresolvable.
-
-    Relative imports resolve against the IMPORTING module's package, so a check
-    that skips ``node.level > 0`` cannot see a relative facade binding at all.
-    That was this gate's blind spot: every real binding in the tree is spelled
-    ``from ... import registry``, so the absolute-only matcher reported zero
-    offenders while four files bound the namespace, and the paired
-    exemption-liveness check then read its one entry as stale.
-    """
-    source_root = REPO_ROOT / "src"
-    if not path.is_relative_to(source_root):
-        return ()
-    parts = list(path.relative_to(source_root).with_suffix("").parts)
-    if parts and parts[-1] == "__init__":
-        return tuple(parts[:-1])
-    return tuple(parts[:-1])
-
-
-def _imports_registry_package_facade(path: Path) -> bool:
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    package = _dotted_package(path)
-    submodules = _registry_submodule_names()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            if any(alias.name == _REGISTRY_PACKAGE for alias in node.names):
-                return True
-            continue
-        if not isinstance(node, ast.ImportFrom):
-            continue
-        if node.level == 0:
-            base = tuple(node.module.split(".")) if node.module else ()
-            resolved = node.module or ""
-        else:
-            if not package:
-                continue
-            base = package[: len(package) - (node.level - 1)]
-            resolved = ".".join((*base, node.module)) if node.module else ".".join(base)
-        if resolved == _REGISTRY_PACKAGE:
-            # Reaching THROUGH the namespace for one of its own modules is the
-            # canonical path; reaching for a bare symbol is the re-export.
-            if any(alias.name not in submodules for alias in node.names):
-                return True
-            continue
-        if node.module is None and any(".".join((*base, alias.name)) == _REGISTRY_PACKAGE for alias in node.names):
-            return True
-    return False
 
 
 def _relative_private_imports(path: Path) -> tuple[str, ...]:

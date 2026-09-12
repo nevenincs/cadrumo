@@ -29,14 +29,6 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from .llm_classification_ports import (
-    LLMClassificationSuggestion,
-    LLMSaturatedSuggestion,
-    LLMSplitApplyResult,
-    LLMSplitSuggestion,
-    LLMSuggestionRejectionResult,
-    OperatorIvaDerivationResult,
-)
 from ...core.config import Settings, load_settings
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -51,6 +43,14 @@ from .llm_classification import (
     apply_llm_classification,
     apply_saturated_llm_classification,
     reject_llm_suggestion,
+)
+from .llm_classification_ports import (
+    LLMClassificationSuggestion,
+    LLMSaturatedSuggestion,
+    LLMSplitApplyResult,
+    LLMSplitSuggestion,
+    LLMSuggestionRejectionResult,
+    OperatorIvaDerivationResult,
 )
 from .models import ManualLedgerTransactionResult
 

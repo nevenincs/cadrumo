@@ -26,8 +26,10 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.errors import StorageValidationError
+from ....adapters.persistence.storage.tests.secure_sql import (
+    isolated_storage_root as _isolated_storage,  # noqa: F401 - autouse fixture
+)
 from ....core.config import override_settings
-from ....adapters.persistence.storage.tests.secure_sql import isolated_storage_root as _isolated_storage  # noqa: F401 - autouse fixture
 from ..errors import ModeloApplicationError
 from ..persistence_wiring import (
     resolve_application_filing_bucket_id,

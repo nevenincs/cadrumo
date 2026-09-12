@@ -237,7 +237,7 @@ def _current_year_prorrata_from_m303_observation(
         return None
     for token in reversed(_settlement_period_tokens(revision)):
         payload = repository.load_observation(
-            Modelo.M303.value,
+            Modelo("303").value,
             Period.from_year_and_code(filing_year, token),
         )
         if payload is None:
@@ -318,7 +318,7 @@ def _current_year_values_for_context(
     """Combine injected current-year values with the M390 stamped M303 fallback."""
     values = dict(current_year_values)
     prorrata_id = _prorrata_casilla_id(revision)
-    if prorrata_id is not None and prorrata_id not in values and modelo == Modelo.M390.value:
+    if prorrata_id is not None and prorrata_id not in values and modelo == Modelo("390").value:
         observed_pct = _current_year_prorrata_from_m303_observation(
             observation_repository,
             filing_year=filing_year,
@@ -511,7 +511,7 @@ def build_bienes_inversion_regularizacion_advisory(
     if in_window == 0:
         return projection, None
 
-    target = _target_binding_and_casilla(revision, modelo=Modelo.M303.value)
+    target = _target_binding_and_casilla(revision, modelo=Modelo("303").value)
     target_casilla_id = target[1] if target is not None else None
 
     message = (
@@ -584,7 +584,7 @@ def build_bienes_inversion_transmision_advisory(
     if projection.computed_count == 0:
         return projection, None
 
-    target = _target_binding_and_casilla(revision, modelo=Modelo.M303.value)
+    target = _target_binding_and_casilla(revision, modelo=Modelo("303").value)
     target_casilla_id = target[1] if target is not None else None
 
     message = (
@@ -638,7 +638,7 @@ class BienesInversionRegularizacionSourceResolver:
         if not declared_binding_ids:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
 
-        if context.modelo not in {Modelo.M303.value, Modelo.M390.value}:
+        if context.modelo not in {Modelo("303").value, Modelo("390").value}:
             return CalculationSourceResolution(
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,

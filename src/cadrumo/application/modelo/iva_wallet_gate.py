@@ -542,7 +542,7 @@ def apply_iva_compensation_decision_binding(
     the calculation source mesh records the IVA-wallet provenance instead of a
     generic ``previous_filing`` source.
     """
-    if modelo != Modelo.M303:
+    if modelo != Modelo("303"):
         return
     target = _WalletBindingTarget(
         bucket_id=bucket_id,
@@ -590,7 +590,7 @@ def require_persisted_iva_compensation_decision_for_work_unit(
     from feeding calculation values unless the repository contains the same
     authority record.
     """
-    if work_unit.modelo != Modelo.M303:
+    if work_unit.modelo != Modelo("303"):
         return supplied_decision
     persisted = load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
     if persisted is None:
@@ -633,7 +633,7 @@ def load_persisted_iva_compensation_decision_for_work_unit(
         303 work units, or ``None`` when the work unit or bucket has no wallet
         authority record.
     """
-    if work_unit.modelo != Modelo.M303:
+    if work_unit.modelo != Modelo("303"):
         return None
     taxpayer_nif = taxpayer_nif_for_bucket(work_unit.bucket_id)
     if taxpayer_nif is None:
@@ -877,7 +877,7 @@ def _activity_start_proves_first_iva_period(work_unit: WorkUnit, snapshot: Regis
     requirements = tuple(
         requirement
         for requirement in cross_period_dependency_requirements(snapshot)
-        if requirement.source_modelo == Modelo.M303.value
+        if requirement.source_modelo == Modelo("303").value
         and _M303_PRIOR_COMPENSATION_ORIGIN_IDS.intersection(requirement.origin_ids)
     )
     if not requirements:
@@ -911,7 +911,7 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
     out as pre-activity; otherwise the reconciliation remains a blocking
     missing-authority state.
     """
-    if work_unit.modelo != Modelo.M303:
+    if work_unit.modelo != Modelo("303"):
         return None
     taxpayer_nif = taxpayer_nif_for_bucket(work_unit.bucket_id)
     if taxpayer_nif is None:
@@ -986,7 +986,7 @@ def _prior_period_observation_requirement(
             filing_year=snapshot.filing_year,
             period=snapshot.period,
         )
-        if requirement.source_modelo == Modelo.M303.value
+        if requirement.source_modelo == Modelo("303").value
         and _M303_PRIOR_COMPENSATION_BINDING_ID in requirement.binding_ids
     )
     if len(requirements) != 1 or len(requirements[0].periods) != 1:
@@ -1038,13 +1038,13 @@ def _prior_period_recurrence(
         binding_id=_M303_PRIOR_COMPENSATION_BINDING_ID,
         amount=amount,
         source_kind=str(payload.source_kind),
-        source_modelo=Modelo.M303.value,
+        source_modelo=Modelo("303").value,
         source_filing_year=requirement.filing_year,
         source_periods=(source_period,),
         source_registry_snapshot_refs=(payload.registry_snapshot_ref,),
         resolved_at=payload.captured_at,
         source_locator=(
-            f"observation-envelope:{Modelo.M303.value}:{source_period.filing_year}:{source_period.registry_token}"
+            f"observation-envelope:{Modelo('303').value}:{source_period.filing_year}:{source_period.registry_token}"
         ),
     )
 
@@ -1075,7 +1075,7 @@ def _prior_period_carry_evidence(
     if requirement is None:
         return _NO_PRIOR_PERIOD_OBSERVATION
     source_period = _prior_period_source_period(requirement)
-    payload = CalculationObservationRepository().load_observation(Modelo.M303.value, source_period)
+    payload = CalculationObservationRepository().load_observation(Modelo("303").value, source_period)
     if payload is None:
         return _NO_PRIOR_PERIOD_OBSERVATION
     found = _PriorPeriodCarryEvidence(recurrence=None, prior_period_observation_found=True)
@@ -1122,7 +1122,7 @@ def require_persisted_iva_compensation_decision_matches_revision(
         The matching :class:`IvaCompensationReconciliationDecision` for Modelo
         303, or ``None`` for non-Modelo 303 work units.
     """
-    if work_unit.modelo != Modelo.M303:
+    if work_unit.modelo != Modelo("303"):
         return None
     decision = load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
     if decision is None:

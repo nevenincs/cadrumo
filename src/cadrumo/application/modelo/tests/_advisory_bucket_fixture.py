@@ -18,9 +18,9 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.bucket_id_fixture import bucket_id  # noqa: F401
 from ....tests.profile_capsule import open_test_profile_session
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...aggregation.source_mesh import CalculationSourceDiagnostic
 

@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.modelo import Modelo
@@ -33,7 +34,6 @@ from ....domain.iva_compensation.filed_derivation import (
     M303CompensationAvailableDerivation,
     M303CompensationBasis,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import errors as errors_module
 from .. import m303_carry_ingress as m303_module
 from .. import observations_repository as observations_module

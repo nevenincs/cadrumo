@@ -75,7 +75,7 @@ class Borrador100Snapshot(BaseModel):
 
     snapshot_id: SnapshotId
     bucket_id: BucketId
-    modelo: str = Field(pattern=f"^{Modelo.M100.value}$")
+    modelo: str = Field(pattern=f"^{Modelo('100').value}$")
     filing_year: FilingYear
     period: Period
     registry_snapshot_ref: RegistrySnapshotRef
@@ -156,14 +156,14 @@ def derive_borrador_100_snapshot_id(
     the hashed bytes.
     """
     if (
-        registry_snapshot_ref.modelo != Modelo.M100.value
+        registry_snapshot_ref.modelo != Modelo("100").value
         or registry_snapshot_ref.modelo_year != filing_year
         or registry_snapshot_ref.period != period.registry_token
     ):
         raise ValueError("borrador snapshot identity coordinate must match registry_snapshot_ref")
     return content_hash_hex(
         {
-            "modelo": Modelo.M100.value,
+            "modelo": Modelo("100").value,
             "filing_year": filing_year,
             "period": period.registry_token,
             "registry_snapshot_ref": registry_snapshot_ref.model_dump(mode="json"),
@@ -280,7 +280,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
                 filing_year=filing_year,
                 period=period,
                 registry_snapshot_ref=bundled_authority()
-                .snapshot(Modelo.M100.value, filing_year=filing_year, period=period.registry_token)
+                .snapshot(Modelo("100").value, filing_year=filing_year, period=period.registry_token)
                 .snapshot_ref,
                 captured_at=captured_at,
                 source_url=source_url,
@@ -345,7 +345,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
         return Borrador100Snapshot(
             snapshot_id=snapshot_id,
             bucket_id=self._repository.bucket_id,
-            modelo=Modelo.M100.value,
+            modelo=Modelo("100").value,
             filing_year=capture.filing_year,
             period=capture.period,
             registry_snapshot_ref=capture.registry_snapshot_ref,

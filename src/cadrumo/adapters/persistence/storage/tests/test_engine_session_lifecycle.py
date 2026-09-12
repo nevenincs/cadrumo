@@ -26,9 +26,9 @@ from pathlib import Path
 import pytest
 from sqlalchemy import text
 
-from .secure_sql import isolated_runtime_profile
 from ..master_key.active_session import current_active_bucket_session
 from ..sql.engine import get_engine
+from .secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

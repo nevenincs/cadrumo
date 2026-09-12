@@ -138,7 +138,7 @@ def build_unsupported_work_create_modelos(
         .lower()
     )
     if fiscal_residency == "non_resident_irnr":
-        return (_Modelo.M210.value,)
+        return (_Modelo("210").value,)
     return ()
 
 

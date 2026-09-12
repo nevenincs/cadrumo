@@ -39,8 +39,8 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 from typing import ClassVar, Final
 
 from pydantic import BaseModel

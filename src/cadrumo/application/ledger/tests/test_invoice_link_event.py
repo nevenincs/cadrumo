@@ -24,6 +24,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.errors import SecureObjectRevisionConflictError
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....domain.buckets.event import BucketEventObjectType, BucketEventType
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.errors import InvoiceLinkError
@@ -32,7 +33,6 @@ from ....domain.iva.classification import InvoiceKind
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...invoices.transaction_linking import link_invoice_transaction_catalogues, link_invoice_transaction_repositories
 from ..actions_manual import link_manual_transaction_invoice
 

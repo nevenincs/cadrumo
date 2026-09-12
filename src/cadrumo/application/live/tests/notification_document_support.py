@@ -29,6 +29,7 @@ from ....adapters.persistence.storage.runtime_repository import secure_object_re
 from ....adapters.persistence.storage.secure_object_namespaces import LIVE_NOTIFICATION_DOCUMENT_NAMESPACE
 from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....application.live.errors import LiveApplicationInputError
 from ....application.live.notification_documents import (
     NotificationDocumentNotFoundError,
@@ -41,7 +42,6 @@ from ....core.hashing import sha256_hex
 from ....domain.attachments.protocols import AttachmentStoreProtocol
 from ....tests.aeat_literal_fixtures import NOTIFICATION_DETALLE_SEDE_URL_FIXTURE
 from ....tests.pdf_fixtures import text_pdf_bytes
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session

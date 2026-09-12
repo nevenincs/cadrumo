@@ -16,9 +16,9 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ....domain.modelos.errors import Modelo036PriorAltaRequiredError, Modelo036TerminalStateError
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..m036_lifecycle import M036DeclarationCommand, list_m036_declarations, record_m036_declaration
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

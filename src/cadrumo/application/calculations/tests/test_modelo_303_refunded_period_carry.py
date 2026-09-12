@@ -28,6 +28,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
@@ -46,7 +47,6 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.filing_evidence import general_m303_filing_evidence
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...modelo.filed_revision_observation import persist_filed_revision_observation
 from ..iva_compensation_history import IvaCompensationHistoryRepository
 from ..observations_repository import CalculationObservationRepository

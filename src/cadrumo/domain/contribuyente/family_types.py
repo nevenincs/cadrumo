@@ -13,6 +13,7 @@ from the factual profile records.
 from __future__ import annotations
 
 from datetime import date
+
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
 from ...core.identity.tax_id import SubjectTaxId

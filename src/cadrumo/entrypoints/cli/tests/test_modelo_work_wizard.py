@@ -30,6 +30,9 @@ from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output.plain_text import PlainTextOutput
 from pydantic import ValidationError
 
+from ....adapters.persistence.storage.tests.secure_sql import (
+    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401
+)
 from ....application.flows import line_frontend as _line_frontend
 from ....application.flows.copy import assemble_page_copy
 from ....application.flows.definition import FlowDefinition, FlowPage
@@ -42,7 +45,6 @@ from ....core.flows import FlowMode
 from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.profile_capsule import open_test_profile_session
-from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
 from ....tests.user_profile import register_cli_profile
 from .. import _modelo_work_wizard_cli
 from .._modelo_behavior_support import resolve_work_unit_for_cli

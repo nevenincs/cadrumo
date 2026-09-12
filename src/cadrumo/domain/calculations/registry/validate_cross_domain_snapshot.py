@@ -74,8 +74,8 @@ class CrossDomainSnapshotCheck(Protocol):
 #: annotation states what callers may pass.
 REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES: Mapping[str, str] = MappingProxyType(
     {
-        Modelo.M100: "cadrumo.domain.renta.first_slice_routing_integrity",
-        Modelo.M130: "cadrumo.domain.renta.retenciones_routing_integrity",
+        Modelo("100"): "cadrumo.domain.renta.first_slice_routing_integrity",
+        Modelo("130"): "cadrumo.domain.renta.retenciones_routing_integrity",
     },
 )
 

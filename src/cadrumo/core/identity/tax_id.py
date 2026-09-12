@@ -31,6 +31,7 @@ from pydantic import AfterValidator, BeforeValidator
 from .documents import IdentityError, validate_identity
 from .nif_iva import normalise_nif_iva
 
+
 def _tax_id_format_declarations() -> Mapping[str, str]:
     """Resolve identifier-shape declarations without a Python fallback catalogue."""
     from ...domain.calculations.registry.tax_id_format import tax_id_format_declarations

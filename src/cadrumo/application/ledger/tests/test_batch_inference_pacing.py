@@ -18,6 +18,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....application.provisioning import (
     AcceleratorDevice,
@@ -28,7 +29,6 @@ from ....application.provisioning import (
 )
 from ....core.hardware import AcceleratorKind
 from ....domain.iva.classification import InvoiceKind
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ..batch_ingest import COMPLETED_BATCH_ITEM_STATUSES, BatchRunResult, run_evidence_batch
 from .loopback_reader import serving_a_loopback_reader
 

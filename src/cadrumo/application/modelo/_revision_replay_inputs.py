@@ -247,7 +247,7 @@ def _m349_detail_row_replay_inputs(
     subfield is normalized with the same export helper used by the row model so
     replay does not duplicate country-prefix logic.
     """
-    if str(work_unit.modelo) != Modelo.M349.value:
+    if str(work_unit.modelo) != Modelo("349").value:
         return {}
     operador_rows = tuple(row for row in revision.detail_rows if isinstance(row, Modelo349OperadorRow))
     rectification_rows = tuple(row for row in revision.detail_rows if isinstance(row, Modelo349RectificacionRow))
@@ -303,7 +303,7 @@ def _m232_detail_row_replay_inputs(
     Money values are rendered through the canonical decimal string so the
     replayed scalar matches what every other numeric replay input carries.
     """
-    if str(work_unit.modelo) != Modelo.M232.value:
+    if str(work_unit.modelo) != Modelo("232").value:
         return {}
     rows = tuple(row for row in revision.detail_rows if isinstance(row, Modelo232VinculadaRow))
     if not rows:

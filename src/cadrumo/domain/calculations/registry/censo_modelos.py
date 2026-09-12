@@ -56,8 +56,8 @@ class CensoModeloOwnership:
     superseded_by: str | None = None
 
 
-_ACTIVE_CENSO_MODELO = Modelo.M036.value
-_HISTORICAL_CENSO_MODELO = Modelo.M037.value
+_ACTIVE_CENSO_MODELO = Modelo("036").value
+_HISTORICAL_CENSO_MODELO = Modelo("037").value
 _HISTORICAL_037_SOURCE_REF = "boe-modelo-037-historical-suppression"
 
 
@@ -68,8 +68,8 @@ class CensoModeloFoundationContract(BaseModel):
 
     schema_version: str = "1"
     service_owner: str = Field(default=CENSO_MODELO_SERVICE_OWNER, pattern=r"^cadrumo\.domain\.calculations\.registry$")
-    active_modelo: str = Field(default=Modelo.M036.value, min_length=3, max_length=3, pattern=r"^[0-9]{3}$")
-    historical_modelos: tuple[str, ...] = (Modelo.M037.value,)
+    active_modelo: str = Field(default=Modelo("036").value, min_length=3, max_length=3, pattern=r"^[0-9]{3}$")
+    historical_modelos: tuple[str, ...] = (Modelo("037").value,)
     event_kinds: tuple[CensoModeloEventKind, ...]
     error_codes: tuple[str, ...]
 
@@ -78,7 +78,7 @@ class CensoModeloFoundationContract(BaseModel):
     def _historical_modelos_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(value) != len(set(value)):
             raise RegistryValidationError("historical censo modelos must be unique")
-        if Modelo.M036.value in value:
+        if Modelo("036").value in value:
             raise RegistryValidationError("active censo modelo 036 must not be historical")
         return value
 

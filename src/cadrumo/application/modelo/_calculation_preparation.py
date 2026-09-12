@@ -378,7 +378,7 @@ def _raise_if_m200_ledger_requires_accounting_result_input(
     transaction_repository: TransactionCatalogueRepositoryProtocol | None,
 ) -> None:
     """Refuse Modelo 200 ledger-backed calculation without accounting-result input."""
-    if str(work_unit.modelo) != Modelo.M200.value:
+    if str(work_unit.modelo) != Modelo("200").value:
         return
     if _M200_ACCOUNTING_RESULT_CASILLA in casilla_inputs or (
         backend_casilla_inputs is not None and _M200_ACCOUNTING_RESULT_CASILLA in backend_casilla_inputs

@@ -58,7 +58,7 @@ class RentaGastosEstimacionDirectaObservationProtocol(Protocol):
     this protocol without any explicit declaration.
 
     Properties are declared read-only so that Literal-typed concrete attributes
-    (e.g. ``modelo: Literal[Modelo.M100]``) satisfy the protocol under strict
+    (e.g. ``modelo: Literal[Modelo('100')]``) satisfy the protocol under strict
     covariant checking.
     """
 
@@ -92,7 +92,7 @@ class LedgerRentaGastosEstimacionDirectaProvider(BaseModel):
         BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION
     )
 
-    modelo: Literal[Modelo.M100] = Modelo.M100
+    modelo: Literal[Modelo("100")] = Modelo("100")
     period: Literal["0A"] = "0A"
     target_casilla_id: CasillaId
     fact: Literal["deductible_amount_sum"] = "deductible_amount_sum"

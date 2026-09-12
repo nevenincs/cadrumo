@@ -28,6 +28,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.filing.schema import APPROVAL_BASIS_VERSION, ModeloApprovalBasis, ModeloDraft
@@ -37,7 +38,6 @@ from ....tests.filing import (
     empty_prior_filing_observations_fingerprint,
     empty_profile_activity_fingerprint,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..draft_review import (
     approve_draft,
     compute_review_checksum,

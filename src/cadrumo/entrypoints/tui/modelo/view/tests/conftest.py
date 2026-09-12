@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ......application.modelo.work_addressing import ModeloVisibleFilingTarget
 from ......application.modelo.work_lifecycle import create_work_unit
 from ......application.modelo.workspace import resolve_static_inspection_result
@@ -24,7 +25,6 @@ from ......core.period import Period
 from ......domain.calculations.registry.authority import bundled_authority
 from ......domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ......tests.profile_capsule import seed_test_profile_record
-from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 
 _PROFILE_ID = "13000000-0000-4000-8000-000000000231"
 _REVISION = "2019-y-siguientes"

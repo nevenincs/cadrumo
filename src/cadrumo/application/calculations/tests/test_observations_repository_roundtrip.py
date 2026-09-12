@@ -23,6 +23,11 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.errors import EnvelopeVersionError
+from ....adapters.persistence.storage.tests.secure_sql import (
+    isolated_runtime_profile,
+    mutate_encrypted_secure_object_json,
+    read_db_at_rest_bytes,
+)
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
@@ -35,11 +40,6 @@ from ....domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationDecisionReason,
     IvaCompensationReconciliationDecision,
-)
-from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_runtime_profile,
-    mutate_encrypted_secure_object_json,
-    read_db_at_rest_bytes,
 )
 from ..errors import ObservationCasillaReferenceError
 from ..observations_repository import (

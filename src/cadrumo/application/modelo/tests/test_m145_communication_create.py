@@ -20,9 +20,9 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..m145_communication_period import M145CommunicationPeriod
 from ..m145_communication_records import (
     M145CommunicationCreateCommand,

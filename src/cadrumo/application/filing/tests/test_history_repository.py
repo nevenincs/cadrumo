@@ -17,10 +17,10 @@ from ....adapters.persistence.storage.bucket.directory_layout import bucket_path
 from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.errors import ClassificationError, SecureObjectRowIdentityError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
 from ....domain.identifiers import ModeloIdentifier
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ..conftest import _BUCKET_ID
 from ..history_models import ModeloHistory, ModeloHistoryEntry
 from ..history_repository import ModeloHistoryRepository

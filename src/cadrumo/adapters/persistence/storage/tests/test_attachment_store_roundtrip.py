@@ -36,7 +36,6 @@ from .....domain.attachments.enums import AttachmentKind, AttachmentSource
 from .....domain.attachments.errors import AttachmentPersistenceError, AttachmentValidationError
 from .....domain.attachments.models import Attachment
 from .....tests.attribute_scope import scoped_attribute
-from .secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..attachment import AttachmentStore, resolve_attachment_store
 from ..crypto.encrypted_columns import (
     decrypt_secure_object_payload,
@@ -47,6 +46,7 @@ from ..secure_object_namespaces import ATTACHMENT_BLOB_NAMESPACE, ATTACHMENT_MAN
 from ..sql.engine import get_engine
 from ..sql.orm import SecureObjectRow
 from ..sql.session import session_scope
+from .secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

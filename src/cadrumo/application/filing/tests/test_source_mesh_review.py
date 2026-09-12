@@ -36,13 +36,13 @@ from decimal import Decimal
 import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....core.period import Period
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft
 from ....domain.invoices.models import Invoice, InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
 from ....domain.submission.models import ModeloDraftStatus
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ...invoices.catalogue_creation import build_catalogue_invoice
 from ..draft_construction import build_draft
 from ..draft_review import ModeloApprovalStaleReason, approval_stale_reasons, approve_draft

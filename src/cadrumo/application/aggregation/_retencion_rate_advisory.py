@@ -361,8 +361,7 @@ def _sectoral_match_message(
     )
     if sectoral_hint is True:
         return opening + (
-            "Your profile declares a sectoral activity, so a withholding at this rate "
-            "is consistent with it."
+            "Your profile declares a sectoral activity, so a withholding at this rate is consistent with it."
         )
     if sectoral_hint is False:
         # Deliberately does not name the mechanism: a False now arrives either

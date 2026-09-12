@@ -44,18 +44,6 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import cast
 
-from .llm_classification_ports import (
-    EvidenceImage,
-    LLMClassificationPorts,
-    LLMClassificationSuggestion,
-    LLMSaturatedSuggestion,
-    LLMSplitApplyResult,
-    LLMSplitChildSuggestion,
-    LLMSplitSuggestion,
-    LLMSuggestionRejectionResult,
-    OperatorIvaDerivationResult,
-    VisionClassifier,
-)
 from ...core.config import Settings
 from ...core.document_shape import PDF_CONTAINER_SHAPES
 from ...core.image_media_type import ImageMediaType, detect_image_media_type
@@ -69,7 +57,7 @@ from ...domain.categories.spending_category import SpendingCategory
 from ...domain.iva.saturation import resolve_category_rate, split_gross_at_rate
 from ...domain.iva.schema import IvaCategory
 from ...domain.transactions.enums import BUSINESS_BEARING_STATES, BusinessClassification, TransactionLifecycleState
-from ...domain.transactions.errors import LLMClassifierError, TransactionNotFoundError, TransactionValidationError
+from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
 from ...domain.transactions.llm import (
     LLMClassificationResponse,
     LLMClassifier,
@@ -95,6 +83,18 @@ from .evidence_advisory import printed_iva_advisory
 from .evidence_errors import PurchaseInvoiceEvidenceInputError
 from .evidence_split import derive_child_amounts
 from .evidence_textlayer import extract_evidence_text
+from .llm_classification_ports import (
+    EvidenceImage,
+    LLMClassificationPorts,
+    LLMClassificationSuggestion,
+    LLMSaturatedSuggestion,
+    LLMSplitApplyResult,
+    LLMSplitChildSuggestion,
+    LLMSplitSuggestion,
+    LLMSuggestionRejectionResult,
+    OperatorIvaDerivationResult,
+    VisionClassifier,
+)
 from .models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult, SplitChildCommand
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
@@ -216,8 +216,7 @@ def _resolve_evidence(
         if text:
             return ResolvedEvidence(reference=reference, text=text, images=())
         images = tuple(
-            EvidenceImage.from_base64(page, ImageMediaType.PNG)
-            for page in ports.rasterise_pdf(evidence_input.data)
+            EvidenceImage.from_base64(page, ImageMediaType.PNG) for page in ports.rasterise_pdf(evidence_input.data)
         )
     else:
         # An attachment is whatever format the operator supplied, so the type is
@@ -288,9 +287,12 @@ def classify_with_evidence(
         # its own run-timing telemetry -- do not double-record here.
         vision = vision_classifier or ports.make_vision_classifier(spec, vision_model)
         images = evidence.images
-        response = cast(LLMClassificationResponse, ports.run_reader(
-            lambda: vision.classify(transaction, evidence_images=images),
-        ))
+        response = cast(
+            LLMClassificationResponse,
+            ports.run_reader(
+                lambda: vision.classify(transaction, evidence_images=images),
+            ),
+        )
         return response, vision.decided_by
     text = evidence.text if evidence is not None else None
     if text_classifier is None:
@@ -302,13 +304,19 @@ def classify_with_evidence(
         # to be produced. Text-layer evidence now takes the same on-host path
         # scanned evidence already took.
         local_text = ports.make_text_classifier(spec)
-        return cast(LLMClassificationResponse, ports.run_reader(
-            lambda: local_text.classify(transaction, evidence_text=text),
-        )), local_text.decided_by
-    return cast(LLMClassificationResponse, ports.record_classifier_run(
-        lambda: text_classifier.classify(transaction, evidence_text=text),
-        text_classifier.decided_by,
-    )), text_classifier.decided_by
+        return cast(
+            LLMClassificationResponse,
+            ports.run_reader(
+                lambda: local_text.classify(transaction, evidence_text=text),
+            ),
+        ), local_text.decided_by
+    return cast(
+        LLMClassificationResponse,
+        ports.record_classifier_run(
+            lambda: text_classifier.classify(transaction, evidence_text=text),
+            text_classifier.decided_by,
+        ),
+    ), text_classifier.decided_by
 
 
 def _split_with_evidence(
@@ -335,9 +343,12 @@ def _split_with_evidence(
         # its own run-timing telemetry -- do not double-record here.
         vision = vision_classifier or ports.make_vision_classifier(spec, vision_model)
         images = evidence.images
-        response = cast(LLMSplitResponse, ports.run_reader(
-            lambda: vision.propose_split(transaction, evidence_images=images),
-        ))
+        response = cast(
+            LLMSplitResponse,
+            ports.run_reader(
+                lambda: vision.propose_split(transaction, evidence_images=images),
+            ),
+        )
         return response, vision.decided_by
     if proposer is None:
         raise TransactionValidationError(
@@ -345,10 +356,13 @@ def _split_with_evidence(
             context={"transaction_id": transaction.transaction_id},
         )
     text = evidence.text if evidence is not None else None
-    return cast(LLMSplitResponse, ports.record_classifier_run(
-        lambda: proposer.propose_split(transaction, evidence_text=text),
-        proposer.decided_by,
-    )), proposer.decided_by
+    return cast(
+        LLMSplitResponse,
+        ports.record_classifier_run(
+            lambda: proposer.propose_split(transaction, evidence_text=text),
+            proposer.decided_by,
+        ),
+    ), proposer.decided_by
 
 
 def _load_llm_transaction(

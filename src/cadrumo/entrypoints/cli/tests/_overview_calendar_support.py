@@ -13,6 +13,7 @@ import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....adapters.inbound.pdf.source_provenance import source_pdf_reference_path
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.censo_sync import CENSO_SOURCE_TAG
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -29,7 +30,6 @@ from ....domain.modelos.filing_record import (
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
 from ....tests.profile_capsule import load_test_profile_record, open_test_profile_session, replace_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 
 __all__ = ["_isolated_backend"]

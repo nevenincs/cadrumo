@@ -13,6 +13,7 @@ import pytest
 from ....adapters.outbound.fx.ecb_provider import ECB_RATE_SOURCE_ID
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.errors import StorageValidationError
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_two_bucket_runtime
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....core.aggregation import (
     BindingSourceKind,
@@ -38,7 +39,6 @@ from ....domain.iva.schema import IvaCategory
 from ....domain.modelos.row_models import Modelo349CountryPrefixContextError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_two_bucket_runtime
 from ...aggregation.source_mesh import CalculationSourceContext
 from ..source_resolver import (
     _OWNED_SOURCES,

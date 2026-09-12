@@ -42,6 +42,7 @@ from pydantic import ValidationError
 from ....adapters.persistence.storage.secure_object_namespaces import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE
 from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import validated_casilla_id
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
@@ -54,7 +55,6 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..review_package_signing import (
     ReviewPackageSigningError,
     ReviewPackageSigningKeypair,

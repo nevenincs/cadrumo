@@ -27,7 +27,7 @@ from pydantic import (
 
 from ....core.toml import freeze_toml_value
 from .errors import RegistryValidationError
-from .ids import RevisionId
+from .ids import RegistryRevisionNodeId, RevisionId
 from .period_selector_overlap import period_selectors_overlap
 from .schema_base import MANIFEST_ONLY, LegalRefs, RegistryModel, SourceRefs
 from .schema_references import PeriodScopedValidityWindow, PeriodSelector, RegistryTemporalBounds
@@ -51,7 +51,7 @@ __all__ = (
 class DeclaredPredecessor(RegistryModel):
     """An explicit claim that a revision is authored relative to a sibling."""
 
-    revision_id: RevisionId
+    revision_id: RegistryRevisionNodeId
 
     @model_serializer(mode="plain")
     def _serialise_as_authored(self) -> str:

@@ -37,8 +37,8 @@ from ....adapters.persistence.storage.secure_object_namespaces import (
 )
 from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
-from ....core.classification.policies import SensitivityClass
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....core.classification.policies import SensitivityClass
 from ..review_package_recipient_registry import (
     RecipientAlreadyRegisteredError,
     RecipientFingerprintRecord,

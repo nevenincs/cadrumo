@@ -23,6 +23,11 @@ from typing import Any
 import pytest
 from sqlalchemy import select
 
+from .....adapters.persistence.storage.tests.secure_sql import (
+    isolated_runtime_profile,
+    mutate_encrypted_secure_object_json,
+    read_db_at_rest_bytes,
+)
 from .....domain.contribuyente.inventory.records import (
     INVENTORY_SCHEMA_VERSION,
     InventoryAcquisitionCompleteness,
@@ -41,11 +46,6 @@ from .....domain.contribuyente.inventory.records import (
 )
 from .....domain.contribuyente.inventory.valuation import inventory_acquisition_fingerprint
 from .....domain.filing_evidence import FilingEvidenceReference
-from .....adapters.persistence.storage.tests.secure_sql import (
-    isolated_runtime_profile,
-    mutate_encrypted_secure_object_json,
-    read_db_at_rest_bytes,
-)
 from ....persistence.storage.sql.engine import get_engine
 from ....persistence.storage.sql.orm import SecureObjectRow
 from ....persistence.storage.sql.session import session_scope

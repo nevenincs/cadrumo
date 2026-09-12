@@ -36,16 +36,12 @@ def tax_domain_metadata(
     normalized = TaxDomain(domain)
     declarations = tax_domain_registry_declarations(effective_date)
     prefix = f"tax_domain.{normalized.value}."
-    return {
-        key.removeprefix(prefix): value
-        for key, value in declarations.items()
-        if key.startswith(prefix)
-    }
+    return {key.removeprefix(prefix): value for key, value in declarations.items() if key.startswith(prefix)}
 
 
 def registered_tax_domain(value: str | TaxDomain, *, effective_date: date | None = None) -> TaxDomain:
     """Validate that an identifier is a currently registered tax domain."""
-    normalized = TaxDomain(value)
+    normalized = bundled_authority().tax_domain(value, effective_date=effective_date)
     declarations = tax_domain_registry_declarations(effective_date)
     if f"tax_domain.{normalized.value}.description" not in declarations:
         raise ValueError(f"tax-domain metadata is missing for {normalized.value!r}")

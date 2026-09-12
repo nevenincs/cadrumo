@@ -67,7 +67,7 @@ class FilingEnvelopeModeloPolicy(BaseModel):
 
 
 _POLICY_BY_MODELO: Mapping[Modelo, FilingEnvelopeModeloPolicy] = {
-    Modelo.M303: FilingEnvelopeModeloPolicy(
+    Modelo("303"): FilingEnvelopeModeloPolicy(
         requires_prior_domiciliation_election=True,
         applicability_gate=validate_m303_export_applicability,
     ),

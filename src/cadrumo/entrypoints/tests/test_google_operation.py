@@ -16,6 +16,7 @@ import pytest
 from ...adapters.persistence.operations.journal import OperationJournalRepository
 from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.export.google_operation import (
     GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
     GOOGLE_SHEETS_EXPORT_PHASE_PLAN,
@@ -36,7 +37,6 @@ from ...core.operations import (
     OperationEventKind,
     OperationTerminalCondition,
 )
-from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..cli.errors import CliRefusedBoundaryError
 from ..cli.modelo_spreadsheet_cli import execute_google_sheets_export, google_operation_error
 from ..operation_composition import compose_operation_dependencies

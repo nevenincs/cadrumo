@@ -672,7 +672,7 @@ def _resolve_m303_export_arrivals(
 ]:
     """Assemble current canonical register arrivals from the work-unit-bound register."""
     snapshot = bundled_authority().snapshot(
-        Modelo.M303.value,
+        Modelo("303").value,
         filing_year=period.filing_year,
         period=period.registry_token,
     )
@@ -691,7 +691,7 @@ def _resolve_m303_export_arrivals(
         contributions = ()
     bienes_parameters = resolve_bienes_inversion_regularizacion_parameters(
         snapshot.revision,
-        modelo_id=Modelo.M303.value,
+        modelo_id=Modelo("303").value,
         filing_period_date=date(period.filing_year, 12, 31),
     )
     definitive_by_identifier: dict[str, Decimal] = {}
@@ -827,7 +827,7 @@ def _resolve_export_model_profile(
     workflow_profile: TaxpayerProfile,
     iva_profile: ModeloIVAProfile | None,
 ) -> tuple[FilingModelProfileFacts, M303FilingFacts | None]:
-    if modelo is Modelo.M303:
+    if modelo == Modelo("303"):
         if iva_profile is None:
             raise FilingProducerSnapshotError("modelo 303 requires an explicitly declared IVA profile")
         return iva_profile, _resolve_m303_filing_facts_for_export(
@@ -835,9 +835,9 @@ def _resolve_export_model_profile(
             revision=revision,
             workflow_profile=workflow_profile,
         )
-    if modelo is Modelo.M202:
+    if modelo == Modelo("202"):
         return Modelo202ProducerProfile(taxpayer_profile=workflow_profile, activities=()), None
-    if modelo is Modelo.M111:
+    if modelo == Modelo("111"):
         return Modelo111ProfileFacts(colegio_concertado=workflow_profile.colegio_concertado), None
     return GeneralFilingProfileFacts(), None
 
@@ -1305,7 +1305,7 @@ def _resolve_modelo_export_prior_domiciliation(
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     calculation_observation_repository: CalculationObservationRepository,
 ) -> PriorDomiciliationElectionProjection:
-    is_m303 = str(work_unit.modelo) == Modelo.M303.value
+    is_m303 = str(work_unit.modelo) == Modelo("303").value
     if is_m303 and command.prior_domiciliation_election is None:
         raise ModeloExportError(
             "Modelo 303 export requires an explicit prior-domiciliation election",

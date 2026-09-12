@@ -228,7 +228,7 @@ def _field_value(
 
 def _m369_period_binding_value(field: ExportFieldDefinition, draft: ModeloDraft) -> object | None:
     """Project the typed Exterior period into the three official detail fields."""
-    if draft.modelo != Modelo.M369 or not draft.period.registry_token.startswith("EXT-"):
+    if draft.modelo != Modelo("369") or not draft.period.registry_token.startswith("EXT-"):
         return None
     if "2-ejercicio-y-periodo-ejercicio" in field.id:
         return draft.period.filing_year
@@ -310,7 +310,7 @@ def _draft_filing_year(draft: ModeloDraft) -> str:
 
 def _draft_period_code(draft: ModeloDraft) -> str:
     registry_token = draft.period.registry_token
-    if draft.modelo == Modelo.M369 and registry_token.startswith("EXT-") and registry_token.endswith("T"):
+    if draft.modelo == Modelo("369") and registry_token.startswith("EXT-") and registry_token.endswith("T"):
         return registry_token.removeprefix("EXT-").removesuffix("T").zfill(2)
     return registry_token
 

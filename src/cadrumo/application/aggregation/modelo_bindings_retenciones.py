@@ -42,12 +42,12 @@ from .source_resolution_operations import (
 from .source_resolution_operations import storage_degradation_resolution
 
 _RETENCIONES_AGGREGATORS = {
-    Modelo.M111.value: aggregate_retenciones_111,
-    Modelo.M115.value: aggregate_retenciones_115,
-    Modelo.M123.value: aggregate_retenciones_123,
-    Modelo.M180.value: aggregate_retenciones_180,
-    Modelo.M190.value: aggregate_retenciones_190,
-    Modelo.M193.value: aggregate_retenciones_193,
+    Modelo("111").value: aggregate_retenciones_111,
+    Modelo("115").value: aggregate_retenciones_115,
+    Modelo("123").value: aggregate_retenciones_123,
+    Modelo("180").value: aggregate_retenciones_180,
+    Modelo("190").value: aggregate_retenciones_190,
+    Modelo("193").value: aggregate_retenciones_193,
 }
 
 
@@ -119,7 +119,7 @@ class RetencionesAggregationSourceResolver:
             # that path, following the Modelo 180 precedent of carrying the flag
             # in the message. The typed action channel cannot express it -- the
             # wizard setup command projects no inputs to bind against.
-            is_m111 = str(context.modelo) == Modelo.M111.value
+            is_m111 = str(context.modelo) == Modelo("111").value
             message = t(
                 "aggregation.retenciones.errors.m111_no_retenciones_attestation_missing"
                 if is_m111

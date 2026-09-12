@@ -30,7 +30,7 @@ def resolve_m303_regimen_simplificado_snapshot(
     scope_decision: M303RegimenSimplificadoScopeDecision,
 ) -> M303RegimenSimplificadoSnapshot:
     """Resolve the sole annual-Orden and record-design snapshot for an explicit scope input."""
-    if registry_snapshot.modelo.id != Modelo.M303:
+    if registry_snapshot.modelo.id != Modelo("303"):
         raise RegistryValidationError("M303 regimen simplificado resolver requires a Modelo 303 registry snapshot")
     record_design = _unique_active_record_design(
         sources=registry_snapshot.sources,
@@ -78,10 +78,10 @@ def m303_annual_orden_snapshot_from_projection(
 
 def _select_m303_annual_orden_projection(registry_snapshot: RegistrySnapshot) -> M303AnnualOrdenProjection:
     """Select the internal projection consumed only by the canonical resolver."""
-    if registry_snapshot.modelo.id != Modelo.M303:
+    if registry_snapshot.modelo.id != Modelo("303"):
         raise RegistryValidationError("annual Orden projection selector requires a Modelo 303 registry snapshot")
     return registry_snapshot.supplementary_ordenes.get(
-        Modelo.M303, M303AnnualOrdenAuthority.empty()
+        Modelo("303"), M303AnnualOrdenAuthority.empty()
     ).require_projection(
         ejercicio=registry_snapshot.filing_year,
         registry_revision_id=registry_snapshot.revision.id,

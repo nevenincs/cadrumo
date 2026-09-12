@@ -760,7 +760,7 @@ def _m303_compensation_source_metadata(
 ) -> tuple[Literal["derived_registry_formula", "derived_carry_policy"], str]:
     if derivation.basis == "generated":
         snapshot = bundled_authority().snapshot(
-            Modelo.M303.value,
+            Modelo("303").value,
             filing_year=observation.ejercicio,
             period=observation.period.registry_token,
         )
@@ -788,7 +788,7 @@ def _with_derived_303_compensation_available_observation(
 ) -> FiledDeclaracionObservation:
     """Add Modelo 303 carry-forward availability derived from canonical filed casillas."""
     target_id = M303_COMPENSATION_AVAILABLE_CASILLA
-    if observation.modelo != Modelo.M303 or any(casilla.casilla_id == target_id for casilla in observation.casillas):
+    if observation.modelo != Modelo("303") or any(casilla.casilla_id == target_id for casilla in observation.casillas):
         return observation
     values = _m303_compensation_source_values(observation)
     # A fetched AEAT filing carries casillas only, and the compensación /

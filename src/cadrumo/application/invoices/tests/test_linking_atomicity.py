@@ -25,6 +25,7 @@ import pytest
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.errors import SecureObjectRevisionConflictError
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.invoice_link import LinkInconsistencyDirection
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
@@ -33,7 +34,6 @@ from ....domain.iva.classification import InvoiceKind
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....tests.write_unit_recorder import WriteUnitRecorder
 from ..transaction_linking import link_invoice_transaction_catalogues, link_invoice_transaction_repositories
 

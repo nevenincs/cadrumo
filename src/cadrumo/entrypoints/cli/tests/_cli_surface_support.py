@@ -4,9 +4,9 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.wizard import compiler as _wizard  # noqa: F401 -- side effect: registers PROFILE_KEYS
 from ....core.config import override_settings
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
 from .cli_runner import invoke_cached_cli
 

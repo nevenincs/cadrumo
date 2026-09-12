@@ -10,6 +10,7 @@ import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.invoice_link import LinkInconsistencyDirection
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
@@ -19,7 +20,6 @@ from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.service import link_invoice
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..catalogue_reads import verify_invoice_repository_links
 from ..transaction_linking import link_invoice_transaction_catalogues
 

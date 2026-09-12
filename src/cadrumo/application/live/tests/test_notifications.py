@@ -18,8 +18,12 @@ from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.sede.notifications import NotificationsSnapshot, RemoteNotification
 from ....adapters.persistence.storage.secure_object_namespaces import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
+from ....adapters.persistence.storage.tests.secure_sql import (
+    TestRuntimeProfile,
+    isolated_runtime_profile,
+    read_db_at_rest_bytes,
+)
 from ....core.config import Settings
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, read_db_at_rest_bytes
 from ..errors import LiveApplicationInputError
 from ..notifications import (
     NotificationsService,

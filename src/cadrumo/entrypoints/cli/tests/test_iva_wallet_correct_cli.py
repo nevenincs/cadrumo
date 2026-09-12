@@ -7,13 +7,13 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.iva_compensation_history import (
     IvaCompensationHistoryRepository,
     seed_iva_compensation_period,
 )
 from ....core.period import Period
 from ....tests.cli_envelope import require_schema_envelope
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ._iva_wallet_inspector_support import _NIF, _SEED_BUCKET_ID, _store_profile_with_nif
 from .cli_runner import invoke_cached_cli
 

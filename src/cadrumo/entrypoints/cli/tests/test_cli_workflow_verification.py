@@ -10,11 +10,11 @@ import pytest
 import typer
 from typer.core import TyperGroup
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.operator_surface.contract import get_operator_surface_contract
 from ....core.config import override_settings
 from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_envelope import unwrap_cli_result as _json
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
 from .cli_runner import cadrumo_click_command, invoke_cached_cli
 

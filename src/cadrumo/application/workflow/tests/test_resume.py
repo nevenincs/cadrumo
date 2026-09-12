@@ -17,6 +17,7 @@ from ....adapters.outbound.aeat.browser.site_health_records import (
 )
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import SiteHealthError, SiteHealthState
@@ -36,7 +37,6 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.profile_capsule import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...modelo.selectors import ModeloCalculationRevisionSelector
 from ...modelo.work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
 from ...modelo.work_lifecycle import create_work_unit

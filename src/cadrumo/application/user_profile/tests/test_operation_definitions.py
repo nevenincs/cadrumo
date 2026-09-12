@@ -20,6 +20,7 @@ from ....adapters.persistence.operations.secure_references import (
 )
 from ....adapters.persistence.storage.master_key.active_session import current_active_bucket_session
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.bucket_pointer import read_pointer
 from ....core.operations import (
     OperationEffect,
@@ -27,7 +28,6 @@ from ....core.operations import (
     OperationTerminalCondition,
 )
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,

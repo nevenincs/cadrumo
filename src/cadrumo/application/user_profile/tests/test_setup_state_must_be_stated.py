@@ -25,8 +25,8 @@ from typing import TYPE_CHECKING
 import pytest
 from pydantic import ValidationError
 
-from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ..capsule_record import ProfileRecordStore
 from ..login_session import login_profile
 from ..profile_record_repository import require_profile_record_session

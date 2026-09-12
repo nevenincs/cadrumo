@@ -6,10 +6,12 @@ from pathlib import Path
 
 import pytest
 
+from .....adapters.persistence.storage.tests.secure_sql import (
+    isolated_storage_root as _isolated_storage,  # noqa: F401 - autouse fixture
+)
 from .....core.bucket_pointer import resolve_repository_bucket_id
 from .....core.config import override_settings
 from .....domain.modelos.repository import WorkUnitPersistenceError
-from .....adapters.persistence.storage.tests.secure_sql import isolated_storage_root as _isolated_storage  # noqa: F401 - autouse fixture
 from ...storage.errors import StorageValidationError
 from ...storage.runtime_readiness import StorageRuntimeReadinessCode
 from ...storage.runtime_repository import secure_object_repository_for_bucket

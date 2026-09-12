@@ -6,7 +6,7 @@
 :class:`RentaDeductibilityResult` values become
 :class:`RentaDeductibleExpenseObservation` records routed through
 :data:`FIRST_SLICE_EXPENSE_CASILLAS` to registry
-:data:`CasillaId` bindings for :class:`~cadrumo.core.Modelo.M100`.
+:data:`CasillaId` bindings for :class:`~cadrumo.core.Modelo('100')`.
 """
 
 from __future__ import annotations
@@ -29,6 +29,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.unit_proportion import UnitProportion, is_unit_proportion
+from ..calculations.registry.renta_expense_policy import renta_expense_policy_declarations
 from ..categories.profile import CategoryProfile
 from ..categories.proportionality import (
     CategoryCitation,
@@ -38,7 +39,6 @@ from ..categories.proportionality import (
     StatutoryCapVariant,
 )
 from ..categories.spending_category import SpendingCategory, SpendingCategoryFamily, family_for
-from ..calculations.registry.renta_expense_policy import renta_expense_policy_declarations
 from ..contribuyente.ccaa import CCAA
 from ._first_slice_routing import FIRST_SLICE_EXPENSE_CASILLAS
 from .errors import RentaValidationError
@@ -257,7 +257,7 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
     source_kind: Literal[BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION] = (
         BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION
     )
-    modelo: Literal[Modelo.M100] = Modelo.M100
+    modelo: Literal[Modelo("100")] = Modelo("100")
     period: Literal["0A"] = "0A"
     tax_year: FilingYear
     activity_key: str = Field(min_length=1, max_length=128)

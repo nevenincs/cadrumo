@@ -19,6 +19,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from ......adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ......application.user_profile.capsule_record import ProfileRecordSession
 from ......application.user_profile.capsule_restore import (
     read_profile_capsule_source,
@@ -35,7 +36,6 @@ from ......application.user_profile.recovery_custody import (
 )
 from ......application.user_profile.registration import register_profile_with_credentials
 from ......domain.user_profile.values import ProfileSetupState, UserProfileRecord
-from ......adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..capsule import load_committed_profile_password_material
 from ..errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
 from ..records import ProfileCustodyEnvelope

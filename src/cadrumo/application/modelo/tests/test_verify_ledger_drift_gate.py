@@ -29,6 +29,7 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.ledger_filing_snapshot import row_fingerprint
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.verification_report import (
@@ -39,7 +40,6 @@ from ....domain.modelos.verification_report import (
 from ....domain.transactions.enums import BusinessClassification
 from ....domain.transactions.models import Transaction
 from ....tests.env_scope import ready_clave_settings
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...ledger.actions_manual import attach_manual_transaction_evidence, update_manual_transaction_fields
 from ...ledger.evidence import PurchaseInvoiceEvidenceService
 from ...ledger.models import ManualLedgerTransactionPatch

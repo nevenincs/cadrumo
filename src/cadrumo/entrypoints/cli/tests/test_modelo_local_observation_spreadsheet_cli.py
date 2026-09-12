@@ -15,13 +15,13 @@ from pathlib import Path
 import pytest
 from openpyxl import Workbook
 
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....application.calculations.binding_prefill import resolve_bindings_from_local_store
 from ....application.calculations.observations_repository import CalculationObservationRepository
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 from ....tests.profile_capsule import open_test_profile_session
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

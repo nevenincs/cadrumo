@@ -13,6 +13,7 @@ from pathlib import Path
 from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ..adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ..adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..application.modelo.work_review import ModeloWorkReview, build_modelo_work_review
 from ..core.period import Period
 from ..domain.calculations.registry.authority import bundled_authority
@@ -36,7 +37,6 @@ from ..domain.modelos.verification_report import (
 )
 from ..domain.modelos.verification_repository import upsert_verification_report
 from ..domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ..adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _NOW = datetime(2026, 8, 12, 10, 0, 0, tzinfo=UTC)

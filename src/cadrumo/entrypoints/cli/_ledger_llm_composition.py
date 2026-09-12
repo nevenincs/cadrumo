@@ -24,7 +24,10 @@ from ...application.ledger.evidence_input import (
     resolve_attachment_evidence_input,
     resolve_purchase_invoice_evidence_input,
 )
-from ...application.ledger.evidence_reference import find_bytes_bearing_evidence_record, refuse_reference_without_document_bytes
+from ...application.ledger.evidence_reference import (
+    find_bytes_bearing_evidence_record,
+    refuse_reference_without_document_bytes,
+)
 from ...application.ledger.llm_classification_ports import (
     EvidenceImage,
     LLMClassificationPorts,
@@ -36,7 +39,6 @@ from ...core.config import Settings
 from ...core.time.clock import now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.transactions.errors import LLMClassifierError, TransactionValidationError
-from ...domain.transactions.llm import PromptSpec
 from ...domain.transactions.models import Transaction
 
 
@@ -93,21 +95,27 @@ def compose_ledger_llm(*, bucket_id: str, settings: Settings) -> LedgerLlmCompos
         record = (
             find_bytes_bearing_evidence_record(
                 evidence_id,
-                evidence_records=PurchaseInvoiceEvidenceService(settings=settings).list_all(bucket_id=resolved_bucket_id),
+                evidence_records=PurchaseInvoiceEvidenceService(settings=settings).list_all(
+                    bucket_id=resolved_bucket_id
+                ),
             )
             if evidence_id is not None
             else None
         )
         if record is not None:
             return ResolvedEvidenceInput(
-                evidence_input=resolve_purchase_invoice_evidence_input(record, store=store), reference=record.evidence_id
+                evidence_input=resolve_purchase_invoice_evidence_input(record, store=store),
+                reference=record.evidence_id,
             )
         if attachment_ids:
             return ResolvedEvidenceInput(
-                evidence_input=resolve_attachment_evidence_input(attachment_ids[0], store=store), reference=attachment_ids[0]
+                evidence_input=resolve_attachment_evidence_input(attachment_ids[0], store=store),
+                reference=attachment_ids[0],
             )
         if evidence_id is None:
-            raise TransactionValidationError("evidence resolution reached the document-bytes refusal without an evidence id")
+            raise TransactionValidationError(
+                "evidence resolution reached the document-bytes refusal without an evidence id"
+            )
         raise refuse_reference_without_document_bytes(evidence_id)
 
     def run_reader(run: Callable[[], object]) -> object:
@@ -155,13 +163,17 @@ def compose_ledger_llm(*, bucket_id: str, settings: Settings) -> LedgerLlmCompos
         resolve_evidence_input=resolve_evidence_input,
         rasterise_pdf=rasterise_pdf_pages_to_base64_png,
         make_text_classifier=lambda spec: LocalTextLLMClassifier(spec=spec, settings=settings),
-        make_vision_classifier=lambda spec, model: _VisionReader(LocalVisionLLMClassifier(spec=spec, settings=settings, model=model)),
+        make_vision_classifier=lambda spec, model: _VisionReader(
+            LocalVisionLLMClassifier(spec=spec, settings=settings, model=model)
+        ),
         run_reader=run_reader,
         record_classifier_run=record_classifier_run,
     )
     return LedgerLlmComposition(
         ports=ports,
-        bucket_event_repository=BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id, settings)),
+        bucket_event_repository=BucketEventHistoryRepository(
+            objects=secure_object_repository_for_bucket(bucket_id, settings)
+        ),
     )
 
 

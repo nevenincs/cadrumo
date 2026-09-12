@@ -48,12 +48,12 @@ from .models import (
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
 )
+from .persistence_ports import LedgerPersistenceConflictError
 from .protocols import (
     BucketEventHistoryCoCommitWriterProtocol,
     InvoiceCatalogueCoCommitWriterProtocol,
     TransactionCatalogueCoCommitWriterProtocol,
 )
-from .persistence_ports import LedgerPersistenceConflictError
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 1
 

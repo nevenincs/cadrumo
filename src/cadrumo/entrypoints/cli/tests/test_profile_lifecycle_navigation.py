@@ -26,8 +26,8 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....core.config import load_settings
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
+from ....core.config import load_settings
 from ....tests.user_profile import register_cli_profile
 from .cli_runner import invoke_cached_cli
 

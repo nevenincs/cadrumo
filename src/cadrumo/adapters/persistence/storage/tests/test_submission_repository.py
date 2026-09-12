@@ -16,13 +16,13 @@ from .....core.period import Period
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
 from .....domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
-from .secure_sql import TestRuntimeProfile
 from ...profile.submission import (
     SubmissionRepository,
 )
 from ...tests.runtime_profile_fixture import default_bucket_runtime_profile_fixture
 from ..errors import ClassificationError
 from ..sql.secure_objects import SecureObjectRepository
+from .secure_sql import TestRuntimeProfile
 
 _runtime_profile = default_bucket_runtime_profile_fixture()
 

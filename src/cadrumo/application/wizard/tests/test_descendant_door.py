@@ -11,6 +11,7 @@ import pytest
 from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output.plain_text import PlainTextOutput
 
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ....application.flows.errors import FlowRunAbandonedError
 from ....application.wizard.descendant_door import (
     build_descendant_door,
@@ -19,7 +20,6 @@ from ....application.wizard.descendant_door import (
     run_descendant_door,
 )
 from ....core.errors.hierarchy import CadrumoError
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.serial]
 

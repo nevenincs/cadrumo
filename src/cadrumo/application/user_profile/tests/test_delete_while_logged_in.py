@@ -32,8 +32,8 @@ from ....adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
     current_active_bucket_session,
 )
-from ....core.time.clock import now as _now
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from ....core.time.clock import now as _now
 from ...evidence.profile_legal_hold import LegalHoldCaseAuthority
 from ...filing.retention import FilingRetentionAuthority
 from ..custody_service import (

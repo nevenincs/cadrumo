@@ -356,7 +356,7 @@ def calculate_modelo_work_revision(
         bucket_id=bucket_id,
     )
     plazo_resolutions: tuple[M210PlazoResolution, ...] = ()
-    if work_unit.modelo == Modelo.M210:
+    if work_unit.modelo == Modelo("210"):
         from .m303_regimen_simplificado_scope import active_taxpayer_profile
         from .work_plazo import calculated_m210_plazo_resolution
 
@@ -1096,7 +1096,7 @@ def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalityS
     profile projection is passed to the registry applicability helper so the
     calculate payload can disclose whether Art. 40.2 or Art. 40.3 was selected.
     """
-    if str(work_unit.modelo) != Modelo.M202:
+    if str(work_unit.modelo) != Modelo("202"):
         return None
 
     from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality

@@ -12,11 +12,11 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.period import Period
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_path
 from ....domain.identifiers import ModeloIdentifier
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..history_models import ModeloHistory, ModeloHistoryEntry
 from ..history_repository import ModeloHistoryRepository
 

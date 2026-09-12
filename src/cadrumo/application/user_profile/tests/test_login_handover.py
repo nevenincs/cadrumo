@@ -40,6 +40,7 @@ from ....adapters.persistence.storage.master_key.active_session import (
 from ....adapters.persistence.storage.master_key.login_throttle import evaluate_login_throttle
 from ....adapters.persistence.storage.profile_custody import build_profile_custody_port
 from ....adapters.persistence.storage.profile_login_session import build_profile_login_session_port
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core import config as config_module
 from ....core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from ....core.config import Settings
@@ -48,7 +49,6 @@ from ....core.profile_session import ProfileSessionRefusalReason
 from ....core.time.clock import now as _now
 from ....domain.buckets.event_repository import BucketEventHistoryPersistenceError
 from ....tests.os_keychain_hook import require_os_credential_store
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..authentication import ProfileAuthenticationRefusedError
 from ..custody_ports import bind_profile_custody_port
 from ..login_session import (

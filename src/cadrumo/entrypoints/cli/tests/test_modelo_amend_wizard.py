@@ -37,6 +37,9 @@ from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
+from ....adapters.persistence.storage.tests.secure_sql import (
+    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401
+)
 from ....application.flows.definition import FlowPage
 from ....application.flows.errors import FlowAnswerError
 from ....application.flows.scripted import run_scripted_flow
@@ -53,7 +56,6 @@ from ....domain.justificante.schema import Justificante
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.profile_capsule import open_test_profile_session
-from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
 from ....tests.user_profile import register_cli_profile
 from .._modelo_amend_wizard_cli import (
     _ACTIVE_RUNS,

@@ -100,12 +100,12 @@ _ESTIMATION_REGIME_PROFILE_KEY: dict[_IrpfEstimationRegime, tuple[str, str]] = {
 
 _CORPORATE_CENSO_ENROLMENT_PROFILE_KEYS: MappingProxyType[str, frozenset[str]] = MappingProxyType(
     {
-        _Modelo.M200.value: frozenset(
+        _Modelo("200").value: frozenset(
             {
                 "taxpayer_type.legal_entity_form",
             },
         ),
-        _Modelo.M202.value: frozenset(
+        _Modelo("202").value: frozenset(
             {
                 "taxpayer_type.legal_entity_form",
                 "taxpayer_type.incn_prior_12_months",
@@ -384,7 +384,7 @@ def _calendar_regime_incompatibility_warnings(
     """Return warnings where a surfaced modelo row lacks regime-specific calculation support."""
     if iva_regime is not _IVARegime.SIMPLIFICADO:
         return ()
-    if not any(entry.modelo == _Modelo.M303.value for entry in entries):
+    if not any(entry.modelo == _Modelo("303").value for entry in entries):
         return ()
     return (
         CalendarWarning(
@@ -392,9 +392,9 @@ def _calendar_regime_incompatibility_warnings(
             message=_M303_SIMPLIFICADO_FORFAIT_WARNING_LOCALE_KEY,
             fix_action=declare_next_action(
                 _M303_SIMPLIFICADO_FORFAIT_ACTION_ID,
-                modelo=_Modelo.M303.value,
+                modelo=_Modelo("303").value,
             ),
-            affected_modelos=(_Modelo.M303.value,),
+            affected_modelos=(_Modelo("303").value,),
         ),
     )
 

@@ -23,11 +23,11 @@ from tempfile import TemporaryDirectory
 import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.period import Period
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..readiness_query import LedgerReadinessIssueV1, read_ledger_readiness
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

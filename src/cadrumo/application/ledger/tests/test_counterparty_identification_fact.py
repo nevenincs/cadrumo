@@ -24,9 +24,9 @@ from datetime import UTC, datetime
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....domain.iva.classification import IvaTerritorialScope
 from ....domain.iva.schema import EUMemberState
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ..counterparty_establishment import (
     ConfirmedCounterpartyFactsRepository,
     CounterpartyEstablishmentConflictError,

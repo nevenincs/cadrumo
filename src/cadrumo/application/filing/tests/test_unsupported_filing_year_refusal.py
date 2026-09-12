@@ -98,8 +98,7 @@ def test_the_refusal_names_the_span_it_would_accept() -> None:
         f"the refusal must name the floor it would accept from; got {listed!r}"
     )
     assert "later" in listed, (
-        "an open span must say so rather than enumerating years it does not bound; "
-        f"got {listed!r}"
+        f"an open span must say so rather than enumerating years it does not bound; got {listed!r}"
     )
 
 

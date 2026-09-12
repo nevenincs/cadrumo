@@ -23,6 +23,7 @@ from ....adapters.outbound.llm.suggestions import (
 )
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.buckets.event import BucketEvent, BucketEventType
 from ....domain.categories.spending_category import SpendingCategory
@@ -32,7 +33,6 @@ from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.llm import LLMSplitResponse
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..llm_classification import (
     apply_evidence_split,
     apply_llm_classification,

@@ -16,11 +16,11 @@ from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRe
 from ....adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from ....adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.config import override_settings
 from ....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...operations.interactions import (
     OperationApplyResponse,
     OperationRejectResponse,

@@ -179,7 +179,7 @@ async def _capture_iva_remote_state_for_active_storage(
         wallet_error: BaseException | None = None
         filed_progress: dict[str, object] = {
             "stage": "not_started",
-            "modelo": Modelo.M303.value,
+            "modelo": Modelo("303").value,
             "year_from": year_from,
             "year_to": year_to,
         }
@@ -411,8 +411,8 @@ def _iva_remote_state_surface_manifest(
 
 
 __all__ = [
-    "build_iva_remote_state_acquisition_report",
     "await_live_iva_surface",
+    "build_iva_remote_state_acquisition_report",
     "capture_iva_compensation_history",
     "capture_iva_compensation_wallet",
     "capture_iva_remote_state",

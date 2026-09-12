@@ -66,7 +66,7 @@ class InventoryProvider(BaseModel):
 
     kind: Literal[BindingSourceKind.INVENTORY] = BindingSourceKind.INVENTORY
 
-    modelo: Literal[Modelo.M100]
+    modelo: Literal[Modelo("100")]
     # The source year is the TARGET's year, never an authored constant: the
     # declaration states timeless intent and the filing context supplies the
     # year. The casilla-renumbering hazard the former absolute ``filing_year``

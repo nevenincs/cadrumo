@@ -18,6 +18,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.ledger.list_query import sort_ledger_results as _sort_results
 from ....application.ledger.models import ManualLedgerTransactionResult
 from ....application.review.filter import LedgerReviewFilterSpec
@@ -25,7 +26,6 @@ from ....core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .._ledger_list import project_ledger_list
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

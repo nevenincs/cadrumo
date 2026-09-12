@@ -51,8 +51,8 @@ def _register_in_sibling(tmp_path_text: str, barrier: Barrier, results: Queue[tu
     """Register the shared label from a separate process, reporting the outcome."""
     from pathlib import Path as _Path
 
-    from ....tests.profile_persistence import composed_profile_persistence_ports
     from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+    from ....tests.profile_persistence import composed_profile_persistence_ports
     from ..registration import register_profile_with_credentials
 
     with isolated_profile_storage_root(tmp_path=_Path(tmp_path_text)), composed_profile_persistence_ports():

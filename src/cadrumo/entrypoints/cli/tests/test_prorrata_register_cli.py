@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.prorrata_register import (
     ProrrataEspecialTransitionKind,
     ProrrataProvisionalProvenance,
@@ -30,7 +31,6 @@ from ....domain.prorrata_register.register import (
     SectorDefinition,
 )
 from ....tests.cli_envelope import unwrap_cli_result as _json
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .._prorrata_register_cli import _entry_payload
 from ._cli_surface_profile_fixture import _isolated_backend
 from ._cli_surface_support import (

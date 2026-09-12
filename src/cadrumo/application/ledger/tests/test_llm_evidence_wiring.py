@@ -18,11 +18,11 @@ import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.pdf_fixtures import text_pdf_bytes
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..llm_classification import _resolve_evidence, suggest_llm_classification

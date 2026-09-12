@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from .....core.google_credential_source import GoogleCredentialSourceKind
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from .....core.google_credential_source import GoogleCredentialSourceKind
 from .. import session_store
 from ..impersonation import GoogleCredentialSourceSelection, GoogleImpersonationConfig
 from ..records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken

@@ -23,13 +23,13 @@ from ....adapters.persistence.storage.custody.recovery_artifact import (
     ProfileCustodyRecoveryArtifact,
     unlock_imported_profile_custody_recovery_artifact,
 )
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.credentials import (
     PROFILE_PASSWORD_MAX_SCALARS,
     PROFILE_PASSWORD_MIN_SCALARS,
     ProfilePasswordRefusalReason,
 )
 from ....domain.buckets.event import BucketEventType
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..custody_ports import (
     profile_custody_recovery_envelope_path,
     unlock_profile_custody_password,

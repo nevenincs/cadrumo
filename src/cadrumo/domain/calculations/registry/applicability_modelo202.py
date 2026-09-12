@@ -183,7 +183,7 @@ def modelo_202_modality_from_inputs(
             failure=RegistryFailureClassification(
                 condition=RegistryFailureCondition.MODELO_202_INCN_DECLARED,
                 facts={
-                    "modelo": Modelo.M202.value,
+                    "modelo": Modelo("202").value,
                     "incn_prior_12_months_declared": False,
                     "entity_type_legal": True,
                 },

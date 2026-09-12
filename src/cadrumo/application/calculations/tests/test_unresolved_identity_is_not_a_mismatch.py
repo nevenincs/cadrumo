@@ -25,6 +25,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.justificante import JustificanteRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import (
@@ -34,7 +35,6 @@ from ....domain.modelos.filing_record import (
     ModeloRecordStatus,
     derive_filing_record_id,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..cross_period_external_evidence import filing_external_evidence_blockers
 from ..cross_period_models import CrossPeriodCleanStateBlocker
 from ._cross_period_clean_state_support import _persist_justificante_metadata

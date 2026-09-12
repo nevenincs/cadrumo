@@ -235,7 +235,7 @@ def _invoice_resolution_from_observations(
         context=context,
         resolver_id=resolver_id,
     )
-    if context.modelo == Modelo.M349.value:
+    if context.modelo == Modelo("349").value:
         diagnostics += _m349_inferred_clave_diagnostics(
             declared_invoices,
             bucket_invoices=catalogue_invoices,
@@ -415,7 +415,7 @@ def _m349_incoherent_verdict(
     ``FX_UNRESOLVED`` is likewise excluded here because the unconverted-foreign
     gate upstream already withholds those records.
     """
-    if context.modelo != Modelo.M349.value:
+    if context.modelo != Modelo("349").value:
         return None
     verdict = decompose_invoice(invoice)
     contradictions = tuple(defect for defect in verdict.defects if defect in _M349_SELF_CONTRADICTION_DEFECTS)
@@ -596,7 +596,7 @@ def _m347_role_fact_advisories(
     clave E carries no direction restriction in the article, so every
     invoice from a public-administration filer is in scope.
     """
-    if context.modelo != Modelo.M347.value:
+    if context.modelo != Modelo("347").value:
         return ()
     declaration_roles = _m347_filer_declaration_roles(context.bucket_id)
     if not declaration_roles:
@@ -716,12 +716,12 @@ def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext)
         # simplificada legitimately carries none (RD 1619/2012 art. 6.1.d), so
         # it has nothing these informativas can declare rather than a defect.
         return None
-    if context.modelo == Modelo.M347.value:
+    if context.modelo == Modelo("347").value:
         return _m347_invoice_observation(invoice, context=context)
     clave = _intracommunity_clave(invoice)
     if clave is None:
         return None
-    if context.modelo == Modelo.M349.value:
+    if context.modelo == Modelo("349").value:
         validate_m349_country_prefix_context(
             country_code=invoice.counterparty_country,
             clave_operacion=clave,
@@ -971,7 +971,7 @@ def _m349_declarante_summary_union(
     context: CalculationSourceContext,
     binding_values: dict[str, Decimal],
 ) -> dict[str, Decimal]:
-    if context.modelo != Modelo.M349.value:
+    if context.modelo != Modelo("349").value:
         return binding_values
     merged = dict(binding_values)
     for payable_binding, public_binding in _M349_PAYABLE_SUMMARY_BINDING_MIRRORS.items():
@@ -1038,7 +1038,7 @@ def _m349_operador_rows_from_observations(
     context: CalculationSourceContext,
     observations: tuple[InvoiceObservation, ...],
 ) -> tuple[Modelo349OperadorRow, ...]:
-    if context.modelo != Modelo.M349.value or not observations:
+    if context.modelo != Modelo("349").value or not observations:
         return ()
     row_values = resolve_invoice_binding_row_values(
         context.revision,

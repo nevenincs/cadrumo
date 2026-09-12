@@ -169,7 +169,7 @@ def resolve_iva_compensation_annual_partition_binding_values(
     states = tuple(
         _period_state_from_303_envelope(envelope)
         for envelope in envelopes
-        if envelope.observation.modelo == Modelo.M303.value and envelope.observation.filing_year == filing_year
+        if envelope.observation.modelo == Modelo("303").value and envelope.observation.filing_year == filing_year
     )
     if not states:
         return {}
@@ -197,7 +197,7 @@ def _load_303_observations_for_partition(
     envelopes: list[ObservationEnvelopePayload] = []
     for period_code in requirement.source_periods:
         payload = repository.load_observation(
-            Modelo.M303.value,
+            Modelo("303").value,
             Period.from_year_and_code(filing_year, period_code),
         )
         if payload is None:

@@ -240,7 +240,7 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
     def _require_target_matches_snapshot(self, target: WorkUnit, context: CalculationSourceContext) -> None:
         if (
             target.bucket_id != context.bucket_id
-            or target.modelo != Modelo.M390.value
+            or target.modelo != Modelo("390").value
             or target.filing_year != context.filing_year
             or target.period != Period.from_year_and_code(context.filing_year, "0A")
             or target.revision_id != context.revision.id
@@ -257,7 +257,7 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
             for item in self._work_unit_repository.load()
             if (
                 item.bucket_id == target.bucket_id
-                and item.modelo == Modelo.M303.value
+                and item.modelo == Modelo("303").value
                 and item.filing_year == target.filing_year
                 and item.period == expected_period
             )
@@ -334,7 +334,7 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
             )
         m303 = evidence.m303
         result = m303.regimen_simplificado.calculation_result
-        modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == Modelo.M303.value)
+        modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == Modelo("303").value)
         source_revision_at_coordinate = select_revision(
             modelo,
             filing_year=source.filing_year,

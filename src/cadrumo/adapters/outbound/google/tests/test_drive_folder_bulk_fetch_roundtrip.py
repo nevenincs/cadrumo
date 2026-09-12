@@ -31,10 +31,10 @@ from pathlib import Path
 import pytest
 
 from .....adapters.persistence.storage.attachment import AttachmentStore
+from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....domain.attachments.enums import AttachmentKind, AttachmentSource
 from .....domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from .....tests.google_credentials import unused_google_credentials
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...storage.errors import OutboundStorageError, OutboundStoragePermissionError
 from ..document_link_resolver import list_drive_folder_documents, resolve_document_link
 from .drive_media_server import drive_files_list_endpoint, drive_media_endpoint

@@ -21,6 +21,7 @@ from ....adapters.persistence.operations.secure_references import (
 from ....adapters.persistence.storage.errors import RepositoryError
 from ....adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_ephemeral_secure_sql, isolated_runtime_profile
 from ....core.access_gate.errors import AeatLiveReadNotEnabledError
 from ....core.directory_scan import scan_directory
 from ....core.errors.error_codes import get_registered_error_code
@@ -37,7 +38,6 @@ from ....core.operations import (
     OperationTerminalCondition,
 )
 from ....tests.aeat_literal_fixtures import REDACTION_TOKEN_QUERY_URL_CANARY
-from ....adapters.persistence.storage.tests.secure_sql import isolated_ephemeral_secure_sql, isolated_runtime_profile
 from ..capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,

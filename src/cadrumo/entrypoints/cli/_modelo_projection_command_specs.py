@@ -124,7 +124,7 @@ MODELO_PROJECTION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 ("--modelo",),
                 _MODELO,
                 "cli.app.modelo.compare.modelo_help",
-                default=Modelo.M100.value,
+                default=Modelo("1").value,
             ),
         ),
         "ModeloCompareResult",

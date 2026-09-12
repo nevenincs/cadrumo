@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import build_error_envelope
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
@@ -35,7 +36,6 @@ from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....domain.iva_compensation.errors import IvaCompensationCasillaReferenceError
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...aggregation.source_mesh import CalculationSourceContext
 from ..bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
 from ..binding_prefill import (

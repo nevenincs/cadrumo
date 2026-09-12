@@ -26,6 +26,7 @@ from typing import ClassVar, override
 import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.ledger import invoice_confirmation
 from ....application.ledger.confirmation_gate import ConfirmationBlockedError, confirmation_blockers
 from ....application.ledger.filer_establishment import FILER_TAX_ID_FACT_PATH
@@ -47,7 +48,6 @@ from ....tests.loopback_llm import (
 )
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from .cli_runner import invoke_cached_cli
 

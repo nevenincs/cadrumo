@@ -20,6 +20,10 @@ from pathlib import Path
 import pydantic
 import pytest
 
+from .....adapters.persistence.storage.tests.secure_sql import (
+    isolated_runtime_profile,
+    mutate_encrypted_secure_object_json,
+)
 from .....domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
     BienInversionDisposal,
@@ -27,7 +31,6 @@ from .....domain.bienes_inversion.register import (
     BienInversionIvaRecord,
     BienInversionKind,
 )
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ....persistence.storage.sql.engine import get_engine
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
 

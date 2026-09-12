@@ -14,8 +14,8 @@ from pathlib import Path
 import pytest
 
 from ..adapters.persistence.storage.bucket.directory_layout import bucket_paths
-from ..core.bucket_pointer import resolve_active_bucket_id
 from ..adapters.persistence.storage.tests.secure_sql import isolated_two_bucket_runtime
+from ..core.bucket_pointer import resolve_active_bucket_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

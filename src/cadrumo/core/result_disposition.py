@@ -138,34 +138,34 @@ _M210_RESULT_CASILLA: Final[CasillaId] = validated_casilla_id(
 #: fallback rather than a guessed mapping.
 _DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
     # IVA: credit is a compensar (C). Result casilla 71 "Resultado final".
-    Modelo.M303: _DispositionSpec(
+    Modelo("303"): _DispositionSpec(
         result_casilla_ids=(_M303_RESULT_CASILLA,),
         negative=ResultDisposition.COMPENSACION,
         zero=ResultDisposition.NEGATIVA,
     ),
     # IRPF pago fraccionado: a negative result is "resultado a deducir" (B), not C.
-    Modelo.M130: _DispositionSpec(
+    Modelo("130"): _DispositionSpec(
         result_casilla_ids=(_M130_RESULT_CASILLA,),
         negative=ResultDisposition.RESULTADO_A_DEDUCIR,
         zero=ResultDisposition.NEGATIVA,
     ),
-    Modelo.M131: _DispositionSpec(
+    Modelo("131"): _DispositionSpec(
         result_casilla_ids=(_M131_RESULT_CASILLA,),
         negative=ResultDisposition.RESULTADO_A_DEDUCIR,
         zero=ResultDisposition.NEGATIVA,
     ),
     # Retenciones: only I/N (no credit code). "Resultado a ingresar" casilla.
-    Modelo.M111: _DispositionSpec(
+    Modelo("111"): _DispositionSpec(
         result_casilla_ids=(_M111_RESULT_CASILLA,),
         negative=ResultDisposition.NEGATIVA,
         zero=ResultDisposition.NEGATIVA,
     ),
-    Modelo.M115: _DispositionSpec(
+    Modelo("115"): _DispositionSpec(
         result_casilla_ids=(_M115_RESULT_CASILLA,),
         negative=ResultDisposition.NEGATIVA,
         zero=ResultDisposition.NEGATIVA,
     ),
-    Modelo.M123: _DispositionSpec(
+    Modelo("123"): _DispositionSpec(
         result_casilla_ids=(_M123_RESULT_CASILLA, _M123_2019_2023_RESULT_CASILLA),
         negative=ResultDisposition.NEGATIVA,
         zero=ResultDisposition.NEGATIVA,
@@ -174,21 +174,21 @@ _DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
     # DP200014B:00599 (semantic_role is_resultado_ingresar_o_devolver, Estado),
     # signed. Renuncia R is an explicit election, not derived; default credit
     # disposition is D.
-    Modelo.M200: _DispositionSpec(
+    Modelo("200"): _DispositionSpec(
         result_casilla_ids=(_M200_RESULT_CASILLA,),
         negative=ResultDisposition.DEVOLUCION,
         zero=ResultDisposition.NEGATIVA,
     ),
     # IS pago fraccionado: only I/N. Result is the active modality's "a ingresar"
     # casilla — 40.2 -> 03, 40.3 -> 34; both are >= 0 and exactly one is non-zero.
-    Modelo.M202: _DispositionSpec(
+    Modelo("202"): _DispositionSpec(
         result_casilla_ids=(_M202_402_RESULT_CASILLA, _M202_403_RESULT_CASILLA),
         negative=ResultDisposition.NEGATIVA,
         zero=ResultDisposition.NEGATIVA,
     ),
     # IRNR autoliquidación: casilla 31 is signed; a negative result requests
     # devolución and zero is the declared cuota-cero disposition.
-    Modelo.M210: _DispositionSpec(
+    Modelo("210"): _DispositionSpec(
         result_casilla_ids=(_M210_RESULT_CASILLA,),
         negative=ResultDisposition.DEVOLUCION,
         zero=ResultDisposition.NEGATIVA,

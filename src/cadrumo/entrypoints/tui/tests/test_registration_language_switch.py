@@ -22,6 +22,7 @@ import pytest
 from textual.widgets import Button, Input, Label, Select, Static
 from textual.widgets._select import SelectOverlay
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.login_session import login_profile
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.credentials import assess_profile_password
@@ -30,7 +31,6 @@ from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.secret.registration import RecoveryWordsScreen, RegistrationScreen
 from ....tests.profile_capsule import load_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .fixture import registration_attempt
 
 pytestmark = [

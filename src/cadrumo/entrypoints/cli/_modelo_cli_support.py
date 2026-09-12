@@ -635,7 +635,7 @@ def _validate_m349_detail_rows_for_work_unit(work_unit_id: str, rows: tuple[Mode
     if not operador_rows and not rectification_rows:
         return
     unit = get_work_unit(work_unit_id)
-    if str(unit.modelo) != Modelo.M349.value:
+    if str(unit.modelo) != Modelo("3").value:
         return
     _validate_m349_operador_rows(
         operador_rows,

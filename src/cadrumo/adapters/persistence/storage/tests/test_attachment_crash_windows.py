@@ -28,8 +28,8 @@ import pytest
 from .....domain.attachments.enums import AttachmentKind, AttachmentSource
 from .....domain.attachments.errors import AttachmentNotFoundError
 from .....domain.attachments.models import Attachment
-from .secure_sql import isolated_runtime_profile
 from ..attachment import AttachmentStore
+from .secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

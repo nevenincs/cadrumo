@@ -14,11 +14,11 @@ from typing import override
 import pytest
 from google.oauth2.credentials import Credentials
 
+from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....core.config import override_settings
 from .....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.env_scope import scoped_env_var
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import active_profile as active_profile_module
 from .. import impersonation as impersonation_module
 from .. import oauth_flow as oauth_flow_module

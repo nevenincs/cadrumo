@@ -28,11 +28,11 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.period import Period
 from ....core.rescate_type import RescateType
 from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.profile_capsule import open_test_profile_session
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ..calculate_input import WorkCalculateInputBundle, build_work_calculate_input_bundle
 from ..semantic_role_resolution import casilla_id_for_unique_semantic_role

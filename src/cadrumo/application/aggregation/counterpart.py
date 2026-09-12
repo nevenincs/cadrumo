@@ -70,8 +70,8 @@ def _registry_counterpart_catalogue(
     """Resolve counterpart kinds and readiness gates from registry authority."""
     selected_authority = authority or bundled_authority()
     query_service = RegistryQueryService(selected_authority)
-    query_service.describe_modelo(Modelo.M347.value, as_of=effective_date)
-    query_service.describe_modelo(Modelo.M349.value, as_of=effective_date)
+    query_service.describe_modelo(Modelo("347").value, as_of=effective_date)
+    query_service.describe_modelo(Modelo("349").value, as_of=effective_date)
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="m347-m349-counterpart-operation-catalogue",
@@ -106,8 +106,8 @@ def _registry_counterpart_catalogue(
         raise ValueError("counterpart registry readiness flag must be true or false")
     return _CounterpartRegistryCatalogue(
         model_kinds={
-            Modelo.M347.value: tokens("modelo.347.operation_kinds"),
-            Modelo.M349.value: tokens("modelo.349.operation_kinds"),
+            Modelo("347").value: tokens("modelo.347.operation_kinds"),
+            Modelo("349").value: tokens("modelo.349.operation_kinds"),
         },
         groi_countries=frozenset({required("modelo.349.readiness.groi_country").strip()}),
         nif_iva_for_non_groi_country=readiness == "true",
@@ -333,7 +333,7 @@ def aggregate_counterpart_347(
 
     Returns a :class:`CounterpartAggregation`.
     """
-    return _aggregate_for_modelo(observations, modelo=Modelo.M347.value, period=period)
+    return _aggregate_for_modelo(observations, modelo=Modelo("347").value, period=period)
 
 
 def aggregate_counterpart_349(
@@ -351,7 +351,7 @@ def aggregate_counterpart_349(
     Returns a :class:`CounterpartAggregation` with rollups sorted by
     ``(source_kind, counterparty_nif, operation_kind)``.
     """
-    return _aggregate_for_modelo(observations, modelo=Modelo.M349.value, period=period)
+    return _aggregate_for_modelo(observations, modelo=Modelo("349").value, period=period)
 
 
 def _counterpart_readiness_for_modelo(
@@ -361,7 +361,7 @@ def _counterpart_readiness_for_modelo(
     observations: tuple[CounterpartObservation, ...],
     registry_catalogue: _CounterpartRegistryCatalogue,
 ) -> dict[str, bool]:
-    if modelo != Modelo.M349.value:
+    if modelo != Modelo("349").value:
         return {
             "requires_groi_check": False,
             "requires_nif_iva_check": False,

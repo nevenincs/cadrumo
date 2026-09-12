@@ -17,8 +17,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Final
 
-from ....core.errors.hierarchy import CadrumoError
 from ....application.ledger.persistence_ports import LedgerPersistenceConflictError
+from ....core.errors.hierarchy import CadrumoError
 
 
 class SecureStorageError(CadrumoError):

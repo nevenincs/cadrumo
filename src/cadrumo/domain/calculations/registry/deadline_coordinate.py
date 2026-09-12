@@ -68,7 +68,7 @@ def deadline_window_semantic_coordinates(
     tipos: tuple[str | None, ...]
     if window.tipo_renta_scope is not None:
         tipos = tuple(sorted(window.tipo_renta_scope))
-    elif modelo == Modelo.M210:
+    elif modelo == Modelo("210"):
         tipos = (None, *tuple(sorted(M210_TIPO_RENTA_CODE_PROJECTION)))
     else:
         tipos = (None,)

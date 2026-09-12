@@ -29,6 +29,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -36,7 +37,6 @@ from ....domain.bienes_inversion.register import BienInversionIvaRecord, BienInv
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_actions import resolve_bucket_source_mesh
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -570,7 +570,7 @@ def _amendment_kind_choice(
 def _m303_motive_page(
     *, modelo: str, baseline_revision: CalculationRevision, run_token: str, table: dict[str, str]
 ) -> FlowPage | None:
-    if modelo != Modelo.M303:
+    if modelo != Modelo("3"):
         return None
     filing_evidence = baseline_revision.filing_instance_evidence
     if filing_evidence is None:

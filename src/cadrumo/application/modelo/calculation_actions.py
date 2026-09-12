@@ -1603,7 +1603,7 @@ def _m210_gross_source_mode(
     mode: M210GrossIncomeSourceMode | None,
 ) -> M210GrossIncomeSourceMode | None:
     """Resolve the persisted M210 [5] authority without affecting other modelos."""
-    if str(work_unit.modelo) == Modelo.M210.value:
+    if str(work_unit.modelo) == Modelo("210").value:
         return mode or M210GrossIncomeSourceMode.MANUAL
     if mode is M210GrossIncomeSourceMode.LEDGER:
         raise ModeloAggregationBindingError(

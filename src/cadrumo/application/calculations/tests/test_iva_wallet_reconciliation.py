@@ -11,6 +11,7 @@ import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
 from ....adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ....core.aggregation import BindingSourceKind
 from ....core.errors.error_codes import build_error_envelope
 from ....core.external_constants import load_external_constants
@@ -27,7 +28,6 @@ from ....domain.iva_compensation.reconciliation import (
     IvaCompensationWalletObservationProtocol,
     reconcile_iva_compensation_wallet,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation.source_mesh import CalculationSourceContext
 from ..binding_prefill import BindingPrefillReport, extract_modelo_303_local_iva_compensation_recurrence
 from ..iva_compensation_history import IvaCompensationHistoryRepository

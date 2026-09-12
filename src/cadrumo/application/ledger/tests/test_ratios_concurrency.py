@@ -28,12 +28,12 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.usage_ratios import load_usage_ratios
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.config import override_settings
 from ....core.locks_errors import LockAcquisitionError
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.usage_ratios.model import ELIGIBLE_USAGE_RATIO_CATEGORIES
 from ....domain.usage_ratios.service import usage_ratio_bucket_lock
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..ratios import set_usage_ratio
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

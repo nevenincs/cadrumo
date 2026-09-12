@@ -41,6 +41,7 @@ from ....adapters.outbound.llm.consent import mint_evidence_consent_token
 from ....adapters.outbound.llm.errors import LLMConsentError
 from ....adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor
 from ....adapters.outbound.llm.usage import UsageRecorder
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from ....core.config import override_settings
 from ....core.config_support import LLMProvider
@@ -54,7 +55,6 @@ from ....tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 # INTEGRATION, not unit, and the reason is a production guard rather than a
 # preference: a consented off-host dispatch writes a consent-ledger entry, and

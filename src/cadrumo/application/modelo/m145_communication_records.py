@@ -160,7 +160,7 @@ class M145CommunicationValidationResult(BaseModel):
         default=M145_COMMUNICATION_SERVICE_OWNER,
         pattern=r"^cadrumo\.application\.modelo$",
     )
-    modelo: str = Field(default=Modelo.M145.value, pattern=r"^145$")
+    modelo: str = Field(default=Modelo("145").value, pattern=r"^145$")
     communication_year: int = Field(ge=2012, le=2099)
     period_token: M145CommunicationPeriod
     revision_id: RevisionId = Field(min_length=1)
@@ -189,7 +189,7 @@ class M145CommunicationExportResult(BaseModel):
         default=M145_COMMUNICATION_SERVICE_OWNER,
         pattern=r"^cadrumo\.application\.modelo$",
     )
-    modelo: str = Field(default=Modelo.M145.value, pattern=r"^145$")
+    modelo: str = Field(default=Modelo("145").value, pattern=r"^145$")
     communication_year: int = Field(ge=2012, le=2099)
     period_token: M145CommunicationPeriod
     revision_id: RevisionId = Field(min_length=1)
@@ -320,7 +320,7 @@ class M145CommunicationRecord(BaseModel):
         default=M145_COMMUNICATION_SERVICE_OWNER,
         pattern=r"^cadrumo\.application\.modelo$",
     )
-    modelo: str = Field(default=Modelo.M145.value, pattern=r"^145$")
+    modelo: str = Field(default=Modelo("145").value, pattern=r"^145$")
     communication_year: int = Field(ge=2012, le=2099)
     period_token: M145CommunicationPeriod
     revision_id: RevisionId = Field(min_length=1)
@@ -378,7 +378,7 @@ def derive_m145_communication_record_id(
     return content_hash_hex(
         {
             "bucket_id": str(bucket_id).strip(),
-            "modelo": Modelo.M145.value,
+            "modelo": Modelo("145").value,
             "communication_year": communication_year,
             "period_token": _period_value(period_token),
             "revision_id": revision_id,
@@ -454,7 +454,7 @@ def _snapshot_for_scope(
     contract = build_m145_communication_service_contract(filing_year=communication_year)
 
     snapshot = bundled_authority().snapshot(
-        Modelo.M145.value,
+        Modelo("145").value,
         filing_year=communication_year,
         period=period_token.value,
     )

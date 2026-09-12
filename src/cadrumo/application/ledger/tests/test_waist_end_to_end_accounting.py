@@ -44,6 +44,7 @@ import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.attachment import AttachmentStore
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....application.aggregation.source_mesh import CalculationSourceContext
 from ....application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
@@ -57,7 +58,6 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ..closure_findings import closure_findings
 from ..evidence_input import EvidenceInput, resolve_attachment_evidence_input
 from ..invoice_draft_extraction import _extract_invoice_fields_from_structured_record

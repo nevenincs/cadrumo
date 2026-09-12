@@ -665,9 +665,9 @@ def test_recapture_divergence_notices_absorbs_a_within_tolerance_change_end_to_e
     production entry point -- against a REAL persisted stored observation, so
     the proof is not confined to the pure comparator in isolation.
     """
+    from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
     from ....domain.calculations.registry.bindings import RegistryModeloObservation
     from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-    from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
     from ...calculations.observations_repository import CalculationObservationRepository
 
     with isolated_runtime_profile(tmp_path=tmp_path):
@@ -709,9 +709,9 @@ def test_recapture_divergence_notices_absorbs_a_within_tolerance_change_end_to_e
 
 def test_recapture_divergence_notices_fires_beyond_tolerance_end_to_end(tmp_path: Path) -> None:
     """The mutation-based counterpart: a genuine divergence still reaches the operator as a Notice."""
+    from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
     from ....domain.calculations.registry.bindings import RegistryModeloObservation
     from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-    from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
     from ...calculations.observations_repository import CalculationObservationRepository
 
     with isolated_runtime_profile(tmp_path=tmp_path):

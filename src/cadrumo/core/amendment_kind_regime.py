@@ -150,18 +150,18 @@ _RECTIFICATIVA_EFFECTIVE_FROM: dict[str, date] = {
     # M303: diseño "ejercicio 2024 a partir de periodos 09 y 3T y siguientes"
     # introduces the rectificativa fields; period 09 and 3T both end on
     # 2024-09-30 (monthly September / calendar Q3), the shared boundary date.
-    Modelo.M303: date(2024, 9, 30),
+    Modelo("303"): date(2024, 9, 30),
     # M100: Manual Práctico de Renta 2025 — rectificativa is the general IRPF
     # correction mechanism "para los períodos impositivos 2024 y siguientes"
     # (effective application from Orden HAC/242/2025, 14 March 2025); the
     # registry's 2024 revision carries the rectificativa discrepancia-de-
     # criterio casilla (0669). M100's revisions are single filing years, so
     # the boundary is simply the close of filing_year 2024 (annual, 0A).
-    Modelo.M100: date(2024, 12, 31),
+    Modelo("100"): date(2024, 12, 31),
     # M200 (Impuesto sobre Sociedades): the ejercicio-2024 registry
     # revision carries rectificativa casillas throughout its "liquidacion_iv"
     # / "rectificativa" sections. M200's revision windows are annual.
-    Modelo.M200: date(2024, 12, 31),
+    Modelo("200"): date(2024, 12, 31),
 }
 
 

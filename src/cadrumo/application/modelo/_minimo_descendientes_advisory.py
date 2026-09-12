@@ -316,7 +316,7 @@ def _guarderia_descendants(revision: ModeloRevision, *, modelo: str, bucket_id: 
     Assembled once so the two cannot drift into disagreeing about when they
     apply.
     """
-    if modelo != Modelo.M100.value:
+    if modelo != Modelo("100").value:
         return None
     casilla_id = casilla_id_for_unambiguous_revision_semantic_role(
         revision,

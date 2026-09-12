@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ....core.schema_family_disposition import RegistrySchemaFamilyDisposition
@@ -21,7 +22,6 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..work_addressing import ModeloVisibleFilingTarget
 from ..work_lifecycle import create_work_unit
 from ..workspace import (

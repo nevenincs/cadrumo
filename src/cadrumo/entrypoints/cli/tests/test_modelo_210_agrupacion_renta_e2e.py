@@ -14,6 +14,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.modelo.calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.m303_regimen_simplificado_scope import active_taxpayer_profile
@@ -27,7 +28,6 @@ from ....domain.modelos.errors import ModeloError
 from ....domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.profile_capsule import seed_modelo_ready_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

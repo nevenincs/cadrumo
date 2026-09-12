@@ -35,6 +35,7 @@ from ...domain.modelos.verification_report import (
 )
 from ...domain.modelos.work_unit import WorkUnit
 
+
 def validate_m210_agrupacion_renta_rows_for_calculation(
     *,
     work_unit: WorkUnit,
@@ -50,7 +51,7 @@ def validate_m210_agrupacion_renta_rows_for_calculation(
     """
     m210_rows = tuple(row for row in detail_rows if isinstance(row, Modelo210AgrupacionRentaRow))
     is_m210_annual_group = (
-        str(work_unit.modelo) == str(Modelo.M210) and work_unit.period.standard_code is StandardPeriodCode.ANNUAL
+        str(work_unit.modelo) == str(Modelo("210")) and work_unit.period.standard_code is StandardPeriodCode.ANNUAL
     )
 
     if not is_m210_annual_group:
@@ -111,7 +112,7 @@ def m210_agrupacion_renta_verification_findings(
     stored revisions, preventing an old or malformed persisted record from
     becoming ``VERIFICADO_COMPLETO`` through a future import or storage path.
     """
-    if str(work_unit.modelo) != str(Modelo.M210) or work_unit.period.standard_code is not StandardPeriodCode.ANNUAL:
+    if str(work_unit.modelo) != str(Modelo("210")) or work_unit.period.standard_code is not StandardPeriodCode.ANNUAL:
         return ()
     try:
         validate_m210_agrupacion_renta_rows_for_calculation(
@@ -120,7 +121,7 @@ def m210_agrupacion_renta_verification_findings(
             m210_official_tipo_renta_code=revision.m210_official_tipo_renta_code,
         )
     except ModeloError as exc:
-        modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == Modelo.M210.value)
+        modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == Modelo("210").value)
         selected_revision = select_revision(
             modelo,
             filing_year=work_unit.filing_year,

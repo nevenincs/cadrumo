@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 from textual.widgets import Input
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.capsule_restore import (
     read_profile_capsule_source,
     restore_profile_capsule_with_password,
@@ -28,7 +29,6 @@ from ....application.user_profile.login_session import logout_active_profile
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.secret.login import LoginScreen
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [
     pytest.mark.integration,

@@ -28,11 +28,11 @@ from ....adapters.persistence.storage.custody.records import (
     ProfileCustodyWrappedDek,
 )
 from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.config import override_settings
 from ....core.json_contract import NoticeSeverity, OutputSchemaError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ....tests.profile_capsule import mint_test_profile_recovery_envelope
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...user_profile.capsule_record import ProfileRecordSession
 from ...user_profile.lifecycle import ProfileCapsuleLifecycle
 from ...wizard.results import ConfigProfileCreateResult, ProfileWizardStatus

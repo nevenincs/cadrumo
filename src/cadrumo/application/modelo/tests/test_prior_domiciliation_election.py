@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.observations_repository import (
     CalculationObservationRepository,
     ObservationSourceKind,
@@ -39,7 +40,6 @@ from ....domain.modelos.filing_record import (
 )
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...calculations.m303_carry_ingress import M303_DECLARATION_TYPE_HEADER_KEY
 from .._prior_domiciliation import resolve_prior_domiciliation_election
 from ..action_errors import ModeloPriorDomiciliationElectionRefusedError

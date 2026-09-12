@@ -25,6 +25,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import mutate_encrypted_secure_object_json
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.filing_projection_ref import M303RegimenSimplificadoFact
@@ -65,7 +66,6 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence, regimen_simplificado_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import mutate_encrypted_secure_object_json
 from ...calculations.m303_regimen_simplificado_annual_summary import M303RegimenSimplificadoAnnualSummaryHandoffError
 from .._registry_helpers import assert_revision_content_integrity
 from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics

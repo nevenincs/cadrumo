@@ -11,9 +11,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, reset_secure_object_store
 from .....application.user_profile.capsule_record import ProfileRecordIntegrityError
 from .....core.config import override_settings
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, reset_secure_object_store
 from ..errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthNetworkError,

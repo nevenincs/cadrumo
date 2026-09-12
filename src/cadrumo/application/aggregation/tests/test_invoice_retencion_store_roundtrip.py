@@ -40,13 +40,13 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage.secure_object_namespaces import RETENCION_OBSERVATIONS_NAMESPACE
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionScheme
 from ....core.period import Period
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..invoice_retencion import route_invoice_retenciones
 from ..retencion_observations_repository import (
     RetencionObservationRepository,

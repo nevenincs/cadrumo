@@ -9,12 +9,12 @@ from typing import cast
 import pytest
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ....application.operator_surface.command_ports import cli_argv_for
 from ....application.workflow.profile_bucket_scan import read_profile_bucket
 from ....core.bucket_pointer import read_pointer
 from ....core.errors.error_codes import ErrorCategory, get_error_exit_code
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..verb_input_schema import build_verb_input_schemas
 from .cli_runner import invoke_cached_cli, semantic_cli_output
 

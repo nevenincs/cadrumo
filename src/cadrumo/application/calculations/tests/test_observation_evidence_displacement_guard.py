@@ -21,11 +21,11 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..errors import ObservationEvidenceDisplacementError
 from ..observations_repository import CalculationObservationRepository
 

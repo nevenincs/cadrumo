@@ -20,8 +20,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core.errors.error_codes import get_registered_error_code
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....core.errors.error_codes import get_registered_error_code
 from ..m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationRecordAmbiguousError,

@@ -25,10 +25,10 @@ from ....adapters.outbound.aeat.browser.tests.real_http_boundary import (
     opened_http_boundary,
 )
 from ....adapters.outbound.aeat.verify.contract import VerifyBrowserSessionLike
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.config import Settings
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..justificante import (
     JustificanteAuthenticity,
     JustificanteCaptureSnapshot,

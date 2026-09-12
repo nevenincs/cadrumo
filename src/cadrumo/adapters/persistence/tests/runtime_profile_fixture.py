@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from ..storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..profile.transactions import TransactionCatalogueRepository
+from ..storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 __all__ = [
     "bucket_scoped_runtime_profile_fixture",

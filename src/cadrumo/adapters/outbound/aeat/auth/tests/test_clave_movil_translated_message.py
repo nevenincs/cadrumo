@@ -23,10 +23,10 @@ from typing import TYPE_CHECKING
 import pytest
 from pydantic import SecretStr
 
+from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ......core.config import Settings
 from ......core.errors.hierarchy import AeatLoginAssertionError
 from ......core.i18n.render import tr
-from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..clave_movil import ClaveMovilAuthProvider
 from ..clave_movil_metadata import ClaveMovilSessionMetadata
 

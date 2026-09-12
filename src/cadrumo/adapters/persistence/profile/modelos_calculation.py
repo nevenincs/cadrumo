@@ -299,12 +299,12 @@ class CalculationRevisionCatalogueRepository:
         justificantes = tuple(JustificanteRepository(objects=self._objects).iter_justificantes())
         snapshots: dict[str, RegistrySnapshot] = {
             unit.work_unit_id: bundled_authority().snapshot(
-                Modelo.M303.value,
+                Modelo("303").value,
                 filing_year=unit.filing_year,
                 period=unit.period.registry_token,
             )
             for unit in work_units.values()
-            if unit.modelo == Modelo.M303.value
+            if unit.modelo == Modelo("303").value
         }
         return CalculationRevisionAggregateContext(
             work_units=work_units,

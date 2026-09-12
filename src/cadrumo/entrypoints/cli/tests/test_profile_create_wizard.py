@@ -22,8 +22,10 @@ from __future__ import annotations
 import pytest
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from ....adapters.persistence.storage.tests.secure_sql import (
+    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401
+)
 from ....application.wizard.catalogue import WIZARD_FLOWS
-from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
 from ....tests.user_profile import register_cli_profile
 from .._root_support import _prefer_complete_verb_path
 from .cli_runner import invoke_cached_cli

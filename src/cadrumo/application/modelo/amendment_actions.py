@@ -179,7 +179,7 @@ def _load_amendment_baseline[CasillaKey](
             context={"calculation_revision_id": baseline.calculation_revision_id},
         )
     require_calculation_revision_coordinates_current(baseline_revision)
-    if work_unit.modelo == Modelo.M303.value and baseline_revision.filing_instance_evidence is None:
+    if work_unit.modelo == Modelo("303").value and baseline_revision.filing_instance_evidence is None:
         raise AmendmentEvidenceMissingError(
             translated_message="errors.error.error_modelo_amendment_evidence_missing",
             context={
@@ -220,7 +220,7 @@ def _resolve_m303_rectificativa_motive_before_identity(
         baseline_revision=baseline_revision,
     )
     requires_motive = (
-        work_unit.modelo == Modelo.M303.value and amendment_kind is CalculationRevisionAmendmentKind.RECTIFICATIVA
+        work_unit.modelo == Modelo("303").value and amendment_kind is CalculationRevisionAmendmentKind.RECTIFICATIVA
     )
     if (requires_motive and applicable and supplied is not None) or (not requires_motive and supplied is None):
         return supplied
@@ -242,7 +242,7 @@ def _m303_rectificativa_motive_is_applicable(
     work_unit: WorkUnit,
     baseline_revision: CalculationRevision,
 ) -> bool:
-    if work_unit.modelo != Modelo.M303.value:
+    if work_unit.modelo != Modelo("303").value:
         return False
     filing_evidence = baseline_revision.filing_instance_evidence
     if filing_evidence is None:
@@ -252,7 +252,7 @@ def _m303_rectificativa_motive_is_applicable(
         )
     regimen_snapshot = filing_evidence.m303.regimen_simplificado.regimen_snapshot
     snapshot = bundled_authority().snapshot(
-        Modelo.M303.value,
+        Modelo("303").value,
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
     )
@@ -463,12 +463,12 @@ def amend_modelo_revision[CasillaKey](
         justificantes=justificantes,
         registry_snapshots={
             work_unit.work_unit_id: bundled_authority().snapshot(
-                Modelo.M303.value,
+                Modelo("303").value,
                 filing_year=work_unit.filing_year,
                 period=work_unit.period.registry_token,
             )
         }
-        if work_unit.modelo == Modelo.M303.value
+        if work_unit.modelo == Modelo("303").value
         else {},
         expected_taxpayer_tax_id=taxpayer_tax_id,
     )

@@ -21,6 +21,7 @@ from ....adapters.outbound.aeat.sede.schema import (
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 from ....core.casilla_id import validated_casilla_id
 from ....core.casilla_value_kind import CasillaValueKind
 from ....core.config import Settings
@@ -36,7 +37,6 @@ from ....domain.calculations.registry.tests.registry_observations import (
 )
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
-from ....adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 from ...calculations.binding_prefill import (
     extract_modelo_303_local_iva_compensation_recurrence,
     resolve_bindings_from_local_store,

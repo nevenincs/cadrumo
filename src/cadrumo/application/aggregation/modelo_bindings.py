@@ -265,7 +265,7 @@ class LedgerIvaAggregationSourceResolver:
         # blocking: several of these categories are cuota-less BY LAW, so no tax
         # is lost -- only the base itself has nowhere on this revision to land.
         unroutable_categories: tuple[IvaCategory, ...] = ()
-        if str(context.modelo) == Modelo.M303.value:
+        if str(context.modelo) == Modelo("303").value:
             present_categories = {observation.category for observation in aggregation.observations}
             unroutable_categories = tuple(
                 category
@@ -389,8 +389,8 @@ class LedgerIvaAggregationSourceResolver:
 #: Modelo 130 cumulative-quarter path, which is the shape every other consumer of
 #: this source kind has.
 _RENTA_INCOME_AGGREGATOR_BY_MODELO = {
-    Modelo.M100.value: aggregate_renta_m100_income_ledger_from_repositories,
-    Modelo.M131.value: aggregate_renta_m131_agrario_income_ledger_from_repositories,
+    Modelo("100").value: aggregate_renta_m100_income_ledger_from_repositories,
+    Modelo("131").value: aggregate_renta_m131_agrario_income_ledger_from_repositories,
 }
 
 

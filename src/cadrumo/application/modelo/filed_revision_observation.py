@@ -133,7 +133,7 @@ def require_filing_result_disposition(
     copies of the condition would be two authorities on when a filing is
     under-declared, and they would drift.
     """
-    if work_unit.modelo == Modelo.M303.value and result_disposition is None:
+    if work_unit.modelo == Modelo("303").value and result_disposition is None:
         raise ModeloLocalObservationError(
             translated_message="errors.error.error_modelos",
             context={"modelo": work_unit.modelo, "period": work_unit.period.registry_token},
@@ -223,7 +223,7 @@ def persist_filed_revision_observation(
     )
     key = observation_key(work_unit.modelo, work_unit.period)
     projects_iva_history = (
-        work_unit.modelo == Modelo.M303.value and taxpayer_nif is not None and bool(taxpayer_nif.strip())
+        work_unit.modelo == Modelo("303").value and taxpayer_nif is not None and bool(taxpayer_nif.strip())
     )
     # Resolve the history repository BEFORE the carry write: both rows describe
     # the one filed period, so a mismatched pair must refuse with neither

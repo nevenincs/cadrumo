@@ -17,7 +17,6 @@ import typer
 from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.cli_exception_preconditions import CliExceptionPrecondition, cli_exception_no_recovery_verdict
 from ...application.ledger.actions_manual import ledger_transaction_payload, list_manual_transactions
 from ...application.ledger.id_resolution import resolve_transaction_id

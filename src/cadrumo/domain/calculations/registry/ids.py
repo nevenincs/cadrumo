@@ -19,6 +19,7 @@ _EXPORT_FIELD_RE = r"^[A-Za-z0-9][A-Za-z0-9._:_-]*$"
 _ORACLE_ID_RE = r"^[a-z](?:[a-z0-9-]{0,126}[a-z0-9])?$"
 
 type ModeloId = Annotated[str, Field(pattern=_MODELO_RE)]
+type RegistryRevisionNodeId = Annotated[str, Field(min_length=1, max_length=160, pattern=_REF_RE)]
 type RevisionId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type FormulaId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type ParameterId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]

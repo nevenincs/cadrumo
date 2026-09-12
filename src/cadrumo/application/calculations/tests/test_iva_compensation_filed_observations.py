@@ -9,6 +9,7 @@ import pytest
 
 from ....adapters.outbound.aeat.sede.errors import SedeError
 from ....adapters.outbound.aeat.sede.schema import ObservedCasillaValue
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_value_kind import CasillaValueKind
 from ....core.errors.error_codes import build_error_envelope
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
@@ -27,7 +28,6 @@ from ....domain.iva_compensation.errors import (
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..errors import IvaCompensationModeloError
 from ..iva_compensation_history import (
     IvaCompensationHistoryRepository,

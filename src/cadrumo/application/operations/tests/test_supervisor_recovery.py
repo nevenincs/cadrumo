@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.operations import (
     OperationCancellation,
     OperationDeadline,
@@ -17,7 +18,6 @@ from ....core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..capabilities import (
     OperationOwnedResource,
     OperationReplayPolicy,

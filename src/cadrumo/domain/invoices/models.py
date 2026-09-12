@@ -95,6 +95,7 @@ def _simplificada_mandatory_tax_id_categories() -> frozenset[IvaCategory]:
     except ValueError as exc:
         raise RegistryValidationError("invoice applicability contains an unknown IVA category") from exc
 
+
 _COLLECTED_PAYMENT_STATUSES: Final[frozenset[PaymentStatus]] = frozenset(
     {PaymentStatus.PAID, PaymentStatus.PARTIALLY_PAID},
 )

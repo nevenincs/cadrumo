@@ -119,7 +119,7 @@ def collect_bienes_inversion_regularizacion_diagnostics(
         for ``filing_year``, or a one-element ``storage_degraded`` diagnostic
         when the encrypted register cannot be read; an empty tuple otherwise.
     """
-    if modelo != Modelo.M303.value:
+    if modelo != Modelo("303").value:
         return ()
     if not is_m303_annual_settlement_period(Period.from_year_and_code(filing_year, period_token)):
         return ()

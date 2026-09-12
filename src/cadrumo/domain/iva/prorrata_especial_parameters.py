@@ -42,6 +42,7 @@ if TYPE_CHECKING:
 #: The registry parameter carrying the art-103.Dos.2 margin.
 PRORRATA_ESPECIAL_MANDATORY_PARAMETER_ID = "m303-prorrata-especial-obligatoria-margen-porcentaje"
 
+
 class ProrrataEspecialMandatoryParameterError(_CadrumoError):
     """Raised when the art-103.Dos.2 margin cannot be grounded for an ejercicio."""
 

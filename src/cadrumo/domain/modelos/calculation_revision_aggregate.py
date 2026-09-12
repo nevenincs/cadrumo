@@ -58,7 +58,7 @@ def validate_calculation_revision_aggregate(
     if identity is None:
         return None
     work_unit = _require_parent_work_unit(revision, context)
-    if work_unit.modelo != Modelo.M303.value:
+    if work_unit.modelo != Modelo("303").value:
         if identity.m303_rectificativa_motive is not None:
             raise ModeloValidationError("an M303 rectificativa motive is forbidden for another modelo")
         return None
@@ -72,7 +72,7 @@ def validate_calculation_revision_aggregate(
     if context.expected_taxpayer_tax_id is None:
         raise ModeloValidationError("M303 rectificativa aggregate requires the authoritative taxpayer tax id")
     if not receipt.matches_filing_target(
-        modelo=Modelo.M303.value,
+        modelo=Modelo("303").value,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
         tax_id=context.expected_taxpayer_tax_id,
@@ -148,7 +148,7 @@ def _require_registry_snapshot(
     snapshot = context.registry_snapshots.get(work_unit.work_unit_id)
     if snapshot is None:
         raise ModeloValidationError("M303 rectificativa revision lacks exact registry snapshot context")
-    if snapshot.modelo.id != Modelo.M303 or snapshot.revision.id != work_unit.revision_id:
+    if snapshot.modelo.id != Modelo("303") or snapshot.revision.id != work_unit.revision_id:
         raise ModeloValidationError("M303 rectificativa registry snapshot disagrees with its parent WorkUnit")
     return snapshot
 

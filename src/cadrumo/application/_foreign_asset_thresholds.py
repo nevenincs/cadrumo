@@ -23,12 +23,12 @@ from ..domain.calculations.registry.temporal import select_revision
 
 _ANNUAL_PERIOD = "0A"
 _INITIAL_PARAMETER_IDS = {
-    Modelo.M720: "modelo-720-asset-declaration-threshold-eur",
-    Modelo.M721: "modelo-721-asset-declaration-threshold-eur",
+    Modelo("720"): "modelo-720-asset-declaration-threshold-eur",
+    Modelo("721"): "modelo-721-asset-declaration-threshold-eur",
 }
 _REDECLARATION_PARAMETER_IDS = {
-    Modelo.M720: "modelo-720-redeclaration-increment-threshold-eur",
-    Modelo.M721: "modelo-721-redeclaration-increment-threshold-eur",
+    Modelo("720"): "modelo-720-redeclaration-increment-threshold-eur",
+    Modelo("721"): "modelo-721-redeclaration-increment-threshold-eur",
 }
 
 

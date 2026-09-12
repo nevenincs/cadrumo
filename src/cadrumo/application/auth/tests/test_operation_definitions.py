@@ -16,13 +16,13 @@ from ....adapters.persistence.operations.journal import OperationJournalReposito
 from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ....adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ....core.auth_provider import AuthProviderKind
 from ....core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ...operations.capabilities import OperationRequestStoragePolicy
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationRegistry

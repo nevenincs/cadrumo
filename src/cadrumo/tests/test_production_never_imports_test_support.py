@@ -150,7 +150,9 @@ def test_a_dynamic_import_of_test_support_is_still_seen() -> None:
     cycle-breaking, so it is the one a production module is most likely to
     already have on hand.
     """
-    dynamic = ast.parse("import importlib\nm = importlib.import_module('cadrumo.adapters.persistence.storage.tests.secure_sql')\n")
+    dynamic = ast.parse(
+        "import importlib\nm = importlib.import_module('cadrumo.adapters.persistence.storage.tests.secure_sql')\n"
+    )
     builtin = ast.parse("m = __import__('cadrumo.adapters.persistence.storage.tests.secure_sql')\n")
 
     assert any(isinstance(n, ast.Call) and _dynamic_tests_import(n) for n in ast.walk(dynamic))
