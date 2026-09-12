@@ -26,7 +26,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.identity.tax_id import SubjectTaxId
+from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 from .....core.period import Period
 from ....filing.schema import (
     ModeloBindingValue,

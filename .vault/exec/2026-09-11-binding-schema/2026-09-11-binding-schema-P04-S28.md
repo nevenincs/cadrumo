@@ -5,7 +5,7 @@ tags:
 date: '2026-09-12'
 modified: '2026-09-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:878f438a7c606658dde05dab70eeff050c9cd73929fe1d745412e1c243edaeaa'
+body_hash: 'sha256:d43f512c997d74c66b4d48b5acc2f012d8358df930f1eac9f30d72f44dd87465'
 step_id: 'S28'
 related:
   - "[[2026-09-11-binding-schema-plan]]"

@@ -63,8 +63,14 @@ def _modelo(
     *editions: list[CasillaDefinition],
     last_declares_no_predecessor: bool = False,
     names: Mapping[str, str] | None = None,
+    concurrent_from: date | None = None,
 ) -> ModeloDefinition:
-    """Build editions from 2023 onward; ``names`` maps an edition id to the predecessor it names."""
+    """Build editions from 2023 onward; ``names`` maps an edition id to the predecessor it names.
+
+    ``concurrent_from`` gives every edition that same start date and no end,
+    which is how a modelo's parallel scheme variants are declared: siblings
+    taking effect together rather than a succession.
+    """
     named = names or {}
     revisions: dict[str, ModeloRevision] = {}
     for offset, casillas in enumerate(editions):
@@ -72,7 +78,11 @@ def _modelo(
         payload: dict[str, object] = {
             "id": str(year),
             "localization_key": f"test.schema.revision.{year}.label",
-            "valid_from": date(year, 1, 1),
+            "valid_from": concurrent_from or date(year, 1, 1),
+            # Each edition closes at its year end, as a real annual succession does. A
+            # none-rooted edition is judged against the earlier one only when that earlier
+            # edition has closed, so the fixtures must state their validity to exercise it.
+            "valid_to": None if concurrent_from else date(year, 12, 31),
             "period_selector": PeriodSelector(years=(year,), periods=("0A",)),
             "legal_refs": ("ley-58-2003:art-29",),
             "source_refs": ("aeat-manual",),
@@ -148,10 +158,55 @@ def test_the_first_edition_is_never_judged() -> None:
     assert unresolved_successor_rows(_modelo([_row("06")])) == ()
 
 
-def test_an_edition_declaring_no_predecessor_is_not_judged() -> None:
-    declared = _modelo(_PREDECESSOR, [_row("07")], last_declares_no_predecessor=True)
-    assert unresolved_successor_rows(declared) == ()
-    assert unresolved_successor_rows(_modelo(_PREDECESSOR, [_row("07")])) == (_key("2024", "07"),)
+def test_an_edition_declaring_no_predecessor_is_still_judged_row_by_row() -> None:
+    """A none is an edition-level statement and does not exempt the edition's rows.
+
+    Declaring a none says the EDITION cannot be produced from the one before it
+    by the merge. Whether an individual casilla continues is a separate axis the
+    corpus declares per row, and it does: rows in none-rooted editions carry
+    ``continuidad_id`` values the adjacent earlier edition also carries. Reading
+    the edition-level none as a blanket exemption put every such row beyond
+    judgement, which let lineage go missing with nothing reporting it.
+
+    The pair below is the discriminator. Both editions declare a none, so a rule
+    that skipped them would return ``()`` for both; judging them row by row
+    separates the unchained row from the one whose chain the adjacent edition
+    carries.
+    """
+    unchained = _modelo(_PREDECESSOR, [_row("07")], last_declares_no_predecessor=True)
+    assert unresolved_successor_rows(unchained) == (_key("2024", "07"),)
+
+    continuing = _modelo(_PREDECESSOR, [_row("07", chain="base")], last_declares_no_predecessor=True)
+    assert unresolved_successor_rows(continuing) == ()
+
+
+def test_a_none_on_the_first_edition_still_judges_nothing() -> None:
+    """The first edition is exempt because it has no earlier edition, not because of its none."""
+    assert unresolved_successor_rows(_modelo([_row("06")], last_declares_no_predecessor=True)) == ()
+
+
+def test_a_concurrent_none_rooted_sibling_is_not_judged_against_its_sibling() -> None:
+    """Parallel scheme variants take effect together; neither continues the other.
+
+    A modelo's scheme variants share a start date and none of them closes, so
+    sorting them puts one 'before' another with no succession behind it. Pairing
+    them would invent a lineage relationship the corpus never declared and
+    report every row of the later-sorted sibling as unresolved.
+
+    The control is the same shape with the earlier edition CLOSED before the
+    later one begins: that is a real succession and its unchained row is
+    reported, so the rule cannot pass by exempting every none-rooted edition.
+    """
+    concurrent = _modelo(
+        [_row("06", chain="base")],
+        [_row("07")],
+        last_declares_no_predecessor=True,
+        concurrent_from=date(2023, 7, 1),
+    )
+    assert unresolved_successor_rows(concurrent) == ()
+
+    succeeding = _modelo([_row("06", chain="base")], [_row("07")], last_declares_no_predecessor=True)
+    assert unresolved_successor_rows(succeeding) == (_key("2024", "07"),)
 
 
 def test_only_the_adjacent_predecessor_edition_resolves_an_id() -> None:

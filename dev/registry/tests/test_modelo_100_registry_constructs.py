@@ -28,7 +28,7 @@ from cadrumo.domain.contribuyente.family_profile import RentaFamilyProfile
 from cadrumo.domain.contribuyente.family_types import RentaAscendantProfile, RentaDescendantProfile
 from cadrumo.application.user_profile.profile_keys import profile_keys as catalogue_profile_keys
 from cadrumo.domain.contribuyente.tax_residence import TaxResidenceProfile
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.validate_constructs import CONSTRUCT_MEMBER_ATTRIBUTES
 from ..compiler.validator import RegistryValidator

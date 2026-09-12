@@ -19,14 +19,14 @@ from ....core.unit_proportion import UnitProportion
 from ...iva.deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
 from ...iva.flow import IvaFlowDirection, is_deducible_flow
 from ...iva.prorrata import InputClassification
+from ...iva.components import registry_category_projection
 from ...iva.schema import (
-    CUOTA_LESS_M303_IVA_CATEGORIES,
-    M303_BASE_OUT_OF_SCOPE_IVA_CATEGORIES,
     IvaCashAccountingTreatment,
     IvaCategory,
     IvaExemptionArticle,
     IvaLedgerObservationRole,
     IvaRateKind,
+    default_iva_cash_accounting_treatment,
 )
 from ._ledger_binding_resolution import (
     UnroutedLedgerQuantity,
@@ -40,6 +40,13 @@ from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .binding_targets import casillas_by_binding
 from .errors import RegistryValidationError
 from .ids import BindingId
+from .iva_rate_kind_catalogue import (
+    require_iva_rate_kind,
+    require_registry_declared_iva_rate_kind,
+    resolve_iva_rate_kind_catalogue,
+)
+from .iva_category_catalogue import resolve_iva_category_catalogue
+from .iva_schema_vocabulary import require_iva_cash_accounting_treatment, require_iva_exemption_article
 from .ledger_binding_selector_support import LedgerIvaFact, LedgerIvaFactValue
 from .quantity_screen_enrolment import assert_quantity_readers_cover_independent_facts, independent_quantity_facts
 from .schema_base import coerce_decimal_tuple, coerce_enum_member, coerce_enum_tuple
@@ -133,7 +140,7 @@ class IvaLedgerObservation(BaseModel):
     390 binding selectors filter prorrata-linked observations without
     a manual join against the parallel ``prorrata_references`` tuple.
     """
-    cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE
+    cash_accounting_treatment: IvaCashAccountingTreatment = Field(default_factory=default_iva_cash_accounting_treatment)
     """Independent criterio-de-caja affiliation for this projection."""
     observation_role: IvaLedgerObservationRole
     """Whether this is a monetary settlement or an art. 75 information projection.
@@ -173,12 +180,17 @@ class IvaLedgerObservation(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_exemption_article_category(self) -> IvaLedgerObservation:
-        if self.exemption_article is not None and self.category is not IvaCategory.DOMESTIC_EXEMPT:
+        require_iva_rate_kind(self.rate_kind, effective_date=self.transaction_date)
+        require_iva_cash_accounting_treatment(self.cash_accounting_treatment)
+        if self.exemption_article is not None:
+            require_iva_exemption_article(self.exemption_article)
+        category_catalogue = resolve_iva_category_catalogue(effective_date=date.today())
+        if self.exemption_article is not None and self.category != category_catalogue.require("domestic_exempt"):
             raise RegistryValidationError(
                 "exemption_article is only valid when category is DOMESTIC_EXEMPT; "
                 f"got category {self.category.value!r}",
             )
-        if not is_deducible_flow(self.flow_direction) or self.category is IvaCategory.RECARGO_EQUIVALENCIA:
+        if not is_deducible_flow(self.flow_direction) or self.category == category_catalogue.require("recargo_equivalencia"):
             if self.deduction_fact_kind is not None or self.deduction_provenance is not None:
                 raise RegistryValidationError("output IVA facts cannot carry deduction authority")
             return self
@@ -262,6 +274,12 @@ class LedgerIvaProvider(BaseModel):
 
     @field_validator("rate_kinds", mode="after")
     @classmethod
+    def _rate_kinds_registry_declared(cls, value: tuple[IvaRateKind, ...]) -> tuple[IvaRateKind, ...]:
+        """Refuse binding rate tiers absent from the IVA facts being validated."""
+        return tuple(require_registry_declared_iva_rate_kind(kind, effective_date=date.today()) for kind in value)
+
+    @field_validator("rate_kinds", mode="after")
+    @classmethod
     def _rate_kinds_unique(cls, value: tuple[IvaRateKind, ...]) -> tuple[IvaRateKind, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("rate_kinds entries must be unique")
@@ -273,6 +291,8 @@ class LedgerIvaProvider(BaseModel):
         cls,
         value: tuple[IvaCashAccountingTreatmentCode, ...],
     ) -> tuple[IvaCashAccountingTreatmentCode, ...]:
+        for token in value:
+            require_iva_cash_accounting_treatment(token)
         if len(set(value)) != len(value):
             raise RegistryValidationError("cash_accounting_treatments entries must be unique")
         return value
@@ -293,13 +313,20 @@ class LedgerIvaProvider(BaseModel):
         cls,
         value: tuple[IvaExemptionArticle, ...] | None,
     ) -> tuple[IvaExemptionArticle, ...] | None:
+        if value is not None:
+            for token in value:
+                require_iva_exemption_article(token)
         if value is not None and len(set(value)) != len(value):
             raise RegistryValidationError("exemption_articles entries must be unique")
         return value
 
     @model_validator(mode="after")
     def _exemption_article_filter_requires_domestic_exempt(self) -> LedgerIvaProvider:
-        if self.exemption_articles is not None and IvaCategory.DOMESTIC_EXEMPT not in self.categories:
+        if (
+            self.exemption_articles is not None
+            and resolve_iva_category_catalogue(effective_date=date.today()).require("domestic_exempt")
+            not in self.categories
+        ):
             raise RegistryValidationError(
                 "exemption_articles selector requires DOMESTIC_EXEMPT in categories",
             )
@@ -337,73 +364,6 @@ class _InvoiceLedgerScreenShape(NamedTuple):
 
 
 _INVOICE_LEDGER_SCREEN_OBSERVATION_ROLES: tuple[IvaLedgerObservationRole, ...] = (IvaLedgerObservationRole.SETTLEMENT,)
-_INVOICE_LEDGER_SCREEN_RATE_SLOTS: tuple[_InvoiceLedgerScreenShape, ...] = (
-    _InvoiceLedgerScreenShape(
-        (IvaCategory.DOMESTIC_GENERAL,),
-        (IvaRateKind.GENERAL,),
-        IvaFlowDirection.REPERCUTIDO,
-        LedgerIvaFact.IVA_AMOUNT_SUM,
-    ),
-    _InvoiceLedgerScreenShape(
-        (IvaCategory.DOMESTIC_REDUCED,),
-        (IvaRateKind.REDUCED,),
-        IvaFlowDirection.REPERCUTIDO,
-        LedgerIvaFact.IVA_AMOUNT_SUM,
-    ),
-    _InvoiceLedgerScreenShape(
-        (IvaCategory.DOMESTIC_SUPER_REDUCED,),
-        (IvaRateKind.SUPER_REDUCED,),
-        IvaFlowDirection.REPERCUTIDO,
-        LedgerIvaFact.IVA_AMOUNT_SUM,
-    ),
-    _InvoiceLedgerScreenShape(
-        (
-            IvaCategory.DOMESTIC_GENERAL,
-            IvaCategory.DOMESTIC_REDUCED,
-            IvaCategory.DOMESTIC_SUPER_REDUCED,
-        ),
-        (
-            IvaRateKind.GENERAL,
-            IvaRateKind.REDUCED,
-            IvaRateKind.SUPER_REDUCED,
-        ),
-        IvaFlowDirection.SOPORTADO,
-        LedgerIvaFact.IVA_AMOUNT_SUM,
-    ),
-    _InvoiceLedgerScreenShape(
-        (IvaCategory.DOMESTIC_GENERAL,),
-        (IvaRateKind.GENERAL,),
-        IvaFlowDirection.REPERCUTIDO,
-        LedgerIvaFact.RECARGO_AMOUNT_SUM,
-    ),
-    _InvoiceLedgerScreenShape(
-        (IvaCategory.DOMESTIC_REDUCED,),
-        (IvaRateKind.REDUCED,),
-        IvaFlowDirection.REPERCUTIDO,
-        LedgerIvaFact.RECARGO_AMOUNT_SUM,
-    ),
-    _InvoiceLedgerScreenShape(
-        (IvaCategory.DOMESTIC_SUPER_REDUCED,),
-        (IvaRateKind.SUPER_REDUCED,),
-        IvaFlowDirection.REPERCUTIDO,
-        LedgerIvaFact.RECARGO_AMOUNT_SUM,
-    ),
-)
-_INVOICE_LEDGER_SCREEN_SHAPE_SET = frozenset(_INVOICE_LEDGER_SCREEN_RATE_SLOTS)
-_INVOICE_LEDGER_SCREEN_DOMESTIC_CATEGORIES = frozenset(
-    {
-        IvaCategory.DOMESTIC_GENERAL,
-        IvaCategory.DOMESTIC_REDUCED,
-        IvaCategory.DOMESTIC_SUPER_REDUCED,
-    },
-)
-_INVOICE_LEDGER_SCREEN_RATE_KINDS = frozenset(
-    {
-        IvaRateKind.GENERAL,
-        IvaRateKind.REDUCED,
-        IvaRateKind.SUPER_REDUCED,
-    },
-)
 _INVOICE_LEDGER_SCREEN_FACTS = frozenset(
     {
         LedgerIvaFact.IVA_AMOUNT_SUM,
@@ -413,12 +373,73 @@ _INVOICE_LEDGER_SCREEN_FACTS = frozenset(
 _INVOICE_LEDGER_SCREEN_MODELOS = frozenset({"303", "390"})
 
 
+def _invoice_ledger_screen_rate_slots(effective_date: date) -> tuple[_InvoiceLedgerScreenShape, ...]:
+    """Project the screen's rate tiers from the governed rate-kind catalogue."""
+    category_catalogue = resolve_iva_category_catalogue(effective_date=effective_date)
+    general_category = category_catalogue.require("domestic_general")
+    reduced_category = category_catalogue.require("domestic_reduced")
+    super_reduced_category = category_catalogue.require("domestic_super_reduced")
+    catalogue = resolve_iva_rate_kind_catalogue(effective_date=effective_date)
+    general = catalogue.for_category(general_category)
+    reduced = catalogue.for_category(reduced_category)
+    super_reduced = catalogue.for_category(super_reduced_category)
+    return (
+        _InvoiceLedgerScreenShape(
+            (general_category,),
+            (general,),
+            IvaFlowDirection.REPERCUTIDO,
+            LedgerIvaFact.IVA_AMOUNT_SUM,
+        ),
+        _InvoiceLedgerScreenShape(
+            (reduced_category,),
+            (reduced,),
+            IvaFlowDirection.REPERCUTIDO,
+            LedgerIvaFact.IVA_AMOUNT_SUM,
+        ),
+        _InvoiceLedgerScreenShape(
+            (super_reduced_category,),
+            (super_reduced,),
+            IvaFlowDirection.REPERCUTIDO,
+            LedgerIvaFact.IVA_AMOUNT_SUM,
+        ),
+        _InvoiceLedgerScreenShape(
+            (
+                general_category,
+                reduced_category,
+                super_reduced_category,
+            ),
+            (general, reduced, super_reduced),
+            IvaFlowDirection.SOPORTADO,
+            LedgerIvaFact.IVA_AMOUNT_SUM,
+        ),
+        _InvoiceLedgerScreenShape(
+            (general_category,),
+            (general,),
+            IvaFlowDirection.REPERCUTIDO,
+            LedgerIvaFact.RECARGO_AMOUNT_SUM,
+        ),
+        _InvoiceLedgerScreenShape(
+            (reduced_category,),
+            (reduced,),
+            IvaFlowDirection.REPERCUTIDO,
+            LedgerIvaFact.RECARGO_AMOUNT_SUM,
+        ),
+        _InvoiceLedgerScreenShape(
+            (super_reduced_category,),
+            (super_reduced,),
+            IvaFlowDirection.REPERCUTIDO,
+            LedgerIvaFact.RECARGO_AMOUNT_SUM,
+        ),
+    )
+
+
 def _is_invoice_ledger_screen_candidate(
     revision: ModeloRevision,
     binding: BindingDefinition,
     selector: LedgerIvaProvider,
     *,
     modelo: str,
+    effective_date: date,
     cash_accounting_treatments: tuple[str, ...] | None = None,
 ) -> bool:
     """Return whether a binding has the screen's typed candidate envelope.
@@ -440,14 +461,21 @@ def _is_invoice_ledger_screen_candidate(
             return False
         if any("transitorio" in str(target_id).casefold() for target_id in target_ids):
             return False
+    rate_kinds = frozenset(resolve_iva_rate_kind_catalogue(effective_date=effective_date).positive_kinds)
     return (
         selector.exemption_articles is None
         and selector.observation_roles == _INVOICE_LEDGER_SCREEN_OBSERVATION_ROLES
         and (cash_accounting_treatments is None or selector.cash_accounting_treatments == cash_accounting_treatments)
         and selector.flow_direction in {IvaFlowDirection.REPERCUTIDO, IvaFlowDirection.SOPORTADO}
         and selector.fact in _INVOICE_LEDGER_SCREEN_FACTS
-        and set(selector.categories).issubset(_INVOICE_LEDGER_SCREEN_DOMESTIC_CATEGORIES)
-        and set(selector.rate_kinds).issubset(_INVOICE_LEDGER_SCREEN_RATE_KINDS)
+        and set(selector.categories).issubset(
+            {
+                resolve_iva_category_catalogue(effective_date=effective_date).require("domestic_general"),
+                resolve_iva_category_catalogue(effective_date=effective_date).require("domestic_reduced"),
+                resolve_iva_category_catalogue(effective_date=effective_date).require("domestic_super_reduced"),
+            },
+        )
+        and set(selector.rate_kinds).issubset(rate_kinds)
     )
 
 
@@ -481,8 +509,10 @@ def invoice_ledger_screen_bindings(
     if modelo not in _INVOICE_LEDGER_SCREEN_MODELOS:
         return ()
 
+    rate_slots = _invoice_ledger_screen_rate_slots(revision.valid_from)
+    shape_set = frozenset(rate_slots)
     expected_by_shape: dict[_InvoiceLedgerScreenShape, list[IvaLedgerScreenBinding]] = {
-        shape: [] for shape in _INVOICE_LEDGER_SCREEN_RATE_SLOTS
+        shape: [] for shape in rate_slots
     }
     expected_prefix = f"modelo-{modelo}-"
     # The screen's treatment vocabulary is a revision declaration.  Derive it
@@ -499,13 +529,14 @@ def invoice_ledger_screen_bindings(
             binding,
             selector,
             modelo=modelo,
+            effective_date=revision.valid_from,
             cash_accounting_treatments=screen_cash_accounting_treatments,
         ):
             continue
         if screen_cash_accounting_treatments is None:
             screen_cash_accounting_treatments = selector.cash_accounting_treatments
         shape = _invoice_ledger_screen_shape(selector)
-        if shape not in _INVOICE_LEDGER_SCREEN_SHAPE_SET:
+        if shape not in shape_set:
             raise RegistryValidationError(
                 f"revision {revision.id!r} modelo {modelo!r} has an unknown "
                 f"invoice IVA screen selector shape {shape!r} on binding {binding.id!r}",
@@ -517,7 +548,7 @@ def invoice_ledger_screen_bindings(
         expected_by_shape[shape].append(IvaLedgerScreenBinding(binding.id, selector))
 
     selected: list[IvaLedgerScreenBinding] = []
-    for shape in _INVOICE_LEDGER_SCREEN_RATE_SLOTS:
+    for shape in rate_slots:
         matches = expected_by_shape[shape]
         if len(matches) != 1:
             state = "missing" if not matches else "duplicate"
@@ -801,7 +832,7 @@ def unsupported_ledger_iva_observations(
 
     1. **``extra_exclusion`` (no sibling has one).** Categories that bear no
        Modelo 303 cuota *by law*
-       (:data:`~cadrumo.domain.iva.CUOTA_LESS_M303_IVA_CATEGORIES` — exempt,
+       (the published 0084 cuota-less projection — exempt,
        zero-rated, not-subject, exempt intra-community supplies/exports,
        triangulation, régimen simplificado) are excluded before the binding
        check: they correctly match no cuota binding, so flagging them would
@@ -833,7 +864,8 @@ def unsupported_ledger_iva_observations(
         parse_selector=iva_ledger_selector,
         build_matcher=_iva_build_matcher,
         is_declarable=lambda observation: True,
-        extra_exclusion=lambda observation: observation.category in CUOTA_LESS_M303_IVA_CATEGORIES,
+        extra_exclusion=lambda observation: observation.category
+        in registry_category_projection("cuota_less_m303"),
     )
 
 
@@ -974,7 +1006,7 @@ def _iva_category_is_reachable(
 def structurally_unroutable_iva_base_categories(
     revision: ModeloRevision,
     *,
-    out_of_scope: frozenset[IvaCategory] = M303_BASE_OUT_OF_SCOPE_IVA_CATEGORIES,
+    out_of_scope: frozenset[IvaCategory] | None = None,
 ) -> tuple[IvaCategory, ...]:
     """Return :class:`IvaCategory` members no ``base_amount_sum`` binding on ``revision`` could ever reach.
 
@@ -1009,15 +1041,15 @@ def structurally_unroutable_iva_base_categories(
       under a different flow direction uncovered).
     - **routed**: both are silent.
 
-    ``out_of_scope`` is deliberately NOT :data:`CUOTA_LESS_M303_IVA_CATEGORIES`.
+    ``out_of_scope`` is deliberately NOT the published 0084 cuota-less
+    projection.
     That set answers "does this category produce a cuota?"; this screen asks
     "does this category's BASE reach some casilla?", and several by-law
     cuota-less categories DO carry a real base by law --
-    :data:`~cadrumo.domain.iva.IvaCategory.DOMESTIC_ZERO` is the proof: zero
+    the registry-declared zero-rated category is the proof: zero
     cuota by definition, base-bearing by law. Reusing CUOTA_LESS here would
     suppress exactly the population this screen exists to catch. The default
-    is M303's own out-of-scope declaration
-    (:data:`~cadrumo.domain.iva.M303_BASE_OUT_OF_SCOPE_IVA_CATEGORIES`); no
+    is M303's own published 0084 out-of-scope declaration; no
     generic per-modelo scope mechanism exists in the registry today (a
     registry-expressiveness gap in its own right), so a caller working a
     different modelo must supply its own set rather than default into M303's.
@@ -1035,22 +1067,24 @@ def structurally_unroutable_iva_base_categories(
 
     Args:
         revision: The :class:`ModeloRevision` whose ``ledger_iva_aggregation``
-            bindings decide which categories' base is drawn.
+        bindings decide which categories' base is drawn.
         out_of_scope: Categories this screen must not evaluate at all, because
             "unroutable base" is not a meaningful question for them on this
-            modelo (see :data:`~cadrumo.domain.iva.M303_BASE_OUT_OF_SCOPE_IVA_CATEGORIES`
-            for the M303 declaration and the reasoning per member).
+            modelo. When omitted, the published 0084 M303 projection is
+            resolved fail-closed.
 
     Returns:
         Every :class:`IvaCategory` member not in ``out_of_scope`` for which no
         ``base_amount_sum`` binding on ``revision`` could ever match an
         observation of that category, in enum declaration order.
     """
+    if out_of_scope is None:
+        out_of_scope = registry_category_projection("m303_base_out_of_scope")
     base_selectors = _base_iva_selectors(revision)
     matchers = tuple((selector, _iva_build_matcher(selector)) for selector in base_selectors)
     return tuple(
         category
-        for category in IvaCategory
+        for category in resolve_iva_category_catalogue(effective_date=revision.valid_from).all_categories
         if category not in out_of_scope and not _iva_category_is_reachable(category, matchers)
     )
 
@@ -1069,11 +1103,11 @@ def structurally_unroutable_iva_base_categories(
 
 # Casilla IDs covered by the first Renta gastos slice (Modelo 100, period 0A).
 # These must stay in sync with the binding selectors in the TOML and with
-# cadrumo.domain.renta._first_slice_routing.FIRST_SLICE_EXPENSE_CASILLAS (the
-# domain-owned SpendingCategory -> casilla routing table this registry-layer
-# module cannot import directly without reversing the hexagonal dependency
-# direction); they are validated at registry load time so mismatches surface
-# before any calculation. Coverage is currently a subset of the full
+# domain-owned SpendingCategory -> casilla routing projection (which this
+# registry-layer module cannot import directly without reversing the hexagonal
+# dependency direction); they are validated at registry load time so
+# mismatches surface before any calculation. Coverage is currently a subset of
+# the full
 
 
 def validate_ledger_iva_aggregation_binding(binding: BindingDefinition) -> list[str]:

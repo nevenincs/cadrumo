@@ -1,7 +1,7 @@
 [revisions."2023-y-siguientes"]
 binding_source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
 formula_source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-instructions", "aeat-modelo-309-procedure"]
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["orden-hfp-1245-2022:art-unico"], source_refs = ["aeat-dr-309-2023"] } }
+predecessor = { none = { cause = "official_structure_differs", reason = "Stated in full: the official record structure is reordered against the edition before it, so supersede-in-place would not reproduce it. Measured against '2018-2022': casillas differ from index 35 ('decl.rg-base-25' -> 'decl.rg-base-04'); every other family is byte-identical.", legal_refs = ["orden-hfp-1245-2022:art-unico"], source_refs = ["aeat-dr-309-2023"] } }
 casilla_source_refs = ["aeat-dr-309-2023"]
 live_cross_reference_source_refs = ["aeat-modelo-309-procedure"]
 application_link_source_refs = ["aeat-modelo-309-procedure"]

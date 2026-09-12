@@ -3,7 +3,6 @@ id = "modelo-303-iva-repercutido-general-cuota"
 provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general"], rate_kinds = ["general"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -17,7 +16,6 @@ id = "modelo-303-iva-repercutido-reducido-cuota"
 provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reduced"], rate_kinds = ["reduced"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -31,7 +29,6 @@ id = "modelo-303-iva-repercutido-super-reducido-cuota"
 provider = { kind = "ledger_iva_aggregation", categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], flow_direction = "repercutido", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -45,7 +42,6 @@ id = "modelo-303-iva-soportado-interiores-cuota"
 provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -69,7 +65,6 @@ id = "modelo-303-iva-repercutido-general-base"
 provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general"], rate_kinds = ["general"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -83,7 +78,6 @@ id = "modelo-303-iva-repercutido-reducido-base"
 provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reduced"], rate_kinds = ["reduced"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -97,7 +91,6 @@ id = "modelo-303-iva-repercutido-super-reducido-base"
 provider = { kind = "ledger_iva_aggregation", categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -111,7 +104,6 @@ id = "modelo-303-iva-soportado-interiores-base"
 provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -134,7 +126,6 @@ id = "modelo-303-recargo-equivalencia-general-cuota"
 provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general"], rate_kinds = ["general"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -148,7 +139,6 @@ id = "modelo-303-recargo-equivalencia-reducido-cuota"
 provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reduced"], rate_kinds = ["reduced"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -162,7 +152,6 @@ id = "modelo-303-recargo-equivalencia-super-reducido-cuota"
 provider = { kind = "ledger_iva_aggregation", categories = ["domestic_super_reduced"], rate_kinds = ["super_reduced"], flow_direction = "repercutido", fact = "recargo_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -186,7 +175,6 @@ id = "modelo-303-casilla-59-entregas-intracomunitarias-base"
 provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_supply"], rate_kinds = ["zero"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-25", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -200,7 +188,6 @@ id = "modelo-303-casilla-60-exportaciones-base"
 provider = { kind = "ledger_iva_aggregation", categories = ["export_third_country_zero_rated", "export_assimilated_zero_rated"], rate_kinds = ["zero"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-21", "ley-37-1992:art-22", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -214,7 +201,6 @@ id = "modelo-303-iva-autorepercutido-intracomunitaria-cuota"
 provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -241,7 +227,6 @@ id = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"
 provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -255,7 +240,6 @@ id = "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"
 provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -276,7 +260,6 @@ id = "modelo-303-iva-soportado-importaciones-cuota"
 provider = { kind = "ledger_iva_aggregation", categories = ["import_third_country"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -290,7 +273,6 @@ id = "modelo-303-compensacion-pendiente-anteriores"
 provider = { kind = "previous_filing", source_modelo = "303", source_casilla_id = "iva.compensacion-disponible-fin-periodo", temporal = { kind = "target_period_offset", periods = -1 } }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -304,7 +286,6 @@ id = "modelo-303-criterio-caja-entregas-art75-base"
 provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "repercutido", cash_accounting_treatments = ["taxpayer_regime"], fact = "base_amount_sum", observation_roles = ["operation_informational"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-75", "ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-terdecies", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -318,7 +299,6 @@ id = "modelo-303-criterio-caja-entregas-art75-cuota"
 provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "repercutido", cash_accounting_treatments = ["taxpayer_regime"], fact = "iva_amount_sum", observation_roles = ["operation_informational"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-75", "ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-terdecies", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -332,7 +312,6 @@ id = "modelo-303-criterio-caja-adquisiciones-base"
 provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", cash_accounting_treatments = ["taxpayer_regime", "supplier_regime"], fact = "base_amount_sum", observation_roles = ["operation_informational"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-terdecies", "ley-37-1992:art-163-quinquiesdecies", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -346,7 +325,6 @@ id = "modelo-303-criterio-caja-adquisiciones-cuota"
 provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", cash_accounting_treatments = ["taxpayer_regime", "supplier_regime"], fact = "iva_amount_sum", observation_roles = ["operation_informational"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-terdecies", "ley-37-1992:art-163-quinquiesdecies", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -360,7 +338,6 @@ id = "modelo-303-bienes-inversion-regularizacion-casilla-43"
 provider = { kind = "bienes_inversion_regularizacion", source_modelo = "303", regularizacion_output = "modelo_303_casilla_43" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -371,7 +348,6 @@ id = "modelo-303-prorrata-regularizacion-casilla-44"
 provider = { kind = "prorrata_regularizacion", source_modelo = "303", source_casilla_ids = ["iva.cuota-deducible-total", "iva.prorrata-volumen-con-derecho", "iva.prorrata-volumen-total", "iva.prorrata-porcentaje"], source_periods = ["1T", "2T", "3T", "4T"], regularizacion_output = "modelo_303_casilla_44" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"

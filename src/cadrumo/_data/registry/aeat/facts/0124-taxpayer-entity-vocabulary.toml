@@ -1,0 +1,80 @@
+[fact]
+fact_id = "taxpayer-entity-vocabulary"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "taxpayer-entity-vocabulary:2007-01-01"
+date_axis = "filing_period"
+valid_from = 2007-01-01
+legal_refs = [
+    "ley-35-2006:art-8",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-87",
+    "ley-27-2014:art-7",
+    "ley-27-2014:art-29",
+    "ley-44-2015:art-1",
+    "ley-44-2015:art-13",
+    "ley-44-2015:art-14",
+]
+source_refs = ["aeat-modelo-100-procedure", "aeat-dr-200-2025"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-100-procedure"
+required_text = ["Modelo"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-200-2025"
+required_text = ["Modelo 200"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "entity_type.order", value = "natural_person,legal_entity,attribution_entity" },
+  { key = "entity_type.natural_person.value", value = "natural_person" },
+  { key = "entity_type.natural_person.description", value = "Persona física; contribuyente del Impuesto sobre la Renta de las Personas Físicas." },
+  { key = "entity_type.natural_person.tax_regime", value = "irpf" },
+  { key = "entity_type.natural_person.legal_refs", value = "ley-35-2006:art-8" },
+  { key = "entity_type.legal_entity.value", value = "legal_entity" },
+  { key = "entity_type.legal_entity.description", value = "Persona jurídica contribuyente del Impuesto sobre Sociedades." },
+  { key = "entity_type.legal_entity.tax_regime", value = "is" },
+  { key = "entity_type.legal_entity.legal_refs", value = "ley-27-2014:art-7" },
+  { key = "entity_type.attribution_entity.value", value = "attribution_entity" },
+  { key = "entity_type.attribution_entity.description", value = "Entidad sin personalidad jurídica bajo el régimen de atribución de rentas; la renta se atribuye a sus miembros." },
+  { key = "entity_type.attribution_entity.tax_regime", value = "attribution" },
+  { key = "entity_type.attribution_entity.legal_refs", value = "ley-35-2006:art-8,ley-35-2006:art-86,ley-35-2006:art-87" },
+  { key = "legal_entity_form.order", value = "sl,sa,sal,sll,cooperativa,sociedad_civil_mercantil,sin_fines_lucrativos,other" },
+  { key = "legal_entity_form.sl.value", value = "sl" },
+  { key = "legal_entity_form.sl.description", value = "Sociedad de responsabilidad limitada (S.L. / S.R.L.)." },
+  { key = "legal_entity_form.sl.entity_type", value = "legal_entity" },
+  { key = "legal_entity_form.sl.legal_refs", value = "ley-27-2014:art-7,ley-27-2014:art-29" },
+  { key = "legal_entity_form.sa.value", value = "sa" },
+  { key = "legal_entity_form.sa.description", value = "Sociedad anónima (S.A.)." },
+  { key = "legal_entity_form.sa.entity_type", value = "legal_entity" },
+  { key = "legal_entity_form.sa.legal_refs", value = "ley-27-2014:art-7,ley-27-2014:art-29" },
+  { key = "legal_entity_form.sal.value", value = "sal" },
+  { key = "legal_entity_form.sal.description", value = "Sociedad Anónima Laboral; la mayoría del capital pertenece a trabajadores socios y puede dotar la reserva especial conforme a la Ley 44/2015." },
+  { key = "legal_entity_form.sal.entity_type", value = "legal_entity" },
+  { key = "legal_entity_form.sal.legal_refs", value = "ley-44-2015:art-1,ley-44-2015:art-13,ley-44-2015:art-14,ley-27-2014:art-29" },
+  { key = "legal_entity_form.sll.value", value = "sll" },
+  { key = "legal_entity_form.sll.description", value = "Sociedad Limitada Laboral; forma laboral de responsabilidad limitada con el régimen laboral y de reserva especial que corresponda." },
+  { key = "legal_entity_form.sll.entity_type", value = "legal_entity" },
+  { key = "legal_entity_form.sll.legal_refs", value = "ley-44-2015:art-1,ley-44-2015:art-13,ley-44-2015:art-14,ley-27-2014:art-29" },
+  { key = "legal_entity_form.cooperativa.value", value = "cooperativa" },
+  { key = "legal_entity_form.cooperativa.description", value = "Sociedad cooperativa — contribuyente del Impuesto sobre Sociedades con un tipo reducido cuando resulta fiscalmente protegida." },
+  { key = "legal_entity_form.cooperativa.entity_type", value = "legal_entity" },
+  { key = "legal_entity_form.cooperativa.legal_refs", value = "ley-27-2014:art-7,ley-27-2014:art-29" },
+  { key = "legal_entity_form.sociedad_civil_mercantil.value", value = "sociedad_civil_mercantil" },
+  { key = "legal_entity_form.sociedad_civil_mercantil.description", value = "Sociedad civil con personalidad jurídica y objeto mercantil, contribuyente del Impuesto sobre Sociedades." },
+  { key = "legal_entity_form.sociedad_civil_mercantil.entity_type", value = "legal_entity" },
+  { key = "legal_entity_form.sociedad_civil_mercantil.legal_refs", value = "ley-27-2014:art-7,ley-27-2014:art-29" },
+  { key = "legal_entity_form.sin_fines_lucrativos.value", value = "sin_fines_lucrativos" },
+  { key = "legal_entity_form.sin_fines_lucrativos.description", value = "Asociación, fundación u otra entidad sin fines lucrativos — contribuyente del Impuesto sobre Sociedades, parcialmente exenta." },
+  { key = "legal_entity_form.sin_fines_lucrativos.entity_type", value = "legal_entity" },
+  { key = "legal_entity_form.sin_fines_lucrativos.legal_refs", value = "ley-27-2014:art-7,ley-27-2014:art-29" },
+  { key = "legal_entity_form.other.value", value = "other" },
+  { key = "legal_entity_form.other.description", value = "Otra forma jurídica reconocida para una entidad contribuyente del Impuesto sobre Sociedades." },
+  { key = "legal_entity_form.other.entity_type", value = "legal_entity" },
+  { key = "legal_entity_form.other.legal_refs", value = "ley-27-2014:art-7,ley-27-2014:art-29" },
+]

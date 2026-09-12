@@ -40,7 +40,6 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
@@ -61,7 +60,7 @@ _MINIMUM_REVISIONS_SCANNED = 40
 
 
 def _resolve(
-    authority: ValidatedRegistryAuthority, modelo: Modelo, filing_year: int, period: str
+    authority: ValidatedRegistryAuthority, modelo_id: str, filing_year: int, period: str
 ) -> RegistrySnapshot | None:
     """Return the snapshot for this coordinate, or ``None`` when law defines none.
 
@@ -72,7 +71,7 @@ def _resolve(
     shrinking the scanned population.
     """
     try:
-        return authority.snapshot(modelo.value, filing_year=filing_year, period=period)
+        return authority.snapshot(modelo_id, filing_year=filing_year, period=period)
     except RegistryError:
         return None
 
@@ -91,18 +90,19 @@ def _scan() -> tuple[frozenset[tuple[str, str, str]], int, dict[tuple[str, str, 
     # Every filing year is walked, not just the first that resolves: a modelo's
     # revisions are keyed by year span, so stopping at the first hit would scan
     # one revision per modelo and silently shrink the population this gate pins.
-    for modelo in Modelo:
+    for definition in authority.modelos:
+        modelo_id = definition.id
         for filing_year in range(2008, 2028):
             for period in ("0A", "1T", "01"):
-                resolution = _resolve(authority, modelo, filing_year, period)
+                resolution = _resolve(authority, modelo_id, filing_year, period)
                 if resolution is None:
                     continue
                 snapshot = resolution
                 revision = snapshot.revision
                 revision_id = revision.id
-                if (modelo.value, revision_id) in seen:
+                if (modelo_id, revision_id) in seen:
                     break
-                seen.add((modelo.value, revision_id))
+                seen.add((modelo_id, revision_id))
                 # Read the SAME constant channels the coverage checker reads. A
                 # ratchet seeing fewer would pin sheets the checker joins fine
                 # and report debt that does not exist.
@@ -143,7 +143,7 @@ def _scan() -> tuple[frozenset[tuple[str, str, str]], int, dict[tuple[str, str, 
                                 # because neighbouring records' fields sit at
                                 # the same low offsets.
                                 continue
-                            key = (modelo.value, str(revision_id), sheet.name)
+                            key = (modelo_id, str(revision_id), sheet.name)
                             unjoined.add(key)
                             record_counts[key] = len(layout.records)
                 break
@@ -222,24 +222,25 @@ def test_no_inventory_entry_is_an_auxiliary_envelope_header() -> None:
 
     misfiled: list[str] = []
     seen: set[tuple[str, str]] = set()
-    for modelo in Modelo:
+    for definition in authority.modelos:
+        modelo_id = definition.id
         for filing_year in range(2008, 2028):
             for period in ("0A", "1T", "01"):
-                snapshot = _resolve(authority, modelo, filing_year, period)
+                snapshot = _resolve(authority, modelo_id, filing_year, period)
                 if snapshot is None:
                     continue
                 revision = snapshot.revision
                 revision_id = str(revision.id)
-                if (modelo.value, revision_id) in seen:
+                if (modelo_id, revision_id) in seen:
                     break
-                seen.add((modelo.value, revision_id))
+                seen.add((modelo_id, revision_id))
                 for layout in getattr(revision, "export_layouts", ()) or ():
                     for source in coverage._design_sources(layout, source_refs):
                         sheets = coverage._read_design_sheets(source)
                         if isinstance(sheets, str):
                             continue
                         for sheet in sheets:
-                            key = (modelo.value, revision_id, sheet.name)
+                            key = (modelo_id, revision_id, sheet.name)
                             if key in _UNJOINED_DESIGN_SHEETS and sheet.auxiliary_envelope_header is not None:
                                 misfiled.append(f"{key[0]} {key[1]} {key[2]!r}")
                 break

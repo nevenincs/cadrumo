@@ -22,7 +22,7 @@ from cadrumo.domain.calculations.registry.formula_initial_values import initial_
 from cadrumo.domain.calculations.registry.m303_prorrata_activity_projection import project_m303_prorrata_activity_rows
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.prorrata_register.register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.loader import load_catalogue_file
 from ..compiler.record_design import extract_record_design

@@ -13,7 +13,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_capability
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from cadrumo.tests.registry_snapshot import build_validated_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_validated_snapshot
 
 from ..compiler.authority import compile_validated_authority
 

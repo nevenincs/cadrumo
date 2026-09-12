@@ -1,0 +1,422 @@
+# Modelo 036 RECORD Pag. 7 -- declaracion censal de alta, modificacion y baja.
+#
+# Emitted from aeat-dr-036-2023, whose window runs 2023-01-01 to 2025-02-02.
+#
+# ONE CASILLA PER PRINTED NUMBER, NOT PER DESIGN ROW. AEAT splits every date
+# into dia, mes and ano rows under a single number, and repeats whole blocks --
+# Pag. 8 prints 800, 801, 818 and 859 four times each, once per repetition of
+# the socio block. The 2025 edition settled this and says so in its own
+# comments; emitting per row instead would have written 263 casillas sharing 85
+# ids, which is valid TOML and wrong. Each comment states the group's whole span
+# and every component it covers.
+#
+# THE 037 ASTERISK IS TRANSCRIBED, NOT NORMALISED. A trailing ' *' marks a field
+# that could be informed on a modelo 037, which Orden HAC/1526/2024 suppressed
+# effective 2025-02-03. The design's own legend gives it that meaning, so it is
+# part of what AEAT printed for these years and it is not in the 2025 captions.
+#
+# NOT MODELLED: the identifier envelope, the reservado runs, the CRLF terminator
+# and the tipo-declaracion discriminant.
+#
+# NOT CLAIMED: these casillas DECLARE the censo; none computes anything. Modelo
+# 036 carries no formula family at all.
+
+# @11+1 An. 9. Oblig. de realizar retenc. o ing. cta. sobre rend. de trabajo personal   * | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.retenciones-trabajo-personal"
+continuidad_id = "ret-retenciones-trabajo-personal"
+number = "700"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @12+8 Num. 9. Oblig. de realizar retenc. o ing. cta. sobre rend. de trabajo personal. Fecha. Día   * [ONE casilla over 3 printed components: @12+2, @14+2, @16+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.retenciones-trabajo-personal-fecha"
+number = "720"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @20+1 An. 9. Oblig. de realizar retenc. o ing. cta. sobre rend. de activ. profesionales...   * | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.retenciones-actividades-profesionales"
+continuidad_id = "ret-retenciones-actividades-profesionales"
+number = "701"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @21+8 Num. 9. Oblig. de realizar retenc. o ing. cta. sobre rend. de activ. profesionales... Fecha. Día   * [ONE casilla over 3 printed components: @21+2, @23+2, @25+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.retenciones-actividades-profesionales-fecha"
+number = "721"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @29+1 An. 9. Oblig. de realizar retenc. o ing. cta. sobre rend. Procedentes del arrendamiento o subarrend...   * | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.retenciones-arrendamiento"
+continuidad_id = "ret-retenciones-arrendamiento"
+number = "702"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @30+8 Num. 9. Oblig. de realizar retenc. o ing. cta. sobre rend. Procedentes del arrend. o subarrend... Fecha. Día   * [ONE casilla over 3 printed components: @30+2, @32+2, @34+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.retenciones-arrendamiento-fecha"
+number = "722"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @38+1 An. 9. Oblig. de realizar retenc. o ing. cta. sobre las transmisiones o reembolsos de acc. o participaciones... | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.retenciones-transmision-acciones"
+continuidad_id = "ret-retenciones-transmision-acciones"
+number = "703"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @39+8 Num. 9. Oblig. de realizar retenc. o ing. cta. sobre las transm. o reembolsos de acc. o participac... Fecha. Día [ONE casilla over 3 printed components: @39+2, @41+2, @43+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.retenciones-transmision-acciones-fecha"
+number = "723"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @47+1 An. 9. Oblig. de realizar retenc. o ing. cta. sobre rentas o rend. de capital mob. derivados de la transmisión... | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.retenciones-capital-mobiliario-transmision"
+continuidad_id = "ret-retenciones-capital-mobiliario-transmision"
+number = "704"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @48+8 Num. 9. Oblig. de realizar retenc. o ing. cta. sobre rentas o r.c.m. derivados de la transmisión... Fecha. Día [ONE casilla over 3 printed components: @48+2, @50+2, @52+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.retenciones-capital-mobiliario-transmision-fecha"
+number = "724"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @56+1 An. 9. Oblig. de realizar retenc. o ing. cta. sobre rentas o rend. de capital mob. obtenidos por la contrapr... | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.retenciones-capital-mobiliario-contraprestacion"
+continuidad_id = "ret-retenciones-capital-mobiliario-contraprestacion"
+number = "705"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @57+8 Num. 9. Oblig. de realizar retenc. o ing. cta. sobre rentas o r.c.m.. obtenidos por la contraprest... Fecha. Día [ONE casilla over 3 printed components: @57+2, @59+2, @61+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.retenciones-capital-mobiliario-contraprestacion-fecha"
+number = "725"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @65+1 An. 9. Oblig. de realizar retenc. o ing. cta. sobre rentas o rend. de cap. mob. Procedentes de operaciones... | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.retenciones-capital-mobiliario-operaciones"
+continuidad_id = "ret-retenciones-capital-mobiliario-operaciones"
+number = "706"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @66+8 Num. 9. Oblig. de realizar retenc. o ing. cta. sobre rentas o r.c.m. Procedentes de operaciones... Fecha. Día [ONE casilla over 3 printed components: @66+2, @68+2, @70+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.retenciones-capital-mobiliario-operaciones-fecha"
+number = "726"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @74+1 An. 9. Oblig. de realizar retenc. o ing. cta. sobre otras rentas o rendimientos de capital mobiliario | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.retenciones-capital-mobiliario-otros"
+continuidad_id = "ret-retenciones-capital-mobiliario-otros"
+number = "707"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @75+8 Num. 9. Oblig. de realizar retenc. o ing. cta. sobre otras rentas o rendimientos de capital mob. Fecha. Día [ONE casilla over 3 printed components: @75+2, @77+2, @79+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.retenciones-capital-mobiliario-otros-fecha"
+number = "727"
+section = ["declaracion", "otras_obligaciones", "retenciones"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @83+1 An. 10. IIEE. Obligac. de inscribir sus establ. en el reg. territorial de la oficina gestora... | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.impuestos-especiales-inscripcion-registro-territorial"
+continuidad_id = "ret-impuestos-especiales-inscripcion-registro-territorial"
+number = "710"
+section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @84+8 Num. 10. IIEE. Obligac. de inscribir sus establ. en el reg. territorial de la oficina gestora... Fecha. Día [ONE casilla over 3 printed components: @84+2, @86+2, @88+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.impuestos-especiales-inscripcion-registro-territorial-fecha"
+number = "730"
+section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @92+1 An. 10. IIEE. Obligado a presentar autoliquidación por el Impuesto sobre la Electricidad (Modelo 560) | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.impuestos-especiales-impuesto-electricidad"
+continuidad_id = "ret-impuestos-especiales-impuesto-electricidad"
+number = "711"
+section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @93+8 Num. 10. IIEE. Obligado a presentar autoliquidación por el Impuesto sobre la Electricidad (Modelo 560). Fecha. Día [ONE casilla over 3 printed components: @93+2, @95+2, @97+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.impuestos-especiales-impuesto-electricidad-fecha"
+number = "731"
+section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @101+1 An. 10. IIEE. Obligado a presentar decl. resumen anual de operaciones del I.E. sobre el Carbón. | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.impuestos-especiales-resumen-anual-carbon"
+continuidad_id = "ret-impuestos-especiales-resumen-anual-carbon"
+number = "712"
+section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @102+8 Num. 10. IIEE. Obligado a presentar decl. resumen anual de operaciones del I.E. sobre el Carbón. Fecha. Día [ONE casilla over 3 printed components: @102+2, @104+2, @106+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.impuestos-especiales-resumen-anual-carbon-fecha"
+number = "732"
+section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @110+1 An. 10. B) Obligación de presentar declaración por el Impuesto Esp. sobre Primas de Seguros | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.impuestos-especiales-primas-seguros"
+continuidad_id = "ret-impuestos-especiales-primas-seguros"
+number = "713"
+section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @111+8 Num. 10. B) Obligación de presentar declaración por el Impuesto Esp. sobre Primas de Seguros. Fecha. Día [ONE casilla over 3 printed components: @111+2, @113+2, @115+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.impuestos-especiales-primas-seguros-fecha"
+number = "733"
+section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @206+1 An. 10. C) Obligación de presentar declaración por Impuestos Mediaoambientales | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.medioambientales-obligacion-declarar"
+continuidad_id = "ret-medioambientales-obligacion-declarar"
+number = "708"
+section = ["declaracion", "otras_obligaciones", "medioambientales"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @207+8 Num. 10. C) Obligación de presentar declaración por Impuestos Mediaoambientales.  Fecha. Día [ONE casilla over 3 printed components: @207+2, @209+2, @211+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.medioambientales-obligacion-declarar-fecha"
+number = "709"
+section = ["declaracion", "otras_obligaciones", "medioambientales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @215+1 An. 10. D) Obligado a presentar autoliquidación por el Impuesto sobre Determinados Servicios Digitales | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.servicios-digitales-obligacion-autoliquidar"
+continuidad_id = "ret-servicios-digitales-obligacion-autoliquidar"
+number = "714"
+section = ["declaracion", "otras_obligaciones", "servicios_digitales"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @216+8 Num. 10. D) Obligado a presentar autoliquidación por el Impuesto sobre Determinados Servicios Digitales. Fecha. Día [ONE casilla over 3 printed components: @216+2, @218+2, @220+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.servicios-digitales-obligacion-autoliquidar-fecha"
+number = "715"
+section = ["declaracion", "otras_obligaciones", "servicios_digitales"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @225+1 An. serv.telecom radiotv y via electronica prestados a particulares desde otros estados miembros(art.70. Uno.4.a) . Destino | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.telecom-art-70-uno-4-destino"
+continuidad_id = "ret-telecom-art-70-uno-4-destino"
+number = "752"
+section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_4"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @226+1 An. serv.telecom radiotv y via electronica prestados a particulares desde otros estados miembros(art.70. Uno.4.a) .Revocacion | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.telecom-art-70-uno-4-revocacion"
+continuidad_id = "ret-telecom-art-70-uno-4-revocacion"
+number = "753"
+section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_4"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @227+8 Num. serv.telecom radiotv y via electronica prestados a particulares desde otros estados miembros(art.70. Uno.4.a) .fecha efectos Dia [ONE casilla over 3 printed components: @227+2, @229+2, @231+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.telecom-art-70-uno-4-fecha"
+number = "754"
+section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_4"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @236+1 An. serv.telecom radiotv y via electronica prestados a particulares desde otros estados miembros(art.70. Uno.8) . Destino | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.telecom-art-70-uno-8-destino"
+continuidad_id = "ret-telecom-art-70-uno-8-destino"
+number = "757"
+section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_8"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @237+1 An. serv.telecom radiotv y via electronica prestados a particulares desde otros estados miembros(art.70. Uno.8) .Revocacion | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.telecom-art-70-uno-8-revocacion"
+continuidad_id = "ret-telecom-art-70-uno-8-revocacion"
+number = "758"
+section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_8"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @238+8 Num. serv.telecom radiotv y via electronica prestados a particulares desde otros estados miembros(art.70. Uno.8) .fecha efectos Dia [ONE casilla over 3 printed components: @238+2, @240+2, @242+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.telecom-art-70-uno-8-fecha"
+number = "759"
+section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_8"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @246+1 An. I.V.A. A) Solicita alta/baja en el Registro de extractores de depósitos fiscales de productos incluidos en los ámbitos objetivos de los Impuestos sobre el alcohol y bebidas derivadas | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.extractores-depositos-alcohol"
+continuidad_id = "ret-extractores-depositos-alcohol"
+number = "716.a"
+section = ["declaracion", "otras_obligaciones", "extractores_depositos"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @247+8 Num. I.V.A. A) Solicita alta/baja en el Registro de extractores de depósitos fiscales de productos incluidos en los ámbitos objetivos de los Impuestos sobre el alcohol y bebidas derivadas Fecha. Día [ONE casilla over 3 printed components: @247+2, @249+2, @251+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.extractores-depositos-alcohol-fecha"
+number = "717.a"
+section = ["declaracion", "otras_obligaciones", "extractores_depositos"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @255+1 An. I.V.A. A) Solicita alta/baja en el Registro de extractores de depósitos fiscales de productos incluidos en los ámbitos objetivos de los Impuestos sobre  Hidrocarburos | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.extractores-depositos-hidrocarburos"
+continuidad_id = "ret-extractores-depositos-hidrocarburos"
+number = "716.b"
+section = ["declaracion", "otras_obligaciones", "extractores_depositos"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @256+8 Num. I.V.A. A) Solicita alta/baja en el Registro de extractores de depósitos fiscales de productos incluidos en los ámbitos objetivos de los Impuestos sobre Hidrocarburos Fecha. Día [ONE casilla over 3 printed components: @256+2, @258+2, @260+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ret.extractores-depositos-hidrocarburos-fecha"
+number = "717.b"
+section = ["declaracion", "otras_obligaciones", "extractores_depositos"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]

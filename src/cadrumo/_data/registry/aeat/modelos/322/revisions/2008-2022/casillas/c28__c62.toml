@@ -255,6 +255,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "500"
+continuidad_id = "m322-prorratas-1-codigo-cnae"
 number = "500"
 section = ["iva", "prorratas"]
 data_type = "text"
@@ -264,8 +265,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "501"
+continuidad_id = "m322-prorratas-1-importe-operaciones"
 number = "501"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_1_importe_operaciones"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -273,8 +276,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "502"
+continuidad_id = "m322-prorratas-1-importe-operaciones-con-derecho-a-deduccion"
 number = "502"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_1_importe_operaciones_con_derecho_a_deduccion"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -282,8 +287,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "503"
+continuidad_id = "m322-prorratas-1-tipo-de-prorrata"
 number = "503"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_1_tipo_de_prorrata"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -291,8 +298,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "504"
+continuidad_id = "m322-prorratas-1-porcentaje-de-prorrata"
 number = "504"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_1_porcentaje_de_prorrata"
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -300,6 +309,7 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "505"
+continuidad_id = "m322-prorratas-2-codigo-cnae"
 number = "505"
 section = ["iva", "prorratas"]
 data_type = "text"
@@ -309,8 +319,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "506"
+continuidad_id = "m322-prorratas-2-importe-operaciones"
 number = "506"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_2_importe_operaciones"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -318,8 +330,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "507"
+continuidad_id = "m322-prorratas-2-importe-operaciones-con-derecho-a-deduccion"
 number = "507"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_2_importe_operaciones_con_derecho_a_deduccion"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -327,8 +341,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "508"
+continuidad_id = "m322-prorratas-2-tipo-de-prorrata"
 number = "508"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_2_tipo_de_prorrata"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -336,8 +352,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "509"
+continuidad_id = "m322-prorratas-2-porcentaje-de-prorrata"
 number = "509"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_2_porcentaje_de_prorrata"
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -356,6 +374,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "510"
+continuidad_id = "m322-prorratas-3-codigo-cnae"
 number = "510"
 section = ["iva", "prorratas"]
 data_type = "text"
@@ -365,8 +384,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "511"
+continuidad_id = "m322-prorratas-3-importe-operaciones"
 number = "511"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_3_importe_operaciones"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -374,8 +395,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "512"
+continuidad_id = "m322-prorratas-3-importe-operaciones-con-derecho-a-deduccion"
 number = "512"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_3_importe_operaciones_con_derecho_a_deduccion"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -383,8 +406,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "513"
+continuidad_id = "m322-prorratas-3-tipo-de-prorrata"
 number = "513"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_3_tipo_de_prorrata"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -392,8 +417,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "514"
+continuidad_id = "m322-prorratas-3-porcentaje-de-prorrata"
 number = "514"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_3_porcentaje_de_prorrata"
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -401,6 +428,7 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "515"
+continuidad_id = "m322-prorratas-4-codigo-cnae"
 number = "515"
 section = ["iva", "prorratas"]
 data_type = "text"
@@ -410,8 +438,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "516"
+continuidad_id = "m322-prorratas-4-importe-operaciones"
 number = "516"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_4_importe_operaciones"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -419,8 +449,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "517"
+continuidad_id = "m322-prorratas-4-importe-operaciones-con-derecho-a-deduccion"
 number = "517"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_4_importe_operaciones_con_derecho_a_deduccion"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -428,8 +460,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "518"
+continuidad_id = "m322-prorratas-4-tipo-de-prorrata"
 number = "518"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_4_tipo_de_prorrata"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -437,8 +471,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "519"
+continuidad_id = "m322-prorratas-4-porcentaje-de-prorrata"
 number = "519"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_4_porcentaje_de_prorrata"
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -457,6 +493,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2008-2022".casillas]]
 id = "520"
+continuidad_id = "m322-prorratas-5-codigo-cnae"
 number = "520"
 section = ["iva", "prorratas"]
 data_type = "text"
@@ -466,8 +503,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "521"
+continuidad_id = "m322-prorratas-5-importe-operaciones"
 number = "521"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_5_importe_operaciones"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -475,8 +514,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "522"
+continuidad_id = "m322-prorratas-5-importe-operaciones-con-derecho-a-deduccion"
 number = "522"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_5_importe_operaciones_con_derecho_a_deduccion"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -484,8 +525,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "523"
+continuidad_id = "m322-prorratas-5-tipo-de-prorrata"
 number = "523"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_5_tipo_de_prorrata"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -493,8 +536,10 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2008-2022".casillas]]
 id = "524"
+continuidad_id = "m322-prorratas-5-porcentaje-de-prorrata"
 number = "524"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_5_porcentaje_de_prorrata"
 data_type = "ratio"
 required = false
 input_kind = "manual"

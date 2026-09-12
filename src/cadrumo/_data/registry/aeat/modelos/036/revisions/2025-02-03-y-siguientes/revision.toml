@@ -109,3 +109,8 @@ source_refs = [
 kind = "underivable"
 reason = """
 No leading source_refs run is shared by two rows of this edition's bindings family. The family holds a single source-stating row, and one statement can open no run that a second shares, so no default is derivable here and the row keeps its own refs rather than lifting them to a manifest default a later authored row might not carry."""
+
+[revisions."2025-02-03-y-siguientes".source_default_dispositions.application_links]
+kind = "underivable"
+reason = """
+lift refuses: 1 source_refs statement(s) not textually rewritable: 0001-application-links.toml: source_refs = ["""

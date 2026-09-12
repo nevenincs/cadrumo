@@ -49,6 +49,7 @@ legal_refs = [
     "orden-hac-529-2026:art-6-3",
     "orden-hac-529-2026:df-segunda",
     "ley-27-2014:art-124",
+    "ley-27-2014:art-75-2",
 ]
 source_refs = [
     "boe-modelo-220-2025-form",

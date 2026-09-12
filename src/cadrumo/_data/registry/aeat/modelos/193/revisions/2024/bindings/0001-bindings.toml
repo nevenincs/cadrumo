@@ -6,7 +6,7 @@ id = "modelo-193-123-perceptores-anual"
 provider = { kind = "retenciones_aggregation", target_casilla_id = "decl.total-perceptores", fact = "perceptor_count_distinct" }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]
+additional_source_refs = ["aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-193-296-note-2025"
@@ -19,7 +19,7 @@ applicability = { kind = "target_periods", periods = ["0A"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]
+additional_source_refs = ["aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-193-296-note-2025"
@@ -32,7 +32,7 @@ applicability = { kind = "target_periods", periods = ["0A"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]
+additional_source_refs = ["aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-193-296-note-2025"

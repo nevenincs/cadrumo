@@ -4,7 +4,7 @@ provider = { kind = "foreign_asset", fact = "row_field", row_field = "asset_clas
 value = { data_type = "text", channel = "row_set", row_grouping = "foreign_asset" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
 
 [[revisions."2013-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-720-procedure"
@@ -16,7 +16,7 @@ provider = { kind = "foreign_asset", fact = "row_field", row_field = "country_co
 value = { data_type = "text", channel = "row_set", row_grouping = "foreign_asset" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
 
 [[revisions."2013-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-720-procedure"
@@ -28,7 +28,7 @@ provider = { kind = "foreign_asset", fact = "row_field", row_field = "currency_c
 value = { data_type = "text", channel = "row_set", row_grouping = "foreign_asset" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
 
 [[revisions."2013-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-720-procedure"
@@ -40,7 +40,7 @@ provider = { kind = "foreign_asset", fact = "row_field", row_field = "asset_iden
 value = { data_type = "text", channel = "row_set", row_grouping = "foreign_asset" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
 
 [[revisions."2013-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-720-procedure"
@@ -52,7 +52,7 @@ provider = { kind = "foreign_asset", fact = "row_field", row_field = "valuation_
 value = { data_type = "money", channel = "row_set", row_grouping = "foreign_asset" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
 
 [[revisions."2013-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-720-procedure"
@@ -64,7 +64,7 @@ provider = { kind = "foreign_asset", fact = "row_field", row_field = "acquisitio
 value = { data_type = "text", channel = "row_set", row_grouping = "foreign_asset" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
+additional_source_refs = ["aeat-modelo-720-procedure"]
 
 [[revisions."2013-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-720-procedure"

@@ -249,6 +249,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Adquiriente. Apellidos o Razón social
 [[revisions."2015-2022".casillas]]
 id = "p06.adquiriente-apellidos-o-razon-social-01"
+continuidad_id = "p06-adquiriente-apellidos-o-razon-social-01"
 number = "237-296"
 segmento = "M15106000"
 section = ["p06", "adquiriente"]
@@ -261,6 +262,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Adquiriente. Nombre
 [[revisions."2015-2022".casillas]]
 id = "p06.adquiriente-nombre-01"
+continuidad_id = "p06-adquiriente-nombre-01"
 number = "297-316"
 segmento = "M15106000"
 section = ["p06", "adquiriente"]
@@ -754,6 +756,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Adquiriente. Apellidos o Razón social
 [[revisions."2015-2022".casillas]]
 id = "p06.adquiriente-apellidos-o-razon-social-02"
+continuidad_id = "p06-adquiriente-apellidos-o-razon-social-02"
 number = "845-904"
 segmento = "M15106000"
 section = ["p06", "adquiriente"]
@@ -766,6 +769,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Adquiriente. Nombre
 [[revisions."2015-2022".casillas]]
 id = "p06.adquiriente-nombre-02"
+continuidad_id = "p06-adquiriente-nombre-02"
 number = "905-924"
 segmento = "M15106000"
 section = ["p06", "adquiriente"]

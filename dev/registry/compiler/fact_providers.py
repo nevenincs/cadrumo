@@ -21,7 +21,11 @@ from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
-from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.facts.schema import (
+    EntitySetFactPayload,
+    GovernedFact,
+    GovernedFactCatalogue,
+)
 
 from .fact_loader import is_governed_fact_filename, load_governed_facts
 from .loader_cache import toml_file_fingerprint
@@ -153,10 +157,24 @@ def serialize_fact_catalogue(catalogue: GovernedFactCatalogue) -> bytes:
     auditable facts index and a stable digest without requiring Modelo input.
     """
     indexed = deterministic_fact_index(catalogue.facts)
+
+    def serialize_fact(fact: GovernedFact) -> dict[str, object]:
+        serialized = fact.model_dump(mode="json")
+        for variant_index, variant in enumerate(fact.variants):
+            if isinstance(variant.payload, EntitySetFactPayload):
+                # Entity-set members are semantically unordered, but the
+                # schema materialises them as a frozenset.  Canonical
+                # candidate bytes must impose an order before hashing or
+                # fresh processes can disagree.
+                serialized["variants"][variant_index]["payload"]["entities"] = sorted(
+                    serialized["variants"][variant_index]["payload"]["entities"],
+                )
+        return serialized
+
     return canonical_json_bytes(
         {
             "schema": FACTS_CANDIDATE_SCHEMA,
-            "facts": {fact_id: fact.model_dump(mode="json") for fact_id, fact in indexed.items()},
+            "facts": {fact_id: serialize_fact(fact) for fact_id, fact in indexed.items()},
         },
     )
 

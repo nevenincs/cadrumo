@@ -19,6 +19,6 @@ source_refs = [
 ]
 
 [modelo.inception.unauthored]
-earliest_authored = 2025
-reason = "Censo de empresarios approved by Orden EHA/1274/2007; filing years 2022-2024 existed in law and are not yet authored."
+earliest_authored = 2023
+reason = "Censo de empresarios approved by Orden EHA/1274/2007; filing years before 2023 existed in law and are not yet authored. 2023 onward is covered by the 2023-hasta-2025-02-02 edition, whose span is the bundled aeat-dr-036-2023 window and meets the 2025-02-03 successor with no day uncovered."
 legal_refs = ["orden-eha-1274-2007:art-1"]

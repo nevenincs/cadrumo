@@ -1,5 +1,5 @@
 [revisions."2023-y-siguientes"]
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["orden-hac-590-2021:art-1"], source_refs = ["enrolled-modelo-490-procedure"] } }
+predecessor = { none = { cause = "official_structure_differs", reason = "Stated in full: the official record structure is reordered against the edition before it, so supersede-in-place would not reproduce it. Measured against '2022-2t-4t': casillas differ from index 31 ('terr-navarra-23' -> 'terr-comun-24') and application_links from index 1 ('modelo-490-deadline' -> 'modelo-490-export').", legal_refs = ["orden-hac-590-2021:art-1"], source_refs = ["enrolled-modelo-490-procedure"] } }
 casilla_source_refs = ["aeat-dr-490-2023"]
 application_link_source_refs = ["enrolled-modelo-490-procedure"]
 authority_grade = "applicability"

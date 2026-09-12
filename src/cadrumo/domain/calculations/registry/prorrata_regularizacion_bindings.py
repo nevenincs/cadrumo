@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Literal
+from collections.abc import Iterable
+from typing import Literal, Protocol
 
 from pydantic import BaseModel, field_validator
 
 from ....core.aggregation import BindingSourceKind
-from ....core.casilla_id import CasillaId
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.models import STRICT_FROZEN_CONFIG
 from .errors import RegistryValidationError
 
@@ -16,7 +17,25 @@ __all__ = [
     "ProrrataRegularizacionOutput",
     "ProrrataRegularizacionOutputValue",
     "ProrrataRegularizacionProvider",
+    "prorrata_source_casilla_ids",
 ]
+
+
+class _BindingWithProvider(Protocol):
+    provider: object
+
+
+def prorrata_source_casilla_ids(bindings: Iterable[_BindingWithProvider]) -> tuple[CasillaId, ...]:
+    """Return the unique, declared prorrata source casillas in registry order."""
+    ids: list[CasillaId] = []
+    for binding in bindings:
+        if not isinstance(binding.provider, ProrrataRegularizacionProvider):
+            continue
+        for casilla_id in binding.provider.source_casilla_ids:
+            value = validated_casilla_id(casilla_id, surface="selected prorrata source casilla")
+            if value not in ids:
+                ids.append(value)
+    return tuple(ids)
 
 
 class ProrrataRegularizacionOutput(StrEnum):

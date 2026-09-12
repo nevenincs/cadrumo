@@ -18,9 +18,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, cast
 
 from .errors import RegistryValidationError
-from .facts.modelo_parameter_fact import ModeloParameterFact
 from .facts.resolution import ResolvedScalarFact, ScalarFactQuery
-from .facts.schema import FactSelector
 from .schema_base import DateAxis
 
 if TYPE_CHECKING:
@@ -35,7 +33,7 @@ __all__ = [
 ]
 
 
-_M347_THRESHOLD_PARAMETER_ID = "modelo-347-tercero-anual-threshold-eur"
+_M347_COUNTERPARTY_THRESHOLD_FACT_ID = "m347-counterparty-declaration-threshold"
 _M347_CLAVE_C_THRESHOLD_FACT_ID = "m347-clave-c-beneficiary-declaration-threshold"
 
 
@@ -44,20 +42,16 @@ def resolve_m347_counterparty_annual_threshold(
     effective_date: date,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> ResolvedScalarFact:
-    """Resolve the Modelo-projected annual counterparty threshold with provenance."""
+    """Resolve the canonical annual counterparty threshold with provenance."""
     if authority is None:
         from .authority import bundled_authority
 
         authority = bundled_authority()
     resolved = authority.resolve_governed_fact(
         ScalarFactQuery(
-            fact_id=ModeloParameterFact.M347_COUNTERPARTY_ANNUAL_THRESHOLD,
+            fact_id=_M347_COUNTERPARTY_THRESHOLD_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
             effective_date=effective_date,
-            selectors=(
-                FactSelector(name="modelo", value="347"),
-                FactSelector(name="parameter_id", value=_M347_THRESHOLD_PARAMETER_ID),
-            ),
         ),
     )
     return cast("ResolvedScalarFact", resolved)

@@ -15,6 +15,7 @@
 
 [[revisions."2022".casillas]]
 id = "declarante-nif"
+continuidad_id = "m345-declarante-nif"
 number = "tipo1.9-17"
 section = ["registro_declarante", "identificacion"]
 data_type = "nif"
@@ -25,6 +26,7 @@ legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-2"]
 
 [[revisions."2022".casillas]]
 id = "ejercicio-declaracion"
+continuidad_id = "m345-ejercicio-declaracion"
 number = "tipo1.5-8"
 section = ["registro_declarante", "identificacion"]
 data_type = "year"
@@ -35,6 +37,7 @@ legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-4"]
 
 [[revisions."2022".casillas]]
 id = "declarante-razon-social"
+continuidad_id = "m345-declarante-razon-social"
 number = "tipo1.18-57"
 section = ["registro_declarante", "identificacion"]
 data_type = "name"
@@ -47,6 +50,7 @@ legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-2"]
 # ejercicio-2022 instrucciones source is bundled, so no formula derives it.
 [[revisions."2022".casillas]]
 id = "total-declarados"
+continuidad_id = "m345-total-declarados"
 number = "tipo1.136-144"
 section = ["registro_declarante", "resumen"]
 data_type = "integer"
@@ -59,6 +63,7 @@ legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-3"]
 # 158-159 parte decimal. Operator-supplied for the same reason as above.
 [[revisions."2022".casillas]]
 id = "importe-total-aportaciones"
+continuidad_id = "m345-importe-total-aportaciones"
 number = "tipo1.145-159"
 section = ["registro_declarante", "resumen"]
 data_type = "money"
@@ -69,6 +74,7 @@ legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-3"]
 
 [[revisions."2022".casillas]]
 id = "declarado-nif"
+continuidad_id = "m345-declarado-nif"
 number = "tipo2.18-26"
 section = ["registro_declarado", "identificacion"]
 data_type = "nif"
@@ -79,6 +85,7 @@ legal_refs = ["orden-hfp-823-2022:art-2", "orden-hfp-823-2022:art-3"]
 
 [[revisions."2022".casillas]]
 id = "declarado-nombre"
+continuidad_id = "m345-declarado-nombre"
 number = "tipo2.36-75"
 section = ["registro_declarado", "identificacion"]
 data_type = "name"
@@ -89,6 +96,7 @@ legal_refs = ["orden-hfp-823-2022:art-2", "orden-hfp-823-2022:art-3"]
 
 [[revisions."2022".casillas]]
 id = "anio-nacimiento"
+continuidad_id = "m345-anio-nacimiento"
 number = "tipo2.76-79"
 section = ["registro_declarado", "identificacion"]
 data_type = "year"
@@ -99,6 +107,7 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 
 [[revisions."2022".casillas]]
 id = "codigo-provincia"
+continuidad_id = "m345-codigo-provincia"
 number = "tipo2.80-81"
 section = ["registro_declarado", "domicilio"]
 data_type = "text"
@@ -111,6 +120,7 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 # ejercicio, so the clave set is the one Orden HFP/823/2022 approved.
 [[revisions."2022".casillas]]
 id = "clave"
+continuidad_id = "m345-clave"
 number = "tipo2.82"
 section = ["registro_declarado", "aportaciones"]
 data_type = "text"
@@ -124,6 +134,7 @@ legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-3"]
 # clave/subclave change of Orden HAC/1504/2024 all apply to later ejercicios.
 [[revisions."2022".casillas]]
 id = "subclave"
+continuidad_id = "m345-subclave"
 number = "tipo2.83-84"
 section = ["registro_declarado", "aportaciones"]
 data_type = "text"
@@ -134,6 +145,7 @@ legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-3"]
 
 [[revisions."2022".casillas]]
 id = "beneficiario-nif"
+continuidad_id = "m345-beneficiario-nif"
 number = "tipo2.85-93"
 section = ["registro_declarado", "beneficiario"]
 data_type = "nif"
@@ -145,6 +157,7 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 # Positions 94-106, subdivided 94-104 parte entera and 105-106 parte decimal.
 [[revisions."2022".casillas]]
 id = "importe"
+continuidad_id = "m345-importe"
 number = "tipo2.94-106"
 section = ["registro_declarado", "aportaciones"]
 data_type = "money"
@@ -157,6 +170,7 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 # here the way this modelo declares the other parent spans.
 [[revisions."2022".casillas]]
 id = "datos-adicionales-claves-abc"
+continuidad_id = "m345-datos-adicionales-claves-abc"
 number = "tipo2.107-160"
 section = ["registro_declarado", "datos_adicionales"]
 data_type = "text"
@@ -166,6 +180,7 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 
 [[revisions."2022".casillas]]
 id = "plan-pensiones-denominacion"
+continuidad_id = "m345-plan-pensiones-denominacion"
 number = "tipo2.107-146"
 section = ["registro_declarado", "datos_adicionales", "claves_abc"]
 data_type = "text"
@@ -177,6 +192,7 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 
 [[revisions."2022".casillas]]
 id = "fondo-pensiones-numero-registro"
+continuidad_id = "m345-fondo-pensiones-numero-registro"
 number = "tipo2.147-151"
 section = ["registro_declarado", "datos_adicionales", "claves_abc"]
 data_type = "text"
@@ -188,6 +204,7 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 
 [[revisions."2022".casillas]]
 id = "fondo-pensiones-nif"
+continuidad_id = "m345-fondo-pensiones-nif"
 number = "tipo2.152-160"
 section = ["registro_declarado", "datos_adicionales", "claves_abc"]
 data_type = "nif"
@@ -199,6 +216,7 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 
 [[revisions."2022".casillas]]
 id = "entidad-aseguradora-nif"
+continuidad_id = "m345-entidad-aseguradora-nif"
 number = "tipo2.161-169"
 section = ["registro_declarado", "datos_adicionales", "clave_d"]
 data_type = "nif"
@@ -213,6 +231,7 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 # closes the record immediately after it with «190‑500 – BLANCOS.».
 [[revisions."2022".casillas]]
 id = "datos-adicionales-clave-i"
+continuidad_id = "m345-datos-adicionales-clave-i"
 number = "tipo2.170-189"
 section = ["registro_declarado", "datos_adicionales"]
 data_type = "integer"
@@ -222,6 +241,7 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 
 [[revisions."2022".casillas]]
 id = "pias-fecha-primera-prima"
+continuidad_id = "m345-pias-fecha-primera-prima"
 number = "tipo2.170-177"
 section = ["registro_declarado", "datos_adicionales", "clave_i"]
 data_type = "date"
@@ -235,6 +255,7 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 # de 240.000 € por contribuyente».
 [[revisions."2022".casillas]]
 id = "pias-importe-acumulado"
+continuidad_id = "m345-pias-importe-acumulado"
 number = "tipo2.178-189"
 section = ["registro_declarado", "datos_adicionales", "clave_i"]
 data_type = "money"

@@ -45,7 +45,6 @@ __all__ = [
     "FactPayload",
     "FactProviderId",
     "FactSelector",
-    "FactVariantId",
     "GovernedFact",
     "GovernedFactCatalogue",
     "GovernedFactFamily",
@@ -63,7 +62,6 @@ __all__ = [
 
 _REGISTRY_ID_PATTERN = r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$"
 FactId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REGISTRY_ID_PATTERN)]
-FactVariantId = RegistryRevisionNodeId
 FactProviderId = Annotated[
     str,
     Field(min_length=1, max_length=128, pattern=r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"),
@@ -410,7 +408,7 @@ class GovernedFactVariant(RegistryTemporalDeltaDeclaration):
     support ceiling closes it.
     """
 
-    variant_id: FactVariantId
+    variant_id: RegistryRevisionNodeId
     selectors: tuple[FactSelector, ...] = ()
     date_axis: DateAxisField
     payload: FactPayload
@@ -420,7 +418,7 @@ class GovernedFactVariant(RegistryTemporalDeltaDeclaration):
     review_status: RevisionReviewStatusField
     ownership: FactOwnershipField
     source_revision_ids: tuple[RevisionId, ...] = Field(default=(), exclude_if=lambda value: not value)
-    precedence_over: tuple[FactVariantId, ...] = ()
+    precedence_over: tuple[RegistryRevisionNodeId, ...] = ()
 
     @model_validator(mode="after")
     def _validate_variant(self) -> GovernedFactVariant:
@@ -590,7 +588,7 @@ class GovernedFact(RegistryModel):
         )
         return variant.date_axis, selectors, period_key
 
-    def materialized_windows(self) -> Mapping[FactVariantId, RegistryValidityWindow]:
+    def materialized_windows(self) -> Mapping[RegistryRevisionNodeId, RegistryValidityWindow]:
         """Resolve delta-authored bounds independently per exact temporal track."""
         if self.support is None:
             return {
@@ -598,7 +596,7 @@ class GovernedFact(RegistryModel):
                 for variant in self.variants
                 if variant.valid_from is not None
             }
-        materialized: dict[FactVariantId, RegistryValidityWindow] = {}
+        materialized: dict[RegistryRevisionNodeId, RegistryValidityWindow] = {}
         tracks: dict[tuple[object, ...], list[GovernedFactVariant]] = {}
         for variant in self.variants:
             tracks.setdefault(self.track_key(variant), []).append(variant)

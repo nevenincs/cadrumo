@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from decimal import Decimal
 from typing import Annotated, Literal
 
-from pydantic import BeforeValidator, Field
+from pydantic import BeforeValidator, Field, ValidationInfo
 
 from ....core.country_code import COUNTRY_CODE_ALPHA2_PATTERN
 from ....core.decimal.coercion import coerce_decimal
 from ....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ....core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
-from ....core.identity.documents import IdentityError
+from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT, IdentityError, SpanishTaxIdFormat
 from ....core.identity.tax_id import validate_spanish_tax_id
 from ....core.period import StandardPeriodCode
 from ....core.spanish_postcode import SPANISH_POSTCODE_PATTERN, SPANISH_PROVINCE_CODE_PATTERN
@@ -57,7 +57,20 @@ def _coerce_decimal(value: object) -> object:
 DecimalValue = Annotated[Decimal, BeforeValidator(_coerce_decimal)]
 
 
-def _validate_nif_string(value: object) -> object:
+def _validate_nif_value(value: object, tax_id_format: SpanishTaxIdFormat | None) -> object:
+    """Validate one registry NIF using only the explicitly supplied format."""
+    if not isinstance(value, str):
+        raise RegistryValidationError(f"NIF value must be a string, got {type(value).__name__}")
+    if not isinstance(tax_id_format, SpanishTaxIdFormat):
+        raise RegistryValidationError("NIF validation requires an explicit Spanish tax-ID format")
+    try:
+        return validate_spanish_tax_id(value, tax_id_format)
+    except IdentityError as exc:
+        detail = exc.translated_message or str(exc)
+        raise RegistryValidationError(f"invalid NIF / NIE / CIF identifier: {detail}") from exc
+
+
+def _validate_nif_string(value: object, info: ValidationInfo) -> object:
     """Validate a Spanish NIF / NIE / CIF identifier and return its canonical form.
 
     Delegates to the shared `validate_spanish_tax_id` algorithm exposed by
@@ -65,13 +78,9 @@ def _validate_nif_string(value: object) -> object:
     `IdentityError` as `RegistryValidationError` so the schema boundary
     surfaces identifier-format problems through its established error type.
     """
-    if not isinstance(value, str):
-        raise RegistryValidationError(f"NIF value must be a string, got {type(value).__name__}")
-    try:
-        return validate_spanish_tax_id(value)
-    except IdentityError as exc:
-        detail = exc.translated_message or str(exc)
-        raise RegistryValidationError(f"invalid NIF / NIE / CIF identifier: {detail}") from exc
+    context = info.context
+    tax_id_format = context.get(TAX_ID_FORMAT_CONTEXT) if isinstance(context, Mapping) else None
+    return _validate_nif_value(value, tax_id_format)
 
 
 NifString = Annotated[str, BeforeValidator(_validate_nif_string)]
@@ -448,7 +457,12 @@ def registry_scalar_value_type(data_type: str) -> RegistryScalarValueType:
         raise RegistryValidationError(f"unsupported registry casilla data type {data_type!r}") from exc
 
 
-def validate_registry_text_scalar(data_type: str, value: object) -> str:
+def validate_registry_text_scalar(
+    data_type: str,
+    value: object,
+    *,
+    tax_id_format: SpanishTaxIdFormat | None = None,
+) -> str:
     """Canonicalise one text-family casilla value through its declared validator."""
     if registry_scalar_value_type(data_type) != "str":
         raise RegistryValidationError(f"registry casilla data type {data_type!r} is not a text scalar")
@@ -462,8 +476,11 @@ def validate_registry_text_scalar(data_type: str, value: object) -> str:
     # a real validator for which blank is genuinely invalid.
     if not stripped and data_type != "text":
         raise RegistryValidationError(f"{data_type} value must not be blank")
-    validator = _REGISTRY_TEXT_SCALAR_VALIDATORS[data_type]
-    result = validator(stripped)
+    result = (
+        _validate_nif_value(stripped, tax_id_format)
+        if data_type == "nif"
+        else _REGISTRY_TEXT_SCALAR_VALIDATORS[data_type](stripped)
+    )
     if not isinstance(result, str):
         raise RegistryValidationError(f"{data_type} validator did not return a string")
     return result

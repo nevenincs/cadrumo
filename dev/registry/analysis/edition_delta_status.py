@@ -218,8 +218,9 @@ import os
 import re
 import sys
 import tomllib
+from datetime import datetime
 from collections import Counter, defaultdict
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import cache
 from itertools import pairwise
@@ -281,6 +282,12 @@ _FAMILY_DEFAULT_KEYS: Final[Mapping[str, str]] = {
     "constructs": "construct_source_refs",
     "parameters": "parameter_source_refs",
 }
+#: Stands in for an absent ``valid_to``. Sorts above any ISO date, so an
+#: edition with no declared end overlaps everything that starts after it --
+#: which is what open-ended means, and is not the same as a window that
+#: happens to end.
+_OPEN_ENDED: Final = "9999-12-31"
+
 #: The migration tool's own wording for a root it declared for want of lineage.
 _ROOT_PENDING_LINEAGE_MARK: Final = "predecessor row without lineage"
 #: The causes that make a root TERMINAL. The tool writes one sentence with a
@@ -363,6 +370,8 @@ COVERAGE_CONDITIONS: Final[tuple[str, ...]] = (
     "promised_year_unserved",
     "promised_coordinate_unserved",
     "coordinate_served_twice",
+    "disposition_coordinate_served",
+    "disposition_kind_mismatched",
     "promised_year_projected",
     "awaiting_ejercicio_orden",
     "pending_orden_declaration_stale",
@@ -371,7 +380,7 @@ COVERAGE_CONDITIONS: Final[tuple[str, ...]] = (
 #: The measurement's version. Bump on any change to what the conditions COUNT,
 #: so a lane diffing two runs can separate corpus movement from instrument
 #: movement rather than having to recall which changed.
-_SIGNAL_SCHEMA: Final = 4
+_SIGNAL_SCHEMA: Final = 22
 
 #: Every condition this screen can report, declared once and used at each
 #: emission site below, so the set cannot be misread off the source.
@@ -407,6 +416,10 @@ CONDITIONS: Final[tuple[str, ...]] = (
 MEASUREMENTS: Final[tuple[str, ...]] = (
     "year_token_as_content",
     "member_restated_dispositioned",
+    "member_restated_family_declared",
+    "member_refs_inline",
+    "attestation_at_risk_on_edge",
+    "attestation_at_risk_rooted",
     "member_restated_unedged",
     "casillas_unmeasured",
     "row_pinned_by_lineage_claim",
@@ -430,12 +443,20 @@ def _typed_casilla_fields() -> frozenset[str] | None:
     Without the model the unknown-key check cannot run; it is skipped and the
     limitation is recorded rather than every key being reported unknown.
     """
-    try:
-        from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-    except Exception as exc:
-        _note_limitation(f"schema_unavailable: {type(exc).__name__}")
-        return None
-    return frozenset(CasillaDefinition.model_fields)
+    def load() -> frozenset[str] | None:
+        try:
+            from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+        except Exception as exc:
+            _note_limitation(f"schema_unavailable: {type(exc).__name__}")
+            return None
+        return frozenset(CasillaDefinition.model_fields)
+
+    # Bounded for the same reason `ledger_totality` is. An import is not a fast
+    # operation here: importing the schema pulls the registry package, whose
+    # module-scope work has reached into the authority artefact, and a
+    # non-reentrant lock held elsewhere turns that import into a hang rather
+    # than an error. A guard that only catches exceptions catches nothing then.
+    return _within_bound(load, "schema_vocabulary")
 
 
 def _note_limitation(text: str) -> None:
@@ -596,6 +617,29 @@ def _declared_families(value: object) -> frozenset[str]:
     return frozenset(str(name) for name in value)
 
 
+def _restated_family_causes(value: object) -> dict[str, str]:
+    """The families an edition declares it states in full, mapped to the declared cause.
+
+    A LIST of tables, each naming a family and a cause -- unlike the per-family
+    disposition tables, which are keyed BY family. The two are different claims
+    and must not be pooled: a disposition says the family is empty by
+    construction, a restatement says the family is stated end to end here and
+    the merge does not inherit it on this edge. An entry naming no family
+    declares nothing and is skipped rather than counted, so a malformed
+    declaration never excuses a family.
+    """
+    if not isinstance(value, list):
+        return {}
+    causes: dict[str, str] = {}
+    for entry in value:
+        if not isinstance(entry, dict):
+            continue
+        family = entry.get("family")
+        if isinstance(family, str) and family:
+            causes[family] = str(entry.get("cause", ""))
+    return causes
+
+
 def _as_refs(value: object) -> tuple[str, ...]:
     return tuple(str(item) for item in value) if isinstance(value, list) else ()
 
@@ -631,11 +675,15 @@ class EditionStatus:
     family_defaults: dict[str, tuple[str, ...]] = field(default_factory=dict)
     source_default_dispositions: frozenset[str] = frozenset()
     family_dispositions: frozenset[str] = frozenset()
+    restated_families: dict[str, str] = field(default_factory=dict)
     declared_default: tuple[str, ...] = ()
     effective_default: tuple[str, ...] = ()
     orden: tuple[str, ...] = ()
     valid_from: str = ""
+    valid_to: str = ""
     authority_grade: str = ""
+    review_status: str = ""
+    reviewed_against: str = ""
     selector_years: tuple[int, ...] = ()
     selector_year_from: int | None = None
     selector_year_to: int | None = None
@@ -681,6 +729,8 @@ class Edge:
     predecessor_rows: int
     predecessor_rows_without_lineage: int
     root_kind: str = ""
+    roots_for_want_of_lineage: bool = False
+    successor_is_reviewed_without_scope: bool = False
     restated_members: tuple[tuple[str, int], ...] = ()
     chained_both_sides: int = 0
     successor_rows: int = 0
@@ -697,6 +747,43 @@ class Edge:
         return self.state == "dispositioned" and self.root_kind == "root_recoverable"
 
     @property
+    def retraction_needs_attestation(self) -> bool:
+        """Whether retracting this root would require a review scope nobody can invent.
+
+        An ``agent_reviewed`` edition that gains an inherited basis must declare
+        the predecessor its rows were reviewed against, and the loader refuses
+        without it: the edition would compile carrying rows its reviewer never
+        read. Retracting a root turns a root edition into exactly that, so a
+        candidate that is otherwise free still stops at a human attestation.
+
+        Reported apart because those edges are the CHEAPEST work on the board
+        and read as blocked-on-nothing without it -- 308/2016-2018 and
+        490/2022-1t both materialise byte-identically from their predecessors
+        and are one authored line from done.
+        """
+        return self.root_reason_resolved and self.successor_is_reviewed_without_scope
+
+    @property
+    def root_reason_resolved(self) -> bool:
+        """Whether this root's stated want-of-lineage reason no longer holds.
+
+        A root declared because the predecessor carried rows with no lineage is
+        a statement about the corpus at the moment it was written. Seeding those
+        rows makes the statement false, and nothing retracts it: the edition
+        still declares an explicit no-predecessor, so the edge stays
+        ``dispositioned``, its rows stay out of the migration queue, and the
+        completed chaining work is invisible. It is the continuity-side twin of
+        a signed coverage disposition whose coordinate an edition now serves.
+
+        Deliberately narrow. Only a root whose REASON cites want of lineage
+        qualifies -- a root declared for a lower authority grade or a diverging
+        member is not made stale by lineage arriving, and sweeping those in
+        would tell the campaign to retire roots that are still correct. Two live
+        roots (131 and 165) are exactly that case.
+        """
+        return self.roots_for_want_of_lineage and not self.predecessor_rows_without_lineage
+
+    @property
     def root_is_open(self) -> bool:
         """Whether this root is recoverable at all, by either route."""
         return self.rooted_pending_lineage or self.rooted_recoverable
@@ -711,6 +798,20 @@ class Edge:
         rows or nine hundred.
         """
         return 0.0 if not self.predecessor_rows else 1 - self.predecessor_rows_without_lineage / self.predecessor_rows
+
+
+def _roots_for_want_of_lineage(status: EditionStatus) -> bool:
+    """Whether an edition's root declaration gives want of lineage as its reason.
+
+    Reads the declared cause first and the wording only as a fallback, matching
+    ``_root_kind``: the cause is a code the tool writes, the wording is prose it
+    also writes, and a corpus carries both. Checked rather than inferred from
+    ``root_kind`` because that classification pools several causes into
+    ``root_pending_lineage``, and only this one is retracted by seeding.
+    """
+    if status.root_cause:
+        return status.root_cause == "predecessor_row_without_lineage"
+    return _ROOT_PENDING_LINEAGE_MARK in status.root_reason.lower()
 
 
 def _root_kind(reason: str, cause: str = "") -> str:
@@ -734,6 +835,39 @@ def _root_kind(reason: str, cause: str = "") -> str:
     if any(known in spelled for known in _ROOT_CAUSES_BY_LAW):
         return "root_by_law"
     return "root_recoverable"
+
+
+#: The fields that ARE the lineage attestation, per the campaign's ruling on the
+#: referent: the three continuidad fields and nothing else. `source_refs` and
+#: `reviewed_by` are deliberately NOT here -- they are provenance about the row,
+#: not the record that its chain was established -- so a row differing in
+#: `source_refs` is a different row rather than the same row with a different
+#: attestation.
+_ATTESTATION_FIELDS: Final = frozenset({"continuidad_id", "continuidad_origin", "continuidad_evidence"})
+
+
+def _drop_would_lose_attestation(inherited: Mapping[str, Any], stated: Mapping[str, Any]) -> bool:
+    """Whether dropping this restated member would destroy a lineage attestation.
+
+    Payload equality here is STRICTER than ``_comparable``. That comparator
+    strips ``source_refs``, ``legal_refs`` and the lineage claims before
+    comparing, because a row whose references lift to an edition default is
+    still droppable for restatement purposes. For this question that is too
+    loose: a row differing in ``source_refs`` is a different row, not the same
+    row wearing a different attestation, and counting it here would inflate the
+    population by rows whose drop loses something other than an attestation.
+
+    So payload is everything except the three attestation fields, and the
+    condition is payload equality PLUS an attestation the inherited member does
+    not carry. A row whose attestation the predecessor also states loses nothing
+    when it goes.
+    """
+    def payload(member: Mapping[str, Any]) -> dict[str, Any]:
+        return {key: value for key, value in member.items() if key not in _ATTESTATION_FIELDS}
+
+    if payload(inherited) != payload(stated):
+        return False
+    return any(key in stated and stated.get(key) != inherited.get(key) for key in _ATTESTATION_FIELDS)
 
 
 def _comparable(member: Mapping[str, Any]) -> dict[str, Any]:
@@ -849,9 +983,36 @@ def _restated_members(
         # looks that way. Counted apart so the disposition is visible as a
         # quantity rather than disappearing into a silent exclusion.
         dispositioned = family in successor.family_dispositions
+        # A second, DIFFERENT exemption. `family_dispositions` says the family is
+        # empty by construction; `restated_families` says this edition states the
+        # family end to end and the merge does not inherit it here. Neither can
+        # express the other -- a none-root would root the whole edition, and a
+        # disposition means empty -- so the causes stay apart and the declared
+        # cause is carried into the finding rather than flattened.
+        restated_family_cause = successor.restated_families.get(family)
         restated = 0
         for identity, member in successor.members.get(family, {}).items():
             before = inherited.get(identity)
+            if before is not None and _drop_would_lose_attestation(before, member):
+                # Split on whether the drop tool can reach the row TODAY. A
+                # successor declaring its predecessor inherits now, so the risk
+                # is live and that half is the wave's countdown. A none-root
+                # inherits nothing, so its rows are only at risk if the root is
+                # later retracted -- which is precisely why a retraction must
+                # not be followed by an identical-member drop before a
+                # lineage-only stub rule exists. An adjacent-edition scan sees
+                # only the first half, which is why modelo 100's rows are
+                # invisible to one.
+                successor._add(
+                    "attestation_at_risk_on_edge"
+                    if successor.declares_predecessor
+                    else "attestation_at_risk_rooted",
+                    f"{family}/{identity}",
+                    f"identical to {predecessor.edition} except its lineage attestation "
+                    "(continuidad_id, continuidad_origin, continuidad_evidence, matched on "
+                    "continuidad_id against the materialised inherited row); an identical-member "
+                    "drop would destroy the attestation",
+                )
             if before is not None and _comparable(before) == _comparable(member):
                 restated += 1
                 locus = f"{family}/{identity}"
@@ -860,6 +1021,15 @@ def _restated_members(
                         "member_restated_dispositioned",
                         locus,
                         f"identical to {predecessor.edition}, family stated in full by declaration",
+                    )
+                    continue
+                if restated_family_cause is not None:
+                    successor._add(
+                        "member_restated_family_declared",
+                        locus,
+                        f"identical to {predecessor.edition}, but this edition declares {family!r} restated "
+                        f"in full (cause {restated_family_cause or 'unstated'}), so the merge does not "
+                        "inherit it on this edge",
                     )
                     continue
                 successor._add("member_restated", locus, f"identical to {predecessor.edition}")
@@ -897,7 +1067,7 @@ def _restated_members(
                         locus,
                         f"identical to {predecessor.edition} but re-grounded on this edition's own references",
                     )
-        if restated and not dispositioned:
+        if restated and not dispositioned and restated_family_cause is None:
             counts.append((family, restated))
         if family == _CASILLAS:
             _measure_unchained(predecessor, successor)
@@ -958,7 +1128,18 @@ def _selectors_overlap(left: EditionStatus, right: EditionStatus) -> bool:
     shared period token. Two editions that overlap may be parallel scheme
     variants rather than a sequence, and a predecessor edge between them would
     assert an order the law does not.
+
+    Selectors are year-granular, so a MID-YEAR cutover looks like an overlap
+    from here and is not one: 036 closes on 2025-02-02 and its successor opens
+    on 2025-02-03, sharing filing year 2025 and every period token while never
+    being live at the same moment. Two editions cannot be parallel variants if
+    their validity dates never coincide, so the dates settle it before the
+    selectors are consulted at all. Without this the screen reported a false
+    `parallel_scheme_variants` on exactly the modelo whose split it could not
+    see.
     """
+    if _validity_windows_disjoint([left, right]):
+        return False
 
     def bounds(edition: EditionStatus) -> tuple[int, int | None]:
         if edition.selector_years:
@@ -1023,6 +1204,48 @@ def _materialised_keys(edition: EditionStatus, by_edition: Mapping[str, EditionS
     return tuple(rows)
 
 
+#: Editions whose declared export scenario has actually been rendered. Kept in
+#: its own file, read raw, because it is EVIDENCE rather than declaration: the
+#: scenarios module says a scenario exists, and this says it ran. Eight editions
+#: were declared in a single pass while the authority would not compile, which
+#: silenced `export_scenario_missing` on every one of them without a byte being
+#: emitted. Splitting the two facts makes that suppression impossible to repeat
+#: by construction rather than by remembering not to.
+_RENDER_EVIDENCE_FILE: Final = Path(__file__).with_name("export_scenario_renders.toml")
+
+
+@cache
+def _rendered_editions() -> frozenset[tuple[str, str]] | None:
+    """Every ``(modelo, edition)`` pair a render has actually been observed for.
+
+    ``None`` when the evidence file cannot be read at all, which is unknowable
+    rather than empty: an unreadable file must not read as "nothing has ever
+    been rendered" and convict every declared scenario.
+
+    An entry whose ``selected_revision`` disagrees with its ``edition`` is NOT
+    counted. That combination means the scenario rendered the wrong edition,
+    which is a withdrawal, not a proof.
+    """
+    if not _RENDER_EVIDENCE_FILE.is_file():
+        return frozenset()
+    try:
+        document = tomllib.loads(_RENDER_EVIDENCE_FILE.read_text(encoding="utf-8"))
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        _note_limitation(f"render_evidence_unreadable: {type(exc).__name__}")
+        return None
+    rendered: set[tuple[str, str]] = set()
+    for entry in document.get("render", ()):
+        modelo, edition = str(entry.get("modelo", "")), str(entry.get("edition", ""))
+        if not modelo or not edition:
+            continue
+        if str(entry.get("selected_revision", "")) != edition:
+            continue
+        if not entry.get("rendered_bytes"):
+            continue
+        rendered.add((modelo, edition))
+    return frozenset(rendered)
+
+
 @cache
 def _scenario_editions(modelo_id: str) -> frozenset[str] | None:
     """The editions the round-trip gate can render export bytes for, or ``None`` when unknowable."""
@@ -1032,13 +1255,21 @@ def _scenario_editions(modelo_id: str) -> frozenset[str] | None:
     # import alone turns an unknowable answer into a crashed screen. This screen
     # reports; it does not gate, and it must keep reporting when a neighbour is
     # mid-edit.
-    try:
-        from ..edition_export_scenarios import edition_export_scenarios
+    def load() -> frozenset[str] | None:
+        try:
+            from ..edition_export_scenarios import edition_export_scenarios
 
-        return frozenset(edition_export_scenarios(modelo_id))
-    except Exception as exc:
-        _note_limitation(f"export_scenarios_unavailable: {type(exc).__name__}")
-        return None
+            return frozenset(edition_export_scenarios(modelo_id))
+        except Exception as exc:
+            _note_limitation(f"export_scenarios_unavailable: {type(exc).__name__}")
+            return None
+
+    # Bounded, like the schema vocabulary. This path builds scenarios eagerly
+    # from typed models, so it reaches further into the domain than the import
+    # alone suggests, and a wedged authority lock makes it hang instead of
+    # raise. Unknowable by timeout and unknowable by ImportError are the same
+    # answer here -- `None`, a limitation, and no blocker claimed.
+    return _within_bound(load, "export_scenarios")
 
 
 def _blockers(
@@ -1089,6 +1320,22 @@ def _blockers(
     # limitation, and no blocker is claimed. An empty set means it WAS consulted
     # and declares no scenario for this modelo, which is a real blocker: the
     # tool cannot compare the successor's bytes and will refuse to apply.
+    # `reviewed_against` is required on a reviewed DELTA edition and REFUSED
+    # everywhere else. Both halves matter. A reviewed edition that names a
+    # predecessor must also name the predecessor its stated rows were reviewed
+    # against -- a reviewer's claim about what was actually examined, which
+    # nobody migrating the edge can invent, so the edge is not ready work but
+    # work that goes back to a reviewer. A successor that declares an explicit
+    # no-predecessor root is the refused half: it will never name a predecessor
+    # on this edge, and demanding the field there asks for a declaration the
+    # schema would reject. Tested the wide way first, and 23 of the 29 findings
+    # were exactly that error.
+    if (
+        successor.review_status == _REVIEWED
+        and not successor.reviewed_against
+        and not successor.declares_no_predecessor
+    ):
+        blockers.append(f"reviewed_against_required={successor.edition}")
     scenarios = _scenario_editions(successor.modelo)
     if scenarios is None:
         pass
@@ -1097,6 +1344,13 @@ def _blockers(
         # the modelo is absent from the declared list, not that its scenario was
         # consulted and refused.
         blockers.append(f"export_scenario_missing={successor.modelo}")
+    elif successor.export_surface:
+        # Declared, but declaration is not proof. The edge stays blocked until a
+        # render has actually been observed for THIS edition, so adding a
+        # scenario entry can never clear the blocker on its own.
+        rendered = _rendered_editions()
+        if rendered is not None and (successor.modelo, successor.edition) not in rendered:
+            blockers.append(f"export_scenario_unrendered={successor.modelo}")
     return tuple(blockers)
 
 
@@ -1127,6 +1381,41 @@ def carried_defaults(statuses: tuple[EditionStatus, ...]) -> None:
                     "default_carried_from_predecessor",
                     family,
                     f"same default as {status.predecessor_id}: {json.dumps(list(refs))}",
+                )
+
+
+def inline_member_refs(statuses: tuple[EditionStatus, ...]) -> None:
+    """Count members still stating ``source_refs`` their family default already gives.
+
+    The member lift moves a family's shared references onto the edition's
+    declared default and removes them from each member, which is a real
+    convergence that NO existing measure could see: restatement counts
+    cross-edition identity, so lifting refs off thousands of members left it
+    unmoved and the work looked like it had not happened.
+
+    Counted per edition and family rather than per member. A per-member emission
+    would add several thousand rows to the findings file on every run, which is
+    the mistake `casillas_unmeasured` was aggregated to undo. Equality is
+    order-sensitive list equality, as it is everywhere a default is compared:
+    a default is a sequence the loader applies in order, not a set.
+
+    Reads 0 for a family when the lift is complete, which is what makes it a
+    burn-down rather than an inventory.
+    """
+    for status in statuses:
+        for family, default in sorted(status.family_defaults.items()):
+            if not default or family in _PER_EDITION_FAMILIES:
+                continue
+            inline = sum(
+                1
+                for member in status.members.get(family, {}).values()
+                if _as_refs(member.get(_ROW_SOURCE)) == default
+            )
+            if inline:
+                status._add(
+                    "member_refs_inline",
+                    family,
+                    f"{inline} members restate the family default inline: {json.dumps(list(default))}",
                 )
 
 
@@ -1176,6 +1465,64 @@ def forest_violations(statuses: tuple[EditionStatus, ...]) -> None:
                 break
 
 
+#: The declared review status that makes `reviewed_against` mandatory once an
+#: edition names a predecessor. Every reviewed edition in the corpus carries
+#: this one value today.
+_REVIEWED: Final = "agent_reviewed"
+
+
+def _edges_with_unknowable_scenarios(
+    found_edges: tuple[Edge, ...], statuses: tuple[EditionStatus, ...]
+) -> int:
+    """Edges whose export blocker could not be decided because the scenarios module failed.
+
+    ``_scenario_editions`` returns ``None`` when the scenarios module cannot be
+    imported, and the blocker computation then claims nothing -- which is right,
+    since unknowable is not absent. The cost is that every edge whose successor
+    has an export surface silently loses a possible cause, and the only trace is
+    a ``limitation`` line elsewhere in the output. Counting them here puts the
+    caveat on the same row as the numbers it qualifies.
+
+    Counts only edges whose SUCCESSOR has an export surface, because that is the
+    exact population ``_blockers`` would have judged.
+    """
+    surfaces = {(status.modelo, status.edition): status.export_surface for status in statuses}
+    return sum(
+        1
+        for edge in found_edges
+        if _scenario_editions(edge.modelo) is None and surfaces.get((edge.modelo, edge.successor))
+    )
+
+
+def _modelo_declaration_blockers(editions: list[EditionStatus]) -> tuple[str, ...]:
+    """The causes that bind every edge of a modelo rather than any one of them.
+
+    The forest rule is not a per-edge rule. On a modelo where NO edition has
+    declared anything, the editions are legally keyless and the modelo loads;
+    the moment one edge declares a predecessor, every other edition but one must
+    declare too, or the modelo that was loading becomes a modelo the tool
+    refuses. So on such a modelo a single edge is not a unit of work at all, and
+    calling one ready is how the screen three times named an edge ready that the
+    modelo could not load -- most recently 189, whose declaration was applied
+    and reverted at net zero.
+
+    The count is the number of editions that must be declared in the SAME
+    load-verified pass: all the silent ones but one, since exactly one may
+    remain keyless as the chain's root.
+    """
+    declared_anything = any(
+        status.declares_predecessor or status.declares_no_predecessor for status in editions
+    )
+    if declared_anything:
+        return ()
+    silent = [
+        status for status in editions if not status.declares_predecessor and not status.declares_no_predecessor
+    ]
+    if len(silent) <= 1:
+        return ()
+    return (f"whole_modelo_declaration_required={len(silent) - 1}",)
+
+
 def edges(statuses: tuple[EditionStatus, ...]) -> tuple[Edge, ...]:
     """Return every modelo's adjacent edition pairs with its migration state.
 
@@ -1196,6 +1543,7 @@ def edges(statuses: tuple[EditionStatus, ...]) -> tuple[Edge, ...]:
     found: list[Edge] = []
     for modelo, editions in sorted(by_modelo.items()):
         by_edition = {status.edition: status for status in editions}
+        modelo_blockers = _modelo_declaration_blockers(editions)
         ordered = sorted(editions, key=lambda status: (status.valid_from, status.edition))
         for predecessor, successor in pairwise(ordered):
             predecessor_keys = _materialised_keys(predecessor, by_edition)
@@ -1224,7 +1572,7 @@ def edges(statuses: tuple[EditionStatus, ...]) -> tuple[Edge, ...]:
                 if root_kind in {"root_pending_lineage", "root_recoverable"}:
                     blockers = _blockers(predecessor, successor, predecessor_keys)
             else:
-                blockers = _blockers(predecessor, successor, predecessor_keys)
+                blockers = _blockers(predecessor, successor, predecessor_keys) + modelo_blockers
                 state = "blocked" if blockers else "ready"
             found.append(
                 Edge(
@@ -1236,6 +1584,10 @@ def edges(statuses: tuple[EditionStatus, ...]) -> tuple[Edge, ...]:
                     predecessor_rows=len(predecessor_keys),
                     predecessor_rows_without_lineage=sum(1 for _, lineage in predecessor_keys if lineage is None),
                     root_kind=root_kind,
+                    roots_for_want_of_lineage=_roots_for_want_of_lineage(successor),
+                    successor_is_reviewed_without_scope=(
+                        successor.review_status == _REVIEWED and not successor.reviewed_against
+                    ),
                     chained_both_sides=len(
                         {lineage for _, lineage in predecessor_keys if lineage is not None}
                         & {lineage for _, lineage in successor.stated_keys if lineage is not None}
@@ -1380,13 +1732,17 @@ def scan_edition(modelo_id: str, edition_dir: Path, typed_fields: frozenset[str]
         # and both are the corpus saying so rather than a heuristic guessing.
         status.source_default_dispositions = _declared_families(table.get("source_default_dispositions"))
         status.family_dispositions = _declared_families(table.get("family_dispositions"))
+        status.restated_families = _restated_family_causes(table.get("restated_families"))
         status.declared_default = _as_refs(table.get(_EDITION_SOURCE_DEFAULT))
         status.family_defaults = {
             family: refs for family, key in _FAMILY_DEFAULT_KEYS.items() if (refs := _as_refs(table.get(key)))
         }
         status.orden = _as_refs(table.get(_EDITION_ORDEN))
         status.valid_from = str(table.get("valid_from", ""))
+        status.valid_to = str(table.get("valid_to", ""))
         status.authority_grade = str(table.get("authority_grade", ""))
+        status.review_status = str(table.get("review_status", ""))
+        status.reviewed_against = str(table.get("reviewed_against", ""))
         selector = table.get("period_selector")
         if isinstance(selector, dict):
             years = selector.get("years")
@@ -1563,7 +1919,7 @@ class LedgerScope:
     and no ``retired`` continuity evolution withdraws -- a retirement gap, owned
     by the migration drop path, where the answer is to inherit it or retire it.
 
-    ``outside_ledger_scope`` is a row in an edition whose manifest declares an
+    ``declared_root_not_first_edition`` is a row in an edition whose manifest declares an
     explicit no-predecessor. The seeder never judges such a revision at all --
     the domain's predecessor judgement returns none for it, and the totality
     gate skips the whole revision -- so a ledger entry written for one of these
@@ -1591,10 +1947,205 @@ class LedgerScope:
     unchained_on_edge: int
     named: int
     unclaimed_predecessor: int
-    outside_ledger_scope: int
+    declared_root_not_first_edition: int
     unnamed_successor: int
     unclaimed_predecessor_excluded: int = 0
     unclaimed_predecessor_seedable: int = 0
+
+
+@dataclass(frozen=True, slots=True)
+class LedgerTotality:
+    """The lineage totality gate's own verdict, carried on the signal."""
+
+    entries: int
+    uncovered: int
+    stale: int
+    is_total: bool
+    stale_modelos: tuple[str, ...]
+
+
+#: How long any call reaching for the compiled domain may take before the screen
+#: gives up on it. Generous enough for a cold corpus compile on a busy machine,
+#: short enough that a wedged instrument does not take the whole report with it.
+_AUTHORITY_BOUND_SECONDS: Final = 300.0
+
+
+def _within_bound[T](work: Callable[[], T], what: str) -> T | None:
+    """Run ``work`` under a time bound, returning ``None`` and a limitation if it overruns.
+
+    A hung instrument says nothing, and that is worse than a refused one: a
+    refusal is a fact the reader can act on, while a hang produces no line at
+    all and takes every other measurement in the same process with it. Tonight a
+    field validator re-entered a non-reentrant authority lock, and every caller
+    that validated a revision stopped returning -- silently, including a screen
+    run that exited 0 with no output whatsoever.
+
+    The worker thread is left running rather than killed, because Python cannot
+    safely kill a thread and a leaked daemon thread is a far smaller cost than a
+    report that never prints. The screen's own answer is what matters here, and
+    it is honest: unmeasured, with the reason named.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+    from concurrent.futures import TimeoutError as FutureTimeout
+
+    executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="delta-status-bound")
+    future = executor.submit(work)
+    try:
+        return future.result(timeout=_AUTHORITY_BOUND_SECONDS)
+    except FutureTimeout:
+        _note_limitation(
+            f"{what}_timed_out: no answer within {_AUTHORITY_BOUND_SECONDS:.0f}s; treated as unmeasured"
+        )
+        return None
+    finally:
+        # Never block on a wedged worker -- the whole point is that it may never
+        # finish. Shutting down without waiting leaks the thread by design.
+        executor.shutdown(wait=False)
+
+
+def ledger_totality(registry_root: Path, ledger_path: Path | None = None) -> LedgerTotality | None:
+    """The totality gate's verdict, or ``None`` when it cannot be asked.
+
+    Computed through ``casilla_lineage_totality.lineage_totality`` rather than
+    reimplemented. A second copy of this rule would be a second thing to keep in
+    step with the seeder, and the screen has already been burned once by
+    carrying its own copy of a rule the tool owns.
+
+    ``None`` is deliberate and is never rendered as zeros. This is the only
+    measurement on the screen that needs the compiled domain -- everything else
+    reads the raw tree precisely so it keeps reporting while the authority
+    refuses -- so it is the one most likely to be unavailable, and a gate that
+    reported "uncovered 0, is_total False" because it could not run would be
+    indistinguishable from a clean corpus.
+    """
+    def measure() -> tuple[int, Any]:
+        from cadrumo.core.resources.bundled_data import bundled_path
+        from cadrumo.domain.calculations.registry.casilla_lineage_totality import lineage_totality
+
+        from ..compiler.authority import compile_registry_tree
+        from .casilla_lineage_ledger import load_ledger_refusals
+
+        definitions, _ = compile_registry_tree(registry_root, bundled_path())
+        refusals = load_ledger_refusals() if ledger_path is None else load_ledger_refusals(ledger_path)
+        return len(refusals), lineage_totality(definitions, tuple(refusals))
+
+    def guarded() -> tuple[int, Any] | None:
+        try:
+            return measure()
+        except Exception as exc:
+            _note_limitation(
+                f"lineage_totality_unavailable: {type(exc).__name__}; the totality gate is unmeasured"
+            )
+            return None
+
+    measured = _within_bound(guarded, "lineage_totality")
+    if measured is None:
+        return None
+    entries, report = measured
+    return LedgerTotality(
+        entries=entries,
+        uncovered=len(report.uncovered),
+        stale=len(report.stale),
+        is_total=report.is_total,
+        stale_modelos=tuple(sorted({key.modelo for key in report.stale})),
+    )
+
+
+#: Per-family materialisation verdicts for demoting a root, written by the
+#: session that runs the demotion harness. Read here rather than recomputed: a
+#: second copy of that judgement would be a second thing to keep in step, and
+#: the screen cannot materialise anything anyway.
+_VERDICTS_FILE: Final = Path(__file__).with_name("root_demotion_verdicts.toml")
+
+#: A verdict older than the edition it judges is not a verdict. The harness
+#: measures a copy of the corpus at an instant, and editions are rewritten under
+#: their own measurement -- one figure moved from 15 to 1 between being measured
+#: and being reported. So a verdict whose edition has been written since reads
+#: as untested rather than as its recorded outcome.
+_VERDICT_UNTESTED: Final = "untested"
+_VERDICT_STALE: Final = "stale"
+
+
+def root_demotion_verdicts(
+    registry_root: Path, path: Path = _VERDICTS_FILE
+) -> dict[tuple[str, str], str]:
+    """Each judged ``(modelo, successor)`` edge mapped to its verdict.
+
+    Returns an empty mapping when the file is absent or unreadable, recording a
+    limitation, so a missing artefact never reads as "everything is untested" on
+    one run and "everything is proven" on the next.
+
+    A verdict is downgraded to ``stale`` when the successor edition's directory
+    has been written since the verdict was measured. That is the whole reason
+    ``measured_at`` exists: a verdict is true of the corpus at an instant, and
+    treating a superseded one as current is exactly how `root_reason_resolved`
+    was wrong in the first place.
+    """
+    if not path.is_file():
+        return {}
+    try:
+        document = tomllib.loads(path.read_text(encoding="utf-8"))
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        _note_limitation(f"root_demotion_verdicts_unreadable: {type(exc).__name__}")
+        return {}
+    verdicts: dict[tuple[str, str], str] = {}
+    for entry in document.get("verdict", ()):
+        modelo, successor = str(entry.get("modelo", "")), str(entry.get("successor", ""))
+        verdict = str(entry.get("verdict", ""))
+        if not modelo or not successor or not verdict:
+            continue
+        measured = str(entry.get("measured_at", ""))
+        if _edition_written_since(registry_root, modelo, successor, measured):
+            verdict = _VERDICT_STALE
+        verdicts[(modelo, successor)] = verdict
+    return verdicts
+
+
+def _edition_written_since(registry_root: Path, modelo: str, edition: str, measured_at: str) -> bool:
+    """Whether an edition's files are newer than the verdict that judged it.
+
+    Compares real modification times, never a formatted timestamp: sorting
+    time-of-day strings once reported a 22:40 file as the newest when the answer
+    was 18:28. An unparseable or absent ``measured_at`` counts as superseded,
+    because a verdict that will not say when it was taken cannot be shown to be
+    current.
+    """
+    if not measured_at:
+        return True
+    try:
+        taken = datetime.fromisoformat(measured_at).timestamp()
+    except ValueError:
+        return True
+    directory = registry_root / _MODELOS / modelo / _REVISIONS / edition
+    if not directory.is_dir():
+        return False
+    return any(path.stat().st_mtime > taken for path in directory.rglob("*") if path.is_file())
+
+
+#: Every demotion verdict the signal prints, in a fixed order so a reader
+#: pinned to a position keeps it. `untested` and `stale` are first-class: a root
+#: nobody has measured and a root whose measurement has been superseded are both
+#: unproven, and neither may be read as free.
+_DEMOTION_VERDICTS: Final[tuple[str, ...]] = (
+    "proven_free",
+    "needs_attestation",
+    "proven_drifts",
+    "refused",
+    "stale",
+    "untested",
+)
+
+
+def _edge_verdict(edge: Edge, report: Report) -> str:
+    """The demotion verdict for a root-demotion candidate, or the empty string.
+
+    Only candidates are judged. An edge whose root reason still holds is not a
+    demotion question at all, and giving it a verdict would put roots that are
+    still correct into a worklist.
+    """
+    if not edge.root_reason_resolved:
+        return ""
+    return report.demotion_verdicts.get((edge.modelo, edge.successor), _VERDICT_UNTESTED)
 
 
 def ledger_scope(
@@ -1645,7 +2196,7 @@ def ledger_scope(
         unchained_on_edge=counted,
         named=counted - first_edition - outside - later,
         unclaimed_predecessor=first_edition,
-        outside_ledger_scope=outside,
+        declared_root_not_first_edition=outside,
         unnamed_successor=later,
         unclaimed_predecessor_excluded=excluded_rows,
         unclaimed_predecessor_seedable=seedable_rows,
@@ -1832,6 +2383,9 @@ class Report:
     promised_years: tuple[int, ...]
     gaps: tuple[CoverageGap, ...]
     edges: tuple[Edge, ...]
+    #: Each judged ``(modelo, successor)`` root demotion mapped to its verdict,
+    #: with any verdict older than the edition it judges downgraded to ``stale``.
+    demotion_verdicts: Mapping[tuple[str, str], str] = field(default_factory=dict)
 
 
 def build_report(registry_root: Path, *, modelo_ids: tuple[str, ...] = ()) -> Report:
@@ -1841,9 +2395,11 @@ def build_report(registry_root: Path, *, modelo_ids: tuple[str, ...] = ()) -> Re
     found_edges = edges(statuses)
     forest_violations(statuses)
     carried_defaults(statuses)
+    inline_member_refs(statuses)
     foreign_edition_tokens(statuses)
     scope_lineage_findings(statuses, found_edges, projected_sources(statuses, promised))
     return Report(
+        demotion_verdicts=root_demotion_verdicts(registry_root),
         statuses=statuses,
         promised_years=promised,
         gaps=coverage_gaps(
@@ -2082,6 +2638,134 @@ class CoverageGap:
         return self.kind == "awaiting_ejercicio_orden" or self.classification in _CLOSING_CLASSIFICATIONS
 
 
+def _validity_windows_disjoint(editions: list[EditionStatus]) -> bool:
+    """Whether every one of these editions is valid over a period none of the others covers.
+
+    Two editions admitting one filing year is NOT double service when their
+    validity DATES do not overlap. A mid-year cutover is exactly that shape:
+    036 closes on 2025-02-02 and its successor opens on 2025-02-03, so filing
+    year 2025 is admitted by both selectors and served by whichever edition
+    covers the event's date. Selection resolves it on a reference date, and
+    narrowing the predecessor's `year_to` to make the screen quiet would
+    silently misroute the 33 days of censal events that fall before the
+    cutover -- so the registry is right and this rule is what was wrong.
+
+    An edition with no `valid_to` is open-ended and overlaps everything after
+    its start, which is why absence is treated as unbounded rather than as a
+    window that happens to end.
+    """
+    windows: list[tuple[str, str]] = []
+    for edition in editions:
+        if not edition.valid_from:
+            # Without a start there is no window to compare, and guessing one
+            # would manufacture a disjointness nobody declared.
+            return False
+        windows.append((edition.valid_from, edition.valid_to or _OPEN_ENDED))
+    windows.sort()
+    return all(earlier[1] < later[0] for earlier, later in pairwise(windows))
+
+
+def _mismatched_dispositions(
+    dispositions: Mapping[CoverageCoordinate, CoverageDisposition] | None,
+    gaps: list[CoverageGap],
+) -> list[CoverageGap]:
+    """Name every signed disposition whose coordinate is still a gap of a DIFFERENT kind.
+
+    A disposition names the kind it disposes of, so an entry written for an
+    unserved year cannot silently absorb the opposite failure if the corpus
+    later serves that cell twice. That check is right, and its consequence is
+    silent: the entry simply stops applying, the coordinate reads unclassified,
+    and the signature sits in the file describing a failure that is no longer
+    the one occurring.
+
+    That is the same species as a disposition whose coordinate is now served --
+    a signed statement the corpus has falsified -- but it is invisible to that
+    measure, because the coordinate IS still a gap. It just is not the gap
+    somebody signed for.
+    """
+    if not dispositions:
+        return []
+    outstanding = {(gap.modelo, gap.filing_year, gap.period): gap.kind for gap in gaps}
+    found: list[CoverageGap] = []
+    for coordinate, disposition in sorted(dispositions.items()):
+        kind = outstanding.get(coordinate)
+        if kind is None or kind == disposition.kind:
+            continue
+        found.append(
+            CoverageGap(
+                coordinate[0],
+                "disposition_kind_mismatched",
+                coordinate[1],
+                coordinate[2],
+                (),
+                False,
+                f"signed {disposition.classification} for {disposition.kind}, "
+                f"but this coordinate now fails as {kind}, so the signature does not apply",
+            )
+        )
+    return found
+
+
+def _served_dispositions(
+    statuses: tuple[EditionStatus, ...],
+    promised_years: tuple[int, ...],
+    dispositions: Mapping[CoverageCoordinate, CoverageDisposition] | None,
+) -> list[CoverageGap]:
+    """Name every signed disposition whose coordinate an edition now serves.
+
+    A disposition says a coordinate is legitimately unserved. Authoring an
+    edition that serves it does not remove the signature, and nothing linked the
+    two: 036/2023 and 036/2024 sat signed `unauthored` beside the edition
+    serving them until somebody read both files by hand. That is a stale
+    declaration asserting a gap the corpus has closed, and it is worse than an
+    unclassified gap because it carries a reviewer's name.
+
+    Derived by subtraction: a disposed coordinate inside the promise that is NOT
+    Servedness is asked of the EDITIONS directly, never derived by subtracting
+    the gaps this run found. Subtraction was the first implementation and it was
+    wrong: a period nothing declares never enters the period denominator, so no
+    gap is emitted for it, and "no gap" then read as "served". That convicted
+    four true 303 dispositions -- 0A signed for 2022, 2023, 2024 and 2026 --
+    when no 303 edition admits 0A in any year. Absence of a gap is not evidence
+    of coverage.
+
+    A disposition naming a period is served only when an edition admits THAT
+    period in that year; ``*`` covers a whole year and is served when any
+    edition admits the year at all.
+    """
+    if not dispositions:
+        return []
+    by_modelo: dict[str, list[EditionStatus]] = defaultdict(list)
+    for status in statuses:
+        if status.has_manifest:
+            by_modelo[status.modelo].append(status)
+    found: list[CoverageGap] = []
+    for coordinate, disposition in sorted(dispositions.items()):
+        modelo, year, period = coordinate
+        editions = by_modelo.get(modelo)
+        if not editions or year not in promised_years:
+            continue
+        admitting = [edition for edition in editions if _admits_year(edition, year)]
+        if period == "*":
+            served = bool(admitting)
+        else:
+            served = any(period in _periods_in_year(edition, year) for edition in admitting)
+        if not served:
+            continue
+        found.append(
+            CoverageGap(
+                modelo,
+                "disposition_coordinate_served",
+                year,
+                period,
+                (),
+                False,
+                f"signed {disposition.classification} for {disposition.kind}, but an edition now serves it",
+            )
+        )
+    return found
+
+
 def coverage_gaps(
     statuses: tuple[EditionStatus, ...],
     promised_years: tuple[int, ...],
@@ -2159,11 +2843,15 @@ def coverage_gaps(
                 if not serving:
                     kind = "promised_coordinate_unserved"
                     gaps.append(CoverageGap(modelo, kind, year, period, (), *_disposition(modelo, kind, year, period)))
-                elif len(serving) > 1:
+                elif len(serving) > 1 and not _validity_windows_disjoint(
+                    [edition for edition in admitting if edition.edition in serving]
+                ):
                     kind = "coordinate_served_twice"
                     gaps.append(
                         CoverageGap(modelo, kind, year, period, serving, *_disposition(modelo, kind, year, period))
                     )
+    gaps.extend(_served_dispositions(statuses, promised_years, dispositions))
+    gaps.extend(_mismatched_dispositions(dispositions, gaps))
     return tuple(gaps)
 
 
@@ -2174,7 +2862,9 @@ def coverage_gaps(
 _ACTIONS: Final[tuple[str, ...]] = (
     "lift_restatement",
     "seed_lineage",
+    "inherit_member_above_floor",
     "declare_export_scenario",
+    "render_export_scenario",
     "migrate_edge",
     "close_coverage",
 )
@@ -2188,6 +2878,9 @@ _BLOCKER_CAUSES: Final[tuple[str, ...]] = (
     "ambiguous_lineage",
     "undeclared_repurpose",
     "export_scenario_missing",
+    "export_scenario_unrendered",
+    "whole_modelo_declaration_required",
+    "reviewed_against_required",
 )
 
 #: Edge states, in the order the signal always prints them.
@@ -2610,6 +3303,19 @@ def _signal_lines(report: Report) -> list[str]:
                 # Appended: roots the tool gave a recoverable cause for, which
                 # `root_by_law` absorbed until it learned to read the cause.
                 f"rooted_recoverable={sum(1 for edge in found_edges if edge.rooted_recoverable)}",
+                # Roots whose own stated reason the corpus has since falsified.
+                # They stay `dispositioned`, so their rows stay out of the
+                # migration queue and the chaining work that resolved them is
+                # invisible -- the continuity twin of a signed coverage
+                # disposition whose coordinate is now served.
+                # NOT an action, deliberately. A discharged reason says the root
+                # is no longer JUSTIFIED; it does not say the edition can be
+                # materialised from its predecessor, which is the separate fact
+                # that decides. Of the first eight, six drift or refuse on
+                # grounds this screen cannot see, so presenting them as a
+                # worklist would send somebody to write six bad retractions.
+                f"root_reason_resolved={sum(1 for edge in found_edges if edge.root_reason_resolved)}",
+                f"retraction_needs_attestation={sum(1 for edge in found_edges if edge.retraction_needs_attestation)}",
             ]
         ),
         # The worklist, in the campaign's own ordering: restatement lifting is
@@ -2621,12 +3327,53 @@ def _signal_lines(report: Report) -> list[str]:
                 f"lift_restatement={census['edition_default_undeclared'] + census['family_default_undeclared']}",
                 f"seed_lineage={_edges_awaiting_lineage(found_edges)}",
                 f"inherit_member={census['member_restated']}",
+                # The movable remainder. `inherit_member` cannot reach zero
+                # while the merge replaces a stated row wholesale and never
+                # fills payload, because every at-risk row must keep stating its
+                # own continuity origin. Showing the difference stops the
+                # headline reading as though the whole population were work,
+                # and it moves on its own when either side changes rather than
+                # needing a floor written down.
+                f"inherit_member_above_floor="
+                f"{max(census['member_restated'] - (census['attestation_at_risk_on_edge'] + census['attestation_at_risk_rooted']), 0)}",
                 f"declare_export_scenario={blockers.get('export_scenario_missing', 0)}",
+                f"render_export_scenario={blockers.get('export_scenario_unrendered', 0)}",
                 f"migrate_edge={edge_states.get('ready', 0)}",
                 f"close_coverage={len({gap.modelo for gap in report.gaps})}",
             ]
         ),
-        " ".join(["blocker", *(f"{cause}={blockers.get(cause, 0)}" for cause in _BLOCKER_CAUSES)]),
+        " ".join(
+            [
+                "blocker",
+                *(f"{cause}={blockers.get(cause, 0)}" for cause in _BLOCKER_CAUSES),
+                # How many edges this line is understating. When the scenarios
+                # module cannot be consulted at all, no export cause is claimed
+                # for any modelo -- correctly, since unknowable is not absent --
+                # and every edge with an export surface silently loses a
+                # potential blocker. That fact was reachable only by noticing a
+                # `limitation` line above, which is prose in a block readers
+                # skim, and the suppression widened `migrated` by 34 edges
+                # before anyone spotted it. Carried on the row itself so a
+                # pinned figure brings its own caveat. Reads 0 when healthy,
+                # which makes it a live assertion rather than a comment.
+                f"blockers_understated={_edges_with_unknowable_scenarios(found_edges, statuses)}",
+            ]
+        ),
+        # The root-demotion candidates split by what a per-family
+        # materialisation harness actually found, rather than presented as one
+        # undifferentiated worklist. `untested` and `stale` are deliberately
+        # distinct from `proven_free`: a verdict whose edition has been written
+        # since is not evidence, and five of the first eleven were superseded
+        # within sixteen minutes of being measured.
+        " ".join(
+            [
+                "root_demotion",
+                *(
+                    f"{verdict}={sum(1 for edge in found_edges if _edge_verdict(edge, report) == verdict)}"
+                    for verdict in _DEMOTION_VERDICTS
+                ),
+            ]
+        ),
         " ".join(["clean", *(kind for kind in CONDITIONS if census[kind] == 0)]) or "clean none",
     ]
     lines += [f"condition {kind}={census[kind]}" for kind in CONDITIONS if census[kind]]
@@ -2636,7 +3383,7 @@ def _signal_lines(report: Report) -> list[str]:
         lines.append(
             f"ledger unchained_on_edge={scope.unchained_on_edge} named={scope.named} "
             f"unclaimed_predecessor={scope.unclaimed_predecessor} unnamed_successor={scope.unnamed_successor} "
-            f"outside_ledger_scope={scope.outside_ledger_scope} "
+            f"declared_root_not_first_edition={scope.declared_root_not_first_edition} "
             f"unclaimed_predecessor_excluded={scope.unclaimed_predecessor_excluded} "
             f"unclaimed_predecessor_seedable={scope.unclaimed_predecessor_seedable}"
         )
@@ -2775,6 +3522,7 @@ def render_report(report: Report, *, totals_only: bool = False) -> str:
         f"  seed lineage          {_fmt(_edges_awaiting_lineage(found_edges)):>8}   edges",
         f"  inherit member        {_fmt(census['member_restated']):>8}   members a merge would supply",
         f"  export scenario       {_fmt(blockers.get('export_scenario_missing', 0)):>8}   edges",
+        f"  scenario unrendered   {_fmt(blockers.get('export_scenario_unrendered', 0)):>8}   edges",
         f"  migrate edge          {_fmt(edge_states.get('ready', 0)):>8}   edges",
         f"  close coverage        {_fmt(len({gap.modelo for gap in report.gaps if not gap.disposed})):>8}"
         "   modelos (coverage campaign)",
@@ -2804,7 +3552,7 @@ def render_report(report: Report, *, totals_only: bool = False) -> str:
             f"  {'unclaimed predecessor (retire/inherit)':<38} {_fmt(scope.unclaimed_predecessor):>8}",
             f"  {'  ledgered wait (excluded modelo)':<38} {_fmt(scope.unclaimed_predecessor_excluded):>8}",
             f"  {'  seedable on the next run':<38} {_fmt(scope.unclaimed_predecessor_seedable):>8}",
-            f"  {'outside ledger scope (no-predecessor)':<38} {_fmt(scope.outside_ledger_scope):>8}",
+            f"  {'declared root, not first edition':<38} {_fmt(scope.declared_root_not_first_edition):>8}",
             f"  {'unnamed successor (ledger miss)':<38} {_fmt(scope.unnamed_successor):>8}",
             "",
         ]

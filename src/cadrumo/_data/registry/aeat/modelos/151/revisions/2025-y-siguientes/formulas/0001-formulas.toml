@@ -1,24 +1,6 @@
 # Modelo 151 (régimen impatriados) — cuota chain formulas, ejercicios 2025 y
 # siguientes.
 
-# Cuota íntegra general: aplica la escala plana del art. 93.2.e.1º (24% hasta
-# 600.000 €, 47% sobre el exceso) a la base liquidable general, vía
-# lookup_bracket sobre modelo-151.escala-cuota-integra-general.
-[[revisions."2025-y-siguientes".formulas]]
-id = "modelo-151-cuota-integra-general"
-target_casilla_id = "impatriado.cuota-integra-general"
-expression = { op = "lookup_bracket", args = [
-    { casilla_id = "impatriado.base-liquidable-general" },
-    { parameter = "modelo-151.escala-cuota-integra-general" },
-] }
-rounding = "money-2"
-legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-modelo-151-procedure"]
-
-[[revisions."2025-y-siguientes".formulas.source_citations]]
-source_ref = "aeat-modelo-151-procedure"
-required_text = ["Modelo 151"]
-
 # Cuota íntegra del ahorro: aplica la escala progresiva del ahorro del art.
 # 93.2.e.2º (19/21/23/27/30, redacción vigente Ley 7/2024) a la base liquidable
 # del ahorro (parte de las rentas del art. 25.1.f TRLIRNR), vía lookup_bracket
@@ -32,7 +14,6 @@ expression = { op = "lookup_bracket", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-modelo-151-procedure"]
 
 [[revisions."2025-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-151-procedure"
@@ -53,7 +34,6 @@ expression = { op = "subtract", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-modelo-151-procedure"]
 
 [[revisions."2025-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-151-procedure"

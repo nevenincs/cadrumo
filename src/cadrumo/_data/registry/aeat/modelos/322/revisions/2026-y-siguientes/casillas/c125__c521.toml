@@ -47,6 +47,9 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "128"
+continuidad_id = "m322-operaciones-intragrupo-valoradas-arts-78-79-liva"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:267 (sha256 a70f3a2ca7dd) DR32203 campo 38 posicion 386 len 17 N box [128]; corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:285 (sha256 f014cec44d49) DR32203 campo 38 posicion 386 len 17 N box [128]; misma descripcion, campo, posicion, longitud y tipo."
 number = "128"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "money"
@@ -345,6 +348,9 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "500"
+continuidad_id = "m322-prorratas-1-codigo-cnae"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:280 (sha256 a70f3a2ca7dd) DR32204 campo 3 posicion 13 len 3 Num box [500]; corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:298 (sha256 f014cec44d49) DR32204 campo 3 posicion 13 len 4 An box [500]; misma descripcion y campo; longitud 3->4 y contenido Nota 6->CNAE-2025."
 number = "500"
 section = ["iva", "prorratas"]
 data_type = "text"
@@ -354,8 +360,12 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "501"
+continuidad_id = "m322-prorratas-1-importe-operaciones"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:234 (sha256 be029175f11e), campo 4 posicion 16 len 17 Num, Prorratas - 1 - Importe de operaciones, validacion 15 enteros 2 decimales; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:247 (sha256 540805f09ca3), campo 4 posicion 16 len 17 Num, misma descripcion y validacion; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:281 (sha256 a70f3a2ca7dd), campo 4 posicion 16 len 17 Num, misma descripcion y validacion; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:299 (sha256 f014cec44d49), campo 4 posicion 17 len 17 Num, misma descripcion y validacion. Tabla Prorratas - 1 y rol estables; solo se mueve la posicion 16 -> 17 por el ensanchamiento de la casilla 500."
 number = "501"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_1_importe_operaciones"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -363,8 +373,12 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "502"
+continuidad_id = "m322-prorratas-1-importe-operaciones-con-derecho-a-deduccion"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:235 (sha256 be029175f11e), campo 5 posicion 33 len 17 Num, Prorratas - 1 - Importe de operaciones con derecho a deduccion, validacion 15 enteros 2 decimales; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:248 (sha256 540805f09ca3), campo 5 posicion 33 len 17 Num, misma descripcion y validacion; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:282 (sha256 a70f3a2ca7dd), campo 5 posicion 33 len 17 Num, misma descripcion y validacion; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:300 (sha256 f014cec44d49), campo 5 posicion 34 len 17 Num, misma descripcion y validacion. Tabla Prorratas - 1 y rol estables; solo se mueve la posicion 33 -> 34 por el ensanchamiento de la casilla 500."
 number = "502"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_1_importe_operaciones_con_derecho_a_deduccion"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -372,8 +386,12 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "503"
+continuidad_id = "m322-prorratas-1-tipo-de-prorrata"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:236 (sha256 be029175f11e), campo 6 posicion 50 len 1 An, Prorratas - 1 - Tipo de prorrata, validacion G, E o blanco; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:249 (sha256 540805f09ca3), campo 6 posicion 50 len 1 An, misma descripcion y validacion; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:283 (sha256 a70f3a2ca7dd), campo 6 posicion 50 len 1 An, misma descripcion y validacion; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:301 (sha256 f014cec44d49), campo 6 posicion 51 len 1 An, misma descripcion y validacion. Tabla Prorratas - 1 y rol estables; solo se mueve la posicion 50 -> 51 por el ensanchamiento de la casilla 500."
 number = "503"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_1_tipo_de_prorrata"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -381,8 +399,12 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "504"
+continuidad_id = "m322-prorratas-1-porcentaje-de-prorrata"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:237 (sha256 be029175f11e), campo 7 posicion 51 len 5 Num, Prorratas - 1 - % de prorrata, validacion 3 enteros 2 decimales, menor o igual que 100; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:250 (sha256 540805f09ca3), campo 7 posicion 51 len 5 Num, misma descripcion y validacion; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:284 (sha256 a70f3a2ca7dd), campo 7 posicion 51 len 5 Num, misma descripcion y validacion; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:302 (sha256 f014cec44d49), campo 7 posicion 52 len 5 Num, misma descripcion y validacion. Tabla Prorratas - 1 y rol estables; solo se mueve la posicion 51 -> 52 por el ensanchamiento de la casilla 500."
 number = "504"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_1_porcentaje_de_prorrata"
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -390,6 +412,9 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "505"
+continuidad_id = "m322-prorratas-2-codigo-cnae"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:285 (sha256 a70f3a2ca7dd) DR32204 campo 8 posicion 56 len 3 Num box [505]; corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:303 (sha256 f014cec44d49) DR32204 campo 8 posicion 57 len 4 An box [505]; misma descripcion y campo; posicion 56->57, longitud 3->4, contenido CNAE-2025."
 number = "505"
 section = ["iva", "prorratas"]
 data_type = "text"
@@ -399,8 +424,12 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "506"
+continuidad_id = "m322-prorratas-2-importe-operaciones"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:239 (sha256 be029175f11e), campo 9 posicion 59 len 17 Num, Prorratas - 2 - Importe de operaciones, validacion 15 enteros 2 decimales; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:252 (sha256 540805f09ca3), campo 9 posicion 59 len 17 Num, misma descripcion y validacion; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:286 (sha256 a70f3a2ca7dd), campo 9 posicion 59 len 17 Num, misma descripcion y validacion; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:304 (sha256 f014cec44d49), campo 9 posicion 61 len 17 Num, misma descripcion y validacion. Tabla Prorratas - 2 y rol estables; solo se mueve la posicion 59 -> 61 por el ensanchamiento de la casilla 505."
 number = "506"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_2_importe_operaciones"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -408,8 +437,12 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "507"
+continuidad_id = "m322-prorratas-2-importe-operaciones-con-derecho-a-deduccion"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:240 (sha256 be029175f11e), campo 10 posicion 76 len 17 Num, Prorratas - 2 - Importe de operaciones con derecho a deduccion, validacion 15 enteros 2 decimales; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:253 (sha256 540805f09ca3), campo 10 posicion 76 len 17 Num, misma descripcion y validacion; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:287 (sha256 a70f3a2ca7dd), campo 10 posicion 76 len 17 Num, misma descripcion y validacion; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:305 (sha256 f014cec44d49), campo 10 posicion 78 len 17 Num, misma descripcion y validacion. Tabla Prorratas - 2 y rol estables; solo se mueve la posicion 76 -> 78 por el ensanchamiento de la casilla 505."
 number = "507"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_2_importe_operaciones_con_derecho_a_deduccion"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -417,8 +450,12 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "508"
+continuidad_id = "m322-prorratas-2-tipo-de-prorrata"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:241 (sha256 be029175f11e), campo 11 posicion 93 len 1 An, Prorratas - 2 - Tipo de prorrata, validacion G, E o blanco; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:254 (sha256 540805f09ca3), campo 11 posicion 93 len 1 An, misma descripcion y validacion; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:288 (sha256 a70f3a2ca7dd), campo 11 posicion 93 len 1 An, misma descripcion y validacion; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:306 (sha256 f014cec44d49), campo 11 posicion 95 len 1 An, misma descripcion y validacion. Tabla Prorratas - 2 y rol estables; solo se mueve la posicion 93 -> 95 por el ensanchamiento de la casilla 505."
 number = "508"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_2_tipo_de_prorrata"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -426,8 +463,12 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "509"
+continuidad_id = "m322-prorratas-2-porcentaje-de-prorrata"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:242 (sha256 be029175f11e), campo 12 posicion 94 len 5 Num, Prorratas - 2 - % de prorrata, validacion 3 enteros 2 decimales, menor o igual que 100; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:255 (sha256 540805f09ca3), campo 12 posicion 94 len 5 Num, misma descripcion y validacion; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:289 (sha256 a70f3a2ca7dd), campo 12 posicion 94 len 5 Num, misma descripcion y validacion; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:307 (sha256 f014cec44d49), campo 12 posicion 96 len 5 Num, misma descripcion y validacion. Tabla Prorratas - 2 y rol estables; solo se mueve la posicion 94 -> 96 por el ensanchamiento de la casilla 505."
 number = "509"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_2_porcentaje_de_prorrata"
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -435,6 +476,9 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "510"
+continuidad_id = "m322-prorratas-3-codigo-cnae"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:290 (sha256 a70f3a2ca7dd) DR32204 campo 13 posicion 99 len 3 Num box [510]; corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:308 (sha256 f014cec44d49) DR32204 campo 13 posicion 101 len 4 An box [510]; misma descripcion y campo; posicion 99->101, longitud 3->4, contenido CNAE-2025."
 number = "510"
 section = ["iva", "prorratas"]
 data_type = "text"
@@ -444,8 +488,12 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "511"
+continuidad_id = "m322-prorratas-3-importe-operaciones"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:244 (sha256 be029175f11e), campo 14 posicion 102 len 17 Num, Prorratas - 3 - Importe de operaciones, validacion 15 enteros 2 decimales; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:257 (sha256 540805f09ca3), campo 14 posicion 102 len 17 Num, misma descripcion y validacion; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:291 (sha256 a70f3a2ca7dd), campo 14 posicion 102 len 17 Num, misma descripcion y validacion; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:309 (sha256 f014cec44d49), campo 14 posicion 105 len 17 Num, misma descripcion y validacion. Tabla Prorratas - 3 y rol estables; solo se mueve la posicion 102 -> 105 por el ensanchamiento de las casillas 505 y 510."
 number = "511"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_3_importe_operaciones"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -453,8 +501,12 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "512"
+continuidad_id = "m322-prorratas-3-importe-operaciones-con-derecho-a-deduccion"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:245 (sha256 be029175f11e), campo 15 posicion 119 len 17 Num, Prorratas - 3 - Importe de operaciones con derecho a deduccion, validacion 15 enteros 2 decimales; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:258 (sha256 540805f09ca3), campo 15 posicion 119 len 17 Num, misma descripcion y validacion; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:292 (sha256 a70f3a2ca7dd), campo 15 posicion 119 len 17 Num, misma descripcion y validacion; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:310 (sha256 f014cec44d49), campo 15 posicion 122 len 17 Num, misma descripcion y validacion. Tabla Prorratas - 3 y rol estables; solo se mueve la posicion 119 -> 122 por el ensanchamiento de las casillas 505 y 510."
 number = "512"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_3_importe_operaciones_con_derecho_a_deduccion"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -462,8 +514,12 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "513"
+continuidad_id = "m322-prorratas-3-tipo-de-prorrata"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:246 (sha256 be029175f11e), campo 16 posicion 136 len 1 An, Prorratas - 3 - Tipo de prorrata, validacion G, E o blanco; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:259 (sha256 540805f09ca3), campo 16 posicion 136 len 1 An, misma descripcion y validacion; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:293 (sha256 a70f3a2ca7dd), campo 16 posicion 136 len 1 An, misma descripcion y validacion; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:311 (sha256 f014cec44d49), campo 16 posicion 139 len 1 An, misma descripcion y validacion. Tabla Prorratas - 3 y rol estables; solo se mueve la posicion 136 -> 139 por el ensanchamiento de las casillas 505 y 510."
 number = "513"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_3_tipo_de_prorrata"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -471,8 +527,12 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "514"
+continuidad_id = "m322-prorratas-3-porcentaje-de-prorrata"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:247 (sha256 be029175f11e), campo 17 posicion 137 len 5 Num, Prorratas - 3 - % de prorrata, validacion 3 enteros 2 decimales, menor o igual que 100; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:260 (sha256 540805f09ca3), campo 17 posicion 137 len 5 Num, misma descripcion y validacion; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:294 (sha256 a70f3a2ca7dd), campo 17 posicion 137 len 5 Num, misma descripcion y validacion; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:312 (sha256 f014cec44d49), campo 17 posicion 140 len 5 Num, misma descripcion y validacion. Tabla Prorratas - 3 y rol estables; solo se mueve la posicion 137 -> 140 por el ensanchamiento de las casillas 505 y 510."
 number = "514"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_3_porcentaje_de_prorrata"
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -480,6 +540,9 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "515"
+continuidad_id = "m322-prorratas-4-codigo-cnae"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:295 (sha256 a70f3a2ca7dd) DR32204 campo 18 posicion 142 len 3 Num box [515]; corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:313 (sha256 f014cec44d49) DR32204 campo 18 posicion 145 len 4 An box [515]; misma descripcion y campo; posicion 142->145, longitud 3->4, contenido CNAE-2025."
 number = "515"
 section = ["iva", "prorratas"]
 data_type = "text"
@@ -489,8 +552,12 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "516"
+continuidad_id = "m322-prorratas-4-importe-operaciones"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:249 (sha256 be029175f11e), campo 19 posicion 145 len 17 Num, Prorratas - 4 - Importe de operaciones, validacion 15 enteros 2 decimales; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:262 (sha256 540805f09ca3), campo 19 posicion 145 len 17 Num, misma descripcion y validacion; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:296 (sha256 a70f3a2ca7dd), campo 19 posicion 145 len 17 Num, misma descripcion y validacion; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:314 (sha256 f014cec44d49), campo 19 posicion 149 len 17 Num, misma descripcion y validacion. Tabla Prorratas - 4 y rol estables; solo se mueve la posicion 145 -> 149 por el ensanchamiento de las casillas 505, 510 y 515."
 number = "516"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_4_importe_operaciones"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -498,8 +565,12 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "517"
+continuidad_id = "m322-prorratas-4-importe-operaciones-con-derecho-a-deduccion"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:250 (sha256 be029175f11e), campo 20 posicion 162 len 17 Num, Prorratas - 4 - Importe de operaciones con derecho a deduccion, validacion 15 enteros 2 decimales; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:263 (sha256 540805f09ca3), campo 20 posicion 162 len 17 Num, misma descripcion y validacion; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:297 (sha256 a70f3a2ca7dd), campo 20 posicion 162 len 17 Num, misma descripcion y validacion; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:315 (sha256 f014cec44d49), campo 20 posicion 166 len 17 Num, misma descripcion y validacion. Tabla Prorratas - 4 y rol estables; solo se mueve la posicion 162 -> 166 por el ensanchamiento de las casillas 505, 510 y 515."
 number = "517"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_4_importe_operaciones_con_derecho_a_deduccion"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -507,8 +578,12 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "518"
+continuidad_id = "m322-prorratas-4-tipo-de-prorrata"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:251 (sha256 be029175f11e), campo 21 posicion 179 len 1 An, Prorratas - 4 - Tipo de prorrata, validacion G, E o blanco; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:264 (sha256 540805f09ca3), campo 21 posicion 179 len 1 An, misma descripcion y validacion; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:298 (sha256 a70f3a2ca7dd), campo 21 posicion 179 len 1 An, misma descripcion y validacion; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:316 (sha256 f014cec44d49), campo 21 posicion 183 len 1 An, misma descripcion y validacion. Tabla Prorratas - 4 y rol estables; solo se mueve la posicion 179 -> 183 por el ensanchamiento de las casillas 505, 510 y 515."
 number = "518"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_4_tipo_de_prorrata"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -516,8 +591,12 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "519"
+continuidad_id = "m322-prorratas-4-porcentaje-de-prorrata"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:252 (sha256 be029175f11e), campo 22 posicion 180 len 5 Num, Prorratas - 4 - % de prorrata, validacion 3 enteros 2 decimales, menor o igual que 100; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:265 (sha256 540805f09ca3), campo 22 posicion 180 len 5 Num, misma descripcion y validacion; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:299 (sha256 a70f3a2ca7dd), campo 22 posicion 180 len 5 Num, misma descripcion y validacion; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:317 (sha256 f014cec44d49), campo 22 posicion 184 len 5 Num, misma descripcion y validacion. Tabla Prorratas - 4 y rol estables; solo se mueve la posicion 180 -> 184 por el ensanchamiento de las casillas 505, 510 y 515."
 number = "519"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_4_porcentaje_de_prorrata"
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -525,6 +604,9 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "520"
+continuidad_id = "m322-prorratas-5-codigo-cnae"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:300 (sha256 a70f3a2ca7dd) DR32204 campo 23 posicion 185 len 3 Num box [520]; corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:318 (sha256 f014cec44d49) DR32204 campo 23 posicion 189 len 4 An box [520]; misma descripcion y campo; posicion 185->189, longitud 3->4, contenido CNAE-2025."
 number = "520"
 section = ["iva", "prorratas"]
 data_type = "text"
@@ -534,8 +616,12 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "521"
+continuidad_id = "m322-prorratas-5-importe-operaciones"
+continuidad_origin = "grounded"
+continuidad_evidence = "DR32201 (registro DR32202): 2022 04-322-ejercicio-2022-y-siguientes.xls.extracted.md:254 (sha256 be029175f11e), campo 24 posicion 188 len 17 Num, Prorratas - 5 - Importe de operaciones, validacion 15 enteros 2 decimales; 2023 02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:267 (sha256 540805f09ca3), campo 24 posicion 188 len 17 Num, misma descripcion y validacion; 2024-25 03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:301 (sha256 a70f3a2ca7dd), campo 24 posicion 188 len 17 Num, misma descripcion y validacion; 2026 01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:319 (sha256 f014cec44d49), campo 24 posicion 193 len 17 Num, misma descripcion y validacion. Tabla Prorratas - 5 y rol estables; solo se mueve la posicion 188 -> 193 por el ensanchamiento de las casillas 505, 510, 515 y 520."
 number = "521"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_5_importe_operaciones"
 data_type = "money"
 required = false
 input_kind = "manual"

@@ -20,7 +20,7 @@ from cadrumo.domain.calculations.registry.schema import (
 )
 from cadrumo.domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from cadrumo.tests.aeat_literal_fixtures import aeat_url, configured_path
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.loader import load_registry_tree
 from ..compiler.validator import RegistryValidator

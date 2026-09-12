@@ -45,6 +45,9 @@
 # @11+9. Identificacion. N.I.F. del establecimiento permanente.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.identificacion-nif"
+continuidad_id = "ep-identificacion-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:330 (sha256 3ecea6c06e3d) box [C1] (3 11 9 An Establecimiento perm. de una per. jca. o ent. no resident...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:379 (sha256 791479fbf9e9) box [C1] (3 11 9 An Establecimiento perm. de una per. jca. o ent. no resident...)."
 number = "C1"
 section = ["declaracion", "establecimiento_permanente", "identificacion"]
 data_type = "nif"
@@ -60,6 +63,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @20+125. Identificacion. Razon o denominacion social.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.identificacion-razon-social"
+continuidad_id = "ep-identificacion-razon-social"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:331 (sha256 3ecea6c06e3d) box [C2] (4 20 125 An Establecimiento perm. de una per. jca. o ent. no reside...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:380 (sha256 791479fbf9e9) box [C2] (4 20 125 An Establecimiento perm. de una per. jca. o ent. no reside...)."
 number = "C2"
 section = ["declaracion", "establecimiento_permanente", "identificacion"]
 data_type = "name"
@@ -75,6 +81,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @145+25. Identificacion. Anagrama.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.identificacion-anagrama"
+continuidad_id = "ep-identificacion-anagrama"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:332 (sha256 3ecea6c06e3d) box [C3] (5 145 25 An Establecimiento perm. de una per. jca. o ent. no reside...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:381 (sha256 791479fbf9e9) box [C3] (5 145 25 An Establecimiento perm. de una per. jca. o ent. no reside...)."
 number = "C3"
 section = ["declaracion", "establecimiento_permanente", "identificacion"]
 data_type = "text"
@@ -90,6 +99,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @170+2. Identificacion. Tipo de establecimiento permanente.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.identificacion-tipo-establecimiento"
+continuidad_id = "ep-identificacion-tipo-establecimiento"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:333 (sha256 3ecea6c06e3d) box [C4] (6 170 2 An Establecimiento perm. de una per. jca. o ent. no residen...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:382 (sha256 791479fbf9e9) box [C4] (6 170 2 An Establecimiento perm. de una per. jca. o ent. no residen...)."
 number = "C4"
 section = ["declaracion", "establecimiento_permanente", "identificacion"]
 data_type = "text"
@@ -105,6 +117,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @172+1. Identificacion. Es una sucursal de la entidad no residente.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.identificacion-es-sucursal"
+continuidad_id = "ep-identificacion-es-sucursal"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:334 (sha256 3ecea6c06e3d) box [C5] (7 172 1 An Establecimiento perm. de una per. jca. o ent. no residen...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:383 (sha256 791479fbf9e9) box [C5] (7 172 1 An Establecimiento perm. de una per. jca. o ent. no residen...)."
 number = "C5"
 section = ["declaracion", "establecimiento_permanente", "identificacion"]
 data_type = "boolean"
@@ -120,6 +135,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @173+9. Identificacion. Persona o entidad no residente de la que depende. N.I.F., si dispone de el.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.identificacion-matriz-nif"
+continuidad_id = "ep-identificacion-matriz-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:335 (sha256 3ecea6c06e3d) box [C6] (8 173 9 An Establ. perm. de una per. jca. o ent. no resid. Pers. o ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:384 (sha256 791479fbf9e9) box [C6] (8 173 9 An Establ. perm. de una per. jca. o ent. no resid. Pers. o ...)."
 number = "C6"
 section = ["declaracion", "establecimiento_permanente", "identificacion"]
 data_type = "nif"
@@ -135,6 +153,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @182+125. Identificacion. Persona o entidad no residente de la que depende. Razon o denominacion social.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.identificacion-matriz-razon-social"
+continuidad_id = "ep-identificacion-matriz-razon-social"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:336 (sha256 3ecea6c06e3d) box [C7] (9 182 125 An Establ. perm. de una per. jca. o ent. no resid. Pers. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:385 (sha256 791479fbf9e9) box [C7] (9 182 125 An Establ. perm. de una per. jca. o ent. no resid. Pers. ...)."
 number = "C7"
 section = ["declaracion", "establecimiento_permanente", "identificacion"]
 data_type = "name"
@@ -150,6 +171,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @307+2. Identificacion. Persona o entidad no residente de la que depende. Estado de residencia.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.identificacion-matriz-estado-residencia"
+continuidad_id = "ep-identificacion-matriz-estado-residencia"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:337 (sha256 3ecea6c06e3d) box [C8] (10 307 2 An Establ. perm. de una per. jca. o ent. no resid. Pers. o...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:386 (sha256 791479fbf9e9) box [C8] (10 307 2 An Establ. perm. de una per. jca. o ent. no resid. Pers. o...)."
 number = "C8"
 section = ["declaracion", "establecimiento_permanente", "identificacion"]
 data_type = "country_code"
@@ -165,6 +189,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @309+5. Domicilio fiscal en Espana. Tipo de via.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-fiscal-tipo-via"
+continuidad_id = "ep-domicilio-fiscal-tipo-via"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:338 (sha256 3ecea6c06e3d) box [C11] (11 309 5 An Establecimiento perm. de una per.jca. o ent. no resid. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:387 (sha256 791479fbf9e9) box [C11] (11 309 5 An Establecimiento perm. de una per.jca. o ent. no resid. ...)."
 number = "C11"
 section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
 data_type = "text"
@@ -183,6 +210,8 @@ id = "ep.domicilio-fiscal-codigo-via-ine"
 number = "ep-domicilio-fiscal-codigo-via-ine"
 section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
 data_type = "text"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 2C @314+5 (line 339 of the extract): Establecimiento perm. de una per.jca. o ent. no resid. Domicilio fiscal en Espana.. The successor design prints the same field at the same page and byte position: Establecimiento perm. de una per.jca. o ent. no resid. Domicilio fiscal en Espana.. AEAT prints the slot with no box number at all; the predecessor edition revision note records 82 such unnumbered slots declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -195,6 +224,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @319+50. Domicilio fiscal en Espana. Nombre de la via publica.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-fiscal-nombre-via"
+continuidad_id = "ep-domicilio-fiscal-nombre-via"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:340 (sha256 3ecea6c06e3d) box [C12] (13 319 50 An Establecimiento perm. de una per.jca. o ent. no resid....) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:389 (sha256 791479fbf9e9) box [C12] (13 319 50 An Establecimiento perm. de una per.jca. o ent. no resid....)."
 number = "C12"
 section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
 data_type = "text"
@@ -210,6 +242,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @369+3. Domicilio fiscal en Espana. Tipo de numero.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-fiscal-tipo-numero"
+continuidad_id = "ep-domicilio-fiscal-tipo-numero"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:341 (sha256 3ecea6c06e3d) box [C13] (14 369 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:390 (sha256 791479fbf9e9) box [C13] (14 369 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...)."
 number = "C13"
 section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
 data_type = "text"
@@ -225,6 +260,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @372+5. Domicilio fiscal en Espana. Numero de casa.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-fiscal-numero-casa"
+continuidad_id = "ep-domicilio-fiscal-numero-casa"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:342 (sha256 3ecea6c06e3d) box [C14] (15 372 5 Num Establecimiento perm. de una per.jca. o ent. no resid....) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:391 (sha256 791479fbf9e9) box [C14] (15 372 5 Num Establecimiento perm. de una per.jca. o ent. no resid....)."
 number = "C14"
 section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
 data_type = "integer"
@@ -240,6 +278,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @377+3. Domicilio fiscal en Espana. Calificador del numero.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-fiscal-calificador-numero"
+continuidad_id = "ep-domicilio-fiscal-calificador-numero"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:343 (sha256 3ecea6c06e3d) box [C15] (16 377 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:392 (sha256 791479fbf9e9) box [C15] (16 377 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...)."
 number = "C15"
 section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
 data_type = "text"
@@ -255,6 +296,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @380+3. Domicilio fiscal en Espana. Bloque.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-fiscal-bloque"
+continuidad_id = "ep-domicilio-fiscal-bloque"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:344 (sha256 3ecea6c06e3d) box [C16] (17 380 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:393 (sha256 791479fbf9e9) box [C16] (17 380 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...)."
 number = "C16"
 section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
 data_type = "text"
@@ -270,6 +314,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @383+3. Domicilio fiscal en Espana. Portal.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-fiscal-portal"
+continuidad_id = "ep-domicilio-fiscal-portal"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:345 (sha256 3ecea6c06e3d) box [C17] (18 383 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:394 (sha256 791479fbf9e9) box [C17] (18 383 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...)."
 number = "C17"
 section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
 data_type = "text"
@@ -285,6 +332,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @386+3. Domicilio fiscal en Espana. Escalera.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-fiscal-escalera"
+continuidad_id = "ep-domicilio-fiscal-escalera"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:346 (sha256 3ecea6c06e3d) box [C18] (19 386 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:395 (sha256 791479fbf9e9) box [C18] (19 386 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...)."
 number = "C18"
 section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
 data_type = "text"
@@ -300,6 +350,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @389+3. Domicilio fiscal en Espana. Planta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-fiscal-planta"
+continuidad_id = "ep-domicilio-fiscal-planta"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:347 (sha256 3ecea6c06e3d) box [C19] (20 389 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:396 (sha256 791479fbf9e9) box [C19] (20 389 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...)."
 number = "C19"
 section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
 data_type = "text"
@@ -315,6 +368,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @392+3. Domicilio fiscal en Espana. Puerta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-fiscal-puerta"
+continuidad_id = "ep-domicilio-fiscal-puerta"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:348 (sha256 3ecea6c06e3d) box [C20] (21 392 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:397 (sha256 791479fbf9e9) box [C20] (21 392 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...)."
 number = "C20"
 section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
 data_type = "text"
@@ -330,6 +386,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @395+40. Domicilio fiscal en Espana. Complemento de domicilio (urbanizacion, poligono industrial, centro comercial).
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-fiscal-complemento-domicilio"
+continuidad_id = "ep-domicilio-fiscal-complemento-domicilio"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:349 (sha256 3ecea6c06e3d) box [C21] (22 395 40 An Establec perm. de una per.jca. o ent. no resid. Domic ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:398 (sha256 791479fbf9e9) box [C21] (22 395 40 An Establec perm. de una per.jca. o ent. no resid. Domic ...)."
 number = "C21"
 section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
 data_type = "text"
@@ -345,6 +404,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @435+30. Domicilio fiscal en Espana. Localidad o poblacion, si es distinta del municipio.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-fiscal-localidad"
+continuidad_id = "ep-domicilio-fiscal-localidad"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:350 (sha256 3ecea6c06e3d) box [C22] (23 435 30 An Establec perm. de una per.jca. o ent. no resid. Domic ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:399 (sha256 791479fbf9e9) box [C22] (23 435 30 An Establec perm. de una per.jca. o ent. no resid. Domic ...)."
 number = "C22"
 section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
 data_type = "text"
@@ -360,6 +422,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @465+5. Domicilio fiscal en Espana. Codigo postal.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-fiscal-codigo-postal"
+continuidad_id = "ep-domicilio-fiscal-codigo-postal"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:351 (sha256 3ecea6c06e3d) box [C23] (24 465 5 Num Establecimiento perm. de una per.jca. o ent. no resid....) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:400 (sha256 791479fbf9e9) box [C23] (24 465 5 Num Establecimiento perm. de una per.jca. o ent. no resid....)."
 number = "C23"
 section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
 data_type = "postal_code"
@@ -378,6 +443,8 @@ id = "ep.domicilio-fiscal-codigo-municipio-ine"
 number = "ep-domicilio-fiscal-codigo-municipio-ine"
 section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
 data_type = "municipality_code"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 2C @470+5 (line 352 of the extract): Establecimiento perm. de una per.jca. o ent. no resid. Domicilio fiscal en Espana.. The successor design prints the same field at the same page and byte position: Establecimiento perm. de una per.jca. o ent. no resid. Domicilio fiscal en Espana. Codigo Municipio INE. AEAT prints the slot with no box number at all; the predecessor edition revision note records 82 such unnumbered slots declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -390,6 +457,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @475+30. Domicilio fiscal en Espana. Nombre del municipio.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-fiscal-municipio"
+continuidad_id = "ep-domicilio-fiscal-municipio"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:353 (sha256 3ecea6c06e3d) box [C24] (26 475 30 An Establecimiento perm. de una per.jca. o ent. no resid....) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:402 (sha256 791479fbf9e9) box [C24] (26 475 30 An Establecimiento perm. de una per.jca. o ent. no resid....)."
 number = "C24"
 section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
 data_type = "text"
@@ -405,6 +475,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @505+2. Domicilio fiscal en Espana. Codigo de provincia.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-fiscal-codigo-provincia"
+continuidad_id = "ep-domicilio-fiscal-codigo-provincia"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:354 (sha256 3ecea6c06e3d) box [C25] (27 505 2 An Establecimiento perm. de una per.jca. o ent. no resid. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:403 (sha256 791479fbf9e9) box [C25] (27 505 2 An Establecimiento perm. de una per.jca. o ent. no resid. ...)."
 number = "C25"
 section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
 data_type = "province_code"
@@ -420,6 +493,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @507+100. Datos de telefonos y direcciones para recibir avisos. E-mail.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.avisos-email"
+continuidad_id = "ep-avisos-email"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:355 (sha256 3ecea6c06e3d) box [C29] (28 507 100 An Establecimiento perm. de una per.jca. o ent. no resid...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:404 (sha256 791479fbf9e9) box [C29] (28 507 100 An Establecimiento perm. de una per.jca. o ent. no resid...)."
 number = "C29"
 section = ["declaracion", "establecimiento_permanente", "avisos"]
 data_type = "text"
@@ -438,6 +514,8 @@ id = "ep.avisos-aeat-alta"
 number = "ep-avisos-aeat-alta"
 section = ["declaracion", "establecimiento_permanente", "avisos"]
 data_type = "boolean"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "CARVED OUT OF A RESERVED RUN. The successor design prints this tick box at Pag. 2C @607+1 'Establecimiento perm. de una per.jca. o ent. no resid. Datos telefonos y direccione para recibir avisos. AEAT Alta'. The predecessor design prints no field there: the byte range falls inside a 'Reservado para la Agencia Tributaria' run, so the box did not exist on the predecessor form. The whole avisos alta/baja block (AEAT, TEA, DGT, e-mail, telefono movil, aplicacion movil AEAT) was taken from those reserved runs on Pag. 2A @471 and @809, Pag. 2B @535 and @873 and Pag. 2C @607 and @951. Sources: corpus/.../modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and corpus/.../modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -453,6 +531,8 @@ id = "ep.avisos-aeat-baja"
 number = "ep-avisos-aeat-baja"
 section = ["declaracion", "establecimiento_permanente", "avisos"]
 data_type = "boolean"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "CARVED OUT OF A RESERVED RUN. The successor design prints this tick box at Pag. 2C @608+1 'Establecimiento perm. de una per.jca. o ent. no resid. Datos telefonos y direccione para recibir avisos. AEAT Baja'. The predecessor design prints no field there: the byte range falls inside a 'Reservado para la Agencia Tributaria' run, so the box did not exist on the predecessor form. The whole avisos alta/baja block (AEAT, TEA, DGT, e-mail, telefono movil, aplicacion movil AEAT) was taken from those reserved runs on Pag. 2A @471 and @809, Pag. 2B @535 and @873 and Pag. 2C @607 and @951. Sources: corpus/.../modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and corpus/.../modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -468,6 +548,8 @@ id = "ep.avisos-tea-alta"
 number = "ep-avisos-tea-alta"
 section = ["declaracion", "establecimiento_permanente", "avisos"]
 data_type = "boolean"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "CARVED OUT OF A RESERVED RUN. The successor design prints this tick box at Pag. 2C @609+1 'Establecimiento perm. de una per.jca. o ent. no resid. Datos telefonos y direccione para recibir avisos. TEA Alta'. The predecessor design prints no field there: the byte range falls inside a 'Reservado para la Agencia Tributaria' run, so the box did not exist on the predecessor form. The whole avisos alta/baja block (AEAT, TEA, DGT, e-mail, telefono movil, aplicacion movil AEAT) was taken from those reserved runs on Pag. 2A @471 and @809, Pag. 2B @535 and @873 and Pag. 2C @607 and @951. Sources: corpus/.../modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and corpus/.../modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -483,6 +565,8 @@ id = "ep.avisos-tea-baja"
 number = "ep-avisos-tea-baja"
 section = ["declaracion", "establecimiento_permanente", "avisos"]
 data_type = "boolean"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "CARVED OUT OF A RESERVED RUN. The successor design prints this tick box at Pag. 2C @610+1 'Establecimiento perm. de una per.jca. o ent. no resid. Datos telefonos y direccione para recibir avisos. TEA Baja'. The predecessor design prints no field there: the byte range falls inside a 'Reservado para la Agencia Tributaria' run, so the box did not exist on the predecessor form. The whole avisos alta/baja block (AEAT, TEA, DGT, e-mail, telefono movil, aplicacion movil AEAT) was taken from those reserved runs on Pag. 2A @471 and @809, Pag. 2B @535 and @873 and Pag. 2C @607 and @951. Sources: corpus/.../modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and corpus/.../modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -498,6 +582,8 @@ id = "ep.avisos-dgt-alta"
 number = "ep-avisos-dgt-alta"
 section = ["declaracion", "establecimiento_permanente", "avisos"]
 data_type = "boolean"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "CARVED OUT OF A RESERVED RUN. The successor design prints this tick box at Pag. 2C @611+1 'Establecimiento perm. de una per.jca. o ent. no resid. Datos telefonos y direccione para recibir avisos. DGT Alta'. The predecessor design prints no field there: the byte range falls inside a 'Reservado para la Agencia Tributaria' run, so the box did not exist on the predecessor form. The whole avisos alta/baja block (AEAT, TEA, DGT, e-mail, telefono movil, aplicacion movil AEAT) was taken from those reserved runs on Pag. 2A @471 and @809, Pag. 2B @535 and @873 and Pag. 2C @607 and @951. Sources: corpus/.../modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and corpus/.../modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -513,6 +599,8 @@ id = "ep.avisos-dgt-baja"
 number = "ep-avisos-dgt-baja"
 section = ["declaracion", "establecimiento_permanente", "avisos"]
 data_type = "boolean"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "CARVED OUT OF A RESERVED RUN. The successor design prints this tick box at Pag. 2C @612+1 'Establecimiento perm. de una per.jca. o ent. no resid. Datos telefonos y direccione para recibir avisos. DGT Baja'. The predecessor design prints no field there: the byte range falls inside a 'Reservado para la Agencia Tributaria' run, so the box did not exist on the predecessor form. The whole avisos alta/baja block (AEAT, TEA, DGT, e-mail, telefono movil, aplicacion movil AEAT) was taken from those reserved runs on Pag. 2A @471 and @809, Pag. 2B @535 and @873 and Pag. 2C @607 and @951. Sources: corpus/.../modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and corpus/.../modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -528,6 +616,8 @@ id = "ep.avisos-email-alta"
 number = "ep-avisos-email-alta"
 section = ["declaracion", "establecimiento_permanente", "avisos"]
 data_type = "boolean"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "CARVED OUT OF A RESERVED RUN. The successor design prints this tick box at Pag. 2C @613+1 'Establecimiento perm. de una per.jca. o ent. no resid. Datos telefonos y direccione para recibir avisos. E-mail Alta/Modificacion'. The predecessor design prints no field there: the byte range falls inside a 'Reservado para la Agencia Tributaria' run, so the box did not exist on the predecessor form. The whole avisos alta/baja block (AEAT, TEA, DGT, e-mail, telefono movil, aplicacion movil AEAT) was taken from those reserved runs on Pag. 2A @471 and @809, Pag. 2B @535 and @873 and Pag. 2C @607 and @951. Sources: corpus/.../modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and corpus/.../modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -543,6 +633,8 @@ id = "ep.avisos-email-baja"
 number = "ep-avisos-email-baja"
 section = ["declaracion", "establecimiento_permanente", "avisos"]
 data_type = "boolean"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "CARVED OUT OF A RESERVED RUN. The successor design prints this tick box at Pag. 2C @614+1 'Establecimiento perm. de una per.jca. o ent. no resid. Datos telefonos y direccione para recibir avisos. E-mail Baja'. The predecessor design prints no field there: the byte range falls inside a 'Reservado para la Agencia Tributaria' run, so the box did not exist on the predecessor form. The whole avisos alta/baja block (AEAT, TEA, DGT, e-mail, telefono movil, aplicacion movil AEAT) was taken from those reserved runs on Pag. 2A @471 and @809, Pag. 2B @535 and @873 and Pag. 2C @607 and @951. Sources: corpus/.../modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and corpus/.../modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -555,6 +647,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @634+5. Domicilio a efectos de notificaciones. Domicilio 1. Tipo de via.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-tipo-via"
+continuidad_id = "ep-domicilio-notificaciones-tipo-via"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:357 (sha256 3ecea6c06e3d) box [C41] (30 634 5 An Establecimiento perm. de una per.jca. o ent. no resid. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:414 (sha256 791479fbf9e9) box [C41] (38 634 5 An Establecimiento perm. de una per.jca. o ent. no resid. ...)."
 number = "C41"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "text"
@@ -573,6 +668,8 @@ id = "ep.domicilio-notificaciones-codigo-via-ine"
 number = "ep-domicilio-notificaciones-codigo-via-ine"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "text"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 2C @639+5 (line 358 of the extract): Establecimiento perm. de una per.jca. o ent. no resid. Domicilio a efectos de notificaciones.. The successor design prints the same field at the same page and byte position: Establecimiento perm. de una per.jca. o ent. no resid. Domicilio a efectos de notificaciones.. AEAT prints the slot with no box number at all; the predecessor edition revision note records 82 such unnumbered slots declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -585,6 +682,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @644+50. Domicilio a efectos de notificaciones. Domicilio 1. Nombre de la via publica.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-nombre-via"
+continuidad_id = "ep-domicilio-notificaciones-nombre-via"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:359 (sha256 3ecea6c06e3d) box [C42] (32 644 50 An Establecimiento perm. de una per.jca. o ent. no resid....) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:416 (sha256 791479fbf9e9) box [C42] (40 644 50 An Establecimiento perm. de una per.jca. o ent. no resid....)."
 number = "C42"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "text"
@@ -600,6 +700,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @694+3. Domicilio a efectos de notificaciones. Domicilio 1. Tipo de numero.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-tipo-numero"
+continuidad_id = "ep-domicilio-notificaciones-tipo-numero"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:360 (sha256 3ecea6c06e3d) box [C43] (33 694 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:417 (sha256 791479fbf9e9) box [C43] (41 694 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...)."
 number = "C43"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "text"
@@ -615,6 +718,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @697+5. Domicilio a efectos de notificaciones. Domicilio 1. Numero de casa.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-numero-casa"
+continuidad_id = "ep-domicilio-notificaciones-numero-casa"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:361 (sha256 3ecea6c06e3d) box [C44] (34 697 5 Num Establecimiento perm. de una per.jca. o ent. no resid....) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:418 (sha256 791479fbf9e9) box [C44] (42 697 5 Num Establecimiento perm. de una per.jca. o ent. no resid....)."
 number = "C44"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "integer"
@@ -630,6 +736,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @702+3. Domicilio a efectos de notificaciones. Domicilio 1. Calificador del numero.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-calificador-numero"
+continuidad_id = "ep-domicilio-notificaciones-calificador-numero"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:362 (sha256 3ecea6c06e3d) box [C45] (35 702 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:419 (sha256 791479fbf9e9) box [C45] (43 702 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...)."
 number = "C45"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "text"
@@ -645,6 +754,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @705+3. Domicilio a efectos de notificaciones. Domicilio 1. Bloque.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-bloque"
+continuidad_id = "ep-domicilio-notificaciones-bloque"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:363 (sha256 3ecea6c06e3d) box [C46] (36 705 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:420 (sha256 791479fbf9e9) box [C46] (44 705 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...)."
 number = "C46"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "text"
@@ -660,6 +772,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @708+3. Domicilio a efectos de notificaciones. Domicilio 1. Portal.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-portal"
+continuidad_id = "ep-domicilio-notificaciones-portal"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:364 (sha256 3ecea6c06e3d) box [C47] (37 708 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:421 (sha256 791479fbf9e9) box [C47] (45 708 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...)."
 number = "C47"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "text"
@@ -675,6 +790,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @711+3. Domicilio a efectos de notificaciones. Domicilio 1. Escalera.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-escalera"
+continuidad_id = "ep-domicilio-notificaciones-escalera"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:365 (sha256 3ecea6c06e3d) box [C48] (38 711 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:422 (sha256 791479fbf9e9) box [C48] (46 711 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...)."
 number = "C48"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "text"
@@ -690,6 +808,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @714+3. Domicilio a efectos de notificaciones. Domicilio 1. Planta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-planta"
+continuidad_id = "ep-domicilio-notificaciones-planta"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:366 (sha256 3ecea6c06e3d) box [C49] (39 714 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:423 (sha256 791479fbf9e9) box [C49] (47 714 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...)."
 number = "C49"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "text"
@@ -705,6 +826,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @717+3. Domicilio a efectos de notificaciones. Domicilio 1. Puerta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-puerta"
+continuidad_id = "ep-domicilio-notificaciones-puerta"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:367 (sha256 3ecea6c06e3d) box [C50] (40 717 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:424 (sha256 791479fbf9e9) box [C50] (48 717 3 An Establecimiento perm. de una per.jca. o ent. no resid. ...)."
 number = "C50"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "text"
@@ -720,6 +844,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @720+40. Domicilio a efectos de notificaciones. Domicilio 1. Complemento de domicilio.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-complemento-domicilio"
+continuidad_id = "ep-domicilio-notificaciones-complemento-domicilio"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:368 (sha256 3ecea6c06e3d) box [C51] (41 720 40 An Establec perm. de una per.jca. o ent. no resid. Domic ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:425 (sha256 791479fbf9e9) box [C51] (49 720 40 An Establec perm. de una per.jca. o ent. no resid. Domic ...)."
 number = "C51"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "text"
@@ -735,6 +862,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @760+30. Domicilio a efectos de notificaciones. Domicilio 1. Localidad o poblacion, si es distinta del municipio.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-localidad"
+continuidad_id = "ep-domicilio-notificaciones-localidad"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:369 (sha256 3ecea6c06e3d) box [C52] (42 760 30 An Establec perm. de una per.jca. o ent. no resid. Domic ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:426 (sha256 791479fbf9e9) box [C52] (50 760 30 An Establec perm. de una per.jca. o ent. no resid. Domic ...)."
 number = "C52"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "text"
@@ -750,6 +880,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @790+5. Domicilio a efectos de notificaciones. Domicilio 1. Codigo postal.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-codigo-postal"
+continuidad_id = "ep-domicilio-notificaciones-codigo-postal"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:370 (sha256 3ecea6c06e3d) box [C53] (43 790 5 Num Establecimiento perm. de una per.jca. o ent. no resid....) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:427 (sha256 791479fbf9e9) box [C53] (51 790 5 Num Establecimiento perm. de una per.jca. o ent. no resid....)."
 number = "C53"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "postal_code"
@@ -768,6 +901,8 @@ id = "ep.domicilio-notificaciones-codigo-municipio-ine"
 number = "ep-domicilio-notificaciones-codigo-municipio-ine"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "municipality_code"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 2C @795+5 (line 371 of the extract): Establecimiento perm. de una per.jca. o ent. no resid. Domicilio a efectos de notificaciones.. The successor design prints the same field at the same page and byte position: Establecimiento perm. de una per.jca. o ent. no resid. Domicilio a efectos de notificaciones. Codigo Municipio. AEAT prints the slot with no box number at all; the predecessor edition revision note records 82 such unnumbered slots declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -780,6 +915,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @800+30. Domicilio a efectos de notificaciones. Domicilio 1. Nombre del municipio.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-municipio"
+continuidad_id = "ep-domicilio-notificaciones-municipio"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:372 (sha256 3ecea6c06e3d) box [C54] (45 800 30 An Establecimiento perm. de una per.jca. o ent. no resid....) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:429 (sha256 791479fbf9e9) box [C54] (53 800 30 An Establecimiento perm. de una per.jca. o ent. no resid....)."
 number = "C54"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "text"
@@ -795,6 +933,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @830+2. Domicilio a efectos de notificaciones. Domicilio 1. Codigo de provincia.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-codigo-provincia"
+continuidad_id = "ep-domicilio-notificaciones-codigo-provincia"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:373 (sha256 3ecea6c06e3d) box [C55] (46 830 2 An Establecimiento perm. de una per.jca. o ent. no resid. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:430 (sha256 791479fbf9e9) box [C55] (54 830 2 An Establecimiento perm. de una per.jca. o ent. no resid. ...)."
 number = "C55"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "province_code"
@@ -810,6 +951,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @832+100. Identificacion. Dominio o direccion de internet.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.identificacion-dominio-internet"
+continuidad_id = "ep-identificacion-dominio-internet"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:374 (sha256 3ecea6c06e3d) box [C27] (47 832 100 An Establecimiento perm. de una per.jca. o ent. no resid...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:431 (sha256 791479fbf9e9) box [C27] (55 832 100 An Establecimiento perm. de una per.jca. o ent. no resid...)."
 number = "C27"
 section = ["declaracion", "establecimiento_permanente", "identificacion"]
 data_type = "text"
@@ -825,6 +969,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @932+4. Datos de telefonos y direcciones para recibir avisos. Prefijo de pais del telefono movil.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.avisos-prefijo-pais-movil"
+continuidad_id = "ep-avisos-prefijo-pais-movil"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:375 (sha256 3ecea6c06e3d) box [C10] (48 932 4 An Establecimiento perm. de una per.jca. o ent. no resid. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:432 (sha256 791479fbf9e9) box [C10] (56 932 4 An Establecimiento perm. de una per.jca. o ent. no resid. ...)."
 number = "C10"
 section = ["declaracion", "establecimiento_permanente", "avisos"]
 data_type = "text"
@@ -840,6 +987,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @936+15. Datos de telefonos y direcciones para recibir avisos. Telefono movil.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.avisos-telefono-movil"
+continuidad_id = "ep-avisos-telefono-movil"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:376 (sha256 3ecea6c06e3d) box [C26] (49 936 15 An Establecimiento perm. de una per.jca. o ent. no resid....) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:433 (sha256 791479fbf9e9) box [C26] (57 936 15 An Establecimiento perm. de una per.jca. o ent. no resid....)."
 number = "C26"
 section = ["declaracion", "establecimiento_permanente", "avisos"]
 data_type = "text"
@@ -858,6 +1008,8 @@ id = "ep.avisos-movil-alta"
 number = "ep-avisos-movil-alta"
 section = ["declaracion", "establecimiento_permanente", "avisos"]
 data_type = "boolean"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "CARVED OUT OF A RESERVED RUN. The successor design prints this tick box at Pag. 2C @951+1 'Establecimiento perm. de una per.jca. o ent. no resid. Datos telefonos y direccione para recibir avisos. Tfno. Movil Alta/Modificacion'. The predecessor design prints no field there: the byte range falls inside a 'Reservado para la Agencia Tributaria' run, so the box did not exist on the predecessor form. The whole avisos alta/baja block (AEAT, TEA, DGT, e-mail, telefono movil, aplicacion movil AEAT) was taken from those reserved runs on Pag. 2A @471 and @809, Pag. 2B @535 and @873 and Pag. 2C @607 and @951. Sources: corpus/.../modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and corpus/.../modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -873,6 +1025,8 @@ id = "ep.avisos-movil-baja"
 number = "ep-avisos-movil-baja"
 section = ["declaracion", "establecimiento_permanente", "avisos"]
 data_type = "boolean"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "CARVED OUT OF A RESERVED RUN. The successor design prints this tick box at Pag. 2C @952+1 'Establecimiento perm. de una per.jca. o ent. no resid. Datos telefonos y direccione para recibir avisos. Tfno. Movil Baja'. The predecessor design prints no field there: the byte range falls inside a 'Reservado para la Agencia Tributaria' run, so the box did not exist on the predecessor form. The whole avisos alta/baja block (AEAT, TEA, DGT, e-mail, telefono movil, aplicacion movil AEAT) was taken from those reserved runs on Pag. 2A @471 and @809, Pag. 2B @535 and @873 and Pag. 2C @607 and @951. Sources: corpus/.../modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and corpus/.../modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -888,6 +1042,8 @@ id = "ep.avisos-app-aeat-alta"
 number = "ep-avisos-app-aeat-alta"
 section = ["declaracion", "establecimiento_permanente", "avisos"]
 data_type = "boolean"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "CARVED OUT OF A RESERVED RUN. The successor design prints this tick box at Pag. 2C @953+1 'Establecimiento perm. de una per.jca. o ent. no resid. Datos telefonos y direccione para recibir avisos. Aplicacion Movil AEAT Alta'. The predecessor design prints no field there: the byte range falls inside a 'Reservado para la Agencia Tributaria' run, so the box did not exist on the predecessor form. The whole avisos alta/baja block (AEAT, TEA, DGT, e-mail, telefono movil, aplicacion movil AEAT) was taken from those reserved runs on Pag. 2A @471 and @809, Pag. 2B @535 and @873 and Pag. 2C @607 and @951. Sources: corpus/.../modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and corpus/.../modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -903,6 +1059,8 @@ id = "ep.avisos-app-aeat-baja"
 number = "ep-avisos-app-aeat-baja"
 section = ["declaracion", "establecimiento_permanente", "avisos"]
 data_type = "boolean"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "CARVED OUT OF A RESERVED RUN. The successor design prints this tick box at Pag. 2C @954+1 'Establecimiento perm. de una per.jca. o ent. no resid. Datos telefonos y direccione para recibir avisos. Aplicacion Movil AEAT Baja'. The predecessor design prints no field there: the byte range falls inside a 'Reservado para la Agencia Tributaria' run, so the box did not exist on the predecessor form. The whole avisos alta/baja block (AEAT, TEA, DGT, e-mail, telefono movil, aplicacion movil AEAT) was taken from those reserved runs on Pag. 2A @471 and @809, Pag. 2B @535 and @873 and Pag. 2C @607 and @951. Sources: corpus/.../modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and corpus/.../modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -915,6 +1073,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @959+50. Domicilio a efectos de notificaciones. Domicilio 1. Destinatario, si es distinto del declarante.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-destinatario"
+continuidad_id = "ep-domicilio-notificaciones-destinatario"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:378 (sha256 3ecea6c06e3d) box [C59] (51 959 50 An Establ.perm. de una per.jca. o ent. no resid. Domicili...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:439 (sha256 791479fbf9e9) box [C59] (63 959 50 An Establ.perm. de una per.jca. o ent. no resid. Domicili...)."
 number = "C59"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "name"
@@ -930,6 +1091,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @1009+2. Domicilio a efectos de notificaciones. Domicilio 1. En calidad de (representante, apoderado, familiar).
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-calidad"
+continuidad_id = "ep-domicilio-notificaciones-calidad"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:379 (sha256 3ecea6c06e3d) box [C60] (52 1009 2 An Establ.perm. de una per.jca. o ent. no resid.. Domicil...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:440 (sha256 791479fbf9e9) box [C60] (64 1009 2 An Establ.perm. de una per.jca. o ent. no resid.. Domicil...)."
 number = "C60"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "text"
@@ -945,6 +1109,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @1011+10. Domicilio a efectos de notificaciones. Domicilio 2. Numero de apartado de correos.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-apartado-correos"
+continuidad_id = "ep-domicilio-notificaciones-apartado-correos"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:380 (sha256 3ecea6c06e3d) box [C61] (53 1011 10 Num Establ. perm. de una per.jca. o ent. no resid.Domici...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:441 (sha256 791479fbf9e9) box [C61] (65 1011 10 Num Establ. perm. de una per.jca. o ent. no resid.Domici...)."
 number = "C61"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "text"
@@ -960,6 +1127,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @1021+30. Domicilio a efectos de notificaciones. Domicilio 2. Poblacion o ciudad.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-apartado-poblacion"
+continuidad_id = "ep-domicilio-notificaciones-apartado-poblacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:381 (sha256 3ecea6c06e3d) box [C62] (54 1021 30 An Establ. perm. de una per.jca. o ent. no resid.Domicil...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:442 (sha256 791479fbf9e9) box [C62] (66 1021 30 An Establ. perm. de una per.jca. o ent. no resid.Domicil...)."
 number = "C62"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "text"
@@ -975,6 +1145,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @1051+5. Domicilio a efectos de notificaciones. Domicilio 2. Codigo postal.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-apartado-codigo-postal"
+continuidad_id = "ep-domicilio-notificaciones-apartado-codigo-postal"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:382 (sha256 3ecea6c06e3d) box [C63] (55 1051 5 Num Establ. perm. de una per.jca. o ent. no resid. Domici...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:443 (sha256 791479fbf9e9) box [C63] (67 1051 5 Num Establ. perm. de una per.jca. o ent. no resid. Domici...)."
 number = "C63"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "postal_code"
@@ -990,6 +1163,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @1056+2. Domicilio a efectos de notificaciones. Domicilio 2. Codigo de provincia.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-apartado-codigo-provincia"
+continuidad_id = "ep-domicilio-notificaciones-apartado-codigo-provincia"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:383 (sha256 3ecea6c06e3d) box [C64] (56 1056 2 An Establ. perm. de una per.jca. o ent. no resid.. Domici...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:444 (sha256 791479fbf9e9) box [C64] (68 1056 2 An Establ. perm. de una per.jca. o ent. no resid.. Domici...)."
 number = "C64"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "province_code"
@@ -1005,6 +1181,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @1085+50. Domicilio a efectos de notificaciones. Domicilio 2. Destinatario, si es distinto del declarante. AEAT's own description for this field opens "Persona Fisica.", which is a copy-paste artefact: the field sits inside the establecimiento permanente record.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-apartado-destinatario"
+continuidad_id = "ep-domicilio-notificaciones-apartado-destinatario"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:385 (sha256 3ecea6c06e3d) box [C68] (58 1085 50 An Persona Física. Domicilio a efecto de notificaciones....) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:446 (sha256 791479fbf9e9) box [C68] (70 1085 50 An Persona Física. Domicilio a efecto de notificaciones....)."
 number = "C68"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "name"
@@ -1020,6 +1199,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @1135+2. Domicilio a efectos de notificaciones. Domicilio 2. En calidad de (representante, apoderado, familiar). AEAT's own description opens "Persona Fisica.", the same copy-paste artefact as C68.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-apartado-calidad"
+continuidad_id = "ep-domicilio-notificaciones-apartado-calidad"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:386 (sha256 3ecea6c06e3d) box [C69] (59 1135 2 An Persona Física. Domicilio a efecto de notificaciones. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:447 (sha256 791479fbf9e9) box [C69] (71 1135 2 An Persona Física. Domicilio a efecto de notificaciones. ...)."
 number = "C69"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "text"
@@ -1035,6 +1217,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @1137+20. Domicilio fiscal en Espana. Referencia catastral.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-fiscal-referencia-catastral"
+continuidad_id = "ep-domicilio-fiscal-referencia-catastral"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:387 (sha256 3ecea6c06e3d) box [C30] (60 1137 20 An Establecimiento perm. de una per. jca. o ent. no resi...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:448 (sha256 791479fbf9e9) box [C30] (72 1137 20 An Establecimiento perm. de una per. jca. o ent. no resi...)."
 number = "C30"
 section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
 data_type = "text"
@@ -1050,6 +1235,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @1157+25. Identificacion. Codigo de identificacion fiscal del Estado de residencia o NVAT.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.identificacion-nif-estado-residencia"
+continuidad_id = "ep-identificacion-nif-estado-residencia"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:389 (sha256 3ecea6c06e3d) box [C9] (Código de identificación fiscal del Estado de residencia/NVAT [C9]) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:450 (sha256 791479fbf9e9) box [C9] (Código de identificación fiscal del Estado de residencia/NVAT [C9])."
 number = "C9"
 section = ["declaracion", "establecimiento_permanente", "identificacion"]
 data_type = "nif_iva"
@@ -1065,6 +1253,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @1182+1. Domicilio a efectos de notificaciones. Indicador de baja del domicilio de notificaciones.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-notificaciones-baja-domicilio"
+continuidad_id = "ep-domicilio-notificaciones-baja-domicilio"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:390 (sha256 3ecea6c06e3d) box [C40] (62 1182 1 An indicador de baja domicilio de notificaciones [C40] S ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:451 (sha256 791479fbf9e9) box [C40] (74 1182 1 An indicador de baja domicilio de notificaciones [C40] S ...)."
 number = "C40"
 section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
 data_type = "boolean"
@@ -1080,6 +1271,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @1183+100. Identificacion. Dominio o direccion de internet (segundo).
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.identificacion-dominio-internet-secundario"
+continuidad_id = "ep-identificacion-dominio-internet-secundario"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:391 (sha256 3ecea6c06e3d) box [C28] (63 1183 100 An Establecimiento perm. de una per.jca. o ent. no resi...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:452 (sha256 791479fbf9e9) box [C28] (75 1183 100 An Establecimiento perm. de una per.jca. o ent. no resi...)."
 number = "C28"
 section = ["declaracion", "establecimiento_permanente", "identificacion"]
 data_type = "text"
@@ -1095,6 +1289,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @1285+1. Domicilio fiscal en Espana. Indicador de referencia catastral del domicilio fiscal.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.domicilio-fiscal-indicador-referencia-catastral"
+continuidad_id = "ep-domicilio-fiscal-indicador-referencia-catastral"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:394 (sha256 3ecea6c06e3d) box [C39] (66 1285 1 an indicador referencia catastral del domicilio fiscal [C...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:454 (sha256 791479fbf9e9) box [C39] (77 1285 1 An Indicador referencia catastral del domicilio fiscal [C...)."
 number = "C39"
 section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
 data_type = "boolean"

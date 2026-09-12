@@ -9,7 +9,7 @@ provider = { kind = "payable_invoice", fact = "operator_count", claves = ["A", "
 value = { data_type = "integer", channel = "integer" }
 aggregation = { op = "count_distinct" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
+additional_source_refs = ["aeat-modelo-349-procedure", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-349-instructions"
@@ -21,7 +21,7 @@ provider = { kind = "payable_invoice", fact = "base_sum", claves = ["A", "I", "T
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
+additional_source_refs = ["aeat-modelo-349-procedure", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-349-instructions"
@@ -33,7 +33,7 @@ provider = { kind = "payable_invoice", fact = "operator_count", claves = ["A", "
 value = { data_type = "integer", channel = "integer" }
 aggregation = { op = "count_distinct" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
+additional_source_refs = ["aeat-modelo-349-procedure", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-349-instructions"
@@ -45,7 +45,7 @@ provider = { kind = "payable_invoice", fact = "rectified_base_delta_sum", claves
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
+additional_source_refs = ["aeat-modelo-349-procedure", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-349-instructions"
@@ -57,7 +57,7 @@ provider = { kind = "payable_invoice", fact = "row_field", row_field = "country_
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
+additional_source_refs = ["aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-349-instructions"
@@ -78,7 +78,7 @@ provider = { kind = "payable_invoice", fact = "row_field", row_field = "party_ta
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
+additional_source_refs = ["aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-349-instructions"
@@ -90,7 +90,7 @@ provider = { kind = "payable_invoice", fact = "row_field", row_field = "party_le
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
+additional_source_refs = ["aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-349-instructions"
@@ -102,7 +102,7 @@ provider = { kind = "payable_invoice", fact = "row_field", row_field = "clave", 
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
+additional_source_refs = ["aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-349-instructions"
@@ -114,7 +114,7 @@ provider = { kind = "payable_invoice", fact = "row_field", row_field = "base_imp
 value = { data_type = "money", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
+additional_source_refs = ["aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-349-instructions"
@@ -126,7 +126,7 @@ provider = { kind = "payable_invoice", fact = "row_field", row_field = "country_
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
+additional_source_refs = ["aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-349-instructions"
@@ -146,7 +146,7 @@ provider = { kind = "payable_invoice", fact = "row_field", row_field = "party_ta
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
+additional_source_refs = ["aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-349-instructions"
@@ -158,7 +158,7 @@ provider = { kind = "payable_invoice", fact = "row_field", row_field = "party_le
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
+additional_source_refs = ["aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-349-instructions"
@@ -170,7 +170,7 @@ provider = { kind = "payable_invoice", fact = "row_field", row_field = "clave", 
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
+additional_source_refs = ["aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-349-instructions"
@@ -182,7 +182,7 @@ provider = { kind = "payable_invoice", fact = "row_field", row_field = "rectifie
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
+additional_source_refs = ["aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-349-instructions"
@@ -194,7 +194,7 @@ provider = { kind = "payable_invoice", fact = "row_field", row_field = "rectifie
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
+additional_source_refs = ["aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-349-instructions"
@@ -206,7 +206,7 @@ provider = { kind = "payable_invoice", fact = "row_field", row_field = "base_imp
 value = { data_type = "money", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
+additional_source_refs = ["aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-349-instructions"
@@ -218,7 +218,7 @@ provider = { kind = "payable_invoice", fact = "row_field", row_field = "rectifie
 value = { data_type = "money", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
+additional_source_refs = ["aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-349-instructions"

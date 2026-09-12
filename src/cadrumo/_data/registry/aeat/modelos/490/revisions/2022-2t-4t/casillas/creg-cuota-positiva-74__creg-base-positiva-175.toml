@@ -2,6 +2,7 @@
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-positiva-74"
+continuidad_id = "reg-cuota-positiva-74"
 number = "74"
 section = ["490_02"]
 data_type = "money"
@@ -11,6 +12,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-positiva-95"
+continuidad_id = "reg-cuota-positiva-95"
 number = "95"
 section = ["490_02"]
 data_type = "money"
@@ -20,6 +22,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-negativa-33"
+continuidad_id = "reg-cuota-negativa-33"
 number = "33"
 section = ["490_02"]
 data_type = "money"
@@ -29,6 +32,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-negativa-54"
+continuidad_id = "reg-cuota-negativa-54"
 number = "54"
 section = ["490_02"]
 data_type = "money"
@@ -38,6 +42,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-negativa-75"
+continuidad_id = "reg-cuota-negativa-75"
 number = "75"
 section = ["490_02"]
 data_type = "money"
@@ -47,6 +52,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-negativa-96"
+continuidad_id = "reg-cuota-negativa-96"
 number = "96"
 section = ["490_02"]
 data_type = "money"
@@ -56,6 +62,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-total-34"
+continuidad_id = "reg-cuota-total-34"
 number = "34"
 section = ["490_02"]
 data_type = "money"
@@ -65,6 +72,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-total-55"
+continuidad_id = "reg-cuota-total-55"
 number = "55"
 section = ["490_02"]
 data_type = "money"
@@ -74,6 +82,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-total-76"
+continuidad_id = "reg-cuota-total-76"
 number = "76"
 section = ["490_02"]
 data_type = "money"
@@ -83,6 +92,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-total-97"
+continuidad_id = "reg-cuota-total-97"
 number = "97"
 section = ["490_02"]
 data_type = "money"
@@ -92,6 +102,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-estado-35"
+continuidad_id = "reg-cuota-estado-35"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:158 (sha256 9a4c8d8cd2e6) box [35] (39 505 17 N Regularización cuota atribuible al Estado (i) = (h) x (...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:156 (sha256 d8115bd4f4d1) prints [35] as another concept (45 594 17 N ( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizació...)."
 number = "35"
@@ -103,6 +114,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-estado-56"
+continuidad_id = "reg-cuota-estado-56"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:159 (sha256 9a4c8d8cd2e6) box [56] (40 522 17 N Regularización cuota atribuible al Estado (i) = (h) x (...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:196 (sha256 d8115bd4f4d1) prints [56] as another concept (85 1149 17 N (f) = (b) * (d) Regu (art. 10.3 Ley). Regularización n...)."
 number = "56"
@@ -114,6 +126,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-estado-77"
+continuidad_id = "reg-cuota-estado-77"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:160 (sha256 9a4c8d8cd2e6) box [77] (41 539 17 N Regularización cuota atribuible al Estado (i) = (h) x (...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:209 (sha256 d8115bd4f4d1) prints [77] as another concept (98 1357 17 N (b) Regu (art. 10.3 Ley). Regularización negativa (bas...)."
 number = "77"
@@ -125,6 +138,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-cuota-estado-98"
+continuidad_id = "reg-cuota-estado-98"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:161 (sha256 9a4c8d8cd2e6) box [98] (42 556 17 N Regularización cuota atribuible al Estado (i) = (h) x (...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:224 (sha256 d8115bd4f4d1) prints [98] as another concept (113 1556 17 Num (e) = (a) * (d) Regu (art. 10.3 Ley). Regularizació...)."
 number = "98"
@@ -136,6 +150,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-ajuste-distribucion-36"
+continuidad_id = "reg-ajuste-distribucion-36"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:162 (sha256 9a4c8d8cd2e6) box [36] (43 573 17 N Ajuste en regularización cuota atribuible al Estado por...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:164 (sha256 d8115bd4f4d1) prints [36] as another concept (53 674 17 Num (e) = (a) * (d) Regu (art. 10.3 Ley). Regularización ...)."
 number = "36"
@@ -147,6 +162,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-ajuste-distribucion-57"
+continuidad_id = "reg-ajuste-distribucion-57"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:163 (sha256 9a4c8d8cd2e6) box [57] (44 590 17 N Ajuste en regularización cuota atribuible al Estado por...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:200 (sha256 d8115bd4f4d1) prints [57] as another concept (89 1217 17 N (g) = (e) + (f) Regu (art. 10.3 Ley). Total Regulariza...)."
 number = "57"
@@ -158,6 +174,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-ajuste-distribucion-78"
+continuidad_id = "reg-ajuste-distribucion-78"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:164 (sha256 9a4c8d8cd2e6) box [78] (45 607 17 N Ajuste en regularización cuota atribuible al Estado por...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:213 (sha256 d8115bd4f4d1) prints [78] as another concept (102 1425 17 N ( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizac...)."
 number = "78"
@@ -169,6 +186,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-ajuste-distribucion-99"
+continuidad_id = "reg-ajuste-distribucion-99"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:165 (sha256 9a4c8d8cd2e6) box [99] (46 624 17 N Ajuste en regularización cuota atribuible al Estado por...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:228 (sha256 d8115bd4f4d1) prints [99] as another concept (117 1624 17 N (f) = (b) * (d) Regu (art. 10.3 Ley). Regularización ...)."
 number = "99"
@@ -180,6 +198,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-ajuste-total-estado-37"
+continuidad_id = "reg-ajuste-total-estado-37"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:166 (sha256 9a4c8d8cd2e6) box [37] (47 641 17 N Total ajuste en cuota íntegra período de regularización...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:168 (sha256 d8115bd4f4d1) prints [37] as another concept (57 742 17 N (f) = (b) * (d) Regu (art. 10.3 Ley). Regularización ne...)."
 number = "37"
@@ -191,6 +210,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-ajuste-total-estado-58"
+continuidad_id = "reg-ajuste-total-estado-58"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:167 (sha256 9a4c8d8cd2e6) box [58] (48 658 17 N Total ajuste en cuota íntegra período de regularización...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:177 (sha256 d8115bd4f4d1) prints [58] as another concept (66 882 17 Num (a) Regu (art. 10.3 Ley). Regularización positiva (ba...)."
 number = "58"
@@ -202,6 +222,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-ajuste-total-estado-79"
+continuidad_id = "reg-ajuste-total-estado-79"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:168 (sha256 9a4c8d8cd2e6) box [79] (49 675 17 N Total ajuste en cuota íntegra período de regularización...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints [79] only as other concepts, at lines [217, 218, 219, 220]."
 number = "79"
@@ -213,6 +234,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-ajuste-total-estado-100"
+continuidad_id = "reg-ajuste-total-estado-100"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:169 (sha256 9a4c8d8cd2e6) box [100] (50 692 17 N Total ajuste en cuota íntegra período de regularización...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:232 (sha256 d8115bd4f4d1) prints [100] as another concept (121 1692 17 N (g) = (e) + (f) Regu (art. 10.3 Ley). Total Regulariz...)."
 number = "100"
@@ -272,6 +294,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-con-reg-39"
+continuidad_id = "terr-alava-con-reg-39"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:174 (sha256 9a4c8d8cd2e6) box [39] (55 729 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:149 (sha256 d8115bd4f4d1) prints [39] as another concept (38 475 17 Num (a) Regu (art. 10.3 Ley). Regularización positiva (ba...)."
 number = "39"
@@ -283,6 +306,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-con-reg-60"
+continuidad_id = "terr-alava-con-reg-60"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:175 (sha256 9a4c8d8cd2e6) box [60] (56 734 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:185 (sha256 d8115bd4f4d1) prints [60] as another concept (74 1018 17 N ( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizaci...)."
 number = "60"
@@ -294,6 +318,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-con-reg-81"
+continuidad_id = "terr-alava-con-reg-81"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:176 (sha256 9a4c8d8cd2e6) box [81] (57 739 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:225 (sha256 d8115bd4f4d1) prints [81] as another concept (114 1573 17 N (f) = (b) * (d) Regu (art. 10.3 Ley). Regularización ...)."
 number = "81"
@@ -305,6 +330,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-alava-con-reg-102"
+continuidad_id = "terr-alava-con-reg-102"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:177 (sha256 9a4c8d8cd2e6) box [102] (58 744 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [102]."
 number = "102"
@@ -364,6 +390,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-con-reg-41"
+continuidad_id = "terr-guipuzcoa-con-reg-41"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:182 (sha256 9a4c8d8cd2e6) box [41] (63 769 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:157 (sha256 d8115bd4f4d1) prints [41] as another concept (46 611 17 N ( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizació...)."
 number = "41"
@@ -375,6 +402,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-con-reg-62"
+continuidad_id = "terr-guipuzcoa-con-reg-62"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:183 (sha256 9a4c8d8cd2e6) box [62] (64 774 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:197 (sha256 d8115bd4f4d1) prints [62] as another concept (86 1166 17 N (f) = (b) * (d) Regu (art. 10.3 Ley). Regularización n...)."
 number = "62"
@@ -386,6 +414,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-con-reg-83"
+continuidad_id = "terr-guipuzcoa-con-reg-83"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:184 (sha256 9a4c8d8cd2e6) box [83] (65 779 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:206 (sha256 d8115bd4f4d1) prints [83] as another concept (95 1306 17 Num (a) Regu (art. 10.3 Ley). Regularización positiva (b...)."
 number = "83"
@@ -397,6 +426,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-guipuzcoa-con-reg-104"
+continuidad_id = "terr-guipuzcoa-con-reg-104"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:185 (sha256 9a4c8d8cd2e6) box [104] (66 784 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [104]."
 number = "104"
@@ -456,6 +486,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-con-reg-43"
+continuidad_id = "terr-vizcaya-con-reg-43"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:190 (sha256 9a4c8d8cd2e6) box [43] (71 809 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:169 (sha256 d8115bd4f4d1) prints [43] as another concept (58 759 17 N (f) = (b) * (d) Regu (art. 10.3 Ley). Regularización ne...)."
 number = "43"
@@ -467,6 +498,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-con-reg-64"
+continuidad_id = "terr-vizcaya-con-reg-64"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:191 (sha256 9a4c8d8cd2e6) box [64] (72 814 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:178 (sha256 d8115bd4f4d1) prints [64] as another concept (67 899 17 Num (a) Regu (art. 10.3 Ley). Regularización positiva (ba...)."
 number = "64"
@@ -478,6 +510,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-con-reg-85"
+continuidad_id = "terr-vizcaya-con-reg-85"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:192 (sha256 9a4c8d8cd2e6) box [85] (73 819 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md:214 (sha256 d8115bd4f4d1) prints [85] as another concept (103 1442 17 N ( c ) =(a)+(b) Regu (art. 10.3 Ley).Total Regularizac...)."
 number = "85"
@@ -489,6 +522,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "terr-vizcaya-con-reg-106"
+continuidad_id = "terr-vizcaya-con-reg-106"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:193 (sha256 9a4c8d8cd2e6) box [106] (74 824 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [106]."
 number = "106"
@@ -596,6 +630,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "490-02-regularizacion-ejercicio-909"
+continuidad_id = "490-02-regularizacion-ejercicio-909"
 number = "490-02-regularizacion-ejercicio-909"
 section = ["490_02"]
 data_type = "year"
@@ -605,6 +640,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-base-declarada-111"
+continuidad_id = "reg-base-declarada-111"
 continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md:211 (sha256 9a4c8d8cd2e6) box [111] (92 913 17 Num Base imponible declarada en período objeto de regular...); corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx.extracted.md (sha256 d8115bd4f4d1) prints no box [111]."
 number = "111"
@@ -652,6 +688,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-2t-4t".casillas]]
 id = "reg-base-positiva-112"
+continuidad_id = "reg-base-positiva-112"
 number = "112"
 section = ["490_02"]
 data_type = "money"

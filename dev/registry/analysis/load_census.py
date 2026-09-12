@@ -703,7 +703,7 @@ def _trace_script(regime: str) -> str:
     snapshot_block = ""
     if regime == "inspection_snapshot":
         snapshot_block = """
-        from cadrumo.tests.registry_snapshot import build_snapshot
+        from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
         for modelo in authority.modelos:
             for period in ("1T", "0A", "ANUAL", "1"):

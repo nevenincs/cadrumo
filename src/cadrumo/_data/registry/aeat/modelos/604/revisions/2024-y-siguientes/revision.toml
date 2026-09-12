@@ -1,5 +1,5 @@
 [revisions."2024-y-siguientes"]
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["orden-hac-510-2021:art-1"], source_refs = ["enrolled-modelo-604-procedure"] } }
+predecessor = { none = { cause = "official_structure_differs", reason = "Stated in full: the official record structure is reordered against the edition before it, so supersede-in-place would not reproduce it. Measured against '2021-2023': casillas differ from index 34 ('liq.03-signo-base-rectificaciones' -> 'liq.03-base-rectificaciones'); every other family is byte-identical.", legal_refs = ["orden-hac-510-2021:art-1"], source_refs = ["enrolled-modelo-604-procedure"] } }
 casilla_source_refs = ["aeat-dr-604-2024"]
 application_link_source_refs = ["enrolled-modelo-604-procedure"]
 authority_grade = "applicability"

@@ -51,7 +51,6 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.payment_election import PaymentElection
 from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
-from cadrumo.core.product_identity import AeatProductSoftwareIdentity
 from cadrumo.core.refund_election import RefundElection
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.core.time.clock import now
@@ -65,6 +64,7 @@ from cadrumo.domain.calculations.registry.static_inspection import RegistryRevis
 from cadrumo.domain.filing.errors import FilingExportError
 from cadrumo.domain.filing.protocols import ModeloInputs
 from cadrumo.domain.filing.schema import ModeloDraft
+from cadrumo.domain.filing.software_identity import AeatProductSoftwareIdentity
 from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.transactions.models import TransactionCatalogue
 

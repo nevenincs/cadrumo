@@ -1602,8 +1602,22 @@ sha256 = "bde86314696bec1ff236451d0117bd9f9c3575f0001ec51942365225f3eb54cc"
 bytes = 2308
 retrieved_at = 2026-05-06
 published_at = 2025-06-24
-applies_from = 2025-07-01
-applies_to = 2025-07-25
+# THE WINDOW IS THE EJERCICIO GOVERNED, NOT THE PRESENTATION. This read
+# 2025-07-01..2025-07-25, which is this orden's own entrada en vigor plus the
+# art. 6 plazo -- "entrara en vigor el dia 1 de julio de 2025" and "en el plazo
+# de los 25 dias naturales siguientes a los seis meses posteriores a la
+# conclusion del periodo impositivo", both bundled in the excerpt above. That is
+# a filing calendar, not a period, and it excluded the 2024 revisions of BOTH
+# modelo 200 and modelo 220, which cite this source.
+#
+# The orden states its own scope in its title, bundled verbatim: "por la que se
+# aprueban los modelos de declaracion del Impuesto sobre Sociedades ... para los
+# periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de
+# 2024". The legal entry over these same bytes already records exactly that, as
+# governs_periods_from 2024-01-01 / governs_periods_to 2024-12-31; the source
+# half simply never agreed with its own twin.
+applies_from = 2024-01-01
+applies_to = 2024-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-12818"
 review_status = "pending_review"
 
@@ -1792,6 +1806,25 @@ required_text = [
     "23 por ciento",
     "cifra de negocios del período impositivo inmediato anterior",
     "1 millón de euros",
+]
+
+[legal."ley-27-2014:art-75-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a75"
+document_id = "BOE-A-2014-12328"
+article = "75.2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a75"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent: enrolled from the bundled consolidated LIS (ley-27-2014.html). Modelo 220's revision prose has discussed LIS art. 75.2 at length for several editions while citing it only indirectly through the approving orden's reference to it, because no table existed; a ref discussed in prose and absent from the catalogue is not citable, and this closes that gap. Both required_text phrases were confirmed present in the bundled payload. NOT CLAIMED -- no operator countersignature, and apartado 1 is not enrolled here."
+reviewed_at = 2026-09-12
+notes = """LIS art. 75.2: plazo de la declaracion del grupo fiscal. The group declaration is filed within the plazo of the REPRESENTANTE's own individual declaration rather than on a plazo of its own, which is why modelo 220's deadline routes through art. 124.1 by way of the representante rather than directly. Orden HAC/529/2026 art. 6.3 grounds the Modelo 220 plazo on this provision; until now the registry could only cite that orden, not the provision it rests on."""
+required_text = [
+    "La declaracion del grupo fiscal debera presentarse dentro del plazo correspondiente a la declaracion en regimen de tributacion individual de la entidad representante",
+    "Declaracion y autoliquidacion del grupo fiscal",
 ]
 
 [legal."ley-27-2014:art-130"]

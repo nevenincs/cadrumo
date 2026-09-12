@@ -1,5 +1,8 @@
 [[revisions."2023-y-siguientes".casillas]]
 id = "01"
+continuidad_id = "capitalizacion-seguros-resumen-perceptores-base-positiva"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/normatives/pdf/boe-a-1999-22372-modelo-188-annex-text.txt (sha256 a595bb60c6f5f067): ANEXO IV lists boxes [01]-[05] in order; corpus/aeat_official/disenos_registro/modelo_188/files/01-188-diseno-de-registro-actualizado-en-2023.pdf.extracted.md (sha256 30ced236b558): [01]/[04] are the two base-sign counts, [02]/[05] the corresponding bases and [03] retenciones; both registry revisions preserve the same row meaning."
 number = "01"
 section = ["resumen"]
 data_type = "integer"
@@ -12,6 +15,9 @@ legal_refs = ["ley-35-2006:art-99", "orden-1999-11-17:apartado-quinto"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "02"
+continuidad_id = "capitalizacion-seguros-resumen-base-positiva"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/normatives/pdf/boe-a-1999-22372-modelo-188-annex-text.txt (sha256 a595bb60c6f5f067): ANEXO IV lists boxes [01]-[05] in order; corpus/aeat_official/disenos_registro/modelo_188/files/01-188-diseno-de-registro-actualizado-en-2023.pdf.extracted.md (sha256 30ced236b558): [01]/[04] are the two base-sign counts, [02]/[05] the corresponding bases and [03] retenciones; both registry revisions preserve the same row meaning."
 number = "02"
 section = ["resumen"]
 data_type = "money"
@@ -22,6 +28,9 @@ legal_refs = ["ley-35-2006:art-99", "orden-1999-11-17:apartado-quinto"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "03"
+continuidad_id = "capitalizacion-seguros-resumen-retenciones"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/normatives/pdf/boe-a-1999-22372-modelo-188-annex-text.txt (sha256 a595bb60c6f5f067): ANEXO IV lists boxes [01]-[05] in order; corpus/aeat_official/disenos_registro/modelo_188/files/01-188-diseno-de-registro-actualizado-en-2023.pdf.extracted.md (sha256 30ced236b558): [01]/[04] are the two base-sign counts, [02]/[05] the corresponding bases and [03] retenciones; both registry revisions preserve the same row meaning."
 number = "03"
 section = ["resumen"]
 data_type = "money"
@@ -32,6 +41,9 @@ legal_refs = ["ley-35-2006:art-99", "orden-1999-11-17:apartado-quinto"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "04"
+continuidad_id = "capitalizacion-seguros-resumen-perceptores-base-negativa"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/normatives/pdf/boe-a-1999-22372-modelo-188-annex-text.txt (sha256 a595bb60c6f5f067): ANEXO IV lists boxes [01]-[05] in order; corpus/aeat_official/disenos_registro/modelo_188/files/01-188-diseno-de-registro-actualizado-en-2023.pdf.extracted.md (sha256 30ced236b558): [01]/[04] are the two base-sign counts, [02]/[05] the corresponding bases and [03] retenciones; both registry revisions preserve the same row meaning."
 number = "04"
 section = ["resumen"]
 data_type = "integer"
@@ -44,6 +56,9 @@ legal_refs = ["ley-35-2006:art-99", "orden-1999-11-17:apartado-quinto"]
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "05"
+continuidad_id = "capitalizacion-seguros-resumen-base-negativa"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/normatives/pdf/boe-a-1999-22372-modelo-188-annex-text.txt (sha256 a595bb60c6f5f067): ANEXO IV lists boxes [01]-[05] in order; corpus/aeat_official/disenos_registro/modelo_188/files/01-188-diseno-de-registro-actualizado-en-2023.pdf.extracted.md (sha256 30ced236b558): [01]/[04] are the two base-sign counts, [02]/[05] the corresponding bases and [03] retenciones; both registry revisions preserve the same row meaning."
 number = "05"
 section = ["resumen"]
 data_type = "money"

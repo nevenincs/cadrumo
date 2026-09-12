@@ -9,7 +9,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 from cadrumo.domain.calculations.registry.temporal import select_revision
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.validator import RegistryValidator
 from ._modelo_303_registry_support import (

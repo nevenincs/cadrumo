@@ -181,6 +181,8 @@ input_kind = "manual"
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.total-registros-entidad"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/01-184-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1430-2025-de-3-de-diciembre-365-kb.pdf, registro de tipo 1, registro del declarante, posiciones 221-229: 'NUMERO TOTAL DE REGISTROS DE ENTIDAD'; The 2025 design prints '221-229 Numerico NUMERO TOTAL DE REGISTROS DE ENTIDAD' then '230-487 BLANCOS'. The 2023-2024 edition's own pinned design, src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/02-184-orden-hap-2250-2015-actualizado-por-orden-hfp-1284-2023-de-28-de-noviembre-263-kb-pdf.pdf, prints '221-487 ------------ BLANCOS' at the same place in the declarante record, so no campo occupied 221-229 there."
 number = "221-229"
 section = ["declarante", "totales"]
 data_type = "integer"

@@ -102,3 +102,18 @@ source_refs = [
     "aeat-modelo-100-procedure",
     "aeat-renta-web-open",
 ]
+
+[revisions."2025".source_default_dispositions.application_links]
+kind = "underivable"
+reason = """
+lift refuses: 8 source_refs statement(s) not textually rewritable: 0002-modelo-100-export.toml: source_refs = [; 0004-modelo-100-filing.toml: source_refs = [; 0005-modelo-100-calculation.toml: source_refs = [; 0006-modelo-100-review.toml: source_refs = [; 0007-modelo-100-approval.toml: source_refs = [; 0008-modelo-100-reconciliation.toml: source_refs = [; 0009-modelo-100-workflow.toml: source_refs = [; 0011-modelo-100-deadline.toml: source_refs = ["""
+
+[revisions."2025".source_default_dispositions.constructs]
+kind = "underivable"
+reason = """
+lift refuses: 18 source_refs statement(s) not textually rewritable; the individual statements are enumerated in the lift tool's refusal report and are elided here to stay inside the reason cap"""
+
+[revisions."2025".source_default_dispositions.dependency_classifications]
+kind = "underivable"
+reason = """
+lift refuses: 3 source_refs statement(s) not textually rewritable: 0003-renta-2025-dep-130.toml: source_refs = [; 0005-renta-2025-dep-184.toml: source_refs = [; 0019-renta-2025-dep-100.toml: source_refs = ["""

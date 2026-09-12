@@ -39,7 +39,7 @@ number = "153-156"
 section = ["perceptor", "identificacion"]
 data_type = "year"
 semantic_role = "payee_birth_year"
-# Declared by the design only for claves A, B (subclaves 01, 03, 04, 99) and C;
+# Declared by the design only for claves A, B.01, B.03 and C;
 # the resolver writes the design's own no-content for every other row.
 required = true
 input_kind = "manual"

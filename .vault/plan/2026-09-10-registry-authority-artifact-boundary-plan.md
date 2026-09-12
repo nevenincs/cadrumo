@@ -9,7 +9,7 @@ related:
   - '[[2026-09-10-registry-authority-artifact-boundary-research]]'
 modified: '2026-09-12'
 body_schema: body-v2
-body_hash: 'sha256:4d419aed9ba825dcae69c82f7c103572b64cc269dfdc27864651e152043afa35'
+body_hash: 'sha256:a0a3bf69c70d6178f69659b99ca7426b7d88bcb1ecfc4c1125db5c6049445a06'
 ---
 
 # `registry-authority-artifact-boundary` plan
@@ -57,7 +57,7 @@ Exclude authoring inputs from the shipped package and prove the release boundary
 
 Place compiler and conformance code in development dependencies and package only runtime assets.
 
-- [ ] `W03.P04.S05` - Restrict distribution contents to runtime authority assets; `pyproject.toml`.
+- [x] `W03.P04.S05` - Restrict distribution contents to runtime authority assets; `pyproject.toml`.
 - [ ] `W03.P04.S06` - Relocate registry authoring tests and compiler-only modules; `src/cadrumo/domain/calculations/registry/`.
 - [x] `W03.P04.S09` - Embed signed runtime evidence projections in authority artifacts; `src/cadrumo/domain/calculations/registry/authority_artifact.py`.
 - [x] `W03.P04.S10` - Project runtime provenance and inspection data into signed authority artifacts; `src/cadrumo/domain/calculations/registry/authority_artifact.py`.

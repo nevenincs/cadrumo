@@ -56,7 +56,7 @@ from cadrumo.domain.calculations.registry.schema_verification import (
     VerificationExpectationDefinition,
     WorkbookParityReference,
 )
-from cadrumo.tests.registry_snapshot import build_snapshot_for_validated_modelo
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot_for_validated_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

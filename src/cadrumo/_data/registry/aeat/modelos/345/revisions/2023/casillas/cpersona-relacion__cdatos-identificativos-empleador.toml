@@ -9,6 +9,8 @@
 # declares ONE top-level campo of 49 bytes, which is the extent declared here.
 [[revisions."2023".casillas]]
 id = "persona-relacion"
+continuidad_id = "m345-persona-relacion"
+continuidad_origin = "seeded"
 number = "tipo1.59-107"
 section = ["registro_declarante", "identificacion"]
 data_type = "text"
@@ -20,6 +22,8 @@ legal_refs = ["orden-hfp-823-2022:art-1"]
 # Registro de tipo 1, campo 8. Positions 108-120, numérico de 13 posiciones.
 [[revisions."2023".casillas]]
 id = "numero-identificativo-declaracion"
+continuidad_id = "m345-numero-identificativo-declaracion"
+continuidad_origin = "seeded"
 number = "tipo1.108-120"
 section = ["registro_declarante", "identificacion"]
 data_type = "integer"
@@ -32,6 +36,8 @@ legal_refs = ["orden-hfp-823-2022:art-1"]
 # 121 declaración complementaria («C»), 122 declaración sustitutiva («S»).
 [[revisions."2023".casillas]]
 id = "declaracion-complementaria-sustitutiva"
+continuidad_id = "m345-declaracion-complementaria-sustitutiva"
+continuidad_origin = "seeded"
 number = "tipo1.121-122"
 section = ["registro_declarante", "identificacion"]
 data_type = "text"
@@ -43,6 +49,8 @@ legal_refs = ["orden-hfp-823-2022:art-1"]
 # Registro de tipo 1, campo 10. Positions 123-135, numérico de 13 posiciones.
 [[revisions."2023".casillas]]
 id = "numero-identificativo-anterior"
+continuidad_id = "m345-numero-identificativo-anterior"
+continuidad_origin = "seeded"
 number = "tipo1.123-135"
 section = ["registro_declarante", "identificacion"]
 data_type = "integer"
@@ -55,6 +63,8 @@ legal_refs = ["orden-hfp-823-2022:art-1"]
 # NIF of a declarado under 14's legal representative.
 [[revisions."2023".casillas]]
 id = "representante-legal-nif"
+continuidad_id = "m345-representante-legal-nif"
+continuidad_origin = "seeded"
 number = "tipo2.27-35"
 section = ["registro_declarado", "identificacion"]
 data_type = "nif"
@@ -72,6 +82,9 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 # HFP/528/2023; absent from the ejercicio-2022 record.
 [[revisions."2023".casillas]]
 id = "datos-identificativos-empleador"
+continuidad_id = "m345-datos-identificativos-empleador"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The 2023 record design prints «DATOS IDENTIFICATIVOS DEL EMPLEADOR QUE SEA PROMOTOR O TOMADOR DEL SISTEMA DE PREVISIÓN SOCIAL» at registro de tipo 2 positions 272-320 (line 1152 of corpus/aeat_official/disenos_registro/modelo_345/files/02-345-ejercicio-2023-y-siguientes.pdf.extracted.md (sha256 45c8a42a945d)). Predecessor edition 2022 is governed by the ANEXO of Orden HFP/823/2022, whose registro de tipo 2 closes «190‑500 – BLANCOS.» at line 457 of corpus/normatives/html/orden-hfp-823-2022.html.extracted.md (sha256 4e7cc97b7170); that anexo prints no «PEPP», no «60.000», no «EMPLEADOR» and no «DEVOLUCIONES O REINTEGROS» at any position. The campo was CREATED by Orden HFP/528/2023, applicable first to ejercicio 2023, so the box is new on this edition's official form."
 number = "tipo2.272-320"
 section = ["registro_declarado", "empleador"]
 data_type = "text"

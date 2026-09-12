@@ -23,6 +23,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from .errors import RegistryValidationError
 from .schema_scalars import registry_scalar_value_type, validate_registry_text_scalar
 from .schema_surfaces import CasillaDefinition
+from .tax_id_format import runtime_tax_id_format
 
 __all__ = ["validate_text_input_targets", "validated_text_input_casilla_ids"]
 
@@ -101,7 +102,11 @@ def validate_text_input_targets(
     validated: dict[CasillaId, str] = {}
     for casilla_id, value in text_inputs.items():
         casilla = casillas_by_id[casilla_id]
-        canonical = validate_registry_text_scalar(casilla.data_type, value)
+        canonical = validate_registry_text_scalar(
+            casilla.data_type,
+            value,
+            tax_id_format=runtime_tax_id_format() if casilla.data_type == "nif" else None,
+        )
         if casilla.constraints is not None:
             reason = casilla.constraints.violates_text(canonical)
             if reason is not None:

@@ -1,0 +1,598 @@
+# Modelo 036 RECORD Pag. 5 -- declaracion censal de alta, modificacion y baja.
+#
+# Emitted from aeat-dr-036-2023, whose window runs 2023-01-01 to 2025-02-02.
+#
+# ONE CASILLA PER PRINTED NUMBER, NOT PER DESIGN ROW. AEAT splits every date
+# into dia, mes and ano rows under a single number, and repeats whole blocks --
+# Pag. 8 prints 800, 801, 818 and 859 four times each, once per repetition of
+# the socio block. The 2025 edition settled this and says so in its own
+# comments; emitting per row instead would have written 263 casillas sharing 85
+# ids, which is valid TOML and wrong. Each comment states the group's whole span
+# and every component it covers.
+#
+# THE 037 ASTERISK IS TRANSCRIBED, NOT NORMALISED. A trailing ' *' marks a field
+# that could be informed on a modelo 037, which Orden HAC/1526/2024 suppressed
+# effective 2025-02-03. The design's own legend gives it that meaning, so it is
+# part of what AEAT printed for these years and it is not in the 2025 captions.
+#
+# NOT MODELLED: the identifier envelope, the reservado runs, the CRLF terminator
+# and the tipo-declaracion discriminant.
+#
+# NOT CLAIMED: these casillas DECLARE the censo; none computes anything. Modelo
+# 036 carries no formula family at all.
+
+# @11+1 An. Suj. Pasivo Gran Empresa y Admones. Publicas. ¿Tiene la condición de Gran Empresa? Si/No | S, N o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.gran-empresa-es-gran-empresa"
+continuidad_id = "iva-gran-empresa-es-gran-empresa"
+number = "541"
+section = ["declaracion", "iva", "gran_empresa"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @12+8 Num. Suj. Pasivo Gran Empresa y Admones. Publicas. ¿Tiene la condición de G.E.?. Fecha. Dia [ONE casilla over 3 printed components: @12+2, @14+2, @16+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.gran-empresa-fecha-gran-empresa"
+number = "545"
+section = ["declaracion", "iva", "gran_empresa"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @20+1 An. Suj. Pasivo G.E. y Admones. Publicas. ¿Es A.Publ. cuyo último presup. anual aprobado supera. 6 mill. €? | S, N o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.gran-empresa-es-admon-publica-presupuesto"
+continuidad_id = "iva-gran-empresa-es-admon-publica-presupuesto"
+number = "577"
+section = ["declaracion", "iva", "gran_empresa"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @21+8 Num. Suj. Pasivo G.E. y A.P. ¿Es Admon. Publ. cuyo último presup. anual aprob sup. 6 mill.€?. Fecha. Día [ONE casilla over 3 printed components: @21+2, @23+2, @25+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.gran-empresa-fecha-admon-publica-presupuesto"
+number = "578"
+section = ["declaracion", "iva", "gran_empresa"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @29+1 An. I.V.A. Informac. obligaciones. ¿Está establ. en el territorio de aplic. del IVA o tiene en él un est. permte? | S, N o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.obligaciones-establecido-en-tai"
+continuidad_id = "iva-obligaciones-establecido-en-tai"
+number = "500"
+section = ["declaracion", "iva", "obligaciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @30+1 An. I.V.A. Informac. oblig. ¿Realiza excl. oper. no suj. o exentas q no obligan a presentar autoliq. periodica?  * | S, N o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.obligaciones-solo-operaciones-sin-autoliquidacion"
+continuidad_id = "iva-obligaciones-solo-operaciones-sin-autoliquidacion"
+number = "501"
+section = ["declaracion", "iva", "obligaciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @31+1 An. I.V.A. B) Comunicac. Inicio de activ. Entregas de bienes o prest. de serv. previa o simultanea...   * | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.inicio-actividad-entregas-previa-o-simultanea"
+continuidad_id = "iva-inicio-actividad-entregas-previa-o-simultanea"
+number = "502"
+section = ["declaracion", "iva", "inicio_actividad"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @32+8 Num. I.V.A. B) Comunicac. Inicio de activ. Entregas de bienes o prest. de serv. previa o simult... Fecha. Día  * [ONE casilla over 3 printed components: @32+2, @34+2, @36+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.inicio-actividad-fecha-entregas-previa-o-simultanea"
+number = "503"
+section = ["declaracion", "iva", "inicio_actividad"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @40+1 An. I.V.A. B) Comunicac. Inicio de activ. Entregas de bienes o prest. de serv. posterior a adq...   * | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.inicio-actividad-entregas-posterior"
+continuidad_id = "iva-inicio-actividad-entregas-posterior"
+number = "504"
+section = ["declaracion", "iva", "inicio_actividad"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @41+8 Num. I.V.A. B) Comunicac. Inicio de activ. Entregas de bienes o prest. de serv. posterior a adq... Fecha. Día   * [ONE casilla over 3 printed components: @41+2, @43+2, @45+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.inicio-actividad-fecha-entregas-posterior"
+number = "505"
+section = ["declaracion", "iva", "inicio_actividad"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @49+1 An. I.V.A. B) Comunic. Inicio de nueva activ. q constituya sector diferenciado...   * | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.inicio-actividad-sector-diferenciado"
+continuidad_id = "iva-inicio-actividad-sector-diferenciado"
+number = "506"
+section = ["declaracion", "iva", "inicio_actividad"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @50+8 Num. I.V.A. B) Comunic. Inicio de nueva activ. q constituya sector diferenciado... Fecha. Día   * [ONE casilla over 3 printed components: @50+2, @52+2, @54+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.inicio-actividad-fecha-sector-diferenciado"
+number = "507"
+section = ["declaracion", "iva", "inicio_actividad"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @58+1 An. I.V.A. B) Comuinic. de comienzo habitual de entregas de bienes o prest. de serv...   * | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.inicio-actividad-comienzo-habitual"
+continuidad_id = "iva-inicio-actividad-comienzo-habitual"
+number = "508"
+section = ["declaracion", "iva", "inicio_actividad"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @59+8 Num. I.V.A. B) Comuinic. de comienzo habitual de entregas de bienes o prest. de serv...Fecha. Día   * [ONE casilla over 3 printed components: @59+2, @61+2, @63+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.inicio-actividad-fecha-comienzo-habitual"
+number = "509"
+section = ["declaracion", "iva", "inicio_actividad"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @67+1 An. I.V.A. C) General   * | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.regimenes-general"
+continuidad_id = "iva-regimenes-general"
+number = "510"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @68+6 An. I.V.A. C) General. Grupo o epígr./sec. I.A.E. o cód. act.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.regimenes-general-iae"
+continuidad_id = "iva-regimenes-general-iae"
+number = "511"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @74+8 Num. I.V.A. C) General. Día   * [ONE casilla over 3 printed components: @74+2, @76+2, @78+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.regimenes-general-fecha"
+number = "512"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @82+1 An. I.V.A. C) Reg. Esp. Recargo de equivalencia.   * | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.regimenes-recargo-equivalencia"
+continuidad_id = "iva-regimenes-recargo-equivalencia"
+number = "514"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @83+6 An. I.V.A. C) Reg. Esp. Recargo de equivalencia. G. o epígr./sec. I.A.E. o cód. act.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.regimenes-recargo-equivalencia-iae"
+continuidad_id = "iva-regimenes-recargo-equivalencia-iae"
+number = "515"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @89+8 Num. I.V.A. C) Reg. Esp. Recargo de equivalencia. Fecha. Día.   * [ONE casilla over 3 printed components: @89+2, @91+2, @93+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.regimenes-recargo-equivalencia-fecha"
+number = "516"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @97+1 An. I.V.A. C) Reg. Esp. Bienes usados operación por operación | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.regimenes-bienes-usados-operacion"
+continuidad_id = "iva-regimenes-bienes-usados-operacion"
+number = "518"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @98+6 An. I.V.A. C) Reg. Esp. Bienes usados operación por operación. G. o epígr./sec. I.A.E. o cód. act.
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.regimenes-bienes-usados-operacion-iae"
+continuidad_id = "iva-regimenes-bienes-usados-operacion-iae"
+number = "519"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @104+8 Num. I.V.A. C) Reg. Esp. Bienes usados operación por operación. Fecha. Día [ONE casilla over 3 printed components: @104+2, @106+2, @108+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.regimenes-bienes-usados-operacion-fecha"
+number = "520"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @112+1 An. I.V.A. C) Reg. Esp. Bienes usados margen de beneficio global. | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.regimenes-bienes-usados-margen-global"
+continuidad_id = "iva-regimenes-bienes-usados-margen-global"
+number = "522"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @113+6 An. I.V.A. C) Reg. Esp. Bienes usados margen de beneficio global. G. o epígr./sec. I.A.E. o cód. act.
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.regimenes-bienes-usados-margen-global-iae"
+continuidad_id = "iva-regimenes-bienes-usados-margen-global-iae"
+number = "523"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @119+8 Num. I.V.A. C) Reg. Esp. Bienes usados margen de beneficio global. Fecha. Día [ONE casilla over 3 printed components: @119+2, @121+2, @123+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.regimenes-bienes-usados-margen-global-fecha"
+number = "524"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @127+1 An. I.V.A.C) Reg. Esp. Agencias de viajes, determinación operación por operación | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.regimenes-agencias-viajes"
+continuidad_id = "iva-regimenes-agencias-viajes"
+number = "526"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @128+6 An. I.V.A.C) Reg. Esp. Agencias de viajes, determ. operación por operac. G. o epígr./sec. I.A.E. o cód. act.
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.regimenes-agencias-viajes-iae"
+continuidad_id = "iva-regimenes-agencias-viajes-iae"
+number = "527"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @134+8 Num. I.V.A.C) Reg. Esp. Agencias de viajes, determinación operación por operación. Fecha. Día [ONE casilla over 3 printed components: @134+2, @136+2, @138+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.regimenes-agencias-viajes-fecha"
+number = "528"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @187+1 An. I.V.A. C) Reg. Esp. Oro de inversión. | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.regimenes-oro-inversion"
+continuidad_id = "iva-regimenes-oro-inversion"
+number = "574"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @188+6 An. I.V.A. C) Reg. Esp. Oro de inversión. G. o epígr./sec. I.A.E. o cód. activ
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.regimenes-oro-inversion-iae"
+continuidad_id = "iva-regimenes-oro-inversion-iae"
+number = "575"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @194+8 Num. I.V.A. C) Reg. Esp. Oro de inversión. Fecha. Día [ONE casilla over 3 printed components: @194+2, @196+2, @198+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.regimenes-oro-inversion-fecha"
+number = "576"
+section = ["declaracion", "iva", "regimenes"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @204+8 Num. I.V.A. D) Solicita alta/baja en el Reg. de operadores intracomunitarios. Fecha. Día [ONE casilla over 3 printed components: @204+2, @206+2, @208+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.registros-operadores-intracomunitarios-fecha"
+number = "584"
+section = ["declaracion", "iva", "registros"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @212+5 Num. I.V.A. E) Propone porcentaje provisional de deducción (3 enteros y 2 decimales)   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.prorrata-porcentaje-provisional"
+continuidad_id = "iva-prorrata-porcentaje-provisional"
+number = "586"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "decimal"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @217+1 An. I.V.A. E) No tiene sectores diferenciados   * | S, N o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.prorrata-sin-sectores-diferenciados"
+continuidad_id = "iva-prorrata-sin-sectores-diferenciados"
+number = "587"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @218+3 Num. I.V.A. E) Sector I. Código C.N.A.E.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.prorrata-sector-1-cnae-1"
+continuidad_id = "iva-prorrata-sector-1-cnae-1"
+number = "588"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @221+3 Num. I.V.A. E) Sector I. Código C.N.A.E.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.prorrata-sector-1-cnae-2"
+continuidad_id = "iva-prorrata-sector-1-cnae-2"
+number = "589"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @224+3 Num. I.V.A. E) Sector I. Código C.N.A.E.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.prorrata-sector-1-cnae-3"
+continuidad_id = "iva-prorrata-sector-1-cnae-3"
+number = "590"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @227+1 An. I.V.A. E) Sector I. Código C.N.A.E. Opción prorrata especial   * | S, N o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.prorrata-sector-1-prorrata-especial"
+continuidad_id = "iva-prorrata-sector-1-prorrata-especial"
+number = "591"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @228+3 Num. I.V.A. E) Sector II. Código C.N.A.E.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.prorrata-sector-2-cnae-1"
+continuidad_id = "iva-prorrata-sector-2-cnae-1"
+number = "592"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @231+3 Num. I.V.A. E) Sector II. Código C.N.A.E.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.prorrata-sector-2-cnae-2"
+continuidad_id = "iva-prorrata-sector-2-cnae-2"
+number = "593"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @234+3 Num. I.V.A. E) Sector II. Código C.N.A.E.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.prorrata-sector-2-cnae-3"
+continuidad_id = "iva-prorrata-sector-2-cnae-3"
+number = "594"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @237+1 An. I.V.A. E) Sector II. Código C.N.A.E. Opción prorrata especial   * | S, N o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.prorrata-sector-2-prorrata-especial"
+continuidad_id = "iva-prorrata-sector-2-prorrata-especial"
+number = "595"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @238+3 Num. I.V.A. E) Sector III. Código C.N.A.E.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.prorrata-sector-3-cnae-1"
+continuidad_id = "iva-prorrata-sector-3-cnae-1"
+number = "596"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @241+3 Num. I.V.A. E) Sector III. Código C.N.A.E.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.prorrata-sector-3-cnae-2"
+continuidad_id = "iva-prorrata-sector-3-cnae-2"
+number = "597"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @244+3 Num. I.V.A. E) Sector III. Código C.N.A.E.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.prorrata-sector-3-cnae-3"
+continuidad_id = "iva-prorrata-sector-3-cnae-3"
+number = "598"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @247+1 An. I.V.A. E) Sector III. Código C.N.A.E. Opción prorrata especial   * | S, N o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.prorrata-sector-3-prorrata-especial"
+continuidad_id = "iva-prorrata-sector-3-prorrata-especial"
+number = "599"
+section = ["declaracion", "iva", "prorrata"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @263+1 An. I.V.A. Informac. Obligaciones A). ¿Tiene la condición de revendedor de telefónos móviles consolas de videojuegos, ordenadores portátiles y tabletas digitales de acuerdo co el art. 84 Uno 2º)LIVA? | S, N o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.obligaciones-revendedor-dispositivos"
+continuidad_id = "iva-obligaciones-revendedor-dispositivos"
+number = "513"
+section = ["declaracion", "iva", "obligaciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @265+8 Num. I.V.A. F) Ingreso IVA Importación. Fecha. Día [ONE casilla over 3 printed components: @265+2, @267+2, @269+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.importacion-ingreso-iva-importacion-fecha"
+number = "736"
+section = ["declaracion", "iva", "importacion"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @274+8 Num. I.V.A.F) llevanza Libros de Registro del Iva a traves de la sede electronica de la AEAT . Fecha. Día [ONE casilla over 3 printed components: @274+2, @276+2, @278+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.libros-registro-llevanza-sede-electronica-fecha"
+number = "738"
+section = ["declaracion", "iva", "libros_registro"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @282+1 An. I.V.A.A) comunicación cumplimiento de obligacion expedir factura se realiza por los destinatarios o por terceros | S, N o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.facturacion-factura-por-destinatarios"
+continuidad_id = "iva-facturacion-factura-por-destinatarios"
+number = "740"
+section = ["declaracion", "iva", "facturacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @283+8 Num. I.V.A. A) comunicación cumplimiento de obligacion expedir factura se realiza por los destinatarios o por terceros. Fecha. Día [ONE casilla over 3 printed components: @283+2, @285+2, @287+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.facturacion-factura-por-destinatarios-fecha"
+number = "739"
+section = ["declaracion", "iva", "facturacion"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @292+8 Num. I.V.A. G) Forales IVA Importación. Fecha. Día [ONE casilla over 3 printed components: @292+2, @294+2, @296+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.importacion-forales-iva-importacion-fecha"
+number = "743"
+section = ["declaracion", "iva", "importacion"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @300+8 Num. Alta / baja revendedores telefonos moviles, consolas. Fecha. Día [ONE casilla over 3 printed components: @300+2, @302+2, @304+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "iva.revendedores-alta-baja-fecha"
+number = "744"
+section = ["declaracion", "iva", "revendedores"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]

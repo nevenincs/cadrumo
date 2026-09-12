@@ -6,6 +6,10 @@ family = "mapping"
 variant_id = "impatriado-income-ledger-registry-mapping:2025"
 date_axis = "filing_period"
 valid_from = 2025-01-01
+# Modelo 151 is one annual filing; the selected M151 schedule declares only
+# the 0A period. Keep the fact selector aligned with this variant's 2025
+# effective boundary rather than admitting quarterly/monthly tokens.
+period_selector = { year_from = 2025, periods = ["0A"] }
 legal_refs = ["ley-35-2006:art-93", "ley-35-2006:art-27", "ley-35-2006:art-28"]
 source_refs = [
   "aeat-modelo-151-procedure",
@@ -19,6 +23,18 @@ ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "aeat-modelo-151-procedure"
 required_text = ["Modelo 151"]
+
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-151-layout"
+required_text = ["declaración anual"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["actividades económicas"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Rendimientos del trabajo"]
 
 [fact.variants.payload]
 kind = "mapping"

@@ -12,6 +12,8 @@
 # completa de la entidad declarante, sin anagrama."
 [[revisions."2025".casillas]]
 id = "declarante-razon-social"
+continuidad_id = "m280-declarante-razon-social"
+continuidad_origin = "seeded"
 number = "tipo1.18-57"
 section = ["identificacion_declaracion"]
 data_type = "name"
@@ -26,6 +28,8 @@ additional_source_refs = ["aeat-dr-280-2022"]
 # ONE top-level campo of 49 bytes, which is the extent declared here.
 [[revisions."2025".casillas]]
 id = "persona-relacion"
+continuidad_id = "m280-persona-relacion"
+continuidad_origin = "seeded"
 number = "tipo1.59-107"
 section = ["identificacion_declaracion"]
 data_type = "text"
@@ -39,6 +43,8 @@ additional_source_refs = ["aeat-dr-280-2022"]
 # cuyos tres primeros digitos se corresponderan con el codigo 280."
 [[revisions."2025".casillas]]
 id = "numero-identificativo-declaracion"
+continuidad_id = "m280-numero-identificativo-declaracion"
+continuidad_origin = "seeded"
 number = "tipo1.108-120"
 section = ["identificacion_declaracion"]
 data_type = "integer"
@@ -52,6 +58,8 @@ additional_source_refs = ["aeat-dr-280-2022"]
 # 122 declaracion sustitutiva ("S").
 [[revisions."2025".casillas]]
 id = "declaracion-complementaria-sustitutiva"
+continuidad_id = "m280-declaracion-complementaria-sustitutiva"
+continuidad_origin = "seeded"
 number = "tipo1.121-122"
 section = ["identificacion_declaracion"]
 data_type = "text"
@@ -68,6 +76,8 @@ additional_source_refs = ["aeat-dr-280-2022"]
 # ceros".
 [[revisions."2025".casillas]]
 id = "numero-identificativo-anterior"
+continuidad_id = "m280-numero-identificativo-anterior"
+continuidad_origin = "seeded"
 number = "tipo1.123-135"
 section = ["identificacion_declaracion"]
 data_type = "integer"
@@ -81,6 +91,8 @@ additional_source_refs = ["aeat-dr-280-2022"]
 # registros de declarados, registros de detalle de tipo 2."
 [[revisions."2025".casillas]]
 id = "numero-total-declarados"
+continuidad_id = "m280-numero-total-declarados"
+continuidad_origin = "seeded"
 number = "tipo1.136-144"
 section = ["identificacion_declaracion"]
 data_type = "integer"
@@ -97,6 +109,8 @@ additional_source_refs = ["aeat-dr-280-2022"]
 # amount with two implied decimals filling the whole 20-byte slot.
 [[revisions."2025".casillas]]
 id = "importe-total-aportaciones"
+continuidad_id = "m280-importe-total-aportaciones"
+continuidad_origin = "seeded"
 number = "tipo1.145-164"
 section = ["identificacion_declaracion"]
 data_type = "money"
@@ -111,6 +125,8 @@ additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280
 # BASE DE LA RETENCION PRACTICADA. Subdivided 165-182 entera, 183-184 decimal.
 [[revisions."2025".casillas]]
 id = "base-retenciones"
+continuidad_id = "m280-base-retenciones"
+continuidad_origin = "seeded"
 number = "tipo1.165-184"
 section = ["identificacion_declaracion"]
 data_type = "money"
@@ -129,6 +145,8 @@ additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280
 # campo se rellenara a espacios."
 [[revisions."2025".casillas]]
 id = "representante-legal-nif"
+continuidad_id = "m280-representante-legal-nif"
+continuidad_origin = "seeded"
 number = "tipo2.27-35"
 section = ["declarado"]
 data_type = "nif"
@@ -142,6 +160,8 @@ additional_source_refs = ["aeat-dr-280-2022"]
 # Largo Plazo), 2 CIALP (Cuenta Individual de Ahorro a Largo Plazo).
 [[revisions."2025".casillas]]
 id = "tipo-plan-ahorro"
+continuidad_id = "m280-tipo-plan-ahorro"
+continuidad_origin = "seeded"
 number = "tipo2.76"
 section = ["plan_ahorro_largo_plazo", "estado"]
 data_type = "text"
@@ -156,6 +176,8 @@ additional_source_refs = ["aeat-dr-280-2022"]
 # mediante un codigo IBAN, "O" si se aporta otro identificador.
 [[revisions."2025".casillas]]
 id = "tipo-identificador"
+continuidad_id = "m280-tipo-identificador"
+continuidad_origin = "seeded"
 number = "tipo2.77"
 section = ["plan_ahorro_largo_plazo", "estado"]
 data_type = "text"
@@ -170,6 +192,8 @@ additional_source_refs = ["aeat-dr-280-2022"]
 # identificativo del CIALP o SIALP cuya titularidad corresponda al declarado."
 [[revisions."2025".casillas]]
 id = "identificador-producto"
+continuidad_id = "m280-identificador-producto"
+continuidad_origin = "seeded"
 number = "tipo2.78-101"
 section = ["plan_ahorro_largo_plazo", "estado"]
 data_type = "text"
@@ -185,6 +209,8 @@ additional_source_refs = ["aeat-dr-280-2022"]
 # tomara la fecha original de su apertura."
 [[revisions."2025".casillas]]
 id = "fecha-apertura"
+continuidad_id = "m280-fecha-apertura"
+continuidad_origin = "seeded"
 number = "tipo2.102-109"
 section = ["plan_ahorro_largo_plazo", "estado"]
 data_type = "text"
@@ -199,6 +225,8 @@ additional_source_refs = ["aeat-dr-280-2022"]
 # entera, 174-175 decimal; unsigned per "no ira precedido de signo alguno".
 [[revisions."2025".casillas]]
 id = "base-retencion-practicada"
+continuidad_id = "m280-base-retencion-practicada"
+continuidad_origin = "seeded"
 number = "tipo2.166-175"
 section = ["plan_ahorro_largo_plazo", "rendimientos"]
 data_type = "money"
@@ -218,6 +246,8 @@ additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280
 # signo and the magnitude cannot be filled inconsistently.
 [[revisions."2025".casillas]]
 id = "rendimientos-negativos-imputables"
+continuidad_id = "m280-rendimientos-negativos-imputables"
+continuidad_origin = "seeded"
 number = "tipo2.176-186"
 section = ["plan_ahorro_largo_plazo", "rendimientos"]
 data_type = "money"

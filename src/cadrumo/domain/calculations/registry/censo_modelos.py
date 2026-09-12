@@ -160,7 +160,7 @@ def _active_036_ownership_from_registry(authority: ValidatedRegistryAuthority) -
     except ValueError as exc:
         raise RegistryValidationError("active censo modelo 036 has no registry revisions") from exc
     foundation_year = _foundation_year_from_latest_revision(revision)
-    event_kinds = tuple(revision.period_selector.periods)
+    event_kinds = tuple(revision.period_selector.declared_periods)
     if event_kinds != CENSO_MODELO_EVENT_KINDS:
         raise RegistryValidationError("active censo modelo 036 event periods must come from the registry")
     for event_kind in event_kinds:

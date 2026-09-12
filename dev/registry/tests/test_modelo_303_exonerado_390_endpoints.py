@@ -10,7 +10,7 @@ import pytest
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.loader import load_catalogue_file
 from ..compiler.record_design import extract_record_design

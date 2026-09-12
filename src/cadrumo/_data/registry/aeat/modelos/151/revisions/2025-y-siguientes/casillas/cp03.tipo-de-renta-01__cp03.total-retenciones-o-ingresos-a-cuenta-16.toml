@@ -146,6 +146,8 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Pagador. Apellidos y nombre o razón social [52]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p03.pagador-apellidos-y-nombre-o-razon-social-52"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The official M15103000 successor design introduces one 80-byte An field, Pagador. Apellidos y nombre o razón social [52], at byte position 111-190. The predecessor M15103000 design has no single [52] field at that span: it declares two distinct An concepts, Pagador. Apellidos o Razón social at 111-170 (60 bytes) and Pagador. Nombre at 171-190 (20 bytes). The combined successor is a new representation, not a many-to-one continuity claim. Sources: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) and corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935)."
 number = "111-190"
 segmento = "M15103000"
 section = ["p03", "pagador_apellidos_y_nombre_o_razon_social"]
@@ -398,6 +400,8 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Pagador. Apellidos y nombre o razón social [52]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p03.pagador-apellidos-y-nombre-o-razon-social-52-02"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The official M15103000 successor design introduces one 80-byte An field, Pagador. Apellidos y nombre o razón social [52], at byte position 355-434. The predecessor M15103000 design has no single [52] field at that span: it declares two distinct An concepts, Pagador. Apellidos o Razón social at 355-414 (60 bytes) and Pagador. Nombre at 415-434 (20 bytes). The combined successor is a new representation, not a many-to-one continuity claim. Sources: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) and corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935)."
 number = "355-434"
 segmento = "M15103000"
 section = ["p03", "pagador_apellidos_y_nombre_o_razon_social"]
@@ -650,6 +654,8 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Pagador. Apellidos y nombre o razón social [52]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p03.pagador-apellidos-y-nombre-o-razon-social-52-03"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The official M15103000 successor design introduces one 80-byte An field, Pagador. Apellidos y nombre o razón social [52], at byte position 599-678. The predecessor M15103000 design has no single [52] field at that span: it declares two distinct An concepts, Pagador. Apellidos o Razón social at 599-658 (60 bytes) and Pagador. Nombre at 659-678 (20 bytes). The combined successor is a new representation, not a many-to-one continuity claim. Sources: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) and corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935)."
 number = "599-678"
 segmento = "M15103000"
 section = ["p03", "pagador_apellidos_y_nombre_o_razon_social"]
@@ -902,6 +908,8 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Pagador. Apellidos y nombre o razón social [52]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p03.pagador-apellidos-y-nombre-o-razon-social-52-04"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The official M15103000 successor design introduces one 80-byte An field, Pagador. Apellidos y nombre o razón social [52], at byte position 843-922. The predecessor M15103000 design has no single [52] field at that span: it declares two distinct An concepts, Pagador. Apellidos o Razón social at 843-902 (60 bytes) and Pagador. Nombre at 903-922 (20 bytes). The combined successor is a new representation, not a many-to-one continuity claim. Sources: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) and corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935)."
 number = "843-922"
 segmento = "M15103000"
 section = ["p03", "pagador_apellidos_y_nombre_o_razon_social"]

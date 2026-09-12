@@ -90,7 +90,7 @@ def _validate_previous_filing_binding(
         source_revision
         for source_revision in source_modelo.revisions.values()
         if not source_reference.required_periods
-        or set(source_reference.required_periods).issubset(set(source_revision.period_selector.periods))
+        or set(source_reference.required_periods).issubset(set(source_revision.period_selector.declared_periods))
     )
     if not matching_revisions:
         failures.append(

@@ -10,6 +10,8 @@
 
 [[revisions."2024".casillas]]
 id = "declarante-nif"
+continuidad_id = "m345-declarante-nif"
+continuidad_origin = "seeded"
 number = "tipo1.9-17"
 section = ["registro_declarante", "identificacion"]
 data_type = "nif"
@@ -20,6 +22,8 @@ legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-2"]
 
 [[revisions."2024".casillas]]
 id = "ejercicio-declaracion"
+continuidad_id = "m345-ejercicio-declaracion"
+continuidad_origin = "seeded"
 number = "tipo1.5-8"
 section = ["registro_declarante", "identificacion"]
 data_type = "year"
@@ -30,6 +34,8 @@ legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-4"]
 
 [[revisions."2024".casillas]]
 id = "declarante-razon-social"
+continuidad_id = "m345-declarante-razon-social"
+continuidad_origin = "seeded"
 number = "tipo1.18-57"
 section = ["registro_declarante", "identificacion"]
 data_type = "name"
@@ -42,6 +48,8 @@ legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-2"]
 # formula derives this total.
 [[revisions."2024".casillas]]
 id = "total-declarados"
+continuidad_id = "m345-total-declarados"
+continuidad_origin = "seeded"
 number = "tipo1.136-144"
 section = ["registro_declarante", "resumen"]
 data_type = "integer"
@@ -54,6 +62,8 @@ legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-3"]
 # Operator-supplied for the same reason as above.
 [[revisions."2024".casillas]]
 id = "importe-total-aportaciones"
+continuidad_id = "m345-importe-total-aportaciones"
+continuidad_origin = "seeded"
 number = "tipo1.145-159"
 section = ["registro_declarante", "resumen"]
 data_type = "money"
@@ -64,6 +74,8 @@ legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-3"]
 
 [[revisions."2024".casillas]]
 id = "declarado-nif"
+continuidad_id = "m345-declarado-nif"
+continuidad_origin = "seeded"
 number = "tipo2.18-26"
 section = ["registro_declarado", "identificacion"]
 data_type = "nif"
@@ -74,6 +86,8 @@ legal_refs = ["orden-hfp-823-2022:art-2", "orden-hfp-823-2022:art-3"]
 
 [[revisions."2024".casillas]]
 id = "declarado-nombre"
+continuidad_id = "m345-declarado-nombre"
+continuidad_origin = "seeded"
 number = "tipo2.36-75"
 section = ["registro_declarado", "identificacion"]
 data_type = "name"
@@ -84,6 +98,8 @@ legal_refs = ["orden-hfp-823-2022:art-2", "orden-hfp-823-2022:art-3"]
 
 [[revisions."2024".casillas]]
 id = "anio-nacimiento"
+continuidad_id = "m345-anio-nacimiento"
+continuidad_origin = "seeded"
 number = "tipo2.76-79"
 section = ["registro_declarado", "identificacion"]
 data_type = "year"
@@ -94,6 +110,8 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 
 [[revisions."2024".casillas]]
 id = "codigo-provincia"
+continuidad_id = "m345-codigo-provincia"
+continuidad_origin = "seeded"
 number = "tipo2.80-81"
 section = ["registro_declarado", "domicilio"]
 data_type = "text"
@@ -111,6 +129,8 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 # different meaning: the 2023 revision must not be read as covering this.
 [[revisions."2024".casillas]]
 id = "clave"
+continuidad_id = "m345-clave"
+continuidad_origin = "seeded"
 number = "tipo2.82"
 section = ["registro_declarado", "aportaciones"]
 data_type = "text"
@@ -128,6 +148,8 @@ legal_refs = [
 # artículo octavo reallocation described at position 82.
 [[revisions."2024".casillas]]
 id = "subclave"
+continuidad_id = "m345-subclave"
+continuidad_origin = "seeded"
 number = "tipo2.83-84"
 section = ["registro_declarado", "aportaciones"]
 data_type = "text"
@@ -142,6 +164,8 @@ legal_refs = [
 
 [[revisions."2024".casillas]]
 id = "beneficiario-nif"
+continuidad_id = "m345-beneficiario-nif"
+continuidad_origin = "seeded"
 number = "tipo2.85-93"
 section = ["registro_declarado", "beneficiario"]
 data_type = "nif"
@@ -153,6 +177,8 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 # Positions 94-106, subdivided 94-104 parte entera and 105-106 parte decimal.
 [[revisions."2024".casillas]]
 id = "importe"
+continuidad_id = "m345-importe"
+continuidad_origin = "seeded"
 number = "tipo2.94-106"
 section = ["registro_declarado", "aportaciones"]
 data_type = "money"
@@ -163,6 +189,9 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 
 [[revisions."2024".casillas]]
 id = "datos-adicionales-claves-abc"
+continuidad_id = "m345-datos-adicionales-claves-abc"
+continuidad_origin = "grounded"
+continuidad_evidence = "Parent span row of the registro de tipo 2; position unchanged. aeat-dr-345-2023 declares '107-160 Alfanumerico DATOS ADICIONALES PARA LAS CLAVES A, B y C' for ejercicio 2023, and aeat-dr-345-2024 declares the identical '107-160 Alfanumerico DATOS ADICIONALES PARA LAS CLAVES A, B y C' for ejercicio 2024. Same positional span, same data type and same printed label in both record designs. The span is a structural container: its children carry the semantic roles and the span itself carries none in either edition, so continuity is established on the official record geometry rather than on role."
 number = "tipo2.107-160"
 section = ["registro_declarado", "datos_adicionales"]
 data_type = "text"
@@ -172,6 +201,8 @@ legal_refs = ["orden-hfp-823-2022:art-3", "orden-hfp-528-2023:art-unico"]
 
 [[revisions."2024".casillas]]
 id = "plan-pensiones-denominacion"
+continuidad_id = "m345-plan-pensiones-denominacion"
+continuidad_origin = "seeded"
 number = "tipo2.107-146"
 section = ["registro_declarado", "datos_adicionales", "claves_abc"]
 data_type = "text"
@@ -183,6 +214,8 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 
 [[revisions."2024".casillas]]
 id = "fondo-pensiones-numero-registro"
+continuidad_id = "m345-fondo-pensiones-numero-registro"
+continuidad_origin = "seeded"
 number = "tipo2.147-151"
 section = ["registro_declarado", "datos_adicionales", "claves_abc"]
 data_type = "text"
@@ -194,6 +227,8 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 
 [[revisions."2024".casillas]]
 id = "fondo-pensiones-nif"
+continuidad_id = "m345-fondo-pensiones-nif"
+continuidad_origin = "seeded"
 number = "tipo2.152-160"
 section = ["registro_declarado", "datos_adicionales", "claves_abc"]
 data_type = "nif"
@@ -205,6 +240,8 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 
 [[revisions."2024".casillas]]
 id = "entidad-aseguradora-nif"
+continuidad_id = "m345-entidad-aseguradora-nif"
+continuidad_origin = "seeded"
 number = "tipo2.161-169"
 section = ["registro_declarado", "datos_adicionales", "clave_d"]
 data_type = "nif"
@@ -216,6 +253,9 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 
 [[revisions."2024".casillas]]
 id = "datos-adicionales-clave-i"
+continuidad_id = "m345-datos-adicionales-clave-i"
+continuidad_origin = "grounded"
+continuidad_evidence = "Parent span row of the registro de tipo 2; position unchanged. aeat-dr-345-2023 declares '170-189 Numerico DATOS ADICIONALES PARA LA CLAVE I' for ejercicio 2023, and aeat-dr-345-2024 declares the identical '170-189 Numerico DATOS ADICIONALES PARA LA CLAVE I' for ejercicio 2024. Same positional span, same data type and same printed label in both record designs. The span is a structural container: its children carry the semantic roles and the span itself carries none in either edition, so continuity is established on the official record geometry rather than on role."
 number = "tipo2.170-189"
 section = ["registro_declarado", "datos_adicionales"]
 data_type = "integer"
@@ -225,6 +265,8 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 
 [[revisions."2024".casillas]]
 id = "pias-fecha-primera-prima"
+continuidad_id = "m345-pias-fecha-primera-prima"
+continuidad_origin = "seeded"
 number = "tipo2.170-177"
 section = ["registro_declarado", "datos_adicionales", "clave_i"]
 data_type = "date"
@@ -237,6 +279,8 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 # The 240.000 EUR ceiling is the design's own.
 [[revisions."2024".casillas]]
 id = "pias-importe-acumulado"
+continuidad_id = "m345-pias-importe-acumulado"
+continuidad_origin = "seeded"
 number = "tipo2.178-189"
 section = ["registro_declarado", "datos_adicionales", "clave_i"]
 data_type = "money"
@@ -251,6 +295,9 @@ legal_refs = ["orden-hfp-823-2022:art-3"]
 # Absent from the ejercicio-2022 record, which ends at 189.
 [[revisions."2024".casillas]]
 id = "datos-adicionales-clave-m"
+continuidad_id = "m345-datos-adicionales-clave-m"
+continuidad_origin = "grounded"
+continuidad_evidence = "Parent span row of the registro de tipo 2; position unchanged. aeat-dr-345-2023 declares '190-270 Alfanumerico DATOS ADICIONALES PARA LA CLAVE M' for ejercicio 2023, and aeat-dr-345-2024 declares the identical '190-270 Alfanumerico DATOS ADICIONALES PARA LA CLAVE M' for ejercicio 2024. Same positional span, same data type and same printed label in both record designs. The span is a structural container: its children carry the semantic roles and the span itself carries none in either edition, so continuity is established on the official record geometry rather than on role."
 number = "tipo2.190-270"
 section = ["registro_declarado", "datos_adicionales"]
 data_type = "text"
@@ -260,6 +307,8 @@ legal_refs = ["orden-hfp-528-2023:art-unico"]
 
 [[revisions."2024".casillas]]
 id = "pepp-denominacion"
+continuidad_id = "m345-pepp-denominacion"
+continuidad_origin = "seeded"
 number = "tipo2.190-229"
 section = ["registro_declarado", "datos_adicionales", "clave_m"]
 data_type = "text"
@@ -271,6 +320,8 @@ legal_refs = ["orden-hfp-528-2023:art-unico"]
 
 [[revisions."2024".casillas]]
 id = "pepp-numero-inscripcion"
+continuidad_id = "m345-pepp-numero-inscripcion"
+continuidad_origin = "seeded"
 number = "tipo2.230-269"
 section = ["registro_declarado", "datos_adicionales", "clave_m"]
 data_type = "text"
@@ -282,6 +333,8 @@ legal_refs = ["orden-hfp-528-2023:art-unico"]
 
 [[revisions."2024".casillas]]
 id = "pepp-cuenta-subcuenta"
+continuidad_id = "m345-pepp-cuenta-subcuenta"
+continuidad_origin = "seeded"
 number = "tipo2.270"
 section = ["registro_declarado", "datos_adicionales", "clave_m"]
 data_type = "text"
@@ -302,6 +355,8 @@ legal_refs = ["orden-hfp-528-2023:art-unico"]
 # a different casilla and this id is deliberately distinct from it.
 [[revisions."2024".casillas]]
 id = "rendimientos-trabajo-no-superiores-60000"
+continuidad_id = "m345-rendimientos-trabajo-no-superiores-60000"
+continuidad_origin = "seeded"
 number = "tipo2.271"
 section = ["registro_declarado", "datos_adicionales"]
 data_type = "text"
@@ -312,6 +367,8 @@ legal_refs = ["orden-hfp-528-2023:art-unico", "orden-hac-1504-2024:art-octavo"]
 
 [[revisions."2024".casillas]]
 id = "empleador-nif"
+continuidad_id = "m345-empleador-nif"
+continuidad_origin = "seeded"
 number = "tipo2.272-280"
 section = ["registro_declarado", "empleador"]
 data_type = "nif"
@@ -322,6 +379,8 @@ legal_refs = ["orden-hfp-528-2023:art-unico"]
 
 [[revisions."2024".casillas]]
 id = "empleador-nombre"
+continuidad_id = "m345-empleador-nombre"
+continuidad_origin = "seeded"
 number = "tipo2.281-320"
 section = ["registro_declarado", "empleador"]
 data_type = "name"
@@ -334,6 +393,8 @@ legal_refs = ["orden-hfp-528-2023:art-unico"]
 # closes the record immediately after it with «322-500 -------- BLANCOS.».
 [[revisions."2024".casillas]]
 id = "devoluciones-excesos"
+continuidad_id = "m345-devoluciones-excesos"
+continuidad_origin = "seeded"
 number = "tipo2.321"
 section = ["registro_declarado", "aportaciones"]
 data_type = "text"

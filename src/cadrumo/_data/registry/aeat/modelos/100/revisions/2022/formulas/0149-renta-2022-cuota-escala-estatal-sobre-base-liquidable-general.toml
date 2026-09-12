@@ -46,7 +46,6 @@ expression = { op = "if_then_else", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-64"]
-source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2022".formulas.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"

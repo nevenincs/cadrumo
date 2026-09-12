@@ -1,0 +1,16 @@
+# The official designs retain one legal own-funds concept but change its
+# fixed-width representation at the 2016 boundary. The 2013 design uses
+# unsigned numeric positions 168-182; the 2016 design uses position 168 as a
+# negative-sign marker and positions 169-183 for the amount. This is a
+# representation evolution, not a retirement or a label/number-based match.
+# `repurposed` is the registry marker used for this non-label/non-legal surface
+# evolution; the casilla continuity id remains the identity proof.
+
+[[revisions."2016-2022".casilla_continuidad_evolutions]]
+id = "m165-importe-fondos-propios-2013-2016-representation-evolved"
+continuidad_id = "m165-importe-fondos-propios"
+from_revision = "2013-2015"
+to_revision = "2016-2022"
+evolution_kind = "repurposed"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2013-2015", "aeat-dr-165-2016-2022"]

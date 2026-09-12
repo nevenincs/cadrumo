@@ -1,0 +1,23 @@
+# The predecessor M15101000 record keeps Representante. Apellidos and
+# Representante. Nombre as separate fields. The successor replaces that pair
+# with one 80-byte [19] field that also admits razón social/denominación. Keep
+# both predecessor concepts distinct and retire them; the successor is a new
+# representation with no many-to-one continuity claim.
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p01-representante-apellidos-retired"
+continuidad_id = "p01-representante-apellidos"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p01-representante-nombre-retired"
+continuidad_id = "p01-representante-nombre"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]

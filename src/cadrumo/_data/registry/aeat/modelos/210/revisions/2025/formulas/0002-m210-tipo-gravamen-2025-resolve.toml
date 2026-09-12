@@ -36,7 +36,6 @@ legal_refs = [
     "trlirnr-rdleg-5-2004:art-25.1.b",
     "trlirnr-rdleg-5-2004:art-25.1.f",
 ]
-source_refs = ["aeat-modelo-210-procedure"]
 
 [[revisions."2025".formulas.source_citations]]
 source_ref = "aeat-modelo-210-procedure"

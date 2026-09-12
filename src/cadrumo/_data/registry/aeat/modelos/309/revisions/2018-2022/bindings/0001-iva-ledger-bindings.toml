@@ -10,7 +10,6 @@ provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acq
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
-source_refs = ["aeat-dr-309-2018", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
 
 [[revisions."2018-2022".bindings.source_citations]]
 source_ref = "aeat-modelo-309-procedure"
@@ -22,7 +21,6 @@ provider = { kind = "ledger_iva_aggregation", categories = ["recargo_equivalenci
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
-source_refs = ["aeat-dr-309-2018", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
 
 [[revisions."2018-2022".bindings.source_citations]]
 source_ref = "aeat-modelo-309-procedure"

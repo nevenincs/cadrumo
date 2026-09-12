@@ -14,16 +14,22 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ..record_design_labels import design_slot_name, read_record_design
 from ..rename_formula_binding_identifiers import (
     ChainedRenameMapError,
+    IdentifierExceedsSchemaCapError,
     ReferenceOutsideEditionError,
     UnownedFragmentDirectoryError,
     _selector,
     apply_span_strip,
+    id_keyed_families,
+    identifier_cap_for_family,
     plan_span_strip,
     references_outside_rewritten_editions,
+    refuse_identifiers_over_cap,
+    refuse_invalid_identifier_evolutions,
     remove_emptied_fragment_directories,
     rewrite_identifier_references,
     unreadable_selectors,
@@ -556,3 +562,90 @@ def test_a_selector_without_overrides_is_typed_unchanged(tmp_path: Path) -> None
     assert selector.periods == ("1T",)
     assert selector.period_overrides == ()
     assert selector.periods_for_year(2026) == ("1T",)
+
+
+# ---------------------------------------------------------------------------
+# Write-time validation against the schema's own caps
+# ---------------------------------------------------------------------------
+
+
+def test_every_id_keyed_family_reports_the_cap_its_model_declares() -> None:
+    """The caps are read off the shipped models, so none may silently resolve to None.
+
+    A family whose cap reads ``None`` is one this tool would write unchecked.
+    The families spell ``id`` through a PEP 695 alias, so the constraint lives
+    one level below the annotation; this case is what catches that unwrapping
+    breaking.
+    """
+    families = sorted(set(id_keyed_families()) | {"casillas", "applicability"})
+
+    caps = {family: identifier_cap_for_family(family) for family in families}
+
+    assert all(isinstance(cap, int) for cap in caps.values()), f"unresolved caps: {caps}"
+    # Not one number everywhere: reading the real model is the point.
+    assert len(set(caps.values())) > 1
+
+
+def test_a_name_over_its_family_cap_is_refused_before_any_write() -> None:
+    """Detector teeth: the refusal names the family, the length and the cap it broke."""
+    cap = identifier_cap_for_family("bindings")
+    assert isinstance(cap, int)
+    too_long = "modelo-131." + ("x" * cap)
+
+    with pytest.raises(IdentifierExceedsSchemaCapError) as refusal:
+        refuse_identifiers_over_cap({too_long: "bindings", "modelo-131.fine": "bindings"})
+
+    assert too_long in refusal.value.offenders
+    assert "modelo-131.fine" not in refusal.value.offenders
+    assert str(cap) in str(refusal.value)
+
+
+def test_the_casilla_cap_is_tighter_and_is_applied_per_family() -> None:
+    """One cap is not every cap: a name legal for a binding can be illegal for a casilla."""
+    binding_cap = identifier_cap_for_family("bindings")
+    casilla_cap = identifier_cap_for_family("casillas")
+    assert isinstance(binding_cap, int) and isinstance(casilla_cap, int)
+    assert casilla_cap < binding_cap
+    between = "a" * (casilla_cap + 1)
+
+    refuse_identifiers_over_cap({between: "bindings"})
+
+    with pytest.raises(IdentifierExceedsSchemaCapError):
+        refuse_identifiers_over_cap({between: "casillas"})
+
+
+def test_an_evolution_row_the_model_refuses_is_caught_before_the_write(tmp_path: Path) -> None:
+    """Constructing the typed model applies every constraint, not only the length.
+
+    Replacing an identifier by itself is a contradiction the model refuses and a
+    length check would wave through, which is why the fragment is validated by
+    building the model rather than by measuring its strings.
+    """
+    body = (
+        '[[revisions."2025".identifier_evolutions]]\n'
+        'kind = "replaced"\n'
+        'family = "bindings"\n'
+        'identifier = "modelo-131.same"\n'
+        'replaced_by = "modelo-131.same"\n'
+        'to_revision = "2025"\n'
+        'legal_refs = ["rd-439-2007:art-110"]\n'
+        'source_refs = ["aeat-dr-131-2025"]\n'
+    )
+
+    with pytest.raises(ValidationError):
+        refuse_invalid_identifier_evolutions(body, "2025")
+
+
+def test_a_well_formed_evolution_fragment_passes_the_same_gate() -> None:
+    """The gate must admit the shipped shape, or it is only proving it can refuse."""
+    body = (
+        '[[revisions."2025".identifier_evolutions]]\n'
+        'kind = "retired"\n'
+        'family = "bindings"\n'
+        'identifier = "modelo-131.dpa.actividad-dana"\n'
+        'to_revision = "2025"\n'
+        'legal_refs = ["rd-439-2007:art-110"]\n'
+        'source_refs = ["aeat-dr-131-2025"]\n'
+    )
+
+    refuse_invalid_identifier_evolutions(body, "2025")

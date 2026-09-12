@@ -4,7 +4,7 @@ provider = { kind = "profile", profile_key = "renta_taxpayer.birth_date", xsd_pa
 value = { data_type = "date", channel = "date" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-57", "orden-hac-242-2025:art-3"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+additional_source_refs = ["aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-renta-2024-manual-parte1"

@@ -1,5 +1,7 @@
 [[revisions."2025".casillas]]
 id = "declarante-nif"
+continuidad_id = "m345-declarante-nif"
+continuidad_origin = "seeded"
 number = "tipo1.9-17"
 section = ["registro_declarante", "identificacion"]
 data_type = "nif"
@@ -13,6 +15,8 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "ejercicio-declaracion"
+continuidad_id = "m345-ejercicio-declaracion"
+continuidad_origin = "seeded"
 number = "tipo1.5-8"
 section = ["registro_declarante", "identificacion"]
 data_type = "year"
@@ -26,6 +30,8 @@ additional_source_refs = ["aeat-modelo-345-deadlines", "boe-modelo-345-2025-amen
 
 [[revisions."2025".casillas]]
 id = "declarante-razon-social"
+continuidad_id = "m345-declarante-razon-social"
+continuidad_origin = "seeded"
 number = "tipo1.18-57"
 section = ["registro_declarante", "identificacion"]
 data_type = "name"
@@ -37,6 +43,8 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "total-declarados"
+continuidad_id = "m345-total-declarados"
+continuidad_origin = "seeded"
 number = "tipo1.136-144"
 section = ["registro_declarante", "resumen"]
 data_type = "integer"
@@ -48,6 +56,8 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "importe-total-aportaciones"
+continuidad_id = "m345-importe-total-aportaciones"
+continuidad_origin = "seeded"
 number = "tipo1.145-159"
 section = ["registro_declarante", "resumen"]
 data_type = "money"
@@ -59,6 +69,8 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "declarado-nif"
+continuidad_id = "m345-declarado-nif"
+continuidad_origin = "seeded"
 number = "tipo2.18-26"
 section = ["registro_declarado", "identificacion"]
 data_type = "nif"
@@ -70,6 +82,8 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "declarado-nombre"
+continuidad_id = "m345-declarado-nombre"
+continuidad_origin = "seeded"
 number = "tipo2.36-75"
 section = ["registro_declarado", "identificacion"]
 data_type = "name"
@@ -81,6 +95,8 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "anio-nacimiento"
+continuidad_id = "m345-anio-nacimiento"
+continuidad_origin = "seeded"
 number = "tipo2.76-79"
 section = ["registro_declarado", "identificacion"]
 data_type = "year"
@@ -92,6 +108,8 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "codigo-provincia"
+continuidad_id = "m345-codigo-provincia"
+continuidad_origin = "seeded"
 number = "tipo2.80-81"
 section = ["registro_declarado", "domicilio"]
 data_type = "text"
@@ -103,6 +121,8 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "clave"
+continuidad_id = "m345-clave"
+continuidad_origin = "seeded"
 number = "tipo2.82"
 section = ["registro_declarado", "aportaciones"]
 data_type = "text"
@@ -118,6 +138,8 @@ additional_source_refs = ["boe-modelo-345-base-order", "boe-modelo-345-2023-amen
 
 [[revisions."2025".casillas]]
 id = "subclave"
+continuidad_id = "m345-subclave"
+continuidad_origin = "seeded"
 number = "tipo2.83-84"
 section = ["registro_declarado", "aportaciones"]
 data_type = "text"
@@ -133,6 +155,8 @@ additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528", "boe-modelo-3
 
 [[revisions."2025".casillas]]
 id = "beneficiario-nif"
+continuidad_id = "m345-beneficiario-nif"
+continuidad_origin = "seeded"
 number = "tipo2.85-93"
 section = ["registro_declarado", "beneficiario"]
 data_type = "nif"
@@ -144,6 +168,8 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "importe"
+continuidad_id = "m345-importe"
+continuidad_origin = "seeded"
 number = "tipo2.94-106"
 section = ["registro_declarado", "aportaciones"]
 data_type = "money"
@@ -155,6 +181,9 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "datos-adicionales-claves-abc"
+continuidad_id = "m345-datos-adicionales-claves-abc"
+continuidad_origin = "grounded"
+continuidad_evidence = "Parent span row of the registro de tipo 2; position unchanged. aeat-dr-345-2024 declares '107-160 Alfanumerico DATOS ADICIONALES PARA LAS CLAVES A, B y C' for ejercicio 2024, and aeat-dr-345-2025 declares the identical '107-160 Alfanumerico DATOS ADICIONALES PARA LAS CLAVES A, B y C' for ejercicio 2025. Same positional span, same data type and same printed label in both record designs. The span is a structural container: its children carry the semantic roles and the span itself carries none in either edition, so continuity is established on the official record geometry rather than on role."
 number = "tipo2.107-160"
 section = ["registro_declarado", "datos_adicionales"]
 data_type = "text"
@@ -165,6 +194,8 @@ additional_source_refs = ["boe-modelo-345-base-order", "boe-modelo-345-2023-amen
 
 [[revisions."2025".casillas]]
 id = "plan-pensiones-denominacion"
+continuidad_id = "m345-plan-pensiones-denominacion"
+continuidad_origin = "seeded"
 number = "tipo2.107-146"
 section = ["registro_declarado", "datos_adicionales", "claves_abc"]
 data_type = "text"
@@ -177,6 +208,8 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "fondo-pensiones-numero-registro"
+continuidad_id = "m345-fondo-pensiones-numero-registro"
+continuidad_origin = "seeded"
 number = "tipo2.147-151"
 section = ["registro_declarado", "datos_adicionales", "claves_abc"]
 data_type = "text"
@@ -189,6 +222,8 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "fondo-pensiones-nif"
+continuidad_id = "m345-fondo-pensiones-nif"
+continuidad_origin = "seeded"
 number = "tipo2.152-160"
 section = ["registro_declarado", "datos_adicionales", "claves_abc"]
 data_type = "nif"
@@ -201,6 +236,8 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "entidad-aseguradora-nif"
+continuidad_id = "m345-entidad-aseguradora-nif"
+continuidad_origin = "seeded"
 number = "tipo2.161-169"
 section = ["registro_declarado", "datos_adicionales", "clave_d"]
 data_type = "nif"
@@ -213,6 +250,9 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "datos-adicionales-clave-i"
+continuidad_id = "m345-datos-adicionales-clave-i"
+continuidad_origin = "grounded"
+continuidad_evidence = "Parent span row of the registro de tipo 2; position unchanged. aeat-dr-345-2024 declares '170-189 Numerico DATOS ADICIONALES PARA LA CLAVE I' for ejercicio 2024, and aeat-dr-345-2025 declares the identical '170-189 Numerico DATOS ADICIONALES PARA LA CLAVE I' for ejercicio 2025. Same positional span, same data type and same printed label in both record designs. The span is a structural container: its children carry the semantic roles and the span itself carries none in either edition, so continuity is established on the official record geometry rather than on role."
 number = "tipo2.170-189"
 section = ["registro_declarado", "datos_adicionales"]
 data_type = "integer"
@@ -223,6 +263,8 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "pias-fecha-primera-prima"
+continuidad_id = "m345-pias-fecha-primera-prima"
+continuidad_origin = "seeded"
 number = "tipo2.170-177"
 section = ["registro_declarado", "datos_adicionales", "clave_i"]
 data_type = "date"
@@ -234,6 +276,8 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "pias-importe-acumulado"
+continuidad_id = "m345-pias-importe-acumulado"
+continuidad_origin = "seeded"
 number = "tipo2.178-189"
 section = ["registro_declarado", "datos_adicionales", "clave_i"]
 data_type = "money"
@@ -246,6 +290,9 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 
 [[revisions."2025".casillas]]
 id = "datos-adicionales-clave-m"
+continuidad_id = "m345-datos-adicionales-clave-m"
+continuidad_origin = "grounded"
+continuidad_evidence = "Parent span row of the registro de tipo 2; position unchanged. aeat-dr-345-2024 declares '190-270 Alfanumerico DATOS ADICIONALES PARA LA CLAVE M' for ejercicio 2024, and aeat-dr-345-2025 declares the identical '190-270 Alfanumerico DATOS ADICIONALES PARA LA CLAVE M' for ejercicio 2025. Same positional span, same data type and same printed label in both record designs. The span is a structural container: its children carry the semantic roles and the span itself carries none in either edition, so continuity is established on the official record geometry rather than on role."
 number = "tipo2.190-270"
 section = ["registro_declarado", "datos_adicionales"]
 data_type = "text"
@@ -256,6 +303,8 @@ additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528"]
 
 [[revisions."2025".casillas]]
 id = "pepp-denominacion"
+continuidad_id = "m345-pepp-denominacion"
+continuidad_origin = "seeded"
 number = "tipo2.190-229"
 section = ["registro_declarado", "datos_adicionales", "clave_m"]
 data_type = "text"
@@ -268,6 +317,8 @@ additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528"]
 
 [[revisions."2025".casillas]]
 id = "pepp-numero-inscripcion"
+continuidad_id = "m345-pepp-numero-inscripcion"
+continuidad_origin = "seeded"
 number = "tipo2.230-269"
 section = ["registro_declarado", "datos_adicionales", "clave_m"]
 data_type = "text"
@@ -280,6 +331,8 @@ additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528"]
 
 [[revisions."2025".casillas]]
 id = "pepp-cuenta-subcuenta"
+continuidad_id = "m345-pepp-cuenta-subcuenta"
+continuidad_origin = "seeded"
 number = "tipo2.270"
 section = ["registro_declarado", "datos_adicionales", "clave_m"]
 data_type = "text"
@@ -292,6 +345,8 @@ additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528"]
 
 [[revisions."2025".casillas]]
 id = "rendimientos-trabajo-superiores-60000"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "THE PREDICATE PRINTED AT POSITION 271 IS REPLACED, NOT RENAMED. The 2025 record design prints «RENDIMIENTOS ÍNTEGROS DEL TRABAJO SUPERIORES A 60.000 EUROS», filled «consignando una “S” cuando el trabajador obtenga rendimientos íntegros del trabajo superiores a 60.000 euros», at registro de tipo 2 position 271 (line 1126 of corpus/aeat_official/disenos_registro/modelo_345/files/01-345-ejercicio-2025.pdf.extracted.md, sha256 a8db0973dd7b). Predecessor edition 2024 prints at that same position the OPPOSITE predicate «RENDIMIENTOS ÍNTEGROS DEL TRABAJO NO SUPERIORES A 60.000 EUROS», filled with an «X» when the worker does NOT exceed 60.000 euros (line 1126 of corpus/.../modelo_345/files/04-345-diseno-de-registro-actualizado-en-2024.pdf.extracted.md, sha256 32d87b9da3fa), and prints the affirmative predicate nowhere. Orden HAC/1430/2025 inverted the byte for ejercicio 2025, so this box is new on this edition's form, not a continuation of the 2024 negative-predicate box."
 number = "tipo2.271"
 section = ["registro_declarado", "datos_adicionales"]
 data_type = "text"
@@ -309,6 +364,8 @@ additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528", "boe-modelo-3
 
 [[revisions."2025".casillas]]
 id = "empleador-nif"
+continuidad_id = "m345-empleador-nif"
+continuidad_origin = "seeded"
 number = "tipo2.272-280"
 section = ["registro_declarado", "empleador"]
 data_type = "nif"
@@ -320,6 +377,8 @@ additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528"]
 
 [[revisions."2025".casillas]]
 id = "empleador-nombre"
+continuidad_id = "m345-empleador-nombre"
+continuidad_origin = "seeded"
 number = "tipo2.281-320"
 section = ["registro_declarado", "empleador"]
 data_type = "name"
@@ -331,6 +390,8 @@ additional_source_refs = ["boe-modelo-345-2023-amendment-hfp-528"]
 
 [[revisions."2025".casillas]]
 id = "devoluciones-excesos"
+continuidad_id = "m345-devoluciones-excesos"
+continuidad_origin = "seeded"
 number = "tipo2.321"
 section = ["registro_declarado", "aportaciones"]
 data_type = "text"

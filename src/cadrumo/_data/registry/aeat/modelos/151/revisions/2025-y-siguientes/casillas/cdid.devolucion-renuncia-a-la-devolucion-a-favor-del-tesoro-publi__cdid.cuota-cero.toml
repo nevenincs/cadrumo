@@ -11,6 +11,9 @@
 # AEAT campo: Devolución. Renuncia a la devolución a favor del Tesoro Público
 [[revisions."2025-y-siguientes".casillas]]
 id = "did.devolucion-renuncia-a-la-devolucion-a-favor-del-tesoro-publi"
+continuidad_id = "did-renuncia-devolucion-tesoro-publico"
+continuidad_origin = "grounded"
+continuidad_evidence = "Official M151DID00 designs identify the same one-byte An flag, Devolución. Renuncia a la devolución a favor del Tesoro Público, across revisions: predecessor campo 8 at position 58 and successor campo 6 at position 13. The two-byte position shift is the documented reordering of the two devolución flags before the IBAN; the semantic flag and type are unchanged. Sources: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) and corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935)."
 number = "13-13"
 segmento = "M151DID00"
 section = ["did", "devolucion_renuncia_a_la_devolucion_a_favor_del_tesoro_publico"]
@@ -23,6 +26,9 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Devolución. Solicita la devolución por transferencia
 [[revisions."2025-y-siguientes".casillas]]
 id = "did.devolucion-solicita-la-devolucion-por-transferencia"
+continuidad_id = "did-solicita-devolucion-transferencia"
+continuidad_origin = "grounded"
+continuidad_evidence = "Official M151DID00 designs identify the same one-byte An flag, Devolución. Solicita la devolución por transferencia, across revisions: predecessor campo 9 at position 59 and successor campo 7 at position 14. The two-byte position shift is the documented reordering of the two devolución flags before the IBAN; the semantic flag and type are unchanged. Sources: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) and corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935)."
 number = "14-14"
 segmento = "M151DID00"
 section = ["did", "devolucion_solicita_la_devolucion_por_transferencia"]
@@ -35,6 +41,9 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Ingreso/Domiciliación/Devolución - IBAN
 [[revisions."2025-y-siguientes".casillas]]
 id = "did.ingreso-domiciliacion-devolucion-iban"
+continuidad_id = "did-numero-de-cuenta-iban"
+continuidad_origin = "grounded"
+continuidad_evidence = "Official M151DID00 designs retain the same 34-byte An IBAN account field across revisions: predecessor campo 6, Número de Cuenta (IBAN), at positions 13-46; successor campo 8, Ingreso/Domiciliación/Devolución - IBAN, at positions 15-48. The two-byte shift is caused by the two devolución flags moving before the account field. The successor label broadens the declared use of the same IBAN value, which is recorded as a label evolution rather than a new or many-to-one concept. Sources: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) and corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935)."
 number = "15-48"
 segmento = "M151DID00"
 section = ["did", "ingreso_domiciliacion_devolucion_iban"]

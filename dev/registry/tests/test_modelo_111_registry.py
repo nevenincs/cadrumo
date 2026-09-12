@@ -10,7 +10,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 

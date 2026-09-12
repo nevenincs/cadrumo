@@ -33,8 +33,9 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.core.tax_domain import TaxDomain
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_capability
 from cadrumo.domain.calculations.registry.support_matrix import revision_capability_probe
-from cadrumo.tests.registry_snapshot import build_snapshot, build_validated_snapshot
+from cadrumo.domain.calculations.registry.temporal import select_revision
 
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
@@ -49,7 +50,7 @@ _MODELOS = [
         "orden-eha-3851-2007:art-1",
         "orden-eha-3851-2007:art-1",
         "BOE-A-2007-22442",
-        TaxDomain.IEDMT,
+        TaxDomain("iedmt"),
     ),
     (
         "122",
@@ -57,7 +58,7 @@ _MODELOS = [
         "orden-hfp-105-2017:art-5",
         "orden-hfp-105-2017:art-7",
         "BOE-A-2017-1334",
-        TaxDomain.IRPF,
+        TaxDomain("irpf"),
     ),
 ]
 
@@ -69,7 +70,7 @@ def test_committed_definition_legal_authority_and_windowless_plazo(
     """Each cadence-dependent tail modelo validates without fabricated deadline windows."""
     modelo, catalogues = _committed_modelo(mid)
     assert modelo.id == mid
-    assert modelo.tax_domain is domain
+    assert modelo.tax_domain == domain
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
     for ref in {approval, plazo}:
@@ -81,49 +82,43 @@ def test_committed_definition_legal_authority_and_windowless_plazo(
 
 
 def test_modelo_576_selects_the_2007_form_only_revision_before_the_2008_record_design() -> None:
-    """The proven legal form year never acquires the later fixed-width writer."""
-    modelo, catalogues = _committed_modelo("576")
+    """Historical corpus selection keeps the legal form separate from the later writer."""
+    modelo, _catalogues = _committed_modelo("576")
 
-    historical = build_snapshot(
+    historical = select_revision(
         modelo,
-        catalogues,
-        source_root=bundled_path(),
         filing_year=2007,
         period="0A",
-        grade=RegistryAuthorityGrade.APPLICABILITY,
     )
-    design_era = build_snapshot(
+    design_era = select_revision(
         modelo,
-        catalogues,
-        source_root=bundled_path(),
         filing_year=2008,
         period="0A",
-        grade=RegistryAuthorityGrade.APPLICABILITY,
     )
 
-    assert historical.revision.id == "2007"
-    assert historical.revision.casillas[0].id == "decl.ejercicio"
-    assert historical.revision.constructs == ()
-    assert historical.revision.export_layouts == ()
-    assert historical.revision.application_links[0].id == "modelo-576-filing"
-    assert historical.revision.application_links[0].surface == "filing"
-    assert historical.revision.application_links[0].consumer == "cadrumo.application.filing"
-    assert historical.revision.workbook_parity_refs[0].source_refs == ("boe-modelo-576-2005-form",)
-    assert set(historical.revision.source_refs) == {
+    assert historical.id == "2007"
+    assert historical.casillas[0].id == "decl.ejercicio"
+    assert historical.constructs == ()
+    assert historical.export_layouts == ()
+    assert historical.application_links[0].id == "modelo-576-filing"
+    assert historical.application_links[0].surface == "filing"
+    assert historical.application_links[0].consumer == "cadrumo.application.filing"
+    assert historical.workbook_parity_refs[0].source_refs == ("boe-modelo-576-2005-form",)
+    assert set(historical.source_refs) == {
         "boe-modelo-576-2005-form",
         "boe-modelo-576-2005-procedure",
     }
-    historical_capability = revision_capability_probe(historical.revision, modelo_id=modelo.id)
+    historical_capability = revision_capability_probe(historical, modelo_id=modelo.id)
     assert not historical_capability.has_fixed_width_export
     assert not historical_capability.has_xml_dictionary_export
     assert not historical_capability.has_extractor
     assert historical_capability.extraction_profile_count == 0
 
-    assert design_era.revision.id == "2008-y-siguientes"
-    layout = design_era.revision.export_layouts[0]
+    assert design_era.id == "2008-y-siguientes"
+    layout = design_era.export_layouts[0]
     fields = layout.records[0].fields
-    assert len(design_era.revision.casillas) == 42
-    assert len(design_era.revision.application_links) == 2
+    assert len(design_era.casillas) == 42
+    assert len(design_era.application_links) == 2
     assert layout.source_refs == ("aeat-dr-576-2008",)
     assert len(fields) == 60
     extents: list[int] = []
@@ -135,8 +130,8 @@ def test_modelo_576_selects_the_2007_form_only_revision_before_the_2008_record_d
 
 
 def test_modelo_576_2007_filing_mutation_reaches_the_generic_no_layout_refusal() -> None:
-    """Even a hypothetical filing-grade promotion cannot manufacture a 2007 writer."""
-    modelo, catalogues = _committed_modelo("576")
+    """The historical revision still fails the generic writer-capability check."""
+    modelo, _catalogues = _committed_modelo("576")
     historical = modelo.revisions["2007"]
     promoted = historical.model_copy(
         update={
@@ -152,10 +147,4 @@ def test_modelo_576_2007_filing_mutation_reaches_the_generic_no_layout_refusal()
         RegistryValidationError,
         match=r"modelo 576 revision 2007 declares no export layout",
     ):
-        build_validated_snapshot(
-            mutated,
-            catalogues,
-            filing_year=2007,
-            period="0A",
-            revision_id="2007",
-        )
+        check_snapshot_filing_capability(mutated, promoted)

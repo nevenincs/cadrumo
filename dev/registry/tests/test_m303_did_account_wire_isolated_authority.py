@@ -35,7 +35,6 @@ from cadrumo.core.modelo import Modelo
 from cadrumo.core.payment_election import PaymentElection
 from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
-from cadrumo.core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from cadrumo.core.refund_election import RefundElection
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.result_disposition import ResultDisposition
@@ -58,6 +57,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     FilingEnvelopePrefixRole,
 )
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.deadlines.models import (
     ChargeAccount,
     IVARegime,
@@ -67,6 +67,7 @@ from cadrumo.domain.deadlines.models import (
     TaxpayerProfile,
 )
 from cadrumo.domain.filing.schema import ModeloDraft
+from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
 from cadrumo.domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
@@ -80,7 +81,6 @@ from cadrumo.domain.modelos.calculation_revision_m303_evidence import M303Exoner
 from cadrumo.domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
 from cadrumo.domain.prorrata_register.register import ProrrataRegister
 from cadrumo.domain.submission.models import ModeloDraftStatus
-from cadrumo.tests.registry_snapshot import build_snapshot
 from dev.registry.compiler.loader import load_modelo_directory
 from dev.registry.compiler.record_design import extract_record_design
 

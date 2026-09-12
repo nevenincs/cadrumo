@@ -1,5 +1,8 @@
 [[revisions."2023-y-siguientes".casillas]]
 id = "iva.autorepercutido.intracomunitaria"
+continuidad_id = "iva-cuota-autorepercutida-intracomunitaria"
+continuidad_origin = "grounded"
+continuidad_evidence = "Internal Modelo 309 authority preserves this virtual calculation concept across 2018-2022 and 2023-y-siguientes: the row retains id iva.autorepercutido.intracomunitaria, semantic_role iva_cuota_autorepercutida_intracomunitaria, section iva/no_periodica/inversion_sujeto_pasivo, money/bound shape, and binding modelo-309-iva-autorepercutido-intracomunitaria-cuota; the same modelo-309-iva-no-periodica construct enrollment and calculation consumer surface remain unchanged."
 number = "iva.autorepercutido.intracomunitaria"
 section = ["iva", "no_periodica", "inversion_sujeto_pasivo"]
 data_type = "money"
@@ -11,6 +14,9 @@ legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-hac-3625-2003:
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "iva.soportado.recargo-equivalencia"
+continuidad_id = "iva-cuota-soportada-recargo-equivalencia"
+continuidad_origin = "grounded"
+continuidad_evidence = "Internal Modelo 309 authority preserves this virtual calculation concept across 2018-2022 and 2023-y-siguientes: the row retains id iva.soportado.recargo-equivalencia, semantic_role iva_cuota_soportada_recargo_equivalencia, section iva/no_periodica/soportado, money/bound shape, and binding modelo-309-iva-soportado-recargo-equivalencia-cuota; the same modelo-309-iva-no-periodica construct enrollment and calculation consumer surface remain unchanged."
 number = "iva.soportado.recargo-equivalencia"
 section = ["iva", "no_periodica", "soportado"]
 data_type = "money"
@@ -22,6 +28,9 @@ legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-hac-3625-2003:
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "iva.cuota-no-periodica-total"
+continuidad_id = "iva-cuota-no-periodica-total"
+continuidad_origin = "grounded"
+continuidad_evidence = "Internal Modelo 309 authority preserves this virtual calculation concept across 2018-2022 and 2023-y-siguientes: the internal_only computed row retains id iva.cuota-no-periodica-total, semantic_role iva_cuota_no_periodica_total, section iva/no_periodica/totales, formula modelo-309-iva-cuota-no-periodica-total, and the same two cuota-leaf inputs in the modelo-309-iva-no-periodica construct; no calculation consumer contract changes."
 internal_only = true
 number = "iva.cuota-no-periodica-total"
 section = ["iva", "no_periodica", "totales"]

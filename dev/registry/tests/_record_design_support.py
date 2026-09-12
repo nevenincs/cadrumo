@@ -19,7 +19,7 @@ from cadrumo.domain.calculations.registry.binding_selector_utils import (
 from cadrumo.domain.calculations.registry.export import resolve_export_layout
 from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignSheet
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.record_design import (
     extract_record_design,

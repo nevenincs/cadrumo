@@ -43,7 +43,6 @@ legal_refs = [
     "rd-1065-2007:art-34",
     "ley-58-2003:art-93",
 ]
-source_refs = ["aeat-dr-347-2011", "aeat-modelo-347-procedure"]
 
 [[revisions."2011-2024".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
@@ -60,7 +59,6 @@ legal_refs = [
     "rd-1065-2007:art-34",
     "ley-58-2003:art-93",
 ]
-source_refs = ["aeat-dr-347-2011", "aeat-modelo-347-procedure"]
 
 [[revisions."2011-2024".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
@@ -75,7 +73,6 @@ legal_refs = [
     "orden-eha-3012-2008:art-1",
     "rd-1065-2007:art-33",
 ]
-source_refs = ["aeat-dr-347-2011", "aeat-modelo-347-procedure"]
 
 [[revisions."2011-2024".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
@@ -90,7 +87,6 @@ legal_refs = [
     "orden-eha-3012-2008:art-1",
     "rd-1065-2007:art-34",
 ]
-source_refs = ["aeat-dr-347-2011", "aeat-modelo-347-procedure"]
 
 [[revisions."2011-2024".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
@@ -105,7 +101,6 @@ legal_refs = [
     "orden-eha-3012-2008:art-1",
     "rd-1065-2007:art-33",
 ]
-source_refs = ["aeat-dr-347-2011", "aeat-modelo-347-procedure"]
 
 [[revisions."2011-2024".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
@@ -120,7 +115,6 @@ legal_refs = [
     "orden-eha-3012-2008:art-1",
     "rd-1065-2007:art-33",
 ]
-source_refs = ["aeat-dr-347-2011", "aeat-modelo-347-procedure"]
 
 [[revisions."2011-2024".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
@@ -135,7 +129,6 @@ legal_refs = [
     "orden-eha-3012-2008:art-1",
     "rd-1065-2007:art-33",
 ]
-source_refs = ["aeat-dr-347-2011", "aeat-modelo-347-procedure"]
 
 [[revisions."2011-2024".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
@@ -150,7 +143,6 @@ legal_refs = [
     "orden-eha-3012-2008:art-1",
     "rd-1065-2007:art-33",
 ]
-source_refs = ["aeat-dr-347-2011", "aeat-modelo-347-procedure"]
 
 [[revisions."2011-2024".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
@@ -166,7 +158,6 @@ legal_refs = [
     "rd-1065-2007:art-31",
     "rd-1065-2007:art-33",
 ]
-source_refs = ["aeat-dr-347-2011", "aeat-modelo-347-procedure"]
 
 [[revisions."2011-2024".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"

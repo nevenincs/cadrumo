@@ -278,6 +278,9 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2023".casillas]]
 id = "500"
+continuidad_id = "m322-prorratas-1-codigo-cnae"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/04-322-ejercicio-2022-y-siguientes.xls.extracted.md:233 (sha256 be029175f11e) DR32204 campo 3 posicion 13 len 3 An box [500]; corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:246 (sha256 540805f09ca3) DR32204 campo 3 posicion 13 len 3 An box [500]; misma descripcion, campo, posicion, longitud, tipo y contenido CNAE.TXT."
 number = "500"
 section = ["iva", "prorratas"]
 data_type = "text"
@@ -287,8 +290,11 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "501"
+continuidad_id = "m322-prorratas-1-importe-operaciones"
+continuidad_origin = "seeded"
 number = "501"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_1_importe_operaciones"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -296,8 +302,11 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "502"
+continuidad_id = "m322-prorratas-1-importe-operaciones-con-derecho-a-deduccion"
+continuidad_origin = "seeded"
 number = "502"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_1_importe_operaciones_con_derecho_a_deduccion"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -305,8 +314,11 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "503"
+continuidad_id = "m322-prorratas-1-tipo-de-prorrata"
+continuidad_origin = "seeded"
 number = "503"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_1_tipo_de_prorrata"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -314,8 +326,11 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "504"
+continuidad_id = "m322-prorratas-1-porcentaje-de-prorrata"
+continuidad_origin = "seeded"
 number = "504"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_1_porcentaje_de_prorrata"
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -323,6 +338,9 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "505"
+continuidad_id = "m322-prorratas-2-codigo-cnae"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/04-322-ejercicio-2022-y-siguientes.xls.extracted.md:238 (sha256 be029175f11e) DR32204 campo 8 posicion 56 len 3 An box [505]; corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:251 (sha256 540805f09ca3) DR32204 campo 8 posicion 56 len 3 An box [505]; misma descripcion, campo, posicion, longitud, tipo y contenido CNAE.TXT."
 number = "505"
 section = ["iva", "prorratas"]
 data_type = "text"
@@ -332,8 +350,11 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "506"
+continuidad_id = "m322-prorratas-2-importe-operaciones"
+continuidad_origin = "seeded"
 number = "506"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_2_importe_operaciones"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -341,8 +362,11 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "507"
+continuidad_id = "m322-prorratas-2-importe-operaciones-con-derecho-a-deduccion"
+continuidad_origin = "seeded"
 number = "507"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_2_importe_operaciones_con_derecho_a_deduccion"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -350,8 +374,11 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "508"
+continuidad_id = "m322-prorratas-2-tipo-de-prorrata"
+continuidad_origin = "seeded"
 number = "508"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_2_tipo_de_prorrata"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -359,8 +386,11 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "509"
+continuidad_id = "m322-prorratas-2-porcentaje-de-prorrata"
+continuidad_origin = "seeded"
 number = "509"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_2_porcentaje_de_prorrata"
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -380,6 +410,9 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2023".casillas]]
 id = "510"
+continuidad_id = "m322-prorratas-3-codigo-cnae"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/04-322-ejercicio-2022-y-siguientes.xls.extracted.md:243 (sha256 be029175f11e) DR32204 campo 13 posicion 99 len 3 An box [510]; corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:256 (sha256 540805f09ca3) DR32204 campo 13 posicion 99 len 3 An box [510]; misma descripcion, campo, posicion, longitud, tipo y contenido CNAE.TXT."
 number = "510"
 section = ["iva", "prorratas"]
 data_type = "text"
@@ -389,8 +422,11 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "511"
+continuidad_id = "m322-prorratas-3-importe-operaciones"
+continuidad_origin = "seeded"
 number = "511"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_3_importe_operaciones"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -398,8 +434,11 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "512"
+continuidad_id = "m322-prorratas-3-importe-operaciones-con-derecho-a-deduccion"
+continuidad_origin = "seeded"
 number = "512"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_3_importe_operaciones_con_derecho_a_deduccion"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -407,8 +446,11 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "513"
+continuidad_id = "m322-prorratas-3-tipo-de-prorrata"
+continuidad_origin = "seeded"
 number = "513"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_3_tipo_de_prorrata"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -416,8 +458,11 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "514"
+continuidad_id = "m322-prorratas-3-porcentaje-de-prorrata"
+continuidad_origin = "seeded"
 number = "514"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_3_porcentaje_de_prorrata"
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -425,6 +470,9 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "515"
+continuidad_id = "m322-prorratas-4-codigo-cnae"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/04-322-ejercicio-2022-y-siguientes.xls.extracted.md:248 (sha256 be029175f11e) DR32204 campo 18 posicion 142 len 3 An box [515]; corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:261 (sha256 540805f09ca3) DR32204 campo 18 posicion 142 len 3 An box [515]; misma descripcion, campo, posicion, longitud, tipo y contenido CNAE.TXT."
 number = "515"
 section = ["iva", "prorratas"]
 data_type = "text"
@@ -434,8 +482,11 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "516"
+continuidad_id = "m322-prorratas-4-importe-operaciones"
+continuidad_origin = "seeded"
 number = "516"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_4_importe_operaciones"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -443,8 +494,11 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "517"
+continuidad_id = "m322-prorratas-4-importe-operaciones-con-derecho-a-deduccion"
+continuidad_origin = "seeded"
 number = "517"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_4_importe_operaciones_con_derecho_a_deduccion"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -452,8 +506,11 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "518"
+continuidad_id = "m322-prorratas-4-tipo-de-prorrata"
+continuidad_origin = "seeded"
 number = "518"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_4_tipo_de_prorrata"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -461,8 +518,11 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "519"
+continuidad_id = "m322-prorratas-4-porcentaje-de-prorrata"
+continuidad_origin = "seeded"
 number = "519"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_4_porcentaje_de_prorrata"
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -482,6 +542,9 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2023".casillas]]
 id = "520"
+continuidad_id = "m322-prorratas-5-codigo-cnae"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/04-322-ejercicio-2022-y-siguientes.xls.extracted.md:253 (sha256 be029175f11e) DR32204 campo 23 posicion 185 len 3 An box [520]; corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:266 (sha256 540805f09ca3) DR32204 campo 23 posicion 185 len 3 An box [520]; misma descripcion, campo, posicion, longitud, tipo y contenido CNAE.TXT."
 number = "520"
 section = ["iva", "prorratas"]
 data_type = "text"
@@ -491,8 +554,11 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "521"
+continuidad_id = "m322-prorratas-5-importe-operaciones"
+continuidad_origin = "seeded"
 number = "521"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_5_importe_operaciones"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -500,8 +566,11 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "522"
+continuidad_id = "m322-prorratas-5-importe-operaciones-con-derecho-a-deduccion"
+continuidad_origin = "seeded"
 number = "522"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_5_importe_operaciones_con_derecho_a_deduccion"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -509,8 +578,11 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "523"
+continuidad_id = "m322-prorratas-5-tipo-de-prorrata"
+continuidad_origin = "seeded"
 number = "523"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_5_tipo_de_prorrata"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -518,8 +590,11 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104
 
 [[revisions."2023".casillas]]
 id = "524"
+continuidad_id = "m322-prorratas-5-porcentaje-de-prorrata"
+continuidad_origin = "seeded"
 number = "524"
 section = ["iva", "prorratas"]
+semantic_role = "m322_prorratas_5_porcentaje_de_prorrata"
 data_type = "ratio"
 required = false
 input_kind = "manual"

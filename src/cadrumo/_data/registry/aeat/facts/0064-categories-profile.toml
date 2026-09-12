@@ -749,6 +749,24 @@ entries = [
 ]
 
 [[fact.variants]]
+variant_id = "categories.profile:iva-deductibility-hint:2022-2026"
+selectors = [
+  { name = "scope", value = "iva_deductibility_hint" },
+]
+date_axis = "filing_period"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+source_refs = ["boe-rirpf-category-profile-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "iva_deductibility_hint.order", value = "general,exempt_or_non_subject,non_deductible_input" },
+  { key = "iva_deductibility_hint.semantics", value = "Local IVA hint kept decoupled from the IVA taxonomy branch." },
+]
+
+[[fact.variants]]
 variant_id = "categories.profile:arrendamiento_vivienda_afecto:2023"
 selectors = [
   { name = "category", value = "arrendamiento_vivienda_afecto" },

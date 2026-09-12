@@ -4,655 +4,561 @@ id = "modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-i
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-14", offset = 14, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-1"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-1", offset = 19, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-1"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-1", offset = 81, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-porcentaje-titularidad-2"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-94", offset = 94, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-2"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-2", offset = 99, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-2"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-2", offset = 161, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-porcentaje-titularidad-3"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-174", offset = 174, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-3"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-descripcion-3", offset = 179, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-3"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-valor-3", offset = 241, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-1"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-1", offset = 267, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-p-opciones-contractuales-descripcion-1"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-p-opciones-contractuales-descripcion-1", offset = 272, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-p-opciones-contractuales-valor-1"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-p-opciones-contractuales-valor-1", offset = 334, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-2"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-2", offset = 347, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-p-opciones-contractuales-descripcion-2"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-p-opciones-contractuales-descripcion-2", offset = 352, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-p-opciones-contractuales-valor-2"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-p-opciones-contractuales-valor-2", offset = 414, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-3"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-p-opciones-contractuales-porcentaje-titularidad-3", offset = 427, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-p-opciones-contractuales-descripcion-3"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-p-opciones-contractuales-descripcion-3", offset = 432, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-p-opciones-contractuales-valor-3"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-p-opciones-contractuales-valor-3", offset = 494, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-1"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-1", offset = 520, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-1"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-1", offset = 521, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-1"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-1", offset = 526, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-1"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-1", offset = 588, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-1"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-1", offset = 601, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-2"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-2", offset = 614, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-2"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-2", offset = 615, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-2"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-2", offset = 620, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-2"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-2", offset = 682, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-2"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-2", offset = 695, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-3"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-clave-3", offset = 708, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-3"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-porcentaje-titularidad-3", offset = 709, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-3"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-descripcion-3", offset = 714, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-3"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-no-de-unidades-3", offset = 776, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-3"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-q-saldos-en-monedas-virtuales-valor-euros-3", offset = 789, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-1"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-1", offset = 815, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-1"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-1", offset = 816, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-1"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-1", offset = 821, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-1"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-1", offset = 883, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-2"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-2", offset = 896, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-2"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-2", offset = 897, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-2"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-2", offset = 902, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-2"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-2", offset = 964, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-3"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-3", offset = 977, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-3"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-3", offset = 978, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-3"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-3", offset = 983, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-3"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-3", offset = 1045, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-4"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-4", offset = 1058, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-4"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-4", offset = 1059, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-4"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-4", offset = 1064, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-4"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-4", offset = 1126, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-5"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-clave-5", offset = 1139, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-5"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-porcentaje-titularidad-5", offset = 1140, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-5"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-descripcion-5", offset = 1145, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-5"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-r-demas-bienes-y-derechos-de-contenido-economico-valor-5", offset = 1207, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-porcentaje-titularidad-1"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-porcentaje-titularidad-1", offset = 1233, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-1"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-nif-nie-persona-o-entidad-acreedora-1", offset = 1238, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-nif-otro-pais-1"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-nif-otro-pais-1", offset = 1258, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-descripcion-1"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-descripcion-1", offset = 1259, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-valor-1"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-valor-1", offset = 1321, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-porcentaje-titularidad-2"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-porcentaje-titularidad-2", offset = 1334, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-2"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-nif-nie-persona-o-entidad-acreedora-2", offset = 1339, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-nif-otro-pais-2"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-nif-otro-pais-2", offset = 1359, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-descripcion-2"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-descripcion-2", offset = 1360, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-valor-2"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-valor-2", offset = 1422, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-porcentaje-titularidad-3"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-porcentaje-titularidad-3", offset = 1435, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-3"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-nif-nie-persona-o-entidad-acreedora-3", offset = 1440, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-nif-otro-pais-3"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-nif-otro-pais-3", offset = 1460, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-descripcion-3"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-descripcion-3", offset = 1461, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-valor-3"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-valor-3", offset = 1523, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-porcentaje-titularidad-4"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-porcentaje-titularidad-4", offset = 1536, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-4"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-nif-nie-persona-o-entidad-acreedora-4", offset = 1541, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-nif-otro-pais-4"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-nif-otro-pais-4", offset = 1561, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-descripcion-4"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-descripcion-4", offset = 1562, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-valor-4"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-valor-4", offset = 1624, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-porcentaje-titularidad-5"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-porcentaje-titularidad-5", offset = 1637, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-5"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-nif-nie-persona-o-entidad-acreedora-5", offset = 1642, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-nif-otro-pais-5"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-nif-otro-pais-5", offset = 1662, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-descripcion-5"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-descripcion-5", offset = 1663, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-valor-5"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-valor-5", offset = 1725, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-porcentaje-titularidad-6"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-porcentaje-titularidad-6", offset = 1738, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-6"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-nif-nie-persona-o-entidad-acreedora-6", offset = 1743, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-nif-otro-pais-6"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-nif-otro-pais-6", offset = 1763, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-descripcion-6"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-descripcion-6", offset = 1764, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-valor-6"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-valor-6", offset = 1826, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-porcentaje-titularidad-7"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-porcentaje-titularidad-7", offset = 1839, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-7"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-nif-nie-persona-o-entidad-acreedora-7", offset = 1844, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-nif-otro-pais-7"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-nif-otro-pais-7", offset = 1864, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-descripcion-7"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-descripcion-7", offset = 1865, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-valor-7"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-valor-7", offset = 1927, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-porcentaje-titularidad-8"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-porcentaje-titularidad-8", offset = 1940, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-nif-nie-persona-o-entidad-acreedora-8"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-nif-nie-persona-o-entidad-acreedora-8", offset = 1945, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-nif-otro-pais-8"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-nif-otro-pais-8", offset = 1965, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-descripcion-8"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-descripcion-8", offset = 1966, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.deudas-deducibles-valor-8"
 provider = { kind = "manual_input", record = "714-08", field = "deudas-deducibles-valor-8", offset = 2028, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
 id = "modelo-714.714-08.indicador-de-pagina-complementaria-714-08"
 provider = { kind = "manual_input", record = "714-08", field = "indicador-de-pagina-complementaria-714-08", offset = 12, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]

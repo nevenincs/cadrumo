@@ -16,7 +16,6 @@ expression = { op = "min", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-30", "rd-439-2007:art-30"]
-source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2020".formulas.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"

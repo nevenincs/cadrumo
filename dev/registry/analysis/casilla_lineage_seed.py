@@ -95,9 +95,12 @@ from itertools import pairwise
 from pathlib import Path
 
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
-from cadrumo.domain.calculations.registry.casilla_lineage_totality import unresolved_successor_rows
+from cadrumo.domain.calculations.registry.casilla_lineage_totality import (
+    judging_predecessor,
+    unresolved_successor_rows,
+)
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
-from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
+from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -109,11 +112,14 @@ from .casilla_id_grammar import classify_casilla_id
 
 __all__ = [
     "EXCLUDED_MODELOS",
+    "SCHEMA_EVIDENCE_LIMIT",
     "CarriedRefusal",
     "DesignInventory",
+    "DesignPlacement",
     "ExcludedModelo",
     "LineagePlan",
     "LineageRefusalCategory",
+    "LongEvidence",
     "ModeloLoadFailure",
     "PartialStamping",
     "PartialStampingError",
@@ -123,9 +129,11 @@ __all__ = [
     "contradictions",
     "gate_regressions",
     "insert_lineage_keys",
+    "judged_pairs",
     "load_corpus",
     "load_previous_ledger",
     "parse_design_inventory",
+    "partition_contradictions",
     "plan_corpus",
     "plan_modelo",
     "render_ledger",
@@ -145,7 +153,6 @@ class LineageRefusalCategory(StrEnum):
     NOT_EXAMINED = "not_examined"
     ABSENCE_UNCLASSIFIED = "absence_unclassified"
     ABSENCE_UNLOCALISED = "absence_unlocalised"
-    OVERLAPPING_PREDECESSOR = "overlapping_predecessor"
     RULING_REFUSES_BARE = "ruling_refuses_bare"
     POSITIONAL_HOLD = "positional_hold"
     PARTIAL_STAMP = "partial_stamp"
@@ -221,15 +228,42 @@ EXCLUDED_MODELOS: Mapping[str, ExcludedModelo] = {
 }
 
 _PLAIN_INTEGER = re.compile(r"^\d+$")
-_DESIGN_BOX = re.compile(r"\[\s*(\d{1,5})\s*\]")
+# Beyond a plain number, modelo 036 prints three non-numeric box shapes: a section
+# letter with one or two digits and an optional subdivision letter ([A4], [A72], [B3B]),
+# a bis box ([412bis], [4774bis]) and a dotted subdivision ([716.a]). Each is no wider
+# than the record designs print, so [AB12], [A123], [a4], [412ter] and [716.ab] are not
+# boxes.
+_NON_NUMERIC_BOX = r"\d{1,5}bis|\d{1,5}\.[a-z]|[A-Z]\d{1,2}[A-Z]?"
+_PRINTED_BOX = re.compile(rf"^(?:{_NON_NUMERIC_BOX})$")
+_DESIGN_BOX = re.compile(rf"\[\s*({_NON_NUMERIC_BOX}|\d{{1,5}})\s*\]")
 _ALPHANUMERIC = re.compile(r"\w")
 _LIST_SEPARATOR = re.compile(r"^\s*(?:,|y|e|o|a)\s*$", re.IGNORECASE)
 _OPERATOR_GAP = re.compile(r"^\s*[-+x*/=]\s*$")
+# An extract heads each record's campo table with the page the design prints it on
+# ("# Pag. 3", "# Pág. 6"); every campo row below it belongs to that record.
+_RECORD_HEADING = re.compile(r"^#+\s+(\S.*)$")
 _CASILLA_HEADER = re.compile(r'^\[\[revisions\.(?:"([^"]+)"|([A-Za-z0-9_-]+))\.casillas\]\]\s*$')
 _ID_LINE = re.compile(r'^id\s*=\s*"([^"]+)"\s*$')
 _CONTINUIDAD_ID = re.compile(r"^[a-z0-9][a-z0-9_-]*[a-z0-9]$|^[a-z0-9]$")
-_EVIDENCE_LIMIT = 512
+_EVIDENCE_ADVISORY = 512
+_RECORDED_REASON_LIMIT = 512
 _SNIPPET = 70
+
+
+def _schema_evidence_limit() -> int:
+    """The maximum length the casilla row model accepts for ``continuidad_evidence``.
+
+    Read off the model rather than restated here, so the seeder's bound is the
+    one that will actually refuse the value and cannot drift from it.
+    """
+    for constraint in CasillaDefinition.model_fields["continuidad_evidence"].metadata:
+        limit = getattr(constraint, "max_length", None)
+        if limit is not None:
+            return int(limit)
+    raise ValueError("CasillaDefinition.continuidad_evidence declares no maximum length")
+
+
+SCHEMA_EVIDENCE_LIMIT = _schema_evidence_limit()
 _MIN_POSITIONAL_SPACE = 5
 _MAX_POSITIONAL_EXPANSION = 3.0
 _LINEAGE_KEYS = ("continuidad_id", "continuidad_origin", "continuidad_evidence")
@@ -243,6 +277,25 @@ _PARTIAL_STAMP = (
 
 
 @dataclass(frozen=True, slots=True)
+class DesignPlacement:
+    """Where one design line puts its campo: the record it belongs to and its byte span.
+
+    ``record`` is the record the extract heads the campo table with (``Pag. 3``),
+    ``offset`` the one-based byte position the design prints in its *Posic.*
+    column and ``length`` the width it prints in *Lon*.
+    """
+
+    record: str
+    offset: int
+    length: int
+
+    @property
+    def end(self) -> int:
+        """The first byte position after this campo."""
+        return self.offset + self.length
+
+
+@dataclass(frozen=True, slots=True)
 class DesignInventory:
     """The boxes one official record design prints, with the line each is defined on.
 
@@ -250,48 +303,150 @@ class DesignInventory:
     is an operand of the formula it quotes (``Resultado ([17] + [19] - [25])
     [26]`` prints 26). A cell enumerating boxes (``las casillas [20], [21] y
     [22]``) is a note about boxes, not a campo, and defines none.
+
+    AEAT prints ONE box number across several campo lines when the field it
+    numbers is split into printed components -- a date as dia, mes and ano at
+    ``@263+2``, ``@265+2`` and ``@267+4``, filed under box ``[425]`` alone. Those
+    lines locate the box as surely as a single line does, because together they
+    tile one contiguous span of one record. The same number printed for two
+    unrelated campos does not, and stays unlocalised.
     """
 
     relative_path: str
     sha256: str
-    lines: Mapping[int, tuple[int, ...]]
+    lines: Mapping[int | str, tuple[int, ...]]
     text_by_line: Mapping[int, str]
+    placements: Mapping[int, DesignPlacement]
 
     @property
-    def boxes(self) -> frozenset[int]:
+    def boxes(self) -> frozenset[int | str]:
         """Every box number this design prints."""
         return frozenset(self.lines)
 
-    def defining_line(self, box: int) -> int | None:
-        """The single line printing ``box``, or ``None`` when absent or printed more than once."""
+    def defining_lines(self, box: int | str) -> tuple[int, ...] | None:
+        """The line(s) locating ``box``, or ``None`` when this design locates it nowhere.
+
+        One line locates a box outright. Several locate it only when they are the
+        printed components of ONE field: the same record, and byte spans that tile
+        one contiguous run. Any other repetition prints one number for more than
+        one concept and locates nothing.
+        """
         found = self.lines.get(box, ())
-        return found[0] if len(found) == 1 else None
+        if not found:
+            return None
+        if len(found) == 1:
+            return found
+        return found if self._component_span(found) is not None else None
+
+    def defining_line(self, box: int | str) -> int | None:
+        """The line a citation of ``box`` anchors on, or ``None`` when it is unlocalised.
+
+        For a field printed as several components this is the first of them; the
+        span the components tile is read off :meth:`component_span`.
+        """
+        found = self.defining_lines(box)
+        return None if found is None else found[0]
+
+    def component_span(self, box: int | str) -> DesignPlacement | None:
+        """The one span a multi-component box tiles, or ``None`` when it has none."""
+        found = self.lines.get(box, ())
+        return None if len(found) < 2 else self._component_span(found)
+
+    def unlocalised_reason(self, box: int | str) -> str:
+        """Why several lines printing ``box`` do not locate it, for the refusal prose."""
+        found = self.lines.get(box, ())
+        placed = [self.placements.get(line) for line in found]
+        if any(placement is None for placement in placed):
+            unplaced = [line for line, placement in zip(found, placed, strict=True) if placement is None]
+            return f"lines {list(found)} print it and {unplaced} record no byte position, so no span can be checked"
+        spans = [placement for placement in placed if placement is not None]
+        records = sorted({placement.record for placement in spans})
+        if len(records) > 1:
+            return f"lines {list(found)} print it in different records {records}, so they are not one field"
+        printed = [f"@{placement.offset}+{placement.length}" for placement in sorted(spans, key=lambda p: p.offset)]
+        return f"lines {list(found)} print it at {printed}, which do not tile one contiguous field"
 
     def snippet(self, line: int) -> str:
         """A short excerpt of one design line for evidence prose."""
         text = " ".join(self.text_by_line.get(line, "").replace("|", " ").split())
         return text if len(text) <= _SNIPPET else text[: _SNIPPET - 3] + "..."
 
+    def _component_span(self, found: tuple[int, ...]) -> DesignPlacement | None:
+        """The span ``found`` tiles as components of one field, or ``None`` when they do not."""
+        placed = [self.placements.get(line) for line in found]
+        if any(placement is None for placement in placed):
+            return None
+        spans = sorted((placement for placement in placed if placement is not None), key=lambda p: p.offset)
+        if len({placement.record for placement in spans}) != 1:
+            return None
+        for before, after in pairwise(spans):
+            if before.end != after.offset:
+                return None
+        return DesignPlacement(
+            record=spans[0].record,
+            offset=spans[0].offset,
+            length=spans[-1].end - spans[0].offset,
+        )
+
 
 def parse_design_inventory(text: str, *, relative_path: str, sha256: str) -> DesignInventory:
     """Build a design's box inventory from its extracted text."""
-    lines: dict[int, list[int]] = collections.defaultdict(list)
+    lines: dict[int | str, list[int]] = collections.defaultdict(list)
     text_by_line: dict[int, str] = {}
+    placements: dict[int, DesignPlacement] = {}
+    record = ""
     for number, line in enumerate(text.splitlines(), start=1):
-        for cell in line.split("|"):
+        heading = _RECORD_HEADING.match(line)
+        if heading is not None:
+            record = " ".join(heading.group(1).split())
+            continue
+        cells = line.split("|")
+        for cell in cells:
             box = _defined_box(cell)
             if box is not None:
                 lines[box].append(number)
                 text_by_line[number] = line
+        if number in text_by_line and (placement := _placement(record, cells)) is not None:
+            placements[number] = placement
     return DesignInventory(
         relative_path=relative_path,
         sha256=sha256,
         lines={box: tuple(found) for box, found in lines.items()},
         text_by_line=text_by_line,
+        placements=placements,
     )
 
 
-def _defined_box(cell: str) -> int | None:
+def _placement(record: str, cells: list[str]) -> DesignPlacement | None:
+    """The byte span one campo row prints, or ``None`` when the row prints none.
+
+    A campo row is ``Nº | Posic. | Lon | Tipo | Descripcion ...``; a row that
+    does not print both a position and a width states no span to reason about.
+    """
+    if len(cells) < 3:
+        return None
+    offset, length = cells[1].strip(), cells[2].strip()
+    if not _PLAIN_INTEGER.match(offset) or not _PLAIN_INTEGER.match(length):
+        return None
+    return DesignPlacement(record=record, offset=int(offset), length=int(length))
+
+
+def _box_key(printed: str) -> int | str:
+    """The comparable identity of one printed box token.
+
+    A numeric box compares as an integer, so the five-digit ``[00101]`` and a
+    row numbered ``101`` are the same box. A non-numeric box carries no numeric
+    meaning and compares verbatim, case included.
+    """
+    return int(printed) if _PLAIN_INTEGER.match(printed) else printed
+
+
+def _box_order(box: int | str) -> tuple[int, int, str]:
+    """A total order over boxes for evidence prose: numeric boxes first, then non-numeric ones."""
+    return (0, box, "") if isinstance(box, int) else (1, 0, box)
+
+
+def _defined_box(cell: str) -> int | str | None:
     """The box one design cell prints, or ``None`` when the cell prints none.
 
     Three shapes are told apart: a campo ending with its own box (``... ([16] x
@@ -319,15 +474,22 @@ def _defined_box(cell: str) -> int | None:
             return None
     if len(matches) > 1 and _OPERATOR_GAP.match(cell[matches[-2].end() : matches[-1].start()]):
         return None
-    return int(matches[-1].group(1))
+    return _box_key(matches[-1].group(1))
 
 
-def printed_box(casilla: CasillaDefinition) -> int | None:
-    """Coverage: the printed box a row states in form_number OR a plain-integer number."""
+def printed_box(casilla: CasillaDefinition) -> int | str | None:
+    """Coverage: the printed box a row states in form_number OR its own number.
+
+    A row's own number counts as a printed box when it is a plain integer or one
+    of the non-numeric box shapes the record designs print; anything else -- a
+    slug, a byte range -- is not a box.
+    """
     if casilla.form_number is not None:
         return int(str(casilla.form_number))
     number = casilla.number.strip()
-    return int(number) if _PLAIN_INTEGER.match(number) else None
+    if _PLAIN_INTEGER.match(number):
+        return int(number)
+    return number if _PRINTED_BOX.match(number) else None
 
 
 def identity_box(casilla: CasillaDefinition) -> str | None:
@@ -407,6 +569,21 @@ class Refusal:
     predecessor: str | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class LongEvidence:
+    """One row whose evidence runs past the advisory length but stays within the schema's cap.
+
+    Written, not refused: the schema is the bound, and cutting a checkable
+    citation to a house style loses the one thing the evidence is for. Reported
+    so an unusually long citation is visible without opening the ledger.
+    """
+
+    modelo: str
+    revision: str
+    casilla: str
+    length: int
+
+
 @dataclass(slots=True)
 class LineagePlan:
     """Every disposition for one modelo, plus the key edits that realise them."""
@@ -416,6 +593,14 @@ class LineagePlan:
     counts: collections.Counter[str] = field(default_factory=collections.Counter)
     refusals: list[Refusal] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+    long_evidence: list[LongEvidence] = field(default_factory=list)
+
+    def record_evidence(self, revision: str, casilla_id: str, evidence: str) -> str:
+        """Bound one evidence string by the schema's cap, recording it when it is unusually long."""
+        text = _bounded(evidence)
+        if len(text) > _EVIDENCE_ADVISORY:
+            self.long_evidence.append(LongEvidence(self.modelo, revision, casilla_id, len(text)))
+        return text
 
     def refuse(
         self,
@@ -497,6 +682,26 @@ def load_rulings(path: Path = RULINGS_PATH) -> dict[str, list[Ruling]]:
 
 
 # --------------------------------------------------------------------------- predicates
+
+
+def judged_pairs(
+    modelo: ModeloDefinition, revisions: tuple[ModeloRevision, ...]
+) -> tuple[tuple[ModeloRevision, ModeloRevision], ...]:
+    """Every ``(predecessor, successor)`` edition pair whose successor rows are judged.
+
+    Pairing is the lineage totality rule's own
+    :func:`~cadrumo.domain.calculations.registry.casilla_lineage_totality.judging_predecessor`,
+    reused rather than restated: a predecessor is the edition an edition's rows
+    continue from, which is a closed earlier edition and never a concurrent
+    sibling sharing its validity window. Period selectors do not decide it --
+    two adjacent editions may name overlapping period tokens while the earlier
+    one closes before the later one opens, and those rows do continue.
+    """
+    return tuple(
+        (predecessor, successor)
+        for index, successor in enumerate(revisions)
+        if (predecessor := judging_predecessor(modelo, revisions, index)) is not None
+    )
 
 
 def admit_bare_chain(
@@ -604,9 +809,7 @@ class _ChainState:
                 if casilla.continuidad_id is not None:
                     state.ids[(revision.id, casilla.id)] = casilla.continuidad_id
                     state.members[casilla.continuidad_id].append((revision.id, casilla.id))
-        for previous, successor in pairwise(revisions):
-            if revisions_overlap(previous, successor):
-                continue
+        for previous, successor in judged_pairs(modelo, revisions):
             for casilla in successor.casillas:
                 if casilla.continuidad_id is None:
                     continue
@@ -753,7 +956,7 @@ class _ModeloPlanner:
         if succ_chain is None:
             keys["continuidad_id"] = chain
         if evidence is not None:
-            keys["continuidad_evidence"] = _bounded(evidence)
+            keys["continuidad_evidence"] = self.plan.record_evidence(pair[1], successor.id, evidence)
         self.plan.set_keys(pair[1], successor.id, **keys)
         self.plan.counts[origin.value] += 1
         return None
@@ -762,9 +965,27 @@ class _ModeloPlanner:
         self, revision: str, casilla: CasillaDefinition, origin: CasillaLineageOrigin, evidence: str
     ) -> None:
         self.plan.set_keys(
-            revision, casilla.id, continuidad_origin=origin.value, continuidad_evidence=_bounded(evidence)
+            revision,
+            casilla.id,
+            continuidad_origin=origin.value,
+            continuidad_evidence=self.plan.record_evidence(revision, casilla.id, evidence),
         )
         self.plan.counts[origin.value] += 1
+
+    def _already_disposed(self, casilla: CasillaDefinition) -> bool:
+        """Count a row whose continuation or kind of none the corpus already declares, and stop judging it.
+
+        A declared ``continuidad_origin`` is the disposition the lineage
+        totality rule reads to call the row resolved. Re-judging it here can
+        only disagree with that rule, and a refusal it produced would put an
+        entry in the ledger for a row the gate resolves -- a stale exception,
+        not an unresolved row. Counted under the origin it declares, so the
+        run's report still accounts for every successor row exactly once.
+        """
+        if casilla.continuidad_origin is None:
+            return False
+        self.plan.counts[casilla.continuidad_origin.value] += 1
+        return True
 
     # -- identifier-wide stamping
 
@@ -868,26 +1089,16 @@ class _ModeloPlanner:
     # -- pair walk
 
     def run(self) -> LineagePlan:
-        revisions = ordered_revisions(self.modelo)
-        for previous, successor in pairwise(revisions):
+        pairs = judged_pairs(self.modelo, ordered_revisions(self.modelo))
+        for previous, successor in pairs:
             self._pair(previous, successor)
-        missing = set(self.rulings) - {(p.id, s.id) for p, s in pairwise(revisions)}
+        missing = set(self.rulings) - {(p.id, s.id) for p, s in pairs}
         if missing:
             raise ValueError(f"modelo {self.modelo_id}: rulings name boundaries that do not exist: {sorted(missing)}")
         return self.plan
 
     def _pair(self, previous: ModeloRevision, successor: ModeloRevision) -> None:
         pair = (previous.id, successor.id)
-        if revisions_overlap(previous, successor):
-            for casilla in successor.casillas:
-                if casilla.continuidad_origin is None:
-                    self.plan.refuse(
-                        successor.id,
-                        casilla.id,
-                        LineageRefusalCategory.OVERLAPPING_PREDECESSOR,
-                        f"{previous.id} and {successor.id} share a validity window; neither precedes the other",
-                    )
-            return
         ruling = self.rulings.get(pair)
         claimed = {
             casilla.id
@@ -909,8 +1120,7 @@ class _ModeloPlanner:
         for casilla in successor.casillas:
             if casilla.id in handled:
                 continue
-            if casilla.continuidad_origin is not None:
-                self.plan.counts[casilla.continuidad_origin.value] += 1
+            if self._already_disposed(casilla):
                 continue
             if casilla.continuidad_id is not None and casilla.continuidad_id in prior_chains:
                 self.plan.counts["declared"] += 1
@@ -994,7 +1204,8 @@ class _ModeloPlanner:
                 successor.id,
                 casilla.id,
                 LineageRefusalCategory.ABSENCE_UNCLASSIFIED,
-                f"box [{box}] is printed on more than one line of {succ_design.relative_path}; page is unqualified",
+                f"box [{box}] is printed on more than one line of {succ_design.relative_path}; page is unqualified: "
+                f"{succ_design.unlocalised_reason(box)}",
             )
             return
         if box in prev_design.boxes:
@@ -1004,7 +1215,8 @@ class _ModeloPlanner:
                     successor.id,
                     casilla.id,
                     LineageRefusalCategory.ABSENCE_UNCLASSIFIED,
-                    f"box [{box}] is printed on more than one line of {prev_design.relative_path}; page is unqualified",
+                    f"box [{box}] is printed on more than one line of {prev_design.relative_path}; page is "
+                    f"unqualified: {prev_design.unlocalised_reason(box)}",
                 )
                 return
             self._write_absence(
@@ -1050,8 +1262,7 @@ class _ModeloPlanner:
         for left, right in ruling.grounded:
             prev_row, succ_row = require(prev_rows, left, "predecessor"), require(succ_rows, right, "successor")
             handled.add(right)
-            if succ_row.continuidad_origin is not None:
-                self.plan.counts[succ_row.continuidad_origin.value] += 1
+            if self._already_disposed(succ_row):
                 continue
             if left in self.forbidden or right in self.forbidden:
                 self.plan.refuse(
@@ -1087,8 +1298,10 @@ class _ModeloPlanner:
                 # A contested row names no single predecessor: which one it continues is the open question.
                 for part in filter(None, (piece.strip() for piece in left.split(" + "))):
                     require(prev_rows, part, "predecessor")
-                require(succ_rows, right, "successor")
+                succ_row = require(succ_rows, right, "successor")
                 handled.add(right)
+                if self._already_disposed(succ_row):
+                    continue
                 self.plan.refuse(successor.id, right, category, reason, predecessor=left or None)
         for casilla_id, casilla in succ_rows.items():
             if casilla_id in handled:
@@ -1098,11 +1311,12 @@ class _ModeloPlanner:
             stem = None if casilla_id in prev_rows else stem_of(casilla_id)
             if stem is not None and stem in ruling.held_stems:
                 handled.add(casilla_id)
+                if self._already_disposed(casilla):
+                    continue
                 self.plan.refuse(successor.id, casilla_id, LineageRefusalCategory.HELD, ruling.held_reason)
             elif casilla_id in ruling.new_on_form or (stem is not None and stem in ruling.new_on_form_stems):
                 handled.add(casilla_id)
-                if casilla.continuidad_origin is not None:
-                    self.plan.counts[casilla.continuidad_origin.value] += 1
+                if self._already_disposed(casilla):
                     continue
                 evidence = _ruled_new_evidence(casilla, prev_design, succ_design, ruling.rationale)
                 if evidence is None:
@@ -1117,8 +1331,7 @@ class _ModeloPlanner:
                 self._write_absence(successor.id, casilla, CasillaLineageOrigin.NEW_ON_FORM, evidence)
             elif casilla_id in ruling.not_on_form:
                 handled.add(casilla_id)
-                if casilla.continuidad_origin is not None:
-                    self.plan.counts[casilla.continuidad_origin.value] += 1
+                if self._already_disposed(casilla):
                     continue
                 if printed_box(casilla) is not None:
                     raise ValueError(f"modelo {self.modelo_id}: not_on_form row {casilla_id!r} states a printed box")
@@ -1146,16 +1359,28 @@ class _ModeloPlanner:
 
 
 def _bounded(evidence: str) -> str:
+    """Normalise evidence whitespace, refusing only what the casilla row model itself would refuse.
+
+    The bound is the schema's, read from the model. A shorter house style is
+    not a reason to lose a checkable citation: evidence longer than
+    ``_EVIDENCE_ADVISORY`` but within the schema cap is written and reported,
+    and only evidence the schema would reject stops the run.
+    """
     text = " ".join(evidence.split())
-    if len(text) > _EVIDENCE_LIMIT:
-        raise ValueError(f"evidence exceeds {_EVIDENCE_LIMIT} characters: {text[:120]!r}")
+    if len(text) > SCHEMA_EVIDENCE_LIMIT:
+        raise ValueError(f"evidence exceeds the schema's {SCHEMA_EVIDENCE_LIMIT}-character cap: {text[:120]!r}")
     return text
 
 
 def _with_rationale(locus: str, rationale: str) -> str:
-    """Append the ruling's rationale when it fits; the checkable locus is never cut."""
+    """Append the ruling's rationale when it fits the advisory length; the checkable locus is never cut.
+
+    Composition, not the bound: the rationale is repeated prose and the locus
+    is the part a reader checks, so the rationale is dropped rather than
+    pushing routine evidence past the advisory length.
+    """
     combined = f"{locus}. {rationale}"
-    return combined if len(" ".join(combined.split())) <= _EVIDENCE_LIMIT else f"{locus}."
+    return combined if len(" ".join(combined.split())) <= _EVIDENCE_ADVISORY else f"{locus}."
 
 
 def _cite(design: DesignInventory | None, line: int | None) -> str:
@@ -1176,8 +1401,11 @@ def _row_locus(casilla: CasillaDefinition, design: DesignInventory | str) -> str
     if not isinstance(design, DesignInventory):
         return None
     box = printed_box(casilla)
-    if box is not None and (line := design.defining_line(box)) is not None:
-        return f"{_cite(design, line)} box [{box}] ({design.snippet(line)})"
+    if box is not None and (found := design.defining_lines(box)) is not None:
+        line = found[0]
+        span = design.component_span(box)
+        over = "" if span is None else f" over {len(found)} printed components @{span.offset}+{span.length}"
+        return f"{_cite(design, line)} box [{box}]{over} ({design.snippet(line)})"
     if casilla.segmento and _BYTE_POSITIONS.match(casilla.number.strip()):
         return f"{_cite(design, None)} record {casilla.segmento} campo at byte position {casilla.number.strip()}"
     return None
@@ -1207,8 +1435,9 @@ def _ruled_new_evidence(
     if locus is None or not isinstance(prev_design, DesignInventory):
         return None
     earlier = prev_design.lines.get(box, ()) if box is not None else ()
-    if len(earlier) == 1:
-        line = earlier[0]
+    localised = None if box is None else prev_design.defining_lines(box)
+    if localised is not None:
+        line = localised[0]
         before = f"{_cite(prev_design, line)} prints [{box}] as another concept ({prev_design.snippet(line)})"
     elif earlier:
         before = f"{_cite(prev_design, None)} prints [{box}] only as other concepts, at lines {list(earlier[:4])}"
@@ -1230,7 +1459,7 @@ def _design_trust(
         if isinstance(design, str):
             return design
         stated = {box for casilla in revision.casillas if (box := printed_box(casilla)) is not None}
-        unresolved = sorted(stated - design.boxes)
+        unresolved = sorted(stated - design.boxes, key=_box_order)
         if unresolved:
             return (
                 f"{design.relative_path} does not print {len(unresolved)} box(es) edition {revision.id} declares "
@@ -1240,7 +1469,7 @@ def _design_trust(
         return "the record design pair cannot be read"
     if prev_design.relative_path == succ_design.relative_path:
         return None
-    retired = sorted(prev_design.boxes - succ_design.boxes)
+    retired = sorted(prev_design.boxes - succ_design.boxes, key=_box_order)
     if retired:
         return (
             f"{succ_design.relative_path} retires {len(retired)} box(es) of the predecessor design "
@@ -1458,7 +1687,7 @@ def _recorded_reason(message: str) -> str:
     for prefix in (f"{root}\\", f"{root}/", root):
         text = text.replace(prefix, "")
     text = text.replace("\\", "/")
-    return text if len(text) <= _EVIDENCE_LIMIT else text[: _EVIDENCE_LIMIT - 3] + "..."
+    return text if len(text) <= _RECORDED_REASON_LIMIT else text[: _RECORDED_REASON_LIMIT - 3] + "..."
 
 
 # --------------------------------------------------------------------------- driver
@@ -1703,12 +1932,40 @@ def carried_refusals(previous: PreviousLedger, skipped: Mapping[str, str]) -> tu
     return tuple(carried)
 
 
+def partition_contradictions(
+    checks: Mapping[str, list[str]],
+) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+    """Split contradictions into the ones that refuse the write and the ones recorded instead.
+
+    An excluded modelo is adjudicated by hand outside this tool: its plan comes
+    from :func:`residual_plan` and proposes no edit, so a contradiction found in
+    it survives every run the seeder will ever make. Refusing the whole corpus
+    on its behalf deadlocks every other modelo against a repair this run is not
+    the one to make, and the ledger is whole-corpus or nothing, so the deadlock
+    is total rather than partial.
+
+    Returning it separately is not forgiving it. The second mapping is rendered
+    into the ledger as ``[[excluded_contradiction]]`` with every offending row
+    named, and the first still refuses the write outright, so a modelo this run
+    seeds gains nothing from this split.
+    """
+    blocking: dict[str, list[str]] = {}
+    excluded: dict[str, list[str]] = {}
+    for modelo_id, problems in checks.items():
+        if not problems:
+            continue
+        target = excluded if modelo_id in EXCLUDED_MODELOS else blocking
+        target[modelo_id] = problems
+    return blocking, excluded
+
+
 def render_ledger(
     plans: list[LineagePlan],
     checks: Mapping[str, list[str]],
     load_failures: Iterable[ModeloLoadFailure],
     partial_stampings: Iterable[PartialStamping],
     *,
+    excluded_contradictions: Mapping[str, list[str]] | None = None,
     carried: Iterable[CarriedRefusal] = (),
     judged_at: str = "",
 ) -> str:
@@ -1719,6 +1976,15 @@ def render_ledger(
     ``[[stamping_in_progress]]`` entry. Both are modelo-level because a modelo
     skipped whole dispositions no row and so can name none: neither record
     invents a row key, and neither is read by the lineage totality gate.
+
+    An ``[[excluded_contradiction]]`` records a contradiction found in an
+    excluded modelo's residual plan, naming every offending row. It is
+    modelo-level for a different reason: the rows it names exist and are real,
+    but they are a hand adjudication's to resolve and not this run's, so the
+    entry must not be read as covering them. The gate keeps its teeth where
+    they matter -- a contradiction in a modelo this run seeds still refuses the
+    write outright -- and stops holding the other modelos hostage to a repair
+    it is structurally unable to make.
 
     Skipping a modelo does not drop its rows. It means this run did not rejudge
     them, not that they stopped needing an entry, so every ``[[refusal]]`` the
@@ -1771,6 +2037,15 @@ def render_ledger(
         "# authored corpus, so it is red for exactly as long as an entry stands here. This record",
         "# keeps one modelo's half-finished pass from stopping the other fifty-seven; it does not",
         "# make the half-finished pass tolerable, and no entry here is ever a resting state.",
+        "#",
+        "# An [[excluded_contradiction]] names a contradiction this run found in an EXCLUDED modelo,",
+        "# with every offending row spelled out. An excluded modelo is adjudicated by hand outside",
+        "# this tool, so its plan proposes no edit and the seeder cannot resolve the contradiction",
+        "# however often it runs; refusing the whole corpus on its behalf would deadlock every other",
+        "# modelo against a repair this run is not the one to make. Recording it here is not",
+        "# tolerating it. The contradiction is a live defect in the authored corpus, it is named so a",
+        "# hand adjudication can find it, and the same contradiction in a modelo this run DOES seed",
+        "# still refuses the write outright.",
         "",
     ]
     if judged_at:
@@ -1792,6 +2067,15 @@ def render_ledger(
             f"chain = {json.dumps(record.chain, ensure_ascii=False)}",
             f"stamped = {json.dumps(list(record.stamped), ensure_ascii=False)}",
             f"unstamped = {json.dumps(list(record.unstamped), ensure_ascii=False)}",
+            "",
+        ]
+    for modelo_id, problems in sorted((excluded_contradictions or {}).items()):
+        out += [
+            "[[excluded_contradiction]]",
+            f"modelo = {json.dumps(modelo_id)}",
+            "contradictions = [",
+            *(f"  {json.dumps(problem, ensure_ascii=False)}," for problem in problems),
+            "]",
             "",
         ]
     for plan in plans:
@@ -1895,6 +2179,14 @@ def main(argv: list[str] | None = None) -> int:
         for problem in checks[plan.modelo][:5]:
             print(f"    CONTRADICTION {problem}")
     print("total:", ", ".join(f"{key}={value}" for key, value in sorted(totals.items())))
+    long_evidence = [entry for plan in plans for entry in plan.long_evidence]
+    if long_evidence:
+        longest = max(long_evidence, key=lambda entry: entry.length)
+        print(
+            f"warning: {len(long_evidence)} evidence string(s) longer than {_EVIDENCE_ADVISORY} characters, within "
+            f"the schema cap of {SCHEMA_EVIDENCE_LIMIT}; longest {longest.length} at "
+            f"{longest.modelo} {longest.revision}/{longest.casilla}"
+        )
     # Repeated after the per-modelo lines: a skip scrolls past among fifty-eight of them, and a
     # reader must not have to open the ledger to learn that a modelo was left unseeded.
     if partial_stampings:
@@ -1920,7 +2212,12 @@ def main(argv: list[str] | None = None) -> int:
     for modelo_id in sorted(skipped):
         if modelo_id not in {entry.modelo for entry in carried}:
             print(f"    CARRIED {modelo_id} no previous refusal to carry; the ledger names none of its rows")
-    if any(checks.values()):
+    blocking, excluded_contradictions = partition_contradictions(checks)
+    for modelo_id, problems in sorted(excluded_contradictions.items()):
+        print(f"{modelo_id}: excluded_contradiction; {len(problems)} contradiction(s) left to hand adjudication")
+        for problem in problems:
+            print(f"    EXCLUDED_CONTRADICTION {problem}")
+    if any(blocking.values()):
         print("refusing to write: the plan contains contradictions", file=sys.stderr)
         return 1
     if args.apply:
@@ -1932,6 +2229,7 @@ def main(argv: list[str] | None = None) -> int:
                     checks,
                     load_failures,
                     partial_stampings,
+                    excluded_contradictions=excluded_contradictions,
                     carried=carried,
                     judged_at=run_identifier(),
                 )

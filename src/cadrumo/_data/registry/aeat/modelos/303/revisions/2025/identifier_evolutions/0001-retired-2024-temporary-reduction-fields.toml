@@ -1,0 +1,101 @@
+# The 2024-late DP30302 design introduced temporary DANA and Lorca eligibility
+# and reduction fields. The 2025 design replaces their complete position spans
+# with fields f094, f121, and f148 marked reserved for the AEAT. No 2025 or 2026
+# projection carries these meanings, so the twelve inherited endpoint
+# identifiers retire at the 2025 boundary.
+
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-dana-elegible.slot-1"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-lorca-elegible.slot-1"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-dana-elegible.slot-2"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-lorca-elegible.slot-2"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-agricola.fact-dana-elegible.slot-1"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-agricola.fact-reduccion-dana.slot-1"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-agricola.fact-dana-elegible.slot-2"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-agricola.fact-reduccion-dana.slot-2"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-reduccion-lorca.slot-1"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-reduccion-dana.slot-1"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-reduccion-lorca.slot-2"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]
+
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "projection_endpoints"
+identifier = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-reduccion-dana.slot-2"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-dr-303-2025"]

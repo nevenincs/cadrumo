@@ -14,7 +14,7 @@ from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.convenio import convenio_authority_from_facts
 from ..compiler.fact_loader import load_governed_facts

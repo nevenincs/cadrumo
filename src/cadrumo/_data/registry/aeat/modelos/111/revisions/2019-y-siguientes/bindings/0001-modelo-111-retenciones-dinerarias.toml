@@ -3,7 +3,6 @@ id = "modelo-111-trabajo-dinerario-perceptores"
 provider = { kind = "retenciones_aggregation", target_casilla_id = "01", fact = "perceptor_count_distinct", schemes = ["rendimientos_trabajo", "rendimientos_trabajo_administrador"] }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80"]
-source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 
 [[revisions."2019-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-111-instructions"
@@ -14,7 +13,6 @@ id = "modelo-111-trabajo-dinerario-base"
 provider = { kind = "retenciones_aggregation", target_casilla_id = "02", fact = "taxable_base_sum", schemes = ["rendimientos_trabajo", "rendimientos_trabajo_administrador"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80"]
-source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 
 [[revisions."2019-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-111-instructions"
@@ -25,7 +23,6 @@ id = "modelo-111-trabajo-dinerario-retenciones"
 provider = { kind = "retenciones_aggregation", target_casilla_id = "03", fact = "retencion_amount_sum", schemes = ["rendimientos_trabajo", "rendimientos_trabajo_administrador"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80"]
-source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 
 [[revisions."2019-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-111-instructions"
@@ -36,7 +33,6 @@ id = "modelo-111-actividades-dinerario-perceptores"
 provider = { kind = "retenciones_aggregation", target_casilla_id = "07", fact = "perceptor_count_distinct", schemes = ["actividades_economicas", "actividades_profesionales"] }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 
 [[revisions."2019-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-111-instructions"
@@ -47,7 +43,6 @@ id = "modelo-111-actividades-dinerario-base"
 provider = { kind = "retenciones_aggregation", target_casilla_id = "08", fact = "taxable_base_sum", schemes = ["actividades_economicas", "actividades_profesionales"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 
 [[revisions."2019-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-111-instructions"
@@ -58,7 +53,6 @@ id = "modelo-111-actividades-dinerario-retenciones"
 provider = { kind = "retenciones_aggregation", target_casilla_id = "09", fact = "retencion_amount_sum", schemes = ["actividades_economicas", "actividades_profesionales"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 
 [[revisions."2019-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-111-instructions"
@@ -69,7 +63,6 @@ id = "modelo-111-premios-dinerario-perceptores"
 provider = { kind = "retenciones_aggregation", target_casilla_id = "13", fact = "perceptor_count_distinct", schemes = ["premios"] }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108"]
-source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 
 [[revisions."2019-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-111-instructions"
@@ -80,7 +73,6 @@ id = "modelo-111-premios-dinerario-base"
 provider = { kind = "retenciones_aggregation", target_casilla_id = "14", fact = "taxable_base_sum", schemes = ["premios"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108"]
-source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 
 [[revisions."2019-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-111-instructions"
@@ -91,7 +83,6 @@ id = "modelo-111-premios-dinerario-retenciones"
 provider = { kind = "retenciones_aggregation", target_casilla_id = "15", fact = "retencion_amount_sum", schemes = ["premios"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108"]
-source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 
 [[revisions."2019-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-111-instructions"

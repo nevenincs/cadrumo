@@ -321,7 +321,13 @@ sha256 = "a457ba5c3f0d154ec58bb5347275765b4e930c70b462bd8ba93d560070f2cad8"
 bytes = 152419
 retrieved_at = 2026-07-01
 published_at = 2024-12-31
-applies_from = 2025-01-01
+# THE WINDOW IS THE EJERCICIO GOVERNED, the third instance of this defect in this
+# file. Published 31 December 2024, it recorded the January of presentation and
+# so excluded the 2024 revision that cites it. Its disposicion final unica says
+# it applies "por primera vez, a las declaraciones informativas correspondientes
+# al ejercicio 2024, que se presentaran en el ejercicio 2025". Left open-ended:
+# the 2025 revision cites it in six files.
+applies_from = 2024-01-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-27528"
 review_status = "pending_review"
 

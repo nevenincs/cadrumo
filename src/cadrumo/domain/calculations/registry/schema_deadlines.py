@@ -10,7 +10,6 @@ from typing import Annotated
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from ....core.filing_year import FilingYear
-from ....core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
 from ....core.period import Period, PeriodKind, RegistrySelectorPeriodCode, registry_period_kind
 from ....core.result_disposition import ResultDisposition
 from .condition_mode import ConditionMode, ConditionModeField
@@ -107,12 +106,11 @@ class DeadlineWindowDefinition(RegistryModel):
             raise RegistryValidationError("deadline window tipo_renta_scope must not be empty")
         if len(set(value)) != len(value):
             raise RegistryValidationError("deadline window tipo_renta_scope entries must be unique")
-        unknown_codes = tuple(code for code in value if code not in M210_TIPO_RENTA_CODE_PROJECTION)
-        if unknown_codes:
-            accepted = ", ".join(sorted(M210_TIPO_RENTA_CODE_PROJECTION))
+        malformed_codes = tuple(code for code in value if len(code) != 2 or not code.isdecimal())
+        if malformed_codes:
             raise RegistryValidationError(
-                f"deadline window tipo_renta_scope contains unknown official Modelo 210 codes "
-                f"{unknown_codes!r}; accepted codes: {accepted}",
+                f"deadline window tipo_renta_scope contains malformed official Modelo 210 codes "
+                f"{malformed_codes!r}; codes must be two-digit decimal tokens",
             )
         return value
 

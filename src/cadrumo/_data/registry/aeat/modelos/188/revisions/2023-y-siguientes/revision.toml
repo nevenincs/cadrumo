@@ -1,4 +1,6 @@
 [revisions."2023-y-siguientes"]
+predecessor = "2022"
+reviewed_against = "2022"
 casilla_source_refs = ["boe-modelo-188-form-text", "boe-modelo-188-form-layout"]
 application_link_source_refs = ["aeat-modelo-188-procedure"]
 authority_grade = "applicability"

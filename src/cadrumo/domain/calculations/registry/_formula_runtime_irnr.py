@@ -33,8 +33,6 @@ from typing import TYPE_CHECKING, NoReturn
 
 from ....core.casilla_id import CasillaId
 from ....core.decimal.constants import ZERO
-from ....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
-from ...contribuyente.renta_codes import UE_EEA_COUNTRY_CODES
 from .convenio import ResolvedConvenioOverride, resolve_convenio_override
 from .errors import RegistryValidationError
 from .formula_runtime_ops import (
@@ -52,6 +50,8 @@ from .formula_runtime_ops import (
     resolve_scalar_parameter as _resolve_scalar_parameter,
 )
 from .ids import BindingId, ParameterId
+from .irnr_tipo_renta import require_tipo_renta_irnr, tipo_renta_pension_token
+from .renta_codes_catalogue import is_ue_eea_country_code
 from .schema_formula import FormulaExpression
 
 if TYPE_CHECKING:
@@ -125,6 +125,7 @@ def evaluate_irnr_resolve_tipo_gravamen(expression: FormulaExpression, ctx: _Eva
             tipo_renta=tipo_renta,
             country="",
         )
+    tipo_renta_token = require_tipo_renta_irnr(tipo_renta)
 
     baseline_param = ctx.parameters.get(args.baseline_parameter)
     ctx.operand_refs.extend((args.baseline_parameter, args.country_binding))
@@ -132,7 +133,7 @@ def evaluate_irnr_resolve_tipo_gravamen(expression: FormulaExpression, ctx: _Eva
     country = ctx.enum_binding_values.get(args.country_binding) or ""
     override = _resolve_convenio_override(ctx, country=country, tipo_renta=tipo_renta)
 
-    if tipo_renta == TipoRentaIrnr.PENSION.value:
+    if tipo_renta_token == tipo_renta_pension_token():
         rate = _irnr_pension_effective_rate(args, ctx, override=override, country=country)
         if rate is None:
             _raise_m210_unresolved_outcome(
@@ -230,16 +231,13 @@ def _resolve_convenio_override(
 ) -> ResolvedConvenioOverride | None:
     """Resolve the treaty override for the declared country + income type, or None.
 
-    Hydrates the free-text ``tipo_renta`` casilla value to the closed
-    :class:`~core.TipoRentaIrnr` enum at this boundary; an unrecognised
-    value carries no treaty override (the domestic baseline stands).
+    Hydrates the free-text ``tipo_renta`` casilla value through the dated
+    ``detail-m349-m210-catalogues`` fact at this boundary; an unrecognised
+    value is refused by the typed resolver.
     """
     if not country:
         return None
-    try:
-        tipo_enum = TipoRentaIrnr(tipo_renta)
-    except ValueError:
-        return None
+    tipo_enum = require_tipo_renta_irnr(tipo_renta)
     devengo_date = ctx.date_context.get("filing_period")
     if not isinstance(devengo_date, date):
         raise RegistryValidationError("IRNR convenio override requires a filing_period devengo date")
@@ -257,18 +255,22 @@ def _resolve_convenio_override(
 def _apply_convenio_override(override: ResolvedConvenioOverride, *, baseline_rate: Decimal | None) -> Decimal | None:
     """Apply a non-pension treaty override to the domestic baseline rate."""
     kind = override.kind
-    if kind is ConvenioOverrideKind.EXEMPT:
+    if kind.value == "exempt":
         return ZERO
-    if kind is ConvenioOverrideKind.ALLOCATION_DOMESTIC_TARIFF:
+    if kind.value == "allocation_domestic_tariff":
         return baseline_rate
-    if override.rate is None:
-        return None
-    if kind is ConvenioOverrideKind.FLAT:
+    if kind.value == "flat":
+        if override.rate is None:
+            return None
         return override.rate
-    # CEILING: min(domestic, treaty) — "más favorable" computed, not assumed.
-    if baseline_rate is None:
-        return None
-    return min(baseline_rate, override.rate)
+    if kind.value == "ceiling":
+        # CEILING: min(domestic, treaty) — "más favorable" computed, not assumed.
+        if override.rate is None:
+            return None
+        if baseline_rate is None:
+            return None
+        return min(baseline_rate, override.rate)
+    raise RegistryValidationError(f"unsupported convenio override kind {kind.value!r}")
 
 
 def _irnr_pension_effective_rate(
@@ -281,13 +283,15 @@ def _irnr_pension_effective_rate(
     if country:
         if override is None:
             return None
-        if override.kind is ConvenioOverrideKind.EXEMPT:
+        if override.kind.value == "exempt":
             return ZERO
-        if override.kind is ConvenioOverrideKind.FLAT and override.rate is not None:
+        if override.kind.value == "flat" and override.rate is not None:
             return override.rate
-        if override.kind is ConvenioOverrideKind.CEILING and override.rate is not None:
+        if override.kind.value == "ceiling" and override.rate is not None:
             effective = _m210_effective_rate_from_tariff(args.base_casilla_id, args.pension_tariff_parameter, ctx)
             return min(effective, override.rate)
+        if override.kind.value != "allocation_domestic_tariff":
+            raise RegistryValidationError(f"unsupported convenio override kind {override.kind.value!r}")
         # ALLOCATION_DOMESTIC_TARIFF delegates the amount to the domestic tariff.
     return _m210_effective_rate_from_tariff(args.base_casilla_id, args.pension_tariff_parameter, ctx)
 
@@ -347,7 +351,11 @@ def evaluate_m210_resolve_base_imponible(expression: FormulaExpression, ctx: _Ev
         gross = _numeric_casilla_value(args.gross_casilla_id, ctx)
         if deductible_expenses == ZERO:
             return gross
-        if not _m210_allows_art_24_6_expenses(tipo_renta=tipo_renta, country_code=country):
+        if not _m210_allows_art_24_6_expenses(
+            tipo_renta=tipo_renta,
+            country_code=country,
+            effective_date=ctx.date_context.get("filing_period"),
+        ):
             raise RegistryValidationError(
                 "M210 gastos_deducibles require the EU/EEA Art. 24.6 path",
                 translated_message="errors.calc.m210_gastos_deducibles_not_allowed",
@@ -477,8 +485,16 @@ def _required_parameter_leaf(expression: FormulaExpression, *, op: str, index: i
     return expression.parameter
 
 
-def _m210_allows_art_24_6_expenses(*, tipo_renta: str, country_code: str) -> bool:
-    return tipo_renta == "ue_residente" or country_code in UE_EEA_COUNTRY_CODES
+def _m210_allows_art_24_6_expenses(
+    *,
+    tipo_renta: str,
+    country_code: str,
+    effective_date: date | None,
+) -> bool:
+    return tipo_renta == "ue_residente" or is_ue_eea_country_code(
+        country_code,
+        effective_date=effective_date,
+    )
 
 
 def _m210_imputation_days(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:

@@ -165,12 +165,13 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         ),
     ),
     ChecklistItem(
-        title="Enroll the modelo id in the core Modelo enum",
+        title="Publish the modelo id through registry authority",
         detail=(
-            "src/cadrumo/core/modelo.py: add the new modelo's Modelo.M<code> member so "
-            "production code references it through the enum, never a bare string literal "
-            "(aeat-registry-authority-flow); the registry-parity gate binds enum "
-            "members to registry_modelo_codes()."
+            "Author the modelo definition and revision records under "
+            "src/cadrumo/_data/registry/aeat/modelos/<code>/ so the compiled registry "
+            "authority publishes membership and enumeration (aeat-registry-authority-flow). "
+            "Production code represents an individual identifier with the syntax-only "
+            'Modelo("<code>") value type; do not add a second core catalogue.'
         ),
     ),
     ChecklistItem(

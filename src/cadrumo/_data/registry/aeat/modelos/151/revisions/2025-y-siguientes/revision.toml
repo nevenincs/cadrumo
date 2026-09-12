@@ -1,6 +1,7 @@
 [revisions."2025-y-siguientes"]
 formula_source_refs = ["aeat-modelo-151-procedure"]
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["ley-35-2006:art-93"], source_refs = ["aeat-modelo-151-procedure"] } }
+predecessor = "2015-2022"
+reviewed_against = "2015-2022"
 casilla_source_refs = ["aeat-dr-151-2023"]
 parameter_source_refs = ["aeat-modelo-151-procedure"]
 application_link_source_refs = ["aeat-modelo-151-procedure"]

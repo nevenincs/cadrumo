@@ -15,11 +15,7 @@ legal_refs = [
     "rd-1065-2007:art-31",
     "ley-58-2003:art-93",
 ]
-source_refs = [
-    "aeat-dr-347-2011",
-    "aeat-modelo-347-procedure",
-    "boe-modelo-347-2008-form",
-]
+additional_source_refs = ["boe-modelo-347-2008-form"]
 
 [[revisions."2011-2024".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
@@ -35,11 +31,7 @@ legal_refs = [
     "rd-1065-2007:art-31",
     "ley-58-2003:art-93",
 ]
-source_refs = [
-    "aeat-dr-347-2011",
-    "aeat-modelo-347-procedure",
-    "boe-modelo-347-2008-form",
-]
+additional_source_refs = ["boe-modelo-347-2008-form"]
 
 [[revisions."2011-2024".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"

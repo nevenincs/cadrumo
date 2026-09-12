@@ -7,7 +7,6 @@ expression = { op = "max", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-130-instructions"
@@ -24,7 +23,6 @@ expression = { op = "subtract", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-130-instructions"
@@ -43,7 +41,6 @@ expression = { op = "max", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-130-instructions"
@@ -58,7 +55,6 @@ expression = { op = "subtract", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-130-instructions"
@@ -73,7 +69,6 @@ expression = { op = "percent", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-130-instructions"
@@ -85,7 +80,6 @@ target_casilla_id = "11"
 expression = { op = "subtract", args = [{ casilla_id = "09" }, { casilla_id = "10" }] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-130-instructions"
@@ -100,7 +94,6 @@ expression = { op = "max", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-130-instructions"
@@ -112,7 +105,6 @@ target_casilla_id = "14"
 expression = { op = "subtract", args = [{ casilla_id = "12" }, { casilla_id = "13" }] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-130-instructions"
@@ -130,7 +122,6 @@ expression = { op = "min", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-130-instructions"
@@ -150,7 +141,6 @@ expression = { op = "subtract", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-130-instructions"
@@ -162,7 +152,6 @@ target_casilla_id = "19"
 expression = { op = "subtract", args = [{ casilla_id = "17" }, { casilla_id = "18" }] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
 source_ref = "aeat-modelo-130-instructions"

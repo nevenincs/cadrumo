@@ -38,7 +38,7 @@ legal_refs = [
     "rd-1065-2007:art-34",
     "ley-58-2003:art-93",
 ]
-source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
+additional_source_refs = ["aeat-modelo-347-procedure"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
@@ -56,7 +56,7 @@ legal_refs = [
     "rd-1065-2007:art-34",
     "ley-58-2003:art-93",
 ]
-source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
+additional_source_refs = ["aeat-modelo-347-procedure"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
@@ -72,7 +72,7 @@ legal_refs = [
     "orden-hac-1431-2025:art-1",
     "rd-1065-2007:art-33",
 ]
-source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
+additional_source_refs = ["aeat-modelo-347-procedure"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
@@ -88,7 +88,7 @@ legal_refs = [
     "orden-hac-1431-2025:art-1",
     "rd-1065-2007:art-34",
 ]
-source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
+additional_source_refs = ["aeat-modelo-347-procedure"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
@@ -104,7 +104,7 @@ legal_refs = [
     "orden-hac-1431-2025:art-1",
     "rd-1065-2007:art-33",
 ]
-source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
+additional_source_refs = ["aeat-modelo-347-procedure"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
@@ -120,7 +120,7 @@ legal_refs = [
     "orden-hac-1431-2025:art-1",
     "rd-1065-2007:art-33",
 ]
-source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
+additional_source_refs = ["aeat-modelo-347-procedure"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
@@ -136,7 +136,7 @@ legal_refs = [
     "orden-hac-1431-2025:art-1",
     "rd-1065-2007:art-33",
 ]
-source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
+additional_source_refs = ["aeat-modelo-347-procedure"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
@@ -152,7 +152,7 @@ legal_refs = [
     "orden-hac-1431-2025:art-1",
     "rd-1065-2007:art-33",
 ]
-source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
+additional_source_refs = ["aeat-modelo-347-procedure"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"
@@ -169,7 +169,7 @@ legal_refs = [
     "rd-1065-2007:art-31",
     "rd-1065-2007:art-33",
 ]
-source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
+additional_source_refs = ["aeat-modelo-347-procedure"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-347-procedure"

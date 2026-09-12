@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from cadrumo.domain.calculations.registry.schema_base import (
     chain_family_fields,
     collection_shaped_fields,
+    manifest_only_fields,
     schema_family_fields,
 )
 
@@ -22,7 +23,10 @@ def schema_family_enrollment_failures(model: type[BaseModel]) -> tuple[str, ...]
     families = schema_family_fields(model)
     chains = chain_family_fields(model)
     declared = families | chains
-    shaped = collection_shaped_fields(model)
+    # A collection pinned to the manifest is a claim the edition makes about
+    # itself, not content whose emptiness is a coverage question, so it is
+    # outside both family vocabularies by construction rather than unmarked.
+    shaped = collection_shaped_fields(model) - manifest_only_fields(model)
     failures = [
         f"field {name!r} carries both SCHEMA_FAMILY and CHAIN_FAMILY; a field is a coverage claim or a "
         "chain statement, never both"

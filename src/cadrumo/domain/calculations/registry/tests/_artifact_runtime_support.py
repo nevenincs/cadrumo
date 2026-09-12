@@ -8,6 +8,7 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import validated_casilla_id
 from .....core.classification.policies import SensitivityClass
 from .....core.tax_domain import TaxDomain
+from ..facts.schema import GovernedFact, GovernedFactCatalogue
 from ..schema import (
     BindingDefinition,
     ModeloDefinition,
@@ -61,7 +62,47 @@ def _minimal_catalogues() -> RegistryCatalogues:
     workbook = source.model_copy(
         update={"id": _WORKBOOK_SOURCE_ID, "evidence_tier": "layout_authority", "kind": "record_design"}
     )
-    return RegistryCatalogues(legal={_LEGAL_ID: legal}, sources={source.id: source, workbook.id: workbook})
+    tax_id_format = GovernedFact.model_validate(
+        {
+            "fact_id": "spanish-tax-identifier-format",
+            "family": "mapping",
+            "provider_id": "artifact-fixture",
+            "variants": (
+                {
+                    "variant_id": "spanish-tax-identifier-format:fixture",
+                    "date_axis": "filing_period",
+                    "valid_from": date(2024, 1, 1),
+                    "legal_refs": (_LEGAL_ID,),
+                    "review_status": "agent_reviewed",
+                    "ownership": "authored",
+                    "payload": {
+                        "kind": "mapping",
+                        "entries": (
+                            {"key": "tax_id.width", "value": "9"},
+                            {"key": "tax_id.country_prefix", "value": "ES"},
+                            {"key": "tax_id.country_prefixed_width", "value": "11"},
+                            {"key": "tax_id.country_prefix_strip_width", "value": "2"},
+                            {"key": "tax_id.leaders.prefixed_nif", "value": "KLM"},
+                            {"key": "tax_id.leaders.nie", "value": "XYZ"},
+                            {"key": "tax_id.leaders.cif", "value": "ABCDEFGHJNPQRSUVW"},
+                            {"key": "tax_id.check.nif_letters", "value": "TRWAGMYFPDXBNJZSQVHLCKE"},
+                            {"key": "tax_id.check.nie_prefix.X", "value": "0"},
+                            {"key": "tax_id.check.nie_prefix.Y", "value": "1"},
+                            {"key": "tax_id.check.nie_prefix.Z", "value": "2"},
+                            {"key": "tax_id.check.cif_digit_only_kinds", "value": "ABEH"},
+                            {"key": "tax_id.check.cif_letter_only_kinds", "value": "PQRSNW"},
+                            {"key": "tax_id.check.cif_letter_table", "value": "JABCDEFGHI"},
+                        ),
+                    },
+                },
+            ),
+        }
+    )
+    return RegistryCatalogues(
+        legal={_LEGAL_ID: legal},
+        sources={source.id: source, workbook.id: workbook},
+        facts=GovernedFactCatalogue(facts={tax_id_format.fact_id: tax_id_format}),
+    )
 
 
 def _minimal_revision(

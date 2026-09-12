@@ -14,7 +14,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.validate_exports import validate_embedded_envelope_source_authority
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree

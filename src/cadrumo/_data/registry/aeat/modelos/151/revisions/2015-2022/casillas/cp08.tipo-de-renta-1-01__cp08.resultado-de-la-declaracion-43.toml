@@ -455,6 +455,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Base liquidable del ahorro [18]
 [[revisions."2015-2022".casillas]]
 id = "p08.base-liquidable-del-ahorro-18"
+continuidad_id = "p08-base-liquidable-del-ahorro-18"
 number = "808-824"
 segmento = "M15108000"
 section = ["p08", "base_liquidable_del_ahorro_18"]
@@ -466,6 +467,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Cuota correspondiente a la base liquidable general del ahorro [20]
 [[revisions."2015-2022".casillas]]
 id = "p08.cuota-correspondiente-e-general-del-ahorro-20"
+continuidad_id = "p08-cuota-correspondiente-e-general-del-ahorro-20"
 number = "842-858"
 segmento = "M15108000"
 section = ["p08", "cuota_correspondien_eneral_del_ahorro_20"]
@@ -729,6 +731,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Resultado de la declaración [43]
 [[revisions."2015-2022".casillas]]
 id = "p08.resultado-de-la-declaracion-43"
+continuidad_id = "p08-resultado-de-la-declaracion-43"
 number = "1233-1249"
 segmento = "M15108000"
 section = ["p08", "resultado_de_la_declaracion_43"]

@@ -132,6 +132,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Pagador. Apellidos o Razón social
 [[revisions."2015-2022".casillas]]
 id = "p02.pagador-apellidos-o-razon-social-01"
+continuidad_id = "p02-pagador-apellidos-o-razon-social-01"
 number = "111-170"
 segmento = "M15102000"
 section = ["p02", "pagador"]
@@ -144,6 +145,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Pagador. Nombre
 [[revisions."2015-2022".casillas]]
 id = "p02.pagador-nombre-01"
+continuidad_id = "p02-pagador-nombre-01"
 number = "171-190"
 segmento = "M15102000"
 section = ["p02", "pagador"]
@@ -364,6 +366,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Pagador. Apellidos o Razón social
 [[revisions."2015-2022".casillas]]
 id = "p02.pagador-apellidos-o-razon-social-02"
+continuidad_id = "p02-pagador-apellidos-o-razon-social-02"
 number = "355-414"
 segmento = "M15102000"
 section = ["p02", "pagador"]
@@ -376,6 +379,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Pagador. Nombre
 [[revisions."2015-2022".casillas]]
 id = "p02.pagador-nombre-02"
+continuidad_id = "p02-pagador-nombre-02"
 number = "415-434"
 segmento = "M15102000"
 section = ["p02", "pagador"]
@@ -596,6 +600,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Pagador. Apellidos o Razón social
 [[revisions."2015-2022".casillas]]
 id = "p02.pagador-apellidos-o-razon-social-03"
+continuidad_id = "p02-pagador-apellidos-o-razon-social-03"
 number = "599-658"
 segmento = "M15102000"
 section = ["p02", "pagador"]
@@ -608,6 +613,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Pagador. Nombre
 [[revisions."2015-2022".casillas]]
 id = "p02.pagador-nombre-03"
+continuidad_id = "p02-pagador-nombre-03"
 number = "659-678"
 segmento = "M15102000"
 section = ["p02", "pagador"]
@@ -828,6 +834,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Pagador. Apellidos o Razón social
 [[revisions."2015-2022".casillas]]
 id = "p02.pagador-apellidos-o-razon-social-04"
+continuidad_id = "p02-pagador-apellidos-o-razon-social-04"
 number = "843-902"
 segmento = "M15102000"
 section = ["p02", "pagador"]
@@ -840,6 +847,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Pagador. Nombre
 [[revisions."2015-2022".casillas]]
 id = "p02.pagador-nombre-04"
+continuidad_id = "p02-pagador-nombre-04"
 number = "903-922"
 segmento = "M15102000"
 section = ["p02", "pagador"]

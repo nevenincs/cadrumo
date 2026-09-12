@@ -9,8 +9,6 @@ body_hash: 'sha256:7d015f47fefbbfeaf42f83aef27531fc701e0ef51498078b4d40f65ae3958
 related: []
 ---
 
-
-
 # `profile-key-registration-inversion` reference: application-owned catalogue
 
 The implementation audit traced the profile-key read path, its wizard source,

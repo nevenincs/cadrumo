@@ -32,7 +32,7 @@ from cadrumo.tests.aeat_literal_fixtures import (
     aeat_url,
     configured_path,
 )
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 from ..maintenance_support import LiveParityCatalogue, OracleEnvironment

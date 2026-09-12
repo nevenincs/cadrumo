@@ -5,21 +5,21 @@ single AEAT modelo. This module derives that module set mechanically and emits
 every embedded rate, ejercicio, and operator-facing prose literal. The expected
 set is empty: findings must move to their owning registry or locale authority.
 
-Derivation uses three independent signals, all keyed on
-:class:`cadrumo.core.modelo.Modelo` so that adding a modelo to the enum widens the
-detector with no edit here:
+Derivation uses three independent signals, all constrained by the modelo codes
+compiled from registry authority so that publishing a modelo widens the detector
+with no edit here:
 
 ``module_name``
     A modelo code appears as a token in the module's file name
     (``m347_threshold.py``, ``_applicability_modelo202.py``).
 ``modelo_reference``
-    The module body reads a concrete ``Modelo.M###`` member.
+    The module body constructs a concrete ``Modelo("###")`` value.
 ``defined_symbol``
     A module-level function, class, or constant the module DEFINES carries a
     modelo code token (``evaluate_m210_resolve_base_imponible``).
 
 The third signal is what makes the derivation stronger than a file-name glob:
-``_formula_runtime_irnr.py`` names no modelo and reads no ``Modelo`` member,
+``_formula_runtime_irnr.py`` names no modelo and constructs no ``Modelo`` value,
 yet every evaluator it defines is Modelo 210 scoped.
 
 """
@@ -52,7 +52,6 @@ __all__ = [
     "EvidenceKind",
     "ModeloModuleRecord",
     "census",
-    "modelo_codes",
 ]
 
 _UTF_8: Final[str] = UTF_8

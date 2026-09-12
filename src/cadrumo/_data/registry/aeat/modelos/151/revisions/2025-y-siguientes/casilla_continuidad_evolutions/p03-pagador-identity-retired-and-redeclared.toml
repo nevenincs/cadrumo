@@ -1,0 +1,76 @@
+# The predecessor M15103000 record keeps Pagador. Apellidos o Razón social
+# and Pagador. Nombre as separate concepts. The successor replaces that pair
+# with one 80-byte [52] field. Retire the two old concepts independently and
+# keep the combined successor without either old continuidad_id.
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p03-pagador-apellidos-o-razon-social-01-retired"
+continuidad_id = "p03-pagador-apellidos-o-razon-social-01"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p03-pagador-nombre-01-retired"
+continuidad_id = "p03-pagador-nombre-01"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p03-pagador-apellidos-o-razon-social-02-retired"
+continuidad_id = "p03-pagador-apellidos-o-razon-social-02"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p03-pagador-nombre-02-retired"
+continuidad_id = "p03-pagador-nombre-02"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p03-pagador-apellidos-o-razon-social-03-retired"
+continuidad_id = "p03-pagador-apellidos-o-razon-social-03"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p03-pagador-nombre-03-retired"
+continuidad_id = "p03-pagador-nombre-03"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p03-pagador-apellidos-o-razon-social-04-retired"
+continuidad_id = "p03-pagador-apellidos-o-razon-social-04"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "p03-pagador-nombre-04-retired"
+continuidad_id = "p03-pagador-nombre-04"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]

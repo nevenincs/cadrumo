@@ -149,3 +149,8 @@ An extraction profile names an AEAT artefact this application ingests -- a decla
 design (aeat-dr-145-v20), which the export family already consumes. The application builds its own workbook and fichero from the casillas; it extracts nothing, and no inbound parser for a 145 artefact exists to name. Empty by where this document lives, not by omission."""
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
 source_refs = ["aeat-modelo-145-procedure", "aeat-dr-145-v20"]
+
+[revisions."2012-01-31-y-siguientes".source_default_dispositions.application_links]
+kind = "underivable"
+reason = """
+lift refuses: 3 source_refs statement(s) not textually rewritable: 0001-application-links.toml: source_refs = [; 0001-application-links.toml: source_refs = [; 0001-application-links.toml: source_refs = ["""

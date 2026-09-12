@@ -9,10 +9,10 @@ Both properties are derived rather than listed. A class whose own name carries a
 modelo code (``M303FilingEnvelopeDefinition``, say) is a per-modelo type and its
 fields are its own business; a generically named one must declare no
 modelo-named field. The modules building a :class:`ValidatedRegistryAuthority`
-and its :class:`RegistrySnapshot` values must reference no ``Modelo.M###``
-member at all.
+and its :class:`RegistrySnapshot` values must not branch on a literal
+``Modelo("###")`` value at all.
 
-The code set comes from the :class:`~cadrumo.core.Modelo` enum, so a new modelo
+The code set comes from the published registry authority, so a new modelo
 widens the gate with no edit here. A stale allowlist entry fails.
 """
 
@@ -24,13 +24,13 @@ from pathlib import Path
 
 import pytest
 
-from .....core.modelo import Modelo
 from .....tests.inventory import SRC_CADRUMO, aeat_relative, production_ast_items
+from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-#: Canonical modelo-code value set, derived from the enum.
-_CODES: frozenset[str] = frozenset(modelo.value for modelo in Modelo)
+#: Canonical modelo-code value set, derived from the published authority.
+_CODES: frozenset[str] = frozenset(modelo.id for modelo in bundled_authority().modelos)
 
 #: Registry package whose generic types this gate governs.
 _REGISTRY_PACKAGE = "domain/calculations/registry"
@@ -90,20 +90,25 @@ def _modelo_named_fields_on_generic_types(
 def _modelo_branches_in_generic_construction(
     items: tuple[tuple[Path, ast.AST], ...] | None = None,
 ) -> dict[str, tuple[str, ...]]:
-    """Return every ``Modelo.M###`` member referenced by generic construction."""
+    """Return every literal ``Modelo("###")`` constructed by generic code."""
     found: dict[str, list[str]] = {}
     for path, tree in _registry_items() if items is None else items:
         relative = aeat_relative(path)
         if relative not in _GENERIC_CONSTRUCTION_MODULES:
             continue
         for node in ast.walk(tree):
-            if (
-                isinstance(node, ast.Attribute)
-                and isinstance(node.value, ast.Name)
-                and node.value.id == "Modelo"
-                and _modelo_codes_in_name(node.attr)
+            if not (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id == "Modelo"
+                and len(node.args) == 1
+                and not node.keywords
+                and isinstance(node.args[0], ast.Constant)
+                and isinstance(node.args[0].value, str)
+                and node.args[0].value in _CODES
             ):
-                found.setdefault(relative, []).append(f"Modelo.{node.attr}")
+                continue
+            found.setdefault(relative, []).append(f'Modelo("{node.args[0].value}")')
     return {relative: tuple(members) for relative, members in found.items()}
 
 
@@ -112,7 +117,7 @@ def test_the_registry_package_is_actually_scanned() -> None:
     scanned = {aeat_relative(path) for path, _ in _registry_items()}
     assert f"{_REGISTRY_PACKAGE}/schema.py" in scanned
     assert scanned >= _GENERIC_CONSTRUCTION_MODULES
-    assert (SRC_CADRUMO / _REGISTRY_PACKAGE / "_supplementary_orden.py").is_file()
+    assert (SRC_CADRUMO / _REGISTRY_PACKAGE / "m303_orden_resolution.py").is_file()
 
 
 def test_no_modelo_named_field_on_a_generic_registry_type() -> None:
@@ -167,7 +172,7 @@ def test_a_per_modelo_class_keeps_its_own_modelo_named_fields() -> None:
 
 def test_the_branch_detector_sees_a_planted_modelo_branch() -> None:
     """Prove the branch scan bites, and only inside generic construction."""
-    planted = ast.parse("def construct_authority():\n    return modelo.id == Modelo.M303\n")
+    planted = ast.parse('def construct_authority():\n    return modelo.id == Modelo("303")\n')
     generic = SRC_CADRUMO / _REGISTRY_PACKAGE / "authority.py"
     per_modelo = SRC_CADRUMO / _REGISTRY_PACKAGE / "m303_orden_resolution.py"
 

@@ -260,6 +260,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "liq21-ajuste-cuota-integra-17"
+continuidad_id = "liq21-ajuste-cuota-integra-17"
 number = "17"
 section = ["490_01"]
 data_type = "money"
@@ -270,8 +271,6 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 [[revisions."2021".casillas]]
 id = "resultado-a-deducir-18"
 continuidad_id = "resultado-anteriores-declaraciones"
-continuidad_origin = "grounded"
-continuidad_evidence = "aeat-dr-490-2021; las revision.toml de 2021 y 2022-1t vinculan ambas al mismo diseno DR49001 (ejercicio 2021 y 2022 hasta 1T): Resultado. A deducir [18] en posicion 916 conserva rol, seccion y forma money de 17 caracteres. La division temporal de 2022 no renumera este campo."
 number = "18"
 section = ["490_01"]
 data_type = "money"
@@ -282,8 +281,6 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 [[revisions."2021".casillas]]
 id = "liq21-resultado-19"
 continuidad_id = "resultado-liquidacion"
-continuidad_origin = "grounded"
-continuidad_evidence = "aeat-dr-490-2021; las revision.toml de 2021 y 2022-1t vinculan ambas al mismo diseno DR49001 (ejercicio 2021 y 2022 hasta 1T): Resultado de la liquidacion [19] en posicion 933 conserva rol, seccion y forma money firmada de 17 caracteres. La division temporal de 2022 no renumera este campo."
 number = "19"
 section = ["490_01"]
 data_type = "money"
@@ -343,6 +340,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "490-02-indicador-pagina-complementaria-12"
+continuidad_id = "490-02-indicador-pagina-complementaria-12"
 number = "490-02-indicador-pagina-complementaria"
 section = ["490_02"]
 data_type = "text"
@@ -352,6 +350,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "490-02-regularizacion-ejercicio-13"
+continuidad_id = "490-02-regularizacion-ejercicio-13"
 number = "490-02-regularizacion-ejercicio"
 section = ["490_02"]
 data_type = "year"
@@ -361,6 +360,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-base-positiva-1"
+continuidad_id = "reg21-base-positiva-1"
 number = "1"
 section = ["490_02"]
 data_type = "money"
@@ -370,6 +370,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-base-positiva-8"
+continuidad_id = "reg21-base-positiva-8"
 number = "8"
 section = ["490_02"]
 data_type = "money"
@@ -379,6 +380,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-base-positiva-14"
+continuidad_id = "reg21-base-positiva-14"
 number = "14-51"
 section = ["490_02"]
 data_type = "money"
@@ -388,6 +390,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-base-positiva-20"
+continuidad_id = "reg21-base-positiva-20"
 number = "20"
 section = ["490_02"]
 data_type = "money"
@@ -397,6 +400,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-base-negativa-2"
+continuidad_id = "reg21-base-negativa-2"
 number = "2"
 section = ["490_02"]
 data_type = "money"
@@ -406,6 +410,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-base-negativa-9"
+continuidad_id = "reg21-base-negativa-9"
 number = "9"
 section = ["490_02"]
 data_type = "money"
@@ -415,6 +420,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-base-negativa-15"
+continuidad_id = "reg21-base-negativa-15"
 number = "15-119"
 section = ["490_02"]
 data_type = "money"
@@ -424,6 +430,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-base-negativa-21"
+continuidad_id = "reg21-base-negativa-21"
 number = "21"
 section = ["490_02"]
 data_type = "money"
@@ -433,6 +440,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-base-total-3"
+continuidad_id = "reg21-base-total-3"
 number = "3"
 section = ["490_02"]
 data_type = "money"
@@ -442,6 +450,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-base-total-10"
+continuidad_id = "reg21-base-total-10"
 number = "10-170"
 section = ["490_02"]
 data_type = "money"
@@ -451,6 +460,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-base-total-16"
+continuidad_id = "reg21-base-total-16"
 number = "16-187"
 section = ["490_02"]
 data_type = "money"
@@ -460,6 +470,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-base-total-22"
+continuidad_id = "reg21-base-total-22"
 number = "22"
 section = ["490_02"]
 data_type = "money"
@@ -469,6 +480,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-tipo-4-221"
+continuidad_id = "reg21-tipo-4-221"
 number = "4"
 section = ["490_02"]
 data_type = "ratio"
@@ -478,6 +490,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-tipo-4-224"
+continuidad_id = "reg21-tipo-4-224"
 number = "4-224"
 section = ["490_02"]
 data_type = "ratio"
@@ -487,6 +500,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-tipo-4-227"
+continuidad_id = "reg21-tipo-4-227"
 number = "4-227"
 section = ["490_02"]
 data_type = "ratio"
@@ -496,6 +510,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-tipo-4-230"
+continuidad_id = "reg21-tipo-4-230"
 number = "4-230"
 section = ["490_02"]
 data_type = "ratio"
@@ -505,6 +520,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-positiva-5"
+continuidad_id = "reg21-cuota-positiva-5"
 number = "5"
 section = ["490_02"]
 data_type = "money"
@@ -514,6 +530,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-positiva-11"
+continuidad_id = "reg21-cuota-positiva-11"
 number = "11-250"
 section = ["490_02"]
 data_type = "money"
@@ -523,6 +540,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-positiva-17"
+continuidad_id = "reg21-cuota-positiva-17"
 number = "17-267"
 section = ["490_02"]
 data_type = "money"
@@ -532,6 +550,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-positiva-23"
+continuidad_id = "reg21-cuota-positiva-23"
 number = "23"
 section = ["490_02"]
 data_type = "money"
@@ -541,6 +560,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-negativa-6"
+continuidad_id = "reg21-cuota-negativa-6"
 number = "6"
 section = ["490_02"]
 data_type = "money"
@@ -550,6 +570,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-negativa-12"
+continuidad_id = "reg21-cuota-negativa-12"
 number = "12-318"
 section = ["490_02"]
 data_type = "money"
@@ -559,6 +580,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-negativa-18"
+continuidad_id = "reg21-cuota-negativa-18"
 number = "18-335"
 section = ["490_02"]
 data_type = "money"
@@ -568,6 +590,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-negativa-24"
+continuidad_id = "reg21-cuota-negativa-24"
 number = "24"
 section = ["490_02"]
 data_type = "money"
@@ -577,6 +600,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-total-7"
+continuidad_id = "reg21-cuota-total-7"
 number = "7"
 section = ["490_02"]
 data_type = "money"
@@ -586,6 +610,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-total-13"
+continuidad_id = "reg21-cuota-total-13"
 number = "13-386"
 section = ["490_02"]
 data_type = "money"
@@ -595,6 +620,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-total-19"
+continuidad_id = "reg21-cuota-total-19"
 number = "19-403"
 section = ["490_02"]
 data_type = "money"
@@ -604,6 +630,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg21-cuota-total-25"
+continuidad_id = "reg21-cuota-total-25"
 number = "25"
 section = ["490_02"]
 data_type = "money"

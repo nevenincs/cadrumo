@@ -8,21 +8,25 @@ from __future__ import annotations
 
 import tomllib
 from collections.abc import Mapping
+from datetime import date
 from pathlib import Path
 
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
 from cadrumo.domain.calculations.registry.casilla_lineage_totality import (
     lineage_totality,
     unresolved_successor_rows,
 )
-from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ..analysis.casilla_lineage_ledger import load_ledger_refusals
 from ..analysis.casilla_lineage_seed import (
+    SCHEMA_EVIDENCE_LIMIT,
     CarriedRefusal,
     DesignOracle,
     LineagePlan,
@@ -30,11 +34,13 @@ from ..analysis.casilla_lineage_seed import (
     ModeloLoadFailure,
     PartialStamping,
     PartialStampingError,
+    Ruling,
     admit_bare_chain,
     carried_refusals,
     contradictions,
     gate_regressions,
     insert_lineage_keys,
+    judged_pairs,
     load_corpus,
     load_previous_ledger,
     load_rulings,
@@ -198,8 +204,7 @@ def modelos() -> Mapping[str, ModeloDefinition]:
     of the other fifty-four.
     """
     return {
-        modelo_id: load_modelo_directory(_bundled_source(modelo_id).path)
-        for modelo_id in ("151", "309", "369", "390")
+        modelo_id: load_modelo_directory(_bundled_source(modelo_id).path) for modelo_id in ("151", "309", "369", "390")
     }
 
 
@@ -259,14 +264,40 @@ def test_the_registry_gate_refuses_a_roleless_chain_unless_every_link_is_grounde
 def test_an_excluded_modelo_is_refused_row_by_row_and_never_written(
     modelos: Mapping[str, ModeloDefinition],
 ) -> None:
-    """A ruled row keeps the ruling's category; every other residual row takes the exclusion's."""
-    plan = residual_plan("309", modelos["309"], load_rulings()["309"])
+    """A ruled row keeps the ruling's category; every other residual row takes the exclusion's.
+
+    The exemplars come from the rulings rather than from three hard-coded rows.
+    They were hard-coded, and one of them -- ``2018-2022 decl.transmitente-pais``
+    -- stopped being a residual the moment it was grounded, which failed this
+    test for the corpus getting BETTER. A fixture that has to be edited every
+    time the adjudication campaign lands a row cannot tell a regression from
+    progress, so the invariant is stated against whatever the rulings currently
+    say.
+    """
+    rulings = load_rulings()["309"]
+    plan = residual_plan("309", modelos["309"], rulings)
     categories = {(refusal.revision, refusal.casilla_id): refusal.category for refusal in plan.refusals}
-    assert plan.edits == {}
-    assert categories[("2016-2017", "decl.transmitente-apellidos")] == "withheld"
-    assert categories[("2016-2017", "decl.transmitente-pais")] == "held"
-    assert categories[("2018-2022", "decl.transmitente-pais")] == "absence_unclassified"
+    assert plan.edits == {}, "an excluded modelo is refused row by row and never written"
+
+    ruled: dict[tuple[str, str], str] = {}
+    for ruling in rulings:
+        for category, pairs in (("held", ruling.held), ("withheld", ruling.withheld)):
+            for _, successor_casilla in pairs:
+                ruled[(ruling.successor, successor_casilla)] = category
+    assert ruled, "309's rulings must name at least one held or withheld row for this to test anything"
+
+    for key, category in ruled.items():
+        assert categories[key] == category, f"{key} should keep the ruling's {category}"
+    for key, category in categories.items():
+        if key not in ruled:
+            assert category == "absence_unclassified", f"{key} is unruled and takes the exclusion's category"
+
+    # A ruling recategorises a residual; it never adds or removes one. Without
+    # that, a ruling that silently dropped rows from the plan would leave those
+    # rows unrefused and unwritten, which is the one outcome an excluded modelo
+    # must never produce.
     unruled = residual_plan("309", modelos["309"], ())
+    assert {(refusal.revision, refusal.casilla_id) for refusal in unruled.refusals} == set(categories)
     assert {refusal.category for refusal in unruled.refusals} == {"absence_unclassified"}
 
 
@@ -581,4 +612,247 @@ def test_a_carried_refusal_never_collides_with_one_this_run_judged(tmp_path: Pat
         render_ledger([plan], {_LOADABLE: []}, (), (), carried=(collision,), judged_at=run_identifier())
     # The same render without the collision is fine, so the refusal is the collision's doing.
     text = render_ledger([plan], {_LOADABLE: []}, (), (), carried=(), judged_at=run_identifier())
-    assert '[run]' in text
+    assert "[run]" in text
+
+
+# --------------------------------------------------------------------------- edition pairing
+
+
+_PAIR_ROW = "01"
+_NO_PREDECESSOR = {
+    "none": {
+        "reason": "a parallel scheme variant taking effect alongside its siblings",
+        "legal_refs": ("ley-58-2003:art-29",),
+        "source_refs": ("aeat-manual",),
+    },
+}
+
+
+def _revision(
+    revision_id: str,
+    valid_from: date,
+    valid_to: date | None,
+    years: tuple[int, ...],
+    casillas: tuple[CasillaDefinition, ...],
+    *,
+    no_predecessor: bool = False,
+) -> ModeloRevision:
+    payload: dict[str, object] = {
+        "id": revision_id,
+        "localization_key": f"modelo.schema.test.revision.{revision_id}.label",
+        "valid_from": valid_from,
+        "valid_to": valid_to,
+        "period_selector": PeriodSelector(years=years, periods=("0A",)),
+        "legal_refs": ("ley-58-2003:art-29",),
+        "source_refs": ("aeat-manual",),
+        "casillas": casillas,
+    }
+    if no_predecessor:
+        payload["predecessor"] = _NO_PREDECESSOR
+    return ModeloRevision.model_validate(payload)
+
+
+def _planted_modelo(*revisions: ModeloRevision) -> ModeloDefinition:
+    return ModeloDefinition.model_validate(
+        {
+            "id": _PLANTED,
+            "title_localization_key": "modelo.schema.test.modelo.title",
+            "official_name_localization_key": "modelo.schema.test.modelo.official_name",
+            "tax_domain": "irpf",
+            "cadence": "annual",
+            "jurisdiction": "ES-AEAT",
+            "legal_refs": ("ley-58-2003:art-29",),
+            "source_refs": ("aeat-manual",),
+            "revisions": {revision.id: revision for revision in revisions},
+        },
+    )
+
+
+def test_editions_whose_selectors_overlap_but_whose_validity_succeeds_are_paired() -> None:
+    """The live 308 shape: one edition closes before the next opens, and both name the same year."""
+    closed = _revision("2009-2011-junio", date(2009, 1, 1), date(2011, 6, 30), (2011,), (_casilla(),))
+    successor = _revision(
+        "2011-julio-2015", date(2011, 7, 1), date(2015, 12, 31), (2011,), (_casilla(),), no_predecessor=True
+    )
+    modelo = _planted_modelo(closed, successor)
+
+    # The shape is only interesting while the period selectors DO overlap: that is the reading
+    # the seeder used to pair by, and pairing by dates has to disagree with it here.
+    assert revisions_overlap(closed, successor), "the planted selectors no longer overlap; this gate is vacuous"
+    assert [(previous.id, current.id) for previous, current in judged_pairs(modelo, ordered_revisions(modelo))] == [
+        (str(closed.id), str(successor.id))
+    ]
+
+
+def test_concurrent_scheme_variants_sharing_a_validity_window_are_not_paired() -> None:
+    """The live 369 shape: siblings that take effect together and never close continue nothing."""
+    start = date(2021, 7, 1)
+    first = _revision("esquema-union", start, None, (2021,), (_casilla(),), no_predecessor=True)
+    second = _revision("esquema-importacion", start, None, (2022,), (_casilla(),), no_predecessor=True)
+    modelo = _planted_modelo(first, second)
+
+    # Their selectors do NOT overlap, so selector-reading would have paired them; the dates must not.
+    assert not revisions_overlap(first, second), "the planted selectors now overlap; this gate is vacuous"
+    assert judged_pairs(modelo, ordered_revisions(modelo)) == ()
+
+
+# --------------------------------------------------------------------------- held stems
+
+
+_HELD_STEM = "planted-held"
+_HELD_ROW = f"{_HELD_STEM}-02"
+_HELD_REASON = "a positional convention the record design cannot settle"
+_NEW_EVIDENCE = "disenos_registro/modelo_999/files/2024.txt:12 box [02] first printed in the successor design"
+
+
+def _held_ruling(predecessor: str, successor: str) -> Ruling:
+    return Ruling(
+        predecessor=predecessor,
+        successor=successor,
+        refuse_bare=False,
+        rationale="planted for this gate",
+        grounded=(),
+        new_on_form=frozenset(),
+        new_on_form_stems=frozenset(),
+        not_on_form=frozenset(),
+        held=(),
+        held_stems=frozenset({_HELD_STEM}),
+        held_reason=_HELD_REASON,
+        withheld=(),
+        withheld_reason="",
+        merged=(),
+        merged_reason="",
+        discontinued=frozenset(),
+    )
+
+
+def _held_modelo(*, origin: CasillaLineageOrigin | None) -> ModeloDefinition:
+    """Two editions where the successor adds one row matching a held stem, with or without an origin."""
+    updates: dict[str, object] = {"id": _HELD_ROW, "number": "02", "semantic_role": "importe_planted"}
+    if origin is not None:
+        updates["continuidad_origin"] = origin.value
+        updates["continuidad_evidence"] = _NEW_EVIDENCE
+    return _planted_modelo(
+        _revision("2023", date(2023, 1, 1), date(2023, 12, 31), (2023,), (_casilla(),)),
+        _revision("2024", date(2024, 1, 1), date(2024, 12, 31), (2024,), (_casilla(), _casilla(**updates))),
+    )
+
+
+def test_a_held_stem_row_that_already_declares_its_absence_is_not_refused_again() -> None:
+    """A row whose kind of none is already written is dispositioned; re-refusing it makes the ledger stale."""
+    rulings = {_PLANTED: [_held_ruling("2023", "2024")]}
+    plan = plan_modelo(_PLANTED, _held_modelo(origin=CasillaLineageOrigin.NEW_ON_FORM), _oracle(), rulings)
+
+    assert [refusal.casilla_id for refusal in plan.refusals] == []
+    assert plan.counts[CasillaLineageOrigin.NEW_ON_FORM.value] == 1
+
+    # The same row without an origin is still held, so the skip above is the origin's doing.
+    bare = plan_modelo(_PLANTED, _held_modelo(origin=None), _oracle(), rulings)
+    assert [(refusal.casilla_id, refusal.category) for refusal in bare.refusals] == [
+        (_HELD_ROW, LineageRefusalCategory.HELD)
+    ]
+    assert bare.refusals[0].reason == _HELD_REASON
+
+
+def _held_pair_ruling(predecessor: str, successor: str) -> Ruling:
+    """The same hold, named as one adjudicated pair rather than by stem."""
+    return Ruling(
+        predecessor=predecessor,
+        successor=successor,
+        refuse_bare=False,
+        rationale="planted for this gate",
+        grounded=(),
+        new_on_form=frozenset(),
+        new_on_form_stems=frozenset(),
+        not_on_form=frozenset(),
+        held=(("01", _HELD_ROW),),
+        held_stems=frozenset(),
+        held_reason=_HELD_REASON,
+        withheld=(),
+        withheld_reason="",
+        merged=(),
+        merged_reason="",
+        discontinued=frozenset(),
+    )
+
+
+def test_a_held_pair_row_that_already_declares_its_absence_is_not_refused_again() -> None:
+    """A row an adjudicated pair holds is dispositioned by its own declared origin, like a held stem."""
+    rulings = {_PLANTED: [_held_pair_ruling("2023", "2024")]}
+    plan = plan_modelo(_PLANTED, _held_modelo(origin=CasillaLineageOrigin.NEW_ON_FORM), _oracle(), rulings)
+
+    assert [refusal.casilla_id for refusal in plan.refusals] == []
+    assert plan.counts[CasillaLineageOrigin.NEW_ON_FORM.value] == 1
+
+    # The same row without an origin is still held, so the skip above is the origin's doing.
+    bare = plan_modelo(_PLANTED, _held_modelo(origin=None), _oracle(), rulings)
+    assert [(refusal.casilla_id, refusal.category) for refusal in bare.refusals] == [
+        (_HELD_ROW, LineageRefusalCategory.HELD)
+    ]
+    assert bare.refusals[0].reason == _HELD_REASON
+
+
+# --------------------------------------------------------------------------- unclassified absence
+
+
+_ABSENT_ROW = "planted-absent"
+_ABSENT_EVIDENCE = "disenos_registro/modelo_999/files/2023.txt:7 box [02] printed; the 2023 edition declares no row"
+
+
+def _absence_modelo(*, origin: CasillaLineageOrigin | None) -> ModeloDefinition:
+    """Two editions where the successor adds a row with no predecessor and no printed box."""
+    updates: dict[str, object] = {
+        "id": _ABSENT_ROW,
+        # A byte range is not a printed box, so no record design can classify the absence.
+        "number": "0001-0010",
+        "semantic_role": "importe_planted",
+    }
+    if origin is not None:
+        updates["continuidad_origin"] = origin.value
+        updates["continuidad_evidence"] = _ABSENT_EVIDENCE
+    return _planted_modelo(
+        _revision("2023", date(2023, 1, 1), date(2023, 12, 31), (2023,), (_casilla(),)),
+        _revision("2024", date(2024, 1, 1), date(2024, 12, 31), (2024,), (_casilla(), _casilla(**updates))),
+    )
+
+
+def test_an_unclassifiable_absence_that_already_declares_its_origin_is_not_refused() -> None:
+    """A row whose kind of none is already written is dispositioned, whatever the record design can say."""
+    origin = CasillaLineageOrigin.PREDECESSOR_EDITION_SILENT
+    plan = plan_modelo(_PLANTED, _absence_modelo(origin=origin), _oracle(), {})
+
+    assert [refusal.casilla_id for refusal in plan.refusals] == []
+    assert plan.counts[origin.value] == 1
+
+
+def test_an_unclassifiable_absence_with_no_origin_is_still_refused() -> None:
+    """The negative control: with nothing declared, the row has no disposition and is refused."""
+    bare = plan_modelo(_PLANTED, _absence_modelo(origin=None), _oracle(), {})
+
+    assert [(refusal.casilla_id, refusal.category) for refusal in bare.refusals] == [
+        (_ABSENT_ROW, LineageRefusalCategory.ABSENCE_UNCLASSIFIED)
+    ]
+
+
+# --------------------------------------------------------------------------- evidence length
+
+
+def test_evidence_within_the_schema_cap_is_written_and_reported_rather_than_refused() -> None:
+    """The schema's cap is the bound; a long citation is kept and named, not cut to a house style."""
+    plan = LineagePlan(_PLANTED)
+    long_evidence = "x" * 700
+    assert len(long_evidence) < SCHEMA_EVIDENCE_LIMIT, "the planted evidence no longer fits; this gate is vacuous"
+
+    assert plan.record_evidence("2024", "01", long_evidence) == long_evidence
+    assert [(entry.revision, entry.casilla, entry.length) for entry in plan.long_evidence] == [("2024", "01", 700)]
+
+    # A routine-length citation is written without a report, so the report above is the length's doing.
+    assert plan.record_evidence("2024", "02", "short citation") == "short citation"
+    assert [entry.casilla for entry in plan.long_evidence] == ["01"]
+
+
+def test_evidence_over_the_schema_cap_refuses() -> None:
+    plan = LineagePlan(_PLANTED)
+    with pytest.raises(ValueError, match="exceeds the schema"):
+        plan.record_evidence("2024", "01", "x" * (SCHEMA_EVIDENCE_LIMIT + 1))
+    assert plan.long_evidence == []

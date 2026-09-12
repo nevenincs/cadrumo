@@ -354,6 +354,8 @@ legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:ar
 [[revisions."2023".casillas]]
 id = "perc.retenciones-forales-estatal"
 continuidad_id = "payee-retenciones-forales-estatal"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The 2023 record design (aeat-dr-193-2023) prints «(249-261) HACIENDA ESTATAL» at registro de tipo 2 positions 249-261, line 1410 of corpus/aeat_official/disenos_registro/modelo_193/files/04-193-diseno-de-registro-modelo-193-2023-866-kb-pdf.pdf.extracted.md (sha256 d340c8d5cea3). The predecessor edition 2022 is grounded on aeat-dr-193-2019, whose registro de tipo 2 ends at position 248 and closes «249-500 -------- BLANCOS.» (line 1346 of corpus/aeat_official/disenos_registro/modelo_193/files/05-193-...-hac-1276-2019...extracted.md (sha256 ee77e8fde25c)); that design prints no forales campo and no Ceuta/Melilla box at all — its only mentions of Ceuta o Melilla are prose inside the PORCENTAJE field (lines 1094 and 1098). The box lies beyond the predecessor record and is new on this edition's official form."
 number = "249-261"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -368,6 +370,8 @@ legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:ar
 [[revisions."2023".casillas]]
 id = "perc.retenciones-forales-navarra"
 continuidad_id = "payee-retenciones-forales-navarra"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The 2023 record design (aeat-dr-193-2023) prints «(262-274) COMUNIDAD FORAL DE NAVARRA» at registro de tipo 2 positions 262-274, line 1454 of corpus/aeat_official/disenos_registro/modelo_193/files/04-193-diseno-de-registro-modelo-193-2023-866-kb-pdf.pdf.extracted.md (sha256 d340c8d5cea3). The predecessor edition 2022 is grounded on aeat-dr-193-2019, whose registro de tipo 2 ends at position 248 and closes «249-500 -------- BLANCOS.» (line 1346 of corpus/aeat_official/disenos_registro/modelo_193/files/05-193-...-hac-1276-2019...extracted.md (sha256 ee77e8fde25c)); that design prints no forales campo and no Ceuta/Melilla box at all — its only mentions of Ceuta o Melilla are prose inside the PORCENTAJE field (lines 1094 and 1098). The box lies beyond the predecessor record and is new on this edition's official form."
 number = "262-274"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -382,6 +386,8 @@ legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:ar
 [[revisions."2023".casillas]]
 id = "perc.retenciones-forales-araba"
 continuidad_id = "payee-retenciones-forales-araba"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The 2023 record design (aeat-dr-193-2023) prints «(275-287) DIPUTACIÓN FORAL DE ARABA/ÁLAVA» at registro de tipo 2 positions 275-287, line 1488 of corpus/aeat_official/disenos_registro/modelo_193/files/04-193-diseno-de-registro-modelo-193-2023-866-kb-pdf.pdf.extracted.md (sha256 d340c8d5cea3). The predecessor edition 2022 is grounded on aeat-dr-193-2019, whose registro de tipo 2 ends at position 248 and closes «249-500 -------- BLANCOS.» (line 1346 of corpus/aeat_official/disenos_registro/modelo_193/files/05-193-...-hac-1276-2019...extracted.md (sha256 ee77e8fde25c)); that design prints no forales campo and no Ceuta/Melilla box at all — its only mentions of Ceuta o Melilla are prose inside the PORCENTAJE field (lines 1094 and 1098). The box lies beyond the predecessor record and is new on this edition's official form."
 number = "275-287"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -396,6 +402,8 @@ legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:ar
 [[revisions."2023".casillas]]
 id = "perc.retenciones-forales-gipuzkoa"
 continuidad_id = "payee-retenciones-forales-gipuzkoa"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The 2023 record design (aeat-dr-193-2023) prints «(288-300) DIPUTACIÓN FORAL DE GIPUZKOA» at registro de tipo 2 positions 288-300, line 1523 of corpus/aeat_official/disenos_registro/modelo_193/files/04-193-diseno-de-registro-modelo-193-2023-866-kb-pdf.pdf.extracted.md (sha256 d340c8d5cea3). The predecessor edition 2022 is grounded on aeat-dr-193-2019, whose registro de tipo 2 ends at position 248 and closes «249-500 -------- BLANCOS.» (line 1346 of corpus/aeat_official/disenos_registro/modelo_193/files/05-193-...-hac-1276-2019...extracted.md (sha256 ee77e8fde25c)); that design prints no forales campo and no Ceuta/Melilla box at all — its only mentions of Ceuta o Melilla are prose inside the PORCENTAJE field (lines 1094 and 1098). The box lies beyond the predecessor record and is new on this edition's official form."
 number = "288-300"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -410,6 +418,8 @@ legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:ar
 [[revisions."2023".casillas]]
 id = "perc.retenciones-forales-bizkaia"
 continuidad_id = "payee-retenciones-forales-bizkaia"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The 2023 record design (aeat-dr-193-2023) prints «(301-313) DIPUTACIÓN FORAL DE BIZKAIA» at registro de tipo 2 positions 301-313, line 1557 of corpus/aeat_official/disenos_registro/modelo_193/files/04-193-diseno-de-registro-modelo-193-2023-866-kb-pdf.pdf.extracted.md (sha256 d340c8d5cea3). The predecessor edition 2022 is grounded on aeat-dr-193-2019, whose registro de tipo 2 ends at position 248 and closes «249-500 -------- BLANCOS.» (line 1346 of corpus/aeat_official/disenos_registro/modelo_193/files/05-193-...-hac-1276-2019...extracted.md (sha256 ee77e8fde25c)); that design prints no forales campo and no Ceuta/Melilla box at all — its only mentions of Ceuta o Melilla are prose inside the PORCENTAJE field (lines 1094 and 1098). The box lies beyond the predecessor record and is new on this edition's official form."
 number = "301-313"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]
@@ -424,6 +434,8 @@ legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:ar
 [[revisions."2023".casillas]]
 id = "perc.ceuta-melilla"
 continuidad_id = "payee-ceuta-melilla-clave"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The 2023 record design (aeat-dr-193-2023) prints «CEUTA O MELILLA / ISLA DE LA PALMA» at registro de tipo 2 positions 314, line 1591 of corpus/aeat_official/disenos_registro/modelo_193/files/04-193-diseno-de-registro-modelo-193-2023-866-kb-pdf.pdf.extracted.md (sha256 d340c8d5cea3). The predecessor edition 2022 is grounded on aeat-dr-193-2019, whose registro de tipo 2 ends at position 248 and closes «249-500 -------- BLANCOS.» (line 1346 of corpus/aeat_official/disenos_registro/modelo_193/files/05-193-...-hac-1276-2019...extracted.md (sha256 ee77e8fde25c)); that design prints no forales campo and no Ceuta/Melilla box at all — its only mentions of Ceuta o Melilla are prose inside the PORCENTAJE field (lines 1094 and 1098). The box lies beyond the predecessor record and is new on this edition's official form."
 number = "314"
 segmento = "perceptor"
 section = ["perceptor", "percepcion"]

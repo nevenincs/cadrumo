@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "decl.ejercicio"
+continuidad_id = "filing-year"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_182/files/02-182-ejercicio-2024.pdf.extracted.md:202-204 (sha256 6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f), tipo 2 positions 5-8 Numérico EJERCICIO; corpus/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.extracted.md:202-204 (sha256 90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831), same field and span."
 number = "ejercicio"
 section = ["declarante"]
 data_type = "year"
@@ -10,6 +13,9 @@ legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2025".casillas]]
 id = "decl.tipo-declaracion"
+continuidad_id = "tipo-declaracion"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_182/files/02-182-ejercicio-2024.pdf.extracted.md:1-10 (sha256 6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f), official Modelo 182 declaracion informativa identity; corpus/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.extracted.md:1-10 (sha256 90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831), same official declaration identity. This applicability-only header has no independent fixed-width slot."
 number = "tipo-declaracion"
 section = ["declarante"]
 data_type = "text"
@@ -20,6 +26,9 @@ legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2025".casillas]]
 id = "tipo2.donante-nif"
+continuidad_id = "donante-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_182/files/02-182-ejercicio-2024.pdf.extracted.md:208-218 (sha256 6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f), tipo 2 positions 18-26 Alfanumérico N.I.F. DEL DECLARADO; corpus/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.extracted.md:208-218 (sha256 90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831), same field and span."
 number = "nif-donante"
 section = ["declarado", "donante"]
 data_type = "nif"
@@ -30,6 +39,9 @@ legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:
 
 [[revisions."2025".casillas]]
 id = "tipo2.donante-nombre"
+continuidad_id = "donante-nombre"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_182/files/02-182-ejercicio-2024.pdf.extracted.md:271-280 (sha256 6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f), tipo 2 positions 36-75 Alfanumérico APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL DECLARADO; corpus/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.extracted.md:271-280 (sha256 90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831), same field and span."
 number = "nombre-donante"
 section = ["declarado", "donante"]
 data_type = "name"
@@ -40,6 +52,9 @@ legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2025".casillas]]
 id = "tipo2.importe-donado"
+continuidad_id = "importe-donativo"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_182/files/02-182-ejercicio-2024.pdf.extracted.md:408-429 (sha256 6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f), tipo 2 positions 84-96 Numérico IMPORTE O VALORACIÓN DEL DONATIVO, APORTACIÓN O DISPOSICIÓN; corpus/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.extracted.md:408-429 (sha256 90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831), same field and span."
 number = "importe-donativo"
 section = ["declarado", "donativo"]
 data_type = "money"
@@ -50,6 +65,9 @@ legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:
 
 [[revisions."2025".casillas]]
 id = "tipo2.porcentaje-deduccion"
+continuidad_id = "porcentaje-deduccion"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_182/files/02-182-ejercicio-2024.pdf.extracted.md:376-395 (sha256 6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f), tipo 2 positions 79-83 Numérico % DE DEDUCCIÓN; corpus/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.extracted.md:376-395 (sha256 90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831), same field and span."
 number = "porcentaje-deduccion"
 section = ["declarado", "donativo"]
 data_type = "ratio"
@@ -60,10 +78,13 @@ legal_refs = ["ley-35-2006:art-68.3", "orden-eha-3021-2007:art-1", "ley-58-2003:
 
 [[revisions."2025".casillas]]
 id = "tipo2.recurrencia"
+continuidad_id = "donativo-recurrente"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_182/files/02-182-ejercicio-2024.pdf.extracted.md:548-572 (sha256 6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f), tipo 2 position 132 RECURRENCIA DONATIVOS; corpus/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf.extracted.md:548-574 (sha256 90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831), same position, with the amended same-entity test recorded in its evolution."
 number = "recurrencia"
 section = ["declarado", "donativo"]
 data_type = "boolean"
 semantic_role = "donativo_recurrente"
 required = true
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-68.3", "orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-68.3", "orden-eha-3021-2007:art-1", "ley-58-2003:art-93", "orden-hac-1430-2025:art-2"]

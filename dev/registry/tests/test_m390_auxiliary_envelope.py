@@ -9,9 +9,9 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.period import Period
-from cadrumo.core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_catalogue_file

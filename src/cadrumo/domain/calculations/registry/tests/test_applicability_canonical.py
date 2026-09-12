@@ -22,7 +22,7 @@ def test_annual_withholding_summary_applicability_uses_art_108_not_art_109() -> 
     core_mod = importlib.import_module(".....core.modelo", package=__package__)
     rules_by_modelo = {rule.modelo: rule for rule in domain_mod.iter_modelo_applicability_rules()}
 
-    for modelo in (core_mod.Modelo.M180, core_mod.Modelo.M190):
+    for modelo in (core_mod.Modelo("180"), core_mod.Modelo("190")):
         legal_refs = rules_by_modelo[modelo].legal_refs
         assert "rd-439-2007:art-108" in legal_refs
         assert "rd-439-2007:art-109" not in legal_refs

@@ -26,7 +26,7 @@ def compile_runtime_catalogues(registry_root: Path) -> RuntimeRegistryCatalogues
     iva_root = root / "iva"
     countries = _records(_read(iva_root / "country_names.toml"), "country", CountryVocabularyRecord, "code")
     territories = _territories(_read(iva_root / "territories.toml"))
-    carve_outs = _records(_read(iva_root / "territory_carve_outs.toml"), "carve_out", TerritoryCarveOut, "code")
+    carve_outs = _carve_outs(_read(iva_root / "territory_carve_outs.toml"))
     apoderamientos = _read(root / "apoderamientos" / "scopes.toml")
     scopes = _records(apoderamientos, "scopes", ApoderamientoScopeRecord, "code")
     regulations = _regulations(_read(iva_root / "catalogues.toml"))
@@ -73,6 +73,26 @@ def _records(document: Mapping[str, object], member: str, model: type[Any], iden
             raise RegistryValidationError(f"runtime catalogue member {member!r} repeats key {key!r}")
         compiled[key] = record
     return compiled
+
+
+def _carve_outs(document: Mapping[str, object]) -> dict[str, TerritoryCarveOut]:
+    """Compile carve-outs and refuse assimilation chains that cannot terminate."""
+    rows = _records(document, "carve_out", TerritoryCarveOut, "code")
+    for code, row in rows.items():
+        if row.assimilated_to == code:
+            raise RegistryValidationError(f"territory carve-out {code!r} is assimilated to itself")
+
+    for start, row in rows.items():
+        seen = {start}
+        step = row.assimilated_to
+        while step is not None and step in rows:
+            if step in seen:
+                raise RegistryValidationError(
+                    f"territory carve-out assimilation chain from {start!r} closes into a cycle",
+                )
+            seen.add(step)
+            step = rows[step].assimilated_to
+    return rows
 
 
 def _territories(document: Mapping[str, object]) -> dict[str, SpanishPostalTerritory]:

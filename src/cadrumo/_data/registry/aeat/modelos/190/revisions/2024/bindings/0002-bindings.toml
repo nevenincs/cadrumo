@@ -4,7 +4,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "perceptor_ta
 value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -16,7 +16,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "perceptor_le
 value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -28,7 +28,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "clave", grou
 value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -40,7 +40,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "subclave", g
 value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -52,7 +52,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "percibido_di
 value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -64,7 +64,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "percibido_es
 value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -76,7 +76,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "retencion_pr
 value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -88,7 +88,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "ingreso_a_cu
 value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -105,7 +105,7 @@ provider = { kind = "withholding", fact = "percepcion_count" }
 value = { data_type = "integer", channel = "integer" }
 aggregation = { op = "count_distinct" }
 legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-instructions-2025"
 required_text = ["Casilla 01. Número total de percepciones", "apuntes o registros de percepción"]
@@ -116,7 +116,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "province_cod
 value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -129,7 +129,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "territorial_
 value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93", "ley-35-2006:art-68.4", "real-decreto-ley-4-2024:art-3", "real-decreto-ley-13-2025:art-2"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -137,12 +137,12 @@ required_text = ["modelo 190"]
 
 [[revisions."2024".bindings]]
 id = "modelo-190-perceptor-row-ano-nacimiento"
-# Birth year and family situation are declared by the design only for claves A, B (subclaves 01, 03, 04, 99) and C; the resolver emits the design's own no-content for every other row.
+# Birth year and family situation are declared by the design only for claves A, B.01, B.03 and C; the resolver emits the design's own no-content for every other row.
 provider = { kind = "withholding", fact = "row_field", row_field = "perceptor_birth_year", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
 value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -154,7 +154,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "perceptor_si
 value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -167,7 +167,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "representati
 value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -180,7 +180,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "ingreso_a_cu
 value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -193,7 +193,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "accrual_year
 value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -206,7 +206,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "spouse_or_un
 value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -214,12 +214,12 @@ required_text = ["modelo 190"]
 
 [[revisions."2024".bindings]]
 id = "modelo-190-perceptor-row-discapacidad"
-# Design campo 18, 167: disability degree clave 0-3, always recorded for claves A, B (01, 03, 04, 99) and C -- clave 0 is the recorded "no disability" fact, never a default.
+# Design campo 18, 167: disability degree clave 0-3, always recorded for claves A, B.01, B.03 and C -- clave 0 is the recorded "no disability" fact, never a default.
 provider = { kind = "withholding", fact = "row_field", row_field = "disability_clave", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
 value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -232,7 +232,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "contract_rel
 value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -245,7 +245,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "unit_convive
 value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -258,7 +258,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "geographic_m
 value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -266,12 +266,12 @@ required_text = ["modelo 190"]
 
 [[revisions."2024".bindings]]
 id = "modelo-190-perceptor-row-reducciones"
-# Design campo 22, 171-183 REDUCCIONES APLICABLES (art. 18.2/18.3, DT 11/12, art. 32.1): the reductions the payer actually considered; the design's own zeros when none. Declared for claves A, B (01, 03, 04, 99), C, E, F (01-06), G (01-06, 08), H and I.
+# Design campo 22, 171-183 REDUCCIONES APLICABLES (art. 18.2/18.3, DT 11/12, art. 32.1): the reductions the payer actually considered; the design's own zeros when none. Declared for claves A, B.01, B.03, C, E, F (01-06), G (01-06, 08), H and I.
 provider = { kind = "withholding", fact = "row_field", row_field = "reducciones_aplicables", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
 value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-18", "ley-35-2006:art-32", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -279,12 +279,12 @@ required_text = ["modelo 190"]
 
 [[revisions."2024".bindings]]
 id = "modelo-190-perceptor-row-gastos-deducibles"
-# Design campo 23, 184-196 GASTOS DEDUCIBLES (art. 19.2 a)-c)): the expenses the payer considered to determine the retention rate; the design's own zeros when none. Declared for claves A, B (01, 03, 04, 99), C, E (01, 02) and exceptionally L.05, L.10, L.27.
+# Design campo 23, 184-196 GASTOS DEDUCIBLES (art. 19.2 a)-c)): the expenses the payer considered to determine the retention rate; the design's own zeros when none. Declared for claves A, B.01, B.03, C, E (01, 02) and exceptionally L.05, L.10, L.27.
 provider = { kind = "withholding", fact = "row_field", row_field = "gastos_deducibles", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
 value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -292,12 +292,12 @@ required_text = ["modelo 190"]
 
 [[revisions."2024".bindings]]
 id = "modelo-190-perceptor-row-pension-compensatoria"
-# Design campo 24, 197-209 PENSIONES COMPENSATORIAS: the annual compensatory pension to the spouse by judicial resolution; the design's own zeros when none. Declared for claves A, B (01, 03, 04, 99) and C.
+# Design campo 24, 197-209 PENSIONES COMPENSATORIAS: the annual compensatory pension to the spouse by judicial resolution; the design's own zeros when none. Declared for claves A, B.01, B.03 and C.
 provider = { kind = "withholding", fact = "row_field", row_field = "pension_compensatoria", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
 value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -305,12 +305,12 @@ required_text = ["modelo 190"]
 
 [[revisions."2024".bindings]]
 id = "modelo-190-perceptor-row-anualidades-alimentos"
-# Design campo 25, 210-222 ANUALIDADES POR ALIMENTOS: the annual food annuities to children by judicial decision; the design's own zeros when none. Declared for claves A, B (01, 03, 04, 99) and C.
+# Design campo 25, 210-222 ANUALIDADES POR ALIMENTOS: the annual food annuities to children by judicial decision; the design's own zeros when none. Declared for claves A, B.01, B.03 and C.
 provider = { kind = "withholding", fact = "row_field", row_field = "anualidades_alimentos", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
 value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -323,7 +323,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "descendants_
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -336,7 +336,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "descendants_
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -349,7 +349,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "descendants_
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -362,7 +362,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "descendants_
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -375,7 +375,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "descendants_
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -388,7 +388,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "descendants_
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -401,7 +401,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "descendants_
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -414,7 +414,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "descendants_
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -427,7 +427,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "descendants_
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -440,7 +440,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "descendants_
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -453,7 +453,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "ascendants_u
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -466,7 +466,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "ascendants_u
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -479,7 +479,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "ascendants_7
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -492,7 +492,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "ascendants_7
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -505,7 +505,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "ascendants_d
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -518,7 +518,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "ascendants_d
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -531,7 +531,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "ascendants_d
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -544,7 +544,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "ascendants_d
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -557,7 +557,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "ascendants_d
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -570,7 +570,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "ascendants_d
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -583,7 +583,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "first_child_
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -596,7 +596,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "second_child
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -609,7 +609,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "third_child_
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -617,12 +617,12 @@ required_text = ["modelo 190"]
 
 [[revisions."2024".bindings]]
 id = "modelo-190-perceptor-row-prestamos-vivienda"
-# Design campo 31, 254: whether the art. 86.1 RIRPF last-paragraph loan communication applied at some point in the exercise; clave 0/1, always recorded for claves A, B (01, 03, 04, 99) and C -- both claves are recorded facts, never defaults.
+# Design campo 31, 254: whether the art. 86.1 RIRPF last-paragraph loan communication applied at some point in the exercise; clave 0/1, always recorded for claves A, B.01, B.03 and C -- both claves are recorded facts, never defaults.
 provider = { kind = "withholding", fact = "row_field", row_field = "housing_loan_communication_clave", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
 value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "rd-439-2007:art-86", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -635,7 +635,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "incapacity_c
 value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -648,7 +648,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "incapacity_c
 value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -661,7 +661,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "incapacity_k
 value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -674,7 +674,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "incapacity_k
 value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -687,7 +687,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "incapacity_k
 value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -700,7 +700,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "complemento_
 value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -713,7 +713,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "foral_retent
 value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -726,7 +726,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "foral_retent
 value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -739,7 +739,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "foral_retent
 value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -752,7 +752,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "foral_retent
 value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -765,7 +765,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "foral_retent
 value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
@@ -798,7 +798,7 @@ provider = { kind = "withholding", fact = "row_field", row_field = "emerging_sto
 value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-42.3.f", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"

@@ -130,8 +130,11 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2024-2025".casillas]]
 id = "107"
+continuidad_id = "m322-informacion-tributacion-territorio-comun"
+continuidad_origin = "seeded"
 number = "107"
 section = ["iva", "tributacion_territorio"]
+semantic_role = "m322_informacion_tributacion_territorio_comun"
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -247,6 +250,9 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2024-2025".casillas]]
 id = "128"
+continuidad_id = "m322-operaciones-intragrupo-valoradas-arts-78-79-liva"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:233 (sha256 540805f09ca3) DR32203 campo 38 posicion 386 len 17 N box [128]; corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:267 (sha256 a70f3a2ca7dd) DR32203 campo 38 posicion 386 len 17 N box [128]; misma descripcion, campo, posicion, longitud y tipo."
 number = "128"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "money"

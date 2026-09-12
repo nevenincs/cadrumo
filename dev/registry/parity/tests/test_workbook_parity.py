@@ -29,7 +29,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ...conformance.registry_schema_support import committed_modelo as _committed_modelo
 from .._parity_tapes import ParityScenario

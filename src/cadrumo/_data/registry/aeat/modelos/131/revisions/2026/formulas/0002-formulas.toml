@@ -7,7 +7,7 @@ expression = { op = "max", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
+additional_source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".formulas.source_citations]]
 source_ref = "aeat-modelo-131-instructions"
 required_text = ["Resultados negativos"]

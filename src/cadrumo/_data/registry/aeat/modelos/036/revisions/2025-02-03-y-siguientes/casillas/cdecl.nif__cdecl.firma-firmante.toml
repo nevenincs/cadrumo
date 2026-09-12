@@ -38,6 +38,9 @@
 # @19+9. Datos identificativos. NIF. [101].
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.nif"
+continuidad_id = "decl-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:11 (sha256 3ecea6c06e3d) box [101] (4 19 9 An Datos identificativos. NIF [101] * obligatorio) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:35 (sha256 791479fbf9e9) box [101] (4 19 9 An Datos identificativos. NIF [101] obligatorio)."
 number = "101"
 section = ["declaracion", "identificativos"]
 data_type = "nif"
@@ -54,6 +57,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # social o denominacion si persona juridica. [102].
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.apellidos-razon-social"
+continuidad_id = "decl-apellidos-razon-social"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:12 (sha256 3ecea6c06e3d) box [102] (5 28 125 An Datos identificativos. Si fisica , Apellidos SIN nombre...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:36 (sha256 791479fbf9e9) box [102] (5 28 125 An Datos identificativos. Si fisica , Apellidos SIN nombre...)."
 number = "102"
 section = ["declaracion", "identificativos"]
 data_type = "name"
@@ -69,6 +75,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @383+25. Datos identificativos. Nombre, en el caso de personas fisicas. [103].
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.nombre"
+continuidad_id = "decl-nombre"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:53 (sha256 3ecea6c06e3d) box [103] (46 383 25 An nombre en caso de fisicas [103]) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:77 (sha256 791479fbf9e9) box [103] (46 383 25 An nombre en caso de fisicas [103])."
 number = "103"
 section = ["declaracion", "identificativos"]
 data_type = "name"
@@ -100,6 +109,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @198+1. Baja. Causa. [151].
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-baja"
+continuidad_id = "decl-causa-baja"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:41 (sha256 3ecea6c06e3d) box [151] (34 198 1 An Baja. Causa [151] *) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:65 (sha256 791479fbf9e9) box [151] (34 198 1 An Baja. Causa [151])."
 number = "151"
 section = ["declaracion", "causas", "baja"]
 data_type = "text"
@@ -134,6 +146,8 @@ id = "decl.firma-lugar"
 number = "decl-firma-lugar"
 section = ["declaracion", "firma"]
 data_type = "text"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 1 @207+40 (line 45 of the extract): Lugar, fecha y firma. Lugar *. The successor design prints the same field at the same page and byte position: Lugar, fecha y firma. Lugar. AEAT prints the slot with no box number at all; the predecessor edition revision note records 82 such unnumbered slots declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-1274-2007:art-1", "orden-hac-1526-2024:art-1"]
@@ -146,6 +160,8 @@ id = "decl.firma-fecha"
 number = "decl-firma-fecha"
 section = ["declaracion", "firma"]
 data_type = "date"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 1 @247+2 (line 46 of the extract): Lugar, fecha y firma. Fecha. Dia *. The successor design prints the same field at the same page and byte position: Lugar, fecha y firma. Fecha. Dia. AEAT prints the slot with no box number at all; the predecessor edition revision note records 82 such unnumbered slots declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-1274-2007:art-1", "orden-hac-1526-2024:art-1"]
@@ -157,6 +173,8 @@ id = "decl.firma-calidad"
 number = "decl-firma-calidad"
 section = ["declaracion", "firma"]
 data_type = "text"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 1 @255+1 (line 49 of the extract): Lugar, fecha y firma. Firma en calidad *. The successor design prints the same field at the same page and byte position: Lugar, fecha y firma. Firma en calidad. AEAT prints the slot with no box number at all; the predecessor edition revision note records 82 such unnumbered slots declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-1274-2007:art-1", "orden-hac-1526-2024:art-1"]
@@ -168,6 +186,8 @@ id = "decl.firma-firmante"
 number = "decl-firma-firmante"
 section = ["declaracion", "firma"]
 data_type = "name"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 1 @256+125 (line 50 of the extract): Firmado: D./D.a *. The successor design prints the same field at the same page and byte position: Firmado: D./D.a. AEAT prints the slot with no box number at all; the predecessor edition revision note records 82 such unnumbered slots declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-1274-2007:art-1", "orden-hac-1526-2024:art-1"]

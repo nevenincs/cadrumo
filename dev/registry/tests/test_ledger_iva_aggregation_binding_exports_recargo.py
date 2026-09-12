@@ -21,7 +21,7 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     resolve_ledger_iva_aggregation_binding_values,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.tests._published_authority import artifact_components
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
 
@@ -40,7 +40,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _m303_revision(revision_id: str) -> ModeloRevision:
-    modelo, _catalogues = artifact_components("303")
+    authority = bundled_authority()
+    modelo, _catalogues = authority.modelo("303"), authority.catalogues
     return modelo.revisions[revision_id]
 
 

@@ -34,7 +34,7 @@ def _service() -> RegistryQueryService:
 
 
 def test_relation_prefill_bindings_preserve_real_registry_declaration_order() -> None:
-    snapshot = bundled_authority().snapshot(Modelo.M202.value, filing_year=2025, period="2P")
+    snapshot = bundled_authority().snapshot(Modelo("202").value, filing_year=2025, period="2P")
 
     folds = relation_prefill_bindings_for_period(snapshot.revision, period="2P")
 
@@ -56,7 +56,7 @@ def test_relation_prefill_binding_carries_its_per_target_period_source_window(
     on the binding's own provider, so the window is asserted through the
     provider rather than through a relation identifier.
     """
-    snapshot = bundled_authority().snapshot(Modelo.M202.value, filing_year=2025, period=period)
+    snapshot = bundled_authority().snapshot(Modelo("202").value, filing_year=2025, period=period)
 
     providers = {
         binding.id: provider

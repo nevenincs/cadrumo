@@ -144,6 +144,7 @@ from .identifier_evolutions import IdentifierEvolution
 from .modelo_inception import DeclaredInception, ModeloInceptionField, UnauthoredBefore
 from .modelo_localization import require_modelo_localization, resolve_modelo_localization
 from .modelo_pending_orden import PendingEjercicioOrden, PendingEjercicioOrdenes
+from .restated_families import RestatedFamilyDeclaration
 from .revision_contracts import (
     DeclaredPredecessor,
     RegistryRevisionDeclaration,
@@ -158,6 +159,7 @@ from .schema_base import (
     CalculationClass,
     CalculationClassField,
     LegalRefs,
+    ModeloFilingCapabilities,
     ModeloFilingCapability,
     RegistryAuthorityGradeField,
     RegistryModel,
@@ -799,6 +801,16 @@ class ModeloRevision(RegistryRevisionDeclaration):
         MANIFEST_ONLY,
         FROZEN_MAPPING,
     ] = Field(default_factory=dict, validate_default=True)
+    restated_families: Annotated[tuple[RestatedFamilyDeclaration, ...], MANIFEST_ONLY] = Field(
+        default=(),
+        exclude_if=lambda value: not value,
+        description=(
+            "Families this edition states in full, declining inheritance from its predecessor on this edge. "
+            'Authored in revision.toml as restated_families = [{ family = "formulas", '
+            'cause = "official_structure_differs", reason = "..." }], one entry per family. The family is '
+            "closed to the families the merge inherits, the cause to the enumerated restatement causes."
+        ),
+    )
     engineered_by: Annotated[str | None, GOVERNANCE_STAMP] = None
     review_status: Annotated[RevisionReviewStatusField, GOVERNANCE_STAMP] = RevisionReviewStatus.PENDING_REVIEW
     reviewed_by: Annotated[str | None, GOVERNANCE_STAMP] = None
@@ -979,6 +991,41 @@ class ModeloRevision(RegistryRevisionDeclaration):
         return self
 
     @model_validator(mode="after")
+    def _validate_restated_families(self) -> ModeloRevision:
+        """Refuse a restatement claim with nothing behind it or no edge to apply to.
+
+        Three directions, each one a declaration that reads as load-bearing while
+        withdrawing nothing. A family the edition declares EMPTY restates no
+        members, so the claim would be indistinguishable from a family nobody
+        has built yet. A root edition inherits nothing on any family, so there is
+        no edge for the claim to act on. And two entries for one family leave the
+        merge with two authored reasons for one decision and no rule for picking
+        between them.
+        """
+        if not self.restated_families:
+            return self
+        if not isinstance(self.predecessor, DeclaredPredecessor):
+            raise RegistryValidationError(
+                f"revision {self.id!r} declares restated families "
+                f"{sorted(entry.family for entry in self.restated_families)!r} but has no declared predecessor, "
+                "so it inherits nothing to decline",
+            )
+        seen: set[str] = set()
+        for entry in self.restated_families:
+            if entry.family in seen:
+                raise RegistryValidationError(
+                    f"revision {self.id!r} declares family {entry.family!r} restated twice; one family carries "
+                    "one authored restatement",
+                )
+            seen.add(entry.family)
+            if not getattr(self, entry.family):
+                raise RegistryValidationError(
+                    f"revision {self.id!r} declares family {entry.family!r} restated in full but declares no "
+                    f"{entry.family!r} at all; drop the restatement or state the family",
+                )
+        return self
+
+    @model_validator(mode="after")
     def _validate_identity_keyed_families(self) -> ModeloRevision:
         """Refuse a revision declaring two members of one keyed family under one id.
 
@@ -1074,7 +1121,7 @@ class ModeloDefinition(RegistryModel):
     jurisdiction: Literal["ES-AEAT"]
     calculation_class: CalculationClassField = CalculationClass.FILING
     output_sensitivity: SensitivityClassField = SensitivityClass.FINANCIAL
-    capabilities: Annotated[frozenset[ModeloFilingCapability], BeforeValidator(frozenset)] = frozenset()
+    capabilities: ModeloFilingCapabilities = ()
     legal_refs: LegalRefs
     source_refs: SourceRefs
     inception: Annotated[ModeloInceptionField | None, MANIFEST_ONLY] = Field(

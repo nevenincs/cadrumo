@@ -1,5 +1,6 @@
 [revisions."2024"]
 id = "2024"
+application_link_source_refs = ["enrolled-modelo-182-procedure"]
 authority_grade = "applicability"
 casilla_source_refs = ["aeat-dr-182-2024", "enrolled-modelo-182-procedure"]
 # Applicability-grade historical epoch for modelo 182, ejercicio 2024, presented

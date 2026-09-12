@@ -5,390 +5,334 @@ id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-17", offset = 435, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-18"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-18", offset = 452, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-18"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-18", offset = 454, length = 4, data_type = "integer" }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-18"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-18", offset = 458, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-18"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-18", offset = 459, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-18"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-18", offset = 461, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-19"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-19", offset = 478, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-19"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-19", offset = 480, length = 4, data_type = "integer" }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-19"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-19", offset = 484, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-19"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-19", offset = 485, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-19"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-19", offset = 487, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-20"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-20", offset = 504, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-20"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-20", offset = 506, length = 4, data_type = "integer" }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-20"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-20", offset = 510, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-20"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-20", offset = 511, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-20"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-20", offset = 513, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-21"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-21", offset = 530, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-21"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-21", offset = 532, length = 4, data_type = "integer" }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-21"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-21", offset = 536, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-21"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-21", offset = 537, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-21"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-21", offset = 539, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-22"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-22", offset = 556, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-22"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-22", offset = 558, length = 4, data_type = "integer" }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-22"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-22", offset = 562, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-22"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-22", offset = 563, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-22"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-22", offset = 565, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-23"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-23", offset = 582, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-23"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-23", offset = 584, length = 4, data_type = "integer" }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-23"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-23", offset = 588, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-23"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-23", offset = 589, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-23"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-23", offset = 591, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-24"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-24", offset = 608, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-24"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-24", offset = 610, length = 4, data_type = "integer" }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-24"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-24", offset = 614, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-24"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-24", offset = 615, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-24"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-24", offset = 617, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-25"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-25", offset = 634, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-25"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-25", offset = 636, length = 4, data_type = "integer" }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-25"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-25", offset = 640, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-25"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-25", offset = 641, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-25"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-25", offset = 643, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-26"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-26", offset = 660, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-26"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-26", offset = 662, length = 4, data_type = "integer" }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-26"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-26", offset = 666, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-26"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-26", offset = 667, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-26"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-26", offset = 669, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-27"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-27", offset = 686, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-27"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-27", offset = 688, length = 4, data_type = "integer" }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-27"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-27", offset = 692, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-27"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-27", offset = 693, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-27"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-27", offset = 695, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-28"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-28", offset = 712, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-28"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-28", offset = 714, length = 4, data_type = "integer" }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-28"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-28", offset = 718, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-28"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-28", offset = 719, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
 id = "modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-28"
 provider = { kind = "manual_input", record = "modelo-369-importacion-t36911", field = "4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-28", offset = 721, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
-source_refs = ["aeat-dr-369-2021"]
 

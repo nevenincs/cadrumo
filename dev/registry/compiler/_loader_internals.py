@@ -86,6 +86,7 @@ from .loader_semantics import compile_export_semantic_field, compile_projection_
 
 _PREDECESSOR_FIELD: Final = "predecessor"
 _AUTHORITY_GRADE_FIELD: Final = "authority_grade"
+_RESTATED_FAMILIES_FIELD: Final = "restated_families"
 _NO_PREDECESSOR_TABLE_KEY: Final = "none"
 _INHERITED_SECTION: Final = "casillas"
 _RETIREMENT_SECTION: Final = "casilla_continuidad_evolutions"
@@ -164,6 +165,33 @@ _KEYED_FAMILIES: Final[tuple[_KeyedFamily, ...]] = (
     # must be declared as a repurpose rather than inherited in place.
     _KeyedFamily(section="verification_predicates", identity="id", identity_fields=("finding_kind",)),
 )
+
+
+def _restated_families(successor: Mapping[str, object]) -> frozenset[str]:
+    """Return the families ``successor`` declares it states in full on this edge.
+
+    A declared family is not merged at all: the edition's stated array survives
+    as authored, member for member and in stated order, because the claim is
+    that the official structure the edition was drawn from lays the family out
+    end to end. Inheriting there would carry members the successor's own
+    document withdrew.
+
+    Nothing is validated here. A malformed entry, a family name outside the
+    merge vocabulary, an empty stated family, and a root edition claiming a
+    restatement are all refused by the declaration's own typed validators, so a
+    reading that recognises nothing simply merges as before and lets the
+    edition be refused with the schema's error rather than a loader one.
+    """
+    entries = as_toml_array(successor.get(_RESTATED_FAMILIES_FIELD, ())) or ()
+    declared: set[str] = set()
+    for raw_entry in entries:
+        entry = _as_toml_table(raw_entry)
+        if entry is None:
+            continue
+        family = entry.get("family")
+        if isinstance(family, str):
+            declared.add(family)
+    return frozenset(declared)
 
 
 def _keyed_retirements(successor: Mapping[str, object], revision_id: str, family: _KeyedFamily) -> frozenset[str]:
@@ -425,7 +453,12 @@ type _RegistryPathFingerprint = tuple[str, int, int, str]
 type _RegistryPathFingerprints = tuple[_RegistryPathFingerprint, ...]
 
 
-def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, object]) -> ModeloDefinition:
+def _build_modelo_definition_from_data(
+    source_path: Path,
+    data: Mapping[str, object],
+    *,
+    validation_context: Mapping[str, object] | None = None,
+) -> ModeloDefinition:
     """Validate a merged modelo TOML payload into a ModeloDefinition."""
     _reject_local_catalogues(source_path, data)
     if "modelo" not in data:
@@ -470,7 +503,7 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
         payload = _compile_revision_projection_semantics(source_path, payload)
         _refuse_authored_export_refs(source_path, revision_id, payload)
         try:
-            revision = ModeloRevision.model_validate(payload)
+            revision = ModeloRevision.model_validate(payload, context=validation_context)
         except ValidationError as exc:
             raise RegistryLoadError(f"{source_path}: invalid revision {revision_id!r}: {exc}") from exc
         revision = _with_derived_export_refs(source_path, revision, payload)
@@ -488,7 +521,8 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
                 "title_localization_key": modelo_locale_key(str(modelo_id_for_context), "title"),
                 "official_name_localization_key": modelo_locale_key(str(modelo_id_for_context), "official_name"),
                 "revisions": revisions,
-            }
+            },
+            context=validation_context,
         )
     except ValidationError as exc:
         raise RegistryLoadError(f"{source_path}: invalid modelo definition: {exc}") from exc
@@ -744,7 +778,10 @@ def _materialise_revision(
             successor=table,
         )
         merged: dict[str, object] = {**table, _INHERITED_SECTION: rows}
+        restated = _restated_families(table)
         for family in _KEYED_FAMILIES:
+            if family.section in restated:
+                continue
             merged[family.section] = _inherit_keyed_family(
                 f"{source_path}: revision {revision_id!r} inheriting from {predecessor_id!r}",
                 revision_id=revision_id,
@@ -1420,6 +1457,7 @@ def _compile_revision_projection_semantics(source_path: Path, payload: Mapping[s
 def _load_modelo_directory_cached(
     directory: str,
     fingerprints: _RegistryPathFingerprints,
+    tax_id_format: object | None = None,
 ) -> ModeloDefinition:
     del fingerprints
     resolved = Path(directory)
@@ -1428,7 +1466,12 @@ def _load_modelo_directory_cached(
     if not merged_revisions:
         raise RegistryLoadError(f"{resolved}: no revisions found in revisions/")
     merged: dict[str, object] = {**manifest_data, "revisions": merged_revisions}
-    return _build_modelo_definition_from_data(resolved, merged)
+    validation_context = None
+    if tax_id_format is not None:
+        from cadrumo.core.identity.documents import TAX_ID_FORMAT_CONTEXT
+
+        validation_context = {TAX_ID_FORMAT_CONTEXT: tax_id_format}
+    return _build_modelo_definition_from_data(resolved, merged, validation_context=validation_context)
 
 
 def _load_modelo_manifest(resolved: Path) -> dict[str, object]:

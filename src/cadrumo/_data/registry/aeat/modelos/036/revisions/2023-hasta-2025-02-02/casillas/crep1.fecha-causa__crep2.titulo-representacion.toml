@@ -1,0 +1,282 @@
+# Modelo 036 RECORD Pag. 3 -- declaracion censal de alta, modificacion y baja.
+#
+# Emitted from aeat-dr-036-2023, whose window runs 2023-01-01 to 2025-02-02.
+#
+# ONE CASILLA PER PRINTED NUMBER, NOT PER DESIGN ROW. AEAT splits every date
+# into dia, mes and ano rows under a single number, and repeats whole blocks --
+# Pag. 8 prints 800, 801, 818 and 859 four times each, once per repetition of
+# the socio block. The 2025 edition settled this and says so in its own
+# comments; emitting per row instead would have written 263 casillas sharing 85
+# ids, which is valid TOML and wrong. Each comment states the group's whole span
+# and every component it covers.
+#
+# THE 037 ASTERISK IS TRANSCRIBED, NOT NORMALISED. A trailing ' *' marks a field
+# that could be informed on a modelo 037, which Orden HAC/1526/2024 suppressed
+# effective 2025-02-03. The design's own legend gives it that meaning, so it is
+# part of what AEAT printed for these years and it is not in the 2025 captions.
+#
+# NOT MODELLED: the identifier envelope, the reservado runs, the CRLF terminator
+# and the tipo-declaracion discriminant.
+#
+# NOT CLAIMED: these casillas DECLARE the censo; none computes anything. Modelo
+# 036 carries no formula family at all.
+
+# @12+8 Num. 3.1.- Causa de la presentación. Alta, Baja o Modificación del representante. Día [ONE casilla over 3 printed components: @12+2, @14+2, @16+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep1.fecha-causa"
+number = "303"
+section = ["declaracion", "representantes", "representante_1"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @20+9 An. 3.1.- Identificación del representante. NIF
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep1.nif"
+continuidad_id = "rep1-nif"
+number = "304"
+section = ["declaracion", "representantes", "representante_1"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @29+125 An. 3.1.- Identificación del representante. Apellidos y nombre o razón social
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep1.apellidos-razon-social"
+continuidad_id = "rep1-apellidos-razon-social"
+number = "305"
+section = ["declaracion", "representantes", "representante_1"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @154+1 An. 3.1.- Identificación del representante. Residente: sí/no | S, N o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep1.residente"
+continuidad_id = "rep1-residente"
+number = "306"
+section = ["declaracion", "representantes", "representante_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @156+8 Num. 3.1.- Identificacion persona fisica designada- Causa de la presentación. Alta, Baja  Día [ONE casilla over 3 printed components: @156+2, @158+2, @160+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep1.designada-fecha-causa"
+number = "313"
+section = ["declaracion", "representantes", "representante_1"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @164+9 An. 3.1.  Identificacion persona fisica designada. NIF
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep1.designada-nif"
+continuidad_id = "rep1-designada-nif"
+number = "307"
+section = ["declaracion", "representantes", "representante_1"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @173+40 An. 3.1.  Identificacion persona fisica designada. Apellido 1
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep1.designada-apellido-1"
+continuidad_id = "rep1-designada-apellido-1"
+number = "308"
+section = ["declaracion", "representantes", "representante_1"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @213+40 An. 3.1.  Identificacion persona fisica designada. Apellido 2
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep1.designada-apellido-2"
+continuidad_id = "rep1-designada-apellido-2"
+number = "309"
+section = ["declaracion", "representantes", "representante_1"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @253+45 An. 3.1.  Identificacion persona fisica designada. Nombre
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep1.designada-nombre"
+continuidad_id = "rep1-designada-nombre"
+number = "310"
+section = ["declaracion", "representantes", "representante_1"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @481+2 Num. 3.1.- Causa de la representación. Legal. Clave
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep1.representacion-legal-clave"
+continuidad_id = "rep1-representacion-legal-clave"
+number = "331"
+section = ["declaracion", "representantes", "representante_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @483+2 Num. 3.1.- Tipo de representación. Clave
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep1.tipo-representacion"
+continuidad_id = "rep1-tipo-representacion"
+number = "333"
+section = ["declaracion", "representantes", "representante_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @485+2 Num. 3.1.- Título de representación. Clave
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep1.titulo-representacion"
+continuidad_id = "rep1-titulo-representacion"
+number = "334"
+section = ["declaracion", "representantes", "representante_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @488+8 Num. 3.2.- Causa de la presentación. Alta, Baja o Modificación del representante. Día [ONE casilla over 3 printed components: @488+2, @490+2, @492+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep2.fecha-causa"
+number = "353"
+section = ["declaracion", "representantes", "representante_2"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @496+9 An. 3.2.- Identificación del representante. NIF
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep2.nif"
+continuidad_id = "rep2-nif"
+number = "354"
+section = ["declaracion", "representantes", "representante_2"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @505+125 An. 3.2.- Identificación del representante. Apellidos y nombre o razón social
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep2.apellidos-razon-social"
+continuidad_id = "rep2-apellidos-razon-social"
+number = "355"
+section = ["declaracion", "representantes", "representante_2"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @630+1 An. 3.2.- Identificación del representante. Residente: sí/no | S, N o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep2.residente"
+continuidad_id = "rep2-residente"
+number = "356"
+section = ["declaracion", "representantes", "representante_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @632+8 Num. 3.2.- Identificacion persona fisica designada- Causa de la presentación. Alta, Baja  Día [ONE casilla over 3 printed components: @632+2, @634+2, @636+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep2.designada-fecha-causa"
+number = "363"
+section = ["declaracion", "representantes", "representante_2"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @640+9 An. 3.2.  Identificacion persona fisica designada. NIF
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep2.designada-nif"
+continuidad_id = "rep2-designada-nif"
+number = "357"
+section = ["declaracion", "representantes", "representante_2"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @649+40 An. 3.2.  Identificacion persona fisica designada. Apellido 1
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep2.designada-apellido-1"
+continuidad_id = "rep2-designada-apellido-1"
+number = "358"
+section = ["declaracion", "representantes", "representante_2"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @689+40 An. 3.2.  Identificacion persona fisica designada. Apellido 2
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep2.designada-apellido-2"
+continuidad_id = "rep2-designada-apellido-2"
+number = "359"
+section = ["declaracion", "representantes", "representante_2"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @729+45 An. 3.2..  Identificacion persona fisica designada. Nombre
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep2.designada-nombre"
+continuidad_id = "rep2-designada-nombre"
+number = "360"
+section = ["declaracion", "representantes", "representante_2"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @957+2 Num. 3.2.- Causa de la representación. Legal. Clave
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep2.representacion-legal-clave"
+continuidad_id = "rep2-representacion-legal-clave"
+number = "381"
+section = ["declaracion", "representantes", "representante_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @959+2 Num. 3.2.- Tipo de representación. Clave
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep2.tipo-representacion"
+continuidad_id = "rep2-tipo-representacion"
+number = "383"
+section = ["declaracion", "representantes", "representante_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @961+2 Num. 3.2.- Título de representación. Clave
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "rep2.titulo-representacion"
+continuidad_id = "rep2-titulo-representacion"
+number = "384"
+section = ["declaracion", "representantes", "representante_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]

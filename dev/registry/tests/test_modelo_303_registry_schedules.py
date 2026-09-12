@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ._modelo_303_registry_support import (
     load_modelo_303,

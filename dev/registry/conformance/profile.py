@@ -102,7 +102,6 @@ from pydantic import BaseModel, Field, NonNegativeInt
 from cadrumo.core.casilla_id import CasillaId as _CasillaId
 from cadrumo.core.export_layout_format import ExportLayoutFormat as _ExportLayoutFormat
 from cadrumo.core.filing_year import FilingYear
-from cadrumo.core.modelo import Modelo as _Modelo
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from cadrumo.core.resources.bundled_data import bundled_path as _bundled_path
@@ -1207,10 +1206,9 @@ def audit_bundled_registry_conformance(*, validate: bool = True) -> RegistryConf
     registry_root = _bundled_path("registry", "aeat")
     inventory = _load_bundled_external_oracle_inventory()
     non_registry_codes = frozenset(item.value for item in _NON_REGISTRY_MODELOS)
-    known_codes = frozenset(item.value for item in _Modelo)
-
     if not validate:
         modelos, _catalogues = _load_registry_tree(registry_root)
+        known_codes = frozenset(modelo.id for modelo in modelos)
         return build_registry_conformance_profile(
             modelos,
             external_grounding=_build_external_grounding_audit(
@@ -1236,6 +1234,7 @@ def audit_bundled_registry_conformance(*, validate: bool = True) -> RegistryConf
             collect_fingerprints=_collect_registry_tree_fingerprints,
         ),
     )
+    known_codes = frozenset(modelo.id for modelo in authority.modelos)
     return build_registry_conformance_profile(
         authority.modelos,
         external_grounding=_build_external_grounding_audit(

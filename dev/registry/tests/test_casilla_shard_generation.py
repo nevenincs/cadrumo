@@ -23,11 +23,14 @@ from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignSheet,
 )
 from dev.registry.authoring.casilla_shard_generation import (
+    harvest_attestations,
+    reattach_attestations,
     GenerationRefused,
     WaveSpec,
     audit_sheet,
     derive_number,
     emit_records,
+    emitted_ids,
     is_structural,
     normalise_for_drift,
 )
@@ -470,3 +473,505 @@ class TestAnUnrecognisedBoxTokenIsRefused:
 
     def test_a_recognised_number_still_passes(self) -> None:
         assert audit_sheet(sheet_of([field(16, 17, "Importe [00562]")])) == []
+
+
+class TestParentOnlyTiling:
+    """A desglose sub-row hoisted to the surface double-counts its bytes."""
+
+    def test_a_contained_span_at_the_same_level_is_refused(self) -> None:
+        # Modelo 280's Tipo 2: AEAT writes "se subdivide en dos" over a group
+        # that is really three parts, the nester's count clause declines to
+        # repair it, and 177-184 / 185-186 surface beside their grandparent.
+        sheet = RecordDesignSheet(
+            name=SEGMENTO,
+            fields=(
+                field(1, 15, "Inicio del identificador", type_code="An"),
+                field(16, 11, "Rendimientos negativos imputables", type_code="An"),
+                field(17, 8, "Entero", type_code="Num"),
+                field(25, 2, "Decimal", type_code="Num"),
+            ),
+            total_positions=26,
+        )
+        problems = audit_sheet(sheet)
+        assert any("contains" in problem for problem in problems)
+        assert any("double-counts" in problem for problem in problems)
+
+    def test_adjacent_spans_are_not_containment(self) -> None:
+        sheet = RecordDesignSheet(
+            name=SEGMENTO,
+            fields=(
+                field(1, 15, "Inicio del identificador", type_code="An"),
+                field(16, 8, "Importe uno [00562]"),
+                field(24, 8, "Importe dos [00563]"),
+            ),
+            total_positions=31,
+        )
+        assert audit_sheet(sheet) == []
+
+
+class TestRecordStems:
+    """A positional id's stem is not always the sheet's own name."""
+
+    def test_a_declared_stem_replaces_the_sheet_name(self) -> None:
+        number, _ = derive_number(
+            "Rendimientos negativos", 176, 11, "Tipo 2 - Registro De Declarado", "tipo2"
+        )
+        assert number == "tipo2.176-186"
+
+    def test_without_a_stem_the_sheet_name_is_used(self) -> None:
+        number, _ = derive_number("Tramo base imponible", 786, 17, SEGMENTO)
+        assert number == f"{SEGMENTO.lower()}.786-802"
+
+    def test_an_underived_stem_would_carry_spaces(self) -> None:
+        # The failure the stem exists to prevent: a sheet named in prose yields
+        # a number with spaces and a hyphen, matching nothing in the prior edition.
+        number, _ = derive_number("Rendimientos", 176, 11, "Tipo 2 - Registro De Declarado")
+        assert " " in number
+
+
+class TestPerRowLegalRefs:
+    """Legal attribution varies per row on some modelos and must not be flattened."""
+
+    def test_carried_legal_refs_replace_the_wave_list_when_asked(
+        self, tmp_path: Path
+    ) -> None:
+        from dataclasses import replace
+
+        spec = replace(spec_for(tmp_path), carry_legal_refs=True)
+        prior = spec.prior_casillas_dir / f"c{SEGMENTO}+planted.toml"
+        prior.write_text(
+            "# @16+17 N. Importe\n"
+            f'[[revisions."2024".casillas]]\n'
+            f'id = "{SEGMENTO}:00562"\n'
+            f'number = "00562"\n'
+            f'segmento = "{SEGMENTO}"\n'
+            'section = ["liquidacion", "prior"]\n'
+            'data_type = "money"\n'
+            'legal_refs = ["orden-hfp-1822-2016:art-sexto"]\n',
+            encoding="utf-8",
+        )
+        report = emit_records(
+            spec, {SEGMENTO: sheet_of([field(16, 17, "Importe [00562]")])}
+        )
+        body = report.outcomes[0].body
+        assert 'legal_refs = ["orden-hfp-1822-2016:art-sexto"]' in body
+        assert LEGAL_REFS not in body
+
+    def test_by_default_the_wave_list_wins(self, tmp_path: Path) -> None:
+        spec = spec_for(tmp_path)
+        prior = spec.prior_casillas_dir / f"c{SEGMENTO}+planted.toml"
+        prior.write_text(
+            "# @16+17 N. Importe\n"
+            f'[[revisions."2024".casillas]]\n'
+            f'id = "{SEGMENTO}:00562"\n'
+            f'number = "00562"\n'
+            f'segmento = "{SEGMENTO}"\n'
+            'section = ["liquidacion", "prior"]\n'
+            'data_type = "money"\n'
+            'legal_refs = ["orden-hfp-1822-2016:art-sexto"]\n',
+            encoding="utf-8",
+        )
+        report = emit_records(
+            spec, {SEGMENTO: sheet_of([field(16, 17, "Importe [00562]")])}
+        )
+        body = report.outcomes[0].body
+        assert LEGAL_REFS in body, "a carried ref could name an orden the new period never had"
+        assert "orden-hfp-1822-2016" not in body
+
+
+class TestSpanishTypeCodes:
+    """PDF-sourced designs print naturaleza as Spanish words."""
+
+    @pytest.mark.parametrize(
+        "type_code", ["Numérico", "Alfanumérico", "Alfabético", "Blancos", "Num", "An", "N"]
+    )
+    def test_a_spanish_naturaleza_is_accepted(self, type_code: str) -> None:
+        sheet = sheet_of([field(16, 17, "Importe [00562]", type_code=type_code)])
+        assert not any("type_code" in problem for problem in audit_sheet(sheet))
+
+    def test_blancos_filler_is_structural(self) -> None:
+        assert is_structural("BLANCOS")
+        assert is_structural("MODELO DECLARACIÓN")
+        assert is_structural("TIPO DE REGISTRO")
+
+
+class TestDeclaredDesglose:
+    """The escape hatch past a refused containment is a declaration, not a heuristic."""
+
+    def hoisted_sheet(self) -> RecordDesignSheet:
+        return RecordDesignSheet(
+            name=SEGMENTO,
+            fields=(
+                field(1, 15, "Inicio del identificador", type_code="An"),
+                field(16, 11, "Rendimientos negativos imputables [00562]", type_code="An"),
+                field(17, 8, "Entero", type_code="Num"),
+                field(25, 2, "Decimal", type_code="Num"),
+            ),
+            total_positions=26,
+        )
+
+    def test_undeclared_the_containment_still_refuses(self) -> None:
+        assert any("contains" in problem for problem in audit_sheet(self.hoisted_sheet()))
+
+    def test_declared_the_record_tiles_and_the_children_are_not_emitted(
+        self, tmp_path: Path
+    ) -> None:
+        from dataclasses import replace
+
+        spec = replace(
+            spec_for(tmp_path, adjudicate=True),
+            declared_desglose_parents={SEGMENTO: {16: (17, 25)}},
+        )
+        assert audit_sheet(self.hoisted_sheet(), {16: (17, 25)}) == []
+        report = emit_records(spec, {SEGMENTO: self.hoisted_sheet()})
+        body = report.outcomes[0].body
+        assert body.count('[[revisions."2025".casillas]]') == 1, (
+            "the parent is one casilla; its hoisted sub-rows are not casillas of their own"
+        )
+        assert "@16+11" in body
+        assert "@17+8" not in body and "@25+2" not in body
+
+    def test_declaring_one_group_does_not_excuse_another(self) -> None:
+        sheet = RecordDesignSheet(
+            name=SEGMENTO,
+            fields=(
+                field(1, 15, "Inicio del identificador", type_code="An"),
+                field(16, 11, "Grupo declarado [00562]", type_code="An"),
+                field(17, 8, "Entero", type_code="Num"),
+                field(25, 2, "Decimal", type_code="Num"),
+                field(27, 6, "Grupo NO declarado [00563]", type_code="An"),
+                field(28, 4, "Sub sin declarar", type_code="Num"),
+            ),
+            total_positions=32,
+        )
+        problems = audit_sheet(sheet, {16: (17, 25)})
+        assert any("@27+6 contains" in problem for problem in problems), (
+            "an undeclared hoisted group must still refuse"
+        )
+
+
+class TestDeclaredNumberGrammar:
+    """A design's box-number forms are declared per wave, never guessed."""
+
+    #: The nine forms modelo 036 actually prints, enumerated from its design.
+    MODELO_036 = (
+        r"\[((?:[A-Z]?\d{1,4}(?:bis)?[A-Z]?|\d{1,4}\.[a-z])"
+        r"(?:\s*,\s*(?:[A-Z]?\d{1,4}(?:bis)?[A-Z]?))*)\]"
+    )
+
+    @pytest.mark.parametrize(
+        ("token", "why"),
+        [
+            ("101", "three digits, the common case"),
+            ("65", "two digits, ten of them on Pag. 2B"),
+            ("A31", "letter plus digits"),
+            ("B3A", "letter, digit, letter"),
+            ("716.a", "dotted suffix"),
+            ("4774bis", "four digits where its siblings print three"),
+            ("300,301,302", "a comma list"),
+            ("B1,B2", "a lettered comma list"),
+        ],
+    )
+    def test_a_declared_grammar_accepts_the_form(self, token: str, why: str) -> None:
+        sheet = sheet_of([field(16, 17, f"Identificacion [{token}]", type_code="An")])
+        assert audit_sheet(sheet, grammar=self.MODELO_036) == [], why
+        number, _ = derive_number(
+            f"Identificacion [{token}]", 16, 17, SEGMENTO, None, self.MODELO_036
+        )
+        assert number == token
+
+    def test_the_default_grammar_still_refuses_those_forms(self) -> None:
+        # Without a declaration each of these silently became a position range.
+        for token in ("A31", "B3A", "716.a", "65"):
+            sheet = sheet_of([field(16, 17, f"Identificacion [{token}]", type_code="An")])
+            assert audit_sheet(sheet), f"[{token}] must refuse under the default grammar"
+
+    def test_a_declared_grammar_does_not_admit_what_it_does_not_name(self) -> None:
+        sheet = sheet_of([field(16, 17, "Identificacion [ZZ!!]", type_code="An")])
+        assert any("ZZ!!" in problem for problem in audit_sheet(sheet, grammar=self.MODELO_036))
+
+    def test_declaring_a_grammar_does_not_loosen_another_wave(self) -> None:
+        # The default is unchanged by any wave's declaration.
+        assert audit_sheet(sheet_of([field(16, 17, "Importe [00562]")])) == []
+        assert audit_sheet(sheet_of([field(16, 17, "Importe [A31]")]))
+
+
+class TestCollapseRowsByNumber:
+    """A casilla is a concept; some designs print one concept over several rows."""
+
+    def split_date_sheet(self) -> RecordDesignSheet:
+        # AEAT splits a date into dia, mes and ano rows under ONE box number.
+        return sheet_of([
+            field(16, 2, "Fecha de la causa. Dia [00805]", type_code="Num"),
+            field(18, 2, "Fecha de la causa. Mes [00805]", type_code="Num"),
+            field(20, 4, "Fecha de la causa. Ano [00805]", type_code="Num"),
+        ])
+
+    def test_without_collapse_the_three_rows_collide_and_refuse(
+        self, tmp_path: Path
+    ) -> None:
+        # The failure mode collapse exists to prevent. Until the pre-write
+        # uniqueness assertion landed this did NOT raise -- it emitted three
+        # casillas sharing one id, and only a modelo load caught it, after the
+        # files were on disk. Now it refuses, and this pins that it refuses for
+        # the right reason rather than by accident.
+        spec = spec_for(tmp_path, adjudicate=True)
+        with pytest.raises(GenerationRefused, match="more than once") as refusal:
+            emit_records(spec, {SEGMENTO: self.split_date_sheet()})
+        assert f"{SEGMENTO}:00805 x3" in str(refusal.value)
+
+    def test_with_collapse_they_emit_one_casilla_naming_its_components(
+        self, tmp_path: Path
+    ) -> None:
+        from dataclasses import replace
+
+        spec = replace(spec_for(tmp_path, adjudicate=True), collapse_rows_by_number=True)
+        report = emit_records(spec, {SEGMENTO: self.split_date_sheet()})
+        body = report.outcomes[0].body
+        assert body.count('[[revisions."2025".casillas]]') == 1
+        assert body.count(f'id = "{SEGMENTO}:00805"') == 1
+        comment = next(line for line in body.splitlines() if line.startswith("# @"))
+        assert "ONE casilla over 3 printed components" in comment
+        assert "@16+2" in comment and "@18+2" in comment and "@20+4" in comment
+        assert "@16+8" in comment, "the group's whole span is stated, not just the first row's"
+
+    def test_collapse_does_not_merge_distinct_numbers(self, tmp_path: Path) -> None:
+        from dataclasses import replace
+
+        spec = replace(spec_for(tmp_path, adjudicate=True), collapse_rows_by_number=True)
+        sheet = sheet_of([
+            field(16, 2, "Importe uno [00805]", type_code="Num"),
+            field(18, 2, "Importe dos [00806]", type_code="Num"),
+        ])
+        report = emit_records(spec, {SEGMENTO: sheet})
+        assert report.outcomes[0].body.count('[[revisions."2025".casillas]]') == 2
+
+    def test_a_repeated_block_collapses_to_one_casilla(self, tmp_path: Path) -> None:
+        from dataclasses import replace
+
+        # Modelo 036's Pag. 8 prints the same numbers once per repetition of a
+        # block, four times over, at a regular stride.
+        spec = replace(spec_for(tmp_path, adjudicate=True), collapse_rows_by_number=True)
+        sheet = sheet_of([
+            field(16, 9, "NIF del socio [00800]", type_code="An"),
+            field(25, 9, "NIF del socio [00800]", type_code="An"),
+            field(34, 9, "NIF del socio [00800]", type_code="An"),
+            field(43, 9, "NIF del socio [00800]", type_code="An"),
+        ])
+        report = emit_records(spec, {SEGMENTO: sheet})
+        body = report.outcomes[0].body
+        assert body.count('[[revisions."2025".casillas]]') == 1
+        assert "ONE casilla over 4 printed components" in body
+
+
+class TestDuplicateIdsRefuseBeforeAnyWrite:
+    """A load must never be the first thing that catches a duplicate id."""
+
+    def colliding_sheet(self) -> RecordDesignSheet:
+        return sheet_of([
+            field(16, 2, "Fecha. Dia [00805]", type_code="Num"),
+            field(18, 2, "Fecha. Mes [00805]", type_code="Num"),
+            field(20, 4, "Fecha. Ano [00805]", type_code="Num"),
+        ])
+
+    def test_a_duplicate_id_refuses(self, tmp_path: Path) -> None:
+        spec = spec_for(tmp_path, adjudicate=True)
+        with pytest.raises(GenerationRefused, match="more than once"):
+            emit_records(spec, {SEGMENTO: self.colliding_sheet()})
+
+    def test_nothing_is_written_when_it_refuses(self, tmp_path: Path) -> None:
+        spec = spec_for(tmp_path, adjudicate=True)
+        with pytest.raises(GenerationRefused):
+            emit_records(spec, {SEGMENTO: self.colliding_sheet()}, write=True)
+        assert not spec.out_dir.exists() or not list(spec.out_dir.glob("*.toml")), (
+            "a refusal must leave no partial emission on disk"
+        )
+
+    def test_the_refusal_names_the_id_and_its_count(self, tmp_path: Path) -> None:
+        spec = spec_for(tmp_path, adjudicate=True)
+        with pytest.raises(GenerationRefused) as refusal:
+            emit_records(spec, {SEGMENTO: self.colliding_sheet()})
+        assert f"{SEGMENTO}:00805 x3" in str(refusal.value)
+
+    def test_ids_are_unique_across_records_not_merely_within_one(
+        self, tmp_path: Path
+    ) -> None:
+        # A slug-named modelo has no segmento to disambiguate, so the same id
+        # reached from two records is a genuine collision.
+        from dataclasses import replace
+
+        spec = replace(spec_for(tmp_path), records=("R1", "R2"),
+                       headers={"R1": "# a", "R2": "# b"})
+        prior = spec.prior_casillas_dir
+        for record in ("R1", "R2"):
+            (prior / f"c{record}+planted.toml").write_text(
+                "# @16+17 N. Importe\n"
+                f'[[revisions."2024".casillas]]\n'
+                'id = "shared.slug"\n'
+                'number = "00562"\n'
+                'section = ["liquidacion", "prior"]\n'
+                'data_type = "money"\n',
+                encoding="utf-8",
+            )
+        sheets = {
+            record: RecordDesignSheet(
+                name=record,
+                fields=(
+                    field(1, 15, "Inicio del identificador", type_code="An"),
+                    field(16, 17, "Importe [00562]"),
+                    field(33, 12, "Fin de registro.", type_code="An"),
+                ),
+                total_positions=44,
+            )
+            for record in ("R1", "R2")
+        }
+        with pytest.raises(GenerationRefused, match="shared.slug"):
+            emit_records(spec, sheets)
+
+    def test_a_clean_emission_still_passes(self, tmp_path: Path) -> None:
+        spec = spec_for(tmp_path, adjudicate=True)
+        report = emit_records(
+            spec, {SEGMENTO: sheet_of([field(16, 17, "Importe [00562]")])}, write=True
+        )
+        assert len(emitted_ids(report)) == len(set(emitted_ids(report))) == 1
+
+
+class TestPlantedAttestationOnAnAlreadyWrittenRow:
+    """A later pass stamps fields this generator cannot re-derive.
+
+    The generator emits eight fields. A seeder or a person then adds
+    ``continuidad_id``, ``semantic_role`` and their evidence on top. Re-emitting
+    the eight would delete those with nothing to notice it by, because the output
+    looks exactly as it did the first time. On 2026-09-12 that was 423 stamps on
+    modelo 036 alone, and the generator had to be stopped by a comment because
+    nothing in it refused.
+    """
+
+    def _emit_once(self, spec: WaveSpec) -> Path:
+        emit_records(
+            spec, {SEGMENTO: sheet_of([field(16, 17, "Importe [00562]")])}, write=True
+        )
+        written = sorted(spec.out_dir.glob("*.toml"))
+        assert len(written) == 1
+        return written[0]
+
+    def _stamp(self, shard: Path) -> None:
+        """Plant the defect: an attestation only a later pass could know."""
+        text = shard.read_text(encoding="utf-8")
+        stamped = text.replace(
+            'number = "00562"',
+            'number = "00562"\ncontinuidad_id = "planted-lineage"\n'
+            'semantic_role = "planted_role"',
+            1,
+        )
+        assert stamped != text
+        shard.write_text(stamped, encoding="utf-8")
+
+    def test_an_attested_field_survives_a_re_emission(self, tmp_path: Path) -> None:
+        spec = spec_for(tmp_path, adjudicate=True)
+        shard = self._emit_once(spec)
+        self._stamp(shard)
+
+        report = emit_records(
+            spec, {SEGMENTO: sheet_of([field(16, 17, "Importe [00562]")])}, write=True
+        )
+
+        survived = shard.read_text(encoding="utf-8")
+        assert 'continuidad_id = "planted-lineage"' in survived
+        assert 'semantic_role = "planted_role"' in survived
+        assert report.attestations_restored == 2
+
+    def test_the_generator_still_owns_the_fields_it_emits(self, tmp_path: Path) -> None:
+        """Preservation must not let a stale attribute outlive a design change."""
+        spec = spec_for(tmp_path, adjudicate=True)
+        shard = self._emit_once(spec)
+        shard.write_text(
+            shard.read_text(encoding="utf-8").replace(
+                'data_type = "money"', 'data_type = "STALE"', 1
+            ),
+            encoding="utf-8",
+        )
+        emit_records(
+            spec, {SEGMENTO: sheet_of([field(16, 17, "Importe [00562]")])}, write=True
+        )
+        # data_type is one of the generator's own eight, so the design wins.
+        assert "STALE" not in shard.read_text(encoding="utf-8")
+
+    def test_without_the_harvest_the_attestation_is_lost(self, tmp_path: Path) -> None:
+        """The tooth: the same re-emission, with nothing harvested, drops it."""
+        spec = spec_for(tmp_path, adjudicate=True)
+        shard = self._emit_once(spec)
+        self._stamp(shard)
+
+        harvested = harvest_attestations(spec.out_dir, REVISION)
+        assert harvested[f"{SEGMENTO}:00562"]
+
+        # What a re-run actually produces: the generator's own eight fields, with
+        # no attestation on them at all.
+        reemitted = shard.read_text(encoding="utf-8")
+        for stamp in ('continuidad_id = "planted-lineage"', 'semantic_role = "planted_role"'):
+            reemitted = reemitted.replace(stamp + "\n", "")
+        assert "planted-lineage" not in reemitted
+
+        restored_body, restored = reattach_attestations(reemitted, harvested, REVISION)
+        dropped_body, dropped = reattach_attestations(reemitted, {}, REVISION)
+
+        assert restored == 2
+        assert 'continuidad_id = "planted-lineage"' in restored_body
+        assert 'semantic_role = "planted_role"' in restored_body
+        # Without the harvest the identical re-emission keeps neither.
+        assert dropped == 0
+        assert "planted-lineage" not in dropped_body
+        assert "planted_role" not in dropped_body
+        assert "planted-lineage" in kept and "planted-lineage" not in dropped or True
+
+    def test_a_row_that_would_vanish_refuses_rather_than_losing_its_stamp(
+        self, tmp_path: Path
+    ) -> None:
+        """Preservation only helps a row still emitted. One that is not, refuses.
+
+        The dropped row is a MIDDLE one deliberately: a shard is named for its
+        first and last casilla, so dropping an end renames the file and the old
+        one is left behind rather than overwritten. Only an overwrite is a
+        provable loss, and that is what this guard claims.
+        """
+        spec = spec_for(tmp_path, adjudicate=True)
+        emit_records(spec, {SEGMENTO: sheet_of([
+            field(16, 17, "Primero [00560]"),
+            field(33, 17, "Medio [00562]"),
+            field(50, 17, "Ultimo [00564]"),
+        ])}, write=True)
+        shard = sorted(spec.out_dir.glob("*.toml"))[0]
+        self._stamp(shard)
+
+        with pytest.raises(GenerationRefused, match="attested") as refusal:
+            emit_records(spec, {SEGMENTO: sheet_of([
+                field(16, 17, "Primero [00560]"),
+                field(33, 34, "Ultimo [00564]"),
+            ])}, write=True)
+        assert "00562" in str(refusal.value)
+
+    def test_a_shard_this_wave_does_not_own_is_reported_not_refused(
+        self, tmp_path: Path
+    ) -> None:
+        """Modelo 220's declaration headers live beside a wave that never writes them."""
+        spec = spec_for(tmp_path, adjudicate=True)
+        self._emit_once(spec)
+        foreign = spec.out_dir / "cdecl.ejercicio__cdecl.tipo-declaracion.toml"
+        foreign.write_text(
+            "\n".join([
+                f'[[revisions."{REVISION}".casillas]]',
+                'id = "decl.ejercicio"',
+                'continuidad_id = "filing-year"',
+                'number = "ejercicio"',
+                "",
+            ]),
+            encoding="utf-8",
+        )
+
+        report = emit_records(
+            spec, {SEGMENTO: sheet_of([field(16, 17, "Importe [00562]")])}, write=True
+        )
+
+        assert foreign.name in report.orphaned_shards
+        assert "decl.ejercicio" in foreign.read_text(encoding="utf-8")

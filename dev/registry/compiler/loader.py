@@ -12,6 +12,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.identity.documents import SpanishTaxIdFormat
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
@@ -32,6 +33,8 @@ from cadrumo.domain.calculations.registry.schema import (
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
 from ._loader_internals import (
+    _inherit_keyed_family,
+    _KeyedFamily,
     _load_catalogue_file_cached,
     _load_modelo_directory_cached,
     _load_modelo_manifest,
@@ -68,7 +71,7 @@ from .loader_fingerprints import (
 )
 
 
-def load_modelo_directory(directory: Path) -> ModeloDefinition:
+def load_modelo_directory(directory: Path, *, tax_id_format: SpanishTaxIdFormat | None = None) -> ModeloDefinition:
     """Compile one directory-mode modelo from its mutable TOML sources."""
     resolved = directory.resolve()
     if not resolved.is_dir():
@@ -78,17 +81,48 @@ def load_modelo_directory(directory: Path) -> ModeloDefinition:
     validate_modelo_directory_source(resolved)
     fingerprints = collect_modelo_directory_fingerprints(resolved)
     try:
-        return _load_modelo_directory_cached(str(resolved), fingerprints)
+        return _load_modelo_directory_cached(str(resolved), fingerprints, tax_id_format)
     except RegistryLoadError as exc:
         refreshed = _refresh_modelo_directory_fingerprints_after_load_error(resolved, exc)
         if refreshed == fingerprints:
             raise
-        return _load_modelo_directory_cached(str(resolved), refreshed)
+        return _load_modelo_directory_cached(str(resolved), refreshed, tax_id_format)
 
 
-def load_modelo_source(source: ModeloSource) -> ModeloDefinition:
+def inherit_keyed_family(
+    subject: str,
+    *,
+    revision_id: str,
+    section: str,
+    identity: str,
+    identity_fields: tuple[str, ...] = (),
+    period_scoped: bool = False,
+    inherited: tuple[object, ...],
+    successor: Mapping[str, object],
+) -> tuple[object, ...]:
+    """Apply the compiler's canonical keyed-family inheritance semantics.
+
+    Registry migration tools use this supported boundary to prove prospective
+    family enrollment against the same merge implementation as compilation,
+    without importing compiler internals or constructing their private models.
+    """
+    return _inherit_keyed_family(
+        subject,
+        revision_id=revision_id,
+        family=_KeyedFamily(
+            section=section,
+            identity=identity,
+            identity_fields=identity_fields,
+            period_scoped=period_scoped,
+        ),
+        inherited=inherited,
+        successor=successor,
+    )
+
+
+def load_modelo_source(source: ModeloSource, *, tax_id_format: SpanishTaxIdFormat | None = None) -> ModeloDefinition:
     """Compile one discovered mutable modelo source."""
-    return load_modelo_directory(source.path)
+    return load_modelo_directory(source.path, tax_id_format=tax_id_format)
 
 
 def load_modelo_locale_key_projection(root: Path) -> frozenset[str]:
@@ -317,36 +351,45 @@ def _validate_sociedades_annual_manual_coverage(
 
 
 def load_registry_tree(
-    root: Path, *, identity: RegistryIdentity | None = None
+    root: Path,
+    *,
+    identity: RegistryIdentity | None = None,
+    tax_id_format: SpanishTaxIdFormat | None = None,
 ) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     """Compile the complete mutable registry tree for development publication."""
     resolved = root.resolve()
     if identity is None:
         identity = resolve_registry_identity(resolved, collect_fingerprints=collect_registry_tree_fingerprints)
     if identity.is_stamped:
-        return load_registry_tree_cached(str(resolved), stamped_cache_key_tuples(identity))
+        return load_registry_tree_cached(str(resolved), stamped_cache_key_tuples(identity), tax_id_format)
     _validate_legal_directory(resolved / "legal")
     discover_modelo_sources(resolved / "modelos")
     fingerprints = collect_registry_tree_fingerprints(resolved)
     try:
-        return load_registry_tree_cached(str(resolved), fingerprints)
+        return load_registry_tree_cached(str(resolved), fingerprints, tax_id_format)
     except RegistryLoadError as exc:
         refreshed = _refresh_registry_tree_fingerprints_after_load_error(resolved, exc)
         if refreshed == fingerprints:
             raise
-        return load_registry_tree_cached(str(resolved), refreshed)
+        return load_registry_tree_cached(str(resolved), refreshed, tax_id_format)
 
 
 @lru_cache(maxsize=32)
 def load_registry_tree_cached(
-    root: str, fingerprints: _RegistryPathFingerprints
+    root: str, fingerprints: _RegistryPathFingerprints, tax_id_format: SpanishTaxIdFormat | None = None
 ) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
+    """Load one fingerprinted tree, optionally under an explicit tax-ID format."""
     resolved = Path(root)
-    use_disk_cache = registry_disk_cache_enabled(is_bundled=is_bundled_registry_root(resolved))
+    use_disk_cache = tax_id_format is None and registry_disk_cache_enabled(
+        is_bundled=is_bundled_registry_root(resolved)
+    )
     if use_disk_cache and (cached := load_compiled_registry_cache(resolved, fingerprints)) is not None:
         return cached
     result = (
-        tuple(load_modelo_source(source) for source in discover_modelo_sources(resolved / "modelos")),
+        tuple(
+            load_modelo_source(source, tax_id_format=tax_id_format)
+            for source in discover_modelo_sources(resolved / "modelos")
+        ),
         load_shared_catalogues(resolved),
     )
     if use_disk_cache:

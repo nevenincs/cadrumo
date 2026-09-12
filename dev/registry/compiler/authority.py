@@ -9,6 +9,7 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.convenio import ConvenioAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.tax_id_format import tax_id_format_from_catalogue
 from cadrumo.domain.iva.compilation_catalogues import compiling_catalogues
 
 from . import fact_providers
@@ -25,7 +26,11 @@ from .corpus_catalogue import (
     verify_catalogue_identity_bindings,
     verify_source_catalogue,
 )
-from .fact_providers import compile_registered_fact_providers, validate_fact_provider_directory_ownership
+from .fact_providers import (
+    compile_authored_fact_catalogue,
+    compile_registered_fact_providers,
+    validate_fact_provider_directory_ownership,
+)
 from .identity import RegistryIdentity, resolve_registry_identity
 from .loader import load_registry_tree
 from .loader_fingerprints import collect_registry_tree_fingerprints
@@ -132,7 +137,15 @@ def compile_registry_tree(
     the one place that assembles them. The result is not yet validated.
     """
     root, sources_root = canonical_authoring_root_pair(registry_root, source_root)
-    modelos, catalogues = load_registry_tree(root, identity=identity)
+    if identity is None:
+        identity = resolve_registry_identity(root, collect_fingerprints=collect_registry_tree_fingerprints)
+    authored_facts = compile_authored_fact_catalogue(root)
+    candidate_tax_id_format = tax_id_format_from_catalogue(authored_facts)
+    modelos, catalogues = load_registry_tree(
+        root,
+        identity=identity,
+        tax_id_format=candidate_tax_id_format,
+    )
     validate_fact_provider_directory_ownership(root)
     with compiling_catalogues(catalogues.legal, catalogues.sources, sources_root):
         facts = compile_registered_fact_providers(root, modelos=modelos)

@@ -15,15 +15,17 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 
 import rtoml
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 __all__ = [
+    "GeneratedTreeBelowSupportedFilingYearsDisposition",
     "GeneratedTreeRecordDriftDisposition",
     "GeneratedTreeRenderRefusalDisposition",
     "GeneratedTreeTypeColumnContradictionDisposition",
+    "below_floor_dispositions",
     "disposition_ledger_from_path",
     "record_drift_dispositions",
     "render_refusal_dispositions",
@@ -168,8 +170,61 @@ class GeneratedTreeRenderRefusalDisposition(_StrictModel):
         return f"{self.modelo}/{self.revision}"
 
 
+class GeneratedTreeBelowSupportedFilingYearsDisposition(_StrictModel):
+    """One declaration that a drifting tree cannot be regenerated at all.
+
+    Distinct from record drift, and not a variety of it. A drift row says which
+    side is wrong and names the action that fixes it. This row says the question
+    cannot be asked: every filing year the revision declares lies below the
+    registry's supported-filing-years floor, so revision selection admits no
+    coordinate for it and the publisher refuses before it compares anything.
+    Republishing is not withheld here by judgement; it is unreachable.
+
+    The shipped records therefore stay as they are, and their difference from a
+    fresh render is a listed non-issue rather than an unexplained one. Modelo
+    232's 2016-2017 edition is the live case: its only filing years are 2016 and
+    2017 against a floor of 2022, and the refusal it raises names no revision
+    for either year.
+
+    ``supported_filing_years_floor`` and ``revision_last_filing_year`` are what
+    keep the row honest, and the model refuses a row where the second reaches
+    the first. A floor lowered to admit the revision, or a revision retired,
+    retires this row rather than leaving a permanent exemption behind.
+    """
+
+    kind: Literal["below_floor"]
+    modelo: str = Field(pattern=r"^[0-9]{3}$")
+    revision: str = Field(min_length=1)
+    source_ref: str = Field(min_length=1)
+    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    supported_filing_years_floor: int = Field(gt=0)
+    """The registry-wide floor this revision lies below, as the legal tree declares it."""
+    revision_last_filing_year: int = Field(gt=0)
+    """The newest filing year the revision declares, which must stay below the floor."""
+    reason: str = Field(min_length=1)
+    reconsideration_condition: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _revision_lies_below_the_floor(self) -> Self:
+        """Refuse a row whose revision the floor no longer excludes."""
+        if self.revision_last_filing_year >= self.supported_filing_years_floor:
+            raise ValueError(
+                f"{self.modelo}/{self.revision}: revision_last_filing_year "
+                f"{self.revision_last_filing_year} is not below supported_filing_years_floor "
+                f"{self.supported_filing_years_floor}; the row explains an exclusion that no "
+                "longer holds and must be retired rather than kept",
+            )
+        return self
+
+    @property
+    def subject(self) -> str:
+        """Return the canonical modelo/revision disposition identity."""
+        return f"{self.modelo}/{self.revision}"
+
+
 _GeneratedTreeDisposition = Annotated[
-    GeneratedTreeRecordDriftDisposition
+    GeneratedTreeBelowSupportedFilingYearsDisposition
+    | GeneratedTreeRecordDriftDisposition
     | GeneratedTreeRenderRefusalDisposition
     | GeneratedTreeTypeColumnContradictionDisposition,
     Field(discriminator="kind"),
@@ -205,6 +260,15 @@ def _load_disposition_ledger() -> tuple[_GeneratedTreeDisposition, ...]:
 def record_drift_dispositions() -> tuple[GeneratedTreeRecordDriftDisposition, ...]:
     """Load the strict pipeline-owned record-drift declaration set."""
     return tuple(item for item in _load_disposition_ledger() if isinstance(item, GeneratedTreeRecordDriftDisposition))
+
+
+def below_floor_dispositions() -> tuple[GeneratedTreeBelowSupportedFilingYearsDisposition, ...]:
+    """Load the strict pipeline-owned below-floor declaration set."""
+    return tuple(
+        item
+        for item in _load_disposition_ledger()
+        if isinstance(item, GeneratedTreeBelowSupportedFilingYearsDisposition)
+    )
 
 
 def render_refusal_dispositions() -> tuple[GeneratedTreeRenderRefusalDisposition, ...]:
