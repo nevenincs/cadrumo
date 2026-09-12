@@ -176,19 +176,10 @@ application:
         observation_merge_key_conflict: 'No se pueden fusionar observaciones con distinta
           clave de modelo, ejercicio o periodo: {primary_modelo} {primary_filing_year}
           {primary_period} frente a {overlay_modelo} {overlay_filing_year} {overlay_period}.'
-        selector_filing_year_delta_type: El selector de vinculación del registro 'filing_year_delta'
-          debe ser un número entero o una cadena numérica; contiene {observed_type}.
-          Corrija el selector en el registro.
-        selector_source_periods_member_type: Cada entrada del selector de vinculación
-          del registro 'source_periods' debe ser un código de periodo. Corrija el
-          selector en el registro.
-        selector_source_periods_type: El selector de vinculación del registro 'source_periods'
-          debe ser un código de periodo o una tupla de códigos de periodo; contiene
-          {observed_type}. Corrija el selector en el registro.
     errors:
       observation_displaces_official_evidence_app_filing: 'Este modelo, ejercicio
         y periodo ya contiene evidencia capturada de la AEAT ({existing_source_kind}),
-        por lo que no se puede guardar encima una declaracion calculada localmente.
+        por lo que no se puede guardar encima una declaración calculada localmente.
         Un recalculo local no es la autoridad sobre lo presentado: si es correcto,
         presente la correccion ante la AEAT y descargue el resultado. La evidencia
         capturada no se puede recuperar por ninguna via que exponga esta aplicacion.'
@@ -888,7 +879,7 @@ application:
         de perceptor/inmueble del Modelo 180, no una casilla decimal escalar. El canal
         local --casilla solo acepta casillas decimales escalares; las filas de detalle
         de perceptor/inmueble del Modelo 180 aún no están soportadas en la superficie
-        pública --row. Usa aeat app modelo aggregate --modelo 180 --retencion-observation
+        pública --row. Usa aeat app modelo aggregate --modelo 180 --retención-observation
         para la fuente soportada de número de perceptores/base/retenciones anual.
       calculate_m184_share_sum_invalid: Los porcentajes de participación de las filas
         de miembro del modelo 184 deben sumar exactamente 100%; se obtuvo %{total}
@@ -914,11 +905,6 @@ application:
         casilla.id canónico de forma segura.
       calculate_semantic_role_missing: La revisión del modelo no contiene ninguna
         casilla con el rol semantico %{semantic_role}.
-      calculate_text_casilla_numeric_value: El valor de --casilla para %{key} (%{label})
-        corresponde a un selector de declarante de data_type=%{data_type} no numérico
-        que identifica al contribuyente que obtiene los rendimientos, no un importe;
-        se recibió %{value}. Introduce el importe en su propia casilla numérica y
-        reserva esta casilla para el selector de miembro.
       calculate_text_input_empty: El valor de --casilla corresponde a una casilla
         de texto y no puede estar vacío.
       calculate_typed_text_input_invalid: El valor de --casilla no es válido para
@@ -1135,7 +1121,7 @@ application:
       work_period_token_unrecognised: --period '%{token}' no se reconoce. Indica --year
         %{year} por separado y usa un token de periodo como 0A, Q1, 1T o 01.
       work_unit_already_discarded: La unidad de trabajo ya está descartada.
-      work_unit_create_discarded: Este objetivo de declaracion fue descartado. Volver
+      work_unit_create_discarded: Este objetivo de declaración fue descartado. Volver
         a crearlo devuelve la misma unidad de trabajo descartada, por lo que no se
         puede reanudar.
       work_unit_discarded_cannot_calculate: La unidad de trabajo %{work_unit_id} está
@@ -1145,7 +1131,7 @@ application:
       work_unit_filing_year_period_mismatch: El ejercicio %{filing_year} no coincide
         con el ejercicio %{period_year} del periodo %{period}.
       work_unit_mutation_refused: La unidad de trabajo esta descartada, y volver a
-        crear el mismo objetivo de declaracion se rechaza en lugar de devolver una
+        crear el mismo objetivo de declaración se rechaza en lugar de devolver una
         unidad nueva.
       work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
       work_unit_revision_divergence: La unidad de trabajo %{work_unit_id} se creó
@@ -1162,47 +1148,16 @@ application:
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
     findings:
-      art20_reduccion_possible: El rendimiento neto %{rnt_id} de %{rnt_value} EUR
-        puede optar a la reducción del artículo 20 %{reduccion_id}.
-      art52_reduccion_individual_sublimit_possible: La reducción %{reduccion_id} de
-        %{reduccion_value} EUR puede superar el sublímite individual de %{sublimit}
-        EUR.
       attribution_received_uncaptured: La casilla %{casilla_id} de %{filing_year}
         contiene %{casilla_value} EUR de renta atribuida sin registrar.
       attribution_received_unfolded: La renta atribuida de %{filing_year} por %{total_base}
         EUR no se integra en la casilla %{casilla_id}.
       cross_casilla_invariant_violated: Se incumple el invariante entre casillas %{predicate_id}
         declarado por el registro en esta revisión.
-      cross_period_activity_start_missing: El modelo %{target_modelo} %{target_filing_year}
-        %{target_period} necesita una fecha de inicio de actividad declarada.
       cross_period_dependency_unclean: 'El modelo de origen %{source_modelo} %{source_filing_year}
         %{source_period} no está limpio para %{origin_ids}: %{blocker_codes}.'
-      cross_period_first_year_fractional_suppression: 'El modelo %{source_modelo}
-        %{source_filing_year} %{source_period} queda fuera de alcance: la actividad
-        comenzó el %{activity_start_date}.'
-      cross_period_m111_no_retenciones: El modelo %{source_modelo} %{source_filing_year}
-        %{source_period} no declara retenciones para %{target_modelo} %{target_filing_year}
-        %{target_period}.
-      cross_period_modelo_not_applicable:
-        message: '%{source_modelo_count} modelo(s) origen no son aplicables a este
-          contribuyente: %{source_modelos}.'
-      cross_period_non_official_local_chain:
-        message: El modelo %{source_modelo} %{source_filing_year} %{source_period}
-          se apoya en una cadena local (%{origin_code}), no en evidencia oficial de
-          la AEAT.
-      cross_period_operator_declared_suppression: El modelo %{source_modelo} %{source_filing_year}
-        %{source_period} se suprime por declaración del contribuyente (%{origin_code}),
-        con fecha de inicio de actividad %{activity_start_date}.
-      cross_period_zero_value_previous_filing: El modelo %{source_modelo} %{source_filing_year}
-        %{source_period} aporta un valor cero a %{target_modelo} %{target_filing_year}
-        %{target_period}.
       cuota_less_ledger_row_base_missing: La transacción %{transaction_id} de la categoría
         de IVA %{iva_category_code} no tiene base declarable.
-      dt12a_reduccion_antiquity_possible: La reducción %{reduccion_id} de %{reduccion_value}
-        EUR puede acogerse a la regla de antigüedad de la disposición transitoria
-        12a.
-      dt12a_reduccion_possible: El ingreso %{ingreso_id} de %{ingreso_value} EUR puede
-        optar a la reducción %{reduccion_id}.
       foreign_asset_redeclaration: 'Modelo %{modelo_code} %{filing_year}: el bien
         en el extranjero %{position_key} del grupo %{group_code} pasó de %{prior_value_eur}
         EUR a %{current_value_eur} EUR, un incremento de %{delta_value_eur} EUR por
@@ -1219,15 +1174,10 @@ application:
         pueden estar sujetos a una cláusula de limitación de beneficios (%{document_id}).
       m210_rate_unavailable: No se ha podido resolver el tipo del modelo 210 para
         el tipo de renta %{tipo_renta_code} del ejercicio %{filing_year} (%{reason_code}).
-      m303_m349_intracom_reconciliation_mismatch: 'Los modelos 303 y 349 discrepan
-        en %{period_code} %{filing_year}: %{m303_total} EUR frente a %{m349_total}
-        EUR, una diferencia de %{gap} EUR.'
       madrid_nacimiento_adopcion_eligibility_advisory: La casilla %{casilla_id} con
         recuento ponderado %{weighted_count} puede optar a la deducción madrileña
         por nacimiento o adopción.
       missing_required_casilla: La casilla obligatoria %{casilla_id} no tiene valor.
-      modelo_202_modality_incomplete: 'La modalidad del modelo 202 está incompleta:
-        falta el dato de perfil %{profile_fact_id}.'
       objective_estimation_exclusion_threshold_exceeded: 'Modelo %{modelo_id} %{filing_year}:
         %{profile_field_id} declarado %{declared} supera el umbral %{parameter_id}
         de %{threshold}.'
@@ -1245,16 +1195,6 @@ application:
         presentación exige autoridad %{requested_grade}.
       registry_snapshot_unresolved: No se ha podido resolver la instantánea del registro
         para el modelo %{modelo} %{filing_year} %{period}.
-      suffered_retencion_capital_mobiliario_uncredited: Esta declaración consigna
-        rendimientos del capital mobiliario del ahorro pero no acredita ninguna retención
-        soportada (%{predicate_id}). Introduzca el importe del certificado de retenciones
-        e ingresos a cuenta del pagador; el contribuyente nunca presentó el Modelo
-        123 que lo declara, por lo que este valor no puede rellenarse automáticamente.
-      suffered_retencion_trabajo_uncredited: Esta declaración consigna rendimientos
-        del trabajo pero no acredita ninguna retención soportada (%{predicate_id}).
-        Introduzca el importe del certificado de retenciones e ingresos a cuenta del
-        pagador; el contribuyente nunca presentó el Modelo 111 que lo declara, por
-        lo que este valor no puede rellenarse automáticamente.
       transaction_evidence_missing_deductible: Una transacción deducible no tiene
         evidencia justificativa (vínculo %{binding_id}, origen %{source_kind_code},
         motivo %{diagnostic_reason_code}).
@@ -1290,33 +1230,6 @@ application:
     explain:
       errors:
         modelo_blank: El identificador de modelo no puede estar en blanco.
-  registry:
-    errors:
-      citation_not_found: No se encontró ninguna cita del registro para la referencia
-        legal solicitada.
-      edition_modelo_undeclared: 'El registro no declara el modelo {modelo}. Modelos
-        declarados: {available_modelos}.'
-      edition_revision_undeclared: 'El modelo {modelo} no declara la edición {revision}.
-        Ediciones declaradas: {available_revisions}.'
-      invalid_manual_id: El manual del registro debe ser uno de {allowed_manual_ids};
-        se recibió {manual_id}.
-      invalid_manual_rule_kind: El tipo de regla del manual del registro debe ser
-        uno de {allowed_rule_kinds}; se recibió {rule_kind}.
-      invalid_topic_locale: El locale de temas del registro debe ser uno de {allowed_locales};
-        se recibió {locale_code}.
-      manual_section_not_found: No se encontró la sección {section} en {manual_id}
-        {year} {part}.
-      manual_section_requires_structure: La sección del manual requiere estructura
-        extraida para {manual_key}.
-      no_revision_for_diff_year: 'Ninguna revisión del registro de {modelo} cubre
-        el ejercicio {filing_year}. Revisiones declaradas: {available_revisions}.'
-    manuals:
-      coverage:
-        available: Disponible localmente
-        recheck_aeat_publication: Vuelva a comprobar el archivo oficial de manuales
-          de la AEAT y adquiera el PDF anual cuando se publique.
-        unacquired: Manual oficial publicado; pendiente de adquisición local
-        unpublished: AEAT aún no lo ha publicado
   storage:
     calc_sheets:
       engine:

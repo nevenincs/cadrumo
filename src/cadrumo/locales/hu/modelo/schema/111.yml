@@ -10,108 +10,108 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
-              help: null
+              help: A Modelo 111 01. casilla adóügyi adatai.
               label: Munkaviszonyból származó pénzbeli jövedelmek - kedvezményezettek
                 száma
             '02':
-              help: null
+              help: 'A Modelo 111 02. casilla adóügyi adatai: adóügyi információ.'
               label: Munkaviszonyból származó pénzbeli jövedelmek - kifizetett összeg
             '03':
-              help: null
+              help: 'A Modelo 111 03. casilla adóügyi adatai: adóügyi információ.'
               label: Munkaviszonyból származó pénzbeli jövedelmek - levont adó összege
             '04':
-              help: null
+              help: A Modelo 111 04. casilla adóügyi adatai.
               label: Munkaviszonyból származó természetbeni jövedelmek - kedvezményezettek
                 száma
             '05':
-              help: null
+              help: 'A Modelo 111 05. casilla adóügyi adatai: adóügyi információ.'
               label: Munkaviszonyból származó természetbeni jövedelmek - juttatás
                 értéke
             '06':
-              help: null
+              help: 'A Modelo 111 06. casilla adóügyi adatai: adóügyi információ.'
               label: Munkaviszonyból származó természetbeni jövedelmek - előlegfizetés
                 összege
             '07':
-              help: null
+              help: A Modelo 111 07. casilla adóügyi adatai.
               label: Gazdasági tevékenységből származó pénzbeli jövedelmek - kedvezményezettek
                 száma
             08:
-              help: null
+              help: 'A Modelo 111 08. casilla adóügyi adatai: adóügyi információ.'
               label: Gazdasági tevékenységből származó pénzbeli jövedelmek - kifizetett
                 összeg
             09:
-              help: null
+              help: 'A Modelo 111 09. casilla adóügyi adatai: adóügyi információ.'
               label: Gazdasági tevékenységből származó pénzbeli jövedelmek - levont
                 adó összege
             '10':
-              help: null
+              help: A Modelo 111 10. casilla adóügyi adatai.
               label: Gazdasági tevékenységből származó természetbeni jövedelmek -
                 kedvezményezettek száma
             '11':
-              help: null
+              help: 'A Modelo 111 11. casilla adóügyi adatai: adóügyi információ.'
               label: Gazdasági tevékenységből származó természetbeni jövedelmek -
                 juttatás értéke
             '12':
-              help: null
+              help: 'A Modelo 111 12. casilla adóügyi adatai: adóügyi információ.'
               label: Gazdasági tevékenységből származó természetbeni jövedelmek -
                 előlegfizetés összege
             '13':
-              help: null
+              help: A Modelo 111 13. casilla adóügyi adatai.
               label: Pénzbeli nyeremények - kedvezményezettek száma
             '14':
-              help: null
+              help: 'A Modelo 111 14. casilla adóügyi adatai: adóügyi információ.'
               label: Pénzbeli nyeremények - kifizetett összeg
             '15':
-              help: null
+              help: 'A Modelo 111 15. casilla adóügyi adatai: adóügyi információ.'
               label: Pénzbeli nyeremények - levont adó összege
             '16':
-              help: null
+              help: A Modelo 111 16. casilla adóügyi adatai.
               label: Természetbeni nyeremények - kedvezményezettek száma
             '17':
-              help: null
+              help: 'A Modelo 111 17. casilla adóügyi adatai: adóügyi információ.'
               label: Természetbeni nyeremények - juttatás értéke
             '18':
-              help: null
+              help: 'A Modelo 111 18. casilla adóügyi adatai: adóügyi információ.'
               label: Természetbeni nyeremények - előlegfizetés összege
             '19':
-              help: null
+              help: A Modelo 111 19. casilla adóügyi adatai.
               label: Erdészeti pénzbeli tőkenyereségek - kedvezményezettek száma
             '20':
-              help: null
+              help: 'A Modelo 111 20. casilla adóügyi adatai: adóügyi információ.'
               label: Erdészeti pénzbeli tőkenyereségek - kifizetett összeg
             '21':
-              help: null
+              help: 'A Modelo 111 21. casilla adóügyi adatai: adóügyi információ.'
               label: Erdészeti pénzbeli tőkenyereségek - levont adó összege
             '22':
-              help: null
+              help: A Modelo 111 22. casilla adóügyi adatai.
               label: Erdészeti természetbeni tőkenyereségek - kedvezményezettek száma
             '23':
-              help: null
+              help: 'A Modelo 111 23. casilla adóügyi adatai: adóügyi információ.'
               label: Erdészeti természetbeni tőkenyereségek - juttatás értéke
             '24':
-              help: null
+              help: 'A Modelo 111 24. casilla adóügyi adatai: adóügyi információ.'
               label: Erdészeti természetbeni tőkenyereségek - előlegfizetés összege
             '25':
-              help: null
+              help: A Modelo 111 25. casilla adóügyi adatai.
               label: Képmáshoz fűződő jogok átengedése - kedvezményezettek száma
             '26':
-              help: null
+              help: A Modelo 111 26. casilla adóügyi adatai.
               label: Képmáshoz fűződő jogok átengedése - kifizetett ellenérték
             '27':
-              help: null
+              help: A Modelo 111 27. casilla adóügyi adatai.
               label: Képmáshoz fűződő jogok átengedése - előlegfizetés összege
             '28':
-              help: null
+              help: 'Tekintse át a casilla adatait: Total adólevonások e előlegfizetések.'
               label: Forrásadó és előlegfizetés összesen
             '29':
-              help: null
+              help: 'A Modelo 111 29. casilla adóügyi adatai: adóügyi információ.'
               label: Korábbi önadózások eredménye
             '30':
-              help: null
+              help: 'Tekintse át a casilla adatait: Eredmény a ingresar.'
               label: Befizetendő eredmény
           construct:
             modelo-111-withholding-workflow:
               field:
-                title: null
+                title: Modelo 111 — adóügyi információ
           field:
-            label: null
+            label: Casilla— adóügyi információ

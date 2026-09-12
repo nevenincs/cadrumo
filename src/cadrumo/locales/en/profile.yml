@@ -27,9 +27,126 @@ profile:
           previously declared facts.
         title: Previous filings
   keys:
+    activities:
+      description: Business activity (plain text is fine; use the IAE heading if you
+        know it)
+    capabilities:
+      google_export: Enable Google Sheets export?
+      llm_vision: Enable on-host LLM vision for reading invoices?
+    censo:
+      activity_start_date: From what date do you have filing obligations / when did
+        you register? (YYYY-MM-DD, optional)
+      large_company: Large-company condition
+      public_administration_budget_gt_6000000: Public-administration budget over 6,000,000
+        EUR
+    contact:
+      postcode: Tax address postcode
     description: Profile configuration keys and their descriptions
+    identity:
+      legal_name: Legal or company name for export headers
+      name: Display name shown in local reviews
+      notes: Notes for your own records (optional)
+      surnames: Surnames or company name for export headers
+      tax_id: Tax identifier (NIF/CIF/DNI/NIE) for the active profile
+    irpf:
+      art109_activity_income_withholding_ge_70pct: Art. 109 70% activity-income coverage
+        exception applies
+      estimation_regime: IRPF estimation regime
+      objective_estimation_modulos_iae_epigraph: IAE epigraph for objective-estimation
+        modules
+      objective_estimation_modulos_module_1_units: Annual module 1 units
+      objective_estimation_modulos_module_2_units: Annual module 2 units
+      objective_estimation_modulos_module_3_units: Annual module 3 units
+      objective_estimation_modulos_module_4_units: Annual module 4 units
+      objective_estimation_modulos_module_5_units: Annual module 5 units
+      objective_estimation_modulos_module_6_units: Annual module 6 units
+      objective_estimation_modulos_module_7_units: Annual module 7 units
+      special_regime: IRPF special regime (Beckham Law / Art. 93 LIRPF)
+      special_regime_start_date: Special regime election date (YYYY-MM-DD)
+    iva:
+      cash_accounting_regime_enrolled: Are you enrolled in the special IVA cash-accounting
+        regime?
+      does_intracomunitario: Conducts intra-community operations
+      group_dominant_entity_enrolled: Enrolled as the dominant entity of an IVA group
+      group_member_enrolled: Enrolled as a member entity of an IVA group
+      hydrocarbon_deposit_advance_payment_deduction_entitled: Are you entitled to
+        deduct advance payments under the hydrocarbon tax-deposit regime?
+      intracommunity_operations_exceed_50000_eur: Intra-community operations exceed
+        50,000 EUR
+      m303_regime_composition: Which Modelo 303 regime composition applies?
+      oss_enrolled: Enrolled in OSS
+      redeme_enrolled: Registered in REDEME (monthly IVA refund register)
+      regime: Which IVA regime applies?
+      roi_enrolled: Enrolled in ROI
+      sii_enrolled: Enrolled in the SII (immediate information supply)
+      voluntary_sii_enrolled: Are you voluntarily enrolled in SII?
+    obligations:
+      bienes_extranjero_above_threshold: Foreign-held assets exceed the Modelo 720
+        threshold
+      monedas_virtuales_extranjero_above_threshold: Virtual currencies held abroad
+        above Modelo 721 threshold
+      third_party_transactions_above_347_threshold: Third-party transactions exceed
+        Modelo 347 threshold
+    preferences:
+      output_language: CLI output language for this profile
+    renta_family:
+      descendants_eu_eea_deduction: EU/EEA descendants in family-unit deduction
+      minor_children_in_unit: Minor children in family unit
+      situacion_familiar: Family situation (Art. 82 LIRPF)
+    renta_filing:
+      declaration_type: Taxation type code
+    renta_spouse:
+      birth_date: Spouse birth date
+      disability_grade: Spouse disability grade (if applicable)
+      eu_eea_country: Spouse EU/EEA country
+      eu_eea_resident: Spouse is EU/EEA resident
+      name: Spouse given name
+      non_resident_irpf: Spouse is non-resident (not an IRPF taxpayer)
+      sex: Spouse sex code
+      surnames: Spouse surnames
+      tax_id: Spouse NIF/NIE
+    renta_taxpayer:
+      birth_date: First taxpayer birth date
+      death_date: First taxpayer death date
+      disability_grade: First taxpayer disability code
+      marital_status: First taxpayer marital status
+      marriage_date: Marriage start date (YYYY-MM-DD)
+      sex: First taxpayer sex code
     tax:
       id: Tax identifier (NIF/CIF/DNI/NIE)
+    tax_residence:
+      ccaa: Tax-residence autonomous community
+      jurisdiction_scope: Which tax territory applies to this Modelo 303?
+    taxpayer_type:
+      country_of_fiscal_residence: Country of fiscal residence (ISO 3166-1 alpha-2
+        code, e.g. GB, DE, FR)
+      declaration_roles: Does the declaring entity hold any of these institutional
+        roles for Modelo 347 (third-party operations) purposes?
+      entity_type: Entity type
+      fiscal_residency: Fiscal residency category
+      incn_prior_12_months: What was your net turnover over the past 12 months? (in
+        euros, optional)
+      irpf_income_categories: IRPF income categories
+      legal_entity_form: Legal form
+      ley_49_2002_special_regime_option_date: Date declared for the Ley 49/2002 special-regime
+        option
+      ley_49_2002_special_regime_option_declared: Has the entity filed the Modelo
+        036 option for the Title II Ley 49/2002 special fiscal regime?
+      ley_49_2002_special_regime_renunciation_date: Date declared for the Ley 49/2002
+        special-regime renunciation
+      ley_49_2002_special_regime_renunciation_declared: Has the entity filed a Modelo
+        036 renunciation of the Title II Ley 49/2002 special fiscal regime?
+      new_entity_first_two_profit_periods: Is this a newly-created legal entity in
+        one of its first two profit-making tax periods?
+      representante_fiscal_nif: NIF/NIE of fiscal representative in Spain (required
+        outside EU/EEA)
+      representante_fiscal_nombre: Name of fiscal representative in Spain
+    withholding:
+      has_employees: Has employees and pays salaries subject to withholding
+      modelo_111_no_retenciones_periods: Modelo 111 periods with no withholding
+      pays_capital_income_with_retencion: Pays capital income with withholding
+      pays_professionals_with_retencion: Pays professionals with withholding
+      pays_rent_with_retencion: Pays local rent with withholding
   schema:
     field:
       activities:
@@ -233,8 +350,16 @@ profile:
         voluntary_sii_enrolled:
           label: Voluntary SII enrolment
       maritime_worker:
+        annual_salary:
+          label: Annual salary
+        exemption_path_rebeca:
+          label: REBECA exemption route
+        gross_navigation_income:
+          label: Gross navigation income
         pending_eu_clearance:
           label: Pending EU state-aid clearance
+        qualifying_days:
+          label: Qualifying days
         retmar_registered:
           label: RETMAR registration
         tuna_fleet:
@@ -455,4 +580,16 @@ profile:
       withholding:
         title: Withholding payer obligations
   validation:
+    boolean_field_invalid: Boolean field is invalid
+    conditional_required_field_missing: Conditionally required field is missing
+    conditionally_forbidden_field: Conditionally forbidden field
+    derived_field_not_editable: Derived field is not editable
+    effective_window_end_not_enforced: Effective-window end is not enforced
+    effective_window_unused: Effective window is unused
+    invalid_date_value: Invalid date value
+    invalid_email_value: Invalid email value
+    invalid_enum_value: Invalid enum value
+    modelo_work_profile_baseline_missing: Modelo work profile baseline is missing
+    numeric_field_invalid: Numeric field is invalid
     required_field_missing: Required profile field missing.
+    unknown_field: Unknown field

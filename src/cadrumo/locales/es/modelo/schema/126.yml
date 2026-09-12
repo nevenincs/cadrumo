@@ -11,42 +11,54 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 01 del
+                Modelo 126.
               label: Base de retenciones e ingresos a cuenta
             '02':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 02 del
+                Modelo 126.
               label: Retenciones e ingresos a cuenta
             '03':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 03 del
+                Modelo 126.
               label: 'Periodificacion: base de retenciones e ingresos a cuenta'
             '04':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 04 del
+                Modelo 126.
               label: 'Periodificacion: retenciones e ingresos a cuenta'
             '05':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ingresos
+                de ejercicios anteriores.'
               label: Ingresos de ejercicios anteriores
             '06':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Regularización.'
               label: Regularizacion
             '07':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 07 del
+                Modelo 126.
               label: 'Periodificacion: base de retenciones e ingresos a cuenta adicional'
             08:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 08 del
+                Modelo 126.
               label: 'Periodificacion: retenciones e ingresos a cuenta adicional'
             09:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ingresos
+                de ejercicios anteriores adicionales.'
               label: Ingresos de ejercicios anteriores adicionales
             '10':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 10 del
+                Modelo 126.
               label: 'Total liquidacion: suma de retenciones e ingresos a cuenta y
                 regularizacion'
             '11':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultados
+                a ingresar de anteriores declaraciones por el mismo concepto, ejercicio
+                y período.'
               label: Resultados a ingresar de anteriores declaraciones por el mismo
                 concepto, ejercicio y periodo
             '12':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultado
+                a ingresar.'
               label: Resultado a ingresar
           construct:
             modelo-126-calculation-construct:

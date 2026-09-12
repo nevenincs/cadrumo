@@ -1,6 +1,14 @@
 modelo:
   schema:
     '165':
+      casilla:
+        continuidad:
+          filing-year:
+            help: A Modelo 165 . casilla adóügyi adatai.
+            label: Casilla — adóügyi mező
+          tipo-declaracion:
+            help: 'A casilla adatai: Casilla kulcs-bevallás: kulcs bevallás.'
+            label: 'Casilla kulcs-bevallás: kulcs bevallás'
       field:
         official_name: Modelo 165. Az újonnan vagy nemrég alapított szervezetek tagjai
           vagy résztvevői részére kiadott egyedi igazolások adatszolgáltatási bevallása.
@@ -10,141 +18,141 @@ modelo:
         2013-2015:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóév.'
               label: Az adóbevallás vonatkozási éve
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: A Modelo 165 . casilla adóügyi adatai.
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
           field:
-            label: null
+            label: Casilla— adóügyi információ
         2016-2022:
           casilla:
             declaracion-complementaria-sustitutiva:
-              help: null
+              help: A Modelo 165 . casilla adóügyi adatai.
               label: Kiegészítő vagy helyettesítő bevallás
             declarante-razon-social:
-              help: null
+              help: A Modelo 165 . casilla adóügyi adatai.
               label: A bejelentő neve vagy cégneve
             fecha-adquisicion:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A részvények vagy üzletrészek megszerzésének dátuma
             fecha-constitucion:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: Az alapítás dátuma
             importe-fondos-propios:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A saját tőke összege
             importe-suscripcion:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A jegyzés vagy szerzés összege
             importe-total-suscripciones:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A jegyzések vagy szerzések teljes összege
             numero-identificativo-anterior:
-              help: null
+              help: A Modelo 165 . casilla adóügyi adatai.
               label: A korábbi bevallás azonosító száma
             numero-identificativo-declaracion:
-              help: null
+              help: A Modelo 165 . casilla adóügyi adatai.
               label: A bevallás azonosító száma
             numero-total-declarados:
-              help: null
+              help: A Modelo 165 . casilla adóügyi adatai.
               label: A bejelentett tagok száma összesen
             persona-relacion:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: Kapcsolattartó személy
             porcentaje-participacion:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A részesedés százaléka
             representante-legal-nif:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A törvényes képviselő adószáma
             socio-nif:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A tag vagy résztulajdonos adószáma
             socio-nombre:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A tag vagy résztulajdonos családi és utóneve
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóév.'
               label: Az adóbevallás vonatkozási éve
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: A Modelo 165 . casilla adóügyi adatai.
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
           construct:
             modelo-165-informative:
               field:
-                title: null
+                title: Modelo 165 bevallás tájékoztató
           field:
-            label: null
+            label: Casilla— adóügyi információ
         2023-2025:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóév.'
               label: Az adóbevallás vonatkozási éve
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: A Modelo 165 . casilla adóügyi adatai.
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
           field:
-            label: null
+            label: Casilla— adóügyi információ
         2026-y-siguientes:
           casilla:
             declaracion-complementaria-sustitutiva:
-              help: null
+              help: A Modelo 165 . casilla adóügyi adatai.
               label: Kiegészítő vagy helyettesítő bevallás
             declarante-razon-social:
-              help: null
+              help: A Modelo 165 . casilla adóügyi adatai.
               label: A bejelentő neve vagy cégneve
             empresa-emergente:
-              help: null
+              help: 'Tekintse át a casilla adatait: Empresa emergente.'
               label: Induló vállalkozás
             fecha-adquisicion:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A részvények vagy üzletrészek megszerzésének dátuma
             fecha-constitucion:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: Az alapítás dátuma
             importe-fondos-propios:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A saját tőke összege
             importe-suscripcion:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A jegyzés vagy szerzés összege
             importe-total-suscripciones:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A jegyzések vagy szerzések teljes összege
             numero-identificativo-anterior:
-              help: null
+              help: A Modelo 165 . casilla adóügyi adatai.
               label: A korábbi bevallás azonosító száma
             numero-identificativo-declaracion:
-              help: null
+              help: A Modelo 165 . casilla adóügyi adatai.
               label: A bevallás azonosító száma
             numero-total-declarados:
-              help: null
+              help: A Modelo 165 . casilla adóügyi adatai.
               label: A bejelentett tagok száma összesen
             persona-relacion:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: Kapcsolattartó személy
             porcentaje-participacion:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A részesedés százaléka
             representante-legal-nif:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A törvényes képviselő adószáma
             socio-nif:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A tag vagy résztulajdonos adószáma
             socio-nombre:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A tag vagy résztulajdonos családi és utóneve
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 165 . casilla adóügyi adatai: adóév.'
               label: Az adóbevallás vonatkozási éve
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: A Modelo 165 . casilla adóügyi adatai.
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
           construct:
             modelo-165-informative:
               field:
-                title: null
+                title: Modelo 165 bevallás tájékoztató
           field:
-            label: null
+            label: Casilla— adóügyi információ

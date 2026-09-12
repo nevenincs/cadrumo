@@ -1,6 +1,66 @@
 modelo:
   schema:
     '341':
+      casilla:
+        continuidad:
+          '02':
+            help: Informació fiscal sobre informació fiscal de la casella 02 del Modelo
+              341.
+            label: Casella 02 — informació fiscal
+          '03':
+            help: Informació fiscal sobre informació fiscal de la casella 03 del Modelo
+              341.
+            label: Casella 03 — informació fiscal
+          '05':
+            help: Informació fiscal sobre informació fiscal de la casella 05 del Modelo
+              341.
+            label: Casella 05 — informació fiscal
+          '06':
+            help: Informació fiscal sobre informació fiscal de la casella 06 del Modelo
+              341.
+            label: Casella 06 — informació fiscal
+          08:
+            help: Informació fiscal sobre informació fiscal de la casella 08 del Modelo
+              341.
+            label: Casella 08 — informació fiscal
+          09:
+            help: Informació fiscal sobre informació fiscal de la casella 09 del Modelo
+              341.
+            label: Casella 09 — informació fiscal
+          codigo-cuenta-cliente:
+            help: Informació fiscal de la casella del Modelo 341.
+            label: Casella — informació fiscal
+          filing-year:
+            help: Informació fiscal de la casella del Modelo 341.
+            label: Casella — informació fiscal
+          letras-etiqueta-persona-fisica:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              341.
+            label: Casella— informació fiscal
+          observaciones-presentacion:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              341.
+            label: Casella— informació fiscal
+          reagp-importe-compensacion:
+            help: Informació fiscal sobre informació fiscal de la casella 07 del Modelo
+              341.
+            label: Casella 07 — informació fiscal
+          reagp-importe-compensacion-total:
+            help: Informació fiscal sobre informació fiscal de la casella 10 del Modelo
+              341.
+            label: Casella 10 — informació fiscal
+          reagp-importe-operaciones:
+            help: Informació fiscal sobre informació fiscal de la casella 01 del Modelo
+              341.
+            label: Casella 01 — informació fiscal
+          reagp-porcentaje-compensacion:
+            help: Informació fiscal sobre informació fiscal de la casella 04 del Modelo
+              341.
+            label: Casella 04 — informació fiscal
+          tipo-declaracion:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              341.
+            label: Casella— informació fiscal
       field:
         official_name: Modelo 341. Sol·licitud de reintegrament de compensacions en
           el règim especial de l'agricultura, la ramaderia i la pesca.
@@ -10,97 +70,123 @@ modelo:
         2005-2015:
           casilla:
             '01':
-              help: null
+              help: 'Consulteu la informació de la casella: Import de las operacions
+                [01].'
               label: Import de les operacions [01]
             '02':
-              help: null
+              help: 'Consulteu la informació de la casella: Import de las operacions
+                [02].'
               label: Import de les operacions [02]
             '03':
-              help: null
+              help: 'Consulteu la informació de la casella: Import de las operacions
+                [03].'
               label: Import de les operacions [03]
             '04':
-              help: null
+              help: 'Consulteu la informació de la casella: Percentatge de compensació
+                [04].'
               label: Percentatge de compensació [04]
             '05':
-              help: null
+              help: 'Consulteu la informació de la casella: Percentatge de compensació
+                [05].'
               label: Percentatge de compensació [05]
             '06':
-              help: null
+              help: 'Consulteu la informació de la casella: Percentatge de compensació
+                [06].'
               label: Percentatge de compensació [06]
             '07':
-              help: null
+              help: 'Consulteu la informació de la casella: Import de la compensació
+                [07].'
               label: Import de la compensació [07]
             08:
-              help: null
+              help: 'Consulteu la informació de la casella: Import de la compensació
+                [08].'
               label: Import de la compensació [08]
             09:
-              help: null
+              help: 'Consulteu la informació de la casella: Import de la compensació
+                [09].'
               label: Import de la compensació [09]
             '10':
-              help: null
+              help: 'Consulteu la informació de la casella: Import total de las compensaciones
+                [10].'
               label: Import total de les compensacions [10]
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                341.
               label: Exercici a què es refereix l'autoliquidació
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+                341.
               label: Període de liquidació a què es refereix l'autoliquidació
             x-etkn4p9ecdnm8qb7dsmm6tb5dpq62bb3dhkmarjkck:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+                341.
               label: Codi de compte de client (C.C.C.)
             x-etkn4p9edhin8sj1ecmmat39e5qmat31:
-              help: null
+              help: 'Consulteu la informació de la casella: Letras de la etiqueta
+                identificativa.'
               label: Lletres de l'etiqueta identificativa
             x-etkn4p9edth76pbiepgm6qbfdpin6:
-              help: null
+              help: 'Consulteu la informació de la casella: Observaciones.'
               label: Observacions
           construct:
             modelo-341-autoliquidacion:
               field:
-                title: null
+                title: Modelo 341 autoliquidació del IVA
           field:
-            label: null
+            label: Casella— informació fiscal
         2016-y-siguientes:
           casilla:
             '01':
-              help: null
+              help: 'Consulteu la informació de la casella: Import de las operacions
+                [01].'
               label: Import de les operacions [01]
             '02':
-              help: null
+              help: 'Consulteu la informació de la casella: Import de las operacions
+                [02].'
               label: Import de les operacions [02]
             '03':
-              help: null
+              help: 'Consulteu la informació de la casella: Import de las operacions
+                [03].'
               label: Import de les operacions [03]
             '04':
-              help: null
+              help: 'Consulteu la informació de la casella: Percentatge de compensació
+                [04].'
               label: Percentatge de compensació [04]
             '05':
-              help: null
+              help: 'Consulteu la informació de la casella: Percentatge de compensació
+                [05].'
               label: Percentatge de compensació [05]
             '06':
-              help: null
+              help: 'Consulteu la informació de la casella: Percentatge de compensació
+                [06].'
               label: Percentatge de compensació [06]
             '07':
-              help: null
+              help: 'Consulteu la informació de la casella: Import de la compensació
+                [07].'
               label: Import de la compensació [07]
             08:
-              help: null
+              help: 'Consulteu la informació de la casella: Import de la compensació
+                [08].'
               label: Import de la compensació [08]
             09:
-              help: null
+              help: 'Consulteu la informació de la casella: Import de la compensació
+                [09].'
               label: Import de la compensació [09]
             '10':
-              help: null
+              help: 'Consulteu la informació de la casella: Import total de las compensaciones
+                [10].'
               label: Import total de les compensacions [10]
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                341.
               label: Exercici a què es refereix l'autoliquidació
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+                341.
               label: Període de liquidació a què es refereix l'autoliquidació
           construct:
             modelo-341-autoliquidacion:
               field:
-                title: null
+                title: Modelo 341 autoliquidació del IVA
           field:
-            label: null
+            label: Casella— informació fiscal

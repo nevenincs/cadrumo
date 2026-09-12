@@ -11,7 +11,8 @@ modelo:
         2009-2011-junio:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                308.
               label: Exercici a què es refereix la sol·licitud
             x-chim6r1ee1in4qbfchng:
               help: Dada declarada al model 308, presa del disseny de registre oficial.
@@ -19,13 +20,14 @@ modelo:
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
-                title: null
+                title: Modelo 308 — informació fiscal
           field:
-            label: null
+            label: Casella— informació fiscal
         2011-julio-2015:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                308.
               label: Exercici a què es refereix la sol·licitud
             x-chim6r1ee1in4qbfchng:
               help: Dada declarada al model 308, presa del disseny de registre oficial.
@@ -33,13 +35,14 @@ modelo:
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
-                title: null
+                title: Modelo 308 — informació fiscal
           field:
-            label: null
+            label: Casella— informació fiscal
         2016-2018:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                308.
               label: Exercici a què es refereix la sol·licitud
             x-chim6r1ee1in4qbfchng:
               help: Dada declarada al model 308, presa del disseny de registre oficial.
@@ -47,9 +50,9 @@ modelo:
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
-                title: null
+                title: Modelo 308 — informació fiscal
           field:
-            label: null
+            label: Casella— informació fiscal
         2019-y-siguientes:
           casilla:
             x-chim6r1echincrrcelhmirre5lh6ioo:
@@ -59,7 +62,8 @@ modelo:
               help: Casella 932-965 del model 308, exercici 2009.
               label: Devolució - IBAN
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                308.
               label: Exercici a què es refereix la sol·licitud
             x-chim6r1edlq6sbb1chonaqbicln78p9dc5o6ar3cd5i6uso:
               help: Casella 119-178 del model 308, exercici 2009.
@@ -189,7 +193,8 @@ modelo:
               help: Casella 13 del model 308, exercici 2009.
               label: Tipus de declaració
             x-chim6r1eehkn0rpdednmoqb3d5q7ap0:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+                308.
               label: Tipus de sol·licitud (recàrrec d'equivalència / art. 30 bis /
                 art. 21.4 / subjecte passiu ocasional / règim simplificat de transport)
             x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:
@@ -198,6 +203,6 @@ modelo:
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
-                title: null
+                title: Modelo 308 — informació fiscal
           field:
-            label: null
+            label: Casella— informació fiscal

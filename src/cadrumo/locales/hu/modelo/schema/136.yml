@@ -9,83 +9,85 @@ modelo:
         '2026':
           casilla:
             '01':
-              help: null
+              help: 'A Modelo 136 01. casilla adóügyi adatai: adóügyi információ.'
               label: A nyertes sorsjegyért, szelvényért vagy fogadásért kapott nyeremény
                 összege
             '02':
-              help: null
+              help: A Modelo 136 02. casilla adóügyi adatai.
               label: A bevallót egyénileg megillető nyeremény összege vagy értéke
             '03':
-              help: null
+              help: 'Tekintse át a casilla adatait: Cuantia adómentes - gravamen especial.'
               label: A különadó alól mentes összeg
             '04':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóalap.'
               label: Adóalap
             '05':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóösszeg - gravamen especial.'
               label: A különadó összege
             '06':
-              help: null
+              help: 'A Modelo 136 06. casilla adóügyi adatai: adóügyi információ.'
               label: Ugyanazon jogcímen és ugyanazon nyereményhez kapcsolódóan korábbi
                 önadózásokból befizetendő eredmények
             '07':
-              help: null
+              help: 'Tekintse át a casilla adatait: Eredmény a ingresar.'
               label: Befizetendő eredmény
             09:
-              help: null
+              help: 'Tekintse át a casilla adatait: Összeg ingresado a favor - Tesoro
+                Publico.'
               label: Az Állami Kincstár javára befizetett összeg
             autoliquidacion-complementaria:
-              help: null
+              help: 'Tekintse át a casilla adatait: Önadózási bevallás kiegészítő.'
               label: Kiegészítő önadózás
             declarante-nif:
-              help: null
+              help: A Modelo 136 . casilla adóügyi adatai.
               label: Adóazonosító szám (NIF)
             declarante-nombre:
-              help: null
+              help: A Modelo 136 . casilla adóügyi adatai.
               label: Családi és utónév vagy cégnév
             ejercicio-declaracion:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóév.'
               label: Adóév
             fecha-celebracion:
-              help: null
+              help: 'A Modelo 136 . casilla adóügyi adatai: adóügyi információ.'
               label: A húzás időpontja
             fecha-cobro-premio:
-              help: null
+              help: 'A Modelo 136 . casilla adóügyi adatai: adóügyi információ.'
               label: A nyeremény felvételének időpontja
             forma-pago:
-              help: null
+              help: 'A Modelo 136 . casilla adóügyi adatai: adóügyi információ.'
               label: Fizetési mód
             iban:
-              help: null
+              help: A Modelo 136 . casilla adóügyi adatai.
               label: IBAN-kód
             justificante-anterior:
-              help: null
+              help: A Modelo 136 . casilla adóügyi adatai.
               label: A korábbi önadózás azonosító bizonylatszáma
             loteria-apuesta-denominacion:
-              help: null
+              help: A Modelo 136 . casilla adóügyi adatai.
               label: A sorsolás vagy fogadás megnevezése
             organizador-codigo-pais:
-              help: null
+              help: A Modelo 136 . casilla adóügyi adatai.
               label: A szervező szerv vagy szervezet országkódja
             organizador-denominacion:
-              help: null
+              help: A Modelo 136 . casilla adóügyi adatai.
               label: A szervező szerv vagy szervezet megnevezése vagy cégneve
             organizador-pais:
-              help: null
+              help: 'A Modelo 136 . casilla adóügyi adatai: adóügyi információ.'
               label: A szervező szerv vagy szervezet országa
             periodo-declaracion:
-              help: null
+              help: 'Tekintse át a casilla adatait: Időszak.'
               label: Időszak
             precio-unitario:
-              help: null
+              help: 'Tekintse át a casilla adatait: Precio unitario.'
               label: Egységár
             provincia-residencia-irpf:
-              help: null
+              help: A Modelo 136 . casilla adóügyi adatai.
               label: Az SZJA-adózó szokásos tartózkodási helye szerinti tartomány
                 kódja
           construct:
             modelo-136-calculation-construct:
               field:
-                title: null
+                title: A 136. számú nyomtatvány nyereményekre kivetett különadójának
+                  számítási szerkezete
           field:
-            label: null
+            label: Casilla— adóügyi információ

@@ -1,6 +1,48 @@
 modelo:
   schema:
     '123':
+      casilla:
+        continuidad:
+          '07':
+            help: 'Casilla information: Casilla 07: withholdings payments on account.'
+            label: 'Casilla 07: withholdings payments on account'
+          08:
+            help: 'Casilla information: Casilla 08: withholdings payments on account.'
+            label: 'Casilla 08: withholdings payments on account'
+          base-rentas-dividendos:
+            help: 'Casilla information: Casilla 04: base income dividendos.'
+            label: 'Casilla 04: base income dividendos'
+          base-rentas-resto:
+            help: Tax information about tax information in casilla 05 of Modelo 123.
+            label: Casilla 05 — tax information
+          base-retenciones-ingresos-a-cuenta:
+            help: 'Casilla information: Casilla 02: base withholdings payments on
+              account.'
+            label: 'Casilla 02: base withholdings payments on account'
+          cuota-a-ingresar:
+            help: 'Casilla information: Casilla 08: amount a ingresar.'
+            label: 'Casilla 08: amount a ingresar'
+          ingresos-ejercicios-anteriores:
+            help: Tax information about tax information in casilla 04 of Modelo 123.
+            label: Casilla 04 — tax information
+          numero-rentas-resto:
+            help: Tax information for casilla 02 of Modelo 123.
+            label: Casilla 02 — tax field
+          numero-rentas-total:
+            help: Tax information for casilla 03 of Modelo 123.
+            label: Casilla 03 — tax field
+          regularizacion:
+            help: 'Casilla information: Casilla 05: adjustment.'
+            label: 'Casilla 05: adjustment'
+          resultado-anteriores-autoliquidaciones:
+            help: 'Casilla information: Casilla 07: result previous self-assessments.'
+            label: 'Casilla 07: result previous self-assessments'
+          retenciones-ingresos-a-cuenta:
+            help: 'Casilla information: Casilla 03: withholdings payments on account.'
+            label: 'Casilla 03: withholdings payments on account'
+          suma-retenciones-regularizacion:
+            help: Tax information about tax information in casilla 06 of Modelo 123.
+            label: Casilla 06 — tax information
       field:
         official_name: Withholdings and payments on account for Personal Income Tax,
           Corporate Income Tax and Non-Resident Income Tax (permanent establishments).
@@ -10,82 +52,91 @@ modelo:
         2019-2023:
           casilla:
             '01':
-              help: null
+              help: Tax information for casilla 01 of Modelo 123.
               label: Number of recipients
             '02':
-              help: null
+              help: Tax information about tax information in casilla 02 of Modelo
+                123.
               label: Withholding and advance payment tax base
             '03':
-              help: null
+              help: 'Review the casilla information: Withholdings e payments on account.'
               label: Withholdings and advance payments
             '04':
-              help: null
+              help: Tax information about tax information in casilla 04 of Modelo
+                123.
               label: Income from prior years
             '05':
-              help: null
+              help: 'Review the casilla information: Adjustment.'
               label: Adjustment
             '06':
-              help: null
+              help: Tax information about tax information in casilla 06 of Modelo
+                123.
               label: Sum of withholdings and adjustment
             '07':
-              help: null
+              help: Tax information about tax information in casilla 07 of Modelo
+                123.
               label: Result of prior self-assessments
             08:
-              help: null
+              help: 'Review the casilla information: Result a ingresar.'
               label: Result payable
           construct:
             modelo-123-2019-capital-withholding:
               field:
-                title: null
+                title: Modelo 123 — tax information
           field:
-            label: null
+            label: Casilla— tax information
         2024-y-siguientes:
           casilla:
             '01':
-              help: null
+              help: Tax information for casilla 01 of Modelo 123.
               label: Number of dividend and profit-sharing income items
             '02':
-              help: null
+              help: Tax information for casilla 02 of Modelo 123.
               label: Number of other income items
             '03':
-              help: null
+              help: Tax information for casilla 03 of Modelo 123.
               label: Total number of income items
             '04':
-              help: null
+              help: 'Review the casilla information: Base dividendos and units.'
               label: Base for dividends and profit-sharing
             '05':
-              help: null
+              help: Tax information about tax information in casilla 05 of Modelo
+                123.
               label: Base for other income
             '06':
-              help: null
+              help: 'Review the casilla information: Base total.'
               label: Total base
             '07':
-              help: null
+              help: 'Review the casilla information: Withholdings dividendos and units.'
               label: Withholdings on dividends and profit-sharing
             08:
-              help: null
+              help: Tax information about tax information in casilla 08 of Modelo
+                123.
               label: Withholdings on other income
             09:
-              help: null
+              help: 'Review the casilla information: Withholdings total.'
               label: Total withholdings
             '10':
-              help: null
+              help: Tax information about tax information in casilla 10 of Modelo
+                123.
               label: Income from previous tax years
             '11':
-              help: null
+              help: 'Review the casilla information: Adjustment.'
               label: Adjustment
             '12':
-              help: null
+              help: Tax information about tax information in casilla 12 of Modelo
+                123.
               label: Sum of withholdings and adjustment
             '13':
-              help: null
+              help: Tax information about tax information in casilla 13 of Modelo
+                123.
               label: Result of previous self-assessments
             '14':
-              help: null
+              help: 'Review the casilla information: Result a ingresar.'
               label: Result payable
           construct:
             modelo-123-current-capital-withholding:
               field:
-                title: null
+                title: Modelo 123 — tax information
           field:
-            label: null
+            label: Casilla— tax information

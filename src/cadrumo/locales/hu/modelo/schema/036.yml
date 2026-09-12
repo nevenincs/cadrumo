@@ -399,145 +399,150 @@ modelo:
                 vegzett tevekenyseg. Hivatkozasi szam.'
               label: Allando helyisegen kivul vegzett tevekenyseg. Hivatkozasi szam
             x-chim6r1ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
-              help: null
+              help: A Modelo 036 102. casilla adóügyi adatai.
               label: Vezeteknev termeszetes szemely eseten, vagy cegnev jogi szemely
                 eseten
             x-chim6r1ecdgnasr15koj2c0:
-              help: null
+              help: 'A Modelo 036 110. casilla adóügyi adatai: adóügyi információ.'
               label: Adóazonosító szám (NIF) igénylése
             x-chim6r1ecdgnasr15koj2c8:
-              help: null
+              help: 'A Modelo 036 111. casilla adóügyi adatai: adóügyi információ.'
               label: Bejelentkezés a vállalkozók, szakemberek és kifizetők nyilvántartásába
             x-chim6r1ecdgnasr15koj4c0:
-              help: null
+              help: 'A Modelo 036 120. casilla adóügyi adatai: adóügyi információ.'
               label: Végleges NIF igénylése ideiglenes NIF birtokában
             x-chim6r1ecdgnasr15koj4c8:
-              help: null
+              help: 'A Modelo 036 121. casilla adóügyi adatai: adóügyi információ.'
               label: Új NIF-igazolókártya igénylése
             x-chim6r1ecdgnasr15koj4cg:
-              help: null
+              help: 'Tekintse át a casilla adatait: Modificación cím fiscal. (páginas
+                2A, 2B és 2C).'
               label: Adóügyi székhely módosítása (2A, 2B és 2C oldal)
             x-chim6r1ecdgnasr15koj4co:
-              help: null
+              help: 'A Modelo 036 123. casilla adóügyi adatai: adóügyi információ.'
               label: Székhely vagy ügyviteli központ módosítása (2A és 2B oldal)
             x-chim6r1ecdgnasr15koj4d0:
-              help: null
+              help: A Modelo 036 124. casilla adóügyi adatai.
               label: Értesítési cím módosítása vagy törlése (2A, 2B és 2C oldal)
             x-chim6r1ecdgnasr15koj4d8:
-              help: null
+              help: 'A Modelo 036 125. casilla adóügyi adatai: adóügyi információ.'
               label: Egyéb azonosító adatok vagy domain módosítása (2A, 2B és 2C oldal)
             x-chim6r1ecdgnasr15koj4dg:
-              help: null
+              help: 'Tekintse át a casilla adatait: Modificación adatok representantes
+                (oldal 3).'
               label: Képviselői adatok módosítása (3. oldal)
             x-chim6r1ecdgnasr15koj4do:
-              help: null
+              help: 'A Modelo 036 127. casilla adóügyi adatai: adóügyi információ.'
               label: Gazdasági tevékenységekre és telephelyekre vonatkozó adatok módosítása
                 (4. oldal)
             x-chim6r1ecdgnasr15koj4e0:
-              help: null
+              help: 'A Modelo 036 128. casilla adóügyi adatai: adóügyi információ.'
               label: Nagyvállalati minősítés vagy 6.000.000 eurót meghaladó költségvetésű
                 közigazgatási szerv minősítés módosítása (5. oldal)
             x-chim6r1ecdgnasr15koj4e8:
-              help: null
+              help: A Modelo 036 129. casilla adóügyi adatai.
               label: Be- vagy kijelentkezés a havi visszatérítési nyilvántartásba
                 (5. oldal)
             x-chim6r1ecdgnasr15koj6c0:
-              help: null
+              help: A Modelo 036 130. casilla adóügyi adatai.
               label: Be- vagy kijelentkezés a közösségi adóalanyok nyilvántartásába
                 (5. oldal)
             x-chim6r1ecdgnasr15koj6c8:
-              help: null
+              help: 'A Modelo 036 131. casilla adóügyi adatai: adóügyi információ.'
               label: Az általános forgalmi adóra vonatkozó adatok módosítása (5. oldal)
             x-chim6r1ecdgnasr15koj6cg:
-              help: null
+              help: A Modelo 036 132. casilla adóügyi adatai.
               label: A személyi jövedelemadóra vonatkozó adatok módosítása (6. oldal)
             x-chim6r1ecdgnasr15koj6co:
-              help: null
+              help: 'Tekintse át a casilla adatait: Modificación adatok relativos
+                al Impuesto sobre Társaságok (oldal 6).'
               label: A társasági adóra vonatkozó adatok módosítása (6. oldal)
             x-chim6r1ecdgnasr15koj6d0:
-              help: null
+              help: A Modelo 036 134. casilla adóügyi adatai.
               label: A külföldi illetőségűek jövedelemadójára vonatkozó adatok módosítása
                 állandó telephelyek, illetve külföldön alapított, spanyol területen
                 jelen lévő jövedelem-hozzárendelésű szervezetek esetében (6. oldal)
             x-chim6r1ecdgnasr15koj6d8:
-              help: null
+              help: 'A Modelo 036 135. casilla adóügyi adatai: adóügyi információ.'
               label: A 49/2002. sz. törvény II. címe szerinti különleges adózási rendszer
                 választása vagy arról való lemondás (6. oldal)
             x-chim6r1ecdgnasr15koj6dg:
-              help: null
+              help: 'Tekintse át a casilla adatait: Modificación adatok relativos
+                a adólevonások e előlegfizetések (oldal 7).'
               label: A levonásokra és előlegfizetésekre vonatkozó adatok módosítása
                 (7. oldal)
             x-chim6r1ecdgnasr15koj6do:
-              help: null
+              help: 'A Modelo 036 137. casilla adóügyi adatai: adóügyi információ.'
               label: Egyéb adókra és nyilvántartásokra vonatkozó adatok módosítása
                 (7. oldal)
             x-chim6r1ecdgnasr15koj6e0:
-              help: null
+              help: 'Tekintse át a casilla adatait: Modificación adatok relativos
+                a regímenes especiales - comercio intracomunitario (oldal 7).'
               label: A közösségi kereskedelem különleges rendszereire vonatkozó adatok
                 módosítása (7. oldal)
             x-chim6r1ecdgnasr15koj6e8:
-              help: null
+              help: 'A Modelo 036 139. casilla adóügyi adatai: adóügyi információ.'
               label: A tagok, résztvevők vagy közreműködők jegyzékére vonatkozó adatok
                 módosítása (8. oldal)
             x-chim6r1ecdgnasr15koj8c0:
-              help: null
+              help: A Modelo 036 140. casilla adóügyi adatai.
               label: Valamennyi vállalkozási és/vagy szakmai tevékenység megszüntetése
                 (jogi személyek és szervezetek, felszámolás nélkül; inaktív szervezetek)
             x-chim6r1ecdgnasr15koj8cg:
-              help: null
+              help: A Modelo 036 142. casilla adóügyi adatai.
               label: Az AEAT, a TEA és a DGT értesítéseinek fogadására szolgáló telefonszámok
                 és elektronikus címek módosítása vagy törlése (2A, 2B és 2C oldal)
             x-chim6r1ecdgnasr15koj8co:
-              help: null
+              help: 'A Modelo 036 143. casilla adóügyi adatai: adóügyi információ.'
               label: Az áfanyilvántartási könyvek AEAT elektronikus ügyfélkapun keresztüli
                 vezetésének választásáról és az arról való lemondásról szóló bejelentés
                 (5. oldal)
             x-chim6r1ecdgnasr15koj8d0:
-              help: null
+              help: 'A Modelo 036 144. casilla adóügyi adatai: adóügyi információ.'
               label: NIF helyreállításának kérelmezése
             x-chim6r1ecdgnasr15koj8d8:
-              help: null
+              help: 'A Modelo 036 145. casilla adóügyi adatai: adóügyi információ.'
               label: A tényleges tulajdonosokra vonatkozó adatok módosítása (10. oldal)
             x-chim6r1ecdgnasr15koj8dg:
-              help: null
+              help: A Modelo 036 146. casilla adóügyi adatai.
               label: Felszámolás alatt álló szervezetekre vonatkozó módosítás
             x-chim6r1ecdgnasr15kojac0:
-              help: null
+              help: A Modelo 036 150. casilla adóügyi adatai.
               label: Kijelentkezés a vállalkozók, szakemberek és kifizetők nyilvántartásából
             x-chim6r1ecdgnasr15lh62qj1:
-              help: null
+              help: A Modelo 036 151. casilla adóügyi adatai.
               label: A vallalkozok, szakemberek es levonok nyilvantartasabol valo
                 torles oka
             x-chim6r1eclr6arjk5llmirj4:
-              help: null
+              help: 'A Modelo 036 . casilla adóügyi adatai: adóügyi információ.'
               label: Nyilvántartási bevallás típusa
             x-chim6r1ecpim6q315limcpb3ehknco9dc9gmko8:
-              help: null
+              help: A Modelo 036 152. casilla adóügyi adatai.
               label: A nyilvantartasbol valo torles tenyleges datuma
             x-chim6r1ecpim6q315limcpb3ehknco9dcdin6p8:
-              help: null
+              help: 'A Modelo 036 141. casilla adóügyi adatai: adóügyi információ.'
               label: Az osszes uzleti vagy szakmai tevekenyseg megszunesenek tenyleges
                 datuma
             x-chim6r1ecpkn4rb15lhm2r39chgm8:
-              help: null
+              help: 'A Modelo 036 . casilla adóügyi adatai: adóügyi információ.'
               label: Milyen minosegben irjak ala a bevallast
             x-chim6r1ecpkn4rb15lj6aor8c4:
-              help: null
+              help: 'A Modelo 036 . casilla adóügyi adatai: adóügyi információ.'
               label: A bevallas alairasanak datuma
             x-chim6r1ecpkn4rb15lj6isjdc5n78p8:
-              help: null
+              help: 'A Modelo 036 . casilla adóügyi adatai: adóügyi információ.'
               label: A bevallast alairo szemely vezetek- es keresztneve
             x-chim6r1ecpkn4rb15lm7apr1e8:
-              help: null
+              help: 'A Modelo 036 . casilla adóügyi adatai: adóügyi információ.'
               label: A bevallas alairasanak helye
             x-chim6r1edpkmc:
-              help: null
+              help: A Modelo 036 101. casilla adóügyi adatai.
               label: A bevallo adoazonosito szama (NIF)
             x-chim6r1edpnmqojick:
-              help: null
+              help: A Modelo 036 103. casilla adóügyi adatai.
               label: Keresztnev termeszetes szemelyek eseten
             x-chim6r1eepkmepbecdkm2b9i60p3a:
-              help: null
+              help: 'A Modelo 036 vigencia. casilla adóügyi adatai: adóügyi információ.'
               label: Jogszabályi hatály 2025. február 3-tól
             x-clo2sobmd5pmuspdc5im2t1dc5m78o8:
               help: 'A 036-es modelo adata, 2025. adóév: Allando telephely. Ertesitesek.
@@ -2413,115 +2418,115 @@ modelo:
               label: Jogi szemely vagy szervezet. Jogi szemelyiseg es szervezeti forma.
                 Jogi szemelyiseggel rendelkezik
             x-e9in0c9ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
-              help: null
+              help: A Modelo 036 305. casilla adóügyi adatai.
               label: A kepviselo vezetek- es keresztneve vagy cegneve (elso kepviselo,
                 3.1 blokk)
             x-e9in0c9ecdgnasr15lo74pbjcln78ob3d5nms:
-              help: null
+              help: A Modelo 036 . casilla adóügyi adatai.
               label: 'A benyujtas oka: a kepviselo bejegyzese, torlese vagy modositasa
                 (elso kepviselo, 3.1 blokk)'
             x-e9in0c9ecdgnasr15lp6as3iclpmarjkc5hmirre:
-              help: null
+              help: A Modelo 036 . casilla adóügyi adatai.
               label: A kepviselet oka (elso kepviselo, 3.1 blokk)
             x-e9in0c9echin6qb7dpgm8o9dc5o6ar3cd5i6ub9h:
-              help: null
+              help: 'A Modelo 036 308. casilla adóügyi adatai: adóügyi információ.'
               label: A kijelolt termeszetes szemely elso vezetekneve (elso kepviselo,
                 3.1 blokk)
             x-e9in0c9echin6qb7dpgm8o9dc5o6ar3cd5i6ub9i:
-              help: null
+              help: 'A Modelo 036 309. casilla adóügyi adatai: adóügyi információ.'
               label: A kijelolt termeszetes szemely masodik vezetekneve (elso kepviselo,
                 3.1 blokk)
             x-e9in0c9echin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
-              help: null
+              help: A Modelo 036 . casilla adóügyi adatai.
               label: A kijelolt termeszetes szemelyre vonatkozo benyujtas oka (elso
                 kepviselo, 3.1 blokk)
             x-e9in0c9echin6qb7dpgm8o9dcpim6q315lhm2tbjc4:
-              help: null
+              help: A Modelo 036 313. casilla adóügyi adatai.
               label: A kijelolt termeszetes szemelyre vonatkozo benyujtasi ok tenyleges
                 datuma (elso kepviselo, 3.1 blokk)
             x-e9in0c9echin6qb7dpgm8o9ddpkmc:
-              help: null
+              help: 'A Modelo 036 307. casilla adóügyi adatai: adóügyi információ.'
               label: A kijelolt termeszetes szemely adoazonosito szama (NIF) (elso
                 kepviselo, 3.1 blokk)
             x-e9in0c9echin6qb7dpgm8o9ddpnmqojick:
-              help: null
+              help: 'A Modelo 036 310. casilla adóügyi adatai: adóügyi információ.'
               label: A kijelolt termeszetes szemely keresztneve (elso kepviselo, 3.1
                 blokk)
             x-e9in0c9ecpim6q315lhm2tbjc4:
-              help: null
+              help: A Modelo 036 303. casilla adóügyi adatai.
               label: A kepviselore vonatkozo benyujtasi ok tenyleges datuma (elso
                 kepviselo, 3.1 blokk)
             x-e9in0c9edpkmc:
-              help: null
+              help: 'A Modelo 036 304. casilla adóügyi adatai: adóügyi információ.'
               label: A kepviselo adoazonosito szama (NIF) (elso kepviselo, 3.1 blokk)
             x-e9in0c9ee9in0sj5edimst31cdkmurhddhimeobc5lhmoobmck:
-              help: null
+              help: 'A Modelo 036 331. casilla adóügyi adatai: adóügyi információ.'
               label: A torvenyes kepviselet kodja (elso kepviselo, 3.1 blokk)
             x-e9in0c9ee9in6qb4cln78p8:
-              help: null
+              help: 'A Modelo 036 306. casilla adóügyi adatai: adóügyi információ.'
               label: 'A kepviselo belfoldi illetosegu-e: igen vagy nem (elso kepviselo,
                 3.1 blokk)'
             x-e9in0c9eehkn0rpde9in0sj5edimst31cdkmurg:
-              help: null
+              help: 'A Modelo 036 333. casilla adóügyi adatai: adóügyi információ.'
               label: A kepviselet tipusanak kodja (elso kepviselo, 3.1 blokk)
             x-e9in0c9eehkn8tbcdsmn4pbge9in6pbeehgm6qbfdo:
-              help: null
+              help: 'A Modelo 036 334. casilla adóügyi adatai: adóügyi információ.'
               label: A kepviseleti jogcim kodja (elso kepviselo, 3.1 blokk)
             x-e9in0chec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
-              help: null
+              help: A Modelo 036 355. casilla adóügyi adatai.
               label: A kepviselo vezetek- es keresztneve vagy cegneve (masodik kepviselo,
                 3.2 blokk)
             x-e9in0checdgnasr15lo74pbjcln78ob3d5nms:
-              help: null
+              help: A Modelo 036 . casilla adóügyi adatai.
               label: 'A benyujtas oka: a kepviselo bejegyzese, torlese vagy modositasa
                 (masodik kepviselo, 3.2 blokk)'
             x-e9in0checdgnasr15lp6as3iclpmarjkc5hmirre:
-              help: null
+              help: A Modelo 036 . casilla adóügyi adatai.
               label: A kepviselet oka (masodik kepviselo, 3.2 blokk)
             x-e9in0chechin6qb7dpgm8o9dc5o6ar3cd5i6ub9h:
-              help: null
+              help: 'A Modelo 036 358. casilla adóügyi adatai: adóügyi információ.'
               label: A kijelolt termeszetes szemely elso vezetekneve (masodik kepviselo,
                 3.2 blokk)
             x-e9in0chechin6qb7dpgm8o9dc5o6ar3cd5i6ub9i:
-              help: null
+              help: 'A Modelo 036 359. casilla adóügyi adatai: adóügyi információ.'
               label: A kijelolt termeszetes szemely masodik vezetekneve (masodik kepviselo,
                 3.2 blokk)
             x-e9in0chechin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
-              help: null
+              help: A Modelo 036 . casilla adóügyi adatai.
               label: A kijelolt termeszetes szemelyre vonatkozo benyujtas oka (masodik
                 kepviselo, 3.2 blokk)
             x-e9in0chechin6qb7dpgm8o9dcpim6q315lhm2tbjc4:
-              help: null
+              help: A Modelo 036 363. casilla adóügyi adatai.
               label: A kijelolt termeszetes szemelyre vonatkozo benyujtasi ok tenyleges
                 datuma (masodik kepviselo, 3.2 blokk)
             x-e9in0chechin6qb7dpgm8o9ddpkmc:
-              help: null
+              help: 'A Modelo 036 357. casilla adóügyi adatai: adóügyi információ.'
               label: A kijelolt termeszetes szemely adoazonosito szama (NIF) (masodik
                 kepviselo, 3.2 blokk)
             x-e9in0chechin6qb7dpgm8o9ddpnmqojick:
-              help: null
+              help: 'A Modelo 036 360. casilla adóügyi adatai: adóügyi információ.'
               label: A kijelolt termeszetes szemely keresztneve (masodik kepviselo,
                 3.2 blokk)
             x-e9in0checpim6q315lhm2tbjc4:
-              help: null
+              help: A Modelo 036 353. casilla adóügyi adatai.
               label: A kepviselore vonatkozo benyujtasi ok tenyleges datuma (masodik
                 kepviselo, 3.2 blokk)
             x-e9in0chedpkmc:
-              help: null
+              help: 'A Modelo 036 354. casilla adóügyi adatai: adóügyi információ.'
               label: A kepviselo adoazonosito szama (NIF) (masodik kepviselo, 3.2
                 blokk)
             x-e9in0chee9in0sj5edimst31cdkmurhddhimeobc5lhmoobmck:
-              help: null
+              help: 'A Modelo 036 381. casilla adóügyi adatai: adóügyi információ.'
               label: A torvenyes kepviselet kodja (masodik kepviselo, 3.2 blokk)
             x-e9in0chee9in6qb4cln78p8:
-              help: null
+              help: 'A Modelo 036 356. casilla adóügyi adatai: adóügyi információ.'
               label: 'A kepviselo belfoldi illetosegu-e: igen vagy nem (masodik kepviselo,
                 3.2 blokk)'
             x-e9in0cheehkn0rpde9in0sj5edimst31cdkmurg:
-              help: null
+              help: 'A Modelo 036 383. casilla adóügyi adatai: adóügyi információ.'
               label: A kepviselet tipusanak kodja (masodik kepviselo, 3.2 blokk)
             x-e9in0cheehkn8tbcdsmn4pbge9in6pbeehgm6qbfdo:
-              help: null
+              help: 'A Modelo 036 384. casilla adóügyi adatai: adóügyi információ.'
               label: A kepviseleti jogcim kodja (masodik kepviselo, 3.2 blokk)
             x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lgmoorfd1nmo:
               help: 'A 036-es modelo adata, 2025. adóév: Adoraktari kitarolok nyilvantartasa.
@@ -2797,99 +2802,99 @@ modelo:
               label: Tagok, resztvevok vagy reszesedok. Vezetek- es keresztnev vagy
                 cegnev
             x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: null
+              help: 'A Modelo 036 923. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett felszamolasi, vagyoni vagy hagyateki
                 hanyada (13a jogutod)
             x-edqm6bb15pn6ipg:
-              help: null
+              help: 'A Modelo 036 920. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett adoazonosito szama (NIF) (13a
                 jogutod)
             x-edqm6bb15pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: A Modelo 036 921. casilla adóügyi adatai.
               label: A jogutod vagy kedvezmenyezett vezetek- es keresztneve vagy cegneve
                 (13a jogutod)
             x-edqm6bb15po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: null
+              help: 'A Modelo 036 922. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
                 oroklesi szazaleka (13a jogutod)
             x-edqm6bb25phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: null
+              help: 'A Modelo 036 927. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett felszamolasi, vagyoni vagy hagyateki
                 hanyada (13b jogutod)
             x-edqm6bb25pn6ipg:
-              help: null
+              help: 'A Modelo 036 924. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett adoazonosito szama (NIF) (13b
                 jogutod)
             x-edqm6bb25pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: A Modelo 036 925. casilla adóügyi adatai.
               label: A jogutod vagy kedvezmenyezett vezetek- es keresztneve vagy cegneve
                 (13b jogutod)
             x-edqm6bb25po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: null
+              help: 'A Modelo 036 926. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
                 oroklesi szazaleka (13b jogutod)
             x-edqm6bb35phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: null
+              help: 'A Modelo 036 931. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett felszamolasi, vagyoni vagy hagyateki
                 hanyada (13c jogutod)
             x-edqm6bb35pn6ipg:
-              help: null
+              help: 'A Modelo 036 928. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett adoazonosito szama (NIF) (13c
                 jogutod)
             x-edqm6bb35pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: A Modelo 036 929. casilla adóügyi adatai.
               label: A jogutod vagy kedvezmenyezett vezetek- es keresztneve vagy cegneve
                 (13c jogutod)
             x-edqm6bb35po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: null
+              help: 'A Modelo 036 930. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
                 oroklesi szazaleka (13c jogutod)
             x-edqm6bb45phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: null
+              help: 'A Modelo 036 935. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett felszamolasi, vagyoni vagy hagyateki
                 hanyada (13d jogutod)
             x-edqm6bb45pn6ipg:
-              help: null
+              help: 'A Modelo 036 932. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett adoazonosito szama (NIF) (13d
                 jogutod)
             x-edqm6bb45pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: A Modelo 036 933. casilla adóügyi adatai.
               label: A jogutod vagy kedvezmenyezett vezetek- es keresztneve vagy cegneve
                 (13d jogutod)
             x-edqm6bb45po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: null
+              help: 'A Modelo 036 934. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
                 oroklesi szazaleka (13d jogutod)
             x-edqm6bb55phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: null
+              help: 'A Modelo 036 939. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett felszamolasi, vagyoni vagy hagyateki
                 hanyada (13e jogutod)
             x-edqm6bb55pn6ipg:
-              help: null
+              help: 'A Modelo 036 936. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett adoazonosito szama (NIF) (13e
                 jogutod)
             x-edqm6bb55pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: A Modelo 036 937. casilla adóügyi adatai.
               label: A jogutod vagy kedvezmenyezett vezetek- es keresztneve vagy cegneve
                 (13e jogutod)
             x-edqm6bb55po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: null
+              help: 'A Modelo 036 938. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
                 oroklesi szazaleka (13e jogutod)
             x-edqm6bb65phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: null
+              help: 'A Modelo 036 943. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett felszamolasi, vagyoni vagy hagyateki
                 hanyada (13f jogutod)
             x-edqm6bb65pn6ipg:
-              help: null
+              help: 'A Modelo 036 940. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett adoazonosito szama (NIF) (13f
                 jogutod)
             x-edqm6bb65pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: A Modelo 036 941. casilla adóügyi adatai.
               label: A jogutod vagy kedvezmenyezett vezetek- es keresztneve vagy cegneve
                 (13f jogutod)
             x-edqm6bb65po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: null
+              help: 'A Modelo 036 942. casilla adóügyi adatai: adóügyi információ.'
               label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
                 oroklesi szazaleka (13f jogutod)
             x-ehkn8bj15lhm2tbjc4mmcpb3d1gg:
@@ -3156,6 +3161,6 @@ modelo:
           construct:
             modelo-036-censo-foundation:
               field:
-                title: null
+                title: Modelo 036 censo foundation
           field:
-            label: null
+            label: Casilla— adóügyi információ

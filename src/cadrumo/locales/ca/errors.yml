@@ -275,8 +275,6 @@ errors:
       és compatible amb l'estat actual de la revisió de càlcul.
     error_modelo_casilla_provenance_missing: Una casella del resultat del motor no
       té definició al registre.
-    error_modelo_detail_row_wrong_modelo: La fila de detall de tipus {row_type} pertany
-      al model {owning_modelo}, però aquest càlcul correspon al model {work_unit_modelo}.
     error_modelo_external_filing_import: No s'ha pogut desar la declaració externa
       importada. Comprova els valors de les caselles i la referència d'evidència.
     error_modelo_filing_record_not_found: No s'ha trobat la declaració registrada
@@ -827,8 +825,6 @@ errors:
       disponible.
     refused_application_live_input: La sol·licitud de lectura en viu a l'AEAT no es
       pot executar amb les dades indicades.
-    refused_application_registry_input: La sol·licitud al registre de models no es
-      pot executar amb les dades indicades.
     refused_auth_certificate_source_not_found: L'origen de certificat indicat no està
       registrat.
     refused_auth_configure_dangling_active_profile: El punter de perfil actiu no resol
@@ -1092,8 +1088,6 @@ errors:
       o no conté cap taula amb fila de capçalera.
     refused_taxation_comparison: La comparació tributària conjunta/individual no es
       pot realitzar per a aquest model o instantània.
-    refused_topic_catalogue_empty: El catàleg de temes inclòs no conté cap tema.
-    refused_topic_not_found: No s'ha trobat el tema sol·licitat.
     refused_user_profile_validation: Un valor del perfil d'usuari no és vàlid. Corregeix
       la dada indicada.
     refused_wizard_answer_type: Un camp de resposta de l'assistent ha rebut un tipus

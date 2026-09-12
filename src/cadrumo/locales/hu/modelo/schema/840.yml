@@ -9,392 +9,393 @@ modelo:
         2003-y-siguientes:
           casilla:
             x-c5hn8bj1cdq6itj9chgm8bbge9kmsor9e1gmo:
-              help: null
+              help: A Modelo 840 59. casilla adóügyi adatai.
               label: Fotevekenyseg
             x-c5hn8bj1dpniqqbed5hmirpde1p6irb5e9giqtj5f8:
-              help: null
+              help: A Modelo 840 65. casilla adóügyi adatai.
               label: A tevekenyseg elso megkezdesenek eve
             x-c5hn8bj2dtn6ipj9cdgm6qbfdo:
-              help: null
+              help: A Modelo 840 61. casilla adóügyi adatai.
               label: Alkalmazando kedvezmeny (kod es leiras)
             x-c5hn8bj3c5mn0obdcln78rpdehqn4qbjehkm6ro:
-              help: null
+              help: A Modelo 840 . casilla adóügyi adatai.
               label: A tevekenyseget turisztikai kempingen belul vegzik
             x-c5hn8bj3c5qn6o9dc9gmko8:
-              help: null
+              help: A Modelo 840 63. casilla adóügyi adatai.
               label: A torles oka (kod es leiras)
             x-c5hn8bj3c5qn6o9dchim6r31e9gm6qbfdomm6rrde1m6arb5dpq62sj9c4:
-              help: null
+              help: A Modelo 840 64. casilla adóügyi adatai.
               label: A kiegeszito bevallas oka
             x-c5hn8bj3c5qn6o9depgn4qb1cdkmurg:
-              help: null
+              help: A Modelo 840 . casilla adóügyi adatai.
               label: A valtozas oka
             x-c5hn8bj3dhgn6p9dcdqmut31:
-              help: null
+              help: A Modelo 840 33. casilla adóügyi adatai.
               label: Kvota tipusa (M onkormanyzati, N orszagos, P tartomanyi, vagy
                 ures)
             x-c5hn8bj3dti6iprf5lmnarj9cdkn0qbf:
-              help: null
+              help: A Modelo 840 39. casilla adóügyi adatai.
               label: A tevekenyseg telepuleskodja (az adohatosag tolti ki)
             x-c5hn8bj3dti6iprf5lo74rrmd5n66qb1:
-              help: null
+              help: A Modelo 840 41. casilla adóügyi adatai.
               label: A tevekenyseg tartomanykodja (az adohatosag tolti ki)
             x-c5hn8bj4clpm6sj9e1hmirre:
-              help: null
+              help: A Modelo 840 36. casilla adóügyi adatai.
               label: A tevekenyseg leirasa (az adohatosag tolti ki)
             x-c5hn8bj4dtmmior9dhkmubb3dti6iprf5lo6usrkc5m0:
-              help: null
+              help: A Modelo 840 44. casilla adóügyi adatai.
               label: 'A tevekenyseg cime: iranyitoszam'
             x-c5hn8bj4dtmmior9dhkmubb3dti6iprf5lr6io8:
-              help: null
+              help: A Modelo 840 45. casilla adóügyi adatai.
               label: 'A tevekenyseg cime: kozteruletkod (az adohatosag tolti ki)'
             x-c5hn8bj4dtmmior9dhkmubb5edhm2r35e9gg:
-              help: null
+              help: 'Tekintse át a casilla adatait: Cím - tevékenység: escalera.'
               label: 'A tevekenyseg cime: lepcsohaz'
             x-c5hn8bj4dtmmior9dhkmubbbd5m6urb5ehp6u:
-              help: null
+              help: 'Tekintse át a casilla adatait: Cím - tevékenység: kilometro.'
               label: 'A tevekenyseg cime: kilometerjelzes'
             x-c5hn8bj4dtmmior9dhkmubbeelmmasjf:
-              help: null
+              help: A Modelo 840 46. casilla adóügyi adatai.
               label: 'A tevekenyseg cime: hazszam'
             x-c5hn8bj4dtmmior9dhkmubbgd5pmu:
-              help: null
+              help: 'Tekintse át a casilla adatait: Cím - tevékenység: piso.'
               label: 'A tevekenyseg cime: emelet'
             x-c5hn8bj4dtmmior9dhkmubbgehng:
-              help: null
+              help: 'A Modelo 840 48. casilla adóügyi adatai: adóügyi információ.'
               label: 'A tevekenyseg cime: „Pto.”, a nyilvantartasi terv roviditese
                 szerint'
             x-c5hn8bj4dtmmior9dhkmubbgelin4t31:
-              help: null
+              help: 'Tekintse át a casilla adatait: Cím - tevékenység: puerta.'
               label: 'A tevekenyseg cime: ajto'
             x-c5hn8bj4dtmmior9dhkmubbjd5jmoo9depkm2:
-              help: null
+              help: 'Tekintse át a casilla adatait: Cím - tevékenység: sigla - via
+                publica.'
               label: 'A tevekenyseg cime: a kozterulet jellegenek roviditese'
             x-c5hn8bj4dtmmior9dhkmubbkclm6apjfdpng:
-              help: null
+              help: 'Tekintse át a casilla adatait: Cím - tevékenység: telefono.'
               label: 'A tevekenyseg cime: telefonszam'
             x-c5hn8bj4dtmmior9dhkmubbmd5giqs3lc9m6ior1:
-              help: null
+              help: 'Tekintse át a casilla adatait: Cím - tevékenység: név - via publica.'
               label: 'A tevekenyseg cime: kozteruletnev'
             x-c5hn8bj5f1imsor9dtn0:
-              help: null
+              help: A Modelo 840 60. casilla adóügyi adatai.
               label: Alkalmazando mentesseg (kod es leiras)
             x-c5hn8bj6clhmgo9dd5n6ior9dsmncobid5gm6qbfdomm6pbjck:
-              help: null
+              help: A Modelo 840 62. casilla adóügyi adatai.
               label: A megkezdes, valtozas, megszunes vagy egyeb ok datuma
             x-c5hn8bj7e9qn0rpdclo6ipric5j6a:
-              help: null
+              help: 'A Modelo 840 37. casilla adóügyi adatai: adóügyi információ.'
               label: Az IAE tarifak csoportja vagy tetele
             x-c5hn8bj9dpj6usjdc5hmirre5lgm8qb3d5nmsobc:
-              help: null
+              help: 'Tekintse át a casilla adatait: Informacion adicional.'
               label: Tovabbi informaciok
             x-c5hn8bjcdthm2r1dc5j6aorkdsmmirj4d5p6aorkc5mmarjkck:
-              help: null
+              help: 'A Modelo 840 35. casilla adóügyi adatai: adóügyi információ.'
               label: Van a tevekenyseghez kozvetve kapcsolodo helyiseg
             x-c5hn8bjdeln6ior9e1kmu:
-              help: null
+              help: A Modelo 840 38. casilla adóügyi adatai.
               label: A tevekenyseg vegzesenek telepuleskodja
             x-c5hn8bjedtq62bb1ctp7as31cdkmurhd64:
-              help: null
+              help: 'A Modelo 840 53. casilla adóügyi adatai: adóügyi információ.'
               label: 'Alkalmazando megjegyzesek: csoportositas, elso'
             x-c5hn8bjedtq62bb1ctp7as31cdkmurhd68:
-              help: null
+              help: 'A Modelo 840 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Alkalmazando megjegyzesek: csoportositas, masodik'
             x-c5hn8bjedtq62bb1ctp7as31cdkmurhd6c:
-              help: null
+              help: 'A Modelo 840 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Alkalmazando megjegyzesek: csoportositas, harmadik'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqc8:
-              help: null
+              help: 'A Modelo 840 55. casilla adóügyi adatai: adóügyi információ.'
               label: 'Alkalmazando megjegyzesek: tetel, elso'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqcg:
-              help: null
+              help: 'A Modelo 840 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Alkalmazando megjegyzesek: tetel, masodik'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqco:
-              help: null
+              help: 'A Modelo 840 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Alkalmazando megjegyzesek: tetel, harmadik'
             x-c5hn8bjedtq62bb7e9qn0rpd64:
-              help: null
+              help: 'A Modelo 840 54. casilla adóügyi adatai: adóügyi információ.'
               label: 'Alkalmazando megjegyzesek: csoport, elso'
             x-c5hn8bjedtq62bb7e9qn0rpd68:
-              help: null
+              help: 'A Modelo 840 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Alkalmazando megjegyzesek: csoport, masodik'
             x-c5hn8bjedtq62bb7e9qn0rpd6c:
-              help: null
+              help: 'A Modelo 840 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Alkalmazando megjegyzesek: csoport, harmadik'
             x-c5hn8bjeelmmasjf5lp6apj5e9imsor9c4:
-              help: null
+              help: A Modelo 840 67. casilla adóügyi adatai.
               label: A tevekenyseg hivatkozasi szama
             x-c5hn8bjge9nncqbecdkm2:
-              help: null
+              help: A Modelo 840 40. casilla adóügyi adatai.
               label: A tevekenyseg vegzesenek tartomanykodja
             x-c5hn8bjge9nncqbecdkm2bb3elnn8o9de1p6utj9dphmiobc:
-              help: null
+              help: 'A Modelo 840 . casilla adóügyi adatai: adóügyi információ.'
               label: A tartomanyi kvotahoz tartozo tartomany
             x-c5hn8bjiclhmas33d5nmsbbcdtq6asj9c5pg:
-              help: null
+              help: A Modelo 840 . casilla adóügyi adatai.
               label: Lottó- es fogadasi atvetel tortenik
             x-c5hn8bjicljmoo9d6gmj4bb6:
-              help: null
+              help: 'A Modelo 840 57. casilla adóügyi adatai: adóügyi információ.'
               label: 'Alkalmazando szabaly: 4. szabaly, 2. F) bekezdes'
             x-c5hn8bjjclhm6qbfdo:
-              help: null
+              help: A Modelo 840 58. casilla adóügyi adatai.
               label: Az IAE tarifak szakasza (az adohatosag tolti ki)
             x-c5hn8bjkd5o6ubb1cdq6itj9chgm8:
-              help: null
+              help: 'A Modelo 840 34. casilla adóügyi adatai: adóügyi információ.'
               label: Tevekenyseg tipusa (E uzleti, P szakmai, A muveszeti)
             x-cdqmut315pgmst35ecmm4rred5j6ior1cdkmurj5ecmmirj3e9imqpbeehnn6:
-              help: null
+              help: A Modelo 840 100. casilla adóügyi adatai.
               label: Kvota a kedvezmenyek es novelesek elott (az adohatosag tolti
                 ki)
             x-cdqmut315ph6urj9cpkm6ob3d5nmsbb3dhgncp8:
-              help: null
+              help: A Modelo 840 101. casilla adóügyi adatai.
               label: Az alkalmazott kedvezmeny kodja (az adohatosag tolti ki)
             x-cdqmut315ph6urj9cpkm6ob3d5nmsbb9dlo6usjkck:
-              help: null
+              help: A Modelo 840 103. casilla adóügyi adatai.
               label: A kedvezmeny osszege (az adohatosag tolti ki)
             x-cdqmut315ph6urj9cpkm6ob3d5nmsbbgdtp66pbeehgmkp8:
-              help: null
+              help: A Modelo 840 102. casilla adóügyi adatai.
               label: Az a szazalek, amelyre a kedvezmeny vonatkozik (az adohatosag
                 tolti ki)
             x-cdqmut315pi6asrgelin6bb2dtn6ipj9cdgm6qbfdpin6bb9dphn4pbdcln78rrj:
-              help: null
+              help: A Modelo 840 107. casilla adóügyi adatai.
               label: Kvota a kedvezmenyek es novelesek utan (az adohatosag tolti ki)
             x-cdqmut315pkmsoriclmmarjkdsmm6r31epig:
-              help: null
+              help: A Modelo 840 104. casilla adóügyi adatai.
               label: Az alkalmazott noveles kodja (az adohatosag tolti ki)
             x-cdqmut315pkmsoriclmmarjkdsmmirbgdtp78p8:
-              help: null
+              help: A Modelo 840 106. casilla adóügyi adatai.
               label: A noveles osszege (az adohatosag tolti ki)
             x-cdqmut315pkmsoriclmmarjkdsmn0rricdimst31d9ig:
-              help: null
+              help: A Modelo 840 105. casilla adóügyi adatai.
               label: Az a szazalek, amelyre a noveles vonatkozik (az adohatosag tolti
                 ki)
             x-cdqmut315pmm2sbld5n62spde9im6sj5c5q6itj1ecmm2tbkdtr6arjkc4:
-              help: null
+              help: A Modelo 840 . casilla adóügyi adatai.
               label: Jatekgepek vagy automata ertekesites kvotaja (az adohatosag tolti
                 ki)
             x-cdqmut315pq62sj9cpgiqrpdd5mn0rriehiiqrb9dpkmqro:
-              help: null
+              help: A Modelo 840 108. casilla adóügyi adatai.
               label: Tarifakvota vagy minimalis osszeg (az adohatosag tolti ki)
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 840 14. casilla adóügyi adatai: adóév.'
               label: A bevallás vonatkozási adóéve
             x-chim6r1edpqmqpbidsmn4pb6clp6arj3d5gg:
-              help: null
+              help: 'A Modelo 840 16. casilla adóügyi adatai: adóügyi információ.'
               label: A bevallás hivatkozási száma (az adóhatóság tölti ki)
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: A Modelo 840 15. casilla adóügyi adatai.
               label: Bevallás típusa (bejegyzés / módosítás / törlés)
             x-clm6ar9dehp6iohecdqmut315lhmurjjd5jmsob4c4mn8obid5j62so:
-              help: null
+              help: A Modelo 840 84. casilla adóügyi adatai.
               label: A tarifakban kozvetlenul feltuntetett osszeg (az adohatosag tolti
                 ki)
             x-clm6ar9dehp6iohectp7as3f5lin0qb7e9gmcp9dedqmqo8:
-              help: null
+              help: A Modelo 840 85. casilla adóügyi adatai.
               label: A csoport vagy tetel adozasi elemeinek osszege (az adohatosag
                 tolti ki)
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dcdnmapj9cdkmarjkckmm6rrie9im6t3fe8:
-              help: null
+              help: A Modelo 840 93. casilla adóügyi adatai.
               label: 'Onkormanyzati kvota: korrekcios egyutthato (az adohatosag tolti
                 ki)'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dcdqmut315limopbdcln78ro:
-              help: null
+              help: A Modelo 840 94. casilla adóügyi adatai.
               label: 'Onkormanyzati kvota: az adozasi elem kvotaja (az adohatosag
                 tolti ki)'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9dcdnmqs3lehgm4r35:
-              help: null
+              help: 'A Modelo 840 89. casilla adóügyi adatai: adóügyi információ.'
               label: 'Onkormanyzati kvota: a helyisegek beszamithato alapteruletenek
                 osszege'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9de9im6t39cpkm6ob4c4:
-              help: null
+              help: 'A Modelo 840 88. casilla adóügyi adatai: adóügyi információ.'
               label: 'Onkormanyzati kvota: a helyisegek helyesbitett alapteruletenek
                 osszege'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9dehnn8obc:
-              help: null
+              help: 'A Modelo 840 87. casilla adóügyi adatai: adóügyi információ.'
               label: 'Onkormanyzati kvota: a helyisegek teljes alapteruletenek osszege'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqn0pbicpkm6qb55lhmurbgelq62ojcck:
-              help: null
+              help: 'A Modelo 840 91. casilla adóügyi adatai: adóügyi információ.'
               label: 'Onkormanyzati kvota: beszamithato alapterulet'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqn0pbicpkm6qb55li6ap3lcdkm4r35:
-              help: null
+              help: 'A Modelo 840 90. casilla adóügyi adatai: adóügyi információ.'
               label: 'Onkormanyzati kvota: levonhato alapterulet'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1depgmorri5limopbdcln78ro:
-              help: null
+              help: A Modelo 840 92. casilla adóügyi adatai.
               label: 'Onkormanyzati kvota: az adozasi elem erteke (az adohatosag tolti
                 ki)'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dcdnmqs3lehgm4r35:
-              help: null
+              help: 'A Modelo 840 98. casilla adóügyi adatai: adóügyi információ.'
               label: 'Tartomanyi vagy orszagos kvota: a helyisegek beszamithato alapterulete'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dcdqmut315limopbdcln78ro:
-              help: null
+              help: A Modelo 840 99. casilla adóügyi adatai.
               label: 'Tartomanyi vagy orszagos kvota: az adozasi elem kvotaja (az
                 adohatosag tolti ki)'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1ddpqmqpbids:
-              help: null
+              help: A Modelo 840 95. casilla adóügyi adatai.
               label: 'Tartomanyi vagy orszagos kvota: helyisegek szama'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1de9im6t39cpkm6ob4c4:
-              help: null
+              help: 'A Modelo 840 97. casilla adóügyi adatai: adóügyi információ.'
               label: 'Tartomanyi vagy orszagos kvota: a helyisegek helyesbitett alapterulete'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dehnn8obc:
-              help: null
+              help: 'A Modelo 840 96. casilla adóügyi adatai: adóügyi információ.'
               label: 'Tartomanyi vagy orszagos kvota: a helyisegek teljes alapterulete'
             x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqrbldpkm6qbgd5ng:
-              help: null
+              help: 'A Modelo 840 71. casilla adóügyi adatai: adóügyi információ.'
               label: a tevékenységhez közvetve kapcsolódó helyiség településkódja
                 (az adóhatóság tölti ki)
             x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqs3fedq62r0:
-              help: null
+              help: 'A Modelo 840 69. casilla adóügyi adatai: adóügyi információ.'
               label: a tevékenységhez közvetve kapcsolódó helyiség irányítószáma
             x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqs3idtr6irj3d5gg:
-              help: null
+              help: 'A Modelo 840 73. casilla adóügyi adatai: adóügyi információ.'
               label: a tevékenységhez közvetve kapcsolódó helyiség tartománykódja
                 (az adóhatóság tölti ki)
             x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqtj9c4:
-              help: null
+              help: 'A Modelo 840 76. casilla adóügyi adatai: adóügyi információ.'
               label: a tevékenységhez közvetve kapcsolódó helyiség közterületkódja
                 (az adóhatóság tölti ki)
             x-dhnm6obc5lkmsp39e9im6t3f5pin6or1dhin4o8:
-              help: null
+              help: 'A Modelo 840 80. casilla adóügyi adatai: adóügyi információ.'
               label: a tevékenységhez közvetve kapcsolódó helyiség lépcsőháza
             x-dhnm6obc5lkmsp39e9im6t3f5plmir3fdlin8sjf:
-              help: null
+              help: 'A Modelo 840 78. casilla adóügyi adatai: adóügyi információ.'
               label: a tevékenységhez közvetve kapcsolódó helyiség kilométerjelzése
             x-dhnm6obc5lkmsp39e9im6t3f5pmnarj9cdkn0qbf:
-              help: null
+              help: 'A Modelo 840 70. casilla adóügyi adatai: adóügyi információ.'
               label: a tevékenységhez közvetve kapcsolódó helyiség településkódja
             x-dhnm6obc5lkmsp39e9im6t3f5pn7arb5e9ng:
-              help: null
+              help: 'A Modelo 840 77. casilla adóügyi adatai: adóügyi információ.'
               label: a tevékenységhez közvetve kapcsolódó helyiség házszáma
             x-dhnm6obc5lkmsp39e9im6t3f5po6isrf:
-              help: null
+              help: 'A Modelo 840 81. casilla adóügyi adatai: adóügyi információ.'
               label: a tevékenységhez közvetve kapcsolódó helyiség emelete
             x-dhnm6obc5lkmsp39e9im6t3f5po74rrmd5n66qb1:
-              help: null
+              help: 'A Modelo 840 72. casilla adóügyi adatai: adóügyi információ.'
               label: a tevékenységhez közvetve kapcsolódó helyiség tartománykódja
             x-dhnm6obc5lkmsp39e9im6t3f5po78ro:
-              help: null
+              help: 'A Modelo 840 79. casilla adóügyi adatai: adóügyi információ.'
               label: „Pto.” a tevékenységhez közvetve kapcsolódó helyiség esetében,
                 a nyilvántartási terv rövidítése szerint
             x-dhnm6obc5lkmsp39e9im6t3f5po7apbiehgg:
-              help: null
+              help: 'A Modelo 840 82. casilla adóügyi adatai: adóügyi információ.'
               label: a tevékenységhez közvetve kapcsolódó helyiség ajtaja
             x-dhnm6obc5lkmsp39e9im6t3f5ppmiprcc4mncqb1:
-              help: null
+              help: 'A Modelo 840 74. casilla adóügyi adatai: adóügyi információ.'
               label: a tevékenységhez közvetve kapcsolódó helyiség közterületének
                 jellege
             x-dhnm6obc5lkmsp39e9im6t3f5pq6ar35cpnmsro:
-              help: null
+              help: 'A Modelo 840 83. casilla adóügyi adatai: adóügyi információ.'
               label: a tevékenységhez közvetve kapcsolódó helyiség telefonszáma
             x-dhnm6obc5lkmsp39e9im6t3f5pqn6rpdchin6t39dpng:
-              help: null
+              help: 'A Modelo 840 68. casilla adóügyi adatai: adóügyi információ.'
               label: a tevékenységhez közvetve kapcsolódó helyiség használata vagy
                 rendeltetése
             x-dhnm6obc5lkmsp39e9im6t3f5pr6io9de1qm4r39cdgg:
-              help: null
+              help: 'A Modelo 840 75. casilla adóügyi adatai: adóügyi információ.'
               label: a tevékenységhez közvetve kapcsolódó helyiség közterületneve
             x-dlgn2tb9dpgn6bjjelmm2:
-              help: null
+              help: A Modelo 840 86. casilla adóügyi adatai.
               label: Jatekgepek vagy automata ertekesites osszege (az adohatosag tolti
                 ki)
             x-dpnn8qb6d5hm2or9dtn2sor1dhkm8ob4:
-              help: null
+              help: 'A Modelo 840 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Milyen minosegben irja ala: tulajdonos vagy kepviselo'
             x-dpnn8qb6d5hm2or9dtn2spj5cdk62:
-              help: null
+              help: 'Tekintse át a casilla adatait: Dátum - notificacion.'
               label: Az ertesites datuma
             x-dpnn8qb6d5hm2or9dtn2sr3lctgn4:
-              help: null
+              help: 'Tekintse át a casilla adatait: Lugar - notificacion.'
               label: Az ertesites helye
             x-e9in0sj5edimst31dpq6abj1e1imor39chnn6bbic5t6urhdednm6qb1dg:
-              help: null
+              help: 'A Modelo 840 18. casilla adóügyi adatai: adóügyi információ.'
               label: A képviselő vezeték- és keresztneve vagy cégneve
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lmnarj9cdkn0qbf:
-              help: null
+              help: 'A Modelo 840 30. casilla adóügyi adatai: adóügyi információ.'
               label: A képviselő településkódja (az adóhatóság tölti ki)
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo6usrkc5m0:
-              help: null
+              help: 'Tekintse át a casilla adatait: Kód postal - cím - képviselő.'
               label: A képviselő címének irányítószáma
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo74rrmd5n66qb1:
-              help: null
+              help: 'A Modelo 840 32. casilla adóügyi adatai: adóügyi információ.'
               label: A képviselő tartománykódja (az adóhatóság tölti ki)
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lr6io8:
-              help: null
+              help: 'A Modelo 840 21. casilla adóügyi adatai: adóügyi információ.'
               label: A képviselő címének közterületkódja (az adóhatóság tölti ki)
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb5edhm2r35e9gg:
-              help: null
+              help: 'Tekintse át a casilla adatait: Escalera - cím - képviselő.'
               label: A képviselő címének lépcsőháza
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbbd5m6urb5ehp6u:
-              help: null
+              help: 'Tekintse át a casilla adatait: Kilómetro - cím - képviselő.'
               label: A képviselő címének kilométerjelzése
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbdeln6ior9e1kmu:
-              help: null
+              help: 'A Modelo 840 29. casilla adóügyi adatai: adóügyi információ.'
               label: A képviselő címének településkódja
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbeelmmasjf:
-              help: null
+              help: 'Tekintse át a casilla adatait: Szám - cím - képviselő.'
               label: A képviselő címének házszáma
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbgd5pmu:
-              help: null
+              help: 'Tekintse át a casilla adatait: Piso - cím - képviselő.'
               label: A képviselő címének emelete
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbge9nncqbecdkm2:
-              help: null
+              help: 'A Modelo 840 31. casilla adóügyi adatai: adóügyi információ.'
               label: A képviselő címének tartománykódja
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbgelin4t31:
-              help: null
+              help: 'Tekintse át a casilla adatait: Puerta - cím - képviselő.'
               label: A képviselő címének ajtaja
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbjd5jmoo9depkm2:
-              help: null
+              help: 'Tekintse át a casilla adatait: Sigla - vía pública - cím - képviselő.'
               label: A képviselő címében szereplő közterület jellegének rövidítése
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbmd5giqs3lc9m6ior1:
-              help: null
+              help: 'Tekintse át a casilla adatait: Név - vía pública - cím - képviselő.'
               label: A képviselő címének közterületneve
             x-e9in0sj5edimst31dpq6abjed5j0:
-              help: null
+              help: 'Tekintse át a casilla adatait: NIF - képviselő.'
               label: A képviselő adóazonosító száma (NIF)
             x-e9in0sj5edimst31dpq6abjkclm6apjfdpng:
-              help: null
+              help: 'Tekintse át a casilla adatait: Teléfono - képviselő.'
               label: A képviselő telefonszáma
             x-edqmkpbkdsn62s35dhm6ip3fecmn4obqdtn2qsrfcdkm2r0:
-              help: null
+              help: 'A Modelo 840 2. casilla adóügyi adatai: adóügyi információ.'
               label: Az adóalany vezeték- és keresztneve vagy cégneve
             x-edqmkpbkdsn68rrdd5hmir39dsmm6rr4d5jmubbgdtpn8obc:
-              help: null
+              help: 'A Modelo 840 12. casilla adóügyi adatai: adóügyi információ.'
               label: Az adóalany címének irányítószáma
             x-edqmkpbkdsn68rrdd5hmir39dsmmasr3c5m6asj1:
-              help: null
+              help: 'A Modelo 840 7. casilla adóügyi adatai: adóügyi információ.'
               label: Az adóalany címének lépcsőháza
             x-edqmkpbkdsn68rrdd5hmir39dsmmmqbcdtmmat3ids:
-              help: null
+              help: 'A Modelo 840 6. casilla adóügyi adatai: adóügyi információ.'
               label: Az adóalany címének kilométerjelzése
             x-edqmkpbkdsn68rrdd5hmir39dsmmqtbed5hmis39ds:
-              help: null
+              help: 'A Modelo 840 10. casilla adóügyi adatai: adóügyi információ.'
               label: Az adóalany címének településkódja
             x-edqmkpbkdsn68rrdd5hmir39dsmmstbdclp6u:
-              help: null
+              help: 'A Modelo 840 5. casilla adóügyi adatai: adóügyi információ.'
               label: Az adóalany címének házszáma
             x-edqmkpbkdsn68rrdd5hmir39dsmn0qbjds:
-              help: null
+              help: 'A Modelo 840 8. casilla adóügyi adatai: adóügyi információ.'
               label: Az adóalany címének emelete
             x-edqmkpbkdsn68rrdd5hmir39dsmn0sjfepkmsor9c4:
-              help: null
+              help: 'A Modelo 840 11. casilla adóügyi adatai: adóügyi információ.'
               label: Az adóalany címének tartománykódja
             x-edqmkpbkdsn68rrdd5hmir39dsmn0tb5e9q62:
-              help: null
+              help: 'A Modelo 840 9. casilla adóügyi adatai: adóügyi információ.'
               label: Az adóalany címének ajtaja
             x-edqmkpbkdsn68rrdd5hmir39dsmn6qb7dhgiqtj9c4:
-              help: null
+              help: 'A Modelo 840 3. casilla adóügyi adatai: adóügyi információ.'
               label: Az adóalany címében szereplő közterület jellegének rövidítése
             x-edqmkpbkdsn68rrdd5hmir39dsmncqb15lo7aojcd5hm2:
-              help: null
+              help: 'A Modelo 840 4. casilla adóügyi adatai: adóügyi információ.'
               label: Az adóalany címének közterületneve
             x-edqmkpbkdsn6sqb6:
-              help: null
+              help: 'A Modelo 840 1. casilla adóügyi adatai: adóügyi információ.'
               label: Az adóalany adóazonosító száma (NIF)
             x-edqmkpbkdsn78pbcclj6urjf5lhmurjkc5hn8ro:
-              help: null
+              help: 'A Modelo 840 13. casilla adóügyi adatai: adóügyi információ.'
               label: Az adóalany kapcsolattartási telefonszáma, körzetszámmal
           construct:
             modelo-840-iae-declaration:
               field:
-                title: null
+                title: Modelo 840 — adóügyi információ
           field:
-            label: null
+            label: Casilla— adóügyi információ

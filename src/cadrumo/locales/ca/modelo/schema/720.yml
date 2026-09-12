@@ -9,30 +9,32 @@ modelo:
         2013-y-siguientes:
           casilla:
             x-cdqmarjkc5pisorfchkmerpdchiiqorlcln78o8:
-              help: null
+              help: Informació fiscal de la casella del Modelo 720.
               label: Codi de compte en entitat financera situada a l'estranger
             x-cdqmarjkc5pistj1dhnn4ob3d5nms:
-              help: null
+              help: Informació fiscal de la casella del Modelo 720.
               label: Valoració de compte en entitat financera situada a l'estranger
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                720.
               label: Exercici a què es refereix l'informació
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: Informació fiscal de la casella del Modelo 720.
               label: Tipus de declaració (originària / substitutiva / complementària)
             x-d5n6qtb5c9m6aspeepgmorric5hmirre:
-              help: null
+              help: Informació fiscal de la casella del Modelo 720.
               label: Valoració de béns immobles o drets reals situats a l'estranger
             x-epgmorriclpisqb4cln78qb6d5hm2or9dtn0:
-              help: null
+              help: Informació fiscal de la casella del Modelo 720.
               label: Identificació de valors, drets, assegurances o rendes situats
                 a l'estranger
             x-epgmorriclpistj1dhnn4ob3d5nms:
-              help: null
+              help: Informació fiscal de la casella del Modelo 720.
               label: Valoració de valors, drets, assegurances o rendes situats a l'estranger
           construct:
             modelo-720-informative:
               field:
-                title: null
+                title: Declaració informativa sobre béns i drets a l'estranger del
+                  Model 720
           field:
-            label: null
+            label: Casella— informació fiscal

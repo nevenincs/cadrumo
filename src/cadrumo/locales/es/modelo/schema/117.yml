@@ -11,46 +11,61 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
-              help: null
-              label: Numero de perceptores por transmisiones o reembolsos de acciones
+              help: 'Consulte la información correspondiente a la casilla: Número
+                de perceptores por transmisiones o reembolsos de acciones y participaciones
+                de IIC.'
+              label: Número de perceptores por transmisiones o reembolsos de acciones
                 y participaciones de IIC
             '02':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 02 del
+                Modelo 117.
               label: Base de retenciones e ingresos a cuenta por transmisiones o reembolsos
                 de acciones y participaciones de IIC
             '03':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 03 del
+                Modelo 117.
               label: Retenciones e ingresos a cuenta por transmisiones o reembolsos
                 de acciones y participaciones de IIC
             '04':
-              help: null
-              label: Numero de perceptores por transmisiones de derechos de suscripcion
+              help: 'Consulte la información correspondiente a la casilla: Número
+                de perceptores por transmisiones de derechos de suscripcion.'
+              label: Número de perceptores por transmisiones de derechos de suscripcion
             '05':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 05 del
+                Modelo 117.
               label: Base de retenciones e ingresos a cuenta por transmisiones de
                 derechos de suscripcion
             '06':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 06 del
+                Modelo 117.
               label: Retenciones e ingresos a cuenta por transmisiones de derechos
                 de suscripcion
             '07':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Base del
+                pago a cuenta previsto en la disposicion adicional decimonovena de
+                la Ley 35/2006.'
               label: Base del pago a cuenta previsto en la disposicion adicional decimonovena
                 de la Ley 35/2006
             08:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Pago a
+                cuenta previsto en la disposicion adicional decimonovena de la Ley
+                35/2006.'
               label: Pago a cuenta previsto en la disposicion adicional decimonovena
                 de la Ley 35/2006
             09:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 09 del
+                Modelo 117.
               label: 'Total liquidacion: suma de retenciones, ingresos a cuenta, pagos
                 a cuenta y regularizacion'
             '10':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultados
+                a ingresar de anteriores declaraciones por el mismo concepto, ejercicio
+                y período.'
               label: Resultados a ingresar de anteriores declaraciones por el mismo
                 concepto, ejercicio y periodo
             '11':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultado
+                a ingresar.'
               label: Resultado a ingresar
           construct:
             modelo-117-total-liquidacion-calculation:

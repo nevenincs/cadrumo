@@ -1,6 +1,201 @@
 modelo:
   schema:
     '193':
+      casilla:
+        continuidad:
+          base-retenciones-ingresos-a-cuenta:
+            help: Informació fiscal sobre informació fiscal de la casella 145-159
+              del Modelo 193.
+            label: Casella 145-159 — informació fiscal
+          declaracion-anterior-numero:
+            help: Informació fiscal de la casella 123-135 del Modelo 193.
+            label: Casella 123-135 — informació fiscal
+          declaracion-complementaria:
+            help: Informació fiscal sobre informació fiscal de la casella 121 del
+              Modelo 193.
+            label: Casella 121 — informació fiscal
+          declaracion-numero-identificativo:
+            help: Informació fiscal de la casella 108-120 del Modelo 193.
+            label: Casella 108-120 — informació fiscal
+          declaracion-sustitutiva:
+            help: Informació fiscal de la casella 122 del Modelo 193.
+            label: Casella 122 — informació fiscal
+          declarante-contacto-nombre:
+            help: Informació fiscal de la casella 68-107 del Modelo 193.
+            label: Casella 68-107 — informació fiscal
+          declarante-contacto-telefono:
+            help: Informació fiscal de la casella 59-67 del Modelo 193.
+            label: Casella 59-67 — informació fiscal
+          declarante-naturaleza:
+            help: Informació fiscal de la casella 235 del Modelo 193.
+            label: Casella 235 — informació fiscal
+          devengo-year:
+            help: Informació fiscal de la casella 118-121 del Modelo 193.
+            label: Casella 118-121 — informació fiscal
+          gasto-contributor-nif:
+            help: Informació fiscal sobre informació fiscal de la casella 18-26 del
+              Modelo 193.
+            label: Casella 18-26 — informació fiscal
+          gasto-contributor-nombre:
+            help: Informació fiscal sobre informació fiscal de la casella 36-75 del
+              Modelo 193.
+            label: Casella 36-75 — informació fiscal
+          gasto-importe-anual:
+            help: Informació fiscal sobre informació fiscal de la casella 195-207
+              del Modelo 193.
+            label: Casella 195-207 — informació fiscal
+          gastos-total-declarante:
+            help: Informació fiscal de la casella 220-234 del Modelo 193.
+            label: Casella 220-234 — informació fiscal
+          payee-base-retenciones-193:
+            help: Informació fiscal sobre informació fiscal de la casella 152-164
+              del Modelo 193.
+            label: Casella 152-164 — informació fiscal
+          payee-ceuta-melilla-clave:
+            help: Informació fiscal sobre informació fiscal de la casella 314 del
+              Modelo 193.
+            label: Casella 314 — informació fiscal
+          payee-clave-codigo:
+            help: Informació fiscal de la casella 79 del Modelo 193.
+            label: Casella 79 — informació fiscal
+          payee-clave-mercado:
+            help: Informació fiscal sobre informació fiscal de la casella 339 del
+              Modelo 193.
+            label: Casella 339 — informació fiscal
+          payee-clave-percepcion:
+            help: Informació fiscal sobre informació fiscal de la casella 92 del Modelo
+              193.
+            label: Casella 92 — informació fiscal
+          payee-codigo-cuenta:
+            help: Informació fiscal de la casella 97-116 del Modelo 193.
+            label: Casella 97-116 — informació fiscal
+          payee-codigo-emisor:
+            help: Informació fiscal de la casella 80-91 del Modelo 193.
+            label: Casella 80-91 — informació fiscal
+          payee-compensaciones:
+            help: Informació fiscal sobre informació fiscal de la casella 225-236
+              del Modelo 193.
+            label: Casella 225-236 — informació fiscal
+          payee-fecha-devengo:
+            help: Informació fiscal sobre informació fiscal de la casella 331-338
+              del Modelo 193.
+            label: Casella 331-338 — informació fiscal
+          payee-fecha-inicio-prestamo:
+            help: Informació fiscal sobre informació fiscal de la casella 209-216
+              del Modelo 193.
+            label: Casella 209-216 — informació fiscal
+          payee-fecha-vencimiento-prestamo:
+            help: Informació fiscal sobre informació fiscal de la casella 217-224
+              del Modelo 193.
+            label: Casella 217-224 — informació fiscal
+          payee-garantias:
+            help: Informació fiscal sobre informació fiscal de la casella 237-248
+              del Modelo 193.
+            label: Casella 237-248 — informació fiscal
+          payee-mediador-flag:
+            help: Informació fiscal sobre informació fiscal de la casella 76 del Modelo
+              193.
+            label: Casella 76 — informació fiscal
+          payee-name:
+            help: Informació fiscal sobre nom del perceptor de la casella 36-75 del
+              Modelo 193.
+            label: Casella 36-75 — nom del perceptor
+          payee-naturaleza-declarante:
+            help: Informació fiscal de la casella 208 del Modelo 193.
+            label: Casella 208 — informació fiscal
+          payee-naturaleza-percepcion:
+            help: Informació fiscal sobre informació fiscal de la casella 93-94 del
+              Modelo 193.
+            label: Casella 93-94 — informació fiscal
+          payee-nif:
+            help: Informació fiscal sobre NIF del perceptor de la casella 18-26 del
+              Modelo 193.
+            label: Casella 18-26 — NIF del perceptor
+          payee-nif-pagador-anterior:
+            help: Informació fiscal sobre informació fiscal de la casella 322-330
+              del Modelo 193.
+            label: Casella 322-330 — informació fiscal
+          payee-numero-orden-193:
+            help: Informació fiscal de la casella 315-321 del Modelo 193.
+            label: Casella 315-321 — informació fiscal
+          payee-pago:
+            help: Informació fiscal sobre informació fiscal de la casella 95 del Modelo
+              193.
+            label: Casella 95 — informació fiscal
+          payee-penalizaciones:
+            help: Informació fiscal sobre informació fiscal de la casella 182-192
+              del Modelo 193.
+            label: Casella 182-192 — informació fiscal
+          payee-pendiente-flag:
+            help: Informació fiscal de la casella 117 del Modelo 193.
+            label: Casella 117 — informació fiscal
+          payee-percepciones-193:
+            help: Informació fiscal sobre informació fiscal de la casella 123-135
+              del Modelo 193.
+            label: Casella 123-135 — informació fiscal
+          payee-porcentaje-retencion:
+            help: Informació fiscal sobre informació fiscal de la casella 165-168
+              del Modelo 193.
+            label: Casella 165-168 — informació fiscal
+          payee-province:
+            help: Informació fiscal sobre província del perceptor de la casella 77-78
+              del Modelo 193.
+            label: Casella 77-78 — província del perceptor
+          payee-reducciones-193:
+            help: Informació fiscal sobre informació fiscal de la casella 139-151
+              del Modelo 193.
+            label: Casella 139-151 — informació fiscal
+          payee-retenciones-193:
+            help: Informació fiscal sobre informació fiscal de la casella 169-181
+              del Modelo 193.
+            label: Casella 169-181 — informació fiscal
+          payee-retenciones-forales-araba:
+            help: Informació fiscal sobre informació fiscal de la casella 275-287
+              del Modelo 193.
+            label: Casella 275-287 — informació fiscal
+          payee-retenciones-forales-bizkaia:
+            help: Informació fiscal sobre informació fiscal de la casella 301-313
+              del Modelo 193.
+            label: Casella 301-313 — informació fiscal
+          payee-retenciones-forales-estatal:
+            help: Informació fiscal sobre informació fiscal de la casella 249-261
+              del Modelo 193.
+            label: Casella 249-261 — informació fiscal
+          payee-retenciones-forales-gipuzkoa:
+            help: Informació fiscal sobre informació fiscal de la casella 288-300
+              del Modelo 193.
+            label: Casella 288-300 — informació fiscal
+          payee-retenciones-forales-navarra:
+            help: Informació fiscal sobre informació fiscal de la casella 262-274
+              del Modelo 193.
+            label: Casella 262-274 — informació fiscal
+          payee-tipo-codigo:
+            help: Informació fiscal de la casella 96 del Modelo 193.
+            label: Casella 96 — informació fiscal
+          payee-tipo-percepcion:
+            help: Informació fiscal sobre informació fiscal de la casella 122 del
+              Modelo 193.
+            label: Casella 122 — informació fiscal
+          perc-nif-representante:
+            help: Informació fiscal sobre informació fiscal de la casella 27-35 del
+              Modelo 193.
+            label: Casella 27-35 — informació fiscal
+          representante-legal-nif:
+            help: Informació fiscal sobre informació fiscal de la casella 27-35 del
+              Modelo 193.
+            label: Casella 27-35 — informació fiscal
+          retenciones-ingresadas-total:
+            help: Informació fiscal sobre informació fiscal de la casella 175-189
+              del Modelo 193.
+            label: Casella 175-189 — informació fiscal
+          retenciones-ingresos-a-cuenta:
+            help: Informació fiscal sobre informació fiscal de la casella 160-174
+              del Modelo 193.
+            label: Casella 160-174 — informació fiscal
+          total-perceptores-count:
+            help: Informació fiscal sobre informació fiscal de la casella 136-144
+              del Modelo 193.
+            label: Casella 136-144 — informació fiscal
       field:
         official_name: Modelo 193. Declaració informativa. Retencions i ingressos
           a compte sobre determinats rendiments del capital mobiliari i determinades

@@ -1,6 +1,120 @@
 modelo:
   schema:
     '270':
+      casilla:
+        continuidad:
+          base-retenciones-ingresos-a-cuenta:
+            help: Informació fiscal sobre informació fiscal de la casella 164-180
+              del Modelo 270.
+            label: Casella 164-180 — informació fiscal
+          filing-year:
+            help: Informació fiscal de la casella del Modelo 270.
+            label: Casella — informació fiscal
+          m270-clave-personalidad:
+            help: Informació fiscal sobre informació fiscal de la casella 117 del
+              Modelo 270.
+            label: Casella 117 — informació fiscal
+          m270-declaracion-complementaria:
+            help: Informació fiscal sobre informació fiscal de la casella 121 del
+              Modelo 270.
+            label: Casella 121 — informació fiscal
+          m270-declaracion-sustitutiva:
+            help: Informació fiscal de la casella 122 del Modelo 270.
+            label: Casella 122 — informació fiscal
+          m270-fecha-nacimiento:
+            help: Informació fiscal sobre informació fiscal de la casella 453-460
+              del Modelo 270.
+            label: Casella 453-460 — informació fiscal
+          m270-fecha-pago-premio:
+            help: Informació fiscal sobre informació fiscal de la casella 128-135
+              del Modelo 270.
+            label: Casella 128-135 — informació fiscal
+          m270-fecha-sorteo:
+            help: Informació fiscal sobre informació fiscal de la casella 120-127
+              del Modelo 270.
+            label: Casella 120-127 — informació fiscal
+          m270-gestor-cobro:
+            help: Informació fiscal sobre informació fiscal de la casella 181 del
+              Modelo 270.
+            label: Casella 181 — informació fiscal
+          m270-importe-premio:
+            help: Informació fiscal sobre informació fiscal de la casella 136-150
+              del Modelo 270.
+            label: Casella 136-150 — informació fiscal
+          m270-lugar-nacimiento:
+            help: Informació fiscal sobre informació fiscal de la casella 461-497
+              del Modelo 270.
+            label: Casella 461-497 — informació fiscal
+          m270-nif-pais-residencia:
+            help: Informació fiscal sobre informació fiscal de la casella 433-452
+              del Modelo 270.
+            label: Casella 433-452 — informació fiscal
+          m270-numero-identificativo:
+            help: Informació fiscal de la casella 108-120 del Modelo 270.
+            label: Casella 108-120 — informació fiscal
+          m270-numero-identificativo-anterior:
+            help: Informació fiscal de la casella 123-135 del Modelo 270.
+            label: Casella 123-135 — informació fiscal
+          m270-pais-residencia:
+            help: Informació fiscal sobre informació fiscal de la casella 498-499
+              del Modelo 270.
+            label: Casella 498-499 — informació fiscal
+          m270-persona-contacto-nombre:
+            help: Informació fiscal sobre informació fiscal de la casella 68-107 del
+              Modelo 270.
+            label: Casella 68-107 — informació fiscal
+          m270-persona-contacto-telefono:
+            help: Informació fiscal sobre informació fiscal de la casella 59-67 del
+              Modelo 270.
+            label: Casella 59-67 — informació fiscal
+          m270-representante-nombre:
+            help: Informació fiscal sobre informació fiscal de la casella 76-115 del
+              Modelo 270.
+            label: Casella 76-115 — informació fiscal
+          m270-tipo-perceptor:
+            help: Informació fiscal sobre informació fiscal de la casella 116 del
+              Modelo 270.
+            label: Casella 116 — informació fiscal
+          m270-total-importe-premios:
+            help: Informació fiscal sobre informació fiscal de la casella 147-163
+              del Modelo 270.
+            label: Casella 147-163 — informació fiscal
+          payee-name:
+            help: Informació fiscal sobre nom del perceptor de la casella 36-75 del
+              Modelo 270.
+            label: Casella 36-75 — nom del perceptor
+          payee-nif:
+            help: Informació fiscal sobre NIF del perceptor de la casella 18-26 del
+              Modelo 270.
+            label: Casella 18-26 — NIF del perceptor
+          payee-province:
+            help: Informació fiscal sobre província del perceptor de la casella 118-119
+              del Modelo 270.
+            label: Casella 118-119 — província del perceptor
+          payee-representative-nif:
+            help: Informació fiscal sobre NIF del representant de la casella 27-35
+              del Modelo 270.
+            label: Casella 27-35 — NIF del representant
+          perc-base-retencion:
+            help: Informació fiscal sobre informació fiscal de la casella 151-165
+              del Modelo 270.
+            label: Casella 151-165 — informació fiscal
+          perc-retencion:
+            help: Informació fiscal sobre informació fiscal de la casella 166-180
+              del Modelo 270.
+            label: Casella 166-180 — informació fiscal
+          retenciones-ingresos-a-cuenta:
+            help: Informació fiscal sobre informació fiscal de la casella 181-197
+              del Modelo 270.
+            label: Casella 181-197 — informació fiscal
+          tipo-declaracion:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              270.
+            label: Casella— informació fiscal
+          total-perceptores-count:
+            help: Informació fiscal sobre informació fiscal de la casella 138-146
+              del Modelo 270.
+            label: Casella 138-146 — informació fiscal
       field:
         official_name: Modelo 270. Resum anual de retencions i ingressos a compte.
           Gravamen especial sobre els premis de determinades loteries i apostes.
@@ -13,7 +127,8 @@ modelo:
                 omesos en una altra del mateix exercici presentada anteriorment.
               label: Declaració complementària
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                270.
               label: Exercici a què es refereix la declaració
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
               help: Número seqüencial de 13 posicions els tres primers dígits del
@@ -35,7 +150,7 @@ modelo:
                 una única declaració anterior del mateix exercici.
               label: Declaració substitutiva
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: Informació fiscal de la casella del Modelo 270.
               label: Tipus de declaració (originària / substitutiva / complementària)
             x-chim6r1eehnn8obc5lh62sr55lp6at35dphmirre:
               help: Suma de les bases de retenció o ingrés a compte reflectides en
@@ -144,9 +259,9 @@ modelo:
           construct:
             modelo-270-informative:
               field:
-                title: null
+                title: Modelo 270 declaració informativa
           field:
-            label: null
+            label: Casella— informació fiscal
         2023-y-siguientes:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
@@ -154,7 +269,8 @@ modelo:
                 omesos en una altra del mateix exercici presentada anteriorment.
               label: Declaració complementària
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                270.
               label: Exercici a què es refereix la declaració
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
               help: Número seqüencial de 13 posicions els tres primers dígits del
@@ -176,7 +292,7 @@ modelo:
                 una única declaració anterior del mateix exercici.
               label: Declaració substitutiva
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: Informació fiscal de la casella del Modelo 270.
               label: Tipus de declaració (originària / substitutiva / complementària)
             x-chim6r1eehnn8obc5lh62sr55lp6at35dphmirre:
               help: Suma de les bases de retenció o ingrés a compte reflectides en
@@ -285,6 +401,6 @@ modelo:
           construct:
             modelo-270-informative:
               field:
-                title: null
+                title: Modelo 270 declaració informativa
           field:
-            label: null
+            label: Casella— informació fiscal

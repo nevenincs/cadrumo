@@ -1,6 +1,281 @@
 modelo:
   schema:
     '184':
+      casilla:
+        continuidad:
+          actividad-principal-espanola:
+            help: A Modelo 184 146. casilla adóügyi adatai.
+            label: Casilla 146 — adóügyi mező
+          base-deduccion-o-importe:
+            help: A Modelo 184 221-232. casilla adóügyi adatai.
+            label: Casilla 221-232 — adóügyi mező
+          cesionario-denominacion:
+            help: A Modelo 184 97-116. casilla adóügyi adatai.
+            label: Casilla 97-116 — adóügyi mező
+          cesionario-nif:
+            help: 'A casilla adatai: Casilla 88-96: cesionario nif.'
+            label: 'Casilla 88-96: cesionario nif'
+          clave-declarado:
+            help: 'A casilla adatai: Casilla 194: clave declarado.'
+            label: 'Casilla 194: clave declarado'
+          clave-pais-entidad-extranjera:
+            help: 'A casilla adatai: Casilla 149-150: clave pais szervezet külföldi.'
+            label: 'Casilla 149-150: clave pais szervezet külföldi'
+          clave-pais-renta:
+            help: 'A casilla adatai: Casilla 80-81: clave pais jövedelem.'
+            label: 'Casilla 80-81: clave pais jövedelem'
+          clave-tipo-participe:
+            help: 'A casilla adatai: Casilla 81: clave kulcs participe.'
+            label: 'Casilla 81: clave kulcs participe'
+          criterio-cobros-y-pagos:
+            help: 'A Modelo 184 396. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 396 — adóügyi információ
+          declaracion-complementaria-sustitutiva:
+            help: A Modelo 184 121-122. casilla adóügyi adatai.
+            label: Casilla 121-122 — adóügyi mező
+          epigrafe-iae:
+            help: 'A casilla adatai: Casilla 84-87: epigrafe iae.'
+            label: 'Casilla 84-87: epigrafe iae'
+          fecha-adquisicion:
+            help: 'A casilla adatai: Casilla 117-124: dátum beszerzés.'
+            label: 'Casilla 117-124: dátum beszerzés'
+          filing-year:
+            help: A Modelo 184 . casilla adóügyi adatai.
+            label: Casilla — adóügyi mező
+          ganancias-perdidas-patrimoniales-atribuibles:
+            help: 'A casilla adatai: Casilla 208-220: ganancias perdidas vagyoni atribuibles.'
+            label: 'Casilla 208-220: ganancias perdidas vagyoni atribuibles'
+          gasto-actividad-amortizaciones:
+            help: 'A casilla adatai: Casilla 362-373: gasto tevékenység amortizaciones.'
+            label: 'Casilla 362-373: gasto tevékenység amortizaciones'
+          gasto-actividad-arrendamientos-canones:
+            help: 'A casilla adatai: Casilla 302-313: gasto tevékenység arrendamientos
+              canones.'
+            label: 'Casilla 302-313: gasto tevékenység arrendamientos canones'
+          gasto-actividad-consumos-explotacion:
+            help: 'A casilla adatai: Casilla 278-289: gasto tevékenység consumos explotacion.'
+            label: 'Casilla 278-289: gasto tevékenység consumos explotacion'
+          gasto-actividad-gastos-financieros:
+            help: 'A Modelo 184 350-361. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 350-361 — adóügyi információ
+          gasto-actividad-gastos-personal:
+            help: 'A Modelo 184 266-277. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 266-277 — adóügyi információ
+          gasto-actividad-otros-gastos-deducibles:
+            help: 'A Modelo 184 386-395. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 386-395 — adóügyi információ
+          gasto-actividad-provisiones:
+            help: 'A casilla adatai: Casilla 374-385: gasto tevékenység provisiones.'
+            label: 'Casilla 374-385: gasto tevékenység provisiones'
+          gasto-actividad-reparaciones-conservacion:
+            help: 'A casilla adatai: Casilla 314-325: gasto tevékenység reparaciones
+              conservacion.'
+            label: 'Casilla 314-325: gasto tevékenység reparaciones conservacion'
+          gasto-actividad-servicios-profesionales:
+            help: 'A casilla adatai: Casilla 326-337: gasto tevékenység szolgáltatások
+              szakmai.'
+            label: 'Casilla 326-337: gasto tevékenység szolgáltatások szakmai'
+          gasto-actividad-suministros:
+            help: 'A casilla adatai: Casilla 338-349: gasto tevékenység suministros.'
+            label: 'Casilla 338-349: gasto tevékenység suministros'
+          gasto-actividad-tributos-deducibles:
+            help: 'A casilla adatai: Casilla 290-301: gasto tevékenység tributos deducibles.'
+            label: 'Casilla 290-301: gasto tevékenység tributos deducibles'
+          gasto-inmobiliario-amortizacion-bienes-muebles:
+            help: 'A casilla adatai: Casilla 481-488: gasto inmobiliario amortizacion
+              termékek muebles.'
+            label: 'Casilla 481-488: gasto inmobiliario amortizacion termékek muebles'
+          gasto-inmobiliario-amortizacion-inmueble:
+            help: 'A casilla adatai: Casilla 471-480: gasto inmobiliario amortizacion
+              inmueble.'
+            label: '471–480. mező: ingatlanráfordítás – az ingatlan értékcsökkenése'
+          gasto-inmobiliario-cantidades-devengadas-terceros:
+            help: 'A casilla adatai: Casilla 451-460: gasto inmobiliario cantidades
+              devengadas terceros.'
+            label: '451–460. mező: ingatlanráfordítás – harmadik feleknek felmerült
+              összegek'
+          gasto-inmobiliario-conservacion-reparacion:
+            help: 'A casilla adatai: Casilla 408-418: gasto inmobiliario conservacion
+              reparacion.'
+            label: '408–418. mező: ingatlanráfordítás – karbantartás és javítás'
+          gasto-inmobiliario-intereses-financiacion:
+            help: 'A casilla adatai: Casilla 397-407: gasto inmobiliario intereses
+              financiacion.'
+            label: 'Casilla 397-407: gasto inmobiliario intereses financiacion'
+          gasto-inmobiliario-intereses-gastos-reparacion:
+            help: 'A Modelo 184 419-429. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 419-429 — adóügyi információ
+          gasto-inmobiliario-otros-gastos-deducibles:
+            help: 'A Modelo 184 489-497. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 489-497 — adóügyi információ
+          gasto-inmobiliario-primas-seguros:
+            help: 'A casilla adatai: Casilla 461-470: gasto inmobiliario primas biztosítások.'
+            label: 'Casilla 461-470: gasto inmobiliario primas biztosítások'
+          gasto-inmobiliario-saldos-dudoso-cobro:
+            help: 'A casilla adatai: Casilla 440-450: gasto inmobiliario saldos dudoso
+              cobro.'
+            label: '440–450. mező: ingatlanráfordítás – kétes követelések'
+          gasto-inmobiliario-tributos-recargos:
+            help: 'A casilla adatai: Casilla 430-439: gasto inmobiliario tributos
+              recargos.'
+            label: '430–439. mező: ingatlanráfordítás – adók és pótlékok'
+          gastos-deducibles-atribuibles:
+            help: 'A Modelo 184 165-176. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 165-176 — adóügyi információ
+          importe-atribuido-miembro:
+            help: 'A casilla adatai: Casilla 96-108: összeg atribuido miembro.'
+            label: 'Casilla 96-108: összeg atribuido miembro'
+          importe-neto-cifra-negocios:
+            help: 'A casilla adatai: Casilla 157-171: összeg neto cifra negocios.'
+            label: 'Casilla 157-171: összeg neto cifra negocios'
+          ingresos-integros-atribuibles:
+            help: 'A casilla adatai: Casilla 151-164: jövedelmek integros atribuibles.'
+            label: 'Casilla 151-164: jövedelmek integros atribuibles'
+          miembro-a-31-diciembre:
+            help: 'A casilla adatai: Casilla 82: miembro a 31 diciembre.'
+            label: 'Casilla 82: miembro a 31 diciembre'
+          miembro-clave-pais:
+            help: 'A casilla adatai: Casilla 79-80: miembro clave pais.'
+            label: 'Casilla 79-80: miembro clave pais'
+          miembro-codigo-provincia:
+            help: A Modelo 184 77-78. casilla adóügyi adatai.
+            label: Casilla 77-78 — adóügyi mező
+          miembro-domicilio-fiscal:
+            help: 'A casilla adatai: Casilla 120-159: miembro cím fiscal.'
+            label: 'Casilla 120-159: miembro cím fiscal'
+          miembro-nif:
+            help: 'A casilla adatai: Casilla 18-26: miembro nif.'
+            label: 'Casilla 18-26: miembro nif'
+          miembro-nombre-razon-social:
+            help: A Modelo 184 36-75. casilla adóügyi adatai.
+            label: Casilla 36-75 — adóügyi mező
+          miembro-representante-fiscal-nif:
+            help: 'A casilla adatai: Casilla 27-35: miembro képviselő fiscal nif.'
+            label: 'Casilla 27-35: miembro képviselő fiscal nif'
+          naturaleza-inmueble:
+            help: 'A Modelo 184 172. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 172 — adóügyi információ
+          numero-dias-arrendamiento:
+            help: A Modelo 184 498-500. casilla adóügyi adatai.
+            label: Casilla 498-500 — adóügyi mező
+          numero-dias-miembro:
+            help: A Modelo 184 83-85. casilla adóügyi adatai.
+            label: Casilla 83-85 — adóügyi mező
+          numero-justificante:
+            help: A Modelo 184 108-120. casilla adóügyi adatai.
+            label: Casilla 108-120 — adóügyi mező
+          objeto-entidad-extranjera:
+            help: 'A casilla adatai: Casilla 148: tárgy szervezet külföldi.'
+            label: 'Casilla 148: tárgy szervezet külföldi'
+          persona-relacion:
+            help: 'A Modelo 184 59-107. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 59-107 — adóügyi információ
+          porcentaje-participacion:
+            help: 'A casilla adatai: Casilla 86-92: százalék participacion.'
+            label: 'Casilla 86-92: százalék participacion'
+          porcentaje-reduccion-renta-atribuible:
+            help: 'A casilla adatai: Casilla 191-195: százalék reduccion jövedelem
+              hozzárendelhető.'
+            label: 'Casilla 191-195: százalék reduccion jövedelem hozzárendelhető'
+          porcentaje-renta-atribuible-residentes:
+            help: 'A casilla adatai: Casilla 151-155: százalék jövedelem hozzárendelhető
+              belföldi illetőségűek.'
+            label: 'Casilla 151-155: százalék jövedelem hozzárendelhető belföldi illetőségűek'
+          porcentaje-titularidad-inmueble:
+            help: 'A Modelo 184 195-199. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 195-199 — adóügyi információ
+          provisiones-y-gastos-dificil-justificacion:
+            help: 'A Modelo 184 160-171. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 160-171 — adóügyi információ
+          reduccion-atribuida-miembro:
+            help: 'A casilla adatai: Casilla 109-119: reduccion atribuida miembro.'
+            label: '109–119. mező: a tagnak tulajdonított csökkentés'
+          referencia-catastral:
+            help: 'A casilla adatai: Casilla 246-265: referencia catastral.'
+            label: 'Casilla 246-265: referencia catastral'
+          regimen-determinacion-rendimientos:
+            help: 'A casilla adatai: Casilla 82: rendszer determinacion jövedelmek.'
+            label: 'Casilla 82: rendszer determinacion jövedelmek'
+          rendimiento-neto-minorado-agricola-estimacion-objetiva:
+            help: A Modelo 184 216-229. casilla adóügyi adatai.
+            label: Casilla 216-229 — adóügyi mező
+          rendimiento-neto-previo-estimacion-objetiva:
+            help: A Modelo 184 203-215. casilla adóügyi adatai.
+            label: Casilla 203-215 — adóügyi mező
+          renta-atribuible-con-derecho-reduccion:
+            help: 'A casilla adatai: Casilla 196-207: jövedelem hozzárendelhető -val/-vel
+              derecho reduccion.'
+            label: 'Casilla 196-207: jövedelem hozzárendelhető -val/-vel derecho reduccion'
+          renta-atribuible-importe:
+            help: 'A casilla adatai: Casilla 177-190: jövedelem hozzárendelhető összeg.'
+            label: 'Casilla 177-190: jövedelem hozzárendelhető összeg'
+          representante-nif:
+            help: 'A casilla adatai: Casilla 172-180: képviselő nif.'
+            label: 'Casilla 172-180: képviselő nif'
+          representante-nombre:
+            help: 'A casilla adatai: Casilla 181-220: képviselő név.'
+            label: 'Casilla 181-220: képviselő név'
+          retenciones-ingresos-a-cuenta-atribuibles:
+            help: 'A casilla adatai: Casilla 233-244: adólevonások előlegfizetések
+              atribuibles.'
+            label: 'Casilla 233-244: adólevonások előlegfizetések atribuibles'
+          situacion-inmueble:
+            help: 'A casilla adatai: Casilla 245: situacion inmueble.'
+            label: 'Casilla 245: situacion inmueble'
+          tipo-actividad:
+            help: 'A casilla adatai: Casilla 83: kulcs tevékenység.'
+            label: 'Casilla 83: kulcs tevékenység'
+          tipo-declaracion:
+            help: 'A casilla adatai: Casilla kulcs-bevallás: kulcs bevallás.'
+            label: 'Casilla kulcs-bevallás: kulcs bevallás'
+          tipo-entidad-espanola:
+            help: 'A casilla adatai: Casilla 145: kulcs szervezet espanola.'
+            label: 'Casilla 145: kulcs szervezet espanola'
+          tipo-entidad-extranjera:
+            help: 'A casilla adatai: Casilla 147: kulcs szervezet külföldi.'
+            label: 'Casilla 147: kulcs szervezet külföldi'
+          tipo-hoja:
+            help: 'A Modelo 184 76. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 76 — adóügyi információ
+          tipo-renta-atribuida-clave:
+            help: 'A casilla adatai: Casilla 77: kulcs jövedelem atribuida clave.'
+            label: 'Casilla 77: kulcs jövedelem atribuida clave'
+          tipo-renta-atribuida-subclave:
+            help: 'A Modelo 184 78-79. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 78-79 — adóügyi információ
+          tipo-soporte:
+            help: 'A casilla adatai: Casilla 58: kulcs soporte.'
+            label: 'Casilla 58: kulcs soporte'
+          tipo3-clave:
+            help: 'A casilla adatai: Casilla 93: kulcs jövedelem atribuida clave.'
+            label: 'Casilla 93: kulcs jövedelem atribuida clave'
+          tipo3-dias-arrendamiento:
+            help: A Modelo 184 200-202. casilla adóügyi adatai.
+            label: Casilla 200-202 — adóügyi mező
+          tipo3-referencia-catastral:
+            help: 'A casilla adatai: Casilla 174-193: referencia catastral.'
+            label: 'Casilla 174-193: referencia catastral'
+          tipo3-situacion-inmueble:
+            help: 'A casilla adatai: Casilla 173: situacion inmueble.'
+            label: 'Casilla 173: situacion inmueble'
+          tipo3-subclave:
+            help: 'A Modelo 184 94-95. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 94-95 — adóügyi információ
+          tipo3-tipo-hoja:
+            help: 'A Modelo 184 76. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 76 — adóügyi információ
+          total-registros-socios:
+            help: 'A casilla adatai: Casilla 136-144: total registros socios.'
+            label: 'Casilla 136-144: total registros socios'
+          tributacion-impuesto-sociedades:
+            help: A Modelo 184 156. casilla adóügyi adatai.
+            label: Casilla 156 — adóügyi mező
+          valor-adquisicion-o-ajustes-disminuciones:
+            help: 'A Modelo 184 138-150. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 138-150 — adóügyi információ
+          valor-liquidativo-o-ajustes-aumentos:
+            help: 'A Modelo 184 125-137. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 125-137 — adóügyi információ
       field:
         official_name: Modelo 184. A jövedelem-hozzárendelési rendszerbe tartozó szervezetek
           éves adatszolgáltatási bevallása.

@@ -254,3 +254,25 @@ docs:
       reviewed_at: Date reviewed
       reviewed_by: Reviewed by
       title: Catalogue record
+  terminology:
+    cli:
+      authority: Source authority when the field is ‘source’.
+      check: Report drift without writing; exit non-zero when drift exists.
+      concept_id: Identifier of the concept to manage.
+      domain: 'IATE: allowed set of subject fields (repeatable).'
+      dry_run: Report what would be seeded without writing.
+      export_path: Path to the downloaded source export file.
+      field_name: short_description | definition | scope_note | source | term.
+      field_value: Field value (citation for ‘source’; label for ‘term’).
+      help: Terminology handbook maintenance.
+      language: Language-section code.
+      min_reliability: 'IATE: minimum reliability code to retain (>= 3).'
+      relation_kind: broader | related.
+      relation_source: Identifier of the source concept for the relation.
+      relation_target: Identifier of the target concept.
+      remove_relation: Remove the relation instead of adding it.
+      remove_term_label: Exact label of the term to remove.
+      replaced_by: Successor concept identifier (required).
+      retire_concept: Identifier of the concept to retire.
+      seed_source: 'Tier-A source: iate | ubterm (eurovoc after verification).'
+      term_status: Term status when the field is ‘term’.

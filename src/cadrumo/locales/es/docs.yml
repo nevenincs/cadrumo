@@ -263,3 +263,27 @@ docs:
       reviewed_at: Fecha de revisión
       reviewed_by: Revisado por
       title: Ficha del catálogo
+  terminology:
+    cli:
+      authority: Autoridad de la fuente cuando el campo es «source».
+      check: Informa de desviaciones sin escribir; devuelve un código distinto de
+        cero si existen.
+      concept_id: Identificador del concepto que se debe gestionar.
+      domain: 'IATE: conjunto permitido de campos temáticos (repetible).'
+      dry_run: Informa de lo que se incorporaría sin escribir.
+      export_path: Ruta del archivo de exportación de la fuente descargado.
+      field_name: short_description | definition | scope_note | source | term.
+      field_value: Valor del campo (cita para «source»; etiqueta para «term»).
+      help: Mantenimiento del manual de terminología.
+      language: Código de la sección lingüística.
+      min_reliability: 'IATE: código mínimo de fiabilidad que se debe conservar (>=
+        3).'
+      relation_kind: broader | related.
+      relation_source: Identificador del concepto de origen de la relación.
+      relation_target: Identificador del concepto de destino.
+      remove_relation: Elimina la relación en lugar de añadirla.
+      remove_term_label: Etiqueta exacta del término que se debe eliminar.
+      replaced_by: Identificador del concepto sucesor (obligatorio).
+      retire_concept: Identificador del concepto que se debe retirar.
+      seed_source: 'Fuente de nivel A: iate | ubterm (eurovoc una vez verificado).'
+      term_status: Estado del término cuando el campo es «term».

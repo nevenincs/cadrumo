@@ -11,48 +11,52 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
-              help: null
+              help: Tax information about tax information in casilla 01 of Modelo
+                126.
               label: Base for withholdings and payments on account
             '02':
-              help: null
+              help: 'Review the casilla information: Withholdings e payments on account.'
               label: Withholdings and payments on account
             '03':
-              help: null
+              help: Tax information for casilla 03 of Modelo 126.
               label: 'Accrual adjustment: base for withholdings and payments on account'
             '04':
-              help: null
+              help: Tax information for casilla 04 of Modelo 126.
               label: 'Accrual adjustment: withholdings and payments on account'
             '05':
-              help: null
+              help: Tax information about tax information in casilla 05 of Modelo
+                126.
               label: Income from earlier years
             '06':
-              help: null
+              help: 'Review the casilla information: Adjustment.'
               label: Adjustment
             '07':
-              help: null
+              help: Tax information for casilla 07 of Modelo 126.
               label: 'Accrual adjustment: additional base for withholdings and payments
                 on account'
             08:
-              help: null
+              help: Tax information for casilla 08 of Modelo 126.
               label: 'Accrual adjustment: additional withholdings and payments on
                 account'
             09:
-              help: null
+              help: Tax information about tax information in casilla 09 of Modelo
+                126.
               label: Additional income from earlier years
             '10':
-              help: null
+              help: Tax information about tax information in casilla 10 of Modelo
+                126.
               label: 'Total settlement: sum of withholdings, payments on account and
                 any adjustment'
             '11':
-              help: null
+              help: Tax information for casilla 11 of Modelo 126.
               label: Amounts payable from earlier returns for the same item, year
                 and period
             '12':
-              help: null
+              help: 'Review the casilla information: Result a ingresar.'
               label: Amount payable
           construct:
             modelo-126-calculation-construct:
               field:
-                title: null
+                title: Modelo 126 calculation construct
           field:
-            label: null
+            label: Casilla— tax information

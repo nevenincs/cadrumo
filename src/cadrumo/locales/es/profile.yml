@@ -27,9 +27,128 @@ profile:
           para arrastrar los datos ya declarados.
         title: Declaraciones anteriores
   keys:
+    activities:
+      description: Actividad económica (texto normal; usa el epígrafe IAE si lo conoces)
+    capabilities:
+      google_export: ¿Activar la exportación a Google Sheets?
+      llm_vision: ¿Activar la visión LLM local para leer facturas?
+    censo:
+      activity_start_date: ¿Desde qué fecha tienes obligaciones de declaración / cuándo
+        te diste de alta? (AAAA-MM-DD, opcional)
+      large_company: Condición de gran empresa
+      public_administration_budget_gt_6000000: Presupuesto de administración pública
+        superior a 6.000.000 EUR
+    contact:
+      postcode: Código postal del domicilio fiscal
     description: Claves de configuración del perfil y sus descripciones
+    identity:
+      legal_name: Razón social de la entidad para cabeceras de exportación
+      name: Nombre visible mostrado en revisiones locales
+      notes: Notas para tus propios registros (opcional)
+      surnames: Apellidos o razón social para cabeceras de exportación
+      tax_id: Identificador fiscal (NIF/CIF/DNI/NIE) para declaraciones
+    irpf:
+      art109_activity_income_withholding_ge_70pct: Aplica la excepción Art. 109 por
+        cobertura del 70% de ingresos de actividad
+      estimation_regime: Régimen de estimación IRPF
+      objective_estimation_modulos_iae_epigraph: Epígrafe IAE para módulos de estimación
+        objetiva
+      objective_estimation_modulos_module_1_units: Unidades anuales del módulo 1
+      objective_estimation_modulos_module_2_units: Unidades anuales del módulo 2
+      objective_estimation_modulos_module_3_units: Unidades anuales del módulo 3
+      objective_estimation_modulos_module_4_units: Unidades anuales del módulo 4
+      objective_estimation_modulos_module_5_units: Unidades anuales del módulo 5
+      objective_estimation_modulos_module_6_units: Unidades anuales del módulo 6
+      objective_estimation_modulos_module_7_units: Unidades anuales del módulo 7
+      special_regime: Régimen especial IRPF (Ley Beckham / Art. 93 LIRPF)
+      special_regime_start_date: Fecha de inicio del régimen especial (AAAA-MM-DD)
+    iva:
+      cash_accounting_regime_enrolled: ¿Está inscrito en el régimen especial del criterio
+        de caja?
+      does_intracomunitario: Realiza operaciones intracomunitarias
+      group_dominant_entity_enrolled: Alta como entidad dominante de un grupo de IVA
+      group_member_enrolled: Alta como entidad miembro de un grupo de IVA
+      hydrocarbon_deposit_advance_payment_deduction_entitled: ¿Tiene derecho a deducir
+        pagos anticipados del régimen de depósitos fiscales de hidrocarburos?
+      intracommunity_operations_exceed_50000_eur: Operaciones intracomunitarias superan
+        50.000 EUR
+      m303_regime_composition: ¿Qué composición de regímenes se aplica al Modelo 303?
+      oss_enrolled: Alta en OSS
+      redeme_enrolled: Inscrito en REDEME (Registro de Devolución Mensual del IVA)
+      regime: ¿Qué régimen de IVA aplica?
+      roi_enrolled: Alta en ROI
+      sii_enrolled: Inscrito en el SII (Suministro Inmediato de Información)
+      voluntary_sii_enrolled: ¿Está inscrito voluntariamente en el SII?
+    obligations:
+      bienes_extranjero_above_threshold: Bienes en el extranjero superan el umbral
+        del Modelo 720
+      monedas_virtuales_extranjero_above_threshold: Monedas virtuales en el extranjero
+        superan el umbral del Modelo 721
+      third_party_transactions_above_347_threshold: Operaciones con terceros superan
+        el umbral del Modelo 347
+    preferences:
+      output_language: Idioma de salida de la CLI para este perfil
+    renta_family:
+      descendants_eu_eea_deduction: Descendientes UE/EEE en la deducción por unidad
+        familiar
+      minor_children_in_unit: Hijos menores en la unidad familiar
+      situacion_familiar: Situación familiar (Art. 82 LIRPF)
+    renta_filing:
+      declaration_type: Código del tipo de tributación
+    renta_spouse:
+      birth_date: Fecha de nacimiento del cónyuge
+      disability_grade: Grado de discapacidad del cónyuge (si aplica)
+      eu_eea_country: País de residencia UE/EEE del cónyuge
+      eu_eea_resident: Cónyuge residente en la UE/EEE
+      name: Nombre del cónyuge
+      non_resident_irpf: Cónyuge no residente (no contribuyente IRPF)
+      sex: Sexo del cónyuge
+      surnames: Apellidos del cónyuge
+      tax_id: NIF/NIE del cónyuge
+    renta_taxpayer:
+      birth_date: Fecha de nacimiento del primer declarante
+      death_date: Fecha de fallecimiento del primer declarante
+      disability_grade: Clave de discapacidad del primer declarante
+      marital_status: Estado civil del primer declarante
+      marriage_date: Fecha de inicio del matrimonio (AAAA-MM-DD)
+      sex: Sexo del primer declarante
     tax:
       id: Identificador fiscal (NIF/CIF/DNI/NIE)
+    tax_residence:
+      ccaa: Comunidad autónoma de residencia fiscal
+      jurisdiction_scope: ¿Qué territorio tributario se aplica a este Modelo 303?
+    taxpayer_type:
+      country_of_fiscal_residence: País de residencia fiscal (código ISO 3166-1 alfa-2,
+        p.ej. GB, DE, FR)
+      declaration_roles: ¿La entidad declarante desempeña alguno de estos roles institucionales
+        a efectos del Modelo 347 (operaciones con terceros)?
+      entity_type: Tipo de entidad
+      fiscal_residency: Categoría de residencia fiscal
+      incn_prior_12_months: ¿Cuál fue su importe neto de la cifra de negocios en los
+        últimos 12 meses? (en euros, opcional)
+      irpf_income_categories: Categorías de renta IRPF
+      legal_entity_form: Forma jurídica
+      ley_49_2002_special_regime_option_date: Fecha declarada de la opción por el
+        régimen especial de la Ley 49/2002
+      ley_49_2002_special_regime_option_declared: ¿La entidad ha presentado en el
+        modelo 036 la opción por el régimen fiscal especial del título II de la Ley
+        49/2002?
+      ley_49_2002_special_regime_renunciation_date: Fecha declarada de la renuncia
+        al régimen especial de la Ley 49/2002
+      ley_49_2002_special_regime_renunciation_declared: ¿La entidad ha presentado
+        en el modelo 036 la renuncia al régimen fiscal especial del título II de la
+        Ley 49/2002?
+      new_entity_first_two_profit_periods: ¿Es una entidad de nueva creación en uno
+        de sus dos primeros periodos impositivos con beneficios?
+      representante_fiscal_nif: NIF/NIE del representante fiscal en España (obligatorio
+        fuera UE/EEE)
+      representante_fiscal_nombre: Nombre del representante fiscal en España
+    withholding:
+      has_employees: Tiene empleados y paga salarios con retención
+      modelo_111_no_retenciones_periods: Periodos Modelo 111 sin retenciones
+      pays_capital_income_with_retencion: Paga rentas de capital con retención
+      pays_professionals_with_retencion: Paga a profesionales con retención
+      pays_rent_with_retencion: Paga alquiler de local con retención
   schema:
     field:
       activities:
@@ -232,8 +351,16 @@ profile:
         voluntary_sii_enrolled:
           label: Inscripción voluntaria en el SII
       maritime_worker:
+        annual_salary:
+          label: Salario anual
+        exemption_path_rebeca:
+          label: Vía de exención REBECA
+        gross_navigation_income:
+          label: Ingresos brutos de navegación
         pending_eu_clearance:
           label: Pendiente de autorización de ayudas de Estado (UE)
+        qualifying_days:
+          label: Días computables
         retmar_registered:
           label: Inscripción en RETMAR
         tuna_fleet:
@@ -455,4 +582,17 @@ profile:
       withholding:
         title: Obligaciones como pagador con retención
   validation:
+    boolean_field_invalid: El campo booleano no es válido
+    conditional_required_field_missing: Falta un campo requerido condicionalmente
+    conditionally_forbidden_field: Campo prohibido condicionalmente
+    derived_field_not_editable: El campo derivado no se puede editar
+    effective_window_end_not_enforced: El final de la ventana de vigencia no se aplica
+    effective_window_unused: La ventana de vigencia no se utiliza
+    invalid_date_value: Valor de fecha no válido
+    invalid_email_value: Valor de correo electrónico no válido
+    invalid_enum_value: Valor de enumeración no válido
+    modelo_work_profile_baseline_missing: Falta un campo base del perfil para el trabajo
+      del modelo
+    numeric_field_invalid: El campo numérico no es válido
     required_field_missing: Falta un campo obligatorio del perfil.
+    unknown_field: Campo desconocido

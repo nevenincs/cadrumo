@@ -9,85 +9,86 @@ modelo:
         '2025':
           casilla:
             aportaciones-ejercicio:
-              help: null
+              help: Tax information for casilla of Modelo 280.
               label: Contributions made during the year
             base-retencion-practicada:
-              help: null
+              help: 'Review the casilla information: Base of the retencion practicada.'
               label: Base of the withholding applied
             base-retenciones:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 280.
               label: Withholding base
             clave-alta:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 280.
               label: Registration key
             declaracion-complementaria-sustitutiva:
-              help: null
+              help: Tax information for casilla of Modelo 280.
               label: Supplementary or replacement return
             declarado-nif:
-              help: null
+              help: 'Review the casilla information: NIF of the declarado.'
               label: Reported person's tax identification number (NIF)
             declarado-nombre:
-              help: null
+              help: 'Review the casilla information: Surname and name of the declarado.'
               label: Surname and forename of the reported person
             declarante-nif:
-              help: null
+              help: Tax information for casilla of Modelo 280.
               label: Declarant's tax identification number (NIF)
             declarante-razon-social:
-              help: null
+              help: Tax information for casilla of Modelo 280.
               label: Business name of the filer
             ejercicio-declaracion:
-              help: null
+              help: Tax information for casilla of Modelo 280.
               label: Reporting year
             extincion-plan:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 280.
               label: Termination of the Long-Term Savings Plan
             fecha-apertura:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 280.
               label: Opening date
             fecha-extincion:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 280.
               label: Termination date
             identificador-producto:
-              help: null
+              help: 'Review the casilla information: Identificador of the producto
+                contratado.'
               label: Identifier of the contracted product
             importe-total-aportaciones:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 280.
               label: Total amount of contributions
             numero-identificativo-anterior:
-              help: null
+              help: Tax information for casilla of Modelo 280.
               label: Identifying number of the previous return
             numero-identificativo-declaracion:
-              help: null
+              help: Tax information for casilla of Modelo 280.
               label: Declaration identifying number
             numero-total-declarados:
-              help: null
+              help: Tax information for casilla of Modelo 280.
               label: Total number of reported persons
             persona-relacion:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 280.
               label: Contact person
             rendimientos-negativos-acumulados:
-              help: null
+              help: 'Review the casilla information: Income negativos acumulados.'
               label: Accumulated negative returns
             rendimientos-negativos-ejercicio:
-              help: null
+              help: Tax information for casilla of Modelo 280.
               label: Negative returns obtained during the year
             rendimientos-negativos-imputables:
-              help: null
+              help: 'Review the casilla information: Income negativos imputables.'
               label: Attributable negative returns
             rendimientos-positivos-acumulados:
-              help: null
+              help: 'Review the casilla information: Income positivos acumulados.'
               label: Accumulated positive returns
             rendimientos-positivos-ejercicio:
-              help: null
+              help: Tax information for casilla of Modelo 280.
               label: Positive returns obtained during the year
             representante-legal-nif:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 280.
               label: Tax ID of the legal representative
             tipo-identificador:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 280.
               label: Identifier type
             tipo-plan-ahorro:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 280.
               label: Type of long-term savings plan
           field:
-            label: null
+            label: Casilla — tax field

@@ -1,6 +1,52 @@
 modelo:
   schema:
     '123':
+      casilla:
+        continuidad:
+          '07':
+            help: Información fiscal sobre información fiscal de la casilla 07 del
+              Modelo 123.
+            label: Casilla 07 — información fiscal
+          08:
+            help: Información fiscal sobre información fiscal de la casilla 08 del
+              Modelo 123.
+            label: Casilla 08 — información fiscal
+          base-rentas-dividendos:
+            help: 'Información de la casilla: Casilla 04: base rentas dividendos.'
+            label: 'Casilla 04: base rentas dividendos'
+          base-rentas-resto:
+            help: 'Información de la casilla: Casilla 05: base rentas resto.'
+            label: 'Casilla 05: base rentas resto'
+          base-retenciones-ingresos-a-cuenta:
+            help: Información fiscal sobre información fiscal de la casilla 02 del
+              Modelo 123.
+            label: Casilla 02 — información fiscal
+          cuota-a-ingresar:
+            help: 'Información de la casilla: Casilla 08: cuota a ingresar.'
+            label: 'Casilla 08: cuota a ingresar'
+          ingresos-ejercicios-anteriores:
+            help: 'Información de la casilla: Casilla 04: ingresos ejercicios anteriores.'
+            label: 'Casilla 04: ingresos ejercicios anteriores'
+          numero-rentas-resto:
+            help: 'Información de la casilla: Casilla 02: número rentas resto.'
+            label: 'Casilla 02: número rentas resto'
+          numero-rentas-total:
+            help: 'Información de la casilla: Casilla 03: número rentas total.'
+            label: 'Casilla 03: número rentas total'
+          regularizacion:
+            help: 'Información de la casilla: Casilla 05: regularización.'
+            label: 'Casilla 05: regularización'
+          resultado-anteriores-autoliquidaciones:
+            help: 'Información de la casilla: Casilla 07: resultado anteriores autoliquidaciones.'
+            label: 'Casilla 07: resultado anteriores autoliquidaciones'
+          retenciones-ingresos-a-cuenta:
+            help: Información fiscal sobre información fiscal de la casilla 03 del
+              Modelo 123.
+            label: Casilla 03 — información fiscal
+          suma-retenciones-regularizacion:
+            help: Información fiscal sobre información fiscal de la casilla 06 del
+              Modelo 123.
+            label: Casilla 06 — información fiscal
       field:
         official_name: Retenciones e ingresos a cuenta del IRPF, Impuesto sobre Sociedades
           e IRNR establecimientos permanentes. Determinados rendimientos del capital
@@ -10,28 +56,35 @@ modelo:
         2019-2023:
           casilla:
             '01':
-              help: null
-              label: Numero de perceptores
+              help: 'Consulte la información correspondiente a la casilla: Número
+                de perceptores.'
+              label: Número de perceptores
             '02':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 02 del
+                Modelo 123.
               label: Base de retenciones e ingresos a cuenta
             '03':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 03 del
+                Modelo 123.
               label: Retenciones e ingresos a cuenta
             '04':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ingresos
+                de ejercicios anteriores.'
               label: Ingresos de ejercicios anteriores
             '05':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Regularización.'
               label: Regularizacion
             '06':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 06 del
+                Modelo 123.
               label: Suma de retenciones y regularizacion
             '07':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultado
+                de anteriores autoliquidaciones.'
               label: Resultado de anteriores autoliquidaciones
             08:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultado
+                a ingresar.'
               label: Resultado a ingresar
           construct:
             modelo-123-2019-capital-withholding:
@@ -43,46 +96,58 @@ modelo:
         2024-y-siguientes:
           casilla:
             '01':
-              help: null
-              label: Numero de rentas dividendos y participaciones
+              help: 'Consulte la información correspondiente a la casilla: Número
+                de rentas dividendos y participaciones.'
+              label: Número de rentas dividendos y participaciones
             '02':
-              help: null
-              label: Numero de rentas resto
+              help: 'Consulte la información correspondiente a la casilla: Número
+                de rentas resto.'
+              label: Número de rentas resto
             '03':
-              help: null
-              label: Numero de rentas total
+              help: 'Consulte la información correspondiente a la casilla: Número
+                de rentas total.'
+              label: Número de rentas total
             '04':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Base dividendos
+                y participaciones.'
               label: Base dividendos y participaciones
             '05':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Base resto
+                de rentas.'
               label: Base resto de rentas
             '06':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Base total.'
               label: Base total
             '07':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 07 del
+                Modelo 123.
               label: Retenciones dividendos y participaciones
             08:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 08 del
+                Modelo 123.
               label: Retenciones resto de rentas
             09:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 09 del
+                Modelo 123.
               label: Retenciones total
             '10':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ingresos
+                de ejercicios anteriores.'
               label: Ingresos de ejercicios anteriores
             '11':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Regularización.'
               label: Regularizacion
             '12':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 12 del
+                Modelo 123.
               label: Suma de retenciones y regularizacion
             '13':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultado
+                de anteriores autoliquidaciones.'
               label: Resultado de anteriores autoliquidaciones
             '14':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultado
+                a ingresar.'
               label: Resultado a ingresar
           construct:
             modelo-123-current-capital-withholding:

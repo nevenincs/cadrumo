@@ -95,10 +95,12 @@ modelo:
               label: 1. Causa de presentación. Solicitud de devolución o modificación
                 de una solicitud de devolución
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la solicitud.'
               label: Ejercicio al que se refiere la solicitud
             x-chim6r1eclpn8ob4dsmmqqb5dlh74ro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Estado
+                miembro de devolución donde se soportaron las cuotas.'
               label: Estado miembro de devolución donde se soportaron las cuotas
             x-chim6r1edpqmqbbicljmisrke9niqobeehin4qbfe8:
               help: Casilla 27-42 del modelo 360, ejercicio 2010.
@@ -689,32 +691,41 @@ modelo:
               help: Casilla 1060-1061 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Actividades. 9. Código NACE. Descripción. Idioma
             x-chincrrcelhmirre5pi6aorcc5p62or9dtn2qrjf5limst3icljm2bb2d5imspbj:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: 4. Devolución
+                solicitada. Declaración de no haber entregado bienes ni servicios.'
               label: 4. Devolución solicitada. Declaración de no haber entregado bienes
                 ni servicios
             x-chincrrcelhmirre5pi6itj9edgg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: 4. Devolución
+                solicitada. Divisa.'
               label: 4. Devolución solicitada. Divisa
             x-chincrrcelhmirre5pkmqs3fe9q6abbjdtm6ior9ehgm8ro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: 4. Devolución
+                solicitada. Importe solicitado.'
               label: 4. Devolución solicitada. Importe solicitado
             x-chincrrcelhmirre5pn7arb5e9niqp3fcdqmqpbeehnn6bb9dlo6usjkc5hmirre:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: 4. Devolución
+                solicitada. Número de documentos de importación.'
               label: 4. Devolución solicitada. Número de documentos de importación
             x-chincrrcelhmirre5pn7arb5e9niqpj1cdq7asj1ec:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: 4. Devolución
+                solicitada. Número de facturas.'
               label: 4. Devolución solicitada. Número de facturas
             x-chincrrcelhmirre5po6asj9dti6ubb6clhmgo9dcpkms:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: 4. Devolución
+                solicitada. Período. Fecha fin del período.'
               label: 4. Devolución solicitada. Período. Fecha fin del período
             x-chincrrcelhmirre5po6asj9dti6ubb6clhmgo9dd5n6ior9ds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: 4. Devolución
+                solicitada. Período. Fecha inicio del período.'
               label: 4. Devolución solicitada. Período. Fecha inicio del período
             x-e1p6usjic5q62bj4clj6irj9ehknco8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: 5. Modificación
+                Prorrata año anterior. Prorrata definitiva.'
               label: 5. Modificación Prorrata año anterior. Prorrata definitiva
             x-e1p6usjic5q62bj5d9in4or9cdkmu:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: 5. Modificación
+                Prorrata año anterior. Ejercicio.'
               label: 5. Modificación Prorrata año anterior. Ejercicio
           construct:
             modelo-360-iva-devolucion-ue:

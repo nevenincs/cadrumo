@@ -186,18 +186,17 @@ msgstr ""
 " document analitzat:"
 
 #: ../../how-to/check-aeat-notifications.md:76
-#, fuzzy
 msgid ""
 "Treat history as a document record, not as a balance. It does not total "
 "the figures, state what is currently payable, or replace the recaudación "
 "register reported by AEAT's debts consulta. A document alone does not "
 "establish whether its amount was paid, appealed, reduced, or superseded."
 msgstr ""
-"Tracta l'historial com un registre de documents, no com un saldo. No suma"
-" les xifres, no indica què es pot pagar actualment ni substitueix el "
-"registre de recaptació que mostren les ordres `aeat app live deudas`. Un "
-"document per si sol no estableix si el seu import s'ha pagat, recorregut,"
-" reduït o substituït."
+"Tracta l'historial com un registre de documents, no com un saldo. No suma "
+"les xifres, no indica què es pot pagar actualment ni substitueix el registre "
+"de recaptació que comunica la consulta de deutes de l'AEAT. Un document per "
+"si sol no estableix si el seu import s'ha pagat, recorregut, reduït o "
+"substituït."
 
 #: ../../how-to/check-aeat-notifications.md:83
 msgid "3. Declaration history (expedientes)"

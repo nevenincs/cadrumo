@@ -1,6 +1,149 @@
 modelo:
   schema:
     '347':
+      casilla:
+        continuidad:
+          arrendamiento-local-negocio:
+            help: 'A Modelo 347 . casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla— adóügyi információ
+          arrendatario-nif:
+            help: 'A casilla adatai: Casilla inmueble.arrendatario-nif: arrendatario
+              nif.'
+            label: 'inmueble.arrendatario-nif mező: a bérlő adóazonosítója'
+          arrendatario-nombre:
+            help: 'A casilla adatai: Casilla inmueble.arrendatario-név: arrendatario
+              név.'
+            label: 'Casilla inmueble.arrendatario-név: arrendatario név'
+          arrendatario-representante-legal-nif:
+            help: 'A Modelo 347 . casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla— adóügyi információ
+          complementaria-sustitutiva:
+            help: A Modelo 347 . casilla adóügyi adatai.
+            label: Casilla — adóügyi mező
+          contraparte-clave-operacion:
+            help: 'A casilla adatai: Casilla contraparte.clave-operacion: contraparte
+              clave operacion.'
+            label: 'Casilla contraparte.clave-operacion: contraparte clave operacion'
+          contraparte-importe-q1:
+            help: 'A casilla adatai: Casilla contraparte.összeg-Q1: contraparte összeg
+              q1.'
+            label: 'Casilla contraparte.összeg-Q1: contraparte összeg q1'
+          contraparte-importe-q2:
+            help: 'A casilla adatai: Casilla contraparte.összeg-Q2: contraparte összeg
+              q2.'
+            label: 'Casilla contraparte.összeg-Q2: contraparte összeg q2'
+          contraparte-importe-q3:
+            help: 'A casilla adatai: Casilla contraparte.összeg-Q3: contraparte összeg
+              q3.'
+            label: 'Casilla contraparte.összeg-Q3: contraparte összeg q3'
+          contraparte-importe-q4:
+            help: 'A casilla adatai: Casilla contraparte.összeg-Q4: contraparte összeg
+              q4.'
+            label: 'Casilla contraparte.összeg-Q4: contraparte összeg q4'
+          contraparte-nif:
+            help: 'A casilla adatai: Casilla contraparte.nif: contraparte nif.'
+            label: 'Casilla contraparte.nif: contraparte nif'
+          contraparte-nombre:
+            help: 'A casilla adatai: Casilla contraparte.név: contraparte név.'
+            label: 'Casilla contraparte.név: contraparte név'
+          contraparte-pais-codigo:
+            help: A Modelo 347 . casilla adóügyi adatai.
+            label: Casilla — adóügyi mező
+          contraparte-provincia-codigo:
+            help: A Modelo 347 . casilla adóügyi adatai.
+            label: Casilla — adóügyi mező
+          declarante-representante-legal-nif:
+            help: A Modelo 347 . casilla adóügyi adatai.
+            label: Casilla — adóügyi mező
+          direccion-inmueble:
+            help: 'A casilla adatai: Casilla inmueble.direccion: direccion inmueble.'
+            label: 'inmueble.direccion mező: az ingatlan címe'
+          ejercicio-operacion:
+            help: 'A casilla adatai: Casilla contraparte.adóév-operacion: adóév operacion.'
+            label: 'Casilla contraparte.adóév-operacion: adóév operacion'
+          filing-year:
+            help: A Modelo 347 . casilla adóügyi adatai.
+            label: Casilla — adóügyi mező
+          importe-anual-operaciones:
+            help: 'A casilla adatai: Casilla contraparte.összeg-éves: összeg éves
+              ügyletek.'
+            label: 'Casilla contraparte.összeg-éves: összeg éves ügyletek'
+          importe-operacion-arrendamiento:
+            help: 'A casilla adatai: Casilla inmueble.összeg-operacion: összeg operacion
+              arrendamiento.'
+            label: 'Casilla inmueble.összeg-operacion: összeg operacion arrendamiento'
+          importe-percibido-metalico:
+            help: 'A casilla adatai: Casilla contraparte.összeg-metalico: összeg percibido
+              metalico.'
+            label: 'Casilla contraparte.összeg-metalico: összeg percibido metalico'
+          importe-total-anual-operaciones:
+            help: 'A casilla adatai: Casilla decl.összeg-total-éves: összeg total
+              éves ügyletek.'
+            label: 'Casilla decl.összeg-total-éves: összeg total éves ügyletek'
+          importe-total-arrendamiento-locales:
+            help: 'A Modelo 347 . casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla— adóügyi információ
+          importe-transmisiones-inmuebles:
+            help: 'A Modelo 347 . casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla— adóügyi információ
+          importe-transmisiones-q1:
+            help: 'A casilla adatai: Casilla contraparte.összeg-transmisiones-Q1:
+              összeg transmisiones q1.'
+            label: 'Casilla contraparte.összeg-transmisiones-Q1: összeg transmisiones
+              q1'
+          importe-transmisiones-q2:
+            help: 'A casilla adatai: Casilla contraparte.összeg-transmisiones-Q2:
+              összeg transmisiones q2.'
+            label: 'Casilla contraparte.összeg-transmisiones-Q2: összeg transmisiones
+              q2'
+          importe-transmisiones-q3:
+            help: 'A casilla adatai: Casilla contraparte.összeg-transmisiones-Q3:
+              összeg transmisiones q3.'
+            label: 'Casilla contraparte.összeg-transmisiones-Q3: összeg transmisiones
+              q3'
+          importe-transmisiones-q4:
+            help: 'A casilla adatai: Casilla contraparte.összeg-transmisiones-Q4:
+              összeg transmisiones q4.'
+            label: 'Casilla contraparte.összeg-transmisiones-Q4: összeg transmisiones
+              q4'
+          nif-operador-comunitario:
+            help: 'A Modelo 347 . casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla— adóügyi információ
+          numero-justificante:
+            help: A Modelo 347 . casilla adóügyi adatai.
+            label: Casilla — adóügyi mező
+          operacion-seguro:
+            help: 'A casilla adatai: Casilla contraparte.operacion-seguro: operacion
+              seguro.'
+            label: 'Casilla contraparte.operacion-seguro: operacion seguro'
+          persona-con-quien-relacionarse:
+            help: 'A Modelo 347 . casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla— adóügyi információ
+          persona-con-quien-relacionarse-telefono:
+            help: 'A Modelo 347 . casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla— adóügyi információ
+          referencia-catastral:
+            help: 'A casilla adatai: Casilla inmueble.referencia-catastral: referencia
+              catastral.'
+            label: 'inmueble.referencia-catastral mező: kataszteri hivatkozás'
+          representante-legal-nif:
+            help: 'A Modelo 347 . casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla— adóügyi információ
+          situacion-inmueble:
+            help: 'A casilla adatai: Casilla inmueble.situacion: situacion inmueble.'
+            label: 'Casilla inmueble.situacion: situacion inmueble'
+          tipo-declaracion:
+            help: 'A casilla adatai: Casilla kulcs-bevallás: kulcs bevallás.'
+            label: 'Casilla kulcs-bevallás: kulcs bevallás'
+          tipo-soporte:
+            help: 'A casilla adatai: Casilla decl.kulcs-soporte: kulcs soporte.'
+            label: 'Casilla decl.kulcs-soporte: kulcs soporte'
+          total-inmuebles:
+            help: 'A Modelo 347 . casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla— adóügyi információ
+          total-personas-entidades:
+            help: A Modelo 347 . casilla adóügyi adatai.
+            label: Casilla — adóügyi mező
       field:
         official_name: Modelo 347. A harmadik személyekkel folytatott ügyletek éves
           bevallása.

@@ -259,3 +259,27 @@ docs:
       reviewed_at: Data de revisió
       reviewed_by: Revisat per
       title: Fitxa del catàleg
+  terminology:
+    cli:
+      authority: Autoritat de la font quan el camp és «source».
+      check: Informa de desviacions sense escriure; retorna un codi diferent de zero
+        si n'hi ha.
+      concept_id: Identificador del concepte que s'ha de gestionar.
+      domain: 'IATE: conjunt permès de camps temàtics (es pot repetir).'
+      dry_run: Informa del que se sembraria sense escriure.
+      export_path: Camí del fitxer d'exportació de la font baixat.
+      field_name: short_description | definition | scope_note | source | term.
+      field_value: Valor del camp (citació per a «source»; etiqueta per a «term»).
+      help: Manteniment del manual de terminologia.
+      language: Codi de la secció lingüística.
+      min_reliability: 'IATE: codi mínim de fiabilitat que s''ha de conservar (>=
+        3).'
+      relation_kind: broader | related.
+      relation_source: Identificador del concepte d'origen de la relació.
+      relation_target: Identificador del concepte de destinació.
+      remove_relation: Elimina la relació en lloc d'afegir-la.
+      remove_term_label: Etiqueta exacta del terme que s'ha d'eliminar.
+      replaced_by: Identificador del concepte successor (obligatori).
+      retire_concept: Identificador del concepte que s'ha de retirar.
+      seed_source: 'Font de nivell A: iate | ubterm (eurovoc un cop verificat).'
+      term_status: Estat del terme quan el camp és «term».

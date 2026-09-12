@@ -10,78 +10,100 @@ modelo:
         '2026':
           casilla:
             '01':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                del premio obtenido por el boleto, cupon o apuesta premiado.'
               label: Importe del premio obtenido por el boleto, cupon o apuesta premiado
             '02':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                o valor del premio que corresponde individualmente al declarante.'
               label: Importe o valor del premio que corresponde individualmente al
                 declarante
             '03':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuantia
+                exenta del gravamen especial.'
               label: Cuantia exenta del gravamen especial
             '04':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Base imponible.'
               label: Base imponible
             '05':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota del
+                gravamen especial.'
               label: Cuota del gravamen especial
             '06':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultados
+                a ingresar de anteriores autoliquidaciones por el mismo concepto y
+                correspondientes al mismo premio.'
               label: Resultados a ingresar de anteriores autoliquidaciones por el
                 mismo concepto y correspondientes al mismo premio
             '07':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultado
+                a ingresar.'
               label: Resultado a ingresar
             09:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                ingresado a favor del Tesoro Publico.'
               label: Importe ingresado a favor del Tesoro Publico
             autoliquidacion-complementaria:
-              help: null
-              label: Autoliquidacion complementaria
+              help: 'Consulte la información correspondiente a la casilla: Autoliquidación
+                complementaria.'
+              label: Autoliquidación complementaria
             declarante-nif:
-              help: null
-              label: Numero de identificacion fiscal (NIF)
+              help: 'Consulte la información correspondiente a la casilla: Número
+                de identificacion fiscal (NIF).'
+              label: Número de identificacion fiscal (NIF)
             declarante-nombre:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 136.
               label: Apellidos y nombre o razon social
             ejercicio-declaracion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio.'
               label: Ejercicio
             fecha-celebracion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                celebracion.'
               label: Fecha de celebracion
             fecha-cobro-premio:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                cobro del premio.'
               label: Fecha de cobro del premio
             forma-pago:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Forma de
+                pago.'
               label: Forma de pago
             iban:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 136.
               label: Codigo IBAN
             justificante-anterior:
-              help: null
-              label: Numero de justificante identificativo de la autoliquidacion anterior
+              help: 'Consulte la información correspondiente a la casilla: Número
+                de justificante identificativo de la autoliquidación anterior.'
+              label: Número de justificante identificativo de la autoliquidación anterior
             loteria-apuesta-denominacion:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 136.
               label: Denominacion de la loteria o apuesta
             organizador-codigo-pais:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 136.
               label: Codigo pais del organismo o entidad organizadora
             organizador-denominacion:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 136.
               label: Denominacion o razon social del organismo o entidad organizadora
             organizador-pais:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Pais del
+                organismo o entidad organizadora.'
               label: Pais del organismo o entidad organizadora
             periodo-declaracion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Período.'
               label: Periodo
             precio-unitario:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Precio
+                unitario.'
               label: Precio unitario
             provincia-residencia-irpf:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 136.
               label: Codigo de la provincia de residencia habitual del contribuyente
                 IRPF
           construct:

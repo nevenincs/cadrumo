@@ -9,23 +9,23 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
-              help: null
+              help: A Modelo 115 01. casilla adóügyi adatai.
               label: Kedvezményezettek száma
             '02':
-              help: null
+              help: 'A Modelo 115 02. casilla adóügyi adatai: adóügyi információ.'
               label: Forrásadó és előlegfizetés alapja
             '03':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adólevonások e előlegfizetések.'
               label: Forrásadó és előlegfizetés
             '04':
-              help: null
+              help: 'A Modelo 115 04. casilla adóügyi adatai: adóügyi információ.'
               label: Korábbi bevallások eredménye
             '05':
-              help: null
+              help: 'Tekintse át a casilla adatait: Eredmény a ingresar.'
               label: Befizetendő eredmény
           construct:
             modelo-115-quarterly-rental-withholding:
               field:
-                title: null
+                title: Modelo 115 — adóügyi információ
           field:
-            label: null
+            label: Casilla— adóügyi információ

@@ -1,6 +1,126 @@
 modelo:
   schema:
     '210':
+      casilla:
+        continuidad:
+          irnr-base-imponible:
+            help: 'Información de la casilla: Casilla 8: irnr base imponible.'
+            label: 'Casilla 8: irnr base imponible'
+          irnr-base-imponible-directa-g:
+            help: 'Información de la casilla: Casilla 18: irnr base imponible directa
+              g.'
+            label: 'Casilla 18: irnr base imponible directa g'
+          irnr-base-imponible-directa-i:
+            help: 'Información de la casilla: Casilla 4: irnr base imponible directa
+              i.'
+            label: 'Casilla 4: irnr base imponible directa i'
+          irnr-base-imponible-ganancias-h:
+            help: 'Información de la casilla: Casilla 17: irnr base imponible ganancias
+              h.'
+            label: 'Casilla 17: irnr base imponible ganancias h'
+          irnr-convenio-indicador:
+            help: 'Información de la casilla: Casilla 20: irnr convenio indicador.'
+            label: 'Casilla 20: irnr convenio indicador'
+          irnr-cuota-diferencial:
+            help: 'Información de la casilla: Casilla 31: irnr cuota diferencial.'
+            label: 'Casilla 31: irnr cuota diferencial'
+          irnr-cuota-integra:
+            help: 'Información de la casilla: Casilla 22: irnr cuota integra.'
+            label: 'Casilla 22: irnr cuota integra'
+          irnr-cuota-integra-reducida:
+            help: 'Información de la casilla: Casilla 28: irnr cuota integra reducida.'
+            label: 'Casilla 28: irnr cuota integra reducida'
+          irnr-cuota-ley-irnr:
+            help: 'Información de la casilla: Casilla 24: irnr cuota ley irnr.'
+            label: 'Casilla 24: irnr cuota ley irnr'
+          irnr-deduccion-donativos:
+            help: 'Información de la casilla: Casilla 23: irnr deducción donativos.'
+            label: 'Casilla 23: irnr deducción donativos'
+          irnr-exencion-dividendos:
+            help: 'Información de la casilla: Casilla 6: irnr exencion dividendos.'
+            label: 'Casilla 6: irnr exencion dividendos'
+          irnr-exenciones-ley-irnr-indicador:
+            help: 'Información de la casilla: Casilla 19: irnr exenciones ley irnr
+              indicador.'
+            label: 'Casilla 19: irnr exenciones ley irnr indicador'
+          irnr-ganancia-diferencia:
+            help: Información fiscal sobre información fiscal de la casilla 11 del
+              Modelo 210.
+            label: Casilla 11 — información fiscal
+          irnr-ganancia-importe:
+            help: 'Información de la casilla: Casilla 12: irnr ganancia importe.'
+            label: 'Casilla 12: irnr ganancia importe'
+          irnr-ganancia-valor-adquisicion:
+            help: 'Información de la casilla: Casilla 10: irnr ganancia valor adquisición.'
+            label: 'Casilla 10: irnr ganancia valor adquisición'
+          irnr-ganancia-valor-transmision:
+            help: 'Información de la casilla: Casilla 9: irnr ganancia valor transmisión.'
+            label: 'Casilla 9: irnr ganancia valor transmisión'
+          irnr-gastos-deducibles:
+            help: 'Información de la casilla: Casilla 7: irnr gastos deducibles.'
+            label: 'Casilla 7: irnr gastos deducibles'
+          irnr-imputacion-inmobiliaria-coeficiente:
+            help: 'Información de la casilla: Casilla coeficiente_imputacion_inmobiliaria:
+              irnr imputacion inmobiliaria coeficiente.'
+            label: 'Casilla coeficiente_imputacion_inmobiliaria: irnr imputacion inmobiliaria
+              coeficiente'
+          irnr-imputacion-inmobiliaria-dias:
+            help: 'Información de la casilla: Casilla dias_imputacion: irnr imputacion
+              inmobiliaria dias.'
+            label: 'Casilla dias_imputacion: irnr imputacion inmobiliaria dias'
+          irnr-imputacion-inmobiliaria-valor-adquisicion:
+            help: 'Información de la casilla: Casilla valor_adquisicion: irnr imputacion
+              inmobiliaria valor adquisición.'
+            label: 'Casilla valor_adquisicion: irnr imputacion inmobiliaria valor
+              adquisición'
+          irnr-imputacion-inmobiliaria-valor-catastral:
+            help: 'Información de la casilla: Casilla valor_catastral: irnr imputacion
+              inmobiliaria valor catastral.'
+            label: 'Casilla valor_catastral: irnr imputacion inmobiliaria valor catastral'
+          irnr-imputacion-inmobiliaria-valor-comprobado-administracion:
+            help: 'Información de la casilla: Casilla valor_comprobado_administracion:
+              irnr imputacion inmobiliaria valor comprobado administración.'
+            label: 'Casilla valor_comprobado_administracion: irnr imputacion inmobiliaria
+              valor comprobado administración'
+          irnr-ingreso-devolucion-anterior:
+            help: 'Información de la casilla: Casilla 30: irnr ingreso devolucion
+              anterior.'
+            label: 'Casilla 30: irnr ingreso devolucion anterior'
+          irnr-limite-convenio:
+            help: 'Información de la casilla: Casilla 26: irnr limite convenio.'
+            label: 'Casilla 26: irnr limite convenio'
+          irnr-mejora-diferencia:
+            help: Información fiscal sobre información fiscal de la casilla 15 del
+              Modelo 210.
+            label: Casilla 15 — información fiscal
+          irnr-mejora-ganancia:
+            help: 'Información de la casilla: Casilla 16: irnr mejora ganancia.'
+            label: 'Casilla 16: irnr mejora ganancia'
+          irnr-mejora-valor-adquisicion:
+            help: 'Información de la casilla: Casilla 14: irnr mejora valor adquisición.'
+            label: 'Casilla 14: irnr mejora valor adquisición'
+          irnr-mejora-valor-transmision:
+            help: 'Información de la casilla: Casilla 13: irnr mejora valor transmisión.'
+            label: 'Casilla 13: irnr mejora valor transmisión'
+          irnr-porcentaje-convenio:
+            help: 'Información de la casilla: Casilla 25: irnr porcentaje convenio.'
+            label: 'Casilla 25: irnr porcentaje convenio'
+          irnr-reduccion-convenio:
+            help: 'Información de la casilla: Casilla 27: irnr reduccion convenio.'
+            label: 'Casilla 27: irnr reduccion convenio'
+          irnr-rendimientos-integros:
+            help: 'Información de la casilla: Casilla 5: irnr rendimientos integros.'
+            label: 'Casilla 5: irnr rendimientos integros'
+          irnr-retencion-practicada:
+            help: Información fiscal sobre información fiscal de la casilla 29 del
+              Modelo 210.
+            label: Casilla 29 — información fiscal
+          irnr-tipo-gravamen:
+            help: 'Información de la casilla: Casilla 21: irnr tipo gravamen.'
+            label: 'Casilla 21: irnr tipo gravamen'
+          irnr-tipo-renta:
+            help: 'Información de la casilla: Casilla tipo_renta: irnr tipo renta.'
+            label: 'Casilla tipo_renta: irnr tipo renta'
       field:
         official_name: Modelo 210. Impuesto sobre la Renta de no Residentes. No residentes
           sin establecimiento permanente. Autoliquidación.
@@ -9,108 +129,137 @@ modelo:
         '2025':
           casilla:
             base_imponible:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Base imponible.'
               label: Base imponible
             base_imponible_directa_g:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Base imponible
+                (210 G).'
               label: Base imponible (210 G)
             base_imponible_directa_i:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Base imponible
+                (210 I).'
               label: Base imponible (210 I)
             base_imponible_ganancias_h:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Base imponible
+                ([12]+[16]) (210 H).'
               label: Base imponible ([12]+[16]) (210 H)
             coeficiente_imputacion_inmobiliaria:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Coeficiente
+                de imputación inmobiliaria.'
               label: Coeficiente de imputación inmobiliaria
             convenio_indicador:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Convenio.'
               label: Convenio
             cuota_diferencial:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota diferencial.'
               label: Cuota diferencial
             cuota_integra:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota íntegra.'
               label: Cuota íntegra
             cuota_integra_reducida:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota íntegra
+                reducida ([24]-[27]).'
               label: Cuota íntegra reducida ([24]-[27])
             cuota_ley_irnr:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota Ley
+                IRNR ([22]-[23]).'
               label: Cuota Ley IRNR ([22]-[23])
             deduccion_donativos:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Deducción
+                por donativos.'
               label: Deducción por donativos
             dias_imputacion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Días de
+                imputación.'
               label: Días de imputación
             exencion_dividendos:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Exención
+                aplicada dividendos (límite anual 1.500 euros) (210 R).'
               label: Exención aplicada dividendos (límite anual 1.500 euros) (210
                 R)
             exenciones_ley_irnr_indicador:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Exenciones
+                Ley IRNR, excepto dividendos (límite anual 1.500 euros).'
               label: Exenciones Ley IRNR, excepto dividendos (límite anual 1.500 euros)
             ganancia_diferencia:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 11 del
+                Modelo 210.
               label: Adquisición. Diferencia (210 H)
             ganancia_importe:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Adquisición.
+                Ganancia (210 H).'
               label: Adquisición. Ganancia (210 H)
             ganancia_valor_adquisicion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Adquisición.
+                Valor de adquisición (actualizado) (210 H).'
               label: Adquisición. Valor de adquisición (actualizado) (210 H)
             ganancia_valor_transmision:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Adquisición.
+                Valor de transmisión (210 H).'
               label: Adquisición. Valor de transmisión (210 H)
             gastos_deducibles:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Gastos
+                deducibles.'
               label: Gastos deducibles
             ingreso_devolucion_anterior:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ingreso/Devolución
+                anterior (exclusivamente autoliquidación complementaria).'
               label: Ingreso/Devolución anterior (exclusivamente autoliquidación complementaria)
             limite_convenio:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Límite
+                Convenio.'
               label: Límite Convenio
             mejora_diferencia:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 15 del
+                Modelo 210.
               label: Mejora o 2ª adquisición. Diferencia (210 H)
             mejora_ganancia:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Mejora
+                o 2ª adquisición. Ganancia (210 H).'
               label: Mejora o 2ª adquisición. Ganancia (210 H)
             mejora_valor_adquisicion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Mejora
+                o 2ª adquisición. Valor de adquisición (actualizado) (210 H).'
               label: Mejora o 2ª adquisición. Valor de adquisición (actualizado) (210
                 H)
             mejora_valor_transmision:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Mejora
+                o 2ª adquisición. Valor de transmisión (210 H).'
               label: Mejora o 2ª adquisición. Valor de transmisión (210 H)
             porcentaje_convenio:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Porcentaje
+                Convenio (%).'
               label: Porcentaje Convenio (%)
             reduccion_convenio:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Reducción
+                por Convenio ([24]-[26]).'
               label: Reducción por Convenio ([24]-[26])
             rendimientos_integros:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Rendimientos
+                íntegros.'
               label: Rendimientos íntegros
             retencion_practicada:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Retención
+                practicada.'
               label: Retención practicada
             tipo_gravamen:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                gravamen.'
               label: Tipo de gravamen
             tipo_renta:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                renta.'
               label: Tipo de renta
             valor_adquisicion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Valor de
+                adquisición.'
               label: Valor de adquisición
             valor_catastral:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Valor catastral.'
               label: Valor catastral
             valor_comprobado_administracion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Valor comprobado
+                por la Administración.'
               label: Valor comprobado por la Administración
           construct:
             m210-irnr-calculation:

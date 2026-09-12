@@ -426,17 +426,16 @@ msgstr ""
 "factures, inclosa l'opció `--attachment-id` i la seva limitació actual."
 
 #: ../../how-to/import-bank-statements.md:200
-#, fuzzy
 msgid ""
 "Pull a document straight from Google Drive into encrypted evidence "
 "storage with `evidence pull`. This command reaches Google Drive, so it "
 "runs against your own authorized account rather than in the documentation"
 " sandbox:"
 msgstr ""
-"Descarrega un document directament de Google Drive a l'emmagatzematge "
-"d'evidència xifrat amb `doclink`. Aquesta ordre arriba a Google Drive, de"
-" manera que s'executa contra el teu propi compte autoritzat en lloc de "
-"l'entorn de proves de la documentació:"
+"Extreu un document directament de Google Drive a l'emmagatzematge "
+"d'evidència xifrat amb `evidence pull`. Aquesta ordre accedeix a Google "
+"Drive, de manera que s'executa amb el teu propi compte autoritzat i no dins "
+"del sandbox de la documentació:"
 
 #: ../../how-to/import-bank-statements.md:207
 msgid ""

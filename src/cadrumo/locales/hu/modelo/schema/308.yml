@@ -11,7 +11,7 @@ modelo:
         2009-2011-junio:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 308 . casilla adóügyi adatai: adóév.'
               label: A kérelem vonatkozási éve
             x-chim6r1ee1in4qbfchng:
               help: A 308-es modelón bevallott adat, a hivatalos nyomtatványtervből
@@ -20,13 +20,13 @@ modelo:
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
-                title: null
+                title: Modelo 308 — adóügyi információ
           field:
-            label: null
+            label: Casilla— adóügyi információ
         2011-julio-2015:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 308 . casilla adóügyi adatai: adóév.'
               label: A kérelem vonatkozási éve
             x-chim6r1ee1in4qbfchng:
               help: A 308-es modelón bevallott adat, a hivatalos nyomtatványtervből
@@ -35,13 +35,13 @@ modelo:
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
-                title: null
+                title: Modelo 308 — adóügyi információ
           field:
-            label: null
+            label: Casilla— adóügyi információ
         2016-2018:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 308 . casilla adóügyi adatai: adóév.'
               label: A kérelem vonatkozási éve
             x-chim6r1ee1in4qbfchng:
               help: A 308-es modelón bevallott adat, a hivatalos nyomtatványtervből
@@ -50,9 +50,9 @@ modelo:
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
-                title: null
+                title: Modelo 308 — adóügyi információ
           field:
-            label: null
+            label: Casilla— adóügyi információ
         2019-y-siguientes:
           casilla:
             x-chim6r1echincrrcelhmirre5lh6ioo:
@@ -62,7 +62,7 @@ modelo:
               help: A 308-es modelo 932-965. rovata, 2009. adóév.
               label: Visszatérítés - IBAN
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 308 . casilla adóügyi adatai: adóév.'
               label: A kérelem vonatkozási éve
             x-chim6r1edlq6sbb1chonaqbicln78p9dc5o6ar3cd5i6uso:
               help: A 308-es modelo 119-178. rovata, 2009. adóév.
@@ -194,7 +194,7 @@ modelo:
               help: A 308-es modelo 13. rovata, 2009. adóév.
               label: Bevallás típusa
             x-chim6r1eehkn0rpdednmoqb3d5q7ap0:
-              help: null
+              help: 'A Modelo 308 . casilla adóügyi adatai: adóügyi információ.'
               label: Kérelem típusa (egyenértékűségi felár / 30a. cikk / 21.4. cikk
                 / eseti adóalany / egyszerűsített szállítási szabályozás)
             x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:
@@ -203,6 +203,6 @@ modelo:
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
-                title: null
+                title: Modelo 308 — adóügyi információ
           field:
-            label: null
+            label: Casilla— adóügyi információ

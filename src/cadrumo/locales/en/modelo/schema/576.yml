@@ -1,6 +1,11 @@
 modelo:
   schema:
     '576':
+      casilla:
+        continuidad:
+          filing-year:
+            help: Tax information for casilla of Modelo 576.
+            label: Casilla — tax field
       field:
         official_name: Modelo 576. Special Tax on Certain Means of Transport. Self-assessment.
         title: IEDMT - self-assessment on registration of certain means of transport
@@ -8,140 +13,155 @@ modelo:
         '2007':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Tax information for casilla of Modelo 576.
               label: Accrual year
           field:
             label: Order EHA/1981/2005, tax year 2007
         2008-y-siguientes:
           casilla:
             x-cdmn8bj1clp6urj1epiiqobedsmmcob2e9km6ob3d5nms:
-              help: null
+              help: Tax information for casilla 29 of Modelo 576.
               label: C.M.T. Aircraft. Year of manufacture
             x-cdmn8bj1clp6urj1epiiqpj1c9p6ior1dpq6a:
-              help: null
+              help: 'Review the casilla information: C.M.T. Aeronaves. Fabricante.'
               label: C.M.T. Aircraft. Manufacturer
             x-cdmn8bj1clp6urj1epiiqrbfchimoro:
-              help: null
+              help: 'Review the casilla information: C.M.T. Aeronaves. Modelo.'
               label: C.M.T. Aircraft. Model
             x-cdmn8bj1clp6urj1epiiqs35edniqrb1f1kmqrpdchin6s35ctqma:
-              help: null
+              help: Tax information about tax information in casilla 30 of Modelo
+                576.
               label: C.M.T. Aircraft. Maximum take-off weight (in kg)
             x-cdmn8bj1clp6urj1epiiqsr5e9kma:
-              help: null
+              help: Tax information about tax information in casilla 28 of Modelo
+                576.
               label: C.M.T. Aircraft. Serial number
             x-cdmn8bj5dlh62sj3c5hmirre5lin6r3fe9gg:
-              help: null
+              help: 'Review the casilla information: C.M.T. Embarcaciones. Eslora
+                máxima (en metros).'
               label: C.M.T. Vessels. Maximum length (in metres)
             x-cdmn8bj5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
-              help: null
+              help: Tax information about tax information in casilla 22 of Modelo
+                576.
               label: C.M.T. Vessels. Manufacturer or importer
             x-cdmn8bj5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
-              help: null
+              help: Tax information about tax information in casilla 24 of Modelo
+                576.
               label: C.M.T. Vessels. Identification (hull number)
             x-cdmn8bj5dlh62sj3c5hmirre5lmmup35dhng:
-              help: null
+              help: 'Review the casilla information: C.M.T. Embarcaciones. Modelo.'
               label: C.M.T. Vessels. Model
             x-cdmn8bj5dlh62sj3c5hmirre5lnm4sr5e9r62or9dtn6aso:
-              help: null
+              help: 'Review the casilla information: C.M.T. Embarcaciones. Observaciones.'
               label: C.M.T. Vessels. Remarks
             x-cdmn8bj6clhmgo9de1p6irb5e9giqrb1ehp6iorldhgm6qbfdo:
-              help: null
+              help: Tax information about tax information in casilla 15 of Modelo
+                576.
               label: C.M.T. Date of first registration of the used means of transport
             x-cdmn8bjbd5m6urb5ehp6uspdd1nn4obj5lqn6ro:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 576.
               label: Kilometres or hours of use
             x-cdmn8bjceljm2shdc5i72tb9edkm6qbfdo:
-              help: null
+              help: Tax information about tax information in casilla 13 of Modelo
+                576.
               label: C.M.T. Acquired in Spain or in a State other than Spain
             x-cdmn8bjeelincrpdelpm2p3f:
-              help: null
+              help: Tax information about tax information in casilla 12 of Modelo
+                576.
               label: C.M.T. New or used means of transport
             x-cdmn8bjmclk6iorldhniqoj1edq6ip3fe8:
-              help: null
+              help: Tax information about tax information in casilla 18 of Modelo
+                576.
               label: C.M.T. Vehicles. Identification number (chassis)
             x-cdmn8bjmclk6iorldhniqor1ehimerrid5giqor5:
-              help: null
+              help: 'Review the casilla information: C.M.T. Vehículos. Clasificación
+                under Directiva 70/156/CEE.'
               label: C.M.T. Vehicles. Classification under Directive 70/156/EEC
             x-cdmn8bjmclk6iorldhniqor9dhkmsp3ic5i62:
-              help: null
+              help: 'Review the casilla information: C.M.T. Vehículos. Cilindrada
+                (c.c.).'
               label: C.M.T. Vehicles. Engine displacement (cc)
             x-cdmn8bjmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 576.
               label: C.M.T. Vehicles. Classification by construction and use criteria
                 (RD 2822/1998)
             x-cdmn8bjmclk6iorldhniqorfchkmerpdd5q7c:
-              help: null
+              help: 'Review the casilla information: C.M.T. Vehículos. Code ITV.'
               label: C.M.T. Vehicles. Roadworthiness code
             x-cdmn8bjmclk6iorldhniqpbdd5pmirreclpiqorf68:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 576.
               label: C.M.T. Vehicles. CO2 emissions
             x-cdmn8bjmclk6iorldhniqpbgd5jn4ob6ck:
-              help: null
+              help: 'Review the casilla information: C.M.T. Vehículos. Epígrafe.'
               label: C.M.T. Vehicles. Tax heading
             x-cdmn8bjmclk6iorldhniqqbkeomn6pbid5ig:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 576.
               label: C.M.T. Vehicles. Roadworthiness card serial number
             x-cdmn8bjmclk6iorldhniqqbkeomn8qbgdsmn8obid9in8o8:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 576.
               label: C.M.T. Vehicles. Roadworthiness card type
             x-cdmn8bjmclk6iorldhniqrb1e9hm2:
-              help: null
+              help: 'Review the casilla information: C.M.T. Vehículos. Marca.'
               label: C.M.T. Vehicles. Make
             x-cdmn8bjmclk6iorldhniqrbfchimorpdehkn0ro:
-              help: null
+              help: 'Review the casilla information: C.M.T. Vehículos. Modelo-Rate.'
               label: C.M.T. Vehicles. Model-Type
             x-cdmn8bjmclk6iorldhniqrbfehnn4:
-              help: null
+              help: Tax information about tax information in casilla 20 of Modelo
+                576.
               label: C.M.T. Vehicles. Petrol, diesel or other engine
             x-cdmn8bjmclk6iorldhniqrr2edin4tj1cdkmurj5ec:
-              help: null
+              help: 'Review the casilla information: C.M.T. Vehículos. Observaciones.'
               label: C.M.T. Vehicles. Remarks
             x-chim6r1ecdgnasr15lk6aor8dsmmirbgdtn6iojcck:
-              help: null
+              help: Tax information for casilla 45 of Modelo 576.
               label: Cause of the taxable event
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Tax information for casilla of Modelo 576.
               label: Accrual year
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
-              help: null
+              help: Tax information about tax information in casilla 41 of Modelo
+                576.
               label: Supplementary return. Receipt number of the previous return
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 576.
               label: Return type
             x-chim6r1eehkn0rpdehp62rjje1nn4t35:
-              help: null
+              help: Tax information about tax information in casilla 8 of Modelo 576.
               label: 'Means of transport type (V: vehicles, E: vessels, A: aircraft)'
             x-d5n78sjfchqm6t3fe8n6sqb6:
-              help: null
+              help: Tax information about tax information in casilla 47 of Modelo
+                576.
               label: Tax ID of the person who brought the means of transport into
                 Spain
             x-d5n78sjfchqm6t3fe8n6srrdc9p6a:
-              help: null
+              help: Tax information about tax information in casilla 48 of Modelo
+                576.
               label: Surname and given name or company name of the party bringing
                 it into Spain
             x-dhkn2bj15li6ap3lcdkn4:
-              help: null
+              help: 'Review the casilla information: Assessment. A deduct.'
               label: Assessment. To be deducted
             x-dhkn2bj2c5pmabb9dlo6urj9c9m6a:
-              help: null
+              help: 'Review the casilla information: Assessment. Tax base.'
               label: Assessment. Taxable base
             x-dhkn2bj2c5pmabb9dlo6urj9c9m6abbicli7aor9chgg:
-              help: null
+              help: 'Review the casilla information: Assessment. Tax base reducida.'
               label: Assessment. Reduced taxable base
             x-dhkn2bj3elnn8o8:
-              help: null
+              help: 'Review the casilla information: Assessment. Amount.'
               label: Assessment. Tax due
             x-dhkn2bj3elnn8o9dc4mmirj7e9in6obi:
-              help: null
+              help: 'Review the casilla information: Assessment. Amount a ingresar.'
               label: Assessment. Tax payable
             x-dhkn2bj4cli7aor3d5nmsbbcd5n6aobc:
-              help: null
+              help: Tax information for casilla 37 of Modelo 576.
               label: Assessment. Flat-rate deduction
             x-dhkn2bjiclpnar3kc5i6u:
-              help: null
+              help: 'Review the casilla information: Assessment. Result of the assessment.'
               label: Assessment. Assessment result
             x-dhkn2bjkd5o6u:
-              help: null
+              help: 'Review the casilla information: Assessment. Rate %.'
               label: Assessment. Rate %
           construct:
             modelo-576-autoliquidacion:

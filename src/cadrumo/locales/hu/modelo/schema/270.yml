@@ -1,6 +1,96 @@
 modelo:
   schema:
     '270':
+      casilla:
+        continuidad:
+          base-retenciones-ingresos-a-cuenta:
+            help: 'A Modelo 270 164-180. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 164-180 — adóügyi információ
+          filing-year:
+            help: A Modelo 270 . casilla adóügyi adatai.
+            label: Casilla — adóügyi mező
+          m270-clave-personalidad:
+            help: 'A Modelo 270 117. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 117 — adóügyi információ
+          m270-declaracion-complementaria:
+            help: 'A Modelo 270 121. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 121 — adóügyi információ
+          m270-declaracion-sustitutiva:
+            help: A Modelo 270 122. casilla adóügyi adatai.
+            label: Casilla 122 — adóügyi mező
+          m270-fecha-nacimiento:
+            help: 'A Modelo 270 453-460. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 453-460 — adóügyi információ
+          m270-fecha-pago-premio:
+            help: 'A Modelo 270 128-135. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 128-135 — adóügyi információ
+          m270-fecha-sorteo:
+            help: 'A Modelo 270 120-127. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 120-127 — adóügyi információ
+          m270-gestor-cobro:
+            help: 'A Modelo 270 181. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 181 — adóügyi információ
+          m270-importe-premio:
+            help: 'A Modelo 270 136-150. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 136-150 — adóügyi információ
+          m270-lugar-nacimiento:
+            help: 'A Modelo 270 461-497. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 461-497 — adóügyi információ
+          m270-nif-pais-residencia:
+            help: 'A Modelo 270 433-452. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 433-452 — adóügyi információ
+          m270-numero-identificativo:
+            help: A Modelo 270 108-120. casilla adóügyi adatai.
+            label: Casilla 108-120 — adóügyi mező
+          m270-numero-identificativo-anterior:
+            help: A Modelo 270 123-135. casilla adóügyi adatai.
+            label: Casilla 123-135 — adóügyi mező
+          m270-pais-residencia:
+            help: 'A Modelo 270 498-499. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 498-499 — adóügyi információ
+          m270-persona-contacto-nombre:
+            help: 'A Modelo 270 68-107. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 68-107 — adóügyi információ
+          m270-persona-contacto-telefono:
+            help: 'A Modelo 270 59-67. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 59-67 — adóügyi információ
+          m270-representante-nombre:
+            help: 'A Modelo 270 76-115. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 76-115 — adóügyi információ
+          m270-tipo-perceptor:
+            help: 'A Modelo 270 116. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 116 — adóügyi információ
+          m270-total-importe-premios:
+            help: 'A Modelo 270 147-163. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 147-163 — adóügyi információ
+          payee-name:
+            help: 'A Modelo 270 36-75. casilla adóügyi adatai: a kedvezményezett neve.'
+            label: Casilla 36-75 — a kedvezményezett neve
+          payee-nif:
+            help: 'A Modelo 270 18-26. casilla adóügyi adatai: a kedvezményezett NIF-je.'
+            label: Casilla 18-26 — a kedvezményezett NIF-je
+          payee-province:
+            help: 'A Modelo 270 118-119. casilla adóügyi adatai: a kedvezményezett
+              tartománya.'
+            label: Casilla 118-119 — a kedvezményezett tartománya
+          payee-representative-nif:
+            help: 'A Modelo 270 27-35. casilla adóügyi adatai: a képviselő NIF-je.'
+            label: Casilla 27-35 — a képviselő NIF-je
+          perc-base-retencion:
+            help: 'A Modelo 270 151-165. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 151-165 — adóügyi információ
+          perc-retencion:
+            help: 'A casilla adatai: Casilla 166-180: adólevonások előlegfizetések.'
+            label: 'Casilla 166-180: adólevonások előlegfizetések'
+          retenciones-ingresos-a-cuenta:
+            help: 'A casilla adatai: Casilla 181-197: adólevonások előlegfizetések.'
+            label: 'Casilla 181-197: adólevonások előlegfizetések'
+          tipo-declaracion:
+            help: 'A casilla adatai: Casilla kulcs-bevallás: kulcs bevallás.'
+            label: 'Casilla kulcs-bevallás: kulcs bevallás'
+          total-perceptores-count:
+            help: 'A Modelo 270 138-146. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 138-146 — adóügyi információ
       field:
         official_name: Modelo 270. Az adóelőleg-levonások és -befizetések éves összesítője.
           Egyes lottó- és fogadási nyeremények különadója.
@@ -14,7 +104,7 @@ modelo:
                 korábbi, azonos évi bevallásból teljesen kimaradtak.
               label: Kiegészítő bevallás
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 270 . casilla adóügyi adatai: adóév.'
               label: Az adóbevallás vonatkozási éve
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
               help: Tizenhárom pozíciós sorszám, amelynek első három számjegye a 270-es
@@ -36,7 +126,7 @@ modelo:
                 teljes egészében érvénytelenít és helyettesít.
               label: Helyettesítő bevallás
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: A Modelo 270 . casilla adóügyi adatai.
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
             x-chim6r1eehnn8obc5lh62sr55lp6at35dphmirre:
               help: A kedvezményezetti rekordokban szereplő forrásadó- vagy adóelőleg-alapok
@@ -143,9 +233,9 @@ modelo:
           construct:
             modelo-270-informative:
               field:
-                title: null
+                title: Modelo 270 bevallás tájékoztató
           field:
-            label: null
+            label: Casilla— adóügyi információ
         2023-y-siguientes:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
@@ -153,7 +243,7 @@ modelo:
                 korábbi, azonos évi bevallásból teljesen kimaradtak.
               label: Kiegészítő bevallás
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 270 . casilla adóügyi adatai: adóév.'
               label: Az adóbevallás vonatkozási éve
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
               help: Tizenhárom pozíciós sorszám, amelynek első három számjegye a 270-es
@@ -175,7 +265,7 @@ modelo:
                 teljes egészében érvénytelenít és helyettesít.
               label: Helyettesítő bevallás
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: A Modelo 270 . casilla adóügyi adatai.
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
             x-chim6r1eehnn8obc5lh62sr55lp6at35dphmirre:
               help: A kedvezményezetti rekordokban szereplő forrásadó- vagy adóelőleg-alapok
@@ -282,6 +372,6 @@ modelo:
           construct:
             modelo-270-informative:
               field:
-                title: null
+                title: Modelo 270 bevallás tájékoztató
           field:
-            label: null
+            label: Casilla— adóügyi információ

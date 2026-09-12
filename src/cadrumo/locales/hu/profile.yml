@@ -29,9 +29,126 @@ profile:
           már bevallott adatok átviteléhez.
         title: Korábbi bevallások
   keys:
+    activities:
+      description: Gazdasági tevékenység (egyszerű szöveg is megfelelő; használja
+        az IAE fejezetet, ha ismeri)
+    capabilities:
+      google_export: Engedélyezi a Google Sheets exportálást?
+      llm_vision: Engedélyezi a helyi LLM-látást a számlák beolvasásához?
+    censo:
+      activity_start_date: Mikortól van bevallási kötelezettsége / mikor regisztrált?
+        (ÉÉÉÉ-HH-NN, opcionális)
+      large_company: Nagyvállalati minősítés
+      public_administration_budget_gt_6000000: Közigazgatási költségvetés 6 000 000
+        EUR felett
+    contact:
+      postcode: Adóügyi lakcím irányítószáma
     description: Profilkonfigurációs kulcsok és leírásaik
+    identity:
+      legal_name: Jogi személy cégneve az exportfejlécekhez
+      name: A helyi áttekintésekben megjelenített név
+      notes: Megjegyzések saját nyilvántartáshoz (opcionális)
+      surnames: Vezetéknevei vagy cégneve az exportfejlécekhez
+      tax_id: Adóazonosító (NIF/CIF/DNI/NIE) a bevallásokhoz
+    irpf:
+      art109_activity_income_withholding_ge_70pct: Alkalmazandó az Art. 109 szerinti
+        70%-os tevékenységi jövedelemfedezeti kivétel
+      estimation_regime: IRPF becslési rend
+      objective_estimation_modulos_iae_epigraph: IAE-epigráfus az objektív becslési
+        modulokhoz
+      objective_estimation_modulos_module_1_units: Az 1. modul éves egységei
+      objective_estimation_modulos_module_2_units: A 2. modul éves egységei
+      objective_estimation_modulos_module_3_units: A 3. modul éves egységei
+      objective_estimation_modulos_module_4_units: A 4. modul éves egységei
+      objective_estimation_modulos_module_5_units: Az 5. modul éves egységei
+      objective_estimation_modulos_module_6_units: A 6. modul éves egységei
+      objective_estimation_modulos_module_7_units: A 7. modul éves egységei
+      special_regime: IRPF különleges adózási rend (Beckham-törvény / LIRPF 93. cikkely)
+      special_regime_start_date: A különleges adózási rend kezdőnapja (ÉÉÉÉ-HH-NN)
+    iva:
+      cash_accounting_regime_enrolled: Be van jelentkezve az IVA pénzforgalmi különleges
+        rendszerébe?
+      does_intracomunitario: Végez intraközösségi ügyleteket
+      group_dominant_entity_enrolled: IVA-csoport domináns szervezeteként bejelentkezett
+      group_member_enrolled: IVA-csoport tagjaként bejelentkezett
+      hydrocarbon_deposit_advance_payment_deduction_entitled: Jogosult a szénhidrogén-adóraktári
+        előlegek levonására?
+      intracommunity_operations_exceed_50000_eur: Intraközösségi ügyletek meghaladják
+        az 50 000 EUR-t
+      m303_regime_composition: Melyik Modelo 303 rendszerösszetétel alkalmazandó?
+      oss_enrolled: OSS-be bejelentkezett
+      redeme_enrolled: REDEME-ben bejegyzett (havi IVA visszaigénylési nyilvántartás)
+      regime: Melyik IVA-rendszer alkalmazandó?
+      roi_enrolled: ROI-ba bejelentkezett
+      sii_enrolled: SII-be bejelentkezett (azonnali információszolgáltatás)
+      voluntary_sii_enrolled: Önkéntesen bejelentkezett az SII-be?
+    obligations:
+      bienes_extranjero_above_threshold: Külföldi vagyon meghaladja a Modelo 720 küszöbértékét
+      monedas_virtuales_extranjero_above_threshold: Külföldi virtuális valuták meghaladják
+        a Modelo 721 küszöbértékét
+      third_party_transactions_above_347_threshold: Harmadik féllel folytatott ügyletek
+        meghaladják a Modelo 347 küszöbértékét
+    preferences:
+      output_language: CLI kimeneti nyelv ehhez a profilhoz
+    renta_family:
+      descendants_eu_eea_deduction: EU/EGT-leszármazottak a családi egység levonásában
+      minor_children_in_unit: Kiskorú gyermekek a családi egységben
+      situacion_familiar: Családi helyzet (LIRPF 82. cikk)
+    renta_filing:
+      declaration_type: Adózási típus kódja
+    renta_spouse:
+      birth_date: Házastárs születési dátuma
+      disability_grade: Házastárs fogyatékossági fokozata (ha alkalmazható)
+      eu_eea_country: Házastárs EU/EGT országa
+      eu_eea_resident: Házastárs EU/EGT-ben él
+      name: Házastárs keresztneve
+      non_resident_irpf: Házastárs nem rezidens IRPF szerint
+      sex: Házastárs neme
+      surnames: Házastárs vezetéknevei
+      tax_id: Házastárs NIF/NIE száma
+    renta_taxpayer:
+      birth_date: Az első adózó születési dátuma
+      death_date: Az első adózó elhalálozásának dátuma
+      disability_grade: Az első adózó fogyatékossági kódja
+      marital_status: Az első adózó családi állapota
+      marriage_date: Házasságkötés dátuma (ÉÉÉÉ-HH-NN)
+      sex: Az első adózó neme
     tax:
       id: Adóazonosító (NIF/CIF/DNI/NIE)
+    tax_residence:
+      ccaa: Adóügyi illetőség szerinti autonóm közösség
+      jurisdiction_scope: Melyik adóterület alkalmazandó erre a Modelo 303-ra?
+    taxpayer_type:
+      country_of_fiscal_residence: Adóügyi illetőség szerinti ország (ISO 3166-1 alfa-2
+        kód, pl. GB, DE, FR)
+      declaration_roles: A bejelentő szervezet betölt-e valamelyik alábbi intézményi
+        szerepet a 347-es modell (harmadik felekkel folytatott ügyletek) szempontjából?
+      entity_type: Entitástípus
+      fiscal_residency: Adóügyi illetőségi kategória
+      incn_prior_12_months: Mi volt a nettó árbevétele az elmúlt 12 hónapban? (euróban,
+        opcionális)
+      irpf_income_categories: IRPF jövedelemkategóriák
+      legal_entity_form: Jogi forma
+      ley_49_2002_special_regime_option_date: A Ley 49/2002 szerinti különleges rendszer
+        választásának bejelentett dátuma
+      ley_49_2002_special_regime_option_declared: A szervezet a 036-os nyomtatványon
+        bejelentette a Ley 49/2002 II. címe szerinti különleges adózási rendszer választását?
+      ley_49_2002_special_regime_renunciation_date: A Ley 49/2002 szerinti különleges
+        rendszerről való lemondás bejelentett dátuma
+      ley_49_2002_special_regime_renunciation_declared: A szervezet a 036-os nyomtatványon
+        bejelentette a Ley 49/2002 II. címe szerinti különleges adózási rendszerről
+        való lemondást?
+      new_entity_first_two_profit_periods: Ez egy újonnan létrehozott jogi személy
+        az első két nyereséges adóidőszakának egyikében?
+      representante_fiscal_nif: A spanyolországi adóügyi képviselő NIF/NIE száma (EU-n/EGT-n
+        kívüli esetén kötelező)
+      representante_fiscal_nombre: A spanyolországi adóügyi képviselő neve
+    withholding:
+      has_employees: Alkalmazottai vannak és forrásadóval terhelt béreket fizet
+      modelo_111_no_retenciones_periods: Modelo 111 forrásadó nélküli időszakok
+      pays_capital_income_with_retencion: Forrásadóval terhelt tőkejövedelmet fizet
+      pays_professionals_with_retencion: Forrásadóval terhelt díjazást fizet szakembereknek
+      pays_rent_with_retencion: Forrásadóval terhelt helyi bérleti díjat fizet
   schema:
     field:
       activities:
@@ -235,8 +352,16 @@ profile:
         voluntary_sii_enrolled:
           label: Önkéntes SII-tagság
       maritime_worker:
+        annual_salary:
+          label: Éves munkabér
+        exemption_path_rebeca:
+          label: REBECA-adómentességi jogcím
+        gross_navigation_income:
+          label: Bruttó hajózási jövedelem
         pending_eu_clearance:
           label: EU állami támogatási jóváhagyásra vár
+        qualifying_days:
+          label: Jogosultsági napok
         retmar_registered:
           label: RETMAR-regisztráció
         tuna_fleet:
@@ -457,4 +582,16 @@ profile:
       withholding:
         title: Forrásadó-fizetői kötelezettségek
   validation:
+    boolean_field_invalid: Érvénytelen logikai mező
+    conditional_required_field_missing: Hiányzik a feltételesen kötelező mező
+    conditionally_forbidden_field: Feltételesen tiltott mező
+    derived_field_not_editable: A származtatott mező nem szerkeszthető
+    effective_window_end_not_enforced: A hatályossági időablak vége nincs kikényszerítve
+    effective_window_unused: A hatályossági időablak nincs használatban
+    invalid_date_value: Érvénytelen dátumérték
+    invalid_email_value: Érvénytelen e-mail-érték
+    invalid_enum_value: Érvénytelen felsorolási érték
+    modelo_work_profile_baseline_missing: Hiányzik a Modelo-munkához szükséges profil-alapmező
+    numeric_field_invalid: Érvénytelen numerikus mező
     required_field_missing: Hiányzik egy kötelező profilmező.
+    unknown_field: Ismeretlen mező

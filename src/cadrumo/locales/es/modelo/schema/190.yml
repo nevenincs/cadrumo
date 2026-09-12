@@ -1,6 +1,284 @@
 modelo:
   schema:
     '190':
+      casilla:
+        continuidad:
+          devengo-year:
+            help: 'Consulte la información correspondiente a la casilla: Ejercicio
+              de devengo.'
+            label: Casilla 148-151 — ejercicio de devengo
+          ingresos-a-cuenta-efectuados:
+            help: 'Información de la casilla: Casilla 122-134: ingresos a cuenta efectuados.'
+            label: 'Casilla 122-134: ingresos a cuenta efectuados'
+          ingresos-a-cuenta-repercutidos:
+            help: 'Información de la casilla: Casilla 135-147: ingresos a cuenta repercutidos.'
+            label: 'Casilla 135-147: ingresos a cuenta repercutidos'
+          m190-correo-electronico:
+            help: Información fiscal sobre información fiscal de la casilla 176-225
+              del Modelo 190.
+            label: Casilla 176-225 — información fiscal
+          m190-declaracion-complementaria:
+            help: Información fiscal sobre información fiscal de la casilla 121 del
+              Modelo 190.
+            label: Casilla 121 — información fiscal
+          m190-declaracion-sustitutiva:
+            help: Información fiscal sobre información fiscal de la casilla 122 del
+              Modelo 190.
+            label: Casilla 122 — información fiscal
+          m190-numero-identificativo:
+            help: Información fiscal sobre información fiscal de la casilla 108-120
+              del Modelo 190.
+            label: Casilla 108-120 — información fiscal
+          m190-numero-identificativo-anterior:
+            help: Información fiscal sobre información fiscal de la casilla 123-135
+              del Modelo 190.
+            label: Casilla 123-135 — información fiscal
+          m190-persona-contacto-nombre:
+            help: Información fiscal sobre información fiscal de la casilla 68-107
+              del Modelo 190.
+            label: Casilla 68-107 — información fiscal
+          m190-persona-contacto-telefono:
+            help: Información fiscal sobre información fiscal de la casilla 59-67
+              del Modelo 190.
+            label: Casilla 59-67 — información fiscal
+          payee-anualidades-alimentos:
+            help: Información fiscal sobre anualidades por alimentos de la casilla
+              210-222 del Modelo 190.
+            label: Casilla 210-222 — anualidades por alimentos
+          payee-ascendientes-75-mas-entero:
+            help: Información fiscal sobre información fiscal de la casilla 244 del
+              Modelo 190.
+            label: Casilla 244 — información fiscal
+          payee-ascendientes-75-mas-total:
+            help: Información fiscal sobre información fiscal de la casilla 243 del
+              Modelo 190.
+            label: Casilla 243 — información fiscal
+          payee-ascendientes-discapacidad-33-65-entero:
+            help: Información fiscal sobre información fiscal de la casilla 246 del
+              Modelo 190.
+            label: Casilla 246 — información fiscal
+          payee-ascendientes-discapacidad-33-65-total:
+            help: Información fiscal sobre información fiscal de la casilla 245 del
+              Modelo 190.
+            label: Casilla 245 — información fiscal
+          payee-ascendientes-discapacidad-65-entero:
+            help: Información fiscal sobre información fiscal de la casilla 250 del
+              Modelo 190.
+            label: Casilla 250 — información fiscal
+          payee-ascendientes-discapacidad-65-total:
+            help: Información fiscal sobre información fiscal de la casilla 249 del
+              Modelo 190.
+            label: Casilla 249 — información fiscal
+          payee-ascendientes-discapacidad-movilidad-entero:
+            help: Información fiscal sobre información fiscal de la casilla 248 del
+              Modelo 190.
+            label: Casilla 248 — información fiscal
+          payee-ascendientes-discapacidad-movilidad-total:
+            help: Información fiscal sobre información fiscal de la casilla 247 del
+              Modelo 190.
+            label: Casilla 247 — información fiscal
+          payee-ascendientes-menores-75-entero:
+            help: Información fiscal sobre información fiscal de la casilla 242 del
+              Modelo 190.
+            label: Casilla 242 — información fiscal
+          payee-ascendientes-menores-75-total:
+            help: Información fiscal sobre información fiscal de la casilla 241 del
+              Modelo 190.
+            label: Casilla 241 — información fiscal
+          payee-birth-year:
+            help: Información fiscal sobre año de nacimiento del perceptor de la casilla
+              153-156 del Modelo 190.
+            label: Casilla 153-156 — año de nacimiento del perceptor
+          payee-ceuta-melilla-clave:
+            help: Información fiscal sobre información fiscal de la casilla 152 del
+              Modelo 190.
+            label: Casilla 152 — información fiscal
+          payee-clave-percepcion:
+            help: Información fiscal sobre información fiscal de la casilla 78 del
+              Modelo 190.
+            label: Casilla 78 — información fiscal
+          payee-complemento-ayuda-infancia:
+            help: Información fiscal sobre información fiscal de la casilla 322 del
+              Modelo 190.
+            label: Casilla 322 — información fiscal
+          payee-computo-hijo-1:
+            help: Información fiscal sobre información fiscal de la casilla 251 del
+              Modelo 190.
+            label: Casilla 251 — información fiscal
+          payee-computo-hijo-2:
+            help: Información fiscal sobre información fiscal de la casilla 252 del
+              Modelo 190.
+            label: Casilla 252 — información fiscal
+          payee-computo-hijo-3:
+            help: Información fiscal sobre información fiscal de la casilla 253 del
+              Modelo 190.
+            label: Casilla 253 — información fiscal
+          payee-contract-relation-clave:
+            help: Información fiscal sobre información fiscal de la casilla 168 del
+              Modelo 190.
+            label: Casilla 168 — información fiscal
+          payee-descendientes-discapacidad-33-65-entero:
+            help: Información fiscal sobre información fiscal de la casilla 231-232
+              del Modelo 190.
+            label: Casilla 231-232 — información fiscal
+          payee-descendientes-discapacidad-33-65-total:
+            help: Información fiscal sobre información fiscal de la casilla 229-230
+              del Modelo 190.
+            label: Casilla 229-230 — información fiscal
+          payee-descendientes-discapacidad-65-entero:
+            help: Información fiscal sobre información fiscal de la casilla 239-240
+              del Modelo 190.
+            label: Casilla 239-240 — información fiscal
+          payee-descendientes-discapacidad-65-total:
+            help: Información fiscal sobre información fiscal de la casilla 237-238
+              del Modelo 190.
+            label: Casilla 237-238 — información fiscal
+          payee-descendientes-discapacidad-movilidad-entero:
+            help: Información fiscal sobre información fiscal de la casilla 235-236
+              del Modelo 190.
+            label: Casilla 235-236 — información fiscal
+          payee-descendientes-discapacidad-movilidad-total:
+            help: Información fiscal sobre información fiscal de la casilla 233-234
+              del Modelo 190.
+            label: Casilla 233-234 — información fiscal
+          payee-descendientes-menores-3-entero:
+            help: Información fiscal sobre información fiscal de la casilla 224 del
+              Modelo 190.
+            label: Casilla 224 — información fiscal
+          payee-descendientes-menores-3-total:
+            help: Información fiscal sobre información fiscal de la casilla 223 del
+              Modelo 190.
+            label: Casilla 223 — información fiscal
+          payee-descendientes-resto-entero:
+            help: Información fiscal sobre información fiscal de la casilla 227-228
+              del Modelo 190.
+            label: Casilla 227-228 — información fiscal
+          payee-descendientes-resto-total:
+            help: Información fiscal sobre información fiscal de la casilla 225-226
+              del Modelo 190.
+            label: Casilla 225-226 — información fiscal
+          payee-disability-clave:
+            help: Información fiscal sobre información fiscal de la casilla 167 del
+              Modelo 190.
+            label: Casilla 167 — información fiscal
+          payee-emerging-stock-excess-clave:
+            help: Información fiscal sobre información fiscal de la casilla 388 del
+              Modelo 190.
+            label: Casilla 388 — información fiscal
+          payee-family-situation:
+            help: Información fiscal sobre situación familiar del perceptor de la
+              casilla 157 del Modelo 190.
+            label: Casilla 157 — situación familiar del perceptor
+          payee-gastos-deducibles:
+            help: Información fiscal sobre gastos deducibles del perceptor de la casilla
+              184-196 del Modelo 190.
+            label: Casilla 184-196 — gastos deducibles del perceptor
+          payee-geographic-mobility-clave:
+            help: Información fiscal sobre información fiscal de la casilla 170 del
+              Modelo 190.
+            label: Casilla 170 — información fiscal
+          payee-incapacidad-dineraria-percepcion:
+            help: Información fiscal sobre información fiscal de la casilla 256-268
+              del Modelo 190.
+            label: Casilla 256-268 — información fiscal
+          payee-incapacidad-dineraria-retenciones:
+            help: Información fiscal sobre información fiscal de la casilla 269-281
+              del Modelo 190.
+            label: Casilla 269-281 — información fiscal
+          payee-incapacidad-especie-ingresos-a-cuenta:
+            help: Información fiscal sobre información fiscal de la casilla 296-308
+              del Modelo 190.
+            label: Casilla 296-308 — información fiscal
+          payee-incapacidad-especie-repercutidos:
+            help: Información fiscal sobre información fiscal de la casilla 309-321
+              del Modelo 190.
+            label: Casilla 309-321 — información fiscal
+          payee-incapacidad-especie-valoracion:
+            help: Información fiscal sobre información fiscal de la casilla 283-295
+              del Modelo 190.
+            label: Casilla 283-295 — información fiscal
+          payee-name:
+            help: Información fiscal sobre nombre del perceptor de la casilla 36-75
+              del Modelo 190.
+            label: Casilla 36-75 — nombre del perceptor
+          payee-nif:
+            help: 'Consulte la información correspondiente a la casilla: NIF del perceptor.'
+            label: Casilla 18-26 — NIF del perceptor
+          payee-pension-compensatoria:
+            help: Información fiscal sobre pensión compensatoria de la casilla 197-209
+              del Modelo 190.
+            label: Casilla 197-209 — pensión compensatoria
+          payee-prestamos-vivienda-clave:
+            help: Información fiscal sobre información fiscal de la casilla 254 del
+              Modelo 190.
+            label: Casilla 254 — información fiscal
+          payee-province:
+            help: Información fiscal sobre provincia del perceptor de la casilla 76-77
+              del Modelo 190.
+            label: Casilla 76-77 — provincia del perceptor
+          payee-reducciones-aplicables:
+            help: Información fiscal sobre información fiscal de la casilla 171-183
+              del Modelo 190.
+            label: Casilla 171-183 — información fiscal
+          payee-retenciones-forales-araba:
+            help: Información fiscal sobre información fiscal de la casilla 349-361
+              del Modelo 190.
+            label: Casilla 349-361 — información fiscal
+          payee-retenciones-forales-bizkaia:
+            help: Información fiscal sobre información fiscal de la casilla 375-387
+              del Modelo 190.
+            label: Casilla 375-387 — información fiscal
+          payee-retenciones-forales-estatal:
+            help: Información fiscal sobre información fiscal de la casilla 323-335
+              del Modelo 190.
+            label: Casilla 323-335 — información fiscal
+          payee-retenciones-forales-gipuzkoa:
+            help: Información fiscal sobre información fiscal de la casilla 362-374
+              del Modelo 190.
+            label: Casilla 362-374 — información fiscal
+          payee-retenciones-forales-navarra:
+            help: Información fiscal sobre información fiscal de la casilla 336-348
+              del Modelo 190.
+            label: Casilla 336-348 — información fiscal
+          payee-spouse-or-unit-titular-nif:
+            help: Información fiscal sobre NIF del cónyuge o de la unidad titular
+              de la casilla 158-166 del Modelo 190.
+            label: Casilla 158-166 — NIF del cónyuge o de la unidad titular
+          payee-subclave-percepcion:
+            help: Información fiscal sobre información fiscal de la casilla 79-80
+              del Modelo 190.
+            label: Casilla 79-80 — información fiscal
+          payee-unit-convivencia-titular-clave:
+            help: Información fiscal sobre información fiscal de la casilla 169 del
+              Modelo 190.
+            label: Casilla 169 — información fiscal
+          perc-retenciones-practicadas:
+            help: Información fiscal sobre información fiscal de la casilla 95-107
+              del Modelo 190.
+            label: Casilla 95-107 — información fiscal
+          percepcion-integra-dineraria:
+            help: Información fiscal sobre información fiscal de la casilla 82-94
+              del Modelo 190.
+            label: Casilla 82-94 — información fiscal
+          percepcion-valoracion-especie:
+            help: Información fiscal sobre información fiscal de la casilla 109-121
+              del Modelo 190.
+            label: Casilla 109-121 — información fiscal
+          representante-legal-nif:
+            help: 'Información de la casilla: Casilla 27-35: representante legal nif.'
+            label: 'Casilla 27-35: representante legal nif'
+          retenciones-ingresos-a-cuenta:
+            help: Información fiscal sobre información fiscal de la casilla 161-175
+              del Modelo 190.
+            label: Casilla 161-175 — información fiscal
+          total-percepciones-amount:
+            help: Información fiscal sobre información fiscal de la casilla 145-160
+              del Modelo 190.
+            label: Casilla 145-160 — información fiscal
+          total-percepciones-count:
+            help: Información fiscal sobre información fiscal de la casilla 136-144
+              del Modelo 190.
+            label: Casilla 136-144 — información fiscal
       field:
         official_name: Modelo 190. Declaración Informativa. Retenciones e ingresos
           a cuenta. Rendimientos del trabajo y de actividades económicas, premios
@@ -11,34 +289,44 @@ modelo:
         '2024':
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                complementaria.'
               label: Declaración complementaria
             x-chim6r1ecdnn4sj5dsmmar35cdq74rred5hmu:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Correo
+                electrónico de la persona con quien relacionarse.'
               label: Correo electrónico de la persona con quien relacionarse
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Número
+                identificativo de la declaración.'
               label: Número identificativo de la declaración
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Número
+                identificativo de la declaración anterior.'
               label: Número identificativo de la declaración anterior
             x-chim6r1ee1in4or5e1hmirreclpiqt3fehgmo:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 145-160
+                del Modelo 190.
               label: Importe total de las percepciones
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Apellidos
+                y nombre de la persona con quien relacionarse.'
               label: Apellidos y nombre de la persona con quien relacionarse
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Teléfono
+                de la persona con quien relacionarse.'
               label: Teléfono de la persona con quien relacionarse
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 161-175
+                del Modelo 190.
               label: Importe total de retenciones e ingresos a cuenta
             x-chim6r1eedqn6t39ehqn8qbmc4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                sustitutiva.'
               label: Declaración sustitutiva
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 136-144
+                del Modelo 190.
               label: Número total de percepciones
             x-e1in4opec5n6ubbec5hmirb9cln78ro:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
@@ -97,7 +385,8 @@ modelo:
                 190.
               label: Ceuta o Melilla
             x-e1in4opecdm62tj5:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Clave de
+                percepción.'
               label: Clave de percepción
             x-e1in4opecdnmqs3cclmmarjkdsmm2ublchgiqqbecpgmsor9c4:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
@@ -207,7 +496,8 @@ modelo:
               label: Prestaciones derivadas de incapacidad laboral. Valoración de
                 la percepción en especie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 122-134
+                del Modelo 190.
               label: Ingresos a cuenta efectuados sobre las percepciones en especie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
@@ -218,7 +508,8 @@ modelo:
                 190.
               label: Movilidad geográfica
             x-e1in4opedpkmc:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                perceptor.'
               label: NIF del perceptor
             x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
@@ -229,17 +520,20 @@ modelo:
                 190.
               label: NIF del representante legal
             x-e1in4opedpnmqojick:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Apellidos
+                y nombre o denominación del perceptor.'
               label: Apellidos y nombre o denominación del perceptor
             x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
               help: Importe declarado en el registro de perceptor del modelo 190.
                 El diseno lo divide en parte entera y parte decimal.
               label: Pensiones compensatorias
             x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Percepción
+                íntegra dineraria no derivada de incapacidad laboral.'
               label: Percepción íntegra dineraria no derivada de incapacidad laboral
             x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Valoración
+                de la percepción en especie no derivada de incapacidad laboral.'
               label: Valoración de la percepción en especie no derivada de incapacidad
                 laboral
             x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
@@ -279,14 +573,16 @@ modelo:
               label: Retenciones e ingresos a cuenta ingresados. Comunidad Foral de
                 Navarra
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 95-107
+                del Modelo 190.
               label: Retenciones practicadas sobre las percepciones dinerarias
             x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
               label: Situación familiar
             x-e1in4opeedqm4orcc5r6a:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Subclave
+                de percepción.'
               label: Subclave de percepción
             x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
@@ -301,34 +597,44 @@ modelo:
         2025-y-siguientes:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                complementaria.'
               label: Declaración complementaria
             x-chim6r1ecdnn4sj5dsmmar35cdq74rred5hmu:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Correo
+                electrónico de la persona con quien relacionarse.'
               label: Correo electrónico de la persona con quien relacionarse
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Número
+                identificativo de la declaración.'
               label: Número identificativo de la declaración
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Número
+                identificativo de la declaración anterior.'
               label: Número identificativo de la declaración anterior
             x-chim6r1ee1in4or5e1hmirreclpiqt3fehgmo:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 145-160
+                del Modelo 190.
               label: Importe total de las percepciones
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Apellidos
+                y nombre de la persona con quien relacionarse.'
               label: Apellidos y nombre de la persona con quien relacionarse
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Teléfono
+                de la persona con quien relacionarse.'
               label: Teléfono de la persona con quien relacionarse
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 161-175
+                del Modelo 190.
               label: Importe total de retenciones e ingresos a cuenta
             x-chim6r1eedqn6t39ehqn8qbmc4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                sustitutiva.'
               label: Declaración sustitutiva
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 136-144
+                del Modelo 190.
               label: Número total de percepciones
             x-e1in4opec5n6ubbec5hmirb9cln78ro:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
@@ -387,7 +693,8 @@ modelo:
                 190.
               label: Ceuta o Melilla
             x-e1in4opecdm62tj5:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Clave de
+                percepción.'
               label: Clave de percepción
             x-e1in4opecdnmqs3cclmmarjkdsmm2ublchgiqqbecpgmsor9c4:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
@@ -497,7 +804,8 @@ modelo:
               label: Prestaciones derivadas de incapacidad laboral. Valoración de
                 la percepción en especie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 122-134
+                del Modelo 190.
               label: Ingresos a cuenta efectuados sobre las percepciones en especie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
@@ -508,7 +816,8 @@ modelo:
                 190.
               label: Movilidad geográfica
             x-e1in4opedpkmc:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                perceptor.'
               label: NIF del perceptor
             x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
@@ -519,17 +828,20 @@ modelo:
                 190.
               label: NIF del representante legal
             x-e1in4opedpnmqojick:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Apellidos
+                y nombre o denominación del perceptor.'
               label: Apellidos y nombre o denominación del perceptor
             x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
               help: Importe declarado en el registro de perceptor del modelo 190.
                 El diseno lo divide en parte entera y parte decimal.
               label: Pensiones compensatorias
             x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Percepción
+                íntegra dineraria no derivada de incapacidad laboral.'
               label: Percepción íntegra dineraria no derivada de incapacidad laboral
             x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Valoración
+                de la percepción en especie no derivada de incapacidad laboral.'
               label: Valoración de la percepción en especie no derivada de incapacidad
                 laboral
             x-e1in4opee1p6asrkc5hmirre5lkmsor1e1gm6qb4c5i0:
@@ -597,14 +909,16 @@ modelo:
               label: Retenciones e ingresos a cuenta ingresados. Comunidad Foral de
                 Navarra
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 95-107
+                del Modelo 190.
               label: Retenciones practicadas sobre las percepciones dinerarias
             x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
               label: Situación familiar
             x-e1in4opeedqm4orcc5r6a:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Subclave
+                de percepción.'
               label: Subclave de percepción
             x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo

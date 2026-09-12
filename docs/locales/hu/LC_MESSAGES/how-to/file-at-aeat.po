@@ -316,7 +316,6 @@ msgid "Step 5: reconcile the justificante against your local record"
 msgstr "5. lépés: egyeztesse a justificantét a helyi nyilvántartásával"
 
 #: ../../how-to/file-at-aeat.md:119
-#, fuzzy
 msgid ""
 "Compare AEAT's receipt against the figures you recorded locally with the "
 "`reconcile import` command shown as the final frame above. Run "
@@ -325,12 +324,12 @@ msgid ""
 "refuses a PDF it cannot read as invalid evidence. For reading verdicts "
 "and handling mismatches, see [reconcile a filing](reconcile.md)."
 msgstr ""
-"Vesse össze az AEAT bizonylatát a helyileg rögzített számokkal a fent "
-"utolsó keretként mutatott `reconcile file` paranccsal. Az egyeztetést a "
-"4. lépés után futtassa, hogy az összevetés a benyújtott nyilvántartásával"
-" szemben történjen. Egyezésekről vagy eltérésekről szóló döntést jelent; "
-"a parancs egy olvashatatlan PDF-et érvénytelen bizonyítékként elutasít. A"
-" döntések értelmezéséhez és az eltérések kezeléséhez lásd [egy benyújtás "
+"Vesse össze az AEAT bizonylatát a helyileg rögzített számokkal a fent utolsó "
+"keretként bemutatott `reconcile import` paranccsal. Futtassa az egyeztetést "
+"a 4. lépés után, hogy az összevetés a benyújtott nyilvántartásával "
+"történjen. Egyezésekről vagy eltérésekről szóló döntést jelent; a parancs "
+"egy olvashatatlan PDF-et érvénytelen bizonyítékként elutasít. A döntések "
+"értelmezéséhez és az eltérések kezeléséhez lásd [egy benyújtás "
 "egyeztetése](reconcile.md)."
 
 #: ../../how-to/file-at-aeat.md:126

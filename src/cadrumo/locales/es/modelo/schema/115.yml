@@ -9,19 +9,24 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
-              help: null
-              label: Numero de perceptores
+              help: 'Consulte la información correspondiente a la casilla: Número
+                de perceptores.'
+              label: Número de perceptores
             '02':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 02 del
+                Modelo 115.
               label: Base de retenciones e ingresos a cuenta
             '03':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 03 del
+                Modelo 115.
               label: Retenciones e ingresos a cuenta
             '04':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultado
+                de anteriores declaraciones.'
               label: Resultado de anteriores declaraciones
             '05':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultado
+                a ingresar.'
               label: Resultado a ingresar
           construct:
             modelo-115-quarterly-rental-withholding:

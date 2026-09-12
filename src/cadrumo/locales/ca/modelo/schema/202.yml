@@ -3,139 +3,184 @@ modelo:
     '202':
       casilla:
         continuidad:
+          '25':
+            help: Informació fiscal sobre informació fiscal de la casella 25 del Modelo
+              202.
+            label: Casella 25 — informació fiscal
           is-pf-mod-40-2-a-ingresar:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.2 LIS - A ingresar.'
             label: Modalitat art. 40.2 LIS - A ingressar
           is-pf-mod-40-2-base-pago-fraccionado:
-            help: null
+            help: Informació fiscal sobre informació fiscal de la casella 01 del Modelo
+              202.
             label: Modalitat art. 40.2 LIS - Base del pagament fraccionat
           is-pf-mod-40-2-resultado-declaracion-anterior:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.2 LIS - Resultat
+              de la declaració anterior (complementàries).'
             label: Modalitat art. 40.2 LIS - Resultat de la declaració anterior (complementàries)
           is-pf-mod-40-3-amortizacion-30pct-dism:
-            help: null
+            help: Informació fiscal sobre informació fiscal de la casella 37 del Modelo
+              202.
             label: Modalitat art. 40.3 LIS - 30% despeses d'amortització - Disminucions
           is-pf-mod-40-3-b1-base-pago-fraccionado:
-            help: null
+            help: Informació fiscal sobre informació fiscal de la casella 16 del Modelo
+              202.
             label: Modalitat art. 40.3 LIS B1 - Cas general - Base pagament fraccionat
           is-pf-mod-40-3-b1-compensacion-cuotas-neg-coop:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS B1 - Compensació
+              de quotes negativas (cooperativas).'
             label: Modalitat art. 40.3 LIS B1 - Compensació de quotes negatives (cooperatives)
           is-pf-mod-40-3-b1-dotaciones-art-11-12:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS B1 - Dotaciones
+              del art. 11.12 LIS.'
             label: Modalitat art. 40.3 LIS B1 - Dotacions de l'art. 11.12 LIS
           is-pf-mod-40-3-b1-porcentaje:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS B1 - Caso
+              general - Percentatge.'
             label: Modalitat art. 40.3 LIS B1 - Cas general - Percentatge
           is-pf-mod-40-3-b1-reserva-nivelacion-convertida-aum:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS B1 - Reserva
+              nivelacion convertida - Aumentos.'
             label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida -
               Augments
           is-pf-mod-40-3-b1-reserva-nivelacion-convertida-dis:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS B1 - Reserva
+              nivelacion convertida - Disminuciones.'
             label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida -
               Disminucions
           is-pf-mod-40-3-b1-resultado-previo:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS B1 - Caso
+              general - Resultat previo.'
             label: Modalitat art. 40.3 LIS B1 - Cas general - Resultat previ
           is-pf-mod-40-3-b2-base-pago-fraccionado:
-            help: null
+            help: Informació fiscal sobre informació fiscal de la casella 19 del Modelo
+              202.
             label: Modalitat art. 40.3 LIS B2 - Base del pagament fraccionat
           is-pf-mod-40-3-b2-base-tipo-1:
-            help: null
+            help: Informació fiscal sobre informació fiscal de la casella 20 del Modelo
+              202.
             label: Modalitat art. 40.3 LIS B2 - Base al tipus 1
           is-pf-mod-40-3-b2-base-tipo-2:
-            help: null
+            help: Informació fiscal sobre informació fiscal de la casella 23 del Modelo
+              202.
             label: Modalitat art. 40.3 LIS B2 - Base al tipus 2
           is-pf-mod-40-3-b2-compensacion-cuotas-neg-coop:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS B2 - Compensació
+              de quotes negativas (cooperativas).'
             label: Modalitat art. 40.3 LIS B2 - Compensació de quotes negatives (cooperatives)
           is-pf-mod-40-3-b2-dotaciones-art-11-12-coop:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS B2 - Dotaciones
+              art. 11.12 LIS (cooperativas).'
             label: Modalitat art. 40.3 LIS B2 - Dotacions art. 11.12 LIS (cooperatives)
+          is-pf-mod-40-3-b2-importe-pago-fraccionado:
+            help: Informació fiscal sobre informació fiscal de la casella 22 del Modelo
+              202.
+            label: Casella 22 — informació fiscal
           is-pf-mod-40-3-b2-porcentaje-1:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS B2 - Percentatge
+              1.'
             label: Modalitat art. 40.3 LIS B2 - Percentatge 1
           is-pf-mod-40-3-b2-porcentaje-2:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS B2 - Percentatge
+              2.'
             label: Modalitat art. 40.3 LIS B2 - Percentatge 2
           is-pf-mod-40-3-b2-reserva-nivelacion-aumentos:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS B2 - Reserva
+              de nivelacion (art. 105 LIS) - Aumentos.'
             label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105 LIS)
               - Augments
           is-pf-mod-40-3-b2-reserva-nivelacion-disminuciones:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS B2 - Reserva
+              de nivelacion (art. 105 LIS) - Disminuciones.'
             label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105 LIS)
               - Disminucions
           is-pf-mod-40-3-b2-resultado-previo:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS B2 - Resultat
+              previo.'
             label: Modalitat art. 40.3 LIS B2 - Resultat previ
           is-pf-mod-40-3-base-imponible-previa:
-            help: null
+            help: Informació fiscal sobre informació fiscal de la casella 13 del Modelo
+              202.
             label: Modalitat art. 40.3 LIS - Base imposable prèvia
           is-pf-mod-40-3-bonificaciones:
-            help: null
+            help: Informació fiscal de la casella 27 del Modelo 202.
             label: Modalitat art. 40.3 LIS - Bonificacions del període computat
           is-pf-mod-40-3-cantidad-a-ingresar:
-            help: null
+            help: 'Informació fiscal sobre informació fiscal de la casella 34 del
+              Modelo 202 Referències: [32], [33].'
             label: Modalitat art. 40.3 LIS - Quantitat a ingressar (major de les claus
               [32] i [33])
           is-pf-mod-40-3-compensacion-bases-negativas:
-            help: null
+            help: Informació fiscal sobre informació fiscal de la casella 14 del Modelo
+              202.
             label: Modalitat art. 40.3 LIS - Compensació de bases negatives d'exercicis
               anteriors
           is-pf-mod-40-3-correcciones-is-aumentos:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS - Correcciones
+              per IS - Aumentos.'
             label: Modalitat art. 40.3 LIS - Correccions per IS - Augments
           is-pf-mod-40-3-correcciones-is-disminuciones:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS - Correcciones
+              per IS - Disminuciones.'
             label: Modalitat art. 40.3 LIS - Correccions per IS - Disminucions
           is-pf-mod-40-3-minimo-a-ingresar:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS - Minimo a
+              ingresar (CN >= 10 millones euros).'
             label: Modalitat art. 40.3 LIS - Mínim a ingressar (CN >= 10 milions d'euros)
           is-pf-mod-40-3-pagos-previos-territorio-comun:
-            help: null
+            help: Informació fiscal sobre informació fiscal de la casella 30 del Modelo
+              202.
             label: Modalitat art. 40.3 LIS - Pagaments fraccionats de períodes anteriors
               en Territori Comú
           is-pf-mod-40-3-remanente-reserva-capitalizacion:
-            help: null
+            help: Informació fiscal de la casella 44 del Modelo 202.
             label: Modalitat art. 40.3 LIS - Romanent de la reserva de capitalització
               no aplicada per insuficiència de base
           is-pf-mod-40-3-reserva-nivelacion-aumentos:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS - Reserva
+              de nivelacion (art. 105 LIS) - Aumentos.'
             label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
               - Augments
           is-pf-mod-40-3-reserva-nivelacion-disminuciones:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS - Reserva
+              de nivelacion (art. 105 LIS) - Disminuciones.'
             label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
               - Disminucions
           is-pf-mod-40-3-resto-correcciones-aumentos:
-            help: null
+            help: Informació fiscal sobre informació fiscal de la casella 07 del Modelo
+              202.
             label: Modalitat art. 40.3 LIS - Resta de correccions - Augments
           is-pf-mod-40-3-resto-correcciones-disminuciones:
-            help: null
+            help: Informació fiscal sobre informació fiscal de la casella 08 del Modelo
+              202.
             label: Modalitat art. 40.3 LIS - Resta de correccions - Disminucions
           is-pf-mod-40-3-resultado:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS - Resultat.'
             label: Modalitat art. 40.3 LIS - Resultat
           is-pf-mod-40-3-resultado-contable:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS - Resultat
+              contable despues del IS.'
             label: Modalitat art. 40.3 LIS - Resultat comptable després de l'IS
           is-pf-mod-40-3-resultado-declaracion-anterior:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS - Resultat
+              de la declaració anterior (complementària).'
             label: Modalitat art. 40.3 LIS - Resultat de la declaració anterior (complementària)
           is-pf-mod-40-3-total-correcciones-aumentos:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS - Total correcciones
+              - Aumentos.'
             label: Modalitat art. 40.3 LIS - TOTAL correccions - Augments
           is-pf-mod-40-3-total-correcciones-disminuciones:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS - Total correcciones
+              - Disminuciones.'
             label: Modalitat art. 40.3 LIS - TOTAL correccions - Disminucions
           is-pf-mod-40-3-volumen-territorio-comun-pct:
-            help: null
+            help: Informació fiscal sobre informació fiscal de la casella 29 del Modelo
+              202.
             label: Modalitat art. 40.3 LIS - Volum d'operacions en Territori Comú
               (%)
           retenciones-ingresos-a-cuenta:
-            help: null
+            help: 'Consulteu la informació de la casella: Mod. 40.3 LIS - Retencions
+              e ingressos a compte sobre ingressos del període computado.'
             label: Modalitat art. 40.3 LIS - Retencions i ingressos a compte sobre
               ingressos del període computat
       field:
@@ -147,151 +192,166 @@ modelo:
         2019-2022:
           casilla:
             '01':
-              help: null
+              help: Modalitat art. 40.2 LIS - Base del pagament fraccionat
               label: Modalitat art. 40.2 LIS - Base del pagament fraccionat
             '02':
-              help: null
+              help: Modalitat art. 40.2 LIS - Resultat de la declaració anterior (complementàries)
               label: Modalitat art. 40.2 LIS - Resultat de la declaració anterior
                 (complementàries)
             '03':
-              help: null
+              help: Modalitat art. 40.2 LIS - A ingressar
               label: Modalitat art. 40.2 LIS - A ingressar
             '04':
-              help: null
+              help: Modalitat art. 40.3 LIS - Resultat comptable després de l'IS
               label: Modalitat art. 40.3 LIS - Resultat comptable després de l'IS
             '05':
-              help: null
+              help: Modalitat art. 40.3 LIS - Correccions per IS - Augments
               label: Modalitat art. 40.3 LIS - Correccions per IS - Augments
             '06':
-              help: null
+              help: Modalitat art. 40.3 LIS - Correccions per IS - Disminucions
               label: Modalitat art. 40.3 LIS - Correccions per IS - Disminucions
             '07':
-              help: null
+              help: Modalitat art. 40.3 LIS - Resta de correccions - Augments
               label: Modalitat art. 40.3 LIS - Resta de correccions - Augments
             08:
-              help: null
+              help: Modalitat art. 40.3 LIS - Resta de correccions - Disminucions
               label: Modalitat art. 40.3 LIS - Resta de correccions - Disminucions
             '13':
-              help: null
+              help: Modalitat art. 40.3 LIS - Base imposable prèvia
               label: Modalitat art. 40.3 LIS - Base imposable prèvia
             '14':
-              help: null
+              help: Modalitat art. 40.3 LIS - Compensació de bases negatives d'exercicis
+                anteriors
               label: Modalitat art. 40.3 LIS - Compensació de bases negatives d'exercicis
                 anteriors
             '16':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Cas general - Base pagament fraccionat
               label: Modalitat art. 40.3 LIS B1 - Cas general - Base pagament fraccionat
             '17':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Cas general - Percentatge
               label: Modalitat art. 40.3 LIS B1 - Cas general - Percentatge
             '18':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Cas general - Resultat previ
               label: Modalitat art. 40.3 LIS B1 - Cas general - Resultat previ
             '19':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Base del pagament fraccionat
               label: Modalitat art. 40.3 LIS B2 - Base del pagament fraccionat
             '20':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Base al tipus 1
               label: Modalitat art. 40.3 LIS B2 - Base al tipus 1
             '21':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Percentatge 1
               label: Modalitat art. 40.3 LIS B2 - Percentatge 1
             '22':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 22 del
+                Modelo 202.
               label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
                 1
             '23':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Base al tipus 2
               label: Modalitat art. 40.3 LIS B2 - Base al tipus 2
             '24':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Percentatge 2
               label: Modalitat art. 40.3 LIS B2 - Percentatge 2
             '25':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 25 del
+                Modelo 202.
               label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
                 2
             '26':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Resultat previ
               label: Modalitat art. 40.3 LIS B2 - Resultat previ
             '27':
-              help: null
+              help: Modalitat art. 40.3 LIS - Bonificacions del període computat
               label: Modalitat art. 40.3 LIS - Bonificacions del període computat
             '28':
-              help: null
+              help: Modalitat art. 40.3 LIS - Retencions i ingressos a compte sobre
+                ingressos del període computat
               label: Modalitat art. 40.3 LIS - Retencions i ingressos a compte sobre
                 ingressos del període computat
             '29':
-              help: null
+              help: Modalitat art. 40.3 LIS - Volum d'operacions en Territori Comú
+                (%)
               label: Modalitat art. 40.3 LIS - Volum d'operacions en Territori Comú
                 (%)
             '30':
-              help: null
+              help: Modalitat art. 40.3 LIS - Pagaments fraccionats de períodes anteriors
+                en Territori Comú
               label: Modalitat art. 40.3 LIS - Pagaments fraccionats de períodes anteriors
                 en Territori Comú
             '31':
-              help: null
+              help: Modalitat art. 40.3 LIS - Resultat de la declaració anterior (complementària)
               label: Modalitat art. 40.3 LIS - Resultat de la declaració anterior
                 (complementària)
             '32':
-              help: null
+              help: Modalitat art. 40.3 LIS - Resultat
               label: Modalitat art. 40.3 LIS - Resultat
             '33':
-              help: null
+              help: Modalitat art. 40.3 LIS - Mínim a ingressar (CN >= 10 milions
+                d'euros)
               label: Modalitat art. 40.3 LIS - Mínim a ingressar (CN >= 10 milions
                 d'euros)
             '34':
-              help: null
+              help: Modalitat art. 40.3 LIS - Quantitat a ingressar (major de les
+                claus [32] i [33])
               label: Modalitat art. 40.3 LIS - Quantitat a ingressar (major de les
                 claus [32] i [33])
             '37':
-              help: null
+              help: Modalitat art. 40.3 LIS - 30% despeses d'amortització - Disminucions
               label: Modalitat art. 40.3 LIS - 30% despeses d'amortització - Disminucions
             '38':
-              help: null
+              help: Modalitat art. 40.3 LIS - TOTAL correccions - Augments
               label: Modalitat art. 40.3 LIS - TOTAL correccions - Augments
             '39':
-              help: null
+              help: Modalitat art. 40.3 LIS - TOTAL correccions - Disminucions
               label: Modalitat art. 40.3 LIS - TOTAL correccions - Disminucions
             '40':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Compensació de quotes negatives (cooperatives)
               label: Modalitat art. 40.3 LIS B1 - Compensació de quotes negatives
                 (cooperatives)
             '42':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Compensació de quotes negatives (cooperatives)
               label: Modalitat art. 40.3 LIS B2 - Compensació de quotes negatives
                 (cooperatives)
             '44':
-              help: null
+              help: Modalitat art. 40.3 LIS - Romanent de la reserva de capitalització
+                no aplicada per insuficiència de base
               label: Modalitat art. 40.3 LIS - Romanent de la reserva de capitalització
                 no aplicada per insuficiència de base
             '45':
-              help: null
+              help: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
+                - Augments
               label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
                 - Augments
             '46':
-              help: null
+              help: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
+                - Disminucions
               label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
                 - Disminucions
             '47':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Dotacions de l'art. 11.12 LIS
               label: Modalitat art. 40.3 LIS B1 - Dotacions de l'art. 11.12 LIS
             '48':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
+                - Augments
               label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
                 - Augments
             '49':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
+                - Disminucions
               label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
                 - Disminucions
             '50':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Dotacions art. 11.12 LIS (cooperatives)
               label: Modalitat art. 40.3 LIS B2 - Dotacions art. 11.12 LIS (cooperatives)
             '51':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105 LIS)
+                - Augments
               label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105
                 LIS) - Augments
             '52':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105 LIS)
+                - Disminucions
               label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105
                 LIS) - Disminucions
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
@@ -353,157 +413,172 @@ modelo:
           construct:
             modelo-202-2019-2022-foundation:
               field:
-                title: null
+                title: Modelo 202— informació fiscal
           field:
-            label: null
+            label: Casella— informació fiscal
         2023-2024:
           casilla:
             '01':
-              help: null
+              help: Modalitat art. 40.2 LIS - Base del pagament fraccionat
               label: Modalitat art. 40.2 LIS - Base del pagament fraccionat
             '02':
-              help: null
+              help: Modalitat art. 40.2 LIS - Resultat de la declaració anterior (complementàries)
               label: Modalitat art. 40.2 LIS - Resultat de la declaració anterior
                 (complementàries)
             '03':
-              help: null
+              help: Modalitat art. 40.2 LIS - A ingressar
               label: Modalitat art. 40.2 LIS - A ingressar
             '04':
-              help: null
+              help: Modalitat art. 40.3 LIS - Resultat comptable després de l'IS
               label: Modalitat art. 40.3 LIS - Resultat comptable després de l'IS
             '05':
-              help: null
+              help: Modalitat art. 40.3 LIS - Correccions per IS - Augments
               label: Modalitat art. 40.3 LIS - Correccions per IS - Augments
             '06':
-              help: null
+              help: Modalitat art. 40.3 LIS - Correccions per IS - Disminucions
               label: Modalitat art. 40.3 LIS - Correccions per IS - Disminucions
             '07':
-              help: null
+              help: Modalitat art. 40.3 LIS - Resta de correccions - Augments
               label: Modalitat art. 40.3 LIS - Resta de correccions - Augments
             08:
-              help: null
+              help: Modalitat art. 40.3 LIS - Resta de correccions - Disminucions
               label: Modalitat art. 40.3 LIS - Resta de correccions - Disminucions
             '13':
-              help: null
+              help: Modalitat art. 40.3 LIS - Base imposable prèvia
               label: Modalitat art. 40.3 LIS - Base imposable prèvia
             '14':
-              help: null
+              help: Modalitat art. 40.3 LIS - Compensació de bases negatives d'exercicis
+                anteriors
               label: Modalitat art. 40.3 LIS - Compensació de bases negatives d'exercicis
                 anteriors
             '16':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Cas general - Base pagament fraccionat
               label: Modalitat art. 40.3 LIS B1 - Cas general - Base pagament fraccionat
             '17':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Cas general - Percentatge
               label: Modalitat art. 40.3 LIS B1 - Cas general - Percentatge
             '18':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Cas general - Resultat previ
               label: Modalitat art. 40.3 LIS B1 - Cas general - Resultat previ
             '19':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Base del pagament fraccionat
               label: Modalitat art. 40.3 LIS B2 - Base del pagament fraccionat
             '20':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Base al tipus 1
               label: Modalitat art. 40.3 LIS B2 - Base al tipus 1
             '21':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Percentatge 1
               label: Modalitat art. 40.3 LIS B2 - Percentatge 1
             '22':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 22 del
+                Modelo 202.
               label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
                 1
             '23':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Base al tipus 2
               label: Modalitat art. 40.3 LIS B2 - Base al tipus 2
             '24':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Percentatge 2
               label: Modalitat art. 40.3 LIS B2 - Percentatge 2
             '25':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 25 del
+                Modelo 202.
               label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
                 2
             '26':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Resultat previ
               label: Modalitat art. 40.3 LIS B2 - Resultat previ
             '27':
-              help: null
+              help: Modalitat art. 40.3 LIS - Bonificacions del període computat
               label: Modalitat art. 40.3 LIS - Bonificacions del període computat
             '28':
-              help: null
+              help: Modalitat art. 40.3 LIS - Retencions i ingressos a compte sobre
+                ingressos del període computat
               label: Modalitat art. 40.3 LIS - Retencions i ingressos a compte sobre
                 ingressos del període computat
             '29':
-              help: null
+              help: Modalitat art. 40.3 LIS - Volum d'operacions en Territori Comú
+                (%)
               label: Modalitat art. 40.3 LIS - Volum d'operacions en Territori Comú
                 (%)
             '30':
-              help: null
+              help: Modalitat art. 40.3 LIS - Pagaments fraccionats de períodes anteriors
+                en Territori Comú
               label: Modalitat art. 40.3 LIS - Pagaments fraccionats de períodes anteriors
                 en Territori Comú
             '31':
-              help: null
+              help: Modalitat art. 40.3 LIS - Resultat de la declaració anterior (complementària)
               label: Modalitat art. 40.3 LIS - Resultat de la declaració anterior
                 (complementària)
             '32':
-              help: null
+              help: Modalitat art. 40.3 LIS - Resultat
               label: Modalitat art. 40.3 LIS - Resultat
             '33':
-              help: null
+              help: Modalitat art. 40.3 LIS - Mínim a ingressar (CN >= 10 milions
+                d'euros)
               label: Modalitat art. 40.3 LIS - Mínim a ingressar (CN >= 10 milions
                 d'euros)
             '34':
-              help: null
+              help: Modalitat art. 40.3 LIS - Quantitat a ingressar (major de les
+                claus [32] i [33])
               label: Modalitat art. 40.3 LIS - Quantitat a ingressar (major de les
                 claus [32] i [33])
             '37':
-              help: null
+              help: Modalitat art. 40.3 LIS - 30% despeses d'amortització - Disminucions
               label: Modalitat art. 40.3 LIS - 30% despeses d'amortització - Disminucions
             '38':
-              help: null
+              help: Modalitat art. 40.3 LIS - TOTAL correccions - Augments
               label: Modalitat art. 40.3 LIS - TOTAL correccions - Augments
             '39':
-              help: null
+              help: Modalitat art. 40.3 LIS - TOTAL correccions - Disminucions
               label: Modalitat art. 40.3 LIS - TOTAL correccions - Disminucions
             '40':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Compensació de quotes negatives (cooperatives)
               label: Modalitat art. 40.3 LIS B1 - Compensació de quotes negatives
                 (cooperatives)
             '42':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Compensació de quotes negatives (cooperatives)
               label: Modalitat art. 40.3 LIS B2 - Compensació de quotes negatives
                 (cooperatives)
             '44':
-              help: null
+              help: Modalitat art. 40.3 LIS - Romanent de la reserva de capitalització
+                no aplicada per insuficiència de base
               label: Modalitat art. 40.3 LIS - Romanent de la reserva de capitalització
                 no aplicada per insuficiència de base
             '45':
-              help: null
+              help: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
+                - Augments
               label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
                 - Augments
             '46':
-              help: null
+              help: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
+                - Disminucions
               label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
                 - Disminucions
             '47':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Dotacions de l'art. 11.12 LIS
               label: Modalitat art. 40.3 LIS B1 - Dotacions de l'art. 11.12 LIS
             '48':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
+                - Augments
               label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
                 - Augments
             '49':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
+                - Disminucions
               label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
                 - Disminucions
             '50':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Dotacions art. 11.12 LIS (cooperatives)
               label: Modalitat art. 40.3 LIS B2 - Dotacions art. 11.12 LIS (cooperatives)
             '51':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105 LIS)
+                - Augments
               label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105
                 LIS) - Augments
             '52':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105 LIS)
+                - Disminucions
               label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105
                 LIS) - Disminucions
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
@@ -565,181 +640,203 @@ modelo:
           construct:
             modelo-202-2023-2024-foundation:
               field:
-                title: null
+                title: Modelo 202— informació fiscal
           field:
-            label: null
+            label: Casella— informació fiscal
         2025-y-siguientes:
           casilla:
             '01':
-              help: null
+              help: Modalitat art. 40.2 LIS - Base del pagament fraccionat
               label: Modalitat art. 40.2 LIS - Base del pagament fraccionat
             '02':
-              help: null
+              help: Modalitat art. 40.2 LIS - Resultat de la declaració anterior (complementàries)
               label: Modalitat art. 40.2 LIS - Resultat de la declaració anterior
                 (complementàries)
             '03':
-              help: null
+              help: Modalitat art. 40.2 LIS - A ingressar
               label: Modalitat art. 40.2 LIS - A ingressar
             '04':
-              help: null
+              help: Modalitat art. 40.3 LIS - Resultat comptable després de l'IS
               label: Modalitat art. 40.3 LIS - Resultat comptable després de l'IS
             '05':
-              help: null
+              help: Modalitat art. 40.3 LIS - Correccions per IS - Augments
               label: Modalitat art. 40.3 LIS - Correccions per IS - Augments
             '06':
-              help: null
+              help: Modalitat art. 40.3 LIS - Correccions per IS - Disminucions
               label: Modalitat art. 40.3 LIS - Correccions per IS - Disminucions
             '07':
-              help: null
+              help: Modalitat art. 40.3 LIS - Resta de correccions - Augments
               label: Modalitat art. 40.3 LIS - Resta de correccions - Augments
             08:
-              help: null
+              help: Modalitat art. 40.3 LIS - Resta de correccions - Disminucions
               label: Modalitat art. 40.3 LIS - Resta de correccions - Disminucions
             '13':
-              help: null
+              help: Modalitat art. 40.3 LIS - Base imposable prèvia
               label: Modalitat art. 40.3 LIS - Base imposable prèvia
             '14':
-              help: null
+              help: Modalitat art. 40.3 LIS - Compensació de bases negatives d'exercicis
+                anteriors
               label: Modalitat art. 40.3 LIS - Compensació de bases negatives d'exercicis
                 anteriors
             '16':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Cas general - Base pagament fraccionat
               label: Modalitat art. 40.3 LIS B1 - Cas general - Base pagament fraccionat
             '17':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Cas general - Percentatge
               label: Modalitat art. 40.3 LIS B1 - Cas general - Percentatge
             '18':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Cas general - Resultat previ
               label: Modalitat art. 40.3 LIS B1 - Cas general - Resultat previ
             '19':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Base del pagament fraccionat
               label: Modalitat art. 40.3 LIS B2 - Base del pagament fraccionat
             '20':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Base al tipus 1
               label: Modalitat art. 40.3 LIS B2 - Base al tipus 1
             '21':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Percentatge 1
               label: Modalitat art. 40.3 LIS B2 - Percentatge 1
             '22':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 22 del
+                Modelo 202.
               label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
                 1
             '23':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Base al tipus 2
               label: Modalitat art. 40.3 LIS B2 - Base al tipus 2
             '24':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Percentatge 2
               label: Modalitat art. 40.3 LIS B2 - Percentatge 2
             '25':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 25 del
+                Modelo 202.
               label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
                 2
             '26':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Resultat previ
               label: Modalitat art. 40.3 LIS B2 - Resultat previ
             '27':
-              help: null
+              help: Modalitat art. 40.3 LIS - Bonificacions del període computat
               label: Modalitat art. 40.3 LIS - Bonificacions del període computat
             '28':
-              help: null
+              help: Modalitat art. 40.3 LIS - Retencions i ingressos a compte sobre
+                ingressos del període computat
               label: Modalitat art. 40.3 LIS - Retencions i ingressos a compte sobre
                 ingressos del període computat
             '29':
-              help: null
+              help: Modalitat art. 40.3 LIS - Volum d'operacions en Territori Comú
+                (%)
               label: Modalitat art. 40.3 LIS - Volum d'operacions en Territori Comú
                 (%)
             '30':
-              help: null
+              help: Modalitat art. 40.3 LIS - Pagaments fraccionats de períodes anteriors
+                en Territori Comú
               label: Modalitat art. 40.3 LIS - Pagaments fraccionats de períodes anteriors
                 en Territori Comú
             '31':
-              help: null
+              help: Modalitat art. 40.3 LIS - Resultat de la declaració anterior (complementària)
               label: Modalitat art. 40.3 LIS - Resultat de la declaració anterior
                 (complementària)
             '32':
-              help: null
+              help: Modalitat art. 40.3 LIS - Resultat
               label: Modalitat art. 40.3 LIS - Resultat
             '33':
-              help: null
+              help: Modalitat art. 40.3 LIS - Mínim a ingressar (CN >= 10 milions
+                d'euros)
               label: Modalitat art. 40.3 LIS - Mínim a ingressar (CN >= 10 milions
                 d'euros)
             '34':
-              help: null
+              help: Modalitat art. 40.3 LIS - Quantitat a ingressar (major de les
+                claus [32] i [33])
               label: Modalitat art. 40.3 LIS - Quantitat a ingressar (major de les
                 claus [32] i [33])
             '37':
-              help: null
+              help: Modalitat art. 40.3 LIS - 30% despeses d'amortització - Disminucions
               label: Modalitat art. 40.3 LIS - 30% despeses d'amortització - Disminucions
             '38':
-              help: null
+              help: Modalitat art. 40.3 LIS - TOTAL correccions - Augments
               label: Modalitat art. 40.3 LIS - TOTAL correccions - Augments
             '39':
-              help: null
+              help: Modalitat art. 40.3 LIS - TOTAL correccions - Disminucions
               label: Modalitat art. 40.3 LIS - TOTAL correccions - Disminucions
             '40':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Compensació de quotes negatives (cooperatives)
               label: Modalitat art. 40.3 LIS B1 - Compensació de quotes negatives
                 (cooperatives)
             '42':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Compensació de quotes negatives (cooperatives)
               label: Modalitat art. 40.3 LIS B2 - Compensació de quotes negatives
                 (cooperatives)
             '44':
-              help: null
+              help: Modalitat art. 40.3 LIS - Romanent de la reserva de capitalització
+                no aplicada per insuficiència de base
               label: Modalitat art. 40.3 LIS - Romanent de la reserva de capitalització
                 no aplicada per insuficiència de base
             '45':
-              help: null
+              help: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
+                - Augments
               label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
                 - Augments
             '46':
-              help: null
+              help: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
+                - Disminucions
               label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
                 - Disminucions
             '47':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Dotacions de l'art. 11.12 LIS
               label: Modalitat art. 40.3 LIS B1 - Dotacions de l'art. 11.12 LIS
             '48':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
+                - Augments
               label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
                 - Augments
             '49':
-              help: null
+              help: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
+                - Disminucions
               label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
                 - Disminucions
             '50':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Dotacions art. 11.12 LIS (cooperatives)
               label: Modalitat art. 40.3 LIS B2 - Dotacions art. 11.12 LIS (cooperatives)
             '51':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105 LIS)
+                - Augments
               label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105
                 LIS) - Augments
             '52':
-              help: null
+              help: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105 LIS)
+                - Disminucions
               label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105
                 LIS) - Disminucions
             '61':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 61 del
+                Modelo 202.
               label: Modalitat art. 40.3 LIS B2 - Base al tipus 3
             '62':
-              help: null
+              help: 'Consulteu la informació de la casella: Mod. 40.3 LIS B2 - Percentatge
+                3.'
               label: Modalitat art. 40.3 LIS B2 - Percentatge 3
             '63':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 63 del
+                Modelo 202.
               label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
                 3
             '64':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 64 del
+                Modelo 202.
               label: Modalitat art. 40.3 LIS B2 - Base al tipus 4
             '65':
-              help: null
+              help: 'Consulteu la informació de la casella: Mod. 40.3 LIS B2 - Percentatge
+                4.'
               label: Modalitat art. 40.3 LIS B2 - Percentatge 4
             '66':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 66 del
+                Modelo 202.
               label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
                 4
             '67':
-              help: null
+              help: 'Consulteu la informació de la casella: Mod. 40.3 LIS - Correcciones
+                per Impuesto Complementario (IC) - Aumentos.'
               label: Modalitat art. 40.3 LIS - Correccions per l'Impost Complementari
                 (IC) - Augments
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
@@ -801,6 +898,7 @@ modelo:
           construct:
             modelo-202-foundation:
               field:
-                title: null
+                title: Fonament del pagament fraccionat del Model 202 amb suport del
+                  registre
           field:
-            label: null
+            label: Casella— informació fiscal

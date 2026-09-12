@@ -52,14 +52,16 @@ modelo:
               label: Regularización cónyuge no separado con discapacidad. Importe
                 de la deducción
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la regularización.'
               label: Ejercicio al que se refiere la regularización
             x-chim6r1ee1gmeqbec4mm6rrde1m6arb5dpq62sj9c4:
               help: Se consigna una C cuando la página es complementaria de otra presentada
                 anteriormente; en otro caso se deja en blanco.
               label: Indicador de página complementaria
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                declaración (originaria / sustitutiva / complementaria).'
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
             x-chin6or5dpi6ipbeehin6bj1c9nmsrpdc5n78qb3d5o62p3f:
               help: Importe del abono anticipado de la deducción efectivamente percibido

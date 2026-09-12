@@ -971,7 +971,6 @@ msgstr ""
 "`validate` de nuevo tras editar."
 
 #: ../../how-to/profile-setup.md:372
-#, fuzzy
 msgid ""
 "**Archive export** writes a sealed, encrypted copy of the profile. The "
 "target filename must end with `.cadrumo-bucket.tar.gz`. The archive is "
@@ -980,12 +979,12 @@ msgid ""
 "sealed archive's header without decrypting it using `aeat config profile "
 "archive inspect`."
 msgstr ""
-"**Exportar archivo** escribe una copia sellada y cifrada del perfil. El "
-"nombre del archivo de destino debe terminar en `.cadrumo-bucket.tar.gz`. "
-"El archivo se cifra con la frase de contraseña del perfil y no incluye la"
-" etiqueta del perfil. Restáuralo con `aeat config profile restore` y lee "
-"la cabecera de un archivo sellado sin descifrarlo con `aeat config "
-"profile archive inspect`."
+"**La exportación del archivo** escribe una copia sellada y cifrada del "
+"perfil. El nombre del archivo de destino debe terminar en "
+"`.cadrumo-bucket.tar.gz`. El archivo se cifra con la frase de contraseña del "
+"perfil y no incluye la etiqueta del perfil. Restáuralo con `aeat config "
+"profile archive import` y lee la cabecera de un archivo sellado sin "
+"descifrarlo mediante `aeat config profile archive inspect`."
 
 #: ../../how-to/profile-setup.md:378
 msgid ""

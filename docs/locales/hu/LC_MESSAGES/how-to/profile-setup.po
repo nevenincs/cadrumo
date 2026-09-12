@@ -971,7 +971,6 @@ msgstr ""
 "`show`, `status` vagy `validate` parancsot a szerkesztés után."
 
 #: ../../how-to/profile-setup.md:372
-#, fuzzy
 msgid ""
 "**Archive export** writes a sealed, encrypted copy of the profile. The "
 "target filename must end with `.cadrumo-bucket.tar.gz`. The archive is "
@@ -980,12 +979,12 @@ msgid ""
 "sealed archive's header without decrypting it using `aeat config profile "
 "archive inspect`."
 msgstr ""
-"A `**Archívum exportálása** a profil lezárt, titkosított másolatát írja "
-"ki. A célfájlnévnek `.cadrumo-bucket.tar.gz` végződésűnek kell lennie. Az"
-" archívumot a profil jelszó-mondatával titkosítja, és nem tartalmazza a "
-"profil címkéjét. A visszaállításhoz használd a `aeat config profile "
-"archive import` parancsot, a lezárt archívum fejlécét pedig visszafejtés "
-"nélkül olvasd a `aeat config profile archive inspect` paranccsal."
+"Az **archívum exportálása** a profil lezárt, titkosított másolatát írja ki. "
+"A célfájlnévnek `.cadrumo-bucket.tar.gz` végződésűnek kell lennie. Az "
+"archívumot a profil jelmondatával titkosítja, és nem tartalmazza a profil "
+"címkéjét. Állítsa helyre az `aeat config profile archive import` paranccsal, "
+"a lezárt archívum fejlécét pedig visszafejtés nélkül az `aeat config profile "
+"archive inspect` paranccsal olvassa."
 
 #: ../../how-to/profile-setup.md:378
 msgid ""

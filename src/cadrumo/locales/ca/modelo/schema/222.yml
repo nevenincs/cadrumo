@@ -308,10 +308,12 @@ modelo:
                 (Mod. 40.3 LIS).
               label: Mod. 40.3 LIS - Correcció per Impost Complementari (IC) - Augments
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                222.
               label: Exercici a què es refereix el pagament fraccionat
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+                222.
               label: Modalitat del pagament fraccionat (art. 40.2 quota íntegra /
                 art. 40.3 base imposable)
             x-d5n6crpec5qmqpbeehniqor1e1kn8obc5lhmurbgcln76ob3d5nmsbb3e9im8qbkdtpg:
@@ -384,6 +386,6 @@ modelo:
           construct:
             modelo-222-declaration-construct:
               field:
-                title: null
+                title: Modelo 222— informació fiscal
           field:
-            label: null
+            label: Casella— informació fiscal

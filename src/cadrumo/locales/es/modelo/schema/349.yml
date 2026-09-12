@@ -9,64 +9,84 @@ modelo:
         2020-y-siguientes:
           casilla:
             x-chim6r1ecdgmqoj9dsmn0pbid5nm8qb3d5i62p0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Indicador
+                de cambio de periodicidad en la obligación de declarar.'
               label: Indicador de cambio de periodicidad en la obligación de declarar
             x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                complementaria o sustitutiva.'
               label: Declaración complementaria o sustitutiva
             x-chim6r1ed5mn0rriehiiqrrgclp62or9dtn6aso:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                de las operaciones intracomunitarias.'
               label: Importe de las operaciones intracomunitarias
             x-chim6r1ed5mn0rriehiiqsj5cdq6ipj9cdgm6qbfdpin6:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                de las rectificaciones.'
               label: Importe de las rectificaciones
             x-chim6r1edpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                representante legal del declarante.'
               label: NIF del representante legal del declarante
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Número
+                identificativo de la declaración.'
               label: Número identificativo de la declaración
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Número
+                identificativo de la declaración anterior.'
               label: Número identificativo de la declaración anterior
             x-chim6r1edpqmqpbidsmmus35e9gm8rriclpg:
-              help: null
-              label: Numero total de operadores intracomunitarios
+              help: 'Consulte la información correspondiente a la casilla: Número
+                total de operadores intracomunitarios.'
+              label: Número total de operadores intracomunitarios
             x-chim6r1edpqmqpbidsmn4pb3ehkmcqb3c5hmirreclpg:
-              help: null
-              label: Numero total de operadores intracomunitarios con rectificaciones
+              help: 'Consulte la información correspondiente a la casilla: Número
+                total de operadores intracomunitarios con rectificaciones.'
+              label: Número total de operadores intracomunitarios con rectificaciones
             x-dto2sobgclm6oqb4dtpiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 93-132
+                del Modelo 349.
               label: Apellidos y nombre o razon social del operador intracomunitario
             x-dto2soj1ediiqqbde1nmsqb2dhig:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Base imponible
+                o importe de la operación intracomunitaria.'
               label: Base imponible o importe de la operacion intracomunitaria
             x-dto2sorcc5r6abbfe1in4ob3d5nms:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Clave de
+                operación intracomunitaria.'
               label: Clave de operacion intracomunitaria
             x-dto2sorfchkmerpde1gmiso:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 76-77
+                del Modelo 349.
               label: Codigo pais del operador comunitario
             x-dto2srj9comm6rrdeln6it31e9kmu:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                operador comunitario.'
               label: NIF del operador comunitario
             x-e9im6t1ec9gn6p9dc5n78pbid5nn4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Base imponible
+                declarada anteriormente.'
               label: Base imponible declarada anteriormente
             x-e9im6t1ec9gn6p9de9im6t39cpkm6ob4c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Base imponible
+                o importes rectificados.'
               label: Base imponible o importes rectificados
             x-e9im6t1ecll6asj3d5hmirpde9im6t39cpkm6ob4ds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                rectificado.'
               label: Ejercicio rectificado
             x-e9im6t1ee1in4qbfchniqsj5cdq6ipj9cdgm8ro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Período
+                rectificado.'
               label: Periodo rectificado
             x-edqn6t39ehqn8rpec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Apellidos
+                y nombre o razón social del sujeto pasivo sustituto.'
               label: Apellidos y nombre o razón social del sujeto pasivo sustituto
             x-edqn6t39ehqn8rpedpkmc:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                empresario o profesional destinatario final sustituto.'
               label: NIF del empresario o profesional destinatario final sustituto
           construct:
             modelo-349-informative:

@@ -1,6 +1,295 @@
 modelo:
   schema:
     '184':
+      casilla:
+        continuidad:
+          actividad-principal-espanola:
+            help: Tax information for casilla 146 of Modelo 184.
+            label: Casilla 146 — tax field
+          base-deduccion-o-importe:
+            help: Tax information for casilla 221-232 of Modelo 184.
+            label: Casilla 221-232 — tax field
+          cesionario-denominacion:
+            help: Tax information for casilla 97-116 of Modelo 184.
+            label: Casilla 97-116 — tax field
+          cesionario-nif:
+            help: 'Casilla information: Casilla 88-96: cesionario nif.'
+            label: 'Casilla 88-96: cesionario nif'
+          clave-declarado:
+            help: 'Casilla information: Casilla 194: clave declarado.'
+            label: 'Casilla 194: clave declarado'
+          clave-pais-entidad-extranjera:
+            help: 'Casilla information: Casilla 149-150: clave pais entity foreign.'
+            label: 'Casilla 149-150: clave pais entity foreign'
+          clave-pais-renta:
+            help: 'Casilla information: Casilla 80-81: clave pais income.'
+            label: 'Casilla 80-81: clave pais income'
+          clave-tipo-participe:
+            help: 'Casilla information: Casilla 81: clave rate participe.'
+            label: 'Casilla 81: clave rate participe'
+          criterio-cobros-y-pagos:
+            help: Tax information about tax information in casilla 396 of Modelo 184.
+            label: Casilla 396 — tax information
+          declaracion-complementaria-sustitutiva:
+            help: Tax information for casilla 121-122 of Modelo 184.
+            label: Casilla 121-122 — tax field
+          epigrafe-iae:
+            help: 'Casilla information: Casilla 84-87: epigrafe iae.'
+            label: 'Casilla 84-87: epigrafe iae'
+          fecha-adquisicion:
+            help: 'Casilla information: Casilla 117-124: date acquisition.'
+            label: 'Casilla 117-124: date acquisition'
+          filing-year:
+            help: Tax information for casilla of Modelo 184.
+            label: Casilla — tax field
+          ganancias-perdidas-patrimoniales-atribuibles:
+            help: 'Casilla information: Casilla 208-220: ganancias perdidas capital-gains
+              atribuibles.'
+            label: 'Casilla 208-220: ganancias perdidas capital-gains atribuibles'
+          gasto-actividad-amortizaciones:
+            help: 'Casilla information: Casilla 362-373: gasto activity amortizaciones.'
+            label: 'Casilla 362-373: gasto activity amortizaciones'
+          gasto-actividad-arrendamientos-canones:
+            help: 'Casilla information: Casilla 302-313: gasto activity arrendamientos
+              canones.'
+            label: 'Casilla 302-313: gasto activity arrendamientos canones'
+          gasto-actividad-consumos-explotacion:
+            help: 'Casilla information: Casilla 278-289: gasto activity consumos explotacion.'
+            label: 'Casilla 278-289: gasto activity consumos explotacion'
+          gasto-actividad-gastos-financieros:
+            help: Tax information about tax information in casilla 350-361 of Modelo
+              184.
+            label: Casilla 350-361 — tax information
+          gasto-actividad-gastos-personal:
+            help: Tax information about tax information in casilla 266-277 of Modelo
+              184.
+            label: Casilla 266-277 — tax information
+          gasto-actividad-otros-gastos-deducibles:
+            help: Tax information about tax information in casilla 386-395 of Modelo
+              184.
+            label: Casilla 386-395 — tax information
+          gasto-actividad-provisiones:
+            help: 'Casilla information: Casilla 374-385: gasto activity provisiones.'
+            label: 'Casilla 374-385: gasto activity provisiones'
+          gasto-actividad-reparaciones-conservacion:
+            help: 'Casilla information: Casilla 314-325: gasto activity reparaciones
+              conservacion.'
+            label: 'Casilla 314-325: gasto activity reparaciones conservacion'
+          gasto-actividad-servicios-profesionales:
+            help: 'Casilla information: Casilla 326-337: gasto activity services professional.'
+            label: 'Casilla 326-337: gasto activity services professional'
+          gasto-actividad-suministros:
+            help: 'Casilla information: Casilla 338-349: gasto activity suministros.'
+            label: 'Casilla 338-349: gasto activity suministros'
+          gasto-actividad-tributos-deducibles:
+            help: 'Casilla information: Casilla 290-301: gasto activity tributos deducibles.'
+            label: 'Casilla 290-301: gasto activity tributos deducibles'
+          gasto-inmobiliario-amortizacion-bienes-muebles:
+            help: 'Casilla information: Casilla 481-488: gasto inmobiliario amortizacion
+              goods muebles.'
+            label: 'Casilla 481-488: gasto inmobiliario amortizacion goods muebles'
+          gasto-inmobiliario-amortizacion-inmueble:
+            help: 'Casilla information: Casilla 471-480: gasto inmobiliario amortizacion
+              inmueble.'
+            label: 'Box 471-480: property expense — depreciation of the property'
+          gasto-inmobiliario-cantidades-devengadas-terceros:
+            help: 'Casilla information: Casilla 451-460: gasto inmobiliario cantidades
+              devengadas terceros.'
+            label: 'Box 451-460: property expense — amounts accrued to third parties'
+          gasto-inmobiliario-conservacion-reparacion:
+            help: 'Casilla information: Casilla 408-418: gasto inmobiliario conservacion
+              reparacion.'
+            label: 'Box 408-418: property expense — maintenance and repairs'
+          gasto-inmobiliario-intereses-financiacion:
+            help: 'Casilla information: Casilla 397-407: gasto inmobiliario intereses
+              financiacion.'
+            label: 'Casilla 397-407: gasto inmobiliario intereses financiacion'
+          gasto-inmobiliario-intereses-gastos-reparacion:
+            help: Tax information about tax information in casilla 419-429 of Modelo
+              184.
+            label: Casilla 419-429 — tax information
+          gasto-inmobiliario-otros-gastos-deducibles:
+            help: Tax information about tax information in casilla 489-497 of Modelo
+              184.
+            label: Casilla 489-497 — tax information
+          gasto-inmobiliario-primas-seguros:
+            help: 'Casilla information: Casilla 461-470: gasto inmobiliario primas
+              insurance.'
+            label: 'Casilla 461-470: gasto inmobiliario primas insurance'
+          gasto-inmobiliario-saldos-dudoso-cobro:
+            help: 'Casilla information: Casilla 440-450: gasto inmobiliario saldos
+              dudoso cobro.'
+            label: 'Box 440-450: property expense — doubtful receivables'
+          gasto-inmobiliario-tributos-recargos:
+            help: 'Casilla information: Casilla 430-439: gasto inmobiliario tributos
+              recargos.'
+            label: 'Box 430-439: property expense — taxes and surcharges'
+          gastos-deducibles-atribuibles:
+            help: Tax information about tax information in casilla 165-176 of Modelo
+              184.
+            label: Casilla 165-176 — tax information
+          importe-atribuido-miembro:
+            help: 'Casilla information: Casilla 96-108: amount atribuido miembro.'
+            label: 'Casilla 96-108: amount atribuido miembro'
+          importe-neto-cifra-negocios:
+            help: 'Casilla information: Casilla 157-171: amount neto cifra negocios.'
+            label: 'Casilla 157-171: amount neto cifra negocios'
+          ingresos-integros-atribuibles:
+            help: 'Casilla information: Casilla 151-164: income integros atribuibles.'
+            label: 'Casilla 151-164: income integros atribuibles'
+          miembro-a-31-diciembre:
+            help: 'Casilla information: Casilla 82: miembro a 31 diciembre.'
+            label: 'Casilla 82: miembro a 31 diciembre'
+          miembro-clave-pais:
+            help: 'Casilla information: Casilla 79-80: miembro clave pais.'
+            label: 'Casilla 79-80: miembro clave pais'
+          miembro-codigo-provincia:
+            help: Tax information for casilla 77-78 of Modelo 184.
+            label: Casilla 77-78 — tax field
+          miembro-domicilio-fiscal:
+            help: 'Casilla information: Casilla 120-159: miembro address fiscal.'
+            label: 'Casilla 120-159: miembro address fiscal'
+          miembro-nif:
+            help: 'Casilla information: Casilla 18-26: miembro nif.'
+            label: 'Casilla 18-26: miembro nif'
+          miembro-nombre-razon-social:
+            help: Tax information for casilla 36-75 of Modelo 184.
+            label: Casilla 36-75 — tax field
+          miembro-representante-fiscal-nif:
+            help: 'Casilla information: Casilla 27-35: miembro representative fiscal
+              nif.'
+            label: 'Casilla 27-35: miembro representative fiscal nif'
+          naturaleza-inmueble:
+            help: Tax information about tax information in casilla 172 of Modelo 184.
+            label: Casilla 172 — tax information
+          numero-dias-arrendamiento:
+            help: Tax information for casilla 498-500 of Modelo 184.
+            label: Casilla 498-500 — tax field
+          numero-dias-miembro:
+            help: Tax information for casilla 83-85 of Modelo 184.
+            label: Casilla 83-85 — tax field
+          numero-justificante:
+            help: Tax information for casilla 108-120 of Modelo 184.
+            label: Casilla 108-120 — tax field
+          objeto-entidad-extranjera:
+            help: 'Casilla information: Casilla 148: subject matter entity foreign.'
+            label: 'Casilla 148: subject matter entity foreign'
+          persona-relacion:
+            help: Tax information about tax information in casilla 59-107 of Modelo
+              184.
+            label: Casilla 59-107 — tax information
+          porcentaje-participacion:
+            help: 'Casilla information: Casilla 86-92: percentage participacion.'
+            label: 'Casilla 86-92: percentage participacion'
+          porcentaje-reduccion-renta-atribuible:
+            help: 'Casilla information: Casilla 191-195: percentage reduccion income
+              attributable.'
+            label: 'Casilla 191-195: percentage reduccion income attributable'
+          porcentaje-renta-atribuible-residentes:
+            help: 'Casilla information: Casilla 151-155: percentage income attributable
+              residents.'
+            label: 'Casilla 151-155: percentage income attributable residents'
+          porcentaje-titularidad-inmueble:
+            help: Tax information about tax information in casilla 195-199 of Modelo
+              184.
+            label: Casilla 195-199 — tax information
+          provisiones-y-gastos-dificil-justificacion:
+            help: Tax information about tax information in casilla 160-171 of Modelo
+              184.
+            label: Casilla 160-171 — tax information
+          reduccion-atribuida-miembro:
+            help: 'Casilla information: Casilla 109-119: reduccion atribuida miembro.'
+            label: 'Box 109-119: reduction allocated to the member'
+          referencia-catastral:
+            help: 'Casilla information: Casilla 246-265: referencia catastral.'
+            label: 'Casilla 246-265: referencia catastral'
+          regimen-determinacion-rendimientos:
+            help: 'Casilla information: Casilla 82: regime determinacion income.'
+            label: 'Casilla 82: regime determinacion income'
+          rendimiento-neto-minorado-agricola-estimacion-objetiva:
+            help: Tax information for casilla 216-229 of Modelo 184.
+            label: Casilla 216-229 — tax field
+          rendimiento-neto-previo-estimacion-objetiva:
+            help: Tax information for casilla 203-215 of Modelo 184.
+            label: Casilla 203-215 — tax field
+          renta-atribuible-con-derecho-reduccion:
+            help: 'Casilla information: Casilla 196-207: income attributable with
+              derecho reduccion.'
+            label: 'Casilla 196-207: income attributable with derecho reduccion'
+          renta-atribuible-importe:
+            help: 'Casilla information: Casilla 177-190: income attributable amount.'
+            label: 'Casilla 177-190: income attributable amount'
+          representante-nif:
+            help: 'Casilla information: Casilla 172-180: representative nif.'
+            label: 'Casilla 172-180: representative nif'
+          representante-nombre:
+            help: 'Casilla information: Casilla 181-220: representative name.'
+            label: 'Casilla 181-220: representative name'
+          retenciones-ingresos-a-cuenta-atribuibles:
+            help: 'Casilla information: Casilla 233-244: withholdings payments on
+              account atribuibles.'
+            label: 'Casilla 233-244: withholdings payments on account atribuibles'
+          situacion-inmueble:
+            help: 'Casilla information: Casilla 245: situacion inmueble.'
+            label: 'Casilla 245: situacion inmueble'
+          tipo-actividad:
+            help: 'Casilla information: Casilla 83: rate activity.'
+            label: 'Casilla 83: rate activity'
+          tipo-declaracion:
+            help: 'Casilla information: Casilla rate-return: rate return.'
+            label: 'Casilla rate-return: rate return'
+          tipo-entidad-espanola:
+            help: 'Casilla information: Casilla 145: rate entity espanola.'
+            label: 'Casilla 145: rate entity espanola'
+          tipo-entidad-extranjera:
+            help: 'Casilla information: Casilla 147: rate entity foreign.'
+            label: 'Casilla 147: rate entity foreign'
+          tipo-hoja:
+            help: Tax information about tax information in casilla 76 of Modelo 184.
+            label: Casilla 76 — tax information
+          tipo-renta-atribuida-clave:
+            help: 'Casilla information: Casilla 77: rate income atribuida clave.'
+            label: 'Casilla 77: rate income atribuida clave'
+          tipo-renta-atribuida-subclave:
+            help: Tax information about tax information in casilla 78-79 of Modelo
+              184.
+            label: Casilla 78-79 — tax information
+          tipo-soporte:
+            help: 'Casilla information: Casilla 58: rate soporte.'
+            label: 'Casilla 58: rate soporte'
+          tipo3-clave:
+            help: 'Casilla information: Casilla 93: rate income atribuida clave.'
+            label: 'Casilla 93: rate income atribuida clave'
+          tipo3-dias-arrendamiento:
+            help: Tax information for casilla 200-202 of Modelo 184.
+            label: Casilla 200-202 — tax field
+          tipo3-referencia-catastral:
+            help: 'Casilla information: Casilla 174-193: referencia catastral.'
+            label: 'Casilla 174-193: referencia catastral'
+          tipo3-situacion-inmueble:
+            help: 'Casilla information: Casilla 173: situacion inmueble.'
+            label: 'Casilla 173: situacion inmueble'
+          tipo3-subclave:
+            help: Tax information about tax information in casilla 94-95 of Modelo
+              184.
+            label: Casilla 94-95 — tax information
+          tipo3-tipo-hoja:
+            help: Tax information about tax information in casilla 76 of Modelo 184.
+            label: Casilla 76 — tax information
+          total-registros-socios:
+            help: 'Casilla information: Casilla 136-144: total registros socios.'
+            label: 'Casilla 136-144: total registros socios'
+          tributacion-impuesto-sociedades:
+            help: Tax information for casilla 156 of Modelo 184.
+            label: Casilla 156 — tax field
+          valor-adquisicion-o-ajustes-disminuciones:
+            help: Tax information about tax information in casilla 138-150 of Modelo
+              184.
+            label: Casilla 138-150 — tax information
+          valor-liquidativo-o-ajustes-aumentos:
+            help: Tax information about tax information in casilla 125-137 of Modelo
+              184.
+            label: Casilla 125-137 — tax information
       field:
         official_name: Modelo 184. Annual informative return of income-attribution
           entities.

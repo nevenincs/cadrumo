@@ -10,68 +10,75 @@ modelo:
         2024-y-siguientes:
           casilla:
             '05':
-              help: null
+              help: Informació fiscal de la casella 05 del Modelo 216.
               label: Nombre de rendes. Dividends i altres rendes de participació en
                 fons propis d'entitats
             '06':
-              help: null
+              help: Informació fiscal de la casella 06 del Modelo 216.
               label: Nombre de rendes. Resta de rendes
             '07':
-              help: null
+              help: Informació fiscal de la casella 07 del Modelo 216.
               label: Nombre de rendes. Total
             08:
-              help: null
+              help: Informació fiscal de la casella 08 del Modelo 216.
               label: Base de retencions i ingressos a compte. Dividends i altres rendes
                 de participació en fons propis d'entitats
             09:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 09 del
+                Modelo 216.
               label: Base de retencions i ingressos a compte. Resta de rendes
             '10':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 10 del
+                Modelo 216.
               label: Base de retencions i ingressos a compte. Total
             '11':
-              help: null
+              help: Informació fiscal de la casella 11 del Modelo 216.
               label: Retencions i ingressos a compte. Dividends i altres rendes de
                 participació en fons propis d'entitats
             '12':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 12 del
+                Modelo 216.
               label: Retencions i ingressos a compte. Resta de rendes
             '13':
-              help: null
+              help: 'Consulteu la informació de la casella: Retencions e ingressos
+                a compte. Total.'
               label: Retencions i ingressos a compte. Total
             '14':
-              help: null
+              help: Informació fiscal de la casella 14 del Modelo 216.
               label: Rendes no sotmeses a retenció o ingrés a compte. Nombre de rendes.
                 Dividends i altres rendes de participació en fons propis d'entitats
             '15':
-              help: null
+              help: Informació fiscal de la casella 15 del Modelo 216.
               label: Rendes no sotmeses a retenció o ingrés a compte. Nombre de rendes.
                 Resta de rendes
             '16':
-              help: null
+              help: Informació fiscal de la casella 16 del Modelo 216.
               label: Rendes no sotmeses a retenció o ingrés a compte. Nombre de rendes.
                 Total
             '17':
-              help: null
+              help: Informació fiscal de la casella 17 del Modelo 216.
               label: Rendes no sotmeses a retenció o ingrés a compte. Base. Dividends
                 i altres rendes de participació en fons propis d'entitats
             '18':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 18 del
+                Modelo 216.
               label: Rendes no sotmeses a retenció o ingrés a compte. Base. Resta
                 de rendes
             '19':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 19 del
+                Modelo 216.
               label: Rendes no sotmeses a retenció o ingrés a compte. Base. Total
             '20':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 20 del
+                Modelo 216.
               label: Resultats a ingressar de declaracions anteriors pel mateix concepte,
                 exercici i període
             '21':
-              help: null
+              help: 'Consulteu la informació de la casella: Resultat a ingresar.'
               label: Resultat a ingressar
           construct:
             modelo-216-calculation-construct:
               field:
-                title: null
+                title: Modelo 216 calculation construct
           field:
-            label: null
+            label: Casella— informació fiscal

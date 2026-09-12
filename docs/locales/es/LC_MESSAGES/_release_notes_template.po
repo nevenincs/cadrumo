@@ -82,16 +82,15 @@ msgid "Rollback"
 msgstr "Reversión"
 
 #: ../../_release_notes_template.md:51
-#, fuzzy
 msgid ""
 "If this release regresses, see `RELEASING.md#diagnose-and-recover`. In "
 "short: the previous version remains installable and this version can be "
 "yanked from PyPI without breaking anyone pinned to an earlier pin."
 msgstr ""
-"Si esta versión introduce una regresión, consulta `RELEASING.md#rollback-"
-"procedure`. En resumen: la versión anterior sigue siendo instalable y "
-"esta versión puede retirarse de PyPI sin afectar a quienes tengan fijada "
-"una versión anterior."
+"Si esta versión introduce una regresión, consulta "
+"`RELEASING.md#diagnose-and-recover`. En resumen: la versión anterior sigue "
+"siendo instalable y esta versión puede retirarse de PyPI sin afectar a "
+"quienes tengan fijada una versión anterior."
 
 #: ../../_release_notes_template.md:55
 msgid "Verification"

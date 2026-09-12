@@ -1,6 +1,15 @@
 modelo:
   schema:
     038:
+      casilla:
+        continuidad:
+          filing-year:
+            help: Informació fiscal de la casella del Modelo 038.
+            label: Casella — informació fiscal
+          tipo-declaracion:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              038.
+            label: Casella— informació fiscal
       field:
         official_name: Modelo 038. Relació d'operacions realitzades per entitats inscrites
           en registres públics. Declaració informativa.
@@ -9,28 +18,30 @@ modelo:
         2024-desde-06:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                038.
               label: Exercici a què es refereix la declaració
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: Informació fiscal de la casella del Modelo 038.
               label: Tipus de declaració (originària / substitutiva / complementària)
           construct:
             modelo-038-informative:
               field:
-                title: null
+                title: Modelo 038 declaració informativa
           field:
-            label: null
+            label: Casella— informació fiscal
         2025-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                038.
               label: Exercici a què es refereix la declaració
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: Informació fiscal de la casella del Modelo 038.
               label: Tipus de declaració (originària / substitutiva / complementària)
           construct:
             modelo-038-informative:
               field:
-                title: null
+                title: Modelo 038 declaració informativa
           field:
-            label: null
+            label: Casella— informació fiscal

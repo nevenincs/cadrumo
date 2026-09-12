@@ -10,100 +10,118 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
-              help: null
+              help: Informació fiscal de la casella 01 del Modelo 111.
               label: Rendiments del treball dineraris nombre de perceptors
             '02':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 02 del
+                Modelo 111.
               label: Rendiments del treball dineraris import de percepcions
             '03':
-              help: null
+              help: 'Consulteu la informació de la casella: Rendiments del treball
+                dinerarios import de retencions.'
               label: Rendiments del treball dineraris import de retencions
             '04':
-              help: null
+              help: Informació fiscal de la casella 04 del Modelo 111.
               label: Rendiments del treball en espècie nombre de perceptors
             '05':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 05 del
+                Modelo 111.
               label: Rendiments del treball en espècie valor de percepcions
             '06':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 06 del
+                Modelo 111.
               label: Rendiments del treball en espècie import d'ingressos a compte
             '07':
-              help: null
+              help: Informació fiscal de la casella 07 del Modelo 111.
               label: Rendiments d'activitats econòmiques dineraris nombre de perceptors
             08:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 08 del
+                Modelo 111.
               label: Rendiments d'activitats econòmiques dineraris import de percepcions
             09:
-              help: null
+              help: 'Consulteu la informació de la casella: Rendiments de activitats
+                economicas dinerarios import de retencions.'
               label: Rendiments d'activitats econòmiques dineraris import de retencions
             '10':
-              help: null
+              help: Informació fiscal de la casella 10 del Modelo 111.
               label: Rendiments d'activitats econòmiques en espècie nombre de perceptors
             '11':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 11 del
+                Modelo 111.
               label: Rendiments d'activitats econòmiques en espècie valor de percepcions
             '12':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 12 del
+                Modelo 111.
               label: Rendiments d'activitats econòmiques en espècie import d'ingressos
                 a compte
             '13':
-              help: null
+              help: Informació fiscal de la casella 13 del Modelo 111.
               label: Premis dineraris nombre de perceptors
             '14':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 14 del
+                Modelo 111.
               label: Premis dineraris import de percepcions
             '15':
-              help: null
+              help: 'Consulteu la informació de la casella: Premios dinerarios import
+                de retencions.'
               label: Premis dineraris import de retencions
             '16':
-              help: null
+              help: Informació fiscal de la casella 16 del Modelo 111.
               label: Premis en espècie nombre de perceptors
             '17':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 17 del
+                Modelo 111.
               label: Premis en espècie valor de percepcions
             '18':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 18 del
+                Modelo 111.
               label: Premis en espècie import d'ingressos a compte
             '19':
-              help: null
+              help: Informació fiscal de la casella 19 del Modelo 111.
               label: Guanys patrimonials forestals dineraris nombre de perceptors
             '20':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 20 del
+                Modelo 111.
               label: Guanys patrimonials forestals dineraris import de percepcions
             '21':
-              help: null
+              help: 'Consulteu la informació de la casella: Ganancias patrimonials
+                forestales dinerarias import de retencions.'
               label: Guanys patrimonials forestals dineraris import de retencions
             '22':
-              help: null
+              help: Informació fiscal de la casella 22 del Modelo 111.
               label: Guanys patrimonials forestals en espècie nombre de perceptors
             '23':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 23 del
+                Modelo 111.
               label: Guanys patrimonials forestals en espècie valor de percepcions
             '24':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 24 del
+                Modelo 111.
               label: Guanys patrimonials forestals en espècie import d'ingressos a
                 compte
             '25':
-              help: null
+              help: Informació fiscal de la casella 25 del Modelo 111.
               label: Cessió de drets d'imatge nombre de perceptors
             '26':
-              help: null
+              help: Informació fiscal de la casella 26 del Modelo 111.
               label: Cessió de drets d'imatge contraprestacions satisfetes
             '27':
-              help: null
+              help: Informació fiscal de la casella 27 del Modelo 111.
               label: Cessió de drets d'imatge import d'ingressos a compte
             '28':
-              help: null
+              help: 'Consulteu la informació de la casella: Total retencions e ingressos
+                a compte.'
               label: Total retencions i ingressos a compte
             '29':
-              help: null
+              help: 'Consulteu la informació de la casella: Resultat de anteriors
+                autoliquidacions.'
               label: Resultat d'autoliquidacions anteriors
             '30':
-              help: null
+              help: 'Consulteu la informació de la casella: Resultat a ingresar.'
               label: Resultat a ingressar
           construct:
             modelo-111-withholding-workflow:
               field:
-                title: null
+                title: Modelo 111 — informació fiscal
           field:
-            label: null
+            label: Casella— informació fiscal

@@ -1,6 +1,310 @@
 modelo:
   schema:
     '184':
+      casilla:
+        continuidad:
+          actividad-principal-espanola:
+            help: 'Información de la casilla: Casilla 146: actividad principal espanola.'
+            label: 'Casilla 146: actividad principal espanola'
+          base-deduccion-o-importe:
+            help: 'Información de la casilla: Casilla 221-232: base deducción o importe.'
+            label: 'Casilla 221-232: base deducción o importe'
+          cesionario-denominacion:
+            help: Información fiscal sobre información fiscal de la casilla 97-116
+              del Modelo 184.
+            label: Casilla 97-116 — información fiscal
+          cesionario-nif:
+            help: 'Información de la casilla: Casilla 88-96: cesionario nif.'
+            label: 'Casilla 88-96: cesionario nif'
+          clave-declarado:
+            help: 'Información de la casilla: Casilla 194: clave declarado.'
+            label: 'Casilla 194: clave declarado'
+          clave-pais-entidad-extranjera:
+            help: 'Información de la casilla: Casilla 149-150: clave pais entidad
+              extranjera.'
+            label: 'Casilla 149-150: clave pais entidad extranjera'
+          clave-pais-renta:
+            help: 'Información de la casilla: Casilla 80-81: clave pais renta.'
+            label: 'Casilla 80-81: clave pais renta'
+          clave-tipo-participe:
+            help: 'Información de la casilla: Casilla 81: clave tipo participe.'
+            label: 'Casilla 81: clave tipo participe'
+          criterio-cobros-y-pagos:
+            help: 'Información de la casilla: Casilla 396: criterio cobros y pagos.'
+            label: 'Casilla 396: criterio cobros y pagos'
+          declaracion-complementaria-sustitutiva:
+            help: 'Información de la casilla: Casilla 121-122: declaración complementaria
+              sustitutiva.'
+            label: 'Casilla 121-122: declaración complementaria sustitutiva'
+          epigrafe-iae:
+            help: 'Información de la casilla: Casilla 84-87: epigrafe iae.'
+            label: 'Casilla 84-87: epigrafe iae'
+          fecha-adquisicion:
+            help: 'Información de la casilla: Casilla 117-124: fecha adquisición.'
+            label: 'Casilla 117-124: fecha adquisición'
+          filing-year:
+            help: 'Consulte la información correspondiente a la casilla: Ejercicio
+              al que se refiere la declaración.'
+            label: Casilla— ejercicio fiscal
+          ganancias-perdidas-patrimoniales-atribuibles:
+            help: 'Información de la casilla: Casilla 208-220: ganancias perdidas
+              patrimoniales atribuibles.'
+            label: 'Casilla 208-220: ganancias perdidas patrimoniales atribuibles'
+          gasto-actividad-amortizaciones:
+            help: 'Información de la casilla: Casilla 362-373: gasto actividad amortizaciones.'
+            label: 'Casilla 362-373: gasto actividad amortizaciones'
+          gasto-actividad-arrendamientos-canones:
+            help: 'Información de la casilla: Casilla 302-313: gasto actividad arrendamientos
+              canones.'
+            label: 'Casilla 302-313: gasto actividad arrendamientos canones'
+          gasto-actividad-consumos-explotacion:
+            help: 'Información de la casilla: Casilla 278-289: gasto actividad consumos
+              explotacion.'
+            label: 'Casilla 278-289: gasto actividad consumos explotacion'
+          gasto-actividad-gastos-financieros:
+            help: 'Información de la casilla: Casilla 350-361: gasto actividad gastos
+              financieros.'
+            label: 'Casilla 350-361: gasto actividad gastos financieros'
+          gasto-actividad-gastos-personal:
+            help: 'Información de la casilla: Casilla 266-277: gasto actividad gastos
+              personal.'
+            label: 'Casilla 266-277: gasto actividad gastos personal'
+          gasto-actividad-otros-gastos-deducibles:
+            help: 'Información de la casilla: Casilla 386-395: gasto actividad otros
+              gastos deducibles.'
+            label: 'Casilla 386-395: gasto actividad otros gastos deducibles'
+          gasto-actividad-provisiones:
+            help: 'Información de la casilla: Casilla 374-385: gasto actividad provisiones.'
+            label: 'Casilla 374-385: gasto actividad provisiones'
+          gasto-actividad-reparaciones-conservacion:
+            help: 'Información de la casilla: Casilla 314-325: gasto actividad reparaciones
+              conservacion.'
+            label: 'Casilla 314-325: gasto actividad reparaciones conservacion'
+          gasto-actividad-servicios-profesionales:
+            help: 'Información de la casilla: Casilla 326-337: gasto actividad servicios
+              profesionales.'
+            label: 'Casilla 326-337: gasto actividad servicios profesionales'
+          gasto-actividad-suministros:
+            help: 'Información de la casilla: Casilla 338-349: gasto actividad suministros.'
+            label: 'Casilla 338-349: gasto actividad suministros'
+          gasto-actividad-tributos-deducibles:
+            help: 'Información de la casilla: Casilla 290-301: gasto actividad tributos
+              deducibles.'
+            label: 'Casilla 290-301: gasto actividad tributos deducibles'
+          gasto-inmobiliario-amortizacion-bienes-muebles:
+            help: 'Información de la casilla: Casilla 481-488: gasto inmobiliario
+              amortizacion bienes muebles.'
+            label: 'Casilla 481-488: gasto inmobiliario amortizacion bienes muebles'
+          gasto-inmobiliario-amortizacion-inmueble:
+            help: 'Información de la casilla: Casilla 471-480: gasto inmobiliario
+              amortizacion inmueble.'
+            label: 'Casilla 471-480: gasto inmobiliario amortizacion inmueble'
+          gasto-inmobiliario-cantidades-devengadas-terceros:
+            help: 'Información de la casilla: Casilla 451-460: gasto inmobiliario
+              cantidades devengadas terceros.'
+            label: 'Casilla 451-460: gasto inmobiliario cantidades devengadas terceros'
+          gasto-inmobiliario-conservacion-reparacion:
+            help: 'Información de la casilla: Casilla 408-418: gasto inmobiliario
+              conservacion reparacion.'
+            label: 'Casilla 408-418: gasto inmobiliario conservacion reparacion'
+          gasto-inmobiliario-intereses-financiacion:
+            help: Información fiscal sobre información fiscal de la casilla 397-407
+              del Modelo 184.
+            label: Casilla 397-407 — información fiscal
+          gasto-inmobiliario-intereses-gastos-reparacion:
+            help: 'Información de la casilla: Casilla 419-429: gasto inmobiliario
+              intereses gastos reparacion.'
+            label: 'Casilla 419-429: gasto inmobiliario intereses gastos reparacion'
+          gasto-inmobiliario-otros-gastos-deducibles:
+            help: 'Información de la casilla: Casilla 489-497: gasto inmobiliario
+              otros gastos deducibles.'
+            label: 'Casilla 489-497: gasto inmobiliario otros gastos deducibles'
+          gasto-inmobiliario-primas-seguros:
+            help: 'Información de la casilla: Casilla 461-470: gasto inmobiliario
+              primas seguros.'
+            label: 'Casilla 461-470: gasto inmobiliario primas seguros'
+          gasto-inmobiliario-saldos-dudoso-cobro:
+            help: 'Información de la casilla: Casilla 440-450: gasto inmobiliario
+              saldos dudoso cobro.'
+            label: 'Casilla 440-450: gasto inmobiliario saldos dudoso cobro'
+          gasto-inmobiliario-tributos-recargos:
+            help: 'Información de la casilla: Casilla 430-439: gasto inmobiliario
+              tributos recargos.'
+            label: 'Casilla 430-439: gasto inmobiliario tributos recargos'
+          gastos-deducibles-atribuibles:
+            help: 'Información de la casilla: Casilla 165-176: gastos deducibles atribuibles.'
+            label: 'Casilla 165-176: gastos deducibles atribuibles'
+          importe-atribuido-miembro:
+            help: 'Información de la casilla: Casilla 96-108: importe atribuido miembro.'
+            label: 'Casilla 96-108: importe atribuido miembro'
+          importe-neto-cifra-negocios:
+            help: 'Información de la casilla: Casilla 157-171: importe neto cifra
+              negocios.'
+            label: 'Casilla 157-171: importe neto cifra negocios'
+          ingresos-integros-atribuibles:
+            help: 'Información de la casilla: Casilla 151-164: ingresos integros atribuibles.'
+            label: 'Casilla 151-164: ingresos integros atribuibles'
+          miembro-a-31-diciembre:
+            help: 'Información de la casilla: Casilla 82: miembro a 31 diciembre.'
+            label: 'Casilla 82: miembro a 31 diciembre'
+          miembro-clave-pais:
+            help: 'Información de la casilla: Casilla 79-80: miembro clave pais.'
+            label: 'Casilla 79-80: miembro clave pais'
+          miembro-codigo-provincia:
+            help: Información fiscal sobre información fiscal de la casilla 77-78
+              del Modelo 184.
+            label: Casilla 77-78 — información fiscal
+          miembro-domicilio-fiscal:
+            help: 'Información de la casilla: Casilla 120-159: miembro domicilio fiscal.'
+            label: 'Casilla 120-159: miembro domicilio fiscal'
+          miembro-nif:
+            help: 'Información de la casilla: Casilla 18-26: miembro nif.'
+            label: 'Casilla 18-26: miembro nif'
+          miembro-nombre-razon-social:
+            help: Información fiscal sobre información fiscal de la casilla 36-75
+              del Modelo 184.
+            label: Casilla 36-75 — información fiscal
+          miembro-representante-fiscal-nif:
+            help: 'Información de la casilla: Casilla 27-35: miembro representante
+              fiscal nif.'
+            label: 'Casilla 27-35: miembro representante fiscal nif'
+          naturaleza-inmueble:
+            help: 'Información de la casilla: Casilla 172: naturaleza inmueble.'
+            label: 'Casilla 172: naturaleza inmueble'
+          numero-dias-arrendamiento:
+            help: 'Información de la casilla: Casilla 498-500: número dias arrendamiento.'
+            label: 'Casilla 498-500: número dias arrendamiento'
+          numero-dias-miembro:
+            help: 'Información de la casilla: Casilla 83-85: número dias miembro.'
+            label: 'Casilla 83-85: número dias miembro'
+          numero-justificante:
+            help: 'Información de la casilla: Casilla 108-120: número justificante.'
+            label: 'Casilla 108-120: número justificante'
+          objeto-entidad-extranjera:
+            help: 'Información de la casilla: Casilla 148: objeto entidad extranjera.'
+            label: 'Casilla 148: objeto entidad extranjera'
+          persona-relacion:
+            help: 'Información de la casilla: Casilla 59-107: persona relacion.'
+            label: 'Casilla 59-107: persona relacion'
+          porcentaje-participacion:
+            help: 'Información de la casilla: Casilla 86-92: porcentaje participacion.'
+            label: 'Casilla 86-92: porcentaje participacion'
+          porcentaje-reduccion-renta-atribuible:
+            help: 'Información de la casilla: Casilla 191-195: porcentaje reduccion
+              renta atribuible.'
+            label: 'Casilla 191-195: porcentaje reduccion renta atribuible'
+          porcentaje-renta-atribuible-residentes:
+            help: 'Información de la casilla: Casilla 151-155: porcentaje renta atribuible
+              residentes.'
+            label: 'Casilla 151-155: porcentaje renta atribuible residentes'
+          porcentaje-titularidad-inmueble:
+            help: 'Información de la casilla: Casilla 195-199: porcentaje titularidad
+              inmueble.'
+            label: 'Casilla 195-199: porcentaje titularidad inmueble'
+          provisiones-y-gastos-dificil-justificacion:
+            help: 'Información de la casilla: Casilla 160-171: provisiones y gastos
+              dificil justificacion.'
+            label: 'Casilla 160-171: provisiones y gastos dificil justificacion'
+          reduccion-atribuida-miembro:
+            help: 'Información de la casilla: Casilla 109-119: reduccion atribuida
+              miembro.'
+            label: 'Casilla 109-119: reduccion atribuida miembro'
+          referencia-catastral:
+            help: 'Información de la casilla: Casilla 246-265: referencia catastral.'
+            label: 'Casilla 246-265: referencia catastral'
+          regimen-determinacion-rendimientos:
+            help: 'Información de la casilla: Casilla 82: régimen determinacion rendimientos.'
+            label: 'Casilla 82: régimen determinacion rendimientos'
+          rendimiento-neto-minorado-agricola-estimacion-objetiva:
+            help: 'Información de la casilla: Casilla 216-229: rendimiento neto minorado
+              agricola estimacion objetiva.'
+            label: 'Casilla 216-229: rendimiento neto minorado agricola estimacion
+              objetiva'
+          rendimiento-neto-previo-estimacion-objetiva:
+            help: 'Información de la casilla: Casilla 203-215: rendimiento neto previo
+              estimacion objetiva.'
+            label: 'Casilla 203-215: rendimiento neto previo estimacion objetiva'
+          renta-atribuible-con-derecho-reduccion:
+            help: 'Información de la casilla: Casilla 196-207: renta atribuible con
+              derecho reduccion.'
+            label: 'Casilla 196-207: renta atribuible con derecho reduccion'
+          renta-atribuible-importe:
+            help: 'Información de la casilla: Casilla 177-190: renta atribuible importe.'
+            label: 'Casilla 177-190: renta atribuible importe'
+          representante-nif:
+            help: 'Consulte la información correspondiente a la casilla: NIF del representante.'
+            label: 'Casilla 172-180: representante nif'
+          representante-nombre:
+            help: 'Información de la casilla: Casilla 181-220: representante nombre.'
+            label: 'Casilla 181-220: representante nombre'
+          retenciones-ingresos-a-cuenta-atribuibles:
+            help: Información fiscal sobre información fiscal de la casilla 233-244
+              del Modelo 184.
+            label: Casilla 233-244 — información fiscal
+          situacion-inmueble:
+            help: Información fiscal sobre información fiscal de la casilla 245 del
+              Modelo 184.
+            label: Casilla 245 — información fiscal
+          tipo-actividad:
+            help: 'Información de la casilla: Casilla 83: tipo actividad.'
+            label: 'Casilla 83: tipo actividad'
+          tipo-declaracion:
+            help: 'Consulte la información correspondiente a la casilla: Tipo de declaración
+              (originaria / sustitutiva / complementaria).'
+            label: 'Casilla tipo-declaración: tipo declaración'
+          tipo-entidad-espanola:
+            help: 'Información de la casilla: Casilla 145: tipo entidad espanola.'
+            label: 'Casilla 145: tipo entidad espanola'
+          tipo-entidad-extranjera:
+            help: 'Información de la casilla: Casilla 147: tipo entidad extranjera.'
+            label: 'Casilla 147: tipo entidad extranjera'
+          tipo-hoja:
+            help: 'Información de la casilla: Casilla 76: tipo hoja.'
+            label: 'Casilla 76: tipo hoja'
+          tipo-renta-atribuida-clave:
+            help: 'Información de la casilla: Casilla 77: tipo renta atribuida clave.'
+            label: 'Casilla 77: tipo renta atribuida clave'
+          tipo-renta-atribuida-subclave:
+            help: 'Información de la casilla: Casilla 78-79: tipo renta atribuida
+              subclave.'
+            label: 'Casilla 78-79: tipo renta atribuida subclave'
+          tipo-soporte:
+            help: 'Información de la casilla: Casilla 58: tipo soporte.'
+            label: 'Casilla 58: tipo soporte'
+          tipo3-clave:
+            help: 'Información de la casilla: Casilla 93: tipo renta atribuida clave.'
+            label: 'Casilla 93: tipo renta atribuida clave'
+          tipo3-dias-arrendamiento:
+            help: 'Información de la casilla: Casilla 200-202: número dias arrendamiento.'
+            label: 'Casilla 200-202: número dias arrendamiento'
+          tipo3-referencia-catastral:
+            help: 'Información de la casilla: Casilla 174-193: referencia catastral.'
+            label: 'Casilla 174-193: referencia catastral'
+          tipo3-situacion-inmueble:
+            help: Información fiscal sobre información fiscal de la casilla 173 del
+              Modelo 184.
+            label: Casilla 173 — información fiscal
+          tipo3-subclave:
+            help: 'Información de la casilla: Casilla 94-95: tipo renta atribuida
+              subclave.'
+            label: 'Casilla 94-95: tipo renta atribuida subclave'
+          tipo3-tipo-hoja:
+            help: 'Información de la casilla: Casilla 76: tipo hoja.'
+            label: 'Casilla 76: tipo hoja'
+          total-registros-socios:
+            help: 'Información de la casilla: Casilla 136-144: total registros socios.'
+            label: 'Casilla 136-144: total registros socios'
+          tributacion-impuesto-sociedades:
+            help: 'Información de la casilla: Casilla 156: tributación impuesto sociedades.'
+            label: 'Casilla 156: tributación impuesto sociedades'
+          valor-adquisicion-o-ajustes-disminuciones:
+            help: 'Información de la casilla: Casilla 138-150: valor adquisición o
+              ajustes disminuciones.'
+            label: 'Casilla 138-150: valor adquisición o ajustes disminuciones'
+          valor-liquidativo-o-ajustes-aumentos:
+            help: 'Información de la casilla: Casilla 125-137: valor liquidativo o
+              ajustes aumentos.'
+            label: 'Casilla 125-137: valor liquidativo o ajustes aumentos'
       field:
         official_name: Modelo 184. Declaración informativa anual de Entidades en régimen
           de atribución de rentas.
@@ -10,40 +314,40 @@ modelo:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: Casilla ejercicio del modelo 184, ejercicio 2015.
-              label: Ejercicio al que se refiere la declaracion
+              label: Ejercicio al que se refiere la declaración
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Casilla tipo-declaracion del modelo 184, ejercicio 2015.
-              label: Tipo de declaracion (originaria / sustitutiva / complementaria)
+              help: Casilla tipo-declaración del modelo 184, ejercicio 2015.
+              label: Tipo de declaración (originaria / sustitutiva / complementaria)
           field:
             label: Modelo 184, ejercicio 2015
         2016-2018:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: Casilla ejercicio del modelo 184, ejercicios 2016 a 2018.
-              label: Ejercicio al que se refiere la declaracion
+              label: Ejercicio al que se refiere la declaración
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Casilla tipo-declaracion del modelo 184, ejercicios 2016 a 2018.
-              label: Tipo de declaracion (originaria / sustitutiva / complementaria)
+              help: Casilla tipo-declaración del modelo 184, ejercicios 2016 a 2018.
+              label: Tipo de declaración (originaria / sustitutiva / complementaria)
           field:
             label: Modelo 184, ejercicios 2016 a 2018
         2019-2021:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: Casilla ejercicio del modelo 184, ejercicios 2019 a 2021.
-              label: Ejercicio al que se refiere la declaracion
+              label: Ejercicio al que se refiere la declaración
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Casilla tipo-declaracion del modelo 184, ejercicios 2019 a 2021.
-              label: Tipo de declaracion (originaria / sustitutiva / complementaria)
+              help: Casilla tipo-declaración del modelo 184, ejercicios 2019 a 2021.
+              label: Tipo de declaración (originaria / sustitutiva / complementaria)
           field:
             label: Modelo 184, ejercicios 2019 a 2021
         '2022':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: Casilla ejercicio del modelo 184, ejercicio 2022.
-              label: Ejercicio al que se refiere la declaracion
+              label: Ejercicio al que se refiere la declaración
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Casilla tipo-declaracion del modelo 184, ejercicio 2022.
-              label: Tipo de declaracion (originaria / sustitutiva / complementaria)
+              help: Casilla tipo-declaración del modelo 184, ejercicio 2022.
+              label: Tipo de declaración (originaria / sustitutiva / complementaria)
           field:
             label: Modelo 184, ejercicio 2022
         2023-2024:
@@ -53,7 +357,7 @@ modelo:
               label: DECLARACIÓN COMPLEMENTARIA O SUSTITUTIVA
             x-chim6r1ecll6asj3d5hmiro:
               help: Casilla ejercicio del modelo 184, ejercicios 2023 y 2024.
-              label: Ejercicio al que se refiere la declaracion
+              label: Ejercicio al que se refiere la declaración
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n62orkd5r6ip31cgmn0sj9dphmis31dg:
               help: Casilla 146 del modelo 184, ejercicios 2023 y 2024.
               label: ACTIVIDAD PRINCIPAL
@@ -67,7 +371,7 @@ modelo:
               help: Casilla 148 del modelo 184, ejercicios 2023 y 2024.
               label: OBJETO
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjgdtp66pbeehgmkp9de9imst315lp6asr9chimst35ec:
-              help: Dato declarado en el modelo 184, declaracion informativa de entidades
+              help: Dato declarado en el modelo 184, declaración informativa de entidades
                 en regimen de atribucion de rentas.
               label: Porcentaje de renta atribuible
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjkd5o6ubb5dpq6ip31cg:
@@ -90,8 +394,8 @@ modelo:
               help: Casilla 181-220 del modelo 184, ejercicios 2023 y 2024.
               label: APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL REPRESENTANTE
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Casilla tipo-declaracion del modelo 184, ejercicios 2023 y 2024.
-              label: Tipo de declaracion (originaria / sustitutiva / complementaria)
+              help: Casilla tipo-declaración del modelo 184, ejercicios 2023 y 2024.
+              label: Tipo de declaración (originaria / sustitutiva / complementaria)
             x-chim6r1eehkn0rpdednn0rriehig:
               help: Casilla 58 del modelo 184, ejercicios 2023 y 2024.
               label: TIPO DE SOPORTE
@@ -230,7 +534,7 @@ modelo:
                 del modelo 184. El diseno lo divide en parte entera y parte decimal.
               label: Gastos del capital inmobiliario. Tributos y recargos
             x-ehkn0rpi5pkmspriclpmuspdd5n78pb7e9nn6:
-              help: Dato declarado en el modelo 184, declaracion informativa de entidades
+              help: Dato declarado en el modelo 184, declaración informativa de entidades
                 en regimen de atribucion de rentas.
               label: Ingresos íntegros / importe de rendimientos devengados / resultado
                 contable
@@ -280,7 +584,7 @@ modelo:
               help: Casilla 93 del modelo 184, ejercicios 2023 y 2024.
               label: CLAVE
             x-ehkn0rpj5phmoobmckmm8pb3dhgn4ob4ds:
-              help: Dato declarado en el modelo 184, declaracion informativa de entidades
+              help: Dato declarado en el modelo 184, declaración informativa de entidades
                 en regimen de atribucion de rentas.
               label: Clave de declarado
             x-ehkn0rpj5phmoobmckmn0ob9ec:
@@ -349,7 +653,7 @@ modelo:
                 entera y parte decimal.
               label: Rendimiento neto previo de actividades en estimación objetiva
             x-ehkn0rpj5pp6as3iclpmarjkc5n78p9dcpkn6or1dgmmsqb6:
-              help: Dato declarado en el modelo 184, declaracion informativa de entidades
+              help: Dato declarado en el modelo 184, declaración informativa de entidades
                 en regimen de atribucion de rentas.
               label: NIF del representante fiscal
             x-ehkn0rpj5ppmit3lc5hmirre5lkmsrblclh6op8:
@@ -375,7 +679,7 @@ modelo:
               label: DECLARACIÓN COMPLEMENTARIA O SUSTITUTIVA
             x-chim6r1ecll6asj3d5hmiro:
               help: Casilla ejercicio del modelo 184, ejercicio 2025.
-              label: Ejercicio al que se refiere la declaracion
+              label: Ejercicio al que se refiere la declaración
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n62orkd5r6ip31cgmn0sj9dphmis31dg:
               help: Casilla 146 del modelo 184, ejercicio 2025.
               label: ACTIVIDAD PRINCIPAL
@@ -389,7 +693,7 @@ modelo:
               help: Casilla 148 del modelo 184, ejercicio 2025.
               label: OBJETO
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjgdtp66pbeehgmkp9de9imst315lp6asr9chimst35ec:
-              help: Dato declarado en el modelo 184, declaracion informativa de entidades
+              help: Dato declarado en el modelo 184, declaración informativa de entidades
                 en regimen de atribucion de rentas.
               label: Porcentaje de renta atribuible
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjkd5o6ubb5dpq6ip31cg:
@@ -412,13 +716,13 @@ modelo:
               help: Casilla 181-220 del modelo 184, ejercicio 2025.
               label: APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL REPRESENTANTE
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Casilla tipo-declaracion del modelo 184, ejercicio 2025.
-              label: Tipo de declaracion (originaria / sustitutiva / complementaria)
+              help: Casilla tipo-declaración del modelo 184, ejercicio 2025.
+              label: Tipo de declaración (originaria / sustitutiva / complementaria)
             x-chim6r1eehkn0rpdednn0rriehig:
               help: Casilla 58 del modelo 184, ejercicio 2025.
               label: TIPO DE SOPORTE
             x-chim6r1eehnn8obc5lp6apr9edq74rrj5limst39chgm8:
-              help: Dato declarado en el modelo 184, declaracion informativa de entidades
+              help: Dato declarado en el modelo 184, declaración informativa de entidades
                 en regimen de atribucion de rentas.
               label: Número total de registros de entidad
             x-chim6r1eehnn8obc5lpmuor9dtpg:
@@ -556,7 +860,7 @@ modelo:
                 del modelo 184. El diseno lo divide en parte entera y parte decimal.
               label: Gastos del capital inmobiliario. Tributos y recargos
             x-ehkn0rpi5pkmspriclpmuspdd5n78pb7e9nn6:
-              help: Dato declarado en el modelo 184, declaracion informativa de entidades
+              help: Dato declarado en el modelo 184, declaración informativa de entidades
                 en regimen de atribucion de rentas.
               label: Ingresos íntegros / importe de rendimientos devengados / resultado
                 contable
@@ -606,7 +910,7 @@ modelo:
               help: Casilla 93 del modelo 184, ejercicio 2025.
               label: CLAVE
             x-ehkn0rpj5phmoobmckmm8pb3dhgn4ob4ds:
-              help: Dato declarado en el modelo 184, declaracion informativa de entidades
+              help: Dato declarado en el modelo 184, declaración informativa de entidades
                 en regimen de atribucion de rentas.
               label: Clave de declarado
             x-ehkn0rpj5phmoobmckmn0ob9ec:
@@ -675,7 +979,7 @@ modelo:
                 entera y parte decimal.
               label: Rendimiento neto previo de actividades en estimación objetiva
             x-ehkn0rpj5pp6as3iclpmarjkc5n78p9dcpkn6or1dgmmsqb6:
-              help: Dato declarado en el modelo 184, declaracion informativa de entidades
+              help: Dato declarado en el modelo 184, declaración informativa de entidades
                 en regimen de atribucion de rentas.
               label: NIF del representante fiscal
             x-ehkn0rpj5ppmit3lc5hmirre5lkmsrblclh6op8:

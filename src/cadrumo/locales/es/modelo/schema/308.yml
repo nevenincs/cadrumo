@@ -11,7 +11,8 @@ modelo:
         2009-2011-junio:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la solicitud.'
               label: Ejercicio al que se refiere la solicitud
             x-chim6r1ee1in4qbfchng:
               help: Dato declarado en el modelo 308, tomado del diseno de registro
@@ -27,7 +28,8 @@ modelo:
         2011-julio-2015:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la solicitud.'
               label: Ejercicio al que se refiere la solicitud
             x-chim6r1ee1in4qbfchng:
               help: Dato declarado en el modelo 308, tomado del diseno de registro
@@ -43,7 +45,8 @@ modelo:
         2016-2018:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la solicitud.'
               label: Ejercicio al que se refiere la solicitud
             x-chim6r1ee1in4qbfchng:
               help: Dato declarado en el modelo 308, tomado del diseno de registro
@@ -65,7 +68,8 @@ modelo:
               help: Casilla 932-965 del modelo 308, ejercicio 2009.
               label: Devolución - IBAN
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la solicitud.'
               label: Ejercicio al que se refiere la solicitud
             x-chim6r1edlq6sbb1chonaqbicln78p9dc5o6ar3cd5i6uso:
               help: Casilla 119-178 del modelo 308, ejercicio 2009.
@@ -196,7 +200,9 @@ modelo:
               help: Casilla 13 del modelo 308, ejercicio 2009.
               label: Tipo de declaración
             x-chim6r1eehkn0rpdednmoqb3d5q7ap0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                solicitud (recargo de equivalencia / art 30 bis / art 21.4 / sujeto
+                pasivo ocasional / régimen simplificado transporte).'
               label: Tipo de solicitud (recargo de equivalencia / art 30 bis / art
                 21.4 / sujeto pasivo ocasional / régimen simplificado transporte)
             x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:

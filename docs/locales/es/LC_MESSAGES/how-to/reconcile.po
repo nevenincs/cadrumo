@@ -54,14 +54,12 @@ msgstr ""
 " en tu perfil y concilia en un solo paso."
 
 #: ../../how-to/reconcile.md:15
-#, fuzzy
 msgid ""
 "**Use a local PDF** with `reconcile import --file` - you downloaded the "
 "justificante yourself; the check is local and never contacts AEAT."
 msgstr ""
-"**Usa un PDF local** con `reconcile file --file`: descargaste el "
-"justificante por tu cuenta; la comprobación es local y nunca contacta con"
-" la AEAT."
+"**Usa un PDF local** con `reconcile import --file`: descargaste tú mismo el "
+"justificante; la comprobación es local y nunca contacta con la AEAT."
 
 #: ../../how-to/reconcile.md:18
 msgid "Before you start"
@@ -93,9 +91,8 @@ msgstr ""
 "funcione; consulta [Autentícate ante la AEAT](authenticate-with-aeat.md)"
 
 #: ../../how-to/reconcile.md:27
-#, fuzzy
 msgid "for `reconcile import`: the justificante PDF on disk"
-msgstr "para `reconcile file`: el PDF del justificante en disco"
+msgstr "para `reconcile import`: el PDF del justificante en disco"
 
 #: ../../how-to/reconcile.md:29
 msgid ""
@@ -373,16 +370,15 @@ msgstr ""
 "en tu perfil."
 
 #: ../../how-to/reconcile.md:143
-#, fuzzy
 msgid ""
 "`reconcile import` reads a PDF you supply but does not store it. If you "
 "reconcile against a downloaded PDF, also pull the receipt so an encrypted"
 " copy is kept in your profile. See [Pull and store the justificante"
 "](#pull-and-store-the-justificante)."
 msgstr ""
-"`reconcile file` lee un PDF que aportas pero no lo guarda. Si concilia "
-"contra un PDF descargado, descarga también el resguardo para conservar "
-"una copia cifrada en tu perfil. Consulta [Descarga y guarda el "
+"`reconcile import` lee un PDF que aportas, pero no lo guarda. Si concilias "
+"contra un PDF descargado, descarga también el resguardo para conservar una "
+"copia cifrada en tu perfil. Consulta [Descarga y guarda el "
 "justificante](#pull-and-store-the-justificante)."
 
 #: ../../how-to/reconcile.md:146

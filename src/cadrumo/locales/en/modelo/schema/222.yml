@@ -308,10 +308,10 @@ modelo:
                 40.3 LIS).
               label: Mod. 40.3 LIS - Complementary tax (IC) correction - Increases
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Tax information for casilla of Modelo 222.
               label: Filing year to which the instalment payment relates
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 222.
               label: Instalment payment method (art. 40.2 gross tax liability / art.
                 40.3 taxable base)
             x-d5n6crpec5qmqpbeehniqor1e1kn8obc5lhmurbgcln76ob3d5nmsbb3e9im8qbkdtpg:
@@ -385,6 +385,6 @@ modelo:
           construct:
             modelo-222-declaration-construct:
               field:
-                title: null
+                title: Modelo 222— tax information
           field:
-            label: null
+            label: Casilla— tax information

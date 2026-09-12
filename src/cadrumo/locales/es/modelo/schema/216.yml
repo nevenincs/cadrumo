@@ -10,65 +10,87 @@ modelo:
         2024-y-siguientes:
           casilla:
             '05':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Número
+                de rentas. Dividendos y otras rentas de participación en fondos propios
+                de entidades.'
               label: Número de rentas. Dividendos y otras rentas de participación
                 en fondos propios de entidades
             '06':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Número
+                de rentas. Resto de rentas.'
               label: Número de rentas. Resto de rentas
             '07':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Número
+                de rentas. Total.'
               label: Número de rentas. Total
             08:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 08 del
+                Modelo 216.
               label: Base de retenciones e ingresos a cuenta. Dividendos y otras rentas
                 de participación en fondos propios de entidades
             09:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 09 del
+                Modelo 216.
               label: Base de retenciones e ingresos a cuenta. Resto de rentas
             '10':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 10 del
+                Modelo 216.
               label: Base de retenciones e ingresos a cuenta. Total
             '11':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 11 del
+                Modelo 216.
               label: Retenciones e ingresos a cuenta. Dividendos y otras rentas de
                 participación en fondos propios de entidades
             '12':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 12 del
+                Modelo 216.
               label: Retenciones e ingresos a cuenta. Resto de rentas
             '13':
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 13 del
+                Modelo 216.
               label: Retenciones e ingresos a cuenta. Total
             '14':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Rentas
+                no sometidas a retención o ingreso a cuenta. Número de rentas. Dividendos
+                y otras rentas de participación en fondos propios de entidades.'
               label: Rentas no sometidas a retención o ingreso a cuenta. Número de
                 rentas. Dividendos y otras rentas de participación en fondos propios
                 de entidades
             '15':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Rentas
+                no sometidas a retención o ingreso a cuenta. Número de rentas. Resto
+                de rentas.'
               label: Rentas no sometidas a retención o ingreso a cuenta. Número de
                 rentas. Resto de rentas
             '16':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Rentas
+                no sometidas a retención o ingreso a cuenta. Número de rentas. Total.'
               label: Rentas no sometidas a retención o ingreso a cuenta. Número de
                 rentas. Total
             '17':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Rentas
+                no sometidas a retención o ingreso a cuenta. Base. Dividendos y otras
+                rentas de participación en fondos propios de entidades.'
               label: Rentas no sometidas a retención o ingreso a cuenta. Base. Dividendos
                 y otras rentas de participación en fondos propios de entidades
             '18':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Rentas
+                no sometidas a retención o ingreso a cuenta. Base. Resto de rentas.'
               label: Rentas no sometidas a retención o ingreso a cuenta. Base. Resto
                 de rentas
             '19':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Rentas
+                no sometidas a retención o ingreso a cuenta. Base. Total.'
               label: Rentas no sometidas a retención o ingreso a cuenta. Base. Total
             '20':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultados
+                a ingresar de anteriores declaraciones por el mismo concepto, ejercicio
+                y período.'
               label: Resultados a ingresar de anteriores declaraciones por el mismo
                 concepto, ejercicio y período
             '21':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultado
+                a ingresar.'
               label: Resultado a ingresar
           construct:
             modelo-216-calculation-construct:

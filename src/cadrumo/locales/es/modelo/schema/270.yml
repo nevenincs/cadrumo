@@ -1,6 +1,123 @@
 modelo:
   schema:
     '270':
+      casilla:
+        continuidad:
+          base-retenciones-ingresos-a-cuenta:
+            help: Información fiscal sobre información fiscal de la casilla 164-180
+              del Modelo 270.
+            label: Casilla 164-180 — información fiscal
+          filing-year:
+            help: 'Consulte la información correspondiente a la casilla: Ejercicio
+              al que se refiere la declaración.'
+            label: Casilla— ejercicio fiscal
+          m270-clave-personalidad:
+            help: Información fiscal sobre información fiscal de la casilla 117 del
+              Modelo 270.
+            label: Casilla 117 — información fiscal
+          m270-declaracion-complementaria:
+            help: Información fiscal sobre información fiscal de la casilla 121 del
+              Modelo 270.
+            label: Casilla 121 — información fiscal
+          m270-declaracion-sustitutiva:
+            help: Información fiscal sobre información fiscal de la casilla 122 del
+              Modelo 270.
+            label: Casilla 122 — información fiscal
+          m270-fecha-nacimiento:
+            help: Información fiscal sobre información fiscal de la casilla 453-460
+              del Modelo 270.
+            label: Casilla 453-460 — información fiscal
+          m270-fecha-pago-premio:
+            help: Información fiscal sobre información fiscal de la casilla 128-135
+              del Modelo 270.
+            label: Casilla 128-135 — información fiscal
+          m270-fecha-sorteo:
+            help: Información fiscal sobre información fiscal de la casilla 120-127
+              del Modelo 270.
+            label: Casilla 120-127 — información fiscal
+          m270-gestor-cobro:
+            help: Información fiscal sobre información fiscal de la casilla 181 del
+              Modelo 270.
+            label: Casilla 181 — información fiscal
+          m270-importe-premio:
+            help: Información fiscal sobre información fiscal de la casilla 136-150
+              del Modelo 270.
+            label: Casilla 136-150 — información fiscal
+          m270-lugar-nacimiento:
+            help: Información fiscal sobre información fiscal de la casilla 461-497
+              del Modelo 270.
+            label: Casilla 461-497 — información fiscal
+          m270-nif-pais-residencia:
+            help: Información fiscal sobre información fiscal de la casilla 433-452
+              del Modelo 270.
+            label: Casilla 433-452 — información fiscal
+          m270-numero-identificativo:
+            help: Información fiscal sobre información fiscal de la casilla 108-120
+              del Modelo 270.
+            label: Casilla 108-120 — información fiscal
+          m270-numero-identificativo-anterior:
+            help: Información fiscal sobre información fiscal de la casilla 123-135
+              del Modelo 270.
+            label: Casilla 123-135 — información fiscal
+          m270-pais-residencia:
+            help: Información fiscal sobre información fiscal de la casilla 498-499
+              del Modelo 270.
+            label: Casilla 498-499 — información fiscal
+          m270-persona-contacto-nombre:
+            help: Información fiscal sobre información fiscal de la casilla 68-107
+              del Modelo 270.
+            label: Casilla 68-107 — información fiscal
+          m270-persona-contacto-telefono:
+            help: Información fiscal sobre información fiscal de la casilla 59-67
+              del Modelo 270.
+            label: Casilla 59-67 — información fiscal
+          m270-representante-nombre:
+            help: Información fiscal sobre información fiscal de la casilla 76-115
+              del Modelo 270.
+            label: Casilla 76-115 — información fiscal
+          m270-tipo-perceptor:
+            help: Información fiscal sobre información fiscal de la casilla 116 del
+              Modelo 270.
+            label: Casilla 116 — información fiscal
+          m270-total-importe-premios:
+            help: Información fiscal sobre información fiscal de la casilla 147-163
+              del Modelo 270.
+            label: Casilla 147-163 — información fiscal
+          payee-name:
+            help: Información fiscal sobre nombre del perceptor de la casilla 36-75
+              del Modelo 270.
+            label: Casilla 36-75 — nombre del perceptor
+          payee-nif:
+            help: 'Consulte la información correspondiente a la casilla: NIF del perceptor.'
+            label: Casilla 18-26 — NIF del perceptor
+          payee-province:
+            help: Información fiscal sobre provincia del perceptor de la casilla 118-119
+              del Modelo 270.
+            label: Casilla 118-119 — provincia del perceptor
+          payee-representative-nif:
+            help: 'Consulte la información correspondiente a la casilla: NIF del representante
+              legal del perceptor.'
+            label: Casilla 27-35 — NIF del representante
+          perc-base-retencion:
+            help: Información fiscal sobre información fiscal de la casilla 151-165
+              del Modelo 270.
+            label: Casilla 151-165 — información fiscal
+          perc-retencion:
+            help: Información fiscal sobre información fiscal de la casilla 166-180
+              del Modelo 270.
+            label: Casilla 166-180 — información fiscal
+          retenciones-ingresos-a-cuenta:
+            help: Información fiscal sobre información fiscal de la casilla 181-197
+              del Modelo 270.
+            label: Casilla 181-197 — información fiscal
+          tipo-declaracion:
+            help: 'Consulte la información correspondiente a la casilla: Tipo de declaración
+              (originaria / sustitutiva / complementaria).'
+            label: 'Casilla tipo-declaración: tipo declaración'
+          total-perceptores-count:
+            help: 'Consulte la información correspondiente a la casilla: Número total
+              de perceptores.'
+            label: Casilla 138-146 — información fiscal
       field:
         official_name: Modelo 270. Resumen anual de retenciones e ingresos a cuenta.
           Gravamen especial sobre los premios de determinadas loterías y apuestas.
@@ -14,7 +131,8 @@ modelo:
                 omitidos en otra del mismo ejercicio presentada anteriormente.
               label: Declaración complementaria
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la declaración.'
               label: Ejercicio al que se refiere la declaración
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
               help: Número secuencial de 13 posiciones cuyos tres primeros dígitos
@@ -37,7 +155,8 @@ modelo:
                 a una única declaración anterior del mismo ejercicio.
               label: Declaración sustitutiva
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                declaración (originaria / sustitutiva / complementaria).'
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
             x-chim6r1eehnn8obc5lh62sr55lp6at35dphmirre:
               help: Suma de las bases de retención o ingreso a cuenta reflejadas en
@@ -159,7 +278,8 @@ modelo:
                 omitidos en otra del mismo ejercicio presentada anteriormente.
               label: Declaración complementaria
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la declaración.'
               label: Ejercicio al que se refiere la declaración
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
               help: Número secuencial de 13 posiciones cuyos tres primeros dígitos
@@ -182,7 +302,8 @@ modelo:
                 a una única declaración anterior del mismo ejercicio.
               label: Declaración sustitutiva
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                declaración (originaria / sustitutiva / complementaria).'
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
             x-chim6r1eehnn8obc5lh62sr55lp6at35dphmirre:
               help: Suma de las bases de retención o ingreso a cuenta reflejadas en

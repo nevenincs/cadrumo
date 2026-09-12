@@ -11,46 +11,52 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 01 del
+                Modelo 126.
               label: Base de retencions i ingressos a compte
             '02':
-              help: null
+              help: 'Consulteu la informació de la casella: Retencions e ingressos
+                a compte.'
               label: Retencions i ingressos a compte
             '03':
-              help: null
+              help: Informació fiscal de la casella 03 del Modelo 126.
               label: 'Periodificació: base de retencions i ingressos a compte'
             '04':
-              help: null
+              help: Informació fiscal de la casella 04 del Modelo 126.
               label: 'Periodificació: retencions i ingressos a compte'
             '05':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 05 del
+                Modelo 126.
               label: Ingressos d'exercicis anteriors
             '06':
-              help: null
+              help: 'Consulteu la informació de la casella: Regularització.'
               label: Regularització
             '07':
-              help: null
+              help: Informació fiscal de la casella 07 del Modelo 126.
               label: 'Periodificació: base de retencions i ingressos a compte addicional'
             08:
-              help: null
+              help: Informació fiscal de la casella 08 del Modelo 126.
               label: 'Periodificació: retencions i ingressos a compte addicional'
             09:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 09 del
+                Modelo 126.
               label: Ingressos d'exercicis anteriors addicionals
             '10':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 10 del
+                Modelo 126.
               label: 'Liquidació total: suma de retencions i ingressos a compte i
                 regularització'
             '11':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 11 del
+                Modelo 126.
               label: Resultats a ingressar de declaracions anteriors pel mateix concepte,
                 exercici i període
             '12':
-              help: null
+              help: 'Consulteu la informació de la casella: Resultat a ingresar.'
               label: Resultat a ingressar
           construct:
             modelo-126-calculation-construct:
               field:
-                title: null
+                title: Modelo 126 calculation construct
           field:
-            label: null
+            label: Casella— informació fiscal

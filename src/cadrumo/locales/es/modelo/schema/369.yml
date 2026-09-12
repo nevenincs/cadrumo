@@ -11,17 +11,21 @@ modelo:
         esquema-exterior:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la autoliquidación.'
               label: Ejercicio al que se refiere la autoliquidación
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Período
+                de la declaración.'
               label: Periodo de la declaración
             x-d5r62bj5f1q6asj9dtp2sorldtq62bbkdtq62r0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Total cuota
+                IVA repercutida del Esquema Exterior (suma de cuotas por destino).'
               label: Total cuota IVA repercutida del Esquema Exterior (suma de cuotas
                 por destino)
             x-d5r62bj5f1q6asj9dtp2sp355ppmasjmd5hmaspdcdqmut31:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota IVA
+                repercutido al destino DE - servicios prestados (Esquema Exterior).'
               label: Cuota IVA repercutido al destino DE - servicios prestados (Esquema
                 Exterior)
           construct:
@@ -36,17 +40,22 @@ modelo:
         esquema-importacion:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la autoliquidación.'
               label: Ejercicio al que se refiere la autoliquidación
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Período
+                de la declaración.'
               label: Periodo de la declaración
             x-d5r62bj9dlo6usjkc5hmirre5phnarrkc4mn8rrkc5m0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Total cuota
+                IVA repercutida del Esquema Importación (IOSS, suma por destino).'
               label: Total cuota IVA repercutida del Esquema Importación (IOSS, suma
                 por destino)
             x-d5r62bj9dlo6usjkc5hmirre5pi6abjcdtriqtj1dhqmabb3elnn8o8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota IVA
+                IOSS al destino DE - ventas a distancia de bienes importados ≤ 150
+                EUR (LIVA art 163 quinvicies).'
               label: Cuota IVA IOSS al destino DE - ventas a distancia de bienes importados
                 ≤ 150 EUR (LIVA art 163 quinvicies)
           construct:
@@ -60,25 +69,31 @@ modelo:
         esquema-union:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: Ejercicio al que se refiere la autoliquidacion
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la autoliquidación.'
+              label: Ejercicio al que se refiere la autoliquidación
             x-chim6r1ee1in4qbfchng:
-              help: null
-              label: Periodo de la declaracion
+              help: 'Consulte la información correspondiente a la casilla: Período
+                de la declaración.'
+              label: Periodo de la declaración
             x-d5r62bjldpkmurhecdqmut315lq6ut31dg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Total cuota
+                IVA repercutida del Esquema Unión (suma cross-destination, cross-flow).'
               label: Total cuota IVA repercutida del Esquema Unión (suma cross-destination,
                 cross-flow)
             x-d5r62bjldpkmurhechiisprfdti76bb4d5pn8obecdiiqorldtq62:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota IVA
+                OSS Unión al destino DE - ventas a distancia + interfaces electrónicas.'
               label: Cuota IVA OSS Unión al destino DE - ventas a distancia + interfaces
                 electrónicas
             x-d5r62bjldpkmurhechiissr5e9r6ior5ecmm6tbfehgg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota IVA
+                OSS Unión al destino DE - servicios prestados (LIVA art 163 unvicies).'
               label: Cuota IVA OSS Unión al destino DE - servicios prestados (LIVA
                 art 163 unvicies)
             x-d5r62bjldpkmurhecpp2ssr5e9r6ior5ecmm6tbfehgg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota IVA
+                OSS Unión al destino FR - servicios prestados (LIVA art 163 unvicies).'
               label: Cuota IVA OSS Unión al destino FR - servicios prestados (LIVA
                 art 163 unvicies)
           construct:

@@ -11,172 +11,176 @@ modelo:
         2012-01-31-y-siguientes:
           casilla:
             x-c5hnasr55lp6aor9c9nispbde1p6asr15limst39chgm8:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-52. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-52 — adóügyi információ
             x-c5hnasr55lp6aor9c9nispj5cdk62bb1dpkmu:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-56. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-56 — adóügyi információ
             x-c5hnasr55lp6aor9c9nispj5cdk62bb4d5gg:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-54. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-54 — adóügyi információ
             x-c5hnasr55lp6aor9c9nispj5cdk62bbdclpg:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-55. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-55 — adóügyi információ
             x-c5hnasr55lp6aor9c9nisr3lctgn4:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-53. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-53 — adóügyi információ
             x-c5hnasr55lp6aor9c9nist39e1niqpj9e9mm2:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-57. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-57 — adóügyi információ
             x-c5n7aobcd5i62p35ecmm2r39dlimst3fecn6irbgdtp78p9dc5n7aobc:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-45. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-45 — adóügyi információ
             x-c5pm6pbechkmarjkckmj2bj1dpkmubbec5hmirb9cln78ro:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-36. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-36 — adóügyi információ
             x-c5pm6pbechkmarjkckmj2bj1f5qm8o9ddlnncqbcd5i62p0:
-              help: null
-              label: null
+              help: A Modelo 145 dr-38. casilla adóügyi adatai.
+              label: Casilla dr-38 — adóügyi mező
             x-c5pm6pbechkmarjkckmj2bj3dtn7cqbmcln66qb15lnn8sjfec:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-39. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-39 — adóügyi információ
             x-c5pm6pbechkmarjkckmj2bj4d5pm6obgc5hmip31cgmmesj1chng:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-37. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-37 — adóügyi információ
             x-c5pm6pbechkmarjkckmj4bj1dpkmubbec5hmirb9cln78ro:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-40. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-40 — adóügyi információ
             x-c5pm6pbechkmarjkckmj4bj1f5qm8o9ddlnncqbcd5i62p0:
-              help: null
-              label: null
+              help: A Modelo 145 dr-42. casilla adóügyi adatai.
+              label: Casilla dr-42 — adóügyi mező
             x-c5pm6pbechkmarjkckmj4bj3dtn7cqbmcln66qb15lnn8sjfec:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-43. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-43 — adóügyi információ
             x-c5pm6pbechkmarjkckmj4bj4d5pm6obgc5hmip31cgmmesj1chng:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-41. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-41 — adóügyi információ
             x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9dc5n6iro:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-50. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-50 — adóügyi információ
             x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9dchkm2:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-48. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-48 — adóügyi információ
             x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9ddlin6:
-              help: null
-              label: null
+              help: 'Tekintse át a casilla adatait: 6. Dátum és firma - comunicacion,
+                mes.'
+              label: 6. Dátum és firma - comunicacion, mes
             x-cdnmqtbed5hm2or9dtn2spj9e9mm2bbceljm2sg:
-              help: null
-              label: null
+              help: 'Tekintse át a casilla adatait: 6. Dátum és firma - comunicacion,
+                lugar.'
+              label: 6. Dátum és firma - comunicacion, lugar
             x-cdnmqtbed5hm2or9dtn2spj9e9mm2bbkd5o6u:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-51. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-51 — adóügyi információ
             x-cdnmqtbed5hm2or9dtn2ss31ctkmso9dcdnmqs3cclmmarjkc5p6io8:
-              help: null
-              label: null
+              help: A Modelo 145 dr-02. casilla adóügyi adatai.
+              label: Casilla dr-02 — adóügyi mező
             x-chin6or5dpi6ipbeehiiqc9ec5n6irpdc5i6us33d5nms:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-17. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-17 — adóügyi információ
             x-chin6or5dpi6ipbeehiiqc9ec5n6irpddpgm6qbdd5imst3f:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-16. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-16 — adóügyi információ
             x-chin6or5dpi6ipbeehiiqc9ec5snap315lmmutj9dhkm8ob4:
-              help: null
-              label: null
+              help: A Modelo 145 dr-19. casilla adóügyi adatai.
+              label: Casilla dr-19 — adóügyi mező
             x-chin6or5dpi6ipbeehiiqc9ecdnmqs3lehniqpbeehin4ro:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-20. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-20 — adóügyi információ
             x-chin6or5dpi6ipbeehiiqc9echkn6or1e1gm6qb4c5i2qpric5i6u:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-18. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-18 — adóügyi információ
             x-chin6or5dpi6ipbeehiiqchec5n6irpdc5i6us33d5nms:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-22. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-22 — adóügyi információ
             x-chin6or5dpi6ipbeehiiqchec5n6irpddpgm6qbdd5imst3f:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-21. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-21 — adóügyi információ
             x-chin6or5dpi6ipbeehiiqchec5snap315lmmutj9dhkm8ob4:
-              help: null
-              label: null
+              help: A Modelo 145 dr-24. casilla adóügyi adatai.
+              label: Casilla dr-24 — adóügyi mező
             x-chin6or5dpi6ipbeehiiqchecdnmqs3lehniqpbeehin4ro:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-25. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-25 — adóügyi információ
             x-chin6or5dpi6ipbeehiiqchechkn6or1e1gm6qb4c5i2qpric5i6u:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-23. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-23 — adóügyi információ
             x-chin6or5dpi6ipbeehiiqcpec5n6irpdc5i6us33d5nms:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-27. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-27 — adóügyi információ
             x-chin6or5dpi6ipbeehiiqcpec5n6irpddpgm6qbdd5imst3f:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-26. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-26 — adóügyi információ
             x-chin6or5dpi6ipbeehiiqcpec5snap315lmmutj9dhkm8ob4:
-              help: null
-              label: null
+              help: A Modelo 145 dr-29. casilla adóügyi adatai.
+              label: Casilla dr-29 — adóügyi mező
             x-chin6or5dpi6ipbeehiiqcpecdnmqs3lehniqpbeehin4ro:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-30. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-30 — adóügyi információ
             x-chin6or5dpi6ipbeehiiqcpechkn6or1e1gm6qb4c5i2qpric5i6u:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-28. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-28 — adóügyi információ
             x-chin6or5dpi6ipbeehiiqd1ec5n6irpdc5i6us33d5nms:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-32. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-32 — adóügyi információ
             x-chin6or5dpi6ipbeehiiqd1ec5n6irpddpgm6qbdd5imst3f:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-31. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-31 — adóügyi információ
             x-chin6or5dpi6ipbeehiiqd1ec5snap315lmmutj9dhkm8ob4:
-              help: null
-              label: null
+              help: A Modelo 145 dr-34. casilla adóügyi adatai.
+              label: Casilla dr-34 — adóügyi mező
             x-chin6or5dpi6ipbeehiiqd1ecdnmqs3lehniqpbeehin4ro:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-35. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-35 — adóügyi információ
             x-chin6or5dpi6ipbeehiiqd1echkn6or1e1gm6qb4c5i2qpric5i6u:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-33. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-33 — adóügyi információ
             x-e1imssr9dtn2qorfdlo6arjjc5q6usj9c4n6irbgdtp78p9dc5n7aobc:
-              help: null
-              label: null
+              help: 'Tekintse át a casilla adatait: 4. Pension compensatoria en favor
+                - conyuge, összeg éves.'
+              label: 4. Pension compensatoria en favor - conyuge, összeg éves
             x-e1in4or5e1q6ushec5n6irpddpgm6qbdd5imst3f:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-07. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-07 — adóügyi információ
             x-e1in4or5e1q6ushecdnmsublctiiqrj9co:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-09. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-09 — adóügyi információ
             x-e1in4or5e1q6ushechkn6or1e1gm6qb4c5i2qobpeli62:
-              help: null
-              label: null
+              help: A Modelo 145 dr-11. casilla adóügyi adatai.
+              label: Casilla dr-11 — adóügyi mező
             x-e1in4or5e1q6ushechkn6or1e1gm6qb4c5i2qpric5i6u:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-10. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-10 — adóügyi információ
             x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mm2rj9ds:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-14. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-14 — adóügyi információ
             x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mm8qb1:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-12. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-12 — adóügyi információ
             x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mmqpbj:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-13. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-13 — adóügyi információ
             x-e1in4or5e1q6ushedpkmc:
-              help: null
-              label: null
+              help: 'Tekintse át a casilla adatait: 1. NIF - kedvezményezett.'
+              label: 1. NIF - kedvezményezett
             x-e1in4or5e1q6ushedpnmqojick:
-              help: null
-              label: null
+              help: 'Tekintse át a casilla adatait: 1. Név - kedvezményezett.'
+              label: 1. Név - kedvezményezett
             x-e1in4or5e1q6ushee1p6irb5e8mm2s35dhm6ip3f:
-              help: null
-              label: null
+              help: 'Tekintse át a casilla adatait: 1. Primer apellido - kedvezményezett.'
+              label: 1. Primer apellido - kedvezményezett
             x-e1in4or5e1q6ushee1p6ur3fdpjm2or9dtn2qob3ehkncqb4c5i2qr31c9nn4obc:
-              help: null
-              label: null
+              help: 'Tekintse át a casilla adatait: 1. Prolongacion - tevékenység
+                laboral.'
+              label: 1. Prolongacion - tevékenység laboral
             x-e1in4or5e1q6usheedimetbechniqobgclm6oqb4ds:
-              help: null
-              label: null
+              help: 'Tekintse át a casilla adatait: 1. Segundo apellido - kedvezményezett.'
+              label: 1. Segundo apellido - kedvezményezett
             x-e1in4or5e1q6usheedkn8tb1cdkmurhdcpgmqqbcd5gn4:
-              help: null
-              label: null
+              help: 'Tekintse át a casilla adatait: 1. Situacion familiar - kedvezményezett.'
+              label: 1. Situacion familiar - kedvezményezett
             x-epkncqb5dpi62bb8c5h6it3lc5m2spj9dpgmsor9c5hmirre5lgmkpbec4:
-              help: null
-              label: null
+              help: 'A Modelo 145 dr-46. casilla adóügyi adatai: adóügyi információ.'
+              label: Casilla dr-46 — adóügyi információ
           field:
-            label: null
+            label: Casilla— adóügyi információ

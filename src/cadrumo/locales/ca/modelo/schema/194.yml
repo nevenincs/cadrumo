@@ -1,6 +1,28 @@
 modelo:
   schema:
     '194':
+      casilla:
+        continuidad:
+          capital-ajeno-resumen-base-negativa:
+            help: Informació fiscal sobre informació fiscal de la casella 05 del Modelo
+              194.
+            label: Casella 05 — informació fiscal
+          capital-ajeno-resumen-base-positiva:
+            help: Informació fiscal sobre informació fiscal de la casella 02 del Modelo
+              194.
+            label: Casella 02 — informació fiscal
+          capital-ajeno-resumen-perceptores-base-negativa:
+            help: Informació fiscal sobre informació fiscal de la casella 04 del Modelo
+              194.
+            label: Casella 04 — informació fiscal
+          capital-ajeno-resumen-perceptores-base-positiva:
+            help: Informació fiscal sobre informació fiscal de la casella 01 del Modelo
+              194.
+            label: Casella 01 — informació fiscal
+          capital-ajeno-resumen-retenciones:
+            help: Informació fiscal sobre informació fiscal de la casella 03 del Modelo
+              194.
+            label: Casella 03 — informació fiscal
       field:
         official_name: Modelo 194. Impost sobre la Renda de les Persones Físiques,
           Impost sobre Societats i Impost sobre la Renda de no Residents (establiments
@@ -35,9 +57,9 @@ modelo:
           construct:
             modelo-194-calculation-construct:
               field:
-                title: null
+                title: Modelo 194 calculation construct
           field:
-            label: null
+            label: Diseño de registro del modelo 194, exercici 2019
         '2023':
           casilla:
             '01':
@@ -63,9 +85,9 @@ modelo:
           construct:
             modelo-194-calculation-construct:
               field:
-                title: null
+                title: Modelo 194 calculation construct
           field:
-            label: null
+            label: Diseño de registro del modelo 194, exercici 2023
         '2024':
           casilla:
             '01':
@@ -91,6 +113,6 @@ modelo:
           construct:
             modelo-194-calculation-construct:
               field:
-                title: null
+                title: Modelo 194 calculation construct
           field:
-            label: null
+            label: Diseño de registro del modelo 194, exercici 2024

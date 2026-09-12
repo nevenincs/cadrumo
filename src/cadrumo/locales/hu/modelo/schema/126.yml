@@ -10,47 +10,47 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
-              help: null
+              help: 'A Modelo 126 01. casilla adóügyi adatai: adóügyi információ.'
               label: A levonások és előlegfizetések alapja
             '02':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adólevonások e előlegfizetések.'
               label: Levonások és előlegfizetések
             '03':
-              help: null
+              help: A Modelo 126 03. casilla adóügyi adatai.
               label: 'Időbeli elhatárolás: a levonások és előlegfizetések alapja'
             '04':
-              help: null
+              help: A Modelo 126 04. casilla adóügyi adatai.
               label: 'Időbeli elhatárolás: levonások és előlegfizetések'
             '05':
-              help: null
+              help: 'A Modelo 126 05. casilla adóügyi adatai: adóügyi információ.'
               label: Korábbi évekből származó bevételek
             '06':
-              help: null
+              help: 'Tekintse át a casilla adatait: Korrekció.'
               label: Korrekció
             '07':
-              help: null
+              help: A Modelo 126 07. casilla adóügyi adatai.
               label: 'Időbeli elhatárolás: a levonások és előlegfizetések további
                 alapja'
             08:
-              help: null
+              help: A Modelo 126 08. casilla adóügyi adatai.
               label: 'Időbeli elhatárolás: további levonások és előlegfizetések'
             09:
-              help: null
+              help: 'A Modelo 126 09. casilla adóügyi adatai: adóügyi információ.'
               label: Korábbi évekből származó további bevételek
             '10':
-              help: null
+              help: 'A Modelo 126 10. casilla adóügyi adatai: adóügyi információ.'
               label: 'Teljes elszámolás: a levonások, előlegfizetések és az esetleges
                 korrekció összege'
             '11':
-              help: null
+              help: 'A Modelo 126 11. casilla adóügyi adatai: adóügyi információ.'
               label: Ugyanazon jogcímen, évre és időszakra vonatkozó korábbi bevallásokból
                 fizetendő összegek
             '12':
-              help: null
+              help: 'Tekintse át a casilla adatait: Eredmény a ingresar.'
               label: Fizetendő összeg
           construct:
             modelo-126-calculation-construct:
               field:
-                title: null
+                title: Modelo 126 calculation construct
           field:
-            label: null
+            label: Casilla— adóügyi információ

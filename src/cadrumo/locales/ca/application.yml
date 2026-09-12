@@ -176,19 +176,10 @@ application:
         observation_merge_key_conflict: 'No es poden fusionar observacions amb clau
           de model, exercici o període diferent: {primary_modelo} {primary_filing_year}
           {primary_period} davant de {overlay_modelo} {overlay_filing_year} {overlay_period}.'
-        selector_filing_year_delta_type: El selector de vinculació del registre 'filing_year_delta'
-          ha de ser un nombre enter o una cadena numèrica; conté {observed_type}.
-          Corregiu el selector al registre.
-        selector_source_periods_member_type: Cada entrada del selector de vinculació
-          del registre 'source_periods' ha de ser un codi de període. Corregiu el
-          selector al registre.
-        selector_source_periods_type: El selector de vinculació del registre 'source_periods'
-          ha de ser un codi de període o una tupla de codis de període; conté {observed_type}.
-          Corregiu el selector al registre.
     errors:
       observation_displaces_official_evidence_app_filing: 'Aquest model, exercici
         i periode ja conte evidencia capturada de l''AEAT ({existing_source_kind}),
-        de manera que no s''hi pot desar a sobre una declaracio calculada localment.
+        de manera que no s''hi pot desar a sobre una declaració calculada localment.
         Un recalcul local no es l''autoritat sobre allo presentat: si es correcte,
         presenteu la correccio davant l''AEAT i descarregueu-ne el resultat. L''evidencia
         capturada no es pot recuperar per cap via que exposi aquesta aplicacio.'
@@ -914,11 +905,6 @@ application:
         canònic de forma segura.
       calculate_semantic_role_missing: La revisió del model no conté cap casella amb
         el rol semàntic %{semantic_role}.
-      calculate_text_casilla_numeric_value: El valor de --casilla per a %{key} (%{label})
-        correspon a un selector de declarant de data_type=%{data_type} no numèric
-        que identifica el contribuent que obté els rendiments, no un import; s'ha
-        rebut %{value}. Introdueix l'import a la seva pròpia casella numèrica i reserva
-        aquesta casella per al selector de membre.
       calculate_text_input_empty: El valor de --casilla correspon a una casella de
         text i no pot estar buit.
       calculate_typed_text_input_invalid: El valor de --casilla no és vàlid per al
@@ -1137,7 +1123,7 @@ application:
       work_period_token_unrecognised: --period '%{token}' no es reconeix. Indica --year
         %{year} per separat i usa un token de període com 0A, Q1, 1T o 01.
       work_unit_already_discarded: La unitat de treball ja està descartada.
-      work_unit_create_discarded: Aquest objectiu de declaracio es va descartar. Tornar
+      work_unit_create_discarded: Aquest objectiu de declaració es va descartar. Tornar
         a crear-lo retorna la mateixa unitat de treball descartada, de manera que
         no es pot reprendre.
       work_unit_discarded_cannot_calculate: La unitat de treball %{work_unit_id} és
@@ -1147,7 +1133,7 @@ application:
       work_unit_filing_year_period_mismatch: L'exercici %{filing_year} no coincideix
         amb l'exercici %{period_year} del període %{period}.
       work_unit_mutation_refused: La unitat de treball esta descartada, i tornar a
-        crear el mateix objectiu de declaracio es rebutja en lloc de retornar una
+        crear el mateix objectiu de declaració es rebutja en lloc de retornar una
         unitat nova.
       work_unit_not_found: No s'ha trobat cap unitat de treball de model amb id=%{work_unit_id}.
       work_unit_revision_divergence: La unitat de treball %{work_unit_id} es va crear
@@ -1163,45 +1149,16 @@ application:
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
     findings:
-      art20_reduccion_possible: El rendiment net %{rnt_id} de %{rnt_value} EUR pot
-        optar a la reducció de l'article 20 %{reduccion_id}.
-      art52_reduccion_individual_sublimit_possible: La reducció %{reduccion_id} de
-        %{reduccion_value} EUR pot superar el subllímit individual de %{sublimit}
-        EUR.
       attribution_received_uncaptured: La casella %{casilla_id} de %{filing_year}
         conté %{casilla_value} EUR de renda atribuïda sense registrar.
       attribution_received_unfolded: La renda atribuïda de %{filing_year} per %{total_base}
         EUR no s'integra a la casella %{casilla_id}.
       cross_casilla_invariant_violated: S'incompleix l'invariant entre caselles %{predicate_id}
         declarat pel registre en aquesta revisió.
-      cross_period_activity_start_missing: El model %{target_modelo} %{target_filing_year}
-        %{target_period} necessita una data d'inici d'activitat declarada.
       cross_period_dependency_unclean: 'El model d''origen %{source_modelo} %{source_filing_year}
         %{source_period} no està net per a %{origin_ids}: %{blocker_codes}.'
-      cross_period_first_year_fractional_suppression: 'El model %{source_modelo} %{source_filing_year}
-        %{source_period} queda fora d''abast: l''activitat va començar el %{activity_start_date}.'
-      cross_period_m111_no_retenciones: El model %{source_modelo} %{source_filing_year}
-        %{source_period} no declara retencions per a %{target_modelo} %{target_filing_year}
-        %{target_period}.
-      cross_period_modelo_not_applicable:
-        message: '%{source_modelo_count} model(s) origen no són aplicables a aquest
-          contribuent: %{source_modelos}.'
-      cross_period_non_official_local_chain:
-        message: El model %{source_modelo} %{source_filing_year} %{source_period}
-          es basa en una cadena local (%{origin_code}), no en evidència oficial de
-          l'AEAT.
-      cross_period_operator_declared_suppression: El model %{source_modelo} %{source_filing_year}
-        %{source_period} se suprimeix per declaració del contribuent (%{origin_code}),
-        amb data d'inici d'activitat %{activity_start_date}.
-      cross_period_zero_value_previous_filing: El model %{source_modelo} %{source_filing_year}
-        %{source_period} aporta un valor zero a %{target_modelo} %{target_filing_year}
-        %{target_period}.
       cuota_less_ledger_row_base_missing: La transacció %{transaction_id} de la categoria
         d'IVA %{iva_category_code} no té base declarable.
-      dt12a_reduccion_antiquity_possible: La reducció %{reduccion_id} de %{reduccion_value}
-        EUR es pot acollir a la regla d'antiguitat de la disposició transitòria 12a.
-      dt12a_reduccion_possible: L'ingrés %{ingreso_id} de %{ingreso_value} EUR pot
-        optar a la reducció %{reduccion_id}.
       foreign_asset_redeclaration: 'Model %{modelo_code} %{filing_year}: el bé a l''estranger
         %{position_key} del grup %{group_code} va passar de %{prior_value_eur} EUR
         a %{current_value_eur} EUR, un increment de %{delta_value_eur} EUR per sobre
@@ -1217,15 +1174,10 @@ application:
         poden estar subjectes a una clàusula de limitació de beneficis (%{document_id}).
       m210_rate_unavailable: No s'ha pogut resoldre el tipus del model 210 per al
         tipus de renda %{tipo_renta_code} de l'exercici %{filing_year} (%{reason_code}).
-      m303_m349_intracom_reconciliation_mismatch: 'Els models 303 i 349 discrepen
-        en %{period_code} %{filing_year}: %{m303_total} EUR davant %{m349_total} EUR,
-        una diferència de %{gap} EUR.'
       madrid_nacimiento_adopcion_eligibility_advisory: La casella %{casilla_id} amb
         recompte ponderat %{weighted_count} pot optar a la deducció madrilenya per
         naixement o adopció.
       missing_required_casilla: La casella obligatòria %{casilla_id} no té valor.
-      modelo_202_modality_incomplete: 'La modalitat del model 202 és incompleta: falta
-        la dada de perfil %{profile_fact_id}.'
       objective_estimation_exclusion_threshold_exceeded: 'Model %{modelo_id} %{filing_year}:
         %{profile_field_id} declarat %{declared} supera el llindar %{parameter_id}
         de %{threshold}.'
@@ -1243,16 +1195,6 @@ application:
         presentació exigeix autoritat %{requested_grade}.
       registry_snapshot_unresolved: No s'ha pogut resoldre la instantània del registre
         per al model %{modelo} %{filing_year} %{period}.
-      suffered_retencion_capital_mobiliario_uncredited: Aquesta declaració consigna
-        rendiments del capital mobiliari de l'estalvi però no acredita cap retenció
-        suportada (%{predicate_id}). Introdueixi l'import del certificat de retencions
-        i ingressos a compte del pagador; el contribuent mai va presentar el Model
-        123 que ho declara, de manera que aquest valor no es pot emplenar automàticament.
-      suffered_retencion_trabajo_uncredited: Aquesta declaració consigna rendiments
-        del treball però no acredita cap retenció suportada (%{predicate_id}). Introdueixi
-        l'import del certificat de retencions i ingressos a compte del pagador; el
-        contribuent mai va presentar el Model 111 que ho declara, de manera que aquest
-        valor no es pot emplenar automàticament.
       transaction_evidence_missing_deductible: Una transacció deduïble no té evidència
         justificativa (vincle %{binding_id}, origen %{source_kind_code}, motiu %{diagnostic_reason_code}).
       transaction_evidence_missing_output: Una transacció repercutida no té evidència
@@ -1287,33 +1229,6 @@ application:
     explain:
       errors:
         modelo_blank: L'identificador de model no pot estar en blanc.
-  registry:
-    errors:
-      citation_not_found: No s'ha trobat cap cita del registre per a la referència
-        legal sol·licitada.
-      edition_modelo_undeclared: 'El registre no declara el model {modelo}. Models
-        declarats: {available_modelos}.'
-      edition_revision_undeclared: 'El model {modelo} no declara l''edició {revision}.
-        Edicions declarades: {available_revisions}.'
-      invalid_manual_id: El manual del registre ha de ser un de {allowed_manual_ids};
-        sha rebut {manual_id}.
-      invalid_manual_rule_kind: El tipus de regla manual ha de ser un de {allowed_rule_kinds};
-        s ha rebut {rule_kind}.
-      invalid_topic_locale: El locale de temes del registre ha de ser un de {allowed_locales};
-        sha rebut {locale_code}.
-      manual_section_not_found: No sha trobat la secció {section} a {manual_id} {year}
-        {part}.
-      manual_section_requires_structure: La secció del manual requereix estructura
-        extreta per a {manual_key}.
-      no_revision_for_diff_year: 'Cap revisió del registre de {modelo} cobreix l''exercici
-        {filing_year}. Revisions declarades: {available_revisions}.'
-    manuals:
-      coverage:
-        available: Disponible localment
-        recheck_aeat_publication: Torneu a comprovar l'arxiu oficial de manuals de
-          l'AEAT i adquiriu el PDF anual quan es publiqui.
-        unacquired: Manual oficial publicat; pendent d'adquisició local
-        unpublished: Encara no publicat per l'AEAT
   storage:
     calc_sheets:
       engine:

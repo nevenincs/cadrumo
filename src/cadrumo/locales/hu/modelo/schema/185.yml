@@ -1,6 +1,14 @@
 modelo:
   schema:
     '185':
+      casilla:
+        continuidad:
+          filing-year:
+            help: A Modelo 185 . casilla adóügyi adatai.
+            label: Casilla — adóügyi mező
+          tipo-declaracion:
+            help: 'A casilla adatai: Casilla kulcs-bevallás: kulcs bevallás.'
+            label: 'Casilla kulcs-bevallás: kulcs bevallás'
       field:
         official_name: Modelo 185. A tagok és önsegélyező-tagok járulékainak havi
           adatszolgáltatási bevallása.
@@ -20,7 +28,7 @@ modelo:
         2025-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 185 . casilla adóügyi adatai: adóév.'
               label: Az adóbevallás vonatkozási éve
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
               help: E bevallás sorszámos azonosító száma, 13 számjegyű.
@@ -29,7 +37,7 @@ modelo:
               help: A bevallással érintett naptári hónap, 01 januártól 12 decemberig.
               label: IDŐSZAK
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: A Modelo 185 . casilla adóügyi adatai.
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
             x-chim6r1eehnn8obc5lp6apr9edq74rrj:
               help: Az e bevallóhoz tartozó bejelentett személyek, azaz a 2-es típusú
@@ -99,6 +107,6 @@ modelo:
           construct:
             modelo-185-informative:
               field:
-                title: null
+                title: Modelo 185 bevallás tájékoztató
           field:
-            label: null
+            label: Casilla— adóügyi információ

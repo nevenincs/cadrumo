@@ -11,30 +11,32 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
-              help: null
+              help: Tax information for casilla 01 of Modelo 128.
               label: Number of recipients
             '02':
-              help: null
+              help: Tax information about tax information in casilla 02 of Modelo
+                128.
               label: Withholding and advance-payment tax base
             '03':
-              help: null
+              help: 'Review the casilla information: Withholdings e payments on account.'
               label: Withholdings and advance payments
             '04':
-              help: null
+              help: Tax information for casilla 04 of Modelo 128.
               label: Number of recipients (additional block)
             '05':
-              help: null
+              help: Tax information about tax information in casilla 05 of Modelo
+                128.
               label: Withholding and advance-payment tax base (additional block)
             '06':
-              help: null
+              help: Tax information for casilla 06 of Modelo 128.
               label: Amount due from previous returns for the same item, tax year
                 and period
             '07':
-              help: null
+              help: 'Review the casilla information: Result a ingresar.'
               label: Amount due
           construct:
             modelo-128-calculation-construct:
               field:
-                title: null
+                title: Modelo 128 calculation construct
           field:
-            label: null
+            label: Casilla— tax information

@@ -3,83 +3,106 @@ modelo:
     '180':
       casilla:
         continuidad:
+          base-retenciones-ingresos-a-cuenta:
+            help: 'Casilla information: Casilla 145-160: base withholdings payments
+              on account.'
+            label: 'Casilla 145-160: base withholdings payments on account'
           devengo-year:
-            help: null
+            help: Tax information for casilla 110-113 of Modelo 180.
             label: Accrual tax year
           payee-inmueble-bloque:
-            help: null
+            help: Tax information about tax information in casilla 201-203 of Modelo
+              180.
             label: Block of the leased property
           payee-inmueble-calificador-numero:
-            help: null
+            help: Tax information for casilla 198-200 of Modelo 180.
             label: Qualifier of the leased property's house number
           payee-inmueble-codigo-municipio:
-            help: null
+            help: Tax information for casilla 316-320 of Modelo 180.
             label: Municipality code of the leased property
           payee-inmueble-codigo-postal:
-            help: null
+            help: Tax information for casilla 323-327 of Modelo 180.
             label: Postal code of the leased property
           payee-inmueble-complemento:
-            help: null
+            help: Tax information about tax information in casilla 216-255 of Modelo
+              180.
             label: Address complement of the leased property
           payee-inmueble-escalera:
-            help: null
+            help: 'Review the casilla information: Escalera of the inmueble arrendado.'
             label: Staircase of the leased property
           payee-inmueble-localidad:
-            help: null
+            help: 'Review the casilla information: Localidad of the inmueble arrendado.'
             label: Locality of the leased property
           payee-inmueble-municipio:
-            help: null
+            help: Tax information about tax information in casilla 286-315 of Modelo
+              180.
             label: Municipality of the leased property
           payee-inmueble-nombre-via:
-            help: null
+            help: 'Review the casilla information: Name of the via publica of the
+              inmueble arrendado.'
             label: Name of the public thoroughfare of the leased property
           payee-inmueble-numero-casa:
-            help: null
+            help: Tax information for casilla 193-197 of Modelo 180.
             label: House number of the leased property
           payee-inmueble-planta:
-            help: null
+            help: 'Review the casilla information: Planta of the inmueble arrendado.'
             label: Floor of the leased property
           payee-inmueble-portal:
-            help: null
+            help: 'Review the casilla information: Portal of the inmueble arrendado.'
             label: Building entrance of the leased property
           payee-inmueble-provincia:
-            help: null
+            help: Tax information for casilla 321-322 of Modelo 180.
             label: Province code of the leased property
           payee-inmueble-puerta:
-            help: null
+            help: 'Review the casilla information: Puerta of the inmueble arrendado.'
             label: Door of the leased property
           payee-inmueble-referencia-catastral:
-            help: null
+            help: 'Review the casilla information: Referencia catastral of the inmueble
+              arrendado.'
             label: Cadastral reference of the leased property
           payee-inmueble-situacion:
-            help: null
+            help: 'Review the casilla information: Situacion of the inmueble.'
             label: Status of the property
           payee-inmueble-tipo-numeracion:
-            help: null
+            help: Tax information about tax information in casilla 190-192 of Modelo
+              180.
             label: Numbering type of the leased property
           payee-inmueble-tipo-via:
-            help: null
+            help: Tax information about tax information in casilla 135-139 of Modelo
+              180.
             label: Thoroughfare type of the leased property
           payee-modalidad-renta:
-            help: null
+            help: Tax information about tax information in casilla 78 of Modelo 180.
             label: Type of income
           payee-name:
-            help: null
+            help: Tax information for casilla 36-75 of Modelo 180.
             label: Recipient's surname and first name, business name or designation
           payee-nif:
-            help: null
+            help: 'Review the casilla information: NIF of the recipient.'
             label: Recipient's NIF
           payee-province:
-            help: null
+            help: Tax information for casilla 76-77 of Modelo 180.
             label: Province code of the recipient's address
           payee-representative-nif:
-            help: null
+            help: Tax information about representative NIF in casilla 27-35 of Modelo
+              180.
             label: NIF of the recipient's legal representative
+          perc-base:
+            help: 'Casilla information: Casilla 79-92: base withholdings payments
+              on account.'
+            label: 'Casilla 79-92: base withholdings payments on account'
+          perc-retenciones:
+            help: 'Casilla information: Casilla 97-109: withholdings payments on account.'
+            label: 'Casilla 97-109: withholdings payments on account'
           porcentaje-retencion:
-            help: null
+            help: Tax information for casilla 93-96 of Modelo 180.
             label: Withholding percentage applied
+          retenciones-ingresos-a-cuenta:
+            help: 'Casilla information: Casilla 161-175: withholdings payments on
+              account.'
+            label: 'Casilla 161-175: withholdings payments on account'
           total-perceptores-count:
-            help: null
+            help: Tax information for casilla 136-144 of Modelo 180.
             label: Total number of recipients
       field:
         official_name: Modelo 180. Informative return. Withholdings and payments on
@@ -89,214 +112,226 @@ modelo:
         2019-2022:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
-              help: null
+              help: 'Review the casilla information: Base withholdings e payments
+                on account total.'
               label: Total base for withholdings and payments on account
             x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
-              help: null
+              help: Tax information for casilla 121-122 of Modelo 180.
               label: Supplementary or replacement declaration
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
-              help: null
+              help: 'Review the casilla information: Number identificativo of the
+                return.'
               label: Declaration identification number
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              help: null
+              help: 'Review the casilla information: Number identificativo of the
+                return previous.'
               label: Identification number of the previous declaration
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: null
+              help: 'Review the casilla information: Withholdings e payments on account
+                total.'
               label: Total withholdings and payments on account
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
-              help: null
+              help: Total number of recipients
               label: Total number of recipients
             x-e1in4opec9gn6p8:
-              help: null
+              help: 'Review the casilla information: Base withholdings e payments
+                on account of the recipient.'
               label: Recipient's base for withholdings and payments on account
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
-              help: null
+              help: Accrual tax year
               label: Accrual tax year
             x-e1in4oped5n6qtb5c9m6abb2dhnn2tb5:
-              help: null
+              help: Block of the leased property
               label: Block of the leased property
             x-e1in4oped5n6qtb5c9m6abb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
-              help: null
+              help: Qualifier of the leased property's house number
               label: Qualifier of the leased property's house number
             x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lmnarj9cdkn0qbf:
-              help: null
+              help: Municipality code of the leased property
               label: Municipality code of the leased property
             x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lo6usrkc5m0:
-              help: null
+              help: Postal code of the leased property
               label: Postal code of the leased property
             x-e1in4oped5n6qtb5c9m6abb3dtmn0r35dlimst3f:
-              help: null
+              help: Address complement of the leased property
               label: Address complement of the leased property
             x-e1in4oped5n6qtb5c9m6abb5edhm2r35e9gg:
-              help: null
+              help: Staircase of the leased property
               label: Staircase of the leased property
             x-e1in4oped5n6qtb5c9m6abbcdthm2r39chgm8:
-              help: null
+              help: Locality of the leased property
               label: Locality of the leased property
             x-e1in4oped5n6qtb5c9m6abbdeln6ior9e1kmu:
-              help: null
+              help: Municipality of the leased property
               label: Municipality of the leased property
             x-e1in4oped5n6qtb5c9m6abbedtmm4sj55lr6io8:
-              help: null
+              help: Name of the public thoroughfare of the leased property
               label: Name of the public thoroughfare of the leased property
             x-e1in4oped5n6qtb5c9m6abbeelmmasjf5lhm2sr1:
-              help: null
+              help: House number of the leased property
               label: House number of the leased property
             x-e1in4oped5n6qtb5c9m6abbgdhgmst31:
-              help: null
+              help: Floor of the leased property
               label: Floor of the leased property
             x-e1in4oped5n6qtb5c9m6abbgdtp78obc:
-              help: null
+              help: Building entrance of the leased property
               label: Building entrance of the leased property
             x-e1in4oped5n6qtb5c9m6abbge9nncqbecdkm2:
-              help: null
+              help: Province code of the leased property
               label: Province code of the leased property
             x-e1in4oped5n6qtb5c9m6abbgelin4t31:
-              help: null
+              help: Door of the leased property
               label: Door of the leased property
             x-e1in4oped5n6qtb5c9m6abbkd5o6ubbeelmmasj1cdkmurg:
-              help: null
+              help: Numbering type of the leased property
               label: Numbering type of the leased property
             x-e1in4oped5n6qtb5c9m6abbkd5o6ubbmd5gg:
-              help: null
+              help: Thoroughfare type of the leased property
               label: Thoroughfare type of the leased property
             x-e1in4opedlnm8obcd5i62p0:
-              help: null
+              help: Type of income
               label: Type of income
             x-e1in4opedpkmc:
-              help: null
+              help: Recipient's NIF
               label: Recipient's NIF
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
-              help: null
+              help: NIF of the recipient's legal representative
               label: NIF of the recipient's legal representative
             x-e1in4opedpnmqojick:
-              help: null
+              help: Recipient's surname and first name, business name or designation
               label: Recipient's surname and first name, business name or designation
             x-e1in4opee1nn4or5dpq62qj55lp6at35dphmirre:
-              help: null
+              help: Withholding percentage applied
               label: Withholding percentage applied
             x-e1in4opee1p6utj9dphmio8:
-              help: null
+              help: Province code of the recipient's address
               label: Province code of the recipient's address
             x-e1in4opee9imcpbicln66qb15lhm2t31edq74obc:
-              help: null
+              help: Cadastral reference of the leased property
               label: Cadastral reference of the leased property
             x-e1in4opee9in8pbecdkmurj5ec:
-              help: null
+              help: 'Review the casilla information: Withholdings e payments on account
+                of the recipient.'
               label: Recipient's withholdings and payments on account
             x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
-              help: null
+              help: Status of the property
               label: Status of the property
           construct:
             modelo-180-annual-summary:
               field:
-                title: null
+                title: Modelo 180 annual summary based on quarterly Modelo 115 filings
           field:
-            label: null
+            label: Casilla— tax information
         2023-y-siguientes:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
-              help: null
+              help: 'Review the casilla information: Base withholdings e payments
+                on account total.'
               label: Total base for withholdings and payments on account
             x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
-              help: null
+              help: Tax information for casilla 121-122 of Modelo 180.
               label: Supplementary or replacement declaration
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
-              help: null
+              help: 'Review the casilla information: Number identificativo of the
+                return.'
               label: Declaration identification number
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              help: null
+              help: 'Review the casilla information: Number identificativo of the
+                return previous.'
               label: Identification number of the previous declaration
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: null
+              help: 'Review the casilla information: Withholdings e payments on account
+                total.'
               label: Total withholdings and payments on account
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
-              help: null
+              help: Total number of recipients
               label: Total number of recipients
             x-e1in4opec9gn6p8:
-              help: null
+              help: 'Review the casilla information: Base withholdings e payments
+                on account of the recipient.'
               label: Recipient's base for withholdings and payments on account
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
-              help: null
+              help: Accrual tax year
               label: Accrual tax year
             x-e1in4oped5n6qtb5c9m6abb2dhnn2tb5:
-              help: null
+              help: Block of the leased property
               label: Block of the leased property
             x-e1in4oped5n6qtb5c9m6abb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
-              help: null
+              help: Qualifier of the leased property's house number
               label: Qualifier of the leased property's house number
             x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lmnarj9cdkn0qbf:
-              help: null
+              help: Municipality code of the leased property
               label: Municipality code of the leased property
             x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lo6usrkc5m0:
-              help: null
+              help: Postal code of the leased property
               label: Postal code of the leased property
             x-e1in4oped5n6qtb5c9m6abb3dtmn0r35dlimst3f:
-              help: null
+              help: Address complement of the leased property
               label: Address complement of the leased property
             x-e1in4oped5n6qtb5c9m6abb5edhm2r35e9gg:
-              help: null
+              help: Staircase of the leased property
               label: Staircase of the leased property
             x-e1in4oped5n6qtb5c9m6abbcdthm2r39chgm8:
-              help: null
+              help: Locality of the leased property
               label: Locality of the leased property
             x-e1in4oped5n6qtb5c9m6abbdeln6ior9e1kmu:
-              help: null
+              help: Municipality of the leased property
               label: Municipality of the leased property
             x-e1in4oped5n6qtb5c9m6abbedtmm4sj55lr6io8:
-              help: null
+              help: Name of the public thoroughfare of the leased property
               label: Name of the public thoroughfare of the leased property
             x-e1in4oped5n6qtb5c9m6abbeelmmasjf5lhm2sr1:
-              help: null
+              help: House number of the leased property
               label: House number of the leased property
             x-e1in4oped5n6qtb5c9m6abbgdhgmst31:
-              help: null
+              help: Floor of the leased property
               label: Floor of the leased property
             x-e1in4oped5n6qtb5c9m6abbgdtp78obc:
-              help: null
+              help: Building entrance of the leased property
               label: Building entrance of the leased property
             x-e1in4oped5n6qtb5c9m6abbge9nncqbecdkm2:
-              help: null
+              help: Province code of the leased property
               label: Province code of the leased property
             x-e1in4oped5n6qtb5c9m6abbgelin4t31:
-              help: null
+              help: Door of the leased property
               label: Door of the leased property
             x-e1in4oped5n6qtb5c9m6abbkd5o6ubbeelmmasj1cdkmurg:
-              help: null
+              help: Numbering type of the leased property
               label: Numbering type of the leased property
             x-e1in4oped5n6qtb5c9m6abbkd5o6ubbmd5gg:
-              help: null
+              help: Thoroughfare type of the leased property
               label: Thoroughfare type of the leased property
             x-e1in4opedlnm8obcd5i62p0:
-              help: null
+              help: Type of income
               label: Type of income
             x-e1in4opedpkmc:
-              help: null
+              help: Recipient's NIF
               label: Recipient's NIF
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
-              help: null
+              help: NIF of the recipient's legal representative
               label: NIF of the recipient's legal representative
             x-e1in4opedpnmqojick:
-              help: null
+              help: Recipient's surname and first name, business name or designation
               label: Recipient's surname and first name, business name or designation
             x-e1in4opee1nn4or5dpq62qj55lp6at35dphmirre:
-              help: null
+              help: Withholding percentage applied
               label: Withholding percentage applied
             x-e1in4opee1p6utj9dphmio8:
-              help: null
+              help: Province code of the recipient's address
               label: Province code of the recipient's address
             x-e1in4opee9imcpbicln66qb15lhm2t31edq74obc:
-              help: null
+              help: Cadastral reference of the leased property
               label: Cadastral reference of the leased property
             x-e1in4opee9in8pbecdkmurj5ec:
-              help: null
+              help: 'Review the casilla information: Withholdings e payments on account
+                of the recipient.'
               label: Recipient's withholdings and payments on account
             x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
-              help: null
+              help: Status of the property
               label: Status of the property
           construct:
             modelo-180-annual-summary:
               field:
-                title: null
+                title: Modelo 180 annual summary based on quarterly Modelo 115 filings
           field:
-            label: null
+            label: Casilla— tax information

@@ -268,7 +268,7 @@ wizard:
       title: Unitat familiar
     filing-export:
       charge-iban:
-        help: IBAN que l AEAT pot carregar quan una declaracio del Model 303 escull
+        help: IBAN que l AEAT pot carregar quan una declaració del Model 303 escull
           la domiciliacio. Es diferent del compte de devolucio.
         prompt: IBAN per a la domiciliacio de l AEAT
       title: Compte de carrec del Model 303

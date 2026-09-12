@@ -11,74 +11,86 @@ modelo:
         esquema-exterior:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                369.
               label: Exercici a què es refereix l'autoliquidació
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Consulteu la informació de la casella: Període de la declaració.'
               label: Període de la declaració
             x-d5r62bj5f1q6asj9dtp2sorldtq62bbkdtq62r0:
-              help: null
+              help: Informació fiscal de la casella del Modelo 369.
               label: Total de quota d'IVA repercutida del Règim exterior (suma de
                 quotes per destinació)
             x-d5r62bj5f1q6asj9dtp2sp355ppmasjmd5hmaspdcdqmut31:
-              help: null
+              help: 'Consulteu la informació de la casella: Quota IVA repercutit al
+                destino DE - serveis prestados (Esquema Exterior).'
               label: Quota d'IVA repercutit a la destinació DE - serveis prestats
                 (Règim exterior)
           construct:
             modelo-369-esquema-exterior:
               field:
-                title: null
+                title: Modelo 369 - Esquema Exterior (règim especial serveis prestados
+                  per no establecidos)
           field:
-            label: null
+            label: Casella — informació fiscal
         esquema-importacion:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                369.
               label: Exercici a què es refereix l'autoliquidació
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Consulteu la informació de la casella: Període de la declaració.'
               label: Període de la declaració
             x-d5r62bj9dlo6usjkc5hmirre5phnarrkc4mn8rrkc5m0:
-              help: null
+              help: Informació fiscal de la casella del Modelo 369.
               label: Total de quota d'IVA repercutida del Règim d'importació (IOSS,
                 suma per destinació)
             x-d5r62bj9dlo6usjkc5hmirre5pi6abjcdtriqtj1dhqmabb3elnn8o8:
-              help: null
+              help: 'Consulteu la informació de la casella: Quota IVA IOSS al destino
+                DE - ventas a distancia de béns importados ≤ 150 EUR (LIVA art 163
+                quinvicies).'
               label: Quota d'IVA IOSS a la destinació DE - vendes a distància de béns
                 importats ≤ 150 EUR (LIVA art. 163 quinvicies)
           construct:
             modelo-369-esquema-importacion:
               field:
-                title: null
+                title: Modelo 369 - Esquema Importacion (règim especial IOSS)
           field:
-            label: null
+            label: Modelo 369 - Esquema Importacion (IOSS) - règim especial ventas
+              a distancia de béns importados (LIVA art 163 quinvicies a octovicies).
+              Mensual per HAC/610/2021 art 2(c)/(d).
         esquema-union:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                369.
               label: Exercici a què es refereix l'autoliquidació
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Consulteu la informació de la casella: Període de la declaració.'
               label: Període de la declaració
             x-d5r62bjldpkmurhecdqmut315lq6ut31dg:
-              help: null
+              help: Informació fiscal de la casella del Modelo 369.
               label: Total quota d'IVA repercutida de l'Esquema Unió (suma cross-destination,
                 cross-flow)
             x-d5r62bjldpkmurhechiisprfdti76bb4d5pn8obecdiiqorldtq62:
-              help: null
+              help: 'Consulteu la informació de la casella: Quota IVA OSS Unión al
+                destino DE - ventas a distancia + interfaces electrónicas.'
               label: Quota d'IVA OSS Unió a la destinació DE - vendes a distància
                 + interfícies electròniques
             x-d5r62bjldpkmurhechiissr5e9r6ior5ecmm6tbfehgg:
-              help: null
+              help: 'Consulteu la informació de la casella: Quota IVA OSS Unión al
+                destino DE - serveis prestados (LIVA art 163 unvicies).'
               label: Quota d'IVA OSS Unió a la destinació DE - serveis prestats (LIVA
                 art. 163 unvicies)
             x-d5r62bjldpkmurhecpp2ssr5e9r6ior5ecmm6tbfehgg:
-              help: null
+              help: 'Consulteu la informació de la casella: Quota IVA OSS Unión al
+                destino FR - serveis prestados (LIVA art 163 unvicies).'
               label: Quota d'IVA OSS Unió a la destinació FR - serveis prestats (LIVA
                 art. 163 unvicies)
           construct:
             modelo-369-esquema-union:
               field:
-                title: null
+                title: Modelo 369 - Esquema Union (règim especial OSS Union)
           field:
-            label: null
+            label: Casella — informació fiscal

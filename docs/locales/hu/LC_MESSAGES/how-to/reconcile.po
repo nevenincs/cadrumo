@@ -55,14 +55,13 @@ msgstr ""
 " tárol a profiljában, és egy lépésben egyeztet."
 
 #: ../../how-to/reconcile.md:15
-#, fuzzy
 msgid ""
 "**Use a local PDF** with `reconcile import --file` - you downloaded the "
 "justificante yourself; the check is local and never contacts AEAT."
 msgstr ""
-"**Használjon egy helyi PDF-et** a `reconcile file --file` paranccsal: Ön "
-"maga töltötte le a justificantét; az ellenőrzés helyi, és soha nem lép "
-"kapcsolatba az AEAT-tal."
+"**Használjon helyi PDF-et** a `reconcile import --file` paranccsal: Ön "
+"töltötte le a justificante-et; az ellenőrzés helyben történik, és soha nem "
+"lép kapcsolatba az AEAT-tal."
 
 #: ../../how-to/reconcile.md:18
 msgid "Before you start"
@@ -94,9 +93,8 @@ msgstr ""
 "AEAT-nál](authenticate-with-aeat.md)"
 
 #: ../../how-to/reconcile.md:27
-#, fuzzy
 msgid "for `reconcile import`: the justificante PDF on disk"
-msgstr "a `reconcile file` parancshoz: a justificante PDF a lemezen"
+msgstr "a `reconcile import` parancshoz: a lemezen lévő justificante-PDF"
 
 #: ../../how-to/reconcile.md:29
 msgid ""
@@ -372,17 +370,16 @@ msgstr ""
 " a profiljában."
 
 #: ../../how-to/reconcile.md:143
-#, fuzzy
 msgid ""
 "`reconcile import` reads a PDF you supply but does not store it. If you "
 "reconcile against a downloaded PDF, also pull the receipt so an encrypted"
 " copy is kept in your profile. See [Pull and store the justificante"
 "](#pull-and-store-the-justificante)."
 msgstr ""
-"A `reconcile file` egy Ön által megadott PDF-et olvas, de nem tárolja. Ha"
-" egy letöltött PDF-fel szemben egyeztet, kérje le a bizonylatot is, hogy "
-"egy titkosított másolat megmaradjon a profiljában. Lásd: [Kérje le és "
-"tárolja a justificantét](#pull-and-store-the-justificante)."
+"A `reconcile import` egy Ön által megadott PDF-et olvas, de nem tárolja. Ha "
+"egy letöltött PDF-fel szemben egyeztet, kérje le a bizonylatot is, hogy egy "
+"titkosított másolat megmaradjon a profiljában. Lásd: [Kérje le és tárolja a "
+"justificante-et](#pull-and-store-the-justificante)."
 
 #: ../../how-to/reconcile.md:146
 msgid ""

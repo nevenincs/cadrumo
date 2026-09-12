@@ -257,3 +257,25 @@ docs:
       reviewed_at: Ellenőrzés dátuma
       reviewed_by: Ellenőrizte
       title: Katalógusbejegyzés
+  terminology:
+    cli:
+      authority: A forrás hitelesítő szerve, ha a mező „source”.
+      check: Írás nélkül jelzi az eltérést; eltérés esetén nem nulla kóddal lép ki.
+      concept_id: A kezelendő fogalom azonosítója.
+      domain: 'IATE: az engedélyezett tárgyköri mezők halmaza (ismételhető).'
+      dry_run: Írás nélkül jelzi, mi kerülne betöltésre.
+      export_path: A letöltött forrásexportfájl elérési útja.
+      field_name: short_description | definition | scope_note | source | term.
+      field_value: A mező értéke (a „source” esetén hivatkozás; a „term” esetén címke).
+      help: A terminológiai kézikönyv karbantartása.
+      language: A nyelvi szakasz kódja.
+      min_reliability: 'IATE: a megtartandó minimális megbízhatósági kód (>= 3).'
+      relation_kind: broader | related.
+      relation_source: A kapcsolat kiinduló fogalmának azonosítója.
+      relation_target: A célfogalom azonosítója.
+      remove_relation: A kapcsolat hozzáadása helyett eltávolítja azt.
+      remove_term_label: Az eltávolítandó kifejezés pontos címkéje.
+      replaced_by: Az utódfogalom azonosítója (kötelező).
+      retire_concept: A kivezetendő fogalom azonosítója.
+      seed_source: 'A-szintű forrás: iate | ubterm (ellenőrzés után eurovoc).'
+      term_status: A kifejezés állapota, ha a mező „term”.
