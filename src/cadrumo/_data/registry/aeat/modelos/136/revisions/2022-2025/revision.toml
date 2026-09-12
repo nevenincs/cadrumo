@@ -1,0 +1,164 @@
+# Historical edition of modelo 136 covering filing years 2022, 2023, 2024 and
+# 2025 -- the gravamen especial sobre los premios de determinadas loterias y
+# apuestas, autoliquidacion.
+#
+# WHY ONE EDITION AND NOT FOUR. The design era is single and its boundary is
+# stated verbatim by the amending orden itself. Orden HAC/763/2018 disposicion
+# final unica reads, in the bundled corpus
+# (corpus/normatives/html/orden-hac-763-2018.html.extracted.md):
+#
+#   "El nuevo modelo 136 ... sera de aplicacion para las autoliquidaciones
+#    correspondientes al tercer trimestre del ano 2018 y siguientes."
+#
+# "y siguientes" is an open end with no terminus, and the catalogue carries no
+# later amending orden for this modelo. The four gap years therefore share one
+# design rather than four, and splitting them into four editions would assert a
+# per-year distinction no source states. The sibling 2026 edition grounds on
+# this same 2018 design, which is positive evidence the era is still unbroken
+# above this edition's ceiling.
+#
+# GEOMETRY, MEASURED NOT ASSUMED. The form reproduced as anexo III of Orden
+# HAC/763/2018 is bundled as boe-modelo-136-current-form-text. Read field by
+# field against the 2026 edition, the box set is IDENTICAL, position for
+# position: 01 importe del premio, 02 importe individual del declarante, 03
+# cuantia exenta, 04 base imponible, 05 cuota del gravamen especial, 06
+# resultados a ingresar de anteriores autoliquidaciones, 07 resultado a
+# ingresar, and the ingreso box printed as "Importe (casilla 09)". The numbering
+# skips 08: the form goes 07 then 09, so the absence of an 08 casilla here is the
+# design's own shape and not an omission. Twenty-four fields in total, the same
+# twenty-four the 2026 edition declares. No field moved and none changed meaning
+# between this edition and 2026, because it is one and the same document.
+#
+# WHY THE GRADE IS 'calculation' AND NOT 'filing'. Every source grounding the
+# three formulas is in force across the whole span: LIRPF disposicion adicional
+# 33 (boe-lirpf-lottery-prize-special-levy, applies_from 2020-01-01) fixes the
+# 40.000 euro exemption and the 20 per cent tipo, and the anexo III form
+# (boe-modelo-136-current-form-text, applies_from 2018-07-19) PRINTS the three
+# arithmetic relations in its own captions -- "Base imponible ( 02 - 03 )",
+# "Cuota del gravamen especial (el 20% del importe de la casilla 04 )" and
+# "Resultado a ingresar ( 05 - 06 )". The calculation closure is transcribed
+# from the in-force form, not inferred, so it is declared rather than withheld.
+#
+# Filing grade is NOT claimed, for two independent reasons. First, both AEAT
+# procedure sources in the catalogue -- aeat-modelo-136-procedure and
+# aeat-modelo-136-procedure-record -- declare applies_from 2026-01-01 and so
+# cannot be cited by an edition ending 2025-12-31; every citation of them that
+# the 2026 edition makes is replaced here by boe-modelo-136-base-order, the
+# founding Orden HAP/70/2013 (applies_from 2013-02-01), whose articles 7, 10, 11
+# and 12 are present verbatim in the bundled corpus. Second, AEAT publishes no
+# positional record design for modelo 136 at all, so this edition declares no
+# export layout, exactly as its 2026 sibling does not.
+#
+# ACQUIRABLE DEBT -- promotion of this edition from calculation to filing grade.
+# The form geometry and the calculation closure are already grounded and would
+# not change. What is missing is procedure authority inside the span. Needed:
+#   - the AEAT modelo 136 procedure/instrucciones pages as they stood during
+#     2022-2025, registered as their own source with an applies_from inside the
+#     span (the bundled pair opens 2026-01-01);
+#   - an AEAT diseno de registro for modelo 136, if one is ever published, to
+#     support an export layout. None exists today for any year of this modelo,
+#     so this is a standing absence rather than an unfetched file.
+#
+# NO PREDECESSOR IS DECLARED, DELIBERATELY. This edition sits BELOW the existing
+# 2026 edition, and content inherits predecessor -> successor only, so a back
+# year cannot inherit from a later one and must state every row itself; it does.
+# The 2026 edition is likewise left untouched and declares no predecessor: were
+# it pointed at this edition, every one of its twenty-four stated casillas would
+# collide with the lineage-free row of the same id inherited from here, which
+# the loader refuses outright. The two editions are therefore siblings on the
+# timeline, contiguous at 2025-12-31 / 2026-01-01 and independent in content.
+
+[revisions."2022-2025"]
+formula_source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-form-text"]
+casilla_source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
+authority_grade = "calculation"
+valid_from = 2022-01-01
+valid_to = 2025-12-31
+period_selector = { year_from = 2022, year_to = 2025, periods = ["1T", "2T", "3T", "4T"] }
+orden_aplicabilidad = [
+    "ley-35-2006:da-33",
+    "orden-hap-70-2013:art-5",
+    "orden-hap-70-2013:art-6",
+    "orden-hap-70-2013:art-7",
+    "orden-hac-763-2018:art-tercero",
+    "orden-hac-763-2018:df-unica",
+]
+legal_refs = [
+    "ley-35-2006:da-33",
+    "orden-hap-70-2013:art-5",
+    "orden-hap-70-2013:art-6",
+    "orden-hap-70-2013:art-7",
+    "orden-hap-70-2013:art-10",
+    "orden-hap-70-2013:art-11",
+    "orden-hap-70-2013:art-12",
+    "orden-hac-763-2018:art-tercero",
+    "orden-hac-763-2018:df-unica",
+]
+source_refs = [
+    "boe-lirpf-lottery-prize-special-levy",
+    "boe-modelo-136-base-order",
+    "boe-modelo-136-2018-amendment-hac-763",
+    "boe-modelo-136-current-form-text",
+    "boe-modelo-136-current-form",
+]
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: calculation-grade authoring of the 2022-2025 historical span of the gravamen especial sobre \
+premios de loterias. VERIFIED -- ONE ERA: orden-hac-763-2018 df-unica reads verbatim in the bundled \
+corpus "El nuevo modelo 136 ... sera de aplicacion para las autoliquidaciones correspondientes al \
+tercer trimestre del ano 2018 y siguientes", an open end with no terminus and no later amending \
+orden in the catalogue, so the four gap years are one design era and are declared as one edition \
+rather than four. VERIFIED -- GEOMETRY: the anexo III form text bundled as \
+boe-modelo-136-current-form-text was read field by field against the 2026 edition; the box set is \
+identical position for position, twenty-four fields, boxes 01-07 then 09 with no 08 printed on the \
+form, so the missing 08 is the design's own numbering and not a dropped row. VERIFIED -- WHEN DUE: \
+orden-hap-70-2013 art. 7 reads verbatim "se efectuara por los sujetos pasivos en los veinte primeros \
+dias naturales de los meses de abril, julio, octubre y enero en relacion con los premios cobrados en \
+el trimestre natural inmediato anterior"; all sixteen declared windows reproduce it exactly and are \
+stored NOMINAL with no weekend pre-shift, because the same article's vencimiento-coincidence clause \
+is what shift_deadline applies at read time. VERIFIED -- IN-WINDOW CITATION: every legal_ref and \
+source_ref cited here was checked against its own catalogue window and is in force across the whole \
+2022-2025 span; the two AEAT procedure sources were DROPPED rather than carried, because both \
+declare applies_from 2026-01-01, and boe-modelo-136-base-order (applies_from 2013-02-01) carries \
+arts. 7, 10, 11 and 12 verbatim in its place. NOT CLAIMED -- filing grade: no procedure or \
+instrucciones source in the catalogue opens inside this span. NOT CLAIMED -- no export layout, \
+neither fixed-width nor xml dictionary: AEAT publishes no diseno de registro for modelo 136 for any \
+year. NOT CLAIMED -- independent_check_coverage is 0.0000 meaning NO CLAIM, not zero: no value here \
+was checked against an independent AEAT oracle. No human operator has countersigned it."""
+reviewed_at = 2026-09-12
+
+[revisions."2022-2025".family_dispositions.projection_endpoints]
+reason = """
+FilingProjectionRef (cadrumo.core) is a CLOSED discriminated union, and every member is scoped to the modelo whose repeated rows it describes; ProjectionEndpointDeclaration.projection_ref accepts only that union, so no declaration naming this modelo's own casillas can validate while the union carries no modelo-136 member. It carries none. This edition also declares one premio per autoliquidacion rather than a repeated row set, so there is no repeated endpoint for the family to admit."""
+legal_refs = ["ley-35-2006:da-33", "orden-hap-70-2013:art-5"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
+[revisions."2022-2025".family_dispositions.verification_predicates]
+reason = """
+A verification predicate guards a calculated result, and this edition does calculate one -- but both predicates its shape admits are unusable, for opposite reasons. implies_nonzero(04 base -> 05 cuota) is TAUTOLOGICAL: casilla 05 is percent(04, irpf.lottery_prize_special_levy_rate), so a positive base cannot produce a zero cuota and the engine could not violate the implication. implies_nonzero(01 premio -> 05 cuota) FALSE-FIRES on the lawful population: LIRPF DA 33 exempts the premio up to a threshold, the exempt amount is entered in casilla 03, and the base is subtract(02, 03), so a small premio legitimately yields a zero base and a zero cuota. Firing there would alert on precisely the filers the exemption is written for. The family is unavailable to this modelo rather than unwritten; the safeguard it exists to provide is already carried by the exempt-amount casilla being a declared input rather than an inferred one."""
+legal_refs = ["ley-35-2006:da-33", "orden-hap-70-2013:art-5"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
+[revisions."2022-2025".family_dispositions.live_cross_references]
+reason = """
+A live cross-reference declares an AEAT surface this application READS at runtime, together with the guard policy, allowed hosts and methods, and forbidden actions that keep the read read-only. It is a statement about what Cadrumo operates, not about what the law requires. Cadrumo operates no live surface for modelo 136: no adapter under adapters/outbound/aeat references it, and the application never performs live AEAT submission in any case, per the standing prohibition on live filing. There is consequently no host to allow, no method to bound and no guard policy to name. Should an adapter ever read this modelo, the family becomes applicable and this disposition must be revisited rather than inherited."""
+legal_refs = ["ley-35-2006:da-33", "orden-hap-70-2013:art-5"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
+[revisions."2022-2025".family_dispositions.extraction_profiles]
+reason = """
+An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels. What is bundled for this span is the BOE anexo III form, whose captions are the boxes a filer completes; AEAT publishes no diseno de registro for modelo 136 and its corpus carries no filed specimen from which printed-label patterns could be measured. Authoring patterns without such an artefact would invent them. Acquire a label-printing filed artefact and the family becomes applicable, at which point this disposition must be revisited rather than inherited."""
+legal_refs = ["ley-35-2006:da-33", "orden-hap-70-2013:art-5"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
+[revisions."2022-2025".family_dispositions.bindings]
+reason = """
+A binding serves two shapes and neither is available here. As a CASILLA resolver it reads a value from a declared source: no casilla of this edition does, its twenty-four being twenty-one manual and three computed, and no formula expression tree names one. As a LAYOUT descriptor it names a record field, and AEAT publishes no diseno de registro for modelo 136 at all, so there is no record field to name. That second shape is not mandatory in any case: an absent bindings family is a normal end state for an edition carrying no export layout rather than an unfinished one. If a layout ever lands for this modelo and materialises repeating rows through binding_rows, the family becomes applicable and this disposition must be revisited rather than inherited."""
+legal_refs = ["ley-35-2006:da-33", "orden-hap-70-2013:art-5"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
+[revisions."2022-2025".family_dispositions.export_layouts]
+reason = """
+AEAT publishes no positional record design for modelo 136, so there is nothing a fixed-width writer could be authored FROM. Measured on the source catalogue rather than asserted: no source cited by this modelo or any of its editions carries kind = 'record_design'. Its layout authority is 'boe-modelo-136-current-form', kind = 'manual_pdf' -- the printable BOE form, which states the boxes a filer completes and not the byte positions of a fichero. This is not an acquisition gap of the kind a missing epoch would be: the modelo has no sibling edition whose design is bundled, so no design exists that has merely gone unfetched. The gravamen especial is presented through AEAT's own electronic form. The runtime filing check is unaffected and still refuses a filing-grade snapshot from an edition with no layout, so disposing this family records why the layout cannot exist without granting a capability."""
+legal_refs = ["ley-35-2006:da-33", "orden-hap-70-2013:art-5"]
+source_refs = ["boe-modelo-136-base-order", "boe-modelo-136-current-form"]

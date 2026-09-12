@@ -1,0 +1,28 @@
+# Modelo 222 declaration-header casillas for the 2024 epoch, grounded in the
+# Orden HFP/227/2017 art 2 approval and the art. 40 LIS pago-fraccionado
+# framework, exactly as the 2025-y-siguientes edition declares them. Both fields
+# are printed by the bundled diseno `aeat-dr-222-2023-2024` on record DR22201 --
+# "Devengo (3). Ejercicio" at position 103 and "Tipo de declaracion" at position
+# 13 -- and neither carries a box number in any epoch.
+
+[[revisions."2024".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["boe-modelo-202-base-order"]
+
+[[revisions."2024".casillas]]
+id = "decl.tipo-declaracion"
+number = "tipo-declaracion"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_declaracion"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["boe-modelo-202-base-order"]

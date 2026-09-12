@@ -1,7 +1,7 @@
 """Per-revision binding refusals derived from the provider registration authority.
 
 The registration table states what each provider kind can do; this module is
-where an authored row is held to it. Four refusals are errors, because each one
+where an authored row is held to it. Six refusals are errors, because each one
 names a declaration that cannot resolve to the value it promises:
 
 * a provider kind with no registration, or a ``deferred`` kind named by a
@@ -16,7 +16,17 @@ names a declaration that cannot resolve to the value it promises:
 * a reviewed-equivalent binding whose value contract differs from the primary's
   -- two alternates that disagree on data type or channel are not equivalents,
   and the casilla would take a different typed value depending on which one
-  resolved.
+  resolved;
+* a second ``prorrata_regularizacion`` binding in one revision, and two row
+  bindings claiming one ``row_field`` of one export record. Both are order
+  refusals: the prorrata consumer reads its four source roles positionally out
+  of the concatenated declaration order, and export field derivation keeps the
+  FIRST binding to claim a ``row_field`` and drops the rest. A revision carrying
+  either duplicate therefore resolves differently depending on the merge order
+  of its binding fragments, which is a filename accident rather than a
+  declaration. Refusing the duplicate is what keeps the surviving positional
+  reads meaningful, so the ambiguity is rejected at the source instead of being
+  silently resolved downstream.
 
 The fifth check, an unreferenced binding without the explicit
 ``non_calculation`` disposition, is :func:`unreferenced_binding_advisories` and
@@ -32,13 +42,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from cadrumo.core.aggregation import BindingAggregationOp
+from cadrumo.domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from cadrumo.domain.calculations.registry.binding_provider_registration import (
     BINDING_PROVIDER_REGISTRATIONS,
     require_relative_provider_coordinates,
     validate_binding_against_registration,
 )
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.binding_targets import binding_consumers
 from cadrumo.domain.calculations.registry.binding_temporal import BindingApplicabilityKind
+from cadrumo.domain.calculations.registry.prorrata_regularizacion_bindings import ProrrataRegularizacionProvider
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
 if TYPE_CHECKING:
@@ -124,7 +138,63 @@ def validate_binding_registration_section(*, prefix: str, revision: ModeloRevisi
     for binding in revision.bindings:
         failures.extend(_registration_failures(prefix=prefix, binding=binding, bound_by=bound_by))
     failures.extend(_alternate_contract_failures(prefix=prefix, revision=revision))
+    failures.extend(_prorrata_duplicate_failures(prefix=prefix, revision=revision))
+    failures.extend(_duplicate_row_field_failures(prefix=prefix, revision=revision))
     return failures
+
+
+def _prorrata_duplicate_failures(*, prefix: str, revision: ModeloRevision) -> list[str]:
+    """Refuse a revision declaring more than one prorrata regularisation binding.
+
+    The consumer concatenates every prorrata binding's ``source_casilla_ids`` in
+    declaration order and then reads four roles -- deductible cuotas, volume with
+    right to deduct, total volume, definitive percentage -- by position. With one
+    binding the positions come from that binding's own reviewed order; with two
+    they come from whichever fragment filename sorted first, so the same corpus
+    would compute a different regularisation after an unrelated rename.
+    """
+    declared = [
+        binding.id for binding in revision.bindings if isinstance(binding.provider, ProrrataRegularizacionProvider)
+    ]
+    if len(declared) < 2:
+        return []
+    return [
+        f"{prefix}: {len(declared)} prorrata_regularizacion bindings are declared ({sorted(declared)}); "
+        f"the positional source roles are read from one binding's reviewed order, so a second declaration "
+        f"makes the regularisation depend on binding fragment merge order",
+    ]
+
+
+def _duplicate_row_field_failures(*, prefix: str, revision: ModeloRevision) -> list[str]:
+    """Refuse two row bindings claiming one ``row_field`` of one record.
+
+    A ``rows`` binding names the record and the row field it fills. Two bindings
+    naming the same pair are not two readings of one slot; they are an ambiguity
+    resolved by merge order at every consumer. Export field derivation is the
+    sharpest case -- it keeps the first claimant and silently drops the rest, so
+    the emitted filing record carries whichever binding's legal and source refs
+    happened to sort first -- and the row-set projection has the same problem.
+    The pair is checked on the declared selector rather than on the export
+    projection so that a record which is not (yet) claimed by an export layout
+    is held to the same uniqueness as one that is.
+    """
+    claimants: dict[tuple[str, str], list[BindingId]] = {}
+    for binding in revision.bindings:
+        if binding_aggregation_op(binding) is not BindingAggregationOp.ROWS:
+            continue
+        selector = selector_as_dict(binding)
+        record = selector.get("record")
+        row_field = selector.get("row_field")
+        if not isinstance(record, str) or not isinstance(row_field, str):
+            continue
+        claimants.setdefault((record, row_field), []).append(binding.id)
+    return [
+        f"{prefix}: record {record!r} row field {row_field!r} is claimed by {len(ids)} row bindings "
+        f"({sorted(ids)}); only the first in binding order contributes a derived export field, so the "
+        f"emitted record depends on binding fragment merge order"
+        for (record, row_field), ids in sorted(claimants.items())
+        if len(ids) > 1
+    ]
 
 
 def unreferenced_binding_advisories(*, prefix: str, revision: ModeloRevision) -> tuple[str, ...]:

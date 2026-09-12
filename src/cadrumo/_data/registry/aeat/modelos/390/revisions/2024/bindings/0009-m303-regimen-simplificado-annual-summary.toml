@@ -6,7 +6,7 @@ id = "modelo-390-m303-simplificado-74-cuota-resultante-no-agricola"
 provider = { kind = "m303_regimen_simplificado_annual_summary", source_modelo = "303", source_casilla_ids = ["51", "53", "52", "54", "55", "56", "57", "58"], summary_casilla_id = "iva.anual.regimen-simplificado.cuota-resultante-no-agricola", temporal = { kind = "filed_current_period", source_period = "4T" } }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure"]
+additional_source_refs = ["aeat-modelo-390-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -17,7 +17,7 @@ id = "modelo-390-m303-simplificado-75-cuota-resultante-agricola"
 provider = { kind = "m303_regimen_simplificado_annual_summary", source_modelo = "303", source_casilla_ids = ["51", "53", "52", "54", "55", "56", "57", "58"], summary_casilla_id = "iva.anual.regimen-simplificado.cuota-resultante-agricola", temporal = { kind = "filed_current_period", source_period = "4T" } }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure"]
+additional_source_refs = ["aeat-modelo-390-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -28,7 +28,7 @@ id = "modelo-390-m303-simplificado-76-aic"
 provider = { kind = "m303_regimen_simplificado_annual_summary", source_modelo = "303", source_casilla_ids = ["51", "53", "52", "54", "55", "56", "57", "58"], summary_casilla_id = "iva.anual.regimen-simplificado.aic-bienes-cuota-devengada", temporal = { kind = "filed_current_period", source_period = "4T" } }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure"]
+additional_source_refs = ["aeat-modelo-390-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -39,7 +39,7 @@ id = "modelo-390-m303-simplificado-77-inversion-sujeto-pasivo"
 provider = { kind = "m303_regimen_simplificado_annual_summary", source_modelo = "303", source_casilla_ids = ["51", "53", "52", "54", "55", "56", "57", "58"], summary_casilla_id = "iva.anual.regimen-simplificado.inversion-sujeto-pasivo", temporal = { kind = "filed_current_period", source_period = "4T" } }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure"]
+additional_source_refs = ["aeat-modelo-390-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -50,7 +50,7 @@ id = "modelo-390-m303-simplificado-78-entregas-activos"
 provider = { kind = "m303_regimen_simplificado_annual_summary", source_modelo = "303", source_casilla_ids = ["51", "53", "52", "54", "55", "56", "57", "58"], summary_casilla_id = "iva.anual.regimen-simplificado.entrega-activos-fijos", temporal = { kind = "filed_current_period", source_period = "4T" } }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure"]
+additional_source_refs = ["aeat-modelo-390-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -61,7 +61,7 @@ id = "modelo-390-m303-simplificado-79-total-cuota-resultante"
 provider = { kind = "m303_regimen_simplificado_annual_summary", source_modelo = "303", source_casilla_ids = ["51", "53", "52", "54", "55", "56", "57", "58"], summary_casilla_id = "iva.anual.reconciliacion.devengada-simplificado-303", temporal = { kind = "filed_current_period", source_period = "4T" } }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure"]
+additional_source_refs = ["aeat-modelo-390-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -72,7 +72,7 @@ id = "modelo-390-m303-simplificado-80-activos-fijos"
 provider = { kind = "m303_regimen_simplificado_annual_summary", source_modelo = "303", source_casilla_ids = ["51", "53", "52", "54", "55", "56", "57", "58"], summary_casilla_id = "iva.anual.regimen-simplificado.iva-soportado-activos-fijos", temporal = { kind = "filed_current_period", source_period = "4T" } }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure"]
+additional_source_refs = ["aeat-modelo-390-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -83,7 +83,7 @@ id = "modelo-390-m303-simplificado-81-regularizacion-inversion"
 provider = { kind = "m303_regimen_simplificado_annual_summary", source_modelo = "303", source_casilla_ids = ["51", "53", "52", "54", "55", "56", "57", "58"], summary_casilla_id = "iva.anual.regimen-simplificado.regularizacion-bienes-inversion", temporal = { kind = "filed_current_period", source_period = "4T" } }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure"]
+additional_source_refs = ["aeat-modelo-390-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -94,7 +94,7 @@ id = "modelo-390-m303-simplificado-82-suma-deducciones"
 provider = { kind = "m303_regimen_simplificado_annual_summary", source_modelo = "303", source_casilla_ids = ["51", "53", "52", "54", "55", "56", "57", "58"], summary_casilla_id = "iva.anual.regimen-simplificado.suma-deducciones", temporal = { kind = "filed_current_period", source_period = "4T" } }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure"]
+additional_source_refs = ["aeat-modelo-390-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -105,7 +105,7 @@ id = "modelo-390-m303-simplificado-83-resultado"
 provider = { kind = "m303_regimen_simplificado_annual_summary", source_modelo = "303", source_casilla_ids = ["51", "53", "52", "54", "55", "56", "57", "58"], summary_casilla_id = "iva.anual.regimen-simplificado.resultado", temporal = { kind = "filed_current_period", source_period = "4T" } }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure"]
+additional_source_refs = ["aeat-modelo-390-procedure"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"

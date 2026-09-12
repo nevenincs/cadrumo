@@ -20,7 +20,7 @@ See Also:
         Registry validator that checks the plazo and legal catalogue references.
     :class:`~core.modelo.Modelo`
         Canonical fleet membership these new-tax registrations extend.
-    :data:`~core.UNMODELED_OBLIGATIONS`
+    :data:`~domain.calculations.registry.modelo_obligation_scope.UNMODELED_OBLIGATIONS`
         Former recognized-unmodeled set reduced by these promotions.
     :mod:`~domain.calculations.registry.tests.test_modelo_592_576_121_122_registry`
         Companion registry coverage for the remaining new-tax modelos.

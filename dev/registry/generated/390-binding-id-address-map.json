@@ -1,0 +1,59 @@
+{
+  "modelo": "390",
+  "refused_modelo": false,
+  "candidates": 5,
+  "surviving": 5,
+  "applied": 5,
+  "bindings": [
+    {
+      "edition": "2024",
+      "old_id": "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-reduccion-aplicable-por-1273",
+      "new_id": "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-reduccion-aplicable-por",
+      "removed": "1273",
+      "record": "page_5",
+      "offset": 1273,
+      "length": 17,
+      "field": "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-reduccion-aplicable-por-1273"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-reduccion-aplicable-por-1290",
+      "new_id": "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-reduccion-aplicable-por",
+      "removed": "1290",
+      "record": "page_5",
+      "offset": 1290,
+      "length": 17,
+      "field": "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-reduccion-aplicable-por-1290"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-reduccion-aplicable-por-1307",
+      "new_id": "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-reduccion-aplicable-por",
+      "removed": "1307",
+      "record": "page_5",
+      "offset": 1307,
+      "length": 17,
+      "field": "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-reduccion-aplicable-por-1307"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-reduccion-aplicable-por-1324",
+      "new_id": "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-reduccion-aplicable-por",
+      "removed": "1324",
+      "record": "page_5",
+      "offset": 1324,
+      "length": 17,
+      "field": "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-reduccion-aplicable-por-1324"
+    },
+    {
+      "edition": "2024",
+      "old_id": "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-reduccion-aplicable-por-1341",
+      "new_id": "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-reduccion-aplicable-por",
+      "removed": "1341",
+      "record": "page_5",
+      "offset": 1341,
+      "length": 17,
+      "field": "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-reduccion-aplicable-por-1341"
+    }
+  ]
+}

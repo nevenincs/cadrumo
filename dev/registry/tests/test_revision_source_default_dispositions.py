@@ -1,6 +1,7 @@
 """An edition's authored statement that a family source default is underivable.
 
-``casilla_source_refs``, ``binding_source_refs`` and ``formula_source_refs``
+``casilla_source_refs`` and the per-family default key of every family enrolled
+in ``FAMILY_SOURCE_DEFAULT_FIELDS``
 lift a family's shared grounding onto the manifest, but only when a leading run
 of references opens two of the family's statements. An edition whose rows share
 no such run has nothing to lift, and a MISSING key cannot say whether that is
@@ -112,7 +113,7 @@ def test_an_authored_disposition_reaches_the_revision(tmp_path: Path) -> None:
 def test_a_disposition_for_a_family_carrying_no_default_is_refused(tmp_path: Path) -> None:
     """A key naming no source-default family explains nothing while reading as though it did."""
     with pytest.raises(RegistryLoadError, match="declares no edition source default"):
-        load_modelo_directory(_tree(tmp_path, dispositions=_disposition("parameters")))
+        load_modelo_directory(_tree(tmp_path, dispositions=_disposition("deadline_windows")))
 
 
 def test_a_disposition_contradicting_a_declared_default_is_refused(tmp_path: Path) -> None:

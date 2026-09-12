@@ -236,8 +236,12 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "165"
+continuidad_id = "m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:145 (sha256 a70f3a2ca7dd) box [165] field 100 position 1350 length 17 Num; corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:84 (sha256 f014cec44d49) box [165] field 43 position 444 length 17 Num; same description and content format (15 enteros + 2 decimales); only record field/position moved."
 number = "165"
 section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_resto_de_operaciones_en_regimen_general_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"

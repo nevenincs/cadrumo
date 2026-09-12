@@ -150,6 +150,19 @@ _KEYED_FAMILIES: Final[tuple[_KeyedFamily, ...]] = (
     _KeyedFamily(section="application_links", identity="id"),
     _KeyedFamily(section="parameters", identity="id", identity_fields=("data_type",)),
     _KeyedFamily(section="deadline_windows", identity="id", period_scoped=True),
+    # Both families were held out of the union while their members had no
+    # identity to key on. Required ids now exist on every member -- 2,460
+    # endpoints and 183 predicates, verified on disk -- so they inherit like
+    # any other keyed family.
+    #
+    # Endpoints carry no identity_fields: a casilla id renumbers between
+    # editions while the endpoint stays the same endpoint, so treating one as
+    # identity would read a renumbering as a repurpose and refuse the edition.
+    _KeyedFamily(section="projection_endpoints", identity="id"),
+    # A predicate softened from a blocking rule to an advisory one is no longer
+    # the same claim about the filing, so finding_kind is identity: the change
+    # must be declared as a repurpose rather than inherited in place.
+    _KeyedFamily(section="verification_predicates", identity="id", identity_fields=("finding_kind",)),
 )
 
 
@@ -323,6 +336,30 @@ def _period_token(value: object) -> str | None:
     return value.split()[-1].upper()
 
 
+def _selector_periods_for_year(table: Mapping[str, object], year: object) -> object:
+    """The periods a selector serves in one filing year, honouring a ``period_overrides`` entry.
+
+    A transition year files a narrower surface than the years around it: an
+    orden that applies from the second trimestre or the month of February
+    leaves January and the first trimestre with the preceding edition. The flat
+    ``periods`` tuple cannot say that, so an override replaces it for the one
+    year it names. Reading the flat tuple here would inherit a period-scoped
+    member for a period the successor does not file in the transition year,
+    which no gate would catch because the member is individually valid.
+
+    Mirrors ``PeriodSelector.periods_for_year`` against the raw table, since
+    inheritance runs before typed construction.
+    """
+    if isinstance(year, int):
+        overrides = table.get("period_overrides")
+        if isinstance(overrides, list | tuple):
+            for override in overrides:
+                override_table = _as_toml_table(override)
+                if override_table is not None and override_table.get("year") == year:
+                    return override_table.get("periods")
+    return table.get("periods")
+
+
 def _selector_covers(selector: object, member: object) -> bool:
     """Whether an edition's ``period_selector`` covers this member's own filing period.
 
@@ -352,7 +389,7 @@ def _selector_covers(selector: object, member: object) -> bool:
         if isinstance(year_to, int) and year > year_to:
             return False
     period = _period_token(member_table.get("period"))
-    periods = table.get("periods")
+    periods = _selector_periods_for_year(table, member_table.get("filing_year"))
     if period is not None and isinstance(periods, list | tuple):
         covered = {token for value in periods if (token := _period_token(value)) is not None}
         if covered and period not in covered:

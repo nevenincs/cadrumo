@@ -354,7 +354,7 @@ def _period_matches(period_selector: PeriodSelector | None, query: _FactQuery) -
         and period_selector.includes_year(query.filing_year)
         and any(
             selector_period_matches_request(selector_period, query.period)
-            for selector_period in period_selector.periods
+            for selector_period in period_selector.periods_for_year(query.filing_year)
         )
     )
 

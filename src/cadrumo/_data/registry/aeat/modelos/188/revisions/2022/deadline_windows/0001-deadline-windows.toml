@@ -1,0 +1,23 @@
+# Plazo for the ejercicio 2022 resumen anual, presented in January 2023.
+#
+# The NOMINAL 1-31 enero window is the one AEAT publishes in its Calendario del
+# Contribuyente, cited here as aeat-calendario-contribuyente-2023 (declared
+# window 2023-01-01..2023-12-31, which is the year this window opens and closes
+# in). It is CITED, not quoted: that calendario is bundled as a PDF with no
+# extracted sidecar, so no verbatim line is reproduced from it.
+#
+# The Orden's own plazo apartados are NOT registered as legal refs -- only
+# apartado-primero and apartado-quinto of orden-1999-11-17 exist in the legal
+# catalogue -- and they state 1-20 enero for papel and 1 enero-20 febrero for
+# soporte, neither of which is the window in current use. This edition
+# therefore cites apartado-quinto, the approving apartado, exactly as the
+# 2023-y-siguientes edition does, and no plazo article id is invented.
+[[revisions."2022".deadline_windows]]
+id = "modelo-188-2022-0a"
+filing_year = 2022
+period = "2022 0A"
+period_kind = "annual"
+opens_on = 2023-01-01
+closes_on = 2023-01-31
+legal_refs = ["orden-1999-11-17:apartado-quinto"]
+source_refs = ["aeat-calendario-contribuyente-2023", "aeat-modelo-188-procedure", "boe-modelo-188-form-layout"]

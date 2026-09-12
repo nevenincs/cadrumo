@@ -1064,6 +1064,9 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Total retenciones o ingresos a cuenta [16]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p03.total-retenciones-o-ingresos-a-cuenta-16"
+continuidad_id = "p03-total-retenciones-o-ingresos-a-cuenta-16"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-151-2015-2022 campo 79 y aeat-dr-151-2023-y-siguientes campo 75, registro M15103000: ambos disenos declaran Total retenciones o ingresos a cuenta [16] en la misma posicion 1040, con longitud 17 y tipo Num. La casilla impresa [16], la descripcion oficial, la posicion de byte y la longitud coinciden; solo cambia el ordinal del campo por la reordenacion del registro."
 number = "1040-1056"
 segmento = "M15103000"
 section = ["p03", "total_retenciones_o_ingresos_a_cuenta"]

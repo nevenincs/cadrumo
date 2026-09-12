@@ -23,6 +23,17 @@ source_refs = [
     "boe-modelo-280-2022-amendment-hfp-1192",
 ]
 
+# READY TO AUTHOR -- editions 280/2022, 2023, 2024, analysed 2026-09-12 and deferred
+# only by a coordination freeze, not by missing evidence. Correct shape is ONE revision
+# spanning 2022-2024: aeat-dr-280-2022 declares applies_from 2022-01-01 with NO closing
+# bound, and Orden HFP/1192/2022 DF unica says it applies "por primera vez, para las
+# declaraciones correspondientes al ejercicio 2022". 27 casillas mirroring the 2025
+# edition; deadline windows February 2023, 2024 and 2025 from art. 4, "durante el mes de
+# febrero de cada ano". Grade applicability: the procedure source opens 2025-01-01.
+# Contrast with modelo 345, whose per-ejercicio designs carry CLOSED windows and whose
+# record grew mid-span -- there the eras are genuinely separate and one span would be
+# wrong. Here the design is one era and three revisions would assert a distinction no
+# source states.
 [modelo.inception.unauthored]
 earliest_authored = 2025
 reason = "Approved by Orden HAP/2118/2015 in force from 2016; filing years 2022-2024 existed in law and are not yet authored."

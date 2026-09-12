@@ -117,13 +117,9 @@ def _collect_deadline_schedule_refs(
 # Protocol declares. ``_install_cross_domain_snapshot_checks`` imports them by
 # name so the registration is deterministic at snapshot build, independent of
 # whatever else the importing process happened to load first.
-# Each entry names the PUBLIC module that actually performs the registration,
-# not its package facade: a runtime-built import target carries the same
-# ownership rule as a static import, and the AST import scanner cannot see
-# these strings. Naming the facade instead made this depend on that package's
-# ``__init__`` importing the check module as a side effect, so making the
-# namespace inert -- which the architecture rule requires -- silently stopped
-# the registration and failed every Modelo 100 snapshot validation.
+# Each entry names the public defining module that performs the registration.
+# Runtime-built import targets carry the same ownership rule as static imports,
+# while remaining invisible to an AST import scanner.
 # Derived from the requirement declaration rather than restated beside it: the
 # modules installed here and the checks the validator demands are the same set
 # by construction, so neither can be moved without the other.
@@ -236,7 +232,7 @@ def build_validated_snapshot(
     # construction site, through the same resolver the query service uses; it
     # returns the declared selector token and preserves a concrete EVENT-n scope
     # rather than collapsing it to the symbolic EVENT-N selector.
-    period = registry_period_for_request(revision.period_selector.periods, period) or period
+    period = registry_period_for_request(revision.period_selector.declared_periods, period) or period
     revision = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})
     validate_materialized_export_record_families(revision)
     if grade is RegistryAuthorityGrade.FILING:

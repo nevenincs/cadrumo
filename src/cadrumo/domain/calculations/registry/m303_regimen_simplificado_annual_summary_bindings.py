@@ -32,6 +32,15 @@ __all__ = [
 
 _SOURCE_CASILLA_IDS: tuple[CasillaId, ...] = ("51", "53", "52", "54", "55", "56", "57", "58")
 _ANNUAL_SUMMARY_SOURCE_PERIOD: FilingPeriodCode = "4T"
+#: The ten official Modelo 390 boxes the simplified-regime annual summary fills.
+#:
+#: The set is closed by the official Modelo 390 record design, so it is stated
+#: here as a set rather than derived by counting declarations: a revision that
+#: authored nine bindings would otherwise check nine boxes and call the map
+#: complete. Membership is what each endpoint is held to; position is not, which
+#: is why the fragment merge order of the binding declarations cannot move a box
+#: number from one endpoint to another.
+_OFFICIAL_SUMMARY_CASILLA_NUMBERS: frozenset[str] = frozenset(str(number) for number in range(74, 84))
 
 
 class M303RegimenSimplificadoAnnualSummaryProvider(BaseModel):
@@ -141,17 +150,8 @@ def validate_m303_regimen_simplificado_annual_summary_revision(revision: ModeloR
 
     # The authoring revision is the authority at publish time. Runtime handoff
     # code deliberately never supplies a second endpoint catalogue.
-    expected_casilla_ids = tuple(requirement.binding_ids_by_summary_casilla_id)
-    failures: list[str] = []
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
-    failures.extend(
-        _endpoint_failures(
-            expected_casilla_ids,
-            requirement.binding_ids_by_summary_casilla_id,
-            casillas_by_id,
-        )
-    )
-    return failures
+    return _endpoint_failures(requirement.binding_ids_by_summary_casilla_id, casillas_by_id)
 
 
 def _annual_summary_bindings(revision: ModeloRevision) -> tuple[BindingDefinition, ...]:
@@ -200,30 +200,54 @@ def _dependency_treatment(revision: ModeloRevision, source_modelo: ModeloId) -> 
 
 
 def _endpoint_failures(
-    expected_casilla_ids: tuple[CasillaId, ...],
     binding_ids_by_summary_casilla_id: Mapping[CasillaId, BindingId],
     casillas_by_id: Mapping[CasillaId, CasillaDefinition],
 ) -> list[str]:
+    """Hold every declared endpoint to its own official Modelo 390 box number.
+
+    Each endpoint is checked against the closed official set, and the claimed
+    numbers must cover that set exactly once. Nothing reads the declaration
+    sequence, so permuting the binding fragments cannot reassign a box.
+    """
     failures: list[str] = []
-    for ordinal, casilla_id in enumerate(expected_casilla_ids, start=74):
+    claimants_by_number: dict[str, list[CasillaId]] = {}
+    for casilla_id, binding_id in binding_ids_by_summary_casilla_id.items():
         casilla = casillas_by_id.get(casilla_id)
-        binding_id = binding_ids_by_summary_casilla_id.get(casilla_id)
         if casilla is None:
             failures.append(
                 "m303_regimen_simplificado_annual_summary endpoint "
-                f"{casilla_id!r} is not declared as Modelo 390 casilla {ordinal}",
+                f"{casilla_id!r} is not declared as a Modelo 390 casilla",
             )
             continue
-        if casilla.number != str(ordinal):
+        if casilla.number not in _OFFICIAL_SUMMARY_CASILLA_NUMBERS:
             failures.append(
                 "m303_regimen_simplificado_annual_summary endpoint "
-                f"{casilla_id!r} must retain official Modelo 390 casilla number {ordinal}",
+                f"{casilla_id!r} declares Modelo 390 casilla number {casilla.number!r}, which is not one of the "
+                f"official annual-summary boxes {sorted(_OFFICIAL_SUMMARY_CASILLA_NUMBERS, key=int)}",
             )
-        if binding_id is not None and (
-            casilla.input_kind is not InputKind.BOUND or bound_casilla_binding_ids(casilla) != (binding_id,)
-        ):
+        else:
+            claimants_by_number.setdefault(casilla.number, []).append(casilla_id)
+        if casilla.input_kind is not InputKind.BOUND or bound_casilla_binding_ids(casilla) != (binding_id,):
             failures.append(
                 "m303_regimen_simplificado_annual_summary endpoint "
                 f"{casilla_id!r} must be bound only by {binding_id!r}",
             )
+    failures.extend(_official_box_coverage_failures(claimants_by_number))
+    return failures
+
+
+def _official_box_coverage_failures(claimants_by_number: Mapping[str, list[CasillaId]]) -> list[str]:
+    """Return the failures for an annual-summary map that misses or doubles a box."""
+    failures = [
+        "m303_regimen_simplificado_annual_summary declares multiple endpoints for official Modelo 390 "
+        f"casilla number {number!r}: {sorted(claimants)}"
+        for number, claimants in sorted(claimants_by_number.items(), key=lambda item: int(item[0]))
+        if len(claimants) > 1
+    ]
+    missing = _OFFICIAL_SUMMARY_CASILLA_NUMBERS - claimants_by_number.keys()
+    if missing:
+        failures.append(
+            "m303_regimen_simplificado_annual_summary declares no endpoint for official Modelo 390 "
+            f"casilla numbers {sorted(missing, key=int)}",
+        )
     return failures

@@ -685,19 +685,34 @@ class ModeloRevision(RegistryRevisionDeclaration):
     the binding and formula families, and carry the same member-side rule: a
     row stating no ``source_refs`` takes the edition default, a row stating
     ``additional_source_refs`` takes the default followed by its additions, and
-    a row stating ``source_refs`` keeps them whole. Three fields rather than one
-    because the three families are grounded in different documents -- a
-    modelo's casillas in its diseno de registros, its bindings in that design's
-    record layout, its formulas in the approving orden's instructions -- and one
-    shared default would force an edition to restate on two families whenever
-    the third differs. Each is independent: declaring one says nothing about
+    a row stating ``source_refs`` keeps them whole.
+    ``application_link_source_refs``, ``applicability_source_refs``,
+    ``filing_schedule_source_refs``, ``live_cross_reference_source_refs``,
+    ``extraction_profile_source_refs``,
+    ``dependency_classification_source_refs``, ``construct_source_refs`` and
+    ``parameter_source_refs`` state the same fact, under the same rule, for the
+    ``application_links``, ``applicability``, ``filing_schedules``,
+    ``live_cross_references``, ``extraction_profiles``,
+    ``dependency_classifications``, ``constructs`` and ``parameters``
+    families.
+
+    One field per family rather than one shared field because the families are
+    grounded in different documents -- a modelo's casillas in its diseno de
+    registros, its bindings in that design's record layout, its formulas in the
+    approving orden's instructions, its filing schedules and applicability in
+    the approving orden's plazos and obligation articles -- and one shared
+    default would force an edition to restate on every other family whenever
+    one of them differs. Each is independent: declaring one says nothing about
     the others, and an edition declaring none is exactly as it was before these
-    keys existed.
+    keys existed. The pairing of family to field is declared once, in
+    :data:`~.reference_sections.FAMILY_SOURCE_DEFAULT_FIELDS`, which is what the
+    loader fills from, so no family can be defaulted from another's grounding.
 
     ``source_default_dispositions`` is what an edition says when one of those
-    three defaults cannot be derived at all: its rows share no leading run of
+    defaults cannot be derived at all: its rows share no leading run of
     ``source_refs``, so each row keeps its own and there is nothing to lift.
-    Keyed by family -- ``casillas``, ``bindings``, ``formulas`` -- and carrying
+    Keyed by family -- ``casillas`` and every family in
+    :data:`~.reference_sections.FAMILY_SOURCE_DEFAULT_FIELDS` -- and carrying
     a :class:`~.source_default_dispositions.SourceDefaultDisposition` reason,
     it separates an edition that has nothing to lift from one nobody has lifted
     yet, which a missing key alone cannot distinguish. A disposition for a
@@ -719,6 +734,38 @@ class ModeloRevision(RegistryRevisionDeclaration):
         exclude_if=lambda value: value is None,
     )
     formula_source_refs: Annotated[SourceRefs | None, MANIFEST_ONLY] = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
+    application_link_source_refs: Annotated[SourceRefs | None, MANIFEST_ONLY] = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
+    applicability_source_refs: Annotated[SourceRefs | None, MANIFEST_ONLY] = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
+    filing_schedule_source_refs: Annotated[SourceRefs | None, MANIFEST_ONLY] = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
+    live_cross_reference_source_refs: Annotated[SourceRefs | None, MANIFEST_ONLY] = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
+    extraction_profile_source_refs: Annotated[SourceRefs | None, MANIFEST_ONLY] = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
+    dependency_classification_source_refs: Annotated[SourceRefs | None, MANIFEST_ONLY] = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
+    construct_source_refs: Annotated[SourceRefs | None, MANIFEST_ONLY] = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
+    parameter_source_refs: Annotated[SourceRefs | None, MANIFEST_ONLY] = Field(
         default=None,
         exclude_if=lambda value: value is None,
     )

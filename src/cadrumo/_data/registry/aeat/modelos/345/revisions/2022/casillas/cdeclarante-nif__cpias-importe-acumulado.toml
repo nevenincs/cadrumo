@@ -1,0 +1,245 @@
+# Modelo 345, ejercicio 2022 -- transcribed from the ANEXO of Orden HFP/823/2022
+# as approved, bundled and hash-pinned as boe-modelo-345-base-order
+# (corpus/normatives/html/orden-hfp-823-2022.html, sha256
+# f879a2cf8d81cafa3070447fb3b088a10414269564f2515548c32707fce418fc).
+#
+# Every id, span and section below is the anexo's own; nothing is inferred and
+# nothing is carried back from a later design. The campos this epoch does NOT
+# have -- 190-270 (clave M / PEPP), 271 (rendimientos), 272-320 (empleador) and
+# 321 (devoluciones), all created by Orden HFP/528/2023 for ejercicio 2023 -- are
+# absent from this file because they are absent from the record, which the anexo
+# closes at «190‑500 – BLANCOS.».
+#
+# The edition default `casilla_source_refs = ["boe-modelo-345-base-order"]`
+# grounds every row below, so no row restates it.
+
+[[revisions."2022".casillas]]
+id = "declarante-nif"
+number = "tipo1.9-17"
+section = ["registro_declarante", "identificacion"]
+data_type = "nif"
+semantic_role = "m345_declarante_nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-2"]
+
+[[revisions."2022".casillas]]
+id = "ejercicio-declaracion"
+number = "tipo1.5-8"
+section = ["registro_declarante", "identificacion"]
+data_type = "year"
+semantic_role = "m345_ejercicio_declaracion"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-4"]
+
+[[revisions."2022".casillas]]
+id = "declarante-razon-social"
+number = "tipo1.18-57"
+section = ["registro_declarante", "identificacion"]
+data_type = "name"
+semantic_role = "m345_declarante_razon_social"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-2"]
+
+# Registro de tipo 1, positions 136-144. Operator-supplied in this revision: no
+# ejercicio-2022 instrucciones source is bundled, so no formula derives it.
+[[revisions."2022".casillas]]
+id = "total-declarados"
+number = "tipo1.136-144"
+section = ["registro_declarante", "resumen"]
+data_type = "integer"
+semantic_role = "m345_total_declarados"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-3"]
+
+# Registro de tipo 1, positions 145-159, subdivided 145-157 parte entera and
+# 158-159 parte decimal. Operator-supplied for the same reason as above.
+[[revisions."2022".casillas]]
+id = "importe-total-aportaciones"
+number = "tipo1.145-159"
+section = ["registro_declarante", "resumen"]
+data_type = "money"
+semantic_role = "m345_importe_total_aportaciones"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-3"]
+
+[[revisions."2022".casillas]]
+id = "declarado-nif"
+number = "tipo2.18-26"
+section = ["registro_declarado", "identificacion"]
+data_type = "nif"
+semantic_role = "m345_declarado_nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-2", "orden-hfp-823-2022:art-3"]
+
+[[revisions."2022".casillas]]
+id = "declarado-nombre"
+number = "tipo2.36-75"
+section = ["registro_declarado", "identificacion"]
+data_type = "name"
+semantic_role = "m345_declarado_nombre"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-2", "orden-hfp-823-2022:art-3"]
+
+[[revisions."2022".casillas]]
+id = "anio-nacimiento"
+number = "tipo2.76-79"
+section = ["registro_declarado", "identificacion"]
+data_type = "year"
+semantic_role = "m345_anio_nacimiento"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-3"]
+
+[[revisions."2022".casillas]]
+id = "codigo-provincia"
+number = "tipo2.80-81"
+section = ["registro_declarado", "domicilio"]
+data_type = "text"
+semantic_role = "m345_codigo_provincia"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-3"]
+
+# Position 82, CLAVE. The anexo's original clave table: no amendment reaches this
+# ejercicio, so the clave set is the one Orden HFP/823/2022 approved.
+[[revisions."2022".casillas]]
+id = "clave"
+number = "tipo2.82"
+section = ["registro_declarado", "aportaciones"]
+data_type = "text"
+semantic_role = "m345_clave"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-3"]
+
+# Positions 83-84, SUBCLAVE. As approved: the subclave re-lettering of Orden
+# HFP/528/2023, the clave A subclave 03 change of Orden HFP/1397/2023 and the
+# clave/subclave change of Orden HAC/1504/2024 all apply to later ejercicios.
+[[revisions."2022".casillas]]
+id = "subclave"
+number = "tipo2.83-84"
+section = ["registro_declarado", "aportaciones"]
+data_type = "text"
+semantic_role = "m345_subclave"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-3"]
+
+[[revisions."2022".casillas]]
+id = "beneficiario-nif"
+number = "tipo2.85-93"
+section = ["registro_declarado", "beneficiario"]
+data_type = "nif"
+semantic_role = "m345_beneficiario_nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-3"]
+
+# Positions 94-106, subdivided 94-104 parte entera and 105-106 parte decimal.
+[[revisions."2022".casillas]]
+id = "importe"
+number = "tipo2.94-106"
+section = ["registro_declarado", "aportaciones"]
+data_type = "money"
+semantic_role = "m345_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-3"]
+
+# The anexo's own parent span for the claves A, B and C additional data, declared
+# here the way this modelo declares the other parent spans.
+[[revisions."2022".casillas]]
+id = "datos-adicionales-claves-abc"
+number = "tipo2.107-160"
+section = ["registro_declarado", "datos_adicionales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-3"]
+
+[[revisions."2022".casillas]]
+id = "plan-pensiones-denominacion"
+number = "tipo2.107-146"
+section = ["registro_declarado", "datos_adicionales", "claves_abc"]
+data_type = "text"
+semantic_role = "m345_plan_pensiones_denominacion"
+required = false
+input_kind = "manual"
+constraints = { max_length = 40, legal_refs = ["orden-hfp-823-2022:art-3"] }
+legal_refs = ["orden-hfp-823-2022:art-3"]
+
+[[revisions."2022".casillas]]
+id = "fondo-pensiones-numero-registro"
+number = "tipo2.147-151"
+section = ["registro_declarado", "datos_adicionales", "claves_abc"]
+data_type = "text"
+semantic_role = "m345_fondo_pensiones_numero_registro"
+required = false
+input_kind = "manual"
+constraints = { max_length = 5, legal_refs = ["orden-hfp-823-2022:art-3"] }
+legal_refs = ["orden-hfp-823-2022:art-3"]
+
+[[revisions."2022".casillas]]
+id = "fondo-pensiones-nif"
+number = "tipo2.152-160"
+section = ["registro_declarado", "datos_adicionales", "claves_abc"]
+data_type = "nif"
+semantic_role = "m345_fondo_pensiones_nif"
+required = false
+input_kind = "manual"
+constraints = { max_length = 9, legal_refs = ["orden-hfp-823-2022:art-3"] }
+legal_refs = ["orden-hfp-823-2022:art-3"]
+
+[[revisions."2022".casillas]]
+id = "entidad-aseguradora-nif"
+number = "tipo2.161-169"
+section = ["registro_declarado", "datos_adicionales", "clave_d"]
+data_type = "nif"
+semantic_role = "m345_entidad_aseguradora_nif"
+required = false
+input_kind = "manual"
+constraints = { max_length = 9, legal_refs = ["orden-hfp-823-2022:art-3"] }
+legal_refs = ["orden-hfp-823-2022:art-3"]
+
+# The anexo's own parent span for the clave I additional data, positions 170-189.
+# This is the LAST campo of the ejercicio-2022 registro de tipo 2; the anexo
+# closes the record immediately after it with «190‑500 – BLANCOS.».
+[[revisions."2022".casillas]]
+id = "datos-adicionales-clave-i"
+number = "tipo2.170-189"
+section = ["registro_declarado", "datos_adicionales"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-3"]
+
+[[revisions."2022".casillas]]
+id = "pias-fecha-primera-prima"
+number = "tipo2.170-177"
+section = ["registro_declarado", "datos_adicionales", "clave_i"]
+data_type = "date"
+semantic_role = "m345_pias_fecha_primera_prima"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-3"]
+
+# Positions 178-189, subdivided 178-187 parte entera and 188-189 parte decimal.
+# The 240.000 EUR ceiling is the anexo's own: «no podrá superar la cuantía total
+# de 240.000 € por contribuyente».
+[[revisions."2022".casillas]]
+id = "pias-importe-acumulado"
+number = "tipo2.178-189"
+section = ["registro_declarado", "datos_adicionales", "clave_i"]
+data_type = "money"
+semantic_role = "m345_pias_importe_acumulado"
+required = false
+input_kind = "manual"
+constraints = { sign = "non_negative", max_value = "240000", legal_refs = ["orden-hfp-823-2022:art-3"] }
+legal_refs = ["orden-hfp-823-2022:art-3"]

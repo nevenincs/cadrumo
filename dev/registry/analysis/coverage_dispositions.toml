@@ -614,3 +614,21 @@ kind = "promised_coordinate_unserved"
 classification = "unauthored"
 reason = "Modelo 353 is a monthly autoliquidacion, and Orden EHA/3434/2007 art. 8 names the January period expressly, giving it until the last day of February to be filed. Orden HAC/27/2026 disposicion final unica applies the replacement anexo II for the first time to the autoliquidaciones correspondientes al segundo trimestre o al mes de febrero de 2026, so it does not reach January; January 2026 was filed under the anexo II it replaced. The corpus closes that predecessor design at 2025-12-31, leaving the periodo authored by neither edition. The coordinate exists in law and is authoring debt."
 authority = "orden-hac-27-2026:disposicion-final-unica (BOE-A-2026-1761); orden-eha-3434-2007:art-8 (BOE-A-2007-20484)"
+
+[[disposition]]
+modelo = "222"
+filing_year = 2022
+period = "*"
+kind = "promised_year_unserved"
+classification = "unauthored"
+reason = "Modelo 222 was approved by Orden HFP/227/2017 art. 2, in force from 16 March 2017, five years before this gap year, and the approving article makes it de uso obligatorio for the pagos fraccionados del art. 40 LIS filed by grupos fiscales en regimen de consolidacion fiscal. Art. 5 apartado 2 of the same orden fixes the plazo as los primeros veinte dias naturales de los meses de abril, octubre y diciembre de cada ano natural, a standing yearly obligation carrying no end date and no exception for 2022. The modelo existed and was filed in this ejercicio; no revision was authored for it. This entry NAMES the gap and does not close it."
+authority = "orden-hfp-227-2017:art-2 (BOE-A-2017-2778); orden-hfp-227-2017:art-5 (apartado 2)"
+
+[[disposition]]
+modelo = "296"
+filing_year = 2022
+period = "*"
+kind = "promised_year_unserved"
+classification = "unauthored"
+reason = "Modelo 296, the declaracion anual de retenciones e ingresos a cuenta del IRNR de no residentes sin establecimiento permanente, was approved by Orden EHA/3290/2008 art. 6, whose texto original entered into force on 18 November 2008, fourteen years before this gap year. Art. 11 of the same orden fixes the plazo as el comprendido entre el 1 de enero y el 31 de enero del ano siguiente al que corresponde la declaracion anual, an unconditional annual obligation that names no terminal ejercicio and was still being amended in 2024 by Orden HAC/56/2024 art. 2.3, which proves the modelo was live across 2022. The modelo existed and was filed for this ejercicio; no revision was authored for it. This entry NAMES the gap and does not close it."
+authority = "orden-eha-3290-2008:art-6 (BOE-A-2008-18497); orden-eha-3290-2008:art-11 (BOE-A-2008-18111, consolidated)"

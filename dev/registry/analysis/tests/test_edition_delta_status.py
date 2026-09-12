@@ -615,6 +615,40 @@ class TestUnionFamilies:
         self._bindings_edition(tmp_path, "2024", self._FIRST + '\nbinding_source_refs = ["dr-2024"]', rows)
         assert "family_default_undeclared" not in _kinds(tmp_path)
 
+    def _section_edition(self, root: Path, edition: str, manifest: str, family: str, rows: str) -> None:
+        _write_edition(
+            root,
+            "999",
+            edition,
+            manifest=manifest,
+            casillas=f'[[revisions."{edition}".casillas]]\nid = "{edition}"\ncontinuidad_id = "c{edition}"\n',
+        )
+        section = root / "modelos" / "999" / "revisions" / edition / family
+        section.mkdir()
+        (section / "0001.toml").write_text(rows, encoding="utf-8")
+
+    _APPLICATION_LINKS = (
+        '[[revisions."2024".application_links]]\nid = "a1"\nsurface = "filing"\nsource_refs = ["proc-2024"]\n\n'
+        '[[revisions."2024".application_links]]\nid = "a2"\nsurface = "export"\nsource_refs = ["proc-2024"]\n'
+    )
+
+    def test_a_derivable_application_link_default_the_manifest_lacks_is_named(self, tmp_path: Path) -> None:
+        """The newly enrolled families are screened by the same rule, not only bindings and formulas."""
+        self._section_edition(tmp_path, "2024", self._FIRST, "application_links", self._APPLICATION_LINKS)
+        kinds = [(f.kind, f.locus) for s in scan_registry(tmp_path) for f in s.findings]
+        assert ("family_default_undeclared", "application_links") in kinds
+
+    def test_a_declared_application_link_default_is_not_named(self, tmp_path: Path) -> None:
+        """Declaring the key closes the finding, so the screen reads the manifest key and not the family name."""
+        self._section_edition(
+            tmp_path,
+            "2024",
+            self._FIRST + '\napplication_link_source_refs = ["proc-2024"]',
+            "application_links",
+            self._APPLICATION_LINKS,
+        )
+        assert "family_default_undeclared" not in _kinds(tmp_path)
+
     def test_a_family_without_an_identity_field_is_named_once(self, tmp_path: Path) -> None:
         _write_edition(
             tmp_path,
@@ -1860,3 +1894,125 @@ class TestManifestlessDirectory:
             casillas='[[revisions."2024".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
         )
         assert "edition_without_manifest" not in _kinds_of(build_report(tmp_path))
+
+
+def _override_edition(
+    root: Path,
+    modelo: str,
+    edition: str,
+    *,
+    valid: str,
+    selector: str,
+) -> None:
+    """One edition whose period surface is stated by a raw selector fragment."""
+    _write_edition(
+        root,
+        modelo,
+        edition,
+        manifest=(f'valid_from = {valid}\nauthority_grade = "filing"\nperiod_selector = {{ {selector} }}'),
+        casillas=f'[[revisions."{edition}".casillas]]\nid = "01"\ncontinuidad_id = "c-{edition}"\n',
+    )
+
+
+class TestPerYearPeriodOverrides:
+    """A boundary inside a filing year is read per (year, period), never per year.
+
+    An override states the transition year's surface INSTEAD of the flat tuple,
+    so the projection must decide each cell on the surface that year actually
+    serves. Reading the flat tuple instead reports the dropped cell as covered
+    and the gained cell as served twice, both silently.
+    """
+
+    def test_a_mid_year_cadence_boundary_is_served_exactly_once(self, tmp_path: Path) -> None:
+        """The 303 shape: monthly from 02, quarterly from 2T, predecessor keeps 01 and 1T."""
+        _write_promise(tmp_path, (2026, 2027))
+        _override_edition(
+            tmp_path,
+            "999",
+            "2025",
+            valid="2025-01-01",
+            selector='years = [2025, 2026], periods = ["01", "1T"]',
+        )
+        _override_edition(
+            tmp_path,
+            "999",
+            "2026",
+            valid="2026-02-01",
+            selector=(
+                'year_from = 2026, periods = ["01", "02", "1T", "2T"], '
+                'period_overrides = [{ year = 2026, periods = ["02", "2T"] }]'
+            ),
+        )
+        assert coverage_gaps(scan_registry(tmp_path), supported_filing_years(tmp_path)) == ()
+
+    def test_two_editions_serving_one_cell_through_overrides_are_reported(self, tmp_path: Path) -> None:
+        """Tooth: the override reaches back over a period the predecessor still serves."""
+        _write_promise(tmp_path, (2026, 2027))
+        _override_edition(
+            tmp_path,
+            "999",
+            "2025",
+            valid="2025-01-01",
+            selector='years = [2025, 2026], periods = ["01", "1T"]',
+        )
+        _override_edition(
+            tmp_path,
+            "999",
+            "2026",
+            valid="2026-02-01",
+            selector=(
+                'year_from = 2026, periods = ["01", "02", "1T", "2T"], '
+                'period_overrides = [{ year = 2026, periods = ["01", "02", "2T"] }]'
+            ),
+        )
+        served_twice = [
+            gap
+            for gap in coverage_gaps(scan_registry(tmp_path), supported_filing_years(tmp_path))
+            if gap.kind == "coordinate_served_twice"
+        ]
+        assert [(gap.filing_year, gap.period, gap.editions) for gap in served_twice] == [
+            (2026, "01", ("2025", "2026")),
+        ]
+
+    def test_an_override_that_drops_a_cell_nobody_serves_is_a_gap(self, tmp_path: Path) -> None:
+        """The 322 shape: monthly only, and January 2026 is served by no edition."""
+        _write_promise(tmp_path, (2026, 2027))
+        _override_edition(
+            tmp_path,
+            "999",
+            "2025",
+            valid="2025-01-01",
+            selector='year_from = 2023, year_to = 2025, periods = ["01", "02"]',
+        )
+        _override_edition(
+            tmp_path,
+            "999",
+            "2026",
+            valid="2026-02-01",
+            selector=(
+                'year_from = 2026, periods = ["01", "02"], period_overrides = [{ year = 2026, periods = ["02"] }]'
+            ),
+        )
+        unserved = [
+            (gap.filing_year, gap.period)
+            for gap in coverage_gaps(scan_registry(tmp_path), supported_filing_years(tmp_path))
+            if gap.kind == "promised_coordinate_unserved"
+        ]
+        assert unserved == [(2026, "01")]
+
+    def test_an_override_period_absent_from_the_flat_tuple_enters_the_denominator(self, tmp_path: Path) -> None:
+        """A token only a transition year carries is still a promised coordinate."""
+        _write_promise(tmp_path, (2026,))
+        _override_edition(
+            tmp_path,
+            "999",
+            "2026",
+            valid="2026-01-01",
+            selector=('years = [2026], periods = ["01"], period_overrides = [{ year = 2026, periods = ["02"] }]'),
+        )
+        unserved = [
+            (gap.filing_year, gap.period)
+            for gap in coverage_gaps(scan_registry(tmp_path), supported_filing_years(tmp_path))
+            if gap.kind == "promised_coordinate_unserved"
+        ]
+        assert unserved == [(2026, "01")]

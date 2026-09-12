@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 
 import pytest
 from pydantic import BaseModel, ValidationError
@@ -83,10 +83,8 @@ def _field(*, field_id: str = "projection.field", projection_ref: object) -> Exp
 
 def _reference_payload(projection_ref: object) -> dict[str, object]:
     """Return the authored form of a typed reference, for identity derivation."""
-    if isinstance(projection_ref, BaseModel):
-        return projection_ref.model_dump(mode="json")
-    assert isinstance(projection_ref, dict)
-    return dict(projection_ref)
+    assert isinstance(projection_ref, BaseModel)
+    return cast("dict[str, object]", projection_ref.model_dump(mode="json"))
 
 
 def _declaration(*, projection_ref: object) -> ProjectionEndpointDeclaration:

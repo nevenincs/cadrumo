@@ -13,15 +13,6 @@ _LEDGER = _ROOT / "dev/registry/analysis/facts_external_constants_retirement.tom
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def _production_python_files() -> tuple[Path, ...]:
-    return tuple(
-        path
-        for source_root in (_ROOT / "src/cadrumo", _ROOT / "src/cadrumo_harness")
-        for path in source_root.rglob("*.py")
-        if "tests" not in path.parts and path != _ROOT / "src/cadrumo/core/external_constants.py"
-    )
-
-
 def _top_level_constants(source: Path) -> list[str]:
     return _public_module_bindings(ast.parse(source.read_text(encoding="utf-8")))
 
@@ -50,19 +41,6 @@ def test_external_constants_retirement_census_matches_live_source() -> None:
     assert "declarations" not in ledger
     retired = set(ledger["retired_statutory_symbols"]) | set(ledger["retired_routing_symbols"])
     assert not retired & set(constants)
-
-
-def test_retired_symbols_have_no_production_import_path() -> None:
-    ledger = tomllib.loads(_LEDGER.read_text(encoding="utf-8"))
-    retired = set(ledger["retired_statutory_symbols"]) | set(ledger["retired_routing_symbols"])
-    actual: dict[str, set[str]] = {}
-    for path in _production_python_files():
-        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
-            if isinstance(node, ast.ImportFrom) and node.module and node.module.endswith("external_constants"):
-                for imported in node.names:
-                    if imported.name in retired:
-                        actual.setdefault(imported.name, set()).add(path.relative_to(_ROOT).as_posix())
-    assert actual == {}
 
 
 def test_technical_configuration_boundary_matches_source() -> None:

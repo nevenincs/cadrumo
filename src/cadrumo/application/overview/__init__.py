@@ -44,14 +44,7 @@ See Also:
         Active-profile and pending-obligation state that remains upstream of
         overview rendering.
 
-Consumers import from the owning module -- :mod:`status_report`,
-:mod:`calendar`, :mod:`calendar_models`, :mod:`coverage`, :mod:`data_prep`,
-:mod:`next_actions`, :mod:`pipeline_health`, :mod:`agenda`, :mod:`backlog`,
-:mod:`explain`, :mod:`errors` -- rather than from this package root.
-
-The root previously DEFINED four status-report builders as well as re-exporting
-fifty-odd names, which is why deleting an export map could not make it inert.
-Those builders now live in :mod:`status_report`.
+The initializer is inert; import contracts from their defining modules.
 """
 
 from __future__ import annotations

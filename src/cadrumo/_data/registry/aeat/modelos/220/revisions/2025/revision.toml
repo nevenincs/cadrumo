@@ -1,5 +1,5 @@
 [revisions."2025"]
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["orden-hac-529-2026:art-6-3"], source_refs = ["boe-modelo-220-2025-form"] } }
+predecessor = { none = { reason = "Stated in full: this sparse, header-only applicability-grade edition intentionally withholds the 1,983 predecessor rows that have no grounded continuity_id. The 2025 declaration authors only its two declaration-header casillas; the deferred financial-closure casillas are not inherited from the 2024 full copy, and no continuity chain is manufactured across that withholding. The 2025 official form and AEAT record-design evidence identify this edition's own scope, while Orden HAC/529/2026 art. 6.3 authorises the Modelo 220 declaration for periods begun in 2025.", legal_refs = ["orden-hac-529-2026:art-6-3"], source_refs = ["boe-modelo-220-2025-form", "aeat-dr-220-2025"] } }
 casilla_source_refs = ["boe-modelo-220-2025-form", "aeat-dr-220-2025"]
 authority_grade = "applicability"
 # Modelo 220 declaración anual del Impuesto sobre Sociedades del grupo fiscal en

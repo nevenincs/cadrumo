@@ -96,3 +96,11 @@ def test_evidence_without_an_origin_is_refused() -> None:
 def test_empty_evidence_is_refused() -> None:
     with pytest.raises(ValidationError, match="continuidad_evidence"):
         _casilla(continuidad_origin=CasillaLineageOrigin.NOT_ON_FORM.value, continuidad_evidence="")
+
+
+def test_evidence_is_bounded_at_1024_characters() -> None:
+    origin = CasillaLineageOrigin.NOT_ON_FORM.value
+    at_cap = "x" * 1024
+    assert _casilla(continuidad_origin=origin, continuidad_evidence=at_cap).continuidad_evidence == at_cap
+    with pytest.raises(ValidationError, match="continuidad_evidence"):
+        _casilla(continuidad_origin=origin, continuidad_evidence=at_cap + "x")

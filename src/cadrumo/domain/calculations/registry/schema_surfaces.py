@@ -387,7 +387,7 @@ class CasillaDefinition(RegistryModel):
     continuidad_evidence: str | None = Field(
         default=None,
         min_length=1,
-        max_length=512,
+        max_length=1024,
         description=(
             "The checkable source behind continuidad_origin: the official "
             "record-design extract or adjudication record, with the line or campo "

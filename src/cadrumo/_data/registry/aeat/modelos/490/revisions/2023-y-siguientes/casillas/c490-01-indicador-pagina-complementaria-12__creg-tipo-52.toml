@@ -311,6 +311,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "cuota-integra-estado-17"
+continuidad_id = "cuota-integra-estado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; ruling 2022-2t-4t>2023: DR49001 imprime Cuota integra atribuible a la Administracion del Estado ([16] x [24]) [17] en posicion 899 en ambos disenos. Solo se anade [23] en 2023; rol, posicion y forma money de 17 caracteres permanecen estables."
 number = "17"
 section = ["490_01"]
 data_type = "money"
@@ -329,6 +332,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "ajuste-cuota-integra-reg-estado-19"
+continuidad_id = "ajuste-cuota-integra-reg-estado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; ruling 2022-2t-4t>2023: DR49001 imprime Ajuste cuota integra periodos regularizacion atribuible al Estado [19] en posicion 933 en ambos disenos. Solo se anade [23] en 2023; rol, posicion y forma money de 17 caracteres permanecen estables."
 number = "19"
 section = ["490_01"]
 data_type = "money"
@@ -385,6 +391,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "resultado-a-deducir-25"
+continuidad_id = "resultado-anteriores-declaraciones"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; ruling 2022-2t-4t>2023: DR49001 imprime Resultado. A deducir [25] en posicion 975 en ambos disenos. Solo se anade [23] en 2023; el rol y la posicion permanecen estables, sin repurposicion."
 number = "25"
 section = ["490_01"]
 data_type = "money"
@@ -394,6 +403,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "resultado-liquidacion-26"
+continuidad_id = "resultado-liquidacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; ruling 2022-2t-4t>2023: DR49001 imprime Resultado de la liquidacion [26] en posicion 992 en ambos disenos. Solo se anade [23] en 2023; el rol y la posicion permanecen estables, sin repurposicion."
 number = "26"
 section = ["490_01"]
 data_type = "money"

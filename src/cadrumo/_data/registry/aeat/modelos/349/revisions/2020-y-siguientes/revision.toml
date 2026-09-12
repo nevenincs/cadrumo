@@ -1,6 +1,7 @@
 [revisions."2020-y-siguientes"]
 binding_source_refs = ["aeat-dr-349-2020-current"]
 casilla_source_refs = ["aeat-dr-349-2020-current"]
+filing_schedule_source_refs = ["aeat-modelo-349-procedure"]
 # Prepared and reviewed by an agent against the bundled diseño de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather

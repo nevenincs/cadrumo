@@ -17,7 +17,7 @@ See Also:
         Authority facade used to resolve the annual windows and windowless cases.
     :class:`~core.modelo.Modelo`
         Canonical fleet membership these five informativas extend.
-    :data:`~core.UNMODELED_OBLIGATIONS`
+    :data:`~domain.calculations.registry.modelo_obligation_scope.UNMODELED_OBLIGATIONS`
         Former recognized-unmodeled set reduced by this Batch-3 promotion.
     :mod:`~domain.calculations.registry.tests.test_modelo_informativas_batch2_registry`
         Sibling M182-template informativa promotion with annual/monthly windows.

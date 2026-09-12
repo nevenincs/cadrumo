@@ -68,6 +68,7 @@ from .work_addressing import (
     law_selected_revision_for_work_target,
 )
 from .work_unit_repository import work_unit_catalogue_repository
+from ..state_projection_ports import StateProjectionReadError, StateProjectionReadPorts
 
 if TYPE_CHECKING:
     from ..state_projection import ProjectionModeloReadiness
@@ -219,6 +220,7 @@ def _skipped_after(stopped_at: QuickfileStage) -> tuple[QuickfileStageOutcome, .
 def run_modelo_quickfile(
     command: QuickfileCommand,
     *,
+    read_ports: StateProjectionReadPorts,
     workflow_profile: TaxpayerProfile,
     build_calculation_inputs: Callable[[str], WorkCalculateInputBundle],
 ) -> QuickfileResult:
@@ -278,7 +280,11 @@ def run_modelo_quickfile(
             export_result=None,
         )
 
-    readiness = _resolve_readiness(command, registry_revision_id=registry_revision_id)
+    readiness = _resolve_readiness(
+        command,
+        registry_revision_id=registry_revision_id,
+        read_ports=read_ports,
+    )
     stages.append(_readiness_outcome(readiness))
 
     # ── Stage 2: create / resume the work unit ────────────────────────────
@@ -475,6 +481,7 @@ def _resolve_readiness(
     command: QuickfileCommand,
     *,
     registry_revision_id: RevisionId,
+    read_ports: StateProjectionReadPorts,
 ) -> ProjectionModeloReadiness | None:
     """Run the readiness projection for the target, tolerating advisory failure.
 
@@ -487,6 +494,7 @@ def _resolve_readiness(
 
     try:
         projection = build_operator_state_projection(
+            read_ports=read_ports,
             modelo_readiness_requests=(
                 ModeloReadinessRequest(
                     modelo=command.modelo,
@@ -496,7 +504,7 @@ def _resolve_readiness(
                 ),
             ),
         )
-    except CadrumoError:
+    except (CadrumoError, StateProjectionReadError):
         _log.debug("quickfile readiness projection failed; continuing", exc_info=True)
         return None
     if not projection.modelo_readiness:

@@ -15,7 +15,46 @@ source_refs = [
     "aeat-dr-038-2024",
 ]
 
+# ACQUIRABLE DEBT -- filing years 2022 and 2023. Examined 2026-09-12 and left
+# UNAUTHORED deliberately: no registered source can ground them, and authoring a
+# record shape for an informativa of third-party operations without one would
+# invent it.
+#
+# The catalogue registers exactly three sources for this modelo, and each fails
+# the 2022-2023 span for its own reason:
+#   - aeat-dr-038-2024 declares applies_from 2024-06-01. Its own design was
+#     introduced by Orden HAC/646/2024, whose disposicion final unica makes it
+#     first applicable to the June 2024 declaration, so it says nothing about
+#     2022 or 2023 and citing it for them would be a year mismatch.
+#   - aeat-dr-038-2012-inspection is the 2012-epoch historical PDF. It carries
+#     record_design_epoch = "2012" and NO applies_from or applies_to at all --
+#     the omission is deliberate and its catalogue comment says so: it "cannot
+#     become selected design authority for the unevidenced 2002-to-May-2024
+#     interval". It also has no .extracted.json/.extracted.md sidecar in the
+#     corpus, so no casilla or record content is machine-readable from it even
+#     if a window were declared.
+#   - enrolled-modelo-038-procedure is in window (applies_from 2002-01-16) but
+#     is a 1093-byte excerpt of Orden HAC/66/2002 carrying only art. 1 (the
+#     approving clause) and art. 6 (the monthly deadline). It grounds scheduling
+#     and nothing else; it prints no field, position or record layout.
+#
+# So the shape of the pre-June-2024 register is genuinely unestablished here.
+# The 2024 amendment is itself the evidence that the earlier shape DIFFERS: it
+# "introduce un nuevo campo, Identificador registral unico de la sociedad
+# (IRUS)" at positions 153-165 of the tipo 2 record and displaces Blancos to
+# 166-250, which means the 2022-2023 record had neither the IRUS field nor that
+# Blancos boundary. What it had instead is exactly what no bundled source states.
+#
+# Needed to author 2022 and 2023, one of:
+#   - the AEAT diseno de registro for modelo 038 as it stood before June 2024,
+#     registered with a real applies_from/applies_to window covering the years
+#     claimed (the acquired 2012 PDF would qualify only once its window is
+#     established from the document and its text extracted to the corpus);
+#   - or the full consolidated text of Orden HAC/66/2002 including its anexo
+#     record design, rather than the present two-article excerpt.
+# Until one lands, 2022 and 2023 stay unauthored rather than approximated from
+# the 2024 design.
 [modelo.inception.unauthored]
 earliest_authored = 2024
-reason = "Approved by Orden HAC/66/2002; filing years 2022-2023 existed in law and are not yet authored."
+reason = "Approved by Orden HAC/66/2002; filing years 2022-2023 existed in law and are not yet authored. Examined 2026-09-12 and left unauthored: no registered source grounds the pre-June-2024 record shape, the only 2012-epoch design declares no applicability window and has no extracted text, and Orden HAC/646/2024 art. 1 is itself evidence that the earlier record differed by the IRUS field at positions 153-165."
 legal_refs = ["orden-hac-66-2002:art-1"]

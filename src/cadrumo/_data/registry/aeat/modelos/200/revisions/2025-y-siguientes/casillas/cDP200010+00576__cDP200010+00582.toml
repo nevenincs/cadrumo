@@ -1,4 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
+continuidad_id = "is-ecpn-total-cambios-operaciones-acciones-propias-capital-escriturado"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200010/DP200010, campos 104/104, filas 109/109: Estado de cambios patrimonio neto (II) - Operaciones con acciones o participaciones propias - Capital - Escriturado [00576]. Descripcion legal, tipo, validacion y contenido coinciden; misma columna Capital - Escriturado (manuales Sociedades 2024 p.144 / 2025 p.147)."
 id = "DP200010:00576"
 number = "00576"
 segmento = "DP200010"
@@ -9,6 +12,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
+continuidad_id = "is-ecpn-total-cambios-operaciones-acciones-propias-capital-no-exigido"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200010/DP200010, campos 105/105, filas 110/110: Estado de cambios patrimonio neto (II) - Operaciones con acciones o participaciones propias - Capital - No exigido [00577]. Descripcion legal, tipo, validacion y contenido coinciden; misma columna Capital - No exigido (manuales Sociedades 2024 p.144 / 2025 p.147)."
 id = "DP200010:00577"
 number = "00577"
 segmento = "DP200010"
@@ -46,6 +52,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
+continuidad_id = "is-ecpn-total-cambios-operaciones-acciones-propias-resultados-ejercicios-anteriores"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200010/DP200010, campos 109/109, filas 114/114: Estado de cambios patrimonio neto (II) - Operaciones con acciones o participaciones propias - Resultados ejercicios anteriores [00581]. Descripcion legal, tipo, validacion y contenido coinciden; misma columna Resultados ejercicios anteriores (manuales Sociedades 2024 p.144 / 2025 p.147)."
 id = "DP200010:00581"
 number = "00581"
 segmento = "DP200010"
@@ -56,6 +65,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
+continuidad_id = "is-ecpn-total-cambios-operaciones-acciones-propias-otras-aportaciones-socios"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200010/DP200010, campos 110/110, filas 115/115: Estado de cambios patrimonio neto (II) - Operaciones con acciones o participaciones propias - Otras aportaciones de socios [00582]. Descripcion legal, tipo, validacion y contenido coinciden; misma columna Otras aportaciones de socios (manuales Sociedades 2024 p.144 / 2025 p.147)."
 id = "DP200010:00582"
 number = "00582"
 segmento = "DP200010"

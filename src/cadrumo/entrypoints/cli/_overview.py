@@ -326,6 +326,7 @@ def overview_status(
     """
     from ...application.user_profile.projections import record_to_values
     from ...core.bucket_pointer import resolve_active_bucket_id
+    from .state_projection_support import state_projection_read_ports
 
     current = current_workflow_state() if resolve_active_bucket_id() is not None else None
     if period is not None:
@@ -335,7 +336,11 @@ def overview_status(
         return
     profile_record = current.active_profile_record() if current is not None else None
     raw_values = record_to_values(profile_record) if profile_record is not None else None
-    report = _overview_application.build_overview_status_report(state=current, raw_values=raw_values)
+    report = _overview_application.build_overview_status_report(
+        state=current,
+        raw_values=raw_values,
+        read_ports=state_projection_read_ports(ctx),
+    )
     typed_status = strict_round_trip(OverviewStatusResult, report)
     status_lines, status_notices = overview_status_output(report)
     # ``status`` is a "what must I file" surface too: reconcile the active

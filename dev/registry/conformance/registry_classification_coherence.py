@@ -14,7 +14,8 @@ not model at all, is decided today in four places that do not have to agree:
 * :attr:`ModeloDefinition.tax_domain` — a TAXONOMY label.
   :attr:`~cadrumo.core.TaxDomain.INFORMATIVE` groups a modelo into the
   informative family and carries no invariant whatsoever.
-* The core modelo constants (:data:`~cadrumo.core.NON_REGISTRY_MODELOS` and the
+* The registry modelo-scope service
+  (:data:`~cadrumo.domain.calculations.registry.modelo_obligation_scope.NON_REGISTRY_MODELOS` and the
   obligation-scope mappings behind it) — which codes intentionally have no
   registry definition at all.
 * :class:`~cadrumo.domain.calculations.registry.DependencyClassificationDefinition`'s
@@ -68,12 +69,12 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
-from cadrumo.core.modelo import NON_REGISTRY_MODELOS
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.prose_elision import PROSE_ELISION_MARKER, elide_to_cap
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.tax_domain import TaxDomain
 from cadrumo.domain.calculations.registry.ids import ModeloId
+from cadrumo.domain.calculations.registry.modelo_obligation_scope import NON_REGISTRY_MODELOS
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_base import CalculationClass, CalculationClassField
 

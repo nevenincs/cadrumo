@@ -1,0 +1,72 @@
+# Modelo 345, ejercicio 2022 -- the anexo positions that carry no calculation but
+# are part of the declared record. Transcribed from the ANEXO of Orden
+# HFP/823/2022 (source boe-modelo-345-base-order,
+# corpus/normatives/html/orden-hfp-823-2022.html, sha256
+# f879a2cf8d81cafa3070447fb3b088a10414269564f2515548c32707fce418fc).
+#
+# The ejercicio-2025 sibling of this file also carries `datos-identificativos-
+# empleador` (tipo2.272-320). That campo does not exist in this epoch: Orden
+# HFP/528/2023 created it and applies it first to ejercicio 2023.
+
+# Registro de tipo 1, campo 7. Positions 59-107, alfanumérico de 49 posiciones.
+# The anexo subdivides the slot (59-67 TELÉFONO, 68-107 APELLIDOS Y NOMBRE) but
+# declares ONE top-level campo of 49 bytes, which is the extent declared here.
+[[revisions."2022".casillas]]
+id = "persona-relacion"
+number = "tipo1.59-107"
+section = ["registro_declarante", "identificacion"]
+data_type = "text"
+semantic_role = "m345_persona_relacion"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-1"]
+
+# Registro de tipo 1, campo 8. Positions 108-120, numérico de 13 posiciones.
+# «El número identificativo que habrá de figurar, será un número secuencial cuyos
+# tres primeros dígitos se corresponderán con el código 345.»
+[[revisions."2022".casillas]]
+id = "numero-identificativo-declaracion"
+number = "tipo1.108-120"
+section = ["registro_declarante", "identificacion"]
+data_type = "integer"
+semantic_role = "m345_numero_identificativo_declaracion"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-1"]
+
+# Registro de tipo 1, campo 9. Positions 121-122, alfabético de 2 posiciones:
+# 121 declaración complementaria («C»), 122 declaración sustitutiva («S»).
+[[revisions."2022".casillas]]
+id = "declaracion-complementaria-sustitutiva"
+number = "tipo1.121-122"
+section = ["registro_declarante", "identificacion"]
+data_type = "text"
+semantic_role = "m345_declaracion_complementaria_sustitutiva"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-1"]
+
+# Registro de tipo 1, campo 10. Positions 123-135, numérico de 13 posiciones.
+# Carries content only when campo 9 declares «C» or «S»; «En cualquier otro caso
+# deberá rellenarse a CEROS.»
+[[revisions."2022".casillas]]
+id = "numero-identificativo-anterior"
+number = "tipo1.123-135"
+section = ["registro_declarante", "identificacion"]
+data_type = "integer"
+semantic_role = "m345_numero_identificativo_anterior"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-1"]
+
+# Registro de tipo 2, campo 6. Positions 27-35, alfanumérico de 9 posiciones, the
+# NIF of a declarado under 14's legal representative.
+[[revisions."2022".casillas]]
+id = "representante-legal-nif"
+number = "tipo2.27-35"
+section = ["registro_declarado", "identificacion"]
+data_type = "nif"
+semantic_role = "m345_representante_legal_nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-3"]

@@ -1,4 +1,5 @@
 [revisions."2025-y-siguientes"]
+predecessor = { none = { reason = "Stated in full: this edition cannot be materialised from the 2024 edition. Of 54 boxes shared with it, 39 sit at different offsets, and the eleven unnumbered Informacion adicional slots -- whose number IS a position range -- move from 555-741 to 633-819, a uniform shift of 78 bytes matching the space six added boxes take. Materialising this edition by inheritance would place those eleven fields 78 bytes into the wrong slot while every box id still matched, so the record would serialise plausibly and be wrong. This edition also prints four rate tiers where 2023-2024 print two, so its cardinality is not derivable from theirs either.", legal_refs = ["orden-hfp-227-2017:art-2"], source_refs = ["aeat-dr-222-2025"] } }
 formula_source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
 casilla_source_refs = ["aeat-dr-222-2025"]
 authority_grade = "calculation"

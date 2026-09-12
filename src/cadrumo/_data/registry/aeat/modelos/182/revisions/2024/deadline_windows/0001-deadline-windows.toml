@@ -1,0 +1,16 @@
+# Plazo from Orden EHA/3021/2007 art. 5: "La presentación de la declaración
+# informativa de donativos, donaciones y aportaciones recibidas y disposiciones
+# realizadas, modelo 182, se realizará en el mes de enero de cada año." The
+# ejercicio 2024 declaration is presented in enero 2025. Both dates are the
+# NOMINAL statutory ones and are stored UNSHIFTED: shift_deadline derives the
+# operational date with its reason, and pre-shifting here would destroy the
+# statutory date and report no shift occurred.
+[[revisions."2024".deadline_windows]]
+id = "modelo-182-2024-0a"
+filing_year = 2024
+period = "2024 0A"
+period_kind = "annual"
+opens_on = 2025-01-01
+closes_on = 2025-01-31
+legal_refs = ["orden-eha-3021-2007:art-5", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-182-procedure"]

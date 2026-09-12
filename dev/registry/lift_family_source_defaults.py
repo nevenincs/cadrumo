@@ -1,9 +1,9 @@
 """Lift a family's shared ``source_refs`` from its members onto the edition manifest.
 
-An edition's bindings and formulas each cite the document that grounds them, and
-in the full-copy authoring shape every member of the family restates that
-citation. The loader already knows how to supply it once: ``ModeloRevision``
-carries ``binding_source_refs`` and ``formula_source_refs`` beside
+An edition's members each cite the document that grounds them, and in the
+full-copy authoring shape every member of the family restates that citation.
+The loader already knows how to supply it once: ``ModeloRevision`` carries a
+source-default field for every family the domain pairs with one, beside
 ``casilla_source_refs``, and
 :func:`dev.registry.compiler._loader_internals._apply_edition_reference_defaults`
 fills them into the members that state none. What the corpus lacks is the
@@ -25,16 +25,27 @@ Refusals, each one an edition the tool declines rather than guesses at:
 - the rule derives no default (a member states no ``source_refs``, no leading
   run opens two members, or two runs tie) -- the rule's own reason is reported;
 - the manifest already declares a different default for that family. The
-  declaration is the higher authority and is never overwritten; a manifest
-  declaring the same value is simply already lifted and is not work;
+  declaration is the higher authority and is never overwritten. A manifest
+  declaring the SAME value is not a refusal and not overwritten either: it is
+  already true, and only the members are rewritten under it. Declaring the
+  default and lifting it out of the members are two halves of one lift, and an
+  edition that took only the first half is not finished -- the restatement
+  stands, and the member-side rule applies to it unchanged. An edition whose
+  members all state something irreducible has nothing left to rewrite and is
+  reported as done;
 - a member states ``source_refs`` the textual pass cannot reproduce exactly. The
   rewrite is textual, so a multi-line array or a spelling this module's line
   pattern does not match is refused for the WHOLE edition rather than partially
   applied. Four such members ship today, all in modelo 347's bindings.
 
-The casilla family is derived and reported like the other two, but only its
-manifest declaration is written: casilla member statements are lifted by their
-own owning pass, and rewriting them here would be two writers on one surface.
+Which families are liftable is read from the domain's own
+``FAMILY_SOURCE_DEFAULT_FIELDS`` pairing rather than restated here, so the
+``--family`` choices, the manifest-key mapping and the member-rewrite set
+follow the loader that consumes them and cannot drift from it.
+
+The casilla family is derived and reported like the rest, but only its manifest
+declaration is written: casilla member statements are lifted by their own
+owning pass, and rewriting them here would be two writers on one surface.
 
 Writes are per modelo and are gated on the modelo still compiling: every edited
 file is re-parsed, and the modelo is loaded through
@@ -56,7 +67,7 @@ import tomllib
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from .source_default_rule import edition_source_default
 
@@ -78,28 +89,45 @@ __all__ = [
 _REVISIONS: Final = "revisions"
 _MANIFEST: Final = "revision.toml"
 
-#: The manifest key each family lifts its shared ``source_refs`` into. The two
-#: inheritable families come from the domain's own pairing so this tool cannot
+#: The manifest key each family lifts its shared ``source_refs`` into. Every
+#: inheritable family comes from the domain's own pairing so this tool cannot
 #: default one family from another's grounding; the casilla key is named here
 #: because that family's member-side lift is owned elsewhere.
 FAMILY_DEFAULT_KEY: Final[dict[str, str]] = {"casillas": "casilla_source_refs"}
 
-#: Families whose members this tool rewrites. The casilla family is derived and
-#: declared but never rewritten here: its members belong to another pass.
-_MEMBER_REWRITE_FAMILIES: Final[frozenset[str]] = frozenset({"bindings", "formulas"})
+#: Families whose members this tool rewrites: every family the domain pairs
+#: with a manifest key. The casilla family is derived and declared but never
+#: rewritten here, because its members belong to another pass.
+_MEMBER_REWRITE_FAMILIES: Final[set[str]] = set()
+
+#: Every family this tool acts on, in the domain's own order with the
+#: declare-only casilla family last.
+_ENROLLED_FAMILIES: Final[list[str]] = []
 
 
 def _enroll_domain_family_keys() -> None:
-    """Fill :data:`FAMILY_DEFAULT_KEY` from the domain's own family/manifest pairing."""
+    """Fill this module's family tables from the domain's own family/manifest pairing.
+
+    The pairing is the single source of which families carry an edition-level
+    source default, so the ``--family`` choices, the manifest-key mapping and
+    the member-rewrite set are all read off it rather than restated here. A
+    family the domain adds to the pairing is liftable the moment it lands, and
+    one it removes stops being an option, without this tool being edited: a
+    hardcoded list could only ever disagree with the loader that consumes it.
+    """
     sys.path.insert(0, str(REPO_ROOT / "src"))
     from cadrumo.domain.calculations.registry.reference_sections import FAMILY_SOURCE_DEFAULT_FIELDS
 
     FAMILY_DEFAULT_KEY.update(dict(FAMILY_SOURCE_DEFAULT_FIELDS))
+    paired = [family for family, _ in FAMILY_SOURCE_DEFAULT_FIELDS]
+    _MEMBER_REWRITE_FAMILIES.update(paired)
+    _ENROLLED_FAMILIES.extend(paired)
+    _ENROLLED_FAMILIES.append("casillas")
 
 
 _enroll_domain_family_keys()
 
-FAMILIES: Final[tuple[str, ...]] = ("bindings", "formulas", "casillas")
+FAMILIES: Final[tuple[str, ...]] = tuple(_ENROLLED_FAMILIES)
 
 _ARRAY_TABLE_HEADER: Final = re.compile(
     r"""^\[\[revisions\.(?:"(?P<dq>[^"]*)"|'(?P<sq>[^']*)'|(?P<bare>[^.\]]+))\.(?P<family>[A-Za-z_]+)\]\]\s*$"""
@@ -142,6 +170,10 @@ class EditionLift:
     refusal: str = ""
     members: int = 0
     fragments: tuple[Path, ...] = ()
+    #: Whether the manifest already declares this default, so only the members
+    #: are rewritten. The declaration is the higher authority either way: an
+    #: equal one is not rewritten, it is simply already true.
+    manifest_declared: bool = False
 
     @property
     def liftable(self) -> bool:
@@ -171,6 +203,8 @@ class ModeloPlan:
         """The manifest fields this plan would write, keyed by edition."""
         written: dict[str, list[str]] = {}
         for lift in self.liftable:
+            if lift.manifest_declared:
+                continue
             written.setdefault(lift.edition, []).append(FAMILY_DEFAULT_KEY[lift.family])
         return {edition: tuple(sorted(keys)) for edition, keys in sorted(written.items())}
 
@@ -228,6 +262,24 @@ def _header_id(header: re.Match[str]) -> str:
     return str(header.group("dq") or header.group("sq") or header.group("bare") or "")
 
 
+def _rewritable_members(members: Sequence[Mapping[str, Any]], default: tuple[str, ...]) -> int:
+    """Count the members whose own ``source_refs`` the member-side rule would rewrite.
+
+    A member states the default exactly, or opens with it and carries a tail;
+    either is work. A member stating anything else is irreducible and is kept
+    whole, so an edition holding only those has nothing left to lift and is
+    reported as done rather than as a lift that rewrites nothing.
+    """
+    rewritable = 0
+    for member in members:
+        stated: object = member.get("source_refs")
+        if not isinstance(stated, list):
+            continue
+        refs = tuple(str(item) for item in cast("list[object]", stated))
+        rewritable += refs[: len(default)] == default
+    return rewritable
+
+
 def plan_edition(modelo: str, edition_dir: Path, family: str) -> EditionLift | None:
     """Decide one edition/family: the default to declare, a refusal, or nothing to do."""
     members, fragments = _members(edition_dir, family)
@@ -238,7 +290,7 @@ def plan_edition(modelo: str, edition_dir: Path, family: str) -> EditionLift | N
     declared = _revision_table(edition_dir).get(key)
     derived, withheld = edition_source_default(members)
 
-    def lift(*, default: tuple[str, ...] = (), refusal: str = "") -> EditionLift:
+    def lift(*, default: tuple[str, ...] = (), refusal: str = "", manifest_declared: bool = False) -> EditionLift:
         return EditionLift(
             modelo=modelo,
             edition=edition,
@@ -247,23 +299,37 @@ def plan_edition(modelo: str, edition_dir: Path, family: str) -> EditionLift | N
             refusal=refusal,
             members=len(members),
             fragments=fragments,
+            manifest_declared=manifest_declared,
+        )
+
+    def unrewritable(default: tuple[str, ...]) -> EditionLift | None:
+        if family not in _MEMBER_REWRITE_FAMILIES:
+            return None
+        unreproducible = _unreproducible_statements(fragments, edition, family)
+        if not unreproducible:
+            return None
+        return lift(
+            default=default,
+            refusal=f"{len(unreproducible)} source_refs statement(s) not textually rewritable: "
+            + "; ".join(unreproducible),
         )
 
     if isinstance(declared, list):
         already = tuple(str(item) for item in declared)
         if derived is not None and already != derived:
             return lift(refusal=f"{key} already declares {list(already)}; the rule derives {list(derived)}")
-        return None
+        # A declaration equal to the derived default is already true, so the
+        # manifest is left alone -- but the members it speaks for may still
+        # restate it. Declaring the default and lifting it out of the members
+        # are two halves of one lift, and an edition that took only the first
+        # half is not finished: the restatement stands, and the member-side
+        # rule applies to it unchanged.
+        if family not in _MEMBER_REWRITE_FAMILIES or derived is None or not _rewritable_members(members, already):
+            return None
+        return unrewritable(already) or lift(default=already, manifest_declared=True)
     if derived is None:
         return lift(refusal=str(withheld))
-    if family in _MEMBER_REWRITE_FAMILIES:
-        unreproducible = _unreproducible_statements(fragments, edition, family)
-        if unreproducible:
-            return lift(
-                refusal=f"{len(unreproducible)} source_refs statement(s) not textually rewritable: "
-                + "; ".join(unreproducible)
-            )
-    return lift(default=derived)
+    return unrewritable(derived) or lift(default=derived)
 
 
 def plan_modelo(modelo_dir: Path, families: Sequence[str] = FAMILIES) -> ModeloPlan:
@@ -390,6 +456,8 @@ def apply_plan(plan: ModeloPlan, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
                     if rewritten != text:
                         _write(fragment, rewritten)
                         touched.append(fragment)
+            if lift.manifest_declared:
+                continue
             manifest = edition_dir / _MANIFEST
             declared = _manifest_with_default(
                 remember(manifest), lift.edition, FAMILY_DEFAULT_KEY[lift.family], lift.default
@@ -435,20 +503,45 @@ class RegistryLoadRegressionError(Exception):
         self.after = after
 
 
-def render_plan(plans: Sequence[ModeloPlan], *, applied: bool) -> str:
-    """Render every plan as diffable lines."""
+def _written_editions(paths: Sequence[Path]) -> dict[str, int]:
+    """Count written files per edition, read off each path's own revisions segment."""
+    counted: dict[str, int] = {}
+    for path in paths:
+        parts = path.parts
+        if _REVISIONS not in parts:
+            continue
+        edition = parts[parts.index(_REVISIONS) + 1]
+        counted[edition] = counted.get(edition, 0) + 1
+    return dict(sorted(counted.items()))
+
+
+def render_plan(
+    plans: Sequence[ModeloPlan],
+    *,
+    applied: bool,
+    written: Mapping[str, Sequence[Path]] | None = None,
+) -> str:
+    """Render every plan as diffable lines.
+
+    ``written`` carries the paths ``apply_plan`` actually wrote, keyed by
+    modelo. A planned lift and a written file are different facts -- a lift
+    whose members already state the default rewrites nothing, and a lift the
+    loader gate rolled back writes nothing at all -- so the applied total
+    counts the files, and reports them per edition. Without it the total
+    counts the plan, which is the only thing a dry run has.
+    """
     lines: list[str] = []
-    liftable = formulas = bindings = casillas = 0
+    liftable = 0
+    per_family: dict[str, int] = {}
     for plan in plans:
         for lift in plan.lifts:
             if lift.liftable:
                 liftable += 1
-                bindings += lift.family == "bindings"
-                formulas += lift.family == "formulas"
-                casillas += lift.family == "casillas"
+                per_family[lift.family] = per_family.get(lift.family, 0) + 1
+                manifest = "declared" if lift.manifest_declared else "write"
                 lines.append(
                     f"lift modelo={plan.modelo} edition={lift.edition} family={lift.family} "
-                    f"members={lift.members} default={list(lift.default)}"
+                    f"members={lift.members} default={list(lift.default)} manifest={manifest}"
                 )
             else:
                 lines.append(
@@ -457,10 +550,17 @@ def render_plan(plans: Sequence[ModeloPlan], *, applied: bool) -> str:
                 )
         for edition, keys in plan.manifests.items():
             lines.append(f"manifest {plan.modelo}/{edition} fields={','.join(keys)}")
+        if written is not None:
+            for edition, count in _written_editions(written.get(plan.modelo, ())).items():
+                lines.append(f"wrote modelo={plan.modelo} edition={edition} files={count}")
     refusals = sum(len(plan.refusals) for plan in plans)
+    breakdown = " ".join(f"{family}={per_family[family]}" for family in FAMILIES if per_family.get(family))
+    if written is not None:
+        total = sum(len(paths) for paths in written.values())
+        lines.append(f"total applied={total} {breakdown} refusals={refusals}".replace("  ", " "))
+        return "\n".join(lines)
     lines.append(
-        f"total {'applied' if applied else 'planned'}={liftable} bindings={bindings} "
-        f"formulas={formulas} casillas={casillas} refusals={refusals}"
+        f"total {'applied' if applied else 'planned'}={liftable} {breakdown} refusals={refusals}".replace("  ", " ")
     )
     return "\n".join(lines)
 
@@ -500,11 +600,13 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     plans = [plan_modelo(directory, families) for directory in directories]
     failures: list[str] = []
+    written: dict[str, Sequence[Path]] = {}
     if args.apply:
         for plan in plans:
             try:
-                apply_plan(plan, root)
+                written[plan.modelo] = apply_plan(plan, root)
             except ModeloLiftFailedError as exc:
+                written[plan.modelo] = ()
                 failures.append(str(exc))
                 plan.lifts = [
                     EditionLift(
@@ -516,7 +618,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     )
                     for lift in plan.lifts
                 ]
-    rendered = render_plan(plans, applied=args.apply)
+    rendered = render_plan(plans, applied=args.apply, written=written if args.apply else None)
     print(rendered)
     for failure in failures:
         print(failure, file=sys.stderr)

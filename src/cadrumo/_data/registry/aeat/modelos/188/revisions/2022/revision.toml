@@ -1,0 +1,92 @@
+[revisions."2022"]
+casilla_source_refs = ["boe-modelo-188-form-text", "boe-modelo-188-form-layout"]
+# Applicability-grade historical edition for modelo 188, ejercicio 2022.
+#
+# The gap this closes was authoring debt, not a legal absence. Modelo 188 was
+# approved by the Orden de 17 de noviembre de 1999, apartado quinto, whose
+# bundled legal entry carries effective_from 1999-11-21 and no end date, and
+# the resumen anual for ejercicio 2022 was filed in January 2023 under it.
+#
+# WHAT GROUNDS THE CASILLAS, and why it is not aeat-dr-188-2023. The five
+# hoja-resumen boxes are read from ANEXO IV of that same Orden, bundled as
+# boe-modelo-188-form-text (applies_from 1999-11-21, open-ended) and
+# transcribed from the BOE image; the anexo prints them in exactly this order
+# and splits the perceptor count and base by the SIGN of the base:
+#   "N. Total de Perceptores: 01 / Base retenciones e ingresos a cuenta: 02 /
+#    Retenciones e ingresos a cuenta: 03 / N. Total de Perceptores: 04 /
+#    Base retenciones e ingresos a cuenta: 05"
+# This is the identical grounding the 2023-y-siguientes edition uses, so the
+# two editions declare the same five boxes with the same meanings.
+#
+# WHAT PROVES THE GEOMETRY IS UNCHANGED ACROSS THE EPOCH BOUNDARY. BOE's
+# "Referencias posteriores" block for BOE-A-1999-22372, bundled verbatim in
+# corpus/normatives/html/orden-1999-11-17.html, reads
+#   "SE MODIFICA: el anexo V, por Orden HFP/1284/2023, de 28 de noviembre
+#    (Ref. BOE-A-2023-24412)."
+# The amendment that separates ejercicio 2022 from ejercicio 2023 therefore
+# touches ANEXO V, the diseños físicos y lógicos, and NOT anexo IV, the
+# hoja-resumen this edition models. The last amendment reaching anexo IV is
+#   "SE MODIFICA: el anexo IV y V, por Orden EHA/3021/2007, de 11 de octubre
+#    (Ref. BOE-A-2007-18192)."
+# which predates both editions and so bears on them identically.
+#
+# NOT CLAIMED -- the bundled boe-modelo-188-form-text transcribes the 1999
+# image, not the anexo IV as EHA/3021/2007 left it. That caveat is inherited
+# from the 2023-y-siguientes edition, applies to both epochs equally, and is
+# recorded here rather than silently carried.
+#
+# NOT CLAIMED -- no record geometry. aeat-dr-188-2023 declares applies_from
+# 2023-01-01 and so cannot be cited by this edition; the anexo V in force for
+# ejercicio 2022 (as amended by Orden HFP/1308/2017) is not in the corpus.
+# Nothing this edition declares depends on it: like its successor, it models
+# only the hoja-resumen, declares no export layout, and does not model the
+# tipo-2 per-perceptor detail. No position, offset or record length is asserted
+# anywhere in this edition.
+#
+# NOT CLAIMED -- boxes 06, 07 and 08 of the same anexo IV ("Presentacion en
+# soporte colectivo: datos adicionales") are printed by the source and are
+# modelled by NEITHER this edition nor 2023-y-siguientes. They are absent from
+# both by the same omission, not dropped here; stating it keeps the two
+# editions comparable rather than making 2022 look narrower than it is.
+#
+# Why the grade is 'applicability' and NOT 'filing': every casilla is operator
+# input, no formula, binding, export layout or completeness manifest is
+# declared, and no source in the catalogue carries modelo 188 instrucciones for
+# ejercicio 2022. Promoting this edition needs TWO acquisitions, named exactly:
+#   - the modelo 188 anexo V (diseños físicos y lógicos) as amended by Orden
+#     HFP/1308/2017, registered as its own source, for the record geometry;
+#   - AEAT modelo 188 instrucciones as they stood for ejercicio 2022, for the
+#     calculation layer.
+# Neither would change the five boxes declared here.
+authority_grade = "applicability"
+id = "2022"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+period_selector = { year_from = 2022, year_to = 2022, periods = ["0A"] }
+orden_aplicabilidad = ["orden-1999-11-17:apartado-quinto"]
+legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99", "rd-439-2007:art-108"]
+source_refs = ["aeat-modelo-188-procedure", "boe-modelo-188-form-layout", "boe-modelo-188-form-text"]
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: authored from ANEXO IV of the Orden de 17-11-1999 as bundled in \
+boe-modelo-188-form-text, whose declared window (applies_from 1999-11-21, no end) covers \
+ejercicio 2022. VERIFIED -- EVERY CITED REF COVERS THE YEAR: orden-1999-11-17:apartado-quinto \
+effective_from 1999-11-21, ley-35-2006:art-99 effective_from 2016-01-01, \
+rd-439-2007:art-108 effective_from 2007-04-01, all open-ended; sources \
+aeat-modelo-188-procedure applies_from 2019-01-01, boe-modelo-188-form-layout and \
+boe-modelo-188-form-text applies_from 1999-11-21, all open-ended. NOT ONE ref or source \
+cited here opens after 2022-01-01. VERIFIED -- aeat-dr-188-2023 is DELIBERATELY ABSENT: \
+its declared applies_from is 2023-01-01, so citing it for ejercicio 2022 would claim \
+authority outside its own window. The 2023-y-siguientes edition cites it and this one \
+cannot, which is the only source-level difference between them. VERIFIED -- THE HOJA-RESUMEN \
+GEOMETRY DID NOT MOVE ACROSS THE EPOCH BOUNDARY: BOE's Referencias posteriores for \
+BOE-A-1999-22372 records the 2023 amendment as touching "el anexo V", the diseños, while \
+the hoja-resumen anexo IV was last amended in 2007, before both epochs. The five boxes, \
+their order and the positive/negative base split are therefore identical in both editions. \
+NOT CLAIMED -- no position, offset or record length is asserted; this edition declares no \
+export layout and does not model the tipo-2 perceptor detail, exactly as its successor does \
+not. NOT CLAIMED -- filing grade: no instrucciones source covers ejercicio 2022, so all five \
+boxes stay input_kind = "manual" with no formula or binding reference, dropped rather than \
+left dangling. NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero. No human \
+operator has countersigned this edition."""
+reviewed_at = 2026-09-12

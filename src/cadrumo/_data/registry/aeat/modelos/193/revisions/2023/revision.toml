@@ -1,4 +1,6 @@
 [revisions."2023"]
+predecessor = "2022"
+reviewed_against = "2022"
 casilla_source_refs = ["aeat-dr-193-2023", "boe-modelo-193-2011-form"]
 # Applicability-grade historical epoch for modelo 193, filing year 2023.
 #

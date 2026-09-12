@@ -8,6 +8,9 @@ number = "11-12"
 section = ["declarante", "liquidacion"]
 data_type = "text"
 semantic_role = "declaracion_periodo"
+continuidad_id = "filing-period"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019 identify the same settlement period in both record designs: M30800 Periodo (PP) at offset 11 length 2 and M30801 Devengo - Periodo at offset 107 length 2, under Orden EHA/3786/2008 art. 2. The 2019 registry surface is intentionally represented as number 11-12, text, and declaracion_periodo in the declarante/liquidacion section while the 2016 surface is period_code in the declaration header; this is an application representation change, not a label- or number-only inference and not a retirement. The 2019 M30801 design additionally admits 01-12 for the applicable Tipo Tributacion, while M30800 retains the quarter/annual codes."
 # The settlement period code (PP), AD-HOC.
 required = false
 input_kind = "manual"

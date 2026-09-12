@@ -510,6 +510,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.06-a-deducir"
+continuidad_id = "importe-a-deducir"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 campo 43 y aeat-dr-604-2024 campo 52, pagina 1: Liquidacion (3) - A deducir [06], 18 posiciones Num en ambos disenos. La casilla impresa [06] y la descripcion oficial del campo son identicas en los dos disenos; solo cambia el ordinal del campo, porque 2024 intercala las casillas de atribucion territorial [08] a [12] por delante de la cola del registro."
 number = "06"
 section = ["liquidacion"]
 data_type = "money"
@@ -519,6 +522,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.07-resultado"
+continuidad_id = "resultado-autoliquidacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 campo 44 y aeat-dr-604-2024 campo 53, pagina 1: Liquidacion (3) - Resultado de la autoliquidacion [07], 18 posiciones Num en ambos disenos. La casilla impresa [07] y la descripcion oficial del campo son identicas en los dos disenos; solo cambia el ordinal del campo, porque 2024 intercala las casillas de atribucion territorial [08] a [12] por delante de la cola del registro."
 number = "07"
 section = ["liquidacion"]
 data_type = "money"

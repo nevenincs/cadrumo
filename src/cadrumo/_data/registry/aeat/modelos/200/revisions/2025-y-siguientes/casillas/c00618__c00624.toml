@@ -8,6 +8,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
+continuidad_id = "is-ecpn-total-cambios-otras-variaciones-capital-no-exigido"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200010/DP200010, campos 126/126, filas 131/131: Estado de cambios patrimonio neto (II) - Otras variaciones del patrimonio neto - Capital - No exigido [00619]. Descripcion legal, tipo, validacion y contenido coinciden; misma columna Capital - No exigido (manuales Sociedades 2024 p.144 / 2025 p.147)."
 id = "DP200010:00619"
 number = "00619"
 segmento = "DP200010"

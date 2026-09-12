@@ -23,6 +23,20 @@ source_refs = [
     "boe-modelo-190-2025-amendment",
 ]
 
+# Why the 2022 edition grounds on a 2020-epoch design: aeat-dr-190-2020 declares
+# applies_from 2020-01-01 applies_to 2022-12-31, so it is the design IN FORCE for
+# ejercicio 2022, not a stale substitute. AEAT published no 2021 or 2022 design;
+# the epoch spans those years. The 2023 edition grounds on aeat-dr-190-2023
+# (2023-01-01..2023-12-31). Neither is acquirable debt.
+#
+# ACQUIRABLE DEBT -- promotion of the 2022 and 2023 editions from applicability to
+# filing grade. The record geometry is already grounded verbatim and would not
+# change; what is missing is the calculation layer, because every instrucciones
+# source in the catalogue opens 2025-01-01 or later. Needed, one per edition:
+#   - AEAT modelo 190 instrucciones as they stood for ejercicio 2022
+#   - AEAT modelo 190 instrucciones as they stood for ejercicio 2023
+# Until then the declarante totals stay input_kind = "manual" with their binding
+# and formula references dropped rather than left dangling.
 [modelo.inception.unauthored]
 earliest_authored = 2022
 reason = "Approved by an unbounded founding Orden; filing years below 2022 existed in law and are not yet authored. Editions 2022 and 2023 were authored 2026-09-12 at applicability grade: the record geometry is grounded verbatim in the registered diseños de registro, while the calculation layer is not, because no instrucciones source in the catalogue opens before 2024."

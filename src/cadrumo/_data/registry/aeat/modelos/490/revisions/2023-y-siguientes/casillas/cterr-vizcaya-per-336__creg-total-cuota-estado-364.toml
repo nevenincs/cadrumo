@@ -216,6 +216,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-total-cuota-363"
+continuidad_id = "total-regularizacion-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; ruling 2022-2t-4t>2023: DR49008 imprime Total Regularizacion (cuota) [363] en posicion 1805 en ambos disenos. Solo se anade [23] en 2023; el total agregado, rol y forma money de 17 caracteres permanecen estables, sin repurposicion."
 number = "363"
 section = ["490_03"]
 data_type = "money"
@@ -225,6 +228,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-total-cuota-estado-364"
+continuidad_id = "total-regularizacion-cuota-estado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023; ruling 2022-2t-4t>2023: DR49008 imprime Total Regularizacion atribuible a la Administracion del Estado [364] en posicion 1822 en ambos disenos. Solo se anade [23] en 2023; el total agregado, rol y forma money de 17 caracteres permanecen estables."
 number = "364"
 section = ["490_03"]
 data_type = "money"

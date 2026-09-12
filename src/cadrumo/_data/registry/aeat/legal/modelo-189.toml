@@ -99,6 +99,24 @@ required_text = [
     "declaración informativa anual acerca de valores, seguros y rentas",
 ]
 
+[legal."orden-hfp-1351-2021:art-sexto"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1351-2021.html#a6"
+document_id = "BOE-A-2021-20004"
+article = "sexto"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-20004#a6"
+published_at = 2021-12-03
+effective_from = 2021-12-04
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-12
+reviewed_by = "agent-review (verbatim against the bundled orden-hfp-1351-2021 excerpt, articulo sexto)"
+notes = """Articulo sexto de la Orden HFP/1351/2021: modifica la Orden EHA/3481/2008, que aprueba el modelo 189. Registrado porque la edicion 189/2022 no es papel que falte sino una frontera de epoca real: NUMERO DE VALORES ocupaba entonces 130-145 y NOMINAL 146-163, frente a 130-146 y 147-164 hoy. Este id cubre la mitad de lo que hace falta; la otra mitad es la Orden HFP/115/2022, aun no adquirida. El id sigue la grafia ordinal del hermano art-octavo, no la numerica. Cita corta a proposito: el excerpt usa espacios duros U+00A0 entre palabra y numero."""
+required_text = [
+    "Se introducen las siguientes modificaciones en la Orden EHA/3481/2008",
+]
+
 [sources."aeat-modelo-189-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"

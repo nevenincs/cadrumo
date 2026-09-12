@@ -1,0 +1,102 @@
+[revisions."2023"]
+casilla_source_refs = ["aeat-dr-222-2023-2024"]
+# Applicability-grade historical edition for modelo 222, filing year 2023.
+#
+# The gap this closes was authoring debt, not a legal absence: Orden
+# HFP/227/2017 art 2 approves modelo 222 with NO year bound -- "Se aprueba el
+# modelo 222 «Impuesto sobre Sociedades. Régimen de consolidación fiscal. Pago
+# fraccionado» que figura como anexo II de la presente orden" -- and its legal
+# entry carries effective_from 2017-03-16 with no end date. The grupos fiscales
+# filed their three pagos fraccionados for 2023 under it.
+#
+# WHICH DESIGN GOVERNS, BY DECLARED WINDOW. aeat-dr-222-2023-2024 declares
+# applies_from 2023-01-01 and applies_to 2024-12-31, so it is the design IN
+# FORCE for this filing year -- not a stale substitute and not acquirable debt.
+# aeat-dr-222-2025 opens 2025-01-01 and is therefore not cited anywhere here.
+#
+# WHAT THIS EDITION ESTABLISHES, BY MEASUREMENT AGAINST THAT BUNDLED DESIGN:
+#   - 56 own-box declarations, zero duplicates: 24 on record DR22201 and 32 on
+#     DR22202. That is exactly the count the 2025-y-siguientes edition's own
+#     review reports for this same file ("63 own-box declarations in the 2025
+#     diseno and 56 in the 2024 one"), which is an independent cross-check of
+#     the transcription rather than a restatement of it.
+#   - BOTH records are 900 positions and end identically to the 2025 epoch:
+#     "Indicador de fin de registro" at position 889, length 12, constants
+#     "</T22201000>" and "</T22202000>". The record envelope did not move.
+#   - THE DELTA TO 2025 IS PURELY ADDITIVE, seven boxes: [67] "Corrección por
+#     Impuesto Complementario (IC) - Aumentos" on DR22201, and [61] [62] [63]
+#     [64] [65] [66] -- the third and fourth rate tiers of B.2 Casos
+#     específicos -- on DR22202. Every one of the 56 boxes declared here is
+#     also present in 2025. Nothing was withdrawn.
+#   - THOSE ADDITIONS SHIFT THE REST OF THE RECORD, which is why no position is
+#     copied across epochs. Measured: DR22201 boxes [01]-[06] sit 24 positions
+#     earlier here than in 2025 (for example [01] at 229, not 253) and boxes
+#     [07] onward sit 41 earlier; DR22202 fields from [42] onward sit 78
+#     earlier. The eleven unnumbered 'Información adicional' slots, whose
+#     casilla `number` IS a position range, are therefore declared at 555-741
+#     here against 633-819 in 2025 -- a uniform +78 that confirms the shift
+#     from the other direction.
+#   - This epoch prints TWO rate tiers in B.2, not four, so the
+#     semantic_role_cardinality reason on boxes [20]-[25], [26] and [32] is
+#     restated for two tiers rather than copied from the four-tier 2025 text.
+#   - Every legal_ref cited is in force across the whole filing year:
+#     orden-hfp-227-2017:art-2 and art-5 from 2017-03-16, ley-27-2014:art-40
+#     from 2015-01-01, all open-ended.
+#
+# Why the grade is 'applicability' and NOT 'calculation' or 'filing': the
+# calculation surface of this modelo is grounded in the corpus ONLY by
+# aeat-modelo-222-instructions and aeat-modelo-202-instructions, both of which
+# declare applies_from 2025-01-01 -- and the 222 instructions page is the
+# 2025-y-siguientes section only. The fifteen boxes the 2025 edition computes
+# ([03], [10], [13], [16], [18], [19], [22], [25], [26], [32], [34], [38],
+# [39], [63], [66]) are therefore declared input_kind = "manual" here, with
+# their formula and additional_source_refs DROPPED rather than left dangling,
+# and this edition declares no formulas, no parameters, no export layout and no
+# completeness manifest. The modalidad 40.2 percentage parameter the 2025
+# edition carries is likewise absent: its value is pinned to a required_text
+# citation of the 2025 instructions, and no 2023 instrucciones source exists to
+# replace it.
+#
+# Promoting this edition to calculation grade needs ONE acquisition: the AEAT
+# modelo 222 instrucciones as they stood for ejercicio 2023, registered as its
+# own source. The record geometry is already here and would not change.
+authority_grade = "applicability"
+id = "2023"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+period_selector = { year_from = 2023, year_to = 2023, periods = ["1P", "2P", "3P"] }
+orden_aplicabilidad = ["orden-hfp-227-2017:art-2"]
+legal_refs = [
+    "orden-hfp-227-2017:art-2",
+    "orden-hfp-227-2017:art-5",
+    "ley-27-2014:art-40",
+]
+source_refs = ["aeat-dr-222-2023-2024", "boe-modelo-202-base-order"]
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: authored from the bundled hash-pinned aeat-dr-222-2023-2024 diseño de registro, \
+whose declared window (2023-01-01..2024-12-31) covers this filing year exactly. VERIFIED -- \
+EVERY CITED REF COVERS THE YEAR: orden-hfp-227-2017 art-2 and art-5 effective_from \
+2017-03-16 open-ended, ley-27-2014:art-40 effective_from 2015-01-01 open-ended, \
+boe-modelo-202-base-order applies_from 2017-03-16 open-ended, aeat-dr-222-2023-2024 \
+2023-01-01..2024-12-31. NOT ONE ref or source cited here opens after 2023-01-01 or closes \
+before 2023-12-31. VERIFIED -- 56 OWN-BOX DECLARATIONS, ZERO DUPLICATES, counted with the \
+rule the 2025 edition establishes (a field's own box is the LAST bracket in its \
+description; earlier brackets are formula inputs). 24 on DR22201, 32 on DR22202. The 2025 \
+edition's own review independently reports 56 for this file, which is why the count is an \
+external check rather than a self-report. VERIFIED -- THE EPOCH DELTA IS ADDITIVE ONLY: \
+2025 adds [67] on DR22201 and [61]-[66] on DR22202 and withdraws nothing; all 56 boxes here \
+survive into 2025. VERIFIED -- POSITIONS WERE NOT COPIED ACROSS EPOCHS. 39 of the shared \
+boxes sit at different offsets in the two designs, so every position-bearing value in this \
+edition was read off THIS design: the eleven unnumbered Información adicional slots are \
+declared at 555-571 through 725-741, against 633-649 through 803-819 in 2025, a uniform +78 \
+that matches the space the six added B.2 boxes take. Copying the 2025 ranges would have put \
+all eleven fields 78 bytes into the wrong slot. VERIFIED -- BOTH RECORDS END IDENTICALLY TO \
+2025: 900 positions, fin de registro at 889 length 12. NOT CLAIMED -- calculation or filing \
+grade: no instrucciones source in the catalogue opens before 2025-01-01, so all 56 boxes are \
+input_kind = "manual" and no formula, parameter, export layout or completeness manifest is \
+declared. NOT CLAIMED -- locale labels. The es/en/ca/hu schema catalogues carry a casilla \
+block for 2025-y-siguientes only; this edition adds none, which is the same state the \
+back-year editions of modelos 190 and 193 are in. NOT CLAIMED -- independent_check_coverage \
+is n/a: NO CLAIM, not zero. No human operator has countersigned this edition."""
+reviewed_at = 2026-09-12

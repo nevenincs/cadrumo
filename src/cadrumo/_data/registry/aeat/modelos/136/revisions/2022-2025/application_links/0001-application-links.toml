@@ -1,0 +1,68 @@
+# The seven application surfaces the 2026 edition enrols, carried here with one
+# systematic substitution: every citation of aeat-modelo-136-procedure or
+# aeat-modelo-136-procedure-record is replaced by boe-modelo-136-base-order.
+#
+# Both AEAT procedure sources declare applies_from 2026-01-01 and cannot be
+# cited by an edition ending 2025-12-31. boe-modelo-136-base-order is Orden
+# HAP/70/2013 itself (applies_from 2013-02-01), and the articles these surfaces
+# depend on are present verbatim in its bundled corpus extract: art. 10
+# "Condiciones generales para la presentacion telematica de los modelos 230 y
+# 136", art. 11 "Procedimiento para la presentacion telematica por Internet de
+# los modelos 230 y 136", and art. 12 on domiciliacion bancaria. The refs are
+# substituted rather than dropped precisely so none is left dangling.
+
+[[revisions."2022-2025".application_links]]
+id = "modelo-136-calculation"
+surface = "calculation"
+consumer = "cadrumo.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-form-text"]
+
+[[revisions."2022-2025".application_links]]
+id = "modelo-136-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".application_links]]
+id = "modelo-136-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-hap-70-2013:art-10", "orden-hap-70-2013:art-11", "orden-hap-70-2013:art-12"]
+source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".application_links]]
+id = "modelo-136-review"
+surface = "review"
+consumer = "cadrumo.application.filing.review"
+requires_snapshot = true
+legal_refs = ["orden-hap-70-2013:art-11"]
+source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".application_links]]
+id = "modelo-136-approval"
+surface = "approval"
+consumer = "cadrumo.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["orden-hap-70-2013:art-11"]
+source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".application_links]]
+id = "modelo-136-reconciliation"
+surface = "reconciliation"
+consumer = "cadrumo.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-hap-70-2013:art-11"]
+source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".application_links]]
+id = "modelo-136-workflow"
+surface = "workflow"
+consumer = "cadrumo.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-hap-70-2013:art-11"]
+source_refs = ["boe-modelo-136-base-order"]

@@ -14,7 +14,38 @@ source_refs = [
     "boe-modelo-202-base-order",
 ]
 
+# Why 2023 and 2024 ground on one design and 2022 grounds on none:
+# aeat-dr-222-2023-2024 declares applies_from 2023-01-01 applies_to 2024-12-31,
+# so a single diseño de registro is in force for BOTH of those filing years --
+# not a stale substitute, and not acquirable debt. It declares 56 boxes against
+# the 2025 design's 63; the difference is additive ([67] on DR22201 and
+# [61]-[66] on DR22202) and shifts the rest of both records, so no position
+# crosses the epoch boundary.
+#
+# ACQUIRABLE DEBT -- filing year 2022 has NO registered record design at all.
+# The catalogue holds exactly two modelo 222 designs, aeat-dr-222-2023-2024
+# (opens 2023-01-01) and aeat-dr-222-2025 (opens 2025-01-01); neither reaches
+# 2022, and no other source in the catalogue carries a modelo 222 casilla
+# inventory for that year. The approving Orden HFP/227/2017 covers 2022 for
+# APPLICABILITY and PLAZO purposes -- art 2 carries no year bound and art 5.2's
+# "de cada año natural" is a recurring plazo -- but it does not carry the box
+# set, and every revision in this registry declares a casilla family. A 2022
+# edition was therefore NOT authored rather than authored with invented or
+# borrowed boxes. Needed, one acquisition:
+#   - the AEAT modelo 222 diseño de registro in force for ejercicio 2022,
+#     registered as its own source with its own declared window.
+#
+# ACQUIRABLE DEBT -- promotion of the 2023 and 2024 editions from applicability
+# to calculation grade. The record geometry is already grounded verbatim and
+# would not change; what is missing is the calculation layer, because every
+# instrucciones source in the catalogue (aeat-modelo-222-instructions,
+# aeat-modelo-202-instructions) opens 2025-01-01. Needed, one per edition:
+#   - AEAT modelo 222 instrucciones as they stood for ejercicio 2023
+#   - AEAT modelo 222 instrucciones as they stood for ejercicio 2024
+# Until then the fifteen boxes the 2025 edition computes stay
+# input_kind = "manual" with their formula references dropped rather than left
+# dangling, and the modalidad 40.2 percentage parameter is not declared.
 [modelo.inception.unauthored]
-earliest_authored = 2025
-reason = "Approved without year bound by Orden HFP/227/2017; filing years 2022-2024 existed in law and are not yet authored."
+earliest_authored = 2023
+reason = "Approved without year bound by Orden HFP/227/2017; filing year 2022 and earlier existed in law and are not yet authored. Editions 2023 and 2024 were authored 2026-09-12 at applicability grade from the diseño de registro whose declared window covers exactly those two years; 2022 has no registered design and was left unauthored rather than grounded on a design outside its window."
 legal_refs = ["orden-hfp-227-2017:art-2"]

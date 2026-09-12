@@ -319,6 +319,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-1t".casillas]]
 id = "resultado-a-deducir-18"
+continuidad_id = "resultado-anteriores-declaraciones"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t; el mismo diseno DR49001 conserva Resultado. A deducir [18] en posicion 916. La resolucion 2022-1t>2022-2t-4t funda despues [18]>[25] por la insercion territorial; este edge no renumera ni repurposa [18]."
 number = "18"
 section = ["490_01"]
 data_type = "money"
@@ -328,6 +331,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-1t".casillas]]
 id = "liq21-resultado-19"
+continuidad_id = "resultado-liquidacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t; el mismo diseno DR49001 conserva Resultado de la liquidacion [19] en posicion 933. La resolucion 2022-1t>2022-2t-4t funda despues [19]>[26] por la insercion territorial; este edge no renumera ni repurposa [19]."
 number = "19"
 section = ["490_01"]
 data_type = "money"

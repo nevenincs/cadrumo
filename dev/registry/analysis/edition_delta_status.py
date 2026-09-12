@@ -80,8 +80,11 @@ model declares one, casillas key on ``continuidad_id``:
   every other family are measured here, since nothing inherits them yet.
 - ``family_default_undeclared`` - a family whose members admit a derivable
   shared ``source_refs`` run, by the migration tool's own rule, in an edition
-  whose manifest declares no default for that family (``casilla_source_refs``,
-  ``binding_source_refs``, ``formula_source_refs``).
+  whose manifest declares no default for that family. Every keyed family
+  carries such a key -- ``casilla_source_refs``, ``binding_source_refs``,
+  ``formula_source_refs`` and one per remaining keyed family -- and the screen
+  reads the pairing from ``_FAMILY_DEFAULT_KEYS``, so a family enrolled in the
+  schema without its key here would read as having nothing to lift.
 - ``family_without_identity`` - a family with members whose element model
   declares no identity field, so it cannot join the union until it has one.
 - ``identifier_is_address`` - a member identifier carrying a ``.NNN-NNN.``
@@ -269,6 +272,14 @@ _FAMILY_DEFAULT_KEYS: Final[Mapping[str, str]] = {
     "casillas": "casilla_source_refs",
     "bindings": "binding_source_refs",
     "formulas": "formula_source_refs",
+    "application_links": "application_link_source_refs",
+    "applicability": "applicability_source_refs",
+    "filing_schedules": "filing_schedule_source_refs",
+    "live_cross_references": "live_cross_reference_source_refs",
+    "extraction_profiles": "extraction_profile_source_refs",
+    "dependency_classifications": "dependency_classification_source_refs",
+    "constructs": "construct_source_refs",
+    "parameters": "parameter_source_refs",
 }
 #: The migration tool's own wording for a root it declared for want of lineage.
 _ROOT_PENDING_LINEAGE_MARK: Final = "predecessor row without lineage"
@@ -293,6 +304,18 @@ _ROOT_CAUSES_BY_LAW: Final = ("parallel scheme variant", "lower grade", "overlap
 _PER_EDITION_FAMILIES: Final = frozenset({"workbook_parity_refs", "export_layouts"})
 #: Keys stripped before two members are compared for restatement.
 _RESTATEMENT_KEYS: Final = frozenset({"source_refs", "legal_refs", "additional_source_refs", *_LINEAGE_CLAIMS})
+
+#: Families a merge cannot reliably supply even when a member looks identical.
+#: `deadline_windows` inherits only where its selector covers the successor, so
+#: an omitted member is not dependably inherited, and its filing_year plus
+#: period are the datum rather than a normalisable key.
+_UNDROPPABLE_FAMILIES: Final = frozenset({"deadline_windows"})
+
+#: Families whose members are per-edition IDENTITY rather than inheritable
+#: declarations, so an identical pair says nothing about restatement. Excluded
+#: from every restatement bucket. Bindings are deliberately NOT here: they are
+#: being enrolled into the union and their restatement is real.
+_IDENTITY_FAMILIES: Final = frozenset({"projection_endpoints", "verification_predicates", "verification_expectations"})
 
 #: A stated casilla row's identity for chain walking: its id and its lineage.
 type RowKey = tuple[str, str | None]
@@ -323,12 +346,18 @@ COVERAGE_CONDITIONS: Final[tuple[str, ...]] = (
     "pending_orden_declaration_stale",
 )
 
+#: The measurement's version. Bump on any change to what the conditions COUNT,
+#: so a lane diffing two runs can separate corpus movement from instrument
+#: movement rather than having to recall which changed.
+_SIGNAL_SCHEMA: Final = 2
+
 #: Every condition this screen can report, declared once and used at each
 #: emission site below, so the set cannot be misread off the source.
 CONDITIONS: Final[tuple[str, ...]] = (
     "derived_field_authored",
     "unknown_authoring_key",
     "edition_without_manifest",
+    "predecessor_forest_violation",
     "row_source_refs_restated",
     "row_source_refs_liftable",
     "constraints_source_refs_restated",
@@ -340,6 +369,9 @@ CONDITIONS: Final[tuple[str, ...]] = (
     "row_missing_lineage",
     "row_missing_lineage_on_edge",
     "member_restated",
+    "member_restated_payload_equal",
+    "member_restated_grounding",
+    "member_restated_pinned",
     "family_default_undeclared",
     "family_without_identity",
     "identifier_is_address",
@@ -349,6 +381,7 @@ CONDITIONS: Final[tuple[str, ...]] = (
 #: Measured alongside the conditions and never counted as findings.
 MEASUREMENTS: Final[tuple[str, ...]] = (
     "member_restated_dispositioned",
+    "member_restated_unedged",
     "row_pinned_by_lineage_claim",
     "row_source_refs_irreducible",
     "row_identical_unchained",
@@ -567,6 +600,7 @@ class EditionStatus:
     rows_by_id: dict[str, dict[str, Any]] = field(default_factory=dict)
     stated_keys: tuple[RowKey, ...] = ()
     retired_lineages: frozenset[str] = frozenset()
+    family_defaults: dict[str, tuple[str, ...]] = field(default_factory=dict)
     source_default_dispositions: frozenset[str] = frozenset()
     family_dispositions: frozenset[str] = frozenset()
     declared_default: tuple[str, ...] = ()
@@ -578,6 +612,7 @@ class EditionStatus:
     selector_year_from: int | None = None
     selector_year_to: int | None = None
     periods: tuple[str, ...] = ()
+    period_overrides: tuple[tuple[int, tuple[str, ...]], ...] = ()
     rows: int = 0
     rows_stating_source_refs: int = 0
     rows_without_lineage: int = 0
@@ -672,6 +707,30 @@ def _comparable(member: Mapping[str, Any]) -> dict[str, Any]:
     return {key: value for key, value in member.items() if key not in _RESTATEMENT_KEYS}
 
 
+def _grounding_lifts(inherited: Mapping[str, Any], stated: Mapping[str, Any], default: tuple[str, ...]) -> bool:
+    """Whether two members' references agree, or the successor's lift to a declared default.
+
+    Payload equality is not droppability. A successor that re-grounds an
+    otherwise identical member on its OWN edition's design states something the
+    predecessor did not, and a merge cannot supply it -- the drop path found
+    zero droppable members on eleven modelos for exactly this reason, because
+    the restatement census sets the reference fields aside before comparing.
+
+    References agree when they are equal outright, or when the successor's
+    source_refs are the edition's declared family default (optionally followed
+    by its own additions), because the lift removes them and what remains is
+    equal. Anything else is a genuine per-edition statement.
+    """
+    for key in ("source_refs", "legal_refs"):
+        before, after = _as_refs(inherited.get(key)), _as_refs(stated.get(key))
+        if before == after:
+            continue
+        if key == "source_refs" and default and after[: len(default)] == default:
+            continue
+        return False
+    return True
+
+
 def _materialised_members(
     edition: EditionStatus, by_edition: Mapping[str, EditionStatus], family: str
 ) -> dict[str, dict[str, Any]]:
@@ -709,8 +768,15 @@ def _restated_members(
     yet and the count is exactly what the union would remove.
     """
     counts: list[tuple[str, int]] = []
+    # Only a DECLARED edge is drop-path work. On an edge whose successor roots
+    # away, an identical member is an observation about adjacency, not a member
+    # a merge would supply, and putting it in the headline offered work the tool
+    # refuses. Counted apart rather than dropped so nothing disappears.
+    declared_edge = successor.declares_predecessor
     for family, key in _schema_families():
         if key is None or family in _PER_EDITION_FAMILIES or (family == _CASILLAS and successor.declares_predecessor):
+            continue
+        if family in _IDENTITY_FAMILIES:
             continue
         inherited = _materialised_members(predecessor, by_edition, family)
         # A family the successor declares as stated in full, or empty, by
@@ -723,13 +789,43 @@ def _restated_members(
             before = inherited.get(identity)
             if before is not None and _comparable(before) == _comparable(member):
                 restated += 1
-                if not dispositioned:
-                    successor._add("member_restated", f"{family}/{identity}", f"identical to {predecessor.edition}")
-                else:
+                locus = f"{family}/{identity}"
+                if dispositioned:
                     successor._add(
                         "member_restated_dispositioned",
-                        f"{family}/{identity}",
+                        locus,
                         f"identical to {predecessor.edition}, family stated in full by declaration",
+                    )
+                    continue
+                successor._add("member_restated", locus, f"identical to {predecessor.edition}")
+                # A row stating its own lineage claim is unreproducible by a
+                # merge: an inherited row never carries one, so dropping it
+                # destroys the claim silently, and the claim is filing-grade.
+                # Orthogonal to grounding -- a row can be payload-equal AND
+                # references-liftable and still be undroppable for this reason.
+                if _LINEAGE_CLAIMS & set(member):
+                    successor._add(
+                        "member_restated_pinned", locus, f"identical to {predecessor.edition}, states a lineage claim"
+                    )
+                elif family in _UNDROPPABLE_FAMILIES:
+                    successor._add(
+                        "member_restated_pinned",
+                        locus,
+                        f"identical to {predecessor.edition}, family inherits conditionally",
+                    )
+                elif not declared_edge:
+                    successor._add(
+                        "member_restated_unedged", locus, f"identical to {predecessor.edition}, edge not declared"
+                    )
+                elif _grounding_lifts(before, member, successor.family_defaults.get(family, ())):
+                    successor._add(
+                        "member_restated_payload_equal", locus, f"identical to {predecessor.edition}, refs lift"
+                    )
+                else:
+                    successor._add(
+                        "member_restated_grounding",
+                        locus,
+                        f"identical to {predecessor.edition} but re-grounded on this edition's own references",
                     )
         if restated and not dispositioned:
             counts.append((family, restated))
@@ -749,6 +845,40 @@ def _measure_unchained(predecessor: EditionStatus, successor: EditionStatus) -> 
             successor._add(
                 "row_identical_unchained", row_id, f"identical to {predecessor.edition} by id, no shared lineage"
             )
+
+
+def _period_overrides(declared: object) -> tuple[tuple[int, tuple[str, ...]], ...]:
+    """Read a selector's per-year period overrides off the raw manifest table.
+
+    A year an edition overrides serves THAT tuple and not the flat one, so the
+    coverage projection must read it here rather than inferring a uniform
+    surface the declaration never stated.
+    """
+    if not isinstance(declared, list):
+        return ()
+    overrides: list[tuple[int, tuple[str, ...]]] = []
+    for entry in declared:
+        if not isinstance(entry, dict):
+            continue
+        year, periods = entry.get("year"), entry.get("periods")
+        if isinstance(year, int) and isinstance(periods, list):
+            overrides.append((year, tuple(str(period) for period in periods)))
+    return tuple(overrides)
+
+
+def _periods_in_year(status: EditionStatus, year: int) -> tuple[str, ...]:
+    """The period surface one edition serves in one filing year.
+
+    ``PeriodSelector.periods_for_year``, reimplemented exactly: a year named by
+    an override serves the override's tuple INSTEAD of the flat one, so a
+    coordinate the transition year drops is served by neither this edition nor,
+    unless another edition states it, any edition -- which is a reportable gap,
+    never a silently covered cell.
+    """
+    for override_year, periods in status.period_overrides:
+        if override_year == year:
+            return periods
+    return status.periods
 
 
 def _selectors_overlap(left: EditionStatus, right: EditionStatus) -> bool:
@@ -773,6 +903,18 @@ def _selectors_overlap(left: EditionStatus, right: EditionStatus) -> bool:
         return False
     if right_end is not None and right_end < left_start:
         return False
+    overridden = sorted({year for status in (left, right) for year, _ in status.period_overrides})
+    if any(
+        _admits_year(left, year)
+        and _admits_year(right, year)
+        and set(_periods_in_year(left, year)) & set(_periods_in_year(right, year))
+        for year in overridden
+    ):
+        return True
+    if overridden and left_end is not None and right_end is not None:
+        shared = range(max(left_start, right_start), min(left_end, right_end) + 1)
+        if {year for year in shared if _admits_year(left, year) and _admits_year(right, year)}.issubset(overridden):
+            return False
     return bool(set(left.periods) & set(right.periods))
 
 
@@ -879,6 +1021,39 @@ def _blockers(
     return tuple(blockers)
 
 
+def forest_violations(statuses: tuple[EditionStatus, ...]) -> None:
+    """Name every modelo whose editions mix a declared chain with silent omission.
+
+    The forest rule is that a modelo's editions form one chain: each either
+    names its predecessor or declares an explicit root. A modelo where MORE
+    THAN ONE edition simply omits the key while another edition names one is
+    neither -- it asserts a chain and leaves holes in it, and the migration tool
+    refuses the whole modelo rather than guess which omission was meant. The
+    screen showed one such modelo's edge as the cleanest on the board while the
+    tool would not touch it.
+
+    A modelo where every edition omits the key is not a violation: nothing has
+    claimed a chain, so there is no chain to be inconsistent with.
+    """
+    by_modelo: dict[str, list[EditionStatus]] = defaultdict(list)
+    for status in statuses:
+        if status.has_manifest:
+            by_modelo[status.modelo].append(status)
+    for modelo, editions in sorted(by_modelo.items()):
+        silent = [
+            status for status in editions if not status.declares_predecessor and not status.declares_no_predecessor
+        ]
+        if len(silent) > 1 and any(status.declares_predecessor for status in editions):
+            named = ", ".join(sorted(status.edition for status in silent))
+            for status in editions:
+                status._add(
+                    "predecessor_forest_violation",
+                    "<modelo>",
+                    f"{modelo}: {len(silent)} editions omit the predecessor key ({named}) while another names one",
+                )
+                break
+
+
 def edges(statuses: tuple[EditionStatus, ...]) -> tuple[Edge, ...]:
     """Return every modelo's adjacent edition pairs with its migration state.
 
@@ -905,7 +1080,14 @@ def edges(statuses: tuple[EditionStatus, ...]) -> tuple[Edge, ...]:
             blockers: tuple[str, ...] = ()
             root_kind = ""
             if successor.declares_predecessor:
-                state = "migrated"
+                # A declared edge is not therefore a sound one. Declaring the
+                # predecessor silences nothing the tool would still refuse, and
+                # two edges reached `migrated` this way while an export scenario
+                # was still missing -- the blocker simply left the signal. So
+                # the causes are computed here too and a declared edge that
+                # still fails one is named apart from a clean migration.
+                blockers = _blockers(predecessor, successor, predecessor_keys)
+                state = "migrated_unverified" if blockers else "migrated"
             elif successor.declares_no_predecessor:
                 state = "dispositioned"
                 root_kind = _root_kind(successor.root_reason)
@@ -1067,6 +1249,9 @@ def scan_edition(modelo_id: str, edition_dir: Path, typed_fields: frozenset[str]
         status.source_default_dispositions = _declared_families(table.get("source_default_dispositions"))
         status.family_dispositions = _declared_families(table.get("family_dispositions"))
         status.declared_default = _as_refs(table.get(_EDITION_SOURCE_DEFAULT))
+        status.family_defaults = {
+            family: refs for family, key in _FAMILY_DEFAULT_KEYS.items() if (refs := _as_refs(table.get(key)))
+        }
         status.orden = _as_refs(table.get(_EDITION_ORDEN))
         status.valid_from = str(table.get("valid_from", ""))
         status.authority_grade = str(table.get("authority_grade", ""))
@@ -1079,6 +1264,7 @@ def scan_edition(modelo_id: str, edition_dir: Path, typed_fields: frozenset[str]
             status.selector_year_to = year_to if isinstance(year_to, int) else None
             periods = selector.get("periods")
             status.periods = tuple(str(p) for p in periods) if isinstance(periods, list) else ()
+            status.period_overrides = _period_overrides(selector.get("period_overrides"))
 
     rows = _read_rows(edition_dir, edition_id, status)
     status.rows = len(rows)
@@ -1444,6 +1630,7 @@ def build_report(registry_root: Path, *, modelo_ids: tuple[str, ...] = ()) -> Re
     statuses = scan_registry(registry_root, modelo_ids=modelo_ids)
     promised = supported_filing_years(registry_root)
     found_edges = edges(statuses)
+    forest_violations(statuses)
     scope_lineage_findings(statuses, found_edges, projected_sources(statuses, promised))
     return Report(
         statuses=statuses,
@@ -1723,7 +1910,10 @@ def coverage_gaps(
 
     gaps: list[CoverageGap] = []
     for modelo, editions in sorted(by_modelo.items()):
-        periods = sorted({period for edition in editions for period in edition.periods})
+        periods = sorted(
+            {period for edition in editions for period in edition.periods}
+            | {period for edition in editions for _, override in edition.period_overrides for period in override}
+        )
         if not periods:
             continue
         for year in promised_years:
@@ -1754,7 +1944,7 @@ def coverage_gaps(
                 gaps.append(CoverageGap(modelo, kind, year, "*", (), *_disposition(modelo, kind, year, "*")))
                 continue
             for period in periods:
-                serving = tuple(edition.edition for edition in admitting if period in edition.periods)
+                serving = tuple(edition.edition for edition in admitting if period in _periods_in_year(edition, year))
                 if not serving:
                     kind = "promised_coordinate_unserved"
                     gaps.append(CoverageGap(modelo, kind, year, period, (), *_disposition(modelo, kind, year, period)))
@@ -1790,7 +1980,13 @@ _BLOCKER_CAUSES: Final[tuple[str, ...]] = (
 )
 
 #: Edge states, in the order the signal always prints them.
-_EDGE_STATES: Final[tuple[str, ...]] = ("migrated", "ready", "blocked", "dispositioned")
+_EDGE_STATES: Final[tuple[str, ...]] = (
+    "migrated",
+    "migrated_unverified",
+    "ready",
+    "blocked",
+    "dispositioned",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -2168,7 +2364,14 @@ def _signal_lines(report: Report) -> list[str]:
         for blocker in edge.blockers
     )
     lines = [
-        "# edition_delta_status schema=1",
+        # The measurement's own version, bumped whenever a condition is added,
+        # split, renamed, or has its population changed. A reader diffing two
+        # runs can then tell a CORPUS change from a MEASUREMENT change without
+        # remembering which is which: if this line moved, the instrument moved,
+        # and a value that shifted alongside it may have shifted for that reason
+        # alone. Three metrics were misread as progress or decay today for want
+        # of exactly this.
+        f"# edition_delta_status schema={_SIGNAL_SCHEMA} conditions={len(CONDITIONS)} measurements={len(MEASUREMENTS)}",
         *(f"limitation {text}" for text in _LIMITATIONS),
         f"corpus modelos={len({status.modelo for status in statuses})} editions={len(statuses)} "
         f"casilla_rows={sum(status.rows for status in statuses)} "
@@ -2287,7 +2490,9 @@ def _fmt(value: int) -> str:
     return f"{value:,}"
 
 
-_TEXT_COLUMNS: Final = frozenset({"modelo", "predecessor", "successor", "family", "identity", "state", "cause"})
+_TEXT_COLUMNS: Final = frozenset(
+    {"modelo", "predecessor", "successor", "family", "identity", "state", "cause", "kind", "locus", "edition"}
+)
 
 
 def _table(headers: tuple[str, ...], rows: Sequence[tuple[str, ...]], *, indent: str = "  ") -> list[str]:
@@ -2392,6 +2597,20 @@ def render_report(report: Report, *, totals_only: bool = False) -> str:
             f"  {'unnamed successor (ledger miss)':<38} {_fmt(scope.unnamed_successor):>8}",
             "",
         ]
+
+    singles = [
+        finding
+        for status in statuses
+        for finding in status.findings
+        if finding.kind in {"edition_keyed_identifier", "edition_default_underivable", "row_source_refs_liftable"}
+    ]
+    if singles:
+        out.append("NAMED SINGLETONS  (conditions small enough to read here)")
+        out += _table(
+            ("modelo", "edition", "kind", "locus"),
+            [(f.modelo, f.edition, f.kind, f.locus) for f in singles[:20]],
+        )
+        out.append("")
 
     out.append("MEASUREMENTS")
     out += [f"  {kind:<32} {_fmt(census[kind]):>8}" for kind in (*MEASUREMENTS, "row_missing_lineage")]

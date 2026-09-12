@@ -218,6 +218,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2022-1t".casillas]]
 id = "reg-total-cuota-101"
+continuidad_id = "total-regularizacion-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2021 para 2021 y 2022-1t; el mismo diseno DR49002 conserva Total Regularizacion (cuota) [101] en posicion 1709. La resolucion 2022-1t>2022-2t-4t funda despues [101]>[363] por la ampliacion territorial; este edge no renumera ni repurposa [101]."
 number = "101"
 section = ["490_02"]
 data_type = "money"

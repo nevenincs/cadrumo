@@ -327,7 +327,7 @@ def _revision_matches_request(
     #
     # The caller's token remains unchanged; canonical normalisation happens at
     # the snapshot boundary, where relation consumers compare exact tokens.
-    return selector_token_for_request(revision.period_selector.periods, period) is not None
+    return selector_token_for_request(revision.period_selector.periods_for_year(filing_year), period) is not None
 
 
 def _select_single_revision(

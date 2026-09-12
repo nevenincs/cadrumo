@@ -10,7 +10,7 @@ opens_on = 2024-01-01
 closes_on = 2024-01-31
 applicability_condition_mode = "all"
 legal_refs = ["orden-eha-3377-2011:art-5"]
-source_refs = ["boe-modelo-193-2011-form"]
+source_refs = ["boe-modelo-193-2011-form", "aeat-calendario-contribuyente-2024"]
 
 [[revisions."2023".deadline_windows.applicability_conditions]]
 field = "pays_capital_income_with_retencion"
@@ -18,4 +18,4 @@ op = "equals"
 value = true
 explanation = "Retenedor que satisface determinados rendimientos o rentas del capital mobiliario sujetos a retencion y presenta el resumen anual."
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["boe-modelo-193-2011-form"]
+source_refs = ["boe-modelo-193-2011-form", "aeat-calendario-contribuyente-2024"]

@@ -1,9 +1,6 @@
 """Application storage namespace for calc-sheet export planning.
 
-This package is a namespace container. Callers must import from the subpackages
-directly (e.g. :mod:`application.storage.calc_sheets`); nothing is
-re-exported at this level by design. Exporting here would couple callers to the
-internal subpackage layout and undermine the layered-import discipline.
+The initializer is inert; import contracts from their defining modules.
 
 The calc-sheet subpackage builds renderer-neutral workbook plans for the live
 Google Sheets transport. Runtime encrypted persistence remains owned by the storage
@@ -20,7 +17,7 @@ See Also:
         :class:`domain.calculations.registry.RegistrySnapshot`.
     :func:`adapters.outbound.google.apply_export_plan`
         Remote Google Sheets materializer for the same export plan.
-    :class:`adapters.persistence.storage.SecureObjectRepository`
+    :class:`adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
         Encrypted canonical persistence boundary that this namespace does not
         replace.
 """

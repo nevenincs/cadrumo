@@ -23,13 +23,18 @@ from typing import Final
 
 import pytest
 
+from cadrumo.domain.calculations.registry.reference_sections import FAMILY_SOURCE_DEFAULT_FIELDS
+
 from ..compiler.loader import load_modelo_directory
 from ..lift_family_source_defaults import (
+    FAMILIES,
+    FAMILY_DEFAULT_KEY,
     REGISTRY_MODELOS_ROOT,
     ModeloLiftFailedError,
     apply_plan,
     lifted_fragment_text,
     load_outcome,
+    main,
     plan_modelo,
     render_plan,
 )
@@ -42,6 +47,11 @@ _MODELO: Final = "111"
 _EDITION: Final = "2019-y-siguientes"
 _DEFAULT: Final = ("aeat-dr-111-2019-v18", "aeat-modelo-111-instructions")
 _FAMILY_KEYS: Final = ("binding_source_refs", "formula_source_refs")
+
+#: The families the shared fixture undeclares, and so the only ones these tests
+#: plan. Which families are liftable at all is pinned separately, against the
+#: domain pairing, by the derivation test at the end of this module.
+_UNDER_TEST: Final = ("bindings", "formulas")
 
 
 def _unlifted_modelo(tmp_path: Path) -> Path:
@@ -78,7 +88,7 @@ def _members(modelo_dir: Path, family: str) -> list[dict[str, object]]:
 def test_undeclared_family_default_is_lifted_and_members_drop_the_restatement(tmp_path: Path) -> None:
     """The derived default lands on the manifest and every member that restated it states none."""
     modelo_dir = _unlifted_modelo(tmp_path)
-    plan = plan_modelo(modelo_dir)
+    plan = plan_modelo(modelo_dir, _UNDER_TEST)
     lifted = {(lift.family, lift.default) for lift in plan.liftable}
     assert lifted == {("bindings", _DEFAULT), ("formulas", _DEFAULT)}
 
@@ -103,7 +113,7 @@ def test_undeclared_family_default_is_lifted_and_members_drop_the_restatement(tm
 def test_manifest_default_is_declared_beside_the_casilla_default(tmp_path: Path) -> None:
     """The three grounding keys are one statement and are written together."""
     modelo_dir = _unlifted_modelo(tmp_path)
-    apply_plan(plan_modelo(modelo_dir), modelo_dir.parent)
+    apply_plan(plan_modelo(modelo_dir, _UNDER_TEST), modelo_dir.parent)
     lines = (modelo_dir / "revisions" / _EDITION / "revision.toml").read_text(encoding="utf-8").splitlines()
     grounding = [
         index for index, line in enumerate(lines) if re.match(r"^(casilla|binding|formula)_source_refs =", line)
@@ -177,10 +187,10 @@ def test_a_conflicting_declared_default_is_never_overwritten(tmp_path: Path) -> 
 def test_a_second_run_finds_nothing_left_to_lift(tmp_path: Path) -> None:
     """The lift is idempotent: the tree it produces is one it plans no further change to."""
     modelo_dir = _unlifted_modelo(tmp_path)
-    apply_plan(plan_modelo(modelo_dir), modelo_dir.parent)
+    apply_plan(plan_modelo(modelo_dir, _UNDER_TEST), modelo_dir.parent)
     after_first = {path: path.read_text(encoding="utf-8") for path in sorted(modelo_dir.rglob("*.toml"))}
 
-    second = plan_modelo(modelo_dir)
+    second = plan_modelo(modelo_dir, _UNDER_TEST)
     assert second.liftable == []
     assert second.refusals == []
     assert apply_plan(second, modelo_dir.parent) == []
@@ -270,9 +280,9 @@ def test_lifted_fragment_text_leaves_other_families_and_nested_tables_alone() ->
 def test_render_plan_reports_a_manifest_line_per_edition_it_writes(tmp_path: Path) -> None:
     """Each edition whose manifest the run declares on is named with the fields it gained."""
     modelo_dir = _unlifted_modelo(tmp_path)
-    rendered = render_plan([plan_modelo(modelo_dir)], applied=False)
+    rendered = render_plan([plan_modelo(modelo_dir, _UNDER_TEST)], applied=False)
     assert f"manifest {_MODELO}/{_EDITION} fields=binding_source_refs,formula_source_refs" in rendered
-    assert "total planned=2 bindings=1 formulas=1 casillas=0 refusals=0" in rendered
+    assert "total planned=2 bindings=1 formulas=1 refusals=0" in rendered
 
 
 def test_the_lift_changes_only_the_lines_it_means_to(tmp_path: Path) -> None:
@@ -286,7 +296,7 @@ def test_the_lift_changes_only_the_lines_it_means_to(tmp_path: Path) -> None:
     before = {path: path.read_bytes() for path in sorted(modelo_dir.rglob("*.toml"))}
     assert all(b"\r\n" not in data for data in before.values()), "the fixture is not LF-authored"
 
-    touched = apply_plan(plan_modelo(modelo_dir), modelo_dir.parent)
+    touched = apply_plan(plan_modelo(modelo_dir, _UNDER_TEST), modelo_dir.parent)
     for path in touched:
         data = path.read_bytes()
         assert b"\r\n" not in data, f"{path.name} was rewritten with CRLF line endings"
@@ -303,3 +313,100 @@ def test_the_lift_changes_only_the_lines_it_means_to(tmp_path: Path) -> None:
     for path, data in before.items():
         if path not in touched:
             assert path.read_bytes() == data, f"{path.name} was rewritten by a lift that does not name it"
+
+
+def test_a_declared_equal_default_rewrites_the_members_under_it(tmp_path: Path) -> None:
+    """An edition that declared the default but never lifted its members is still work.
+
+    Declaring the default and dropping it from the members are two halves of
+    one lift. An edition holding only the first half has the restatement the
+    tool exists to remove, sitting under a manifest that already states it, so
+    the members are rewritten and the correct declaration is left exactly as
+    authored rather than overwritten or duplicated.
+    """
+    modelo_dir = _unlifted_modelo(tmp_path)
+    manifest = modelo_dir / "revisions" / _EDITION / "revision.toml"
+    declaration = 'binding_source_refs = ["' + '", "'.join(_DEFAULT) + '"]'
+    manifest.write_text(
+        manifest.read_text(encoding="utf-8").replace(
+            "casilla_source_refs = [", f"{declaration}\ncasilla_source_refs = [", 1
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+    assert [member for member in _members(modelo_dir, "bindings") if "source_refs" in member], (
+        "the fixture's members do not restate the declared default"
+    )
+
+    plan = plan_modelo(modelo_dir, ("bindings",))
+    assert plan.refusals == []
+    lifted = plan.liftable
+    assert [(lift.family, lift.default, lift.manifest_declared) for lift in lifted] == [("bindings", _DEFAULT, True)]
+    assert plan.manifests == {}, "an already-correct declaration was queued for rewriting"
+
+    touched = apply_plan(plan, modelo_dir.parent)
+    assert touched, "the planned member rewrite wrote no file"
+    assert manifest not in touched, "the manifest was rewritten although it already declared the default"
+    assert manifest.read_text(encoding="utf-8").count("binding_source_refs =") == 1
+
+    restating = [member for member in _members(modelo_dir, "bindings") if "source_refs" in member]
+    assert restating == [], "the members still restate the declared default"
+    revision = load_modelo_directory(modelo_dir).revisions[_EDITION]
+    assert all(binding.source_refs == _DEFAULT for binding in revision.bindings)
+
+    second = plan_modelo(modelo_dir, ("bindings",))
+    assert second.liftable == [] and second.refusals == []
+
+
+def test_the_applied_total_counts_the_files_the_run_actually_wrote(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The summary reports writes, not plan rows, and names them per edition.
+
+    A planned lift and a written file are different facts, so the applied
+    total is read back off the tree: it must equal the number of files whose
+    bytes the run actually changed.
+    """
+    modelo_dir = _unlifted_modelo(tmp_path)
+    before = {path: path.read_bytes() for path in sorted(modelo_dir.rglob("*.toml"))}
+
+    assert (
+        main(
+            [
+                "--modelo",
+                _MODELO,
+                "--modelos-root",
+                str(modelo_dir.parent),
+                "--apply",
+                *[arg for family in _UNDER_TEST for arg in ("--family", family)],
+            ]
+        )
+        == 0
+    )
+    rendered = capsys.readouterr().out
+
+    changed = [path for path, data in before.items() if path.read_bytes() != data]
+    assert changed, "the run wrote nothing to count"
+    assert f"total applied={len(changed)} " in rendered
+    assert f"wrote modelo={_MODELO} edition={_EDITION} files={len(changed)}" in rendered
+
+
+def test_the_liftable_families_are_read_from_the_domain_pairing() -> None:
+    """The family surfaces follow the domain's pairing rather than a list restated here.
+
+    The loader fills a member's default by walking
+    ``FAMILY_SOURCE_DEFAULT_FIELDS``, so a tool that carried its own list of
+    families could only ever disagree with it. Every paired family must be an
+    offered choice, must map to the domain's own manifest key, and must be one
+    whose members this tool rewrites; the casilla family is the single
+    declare-only exception, because another pass owns its member statements.
+    """
+    paired = dict(FAMILY_SOURCE_DEFAULT_FIELDS)
+    assert paired, "the domain declares no family source defaults"
+    for family, key in paired.items():
+        assert family in FAMILIES, f"{family} is paired by the domain but is not an offered choice"
+        assert FAMILY_DEFAULT_KEY[family] == key, f"{family} maps to a key the domain does not pair it with"
+
+    assert set(FAMILIES) == set(paired) | {"casillas"}
+    assert FAMILY_DEFAULT_KEY["casillas"] == "casilla_source_refs"
+    assert "casillas" not in paired, "the casilla family's members are owned by another pass"

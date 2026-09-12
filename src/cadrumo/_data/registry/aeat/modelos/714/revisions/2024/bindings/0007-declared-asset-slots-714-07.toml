@@ -1,244 +1,244 @@
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-14"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-clave-1"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-14", offset = 14, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-15"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-porcentaje-titularidad-1"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-15", offset = 15, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-20"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-matricula-1"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-20", offset = 20, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-40"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-descripcion-1"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-40", offset = 40, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-102"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-valor-1"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-102", offset = 102, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-115"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-clave-2"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-115", offset = 115, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-116"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-porcentaje-titularidad-2"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-116", offset = 116, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-121"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-matricula-2"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-121", offset = 121, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-141"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-descripcion-2"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-141", offset = 141, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-203"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-valor-2"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-203", offset = 203, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-216"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-clave-3"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-216", offset = 216, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-217"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-porcentaje-titularidad-3"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-217", offset = 217, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-222"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-matricula-3"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-222", offset = 222, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-242"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-descripcion-3"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-242", offset = 242, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-304"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-valor-3"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-304", offset = 304, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-317"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-clave-4"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-317", offset = 317, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-318"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-porcentaje-titularidad-4"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-318", offset = 318, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-323"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-matricula-4"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-323", offset = 323, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-343"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-descripcion-4"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-343", offset = 343, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-405"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-valor-4"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-405", offset = 405, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-418"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-clave-5"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-418", offset = 418, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-419"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-porcentaje-titularidad-5"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-419", offset = 419, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-424"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-matricula-5"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-424", offset = 424, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-444"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-descripcion-5"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-444", offset = 444, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-506"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-valor-5"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-506", offset = 506, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-519"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-clave-6"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-519", offset = 519, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-520"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-porcentaje-titularidad-6"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-520", offset = 520, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-525"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-matricula-6"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-525", offset = 525, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-545"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-descripcion-6"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-545", offset = 545, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-607"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-valor-6"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-607", offset = 607, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-620"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-clave-7"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-620", offset = 620, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-621"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-porcentaje-titularidad-7"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-621", offset = 621, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-626"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-matricula-7"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-626", offset = 626, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-646"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-descripcion-7"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-646", offset = 646, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-708"
+id = "modelo-714.714-07.bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-valor-7"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-k-vehiculos-joyas-pieles-de-caracter-suntuario-embarcaciones-708", offset = 708, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-242-2025:art-4"]
@@ -420,14 +420,14 @@ legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1234"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-porcentaje-usufructo-derecho-real-1"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1234", offset = 1234, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1239"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-referencia-catastral-1"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1239", offset = 1239, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
@@ -441,28 +441,28 @@ legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1260"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-valor-utilizado-1"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1260", offset = 1260, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1261"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-descripcion-situacion-bien-1"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1261", offset = 1261, length = 21, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1282"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-valor-del-bien-1"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1282", offset = 1282, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1295"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-valor-del-derecho-1"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1295", offset = 1295, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-242-2025:art-4"]
@@ -476,14 +476,14 @@ legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1309"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-porcentaje-usufructo-derecho-real-2"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1309", offset = 1309, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1314"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-referencia-catastral-2"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1314", offset = 1314, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
@@ -497,28 +497,28 @@ legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1335"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-valor-utilizado-2"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1335", offset = 1335, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1336"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-descripcion-situacion-bien-2"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1336", offset = 1336, length = 21, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1357"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-valor-del-bien-2"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1357", offset = 1357, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1370"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-valor-del-derecho-2"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1370", offset = 1370, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-242-2025:art-4"]
@@ -532,14 +532,14 @@ legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1384"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-porcentaje-usufructo-derecho-real-3"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1384", offset = 1384, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1389"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-referencia-catastral-3"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1389", offset = 1389, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
@@ -553,28 +553,28 @@ legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1410"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-valor-utilizado-3"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1410", offset = 1410, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1411"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-descripcion-situacion-bien-3"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1411", offset = 1411, length = 21, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1432"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-valor-del-bien-3"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1432", offset = 1432, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1445"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-valor-del-derecho-3"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1445", offset = 1445, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-242-2025:art-4"]
@@ -588,14 +588,14 @@ legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1459"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-porcentaje-usufructo-derecho-real-4"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1459", offset = 1459, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1464"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-referencia-catastral-4"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1464", offset = 1464, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
@@ -609,28 +609,28 @@ legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1485"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-valor-utilizado-4"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1485", offset = 1485, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1486"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-descripcion-situacion-bien-4"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1486", offset = 1486, length = 21, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1507"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-valor-del-bien-4"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1507", offset = 1507, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1520"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-valor-del-derecho-4"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1520", offset = 1520, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-242-2025:art-4"]
@@ -644,14 +644,14 @@ legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1534"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-porcentaje-usufructo-derecho-real-5"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1534", offset = 1534, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1539"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-referencia-catastral-5"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1539", offset = 1539, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
@@ -665,28 +665,28 @@ legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1560"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-valor-utilizado-5"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1560", offset = 1560, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1561"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-descripcion-situacion-bien-5"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1561", offset = 1561, length = 21, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1582"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-valor-del-bien-5"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1582", offset = 1582, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1595"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-valor-del-derecho-5"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1595", offset = 1595, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-242-2025:art-4"]
@@ -700,14 +700,14 @@ legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1609"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-porcentaje-usufructo-derecho-real-6"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1609", offset = 1609, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1614"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-referencia-catastral-6"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1614", offset = 1614, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
@@ -721,28 +721,28 @@ legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1635"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-valor-utilizado-6"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1635", offset = 1635, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1636"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-descripcion-situacion-bien-6"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1636", offset = 1636, length = 21, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1657"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-valor-del-bien-6"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1657", offset = 1657, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-242-2025:art-4"]
 source_refs = ["aeat-dr-714-2024"]
 
 [[revisions."2024".bindings]]
-id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1670"
+id = "modelo-714.714-07.bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-valor-del-derecho-6"
 provider = { kind = "manual_input", record = "714-07", field = "bienes-y-derechos-m-derechos-reales-de-uso-y-disfrute-excluidos-vivienda-1670", offset = 1670, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-242-2025:art-4"]

@@ -1,0 +1,10 @@
+# One annual period. Orden HFP/823/2022 artículo 4 fixes the single yearly
+# presentation covering «el año natural inmediato anterior»; there is no
+# sub-annual period for this modelo.
+[[revisions."2023".filing_schedules]]
+id = "modelo-345-anual"
+period_kind = "annual"
+periods = ["0A"]
+profile_condition_mode = "all"
+legal_refs = ["orden-hfp-823-2022:art-4"]
+source_refs = ["boe-modelo-345-base-order"]

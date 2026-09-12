@@ -1,0 +1,17 @@
+# The official 2019 design retains the same settlement-period concept and
+# fixed-width positions as 2016, but the registry's application-facing row is
+# deliberately represented as a text declaracion_periodo in the liquidacion
+# section (number 11-12), and M30801 widens the accepted domain to 01-12 for
+# the applicable Tipo Tributacion. This is a declared structural/value-domain
+# evolution of one grounded chain, not a retirement or reintroduction inferred
+# from labels or row numbers. `repurposed` is the schema marker for this
+# non-label/non-legal surface change; continuidad_id still proves identity.
+
+[[revisions."2019-y-siguientes".casilla_continuidad_evolutions]]
+id = "filing-period-from-2016-representation-evolved"
+continuidad_id = "filing-period"
+from_revision = "2016-2018"
+to_revision = "2019-y-siguientes"
+evolution_kind = "repurposed"
+legal_refs = ["orden-eha-3786-2008:art-2", "ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2016", "aeat-dr-308-2019"]

@@ -218,6 +218,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "reg-total-cuota-101"
+continuidad_id = "total-regularizacion-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2021; las revision.toml de 2021 y 2022-1t vinculan ambas al mismo diseno DR49002 (ejercicio 2021 y 2022 hasta 1T): Total Regularizacion (cuota) [101] en posicion 1709 conserva el total agregado, seccion y forma money firmada de 17 caracteres. La division temporal de 2022 no renumera este campo."
 number = "101"
 section = ["490_02"]
 data_type = "money"

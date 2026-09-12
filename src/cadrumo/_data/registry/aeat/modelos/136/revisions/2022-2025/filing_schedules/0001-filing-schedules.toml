@@ -1,0 +1,16 @@
+# Quarterly cadence under Orden HAP/70/2013 arts. 7 and 11. Art. 11 fixes the
+# period vocabulary verbatim -- "Periodo del Modelo 136: 2 caracteres.
+# Trimestrales (1T, 2T, 3T, 4T)" -- and art. 7 fixes the windows themselves.
+# Both are in force from 2013-02-01 and so cover the whole 2022-2025 span.
+#
+# source_refs cites only boe-modelo-136-base-order, the founding orden itself.
+# The AEAT procedure source the 2026 edition also names is omitted here because
+# it declares applies_from 2026-01-01 and is out of window for this edition.
+
+[[revisions."2022-2025".filing_schedules]]
+id = "modelo-136-trimestral"
+period_kind = "quarterly"
+periods = ["1T", "2T", "3T", "4T"]
+profile_condition_mode = "all"
+legal_refs = ["orden-hap-70-2013:art-7", "orden-hap-70-2013:art-11"]
+source_refs = ["boe-modelo-136-base-order"]

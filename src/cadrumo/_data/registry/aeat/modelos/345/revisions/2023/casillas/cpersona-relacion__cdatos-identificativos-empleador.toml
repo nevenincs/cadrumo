@@ -1,0 +1,81 @@
+# Modelo 345, ejercicio 2023 -- the official record-design positions that carry
+# no calculation. Transcribed from the bundled Diseño de Registro (source
+# aeat-dr-345-2023, corpus/aeat_official/disenos_registro/modelo_345/files/
+# 02-345-ejercicio-2023-y-siguientes.pdf, sha256
+# 94800d433248ad6bd9baf1213fe2ae512732d21520b923cc0ce2c044edd247de).
+
+# Registro de tipo 1, campo 7. Positions 59-107, alfanumérico de 49 posiciones.
+# The design subdivides the slot (59-67 TELÉFONO, 68-107 APELLIDOS Y NOMBRE) but
+# declares ONE top-level campo of 49 bytes, which is the extent declared here.
+[[revisions."2023".casillas]]
+id = "persona-relacion"
+number = "tipo1.59-107"
+section = ["registro_declarante", "identificacion"]
+data_type = "text"
+semantic_role = "m345_persona_relacion"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-1"]
+
+# Registro de tipo 1, campo 8. Positions 108-120, numérico de 13 posiciones.
+[[revisions."2023".casillas]]
+id = "numero-identificativo-declaracion"
+number = "tipo1.108-120"
+section = ["registro_declarante", "identificacion"]
+data_type = "integer"
+semantic_role = "m345_numero_identificativo_declaracion"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-1"]
+
+# Registro de tipo 1, campo 9. Positions 121-122, alfabético de 2 posiciones:
+# 121 declaración complementaria («C»), 122 declaración sustitutiva («S»).
+[[revisions."2023".casillas]]
+id = "declaracion-complementaria-sustitutiva"
+number = "tipo1.121-122"
+section = ["registro_declarante", "identificacion"]
+data_type = "text"
+semantic_role = "m345_declaracion_complementaria_sustitutiva"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-1"]
+
+# Registro de tipo 1, campo 10. Positions 123-135, numérico de 13 posiciones.
+[[revisions."2023".casillas]]
+id = "numero-identificativo-anterior"
+number = "tipo1.123-135"
+section = ["registro_declarante", "identificacion"]
+data_type = "integer"
+semantic_role = "m345_numero_identificativo_anterior"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-1"]
+
+# Registro de tipo 2, campo 6. Positions 27-35, alfanumérico de 9 posiciones, the
+# NIF of a declarado under 14's legal representative.
+[[revisions."2023".casillas]]
+id = "representante-legal-nif"
+number = "tipo2.27-35"
+section = ["registro_declarado", "identificacion"]
+data_type = "nif"
+semantic_role = "m345_representante_legal_nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-823-2022:art-3"]
+
+# Registro de tipo 2, campo 19. Positions 272-320, «DATOS IDENTIFICATIVOS DEL
+# EMPLEADOR QUE SEA PROMOTOR O TOMADOR DEL SISTEMA DE PREVISIÓN SOCIAL». The
+# design subdivides the slot (272-280 N.I.F., 281-320 APELLIDOS Y NOMBRE O RAZÓN
+# SOCIAL) and declares ONE top-level campo of 49 bytes; this revision carries the
+# two subdivisions separately as `empleador-nif` and `empleador-nombre`, and this
+# casilla is the design's own parent span. Created for this ejercicio by Orden
+# HFP/528/2023; absent from the ejercicio-2022 record.
+[[revisions."2023".casillas]]
+id = "datos-identificativos-empleador"
+number = "tipo2.272-320"
+section = ["registro_declarado", "empleador"]
+data_type = "text"
+semantic_role = "m345_datos_identificativos_empleador"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-528-2023:art-unico"]

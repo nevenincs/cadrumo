@@ -577,7 +577,17 @@ class GovernedFact(RegistryModel):
             sorted((item.name, type(item.value).__name__, repr(item.value)) for item in variant.selectors)
         )
         period = variant.period_selector
-        period_key = None if period is None else (period.years, period.year_from, period.year_to, period.periods)
+        period_key = (
+            None
+            if period is None
+            else (
+                period.years,
+                period.year_from,
+                period.year_to,
+                period.periods,
+                tuple((item.year, item.periods) for item in period.period_overrides),
+            )
+        )
         return variant.date_axis, selectors, period_key
 
     def materialized_windows(self) -> Mapping[FactVariantId, RegistryValidityWindow]:
