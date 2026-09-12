@@ -328,7 +328,7 @@ def test_secure_object_payload_is_encrypted_in_database(tmp_path: Path) -> None:
         # Scan the main file AND its -wal sidecar: under WAL the just-written
         # row lives in <db>-wal until checkpoint, so a main-only read would
         # pass this at-rest assertion tautologically.
-        from ......tests.secure_sql import read_db_at_rest_bytes
+        from ......adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 
         at_rest = read_db_at_rest_bytes(db_path)
         assert payload not in at_rest

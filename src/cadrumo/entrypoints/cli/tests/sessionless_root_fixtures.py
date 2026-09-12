@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from ....tests.secure_sql import isolated_sessionless_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_sessionless_storage_root
 
 
 @pytest.fixture

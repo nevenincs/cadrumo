@@ -5,7 +5,7 @@ from collections.abc import Iterator
 import pytest
 
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, reset_secure_object_store
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, reset_secure_object_store
 from .action_fixtures import _BUCKET_ID
 
 

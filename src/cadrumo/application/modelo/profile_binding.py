@@ -20,10 +20,15 @@ declaring a binding that consumes their output, so extending coverage to a
 new filing year is registry work rather than a code edit.
 
 Channel selection is the load-bearing decision. The registry runtime
-resolves profile bindings through three engine channels:
+resolves profile bindings through four engine channels:
 ``date_binding_values`` for date operands, ``enum_binding_values`` for
-dispatch keys, and Decimal-valued ``binding_values`` for numeric
-operands. The channel is determined by the consumer shape:
+dispatch keys, ``boolean_binding_values`` for truth values, and
+Decimal-valued ``binding_values`` for numeric operands. The boolean channel
+is selected from the binding's OWN declared value contract
+(``value.channel = "boolean"``), never from the Python type of the fact that
+turned up: a truth value routed by type would follow whatever the profile
+happened to store, which is how a yes/no fact came to be labelled as currency.
+The remaining three are determined by the consumer shape:
 :func:`expression_date_binding_refs` finds date operands,
 :func:`enum_consumed_binding_ids` finds enum dispatch operands, and
 formula-consumed or bound numeric casillas use the Decimal channel. A
@@ -50,6 +55,7 @@ from ...core.parsing.dates import parse_iso8601_date
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
+from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ...domain.calculations.registry.ids import BindingId
@@ -130,8 +136,7 @@ _PARTNERED_STATUS_TOKENS = _MARRIED_STATUS_TOKENS | frozenset({RentaMaritalStatu
 _UNMARRIED_STATUS_TOKENS = frozenset(
     member.value for member in RentaMaritalStatus if member is not RentaMaritalStatus.CASADO
 )
-_MARRIAGE_DERIVED_FACT_PATHS = (
-    "renta_taxpayer.marriage_full_year",
+_MARRIAGE_DERIVED_MONTH_FACT_PATHS = (
     "renta_taxpayer.marriage_month_start",
     "renta_taxpayer.marriage_month_end",
 )
@@ -165,8 +170,11 @@ def inject_derived_marriage_facts(
     taxpayer the same casillas are neutral zeros: Art. 82 marriage-month facts
     are not applicable, and the CLI must not force a single filer to invent a
     marriage date.  Married taxpayers without a marriage date remain unresolved.
-    Values are injected as ``Decimal`` so the Decimal-channel binding resolver
-    picks them up without a special case in the main loop.
+    The two month figures are injected as ``Decimal`` counts. The full-year
+    fact is a yes/no question and is injected as a real ``bool``, which is what
+    its binding's boolean value contract requires: a ``Decimal("0")`` standing
+    in for "not married the whole year" is indistinguishable from a zero-valued
+    count once it reaches the Decimal channel.
 
     This function is idempotent: if the keys are already present (e.g. written
     as explicit profile facts by an older tooling version) they are not
@@ -176,7 +184,8 @@ def inject_derived_marriage_facts(
     if not isinstance(raw_date, date):
         marital_status = str(fact_index.get("renta_taxpayer.marital_status", "")).strip().lower()
         if marital_status in _UNMARRIED_STATUS_TOKENS:
-            for fact_path in _MARRIAGE_DERIVED_FACT_PATHS:
+            fact_index.setdefault("renta_taxpayer.marriage_full_year", False)
+            for fact_path in _MARRIAGE_DERIVED_MONTH_FACT_PATHS:
                 fact_index.setdefault(fact_path, Decimal("0"))
         return
 
@@ -188,7 +197,7 @@ def inject_derived_marriage_facts(
     full_year = marriage_full_year(raw_date, filing_year)
 
     if "renta_taxpayer.marriage_full_year" not in fact_index:
-        fact_index["renta_taxpayer.marriage_full_year"] = Decimal("1") if full_year else Decimal("0")
+        fact_index["renta_taxpayer.marriage_full_year"] = full_year
     if "renta_taxpayer.marriage_month_start" not in fact_index:
         fact_index["renta_taxpayer.marriage_month_start"] = Decimal(month_start)
     if "renta_taxpayer.marriage_month_end" not in fact_index:
@@ -958,7 +967,7 @@ def inject_derived_anualidades_eligibility_facts(
         )
         for descendant in descendant_list_from_facts(descendant_facts)
     )
-    fact_index[key] = Decimal("0") if shared_custody else Decimal("1")
+    fact_index[key] = not shared_custody
 
 
 _MADRID_CCAA_CODE = "madrid"
@@ -1258,19 +1267,42 @@ def _decimal_value(binding_id: BindingId, value: object) -> Decimal:
     )
 
 
+def _boolean_value(binding_id: BindingId, value: object) -> bool:
+    """Return the truth value for a boolean-contract binding, or refuse.
+
+    Deliberately narrow: only a real :class:`bool` satisfies a boolean value
+    contract. A ``Decimal("1")`` is accepted nowhere here, because accepting it
+    is the coercion this channel exists to remove -- ``Decimal("1") == True`` in
+    Python, so a permissive reading would make the two encodings
+    indistinguishable again at exactly the boundary meant to tell them apart.
+    """
+    if isinstance(value, bool):
+        return value
+    raise ProfileBindingResolutionError(
+        f"profile fact for boolean-channel binding {binding_id!r} is not a boolean; "
+        f"got value type {type(value).__name__!r}. The registry declares this binding's "
+        f"value contract as boolean; a numeric stand-in for a truth value is refused "
+        f"rather than coerced",
+        translated_message="application.modelo.profile_binding.errors.boolean_value_type_invalid",
+        context={"binding_id": binding_id, "value_type": type(value).__name__},
+    )
+
+
 @dataclass(slots=True)
 class _ResolvedBindingChannels:
-    """Mutable accumulator for the three engine channels a profile binding routes into.
+    """Mutable accumulator for the four engine channels a profile binding routes into.
 
     The Decimal channel carries numeric operands, the enum channel carries
-    string dispatch keys, and the date channel carries date-typed facts. Object
-    identity of the three dicts is preserved across the resolution loop so
-    :func:`_route_resolved_binding` mutates the same accumulator in place.
+    string dispatch keys, the date channel carries date-typed facts, and the
+    boolean channel carries truth values. Object identity of the four dicts is
+    preserved across the resolution loop so :func:`_route_resolved_binding`
+    mutates the same accumulator in place.
     """
 
     decimal_values: dict[BindingId, Decimal] = dataclass_field(default_factory=dict)
     enum_values: dict[BindingId, str] = dataclass_field(default_factory=dict)
     date_values: dict[BindingId, date] = dataclass_field(default_factory=dict)
+    boolean_values: dict[BindingId, bool] = dataclass_field(default_factory=dict)
 
 
 def _route_resolved_binding(
@@ -1279,18 +1311,39 @@ def _route_resolved_binding(
     *,
     is_date_channel: bool,
     is_enum_channel: bool,
+    declared_channel: BindingValueChannel,
     channels: _ResolvedBindingChannels,
 ) -> None:
     """Route one resolved profile fact into its engine channel on ``channels``.
 
-    The caller has already skipped ``None`` (absent) facts. Date-channel facts
-    must be ``date``; enum-channel facts must not be ``bool``; otherwise the fact
-    is projected through the Decimal channel via :func:`_decimal_value`.
+    The binding's AUTHORED value contract decides the transport, for every
+    channel. That is the only authority that can be right about a binding whose
+    consumers have not been written yet, or whose consumer disappeared: a
+    declared date binding with no ``age_at_year_end`` op still holds a date, and
+    inferring its transport from the formulas that happen to read it made the
+    contract a function of downstream code rather than of the declaration.
+
+    The consumer shape is retained as a CROSS-CHECK rather than dropped. A
+    binding a formula consumes as a date operand while declaring some other
+    contract is a declaration that disagrees with its own use, and resolving it
+    on either channel would silently pick a winner between two authorities; it
+    is refused instead. Measured across the bundled registry when this routing
+    landed, exactly two declarations disagreed -- a birth date declared ``text``
+    and an ISO country code declared ``money`` -- and both were corrected at the
+    declaration rather than absorbed here.
+
+    The caller has already skipped ``None`` (absent) facts.
     """
-    if is_date_channel:
+    _reject_channel_declaration_conflict(
+        binding_id,
+        declared_channel=declared_channel,
+        is_date_channel=is_date_channel,
+        is_enum_channel=is_enum_channel,
+    )
+    if declared_channel is BindingValueChannel.DATE:
         # Date-channel bindings carry date-typed facts (e.g. birth_date)
-        # consumed by the age_at_year_end op.  They must not be projected
-        # through the Decimal or enum channels.
+        # consumed by the age_at_year_end op. They must not be projected
+        # through the Decimal, enum, or boolean channels.
         if not isinstance(value, date):
             raise ProfileBindingResolutionError(
                 f"profile fact for date-channel binding {binding_id!r} must be a date, got {type(value).__name__!r}",
@@ -1298,8 +1351,12 @@ def _route_resolved_binding(
                 context={"binding_id": binding_id, "value_type": type(value).__name__},
             )
         channels.date_values[binding_id] = value
-    elif is_enum_channel:
-        # Boolean-typed facts must never reach the enum dispatch channel —
+        return
+    if declared_channel is BindingValueChannel.BOOLEAN:
+        channels.boolean_values[binding_id] = _boolean_value(binding_id, value)
+        return
+    if declared_channel is BindingValueChannel.ENUM or is_enum_channel:
+        # Boolean-typed facts must never reach the enum dispatch channel --
         # enum dispatch keys are string category codes, not yes/no flags.
         # A bool here signals a mis-wired registry binding; refuse early
         # rather than letting the engine silently mismatch the dispatch table.
@@ -1311,16 +1368,65 @@ def _route_resolved_binding(
                 context={"binding_id": binding_id, "value_type": "bool"},
             )
         channels.enum_values[binding_id] = str(value)
-    else:
-        # The resolver projects profile facts into engine channels; it does not
-        # invent values the operator never supplied. Per-verb baselines own the
-        # "operator declared nothing" semantics for each call site, because the
-        # right default differs per verb (single-filer for projection vs.
-        # explicit operator entry for work_calculate). The classifier discovered
-        # 9 of 12 M100 profile bindings are core inputs whose zero-default
-        # corrupts the calculation, not optional levers — a blanket
-        # resolver-side zero is structurally wrong.
-        channels.decimal_values[binding_id] = _decimal_value(binding_id, value)
+        return
+    if isinstance(value, bool):
+        # A truth value for a contract that is not boolean. Folding it onto the
+        # Decimal channel is how "no" became the number zero: the resulting
+        # figure is a filing-grade amount the fact never asserted.
+        raise ProfileBindingResolutionError(
+            f"profile fact for binding {binding_id!r} is a boolean but the binding declares the "
+            f"{declared_channel.value!r} value channel; a truth value is not a "
+            f"{declared_channel.value} quantity and is refused rather than coerced",
+            translated_message="application.modelo.profile_binding.errors.boolean_value_channel_mismatch",
+            context={"binding_id": binding_id, "declared_channel": declared_channel.value},
+        )
+    # The resolver projects profile facts into engine channels; it does not
+    # invent values the operator never supplied. Per-verb baselines own the
+    # "operator declared nothing" semantics for each call site, because the
+    # right default differs per verb (single-filer for projection vs.
+    # explicit operator entry for work_calculate). The classifier discovered
+    # 9 of 12 M100 profile bindings are core inputs whose zero-default
+    # corrupts the calculation, not optional levers -- a blanket
+    # resolver-side zero is structurally wrong.
+    channels.decimal_values[binding_id] = _decimal_value(binding_id, value)
+
+
+def _reject_channel_declaration_conflict(
+    binding_id: BindingId,
+    *,
+    declared_channel: BindingValueChannel,
+    is_date_channel: bool,
+    is_enum_channel: bool,
+) -> None:
+    """Refuse a binding whose consuming formula contradicts its declared contract.
+
+    The cross-check that keeps declared-channel routing honest. Without it,
+    moving the authority to the declaration would convert a disagreement into
+    silence: a birth date declared ``text`` would simply resolve as text and the
+    ``age_at_year_end`` op would then report a missing date binding, blaming the
+    profile for a declaration defect.
+
+    The enum direction is asymmetric on purpose. A declared ENUM binding with no
+    enum-dispatch consumer is legal -- a calculation-only typed enum, or a
+    dispatch key whose consumer lives on another revision -- so only the reverse
+    (consumed as enum, declared as something else) is a contradiction.
+    """
+    if is_date_channel and declared_channel is not BindingValueChannel.DATE:
+        raise ProfileBindingResolutionError(
+            f"binding {binding_id!r} is consumed as a date operand but declares the "
+            f"{declared_channel.value!r} value channel; correct the binding's value contract "
+            f"rather than resolving it on a channel its declaration does not name",
+            translated_message="application.modelo.profile_binding.errors.channel_declaration_conflict",
+            context={"binding_id": binding_id, "declared_channel": declared_channel.value, "consumer_channel": "date"},
+        )
+    if is_enum_channel and declared_channel not in {BindingValueChannel.ENUM, BindingValueChannel.TEXT}:
+        raise ProfileBindingResolutionError(
+            f"binding {binding_id!r} is consumed as an enum dispatch key but declares the "
+            f"{declared_channel.value!r} value channel; correct the binding's value contract "
+            f"rather than resolving it on a channel its declaration does not name",
+            translated_message="application.modelo.profile_binding.errors.channel_declaration_conflict",
+            context={"binding_id": binding_id, "declared_channel": declared_channel.value, "consumer_channel": "enum"},
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1432,7 +1538,7 @@ def _load_profile_facts(
     return _ProfileFacts(fact_index=fact_index, fingerprint=profile_record_fingerprint)
 
 
-def _resolve_profile_binding_channels(
+def resolve_profile_binding_channels(
     bindings: tuple[BindingDefinition, ...],
     fact_index: Mapping[str, UserProfileFactValue],
     *,
@@ -1440,7 +1546,7 @@ def _resolve_profile_binding_channels(
     formula_date_consumed: frozenset[BindingId],
     enum_bindings: frozenset[BindingId],
 ) -> _ResolvedBindingChannels:
-    """Resolve each selected binding into the Decimal / enum / date engine channels."""
+    """Resolve each selected binding into the Decimal / enum / date / boolean channels."""
     channels = _ResolvedBindingChannels()
     for binding in bindings:
         binding_id = binding.id
@@ -1454,6 +1560,7 @@ def _resolve_profile_binding_channels(
             value,
             is_date_channel=binding_id in formula_date_consumed,
             is_enum_channel=binding_id in enum_bindings or binding.value.typed_enum is not None,
+            declared_channel=binding.value.channel,
             channels=channels,
         )
     return channels
@@ -1463,17 +1570,18 @@ def _profile_value_channel_ids(
     decimal_values: Mapping[BindingId, Decimal],
     enum_values: Mapping[BindingId, str],
     date_values: Mapping[BindingId, date],
+    boolean_values: Mapping[BindingId, bool],
 ) -> frozenset[BindingId]:
-    """Union the three value channels a profile resolution populates."""
-    return frozenset(set(decimal_values) | set(enum_values) | set(date_values))
+    """Union the four value channels a profile resolution populates."""
+    return frozenset(set(decimal_values) | set(enum_values) | set(date_values) | set(boolean_values))
 
 
 def profile_resolved_binding_ids(resolution: CalculationSourceResolution) -> frozenset[BindingId]:
     """Return the binding ids a profile resolution actually satisfied.
 
     :class:`CalculationSourceResolution` is the shared envelope for every
-    source resolver and carries seven value channels; a profile resolution
-    populates exactly three of them. Which three is a fact about this
+    source resolver and carries eight value channels; a profile resolution
+    populates exactly four of them. Which four is a fact about this
     resolver, so it is stated here once rather than re-encoded by each
     consumer -- the Modelo binding-readiness gate and the operator state
     projection previously open-coded the same union independently, and a
@@ -1490,6 +1598,7 @@ def profile_resolved_binding_ids(resolution: CalculationSourceResolution) -> fro
         resolution.binding_values,
         resolution.enum_binding_values,
         resolution.date_binding_values,
+        resolution.boolean_binding_values,
     )
 
 
@@ -1514,7 +1623,8 @@ def resolve_profile_sourced_bindings(
 
     Walks the registry revision's ``source = "profile"`` bindings,
     matches each against a fact on the bucket's user profile, and routes
-    the value into the Decimal, enum, or date channel according to the
+    the value into the Decimal, enum, date, or boolean channel: boolean from
+    the binding's own declared value contract, the other three from the
     consuming formula, bound numeric casilla, or calculation-only selector
     with no export address.
 
@@ -1523,7 +1633,7 @@ def resolve_profile_sourced_bindings(
     A bucket with no profile yields an empty result.
 
     Returns a :class:`CalculationSourceResolution` with resolved binding
-    values split across the Decimal, enum, and date engine channels and a
+    values split across the Decimal, enum, date, and boolean engine channels and a
     :class:`CalculationSourceProvenance` row per profile-sourced binding.
 
     See Also:
@@ -1544,7 +1654,7 @@ def resolve_profile_sourced_bindings(
     )
     if facts is None:
         return CalculationSourceResolution(resolver_id=_PROFILE_RESOLVER_ID, owned_sources=_PROFILE_OWNED_SOURCES)
-    channels = _resolve_profile_binding_channels(
+    channels = resolve_profile_binding_channels(
         selection.bindings,
         facts.fact_index,
         caller_binding_ids=caller_binding_ids,
@@ -1554,7 +1664,10 @@ def resolve_profile_sourced_bindings(
     decimal_values = channels.decimal_values
     enum_values = channels.enum_values
     date_values = channels.date_values
-    sourced = tuple(sorted(_profile_value_channel_ids(decimal_values, enum_values, date_values)))
+    boolean_values = channels.boolean_values
+    sourced = tuple(
+        sorted(_profile_value_channel_ids(decimal_values, enum_values, date_values, boolean_values)),
+    )
     fingerprint = facts.fingerprint if sourced else None
     return CalculationSourceResolution(
         resolver_id=_PROFILE_RESOLVER_ID,
@@ -1562,6 +1675,7 @@ def resolve_profile_sourced_bindings(
         binding_values=decimal_values,
         enum_binding_values=enum_values,
         date_binding_values=date_values,
+        boolean_binding_values=boolean_values,
         diagnostics=_derived_binding_diagnostics(
             selection.bindings,
             facts.fact_index,
@@ -1635,11 +1749,11 @@ def _derived_binding_diagnostics(
 
 def _economic_activity_binding_value(
     fact_index: Mapping[str, UserProfileFactValue],
-) -> Decimal:
-    """Derive the numeric activity predicate from the canonical category fact."""
+) -> bool:
+    """Derive the activity predicate from the canonical category fact."""
     raw_categories = str(fact_index.get("taxpayer_type.irpf_income_categories", ""))
     categories = {token.strip() for token in raw_categories.split(",") if token.strip()}
-    return Decimal("1") if _ECONOMIC_ACTIVITY_INCOME_CATEGORY in categories else Decimal("0")
+    return _ECONOMIC_ACTIVITY_INCOME_CATEGORY in categories
 
 
 def _profile_selector_value(
@@ -1718,6 +1832,7 @@ __all__ = [
     "madrid_nacimiento_adopcion_candidate_weighted_count",
     "profile_resolved_binding_ids",
     "resolve_maternidad_meses",
+    "resolve_profile_binding_channels",
     "resolve_profile_binding_value",
     "resolve_profile_sourced_bindings",
     "second_entitled_filer_indicated",

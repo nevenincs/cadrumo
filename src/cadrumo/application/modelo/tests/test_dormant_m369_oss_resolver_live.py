@@ -29,7 +29,7 @@ from ....domain.iva.classification import InvoiceKind, TransactionKind
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import EUMemberState, IvaRateKind
 from ....domain.modelos.calculation_revision import CalculationRevisionState
-from ....tests.secure_sql import isolated_injected_secure_object_repository, isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_injected_secure_object_repository, isolated_runtime_profile
 from ...aggregation import oss_ioss as oss_ioss_module
 from ...aggregation.errors import (
     AggregationValidationError,

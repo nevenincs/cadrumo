@@ -32,7 +32,7 @@ from ....domain.iva.classification import InvoiceKind
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...invoices.transaction_linking import link_invoice_transaction_catalogues, link_invoice_transaction_repositories
 from ..actions_manual import link_manual_transaction_invoice
 

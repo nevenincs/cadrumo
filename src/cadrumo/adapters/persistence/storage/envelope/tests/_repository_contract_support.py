@@ -56,7 +56,7 @@ from sqlalchemy import Engine, select
 from ......core.classification.policies import SensitivityClass
 from ......core.config import override_settings
 from ......tests.master_key import EphemeralMasterKeyProvider
-from ......tests.secure_sql import mutate_encrypted_secure_object_json
+from ......adapters.persistence.storage.tests.secure_sql import mutate_encrypted_secure_object_json
 from ...errors import ClassificationError
 from ...sql.engine import create_engine_from_settings, dispose_engine
 from ...sql.orm import Base, SecureObjectRow
@@ -215,7 +215,7 @@ def _database_payload_is_encrypted_audit_data[T: BaseModel](
     case: SecureRepositoryContractCase[T],
     db_path: Path,
 ) -> None:
-    from ......tests.secure_sql import read_db_at_rest_bytes
+    from ......adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 
     repo = case.repository_factory()
     repo.save(case.first_payload)

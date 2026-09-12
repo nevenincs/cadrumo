@@ -22,7 +22,7 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
-from cadrumo.tests.secure_sql import isolated_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.errors import AttachmentValidationError
 from cadrumo.domain.attachments.models import Attachment

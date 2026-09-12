@@ -55,7 +55,7 @@ from ....domain.contribuyente.inventory.records import (
 )
 from ....domain.contribuyente.inventory.valuation import compute_inventory_anexo_d_projection
 from ....domain.filing_evidence import FilingEvidenceReference
-from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..inventory import _VALUE_ATTRIBUTE_BY_OPERATION, InventorySourceResolver
 from ..source_mesh import CalculationSourceContext
 from ..terminal_origin_audit import collect_terminal_origin_diagnostics

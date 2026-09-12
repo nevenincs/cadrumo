@@ -28,7 +28,7 @@ import pytest
 from sqlalchemy import select
 
 from .....core.config_support import LLMProvider
-from .....tests.secure_sql import TestRuntimeProfile
+from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....persistence.storage.secure_object_namespaces import (
     LLM_CACHE_NAMESPACE,
     LLM_RUN_TELEMETRY_NAMESPACE,

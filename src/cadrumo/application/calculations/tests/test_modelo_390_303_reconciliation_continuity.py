@@ -68,7 +68,7 @@ from ....domain.calculations.registry.tests.registry_observations import revisio
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...aggregation.source_mesh import CalculationSourceContext
 from ..iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
 from ..observations_repository import CalculationObservationRepository, ResultDispositionProjection

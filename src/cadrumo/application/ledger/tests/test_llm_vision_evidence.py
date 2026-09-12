@@ -31,7 +31,7 @@ from ....tests.persistence_vision_evidence_support import (
 from ....tests.persistence_vision_evidence_support import (
     profile as profile,
 )
-from ....tests.secure_sql import TestRuntimeProfile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ...provisioning_contracts import ProvisioningPreconditionCondition
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..llm_classification import ResolvedEvidence, _resolve_evidence, classify_with_evidence

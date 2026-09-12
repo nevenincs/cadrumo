@@ -1,0 +1,20 @@
+[fact]
+fact_id = "deadline-fact-date-axis-mapping"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "deadline-fact-date-axis-mapping:2007-01-01"
+date_axis = "filing_period"
+valid_from = 2007-01-01
+legal_refs = ["ley-35-2006:art-96", "ley-39-2015:art-43.2"]
+source_refs = ["boe-lirpf-statutory-facts", "boe-ley-39-2015-art-43-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "lirpf-multiple-pagadores-secondary-threshold", value = "filing_period" },
+  { key = "lirpf-work-income-multiple-pagadores-reduced-limit", value = "filing_period" },
+  { key = "dehu-tacit-rejection-natural-days", value = "submission_date" },
+]

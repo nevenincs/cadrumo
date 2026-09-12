@@ -24,7 +24,7 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.identity.bucket import BucketId
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
-from cadrumo.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.usage_ratios.errors import UsageRatioPersistenceError
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
@@ -44,7 +44,7 @@ def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 
 def _database_bytes(profile: TestRuntimeProfile) -> bytes:
-    from cadrumo.tests.secure_sql import read_db_at_rest_bytes
+    from cadrumo.adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 
     return read_db_at_rest_bytes(profile.paths.database_file)
 

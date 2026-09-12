@@ -32,7 +32,7 @@ from .....application.user_profile.login_session import login_profile
 from .....application.user_profile.overview import ProfileOverview, build_profile_overview
 from .....application.user_profile.profile_record_repository import ProfileRecordRepository
 from .....application.user_profile.registration import register_profile_with_credentials
-from .....tests.secure_sql import isolated_profile_storage_root
+from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...components.host import ScreenHostApp
 from ..overview import ProfileManagerScreen
 

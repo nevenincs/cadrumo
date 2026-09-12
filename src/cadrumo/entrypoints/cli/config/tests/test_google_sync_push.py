@@ -24,7 +24,7 @@ from .....adapters.persistence.storage.namespace_registry import STORAGE_NAMESPA
 from .....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from .....core.i18n.render import tr
 from .....tests.path_obstruction import obstructed_path
-from .....tests.secure_sql import isolated_runtime_profile
+from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .._google_payloads import GoogleSyncProbeResult
 from ..google import _push_secure_object_mirror_rows
 from ..google_errors import google_refusal

@@ -17,7 +17,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_actions import calculate_modelo_revision
 from ..work_lifecycle import create_work_unit
 

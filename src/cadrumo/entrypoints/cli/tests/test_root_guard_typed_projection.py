@@ -12,7 +12,7 @@ from ....adapters.persistence.storage.master_key.active_session import close_act
 from ....application.storage_write_policy import inspect_storage_write_policy
 from ....core.bucket_pointer import pointer_path
 from ....core.config import Settings, override_settings
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
 from ...cli.main import app
 from ..command_suggestions import INVOCATION_REMAINDER_META_KEY

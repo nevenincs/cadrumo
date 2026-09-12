@@ -28,7 +28,7 @@ from ....domain.calculations.registry.export import ResolvedExportLayout, resolv
 from ....domain.calculations.registry.schema_exports import ExportFieldDefinition
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....tests.registry_snapshot import build_snapshot
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationExportResult,

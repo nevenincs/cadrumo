@@ -26,7 +26,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.master_key.active_session import has_active_bucket_session
-from ....tests.secure_sql import isolated_sessionless_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_sessionless_storage_root
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

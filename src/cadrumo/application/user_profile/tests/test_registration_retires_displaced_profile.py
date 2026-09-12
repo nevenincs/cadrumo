@@ -33,7 +33,7 @@ import pytest
 from ....adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 from ....core.bucket_pointer import read_pointer
 from ....tests.os_keychain_hook import require_os_credential_store
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..registration import ProfileRegistrationError, register_profile_with_credentials
 from .test_login_handover import (
     _assert_no_resumable_material,

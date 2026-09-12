@@ -28,7 +28,7 @@ from pathlib import Path
 
 import pytest
 
-from .....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
+from .secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from ..attachment import AttachmentStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

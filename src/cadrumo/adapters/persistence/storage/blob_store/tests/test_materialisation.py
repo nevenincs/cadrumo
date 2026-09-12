@@ -11,7 +11,7 @@ from ......core.classification.policies import SensitivityClass
 from ......core.config import Settings
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ......tests.profile_capsule import open_test_profile_session
-from ......tests.secure_sql import isolated_profile_storage_root
+from ......adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...secret_store.store import SecretRecord
 from ...tests.storage_path_grammar import assert_path_matches_grammar
 from ..blob_store import EncryptedBlobStore

@@ -27,7 +27,7 @@ import pytest
 from ..application.user_profile.profile_record_repository import ProfileRecordRepository
 from ..domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from .profile_capsule import MODELO_READY_PROFILE_FACTS, seed_test_profile_record
-from .secure_sql import isolated_runtime_profile
+from ..adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -205,7 +205,7 @@ def test_load_decision_returns_hashed_key_record(tmp_path: Path) -> None:
     keyed with iva_wallet_decision_key (hashed) and must be returned directly.
     """
 
-    from ....tests.secure_sql import isolated_runtime_profile
+    from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
     from ..observations_repository import IvaWalletDecisionRepository
 
     decided_at = datetime(2025, 6, 1, 12, 0, 0, tzinfo=UTC)

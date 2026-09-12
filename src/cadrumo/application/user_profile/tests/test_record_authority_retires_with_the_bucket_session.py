@@ -23,7 +23,7 @@ from ....adapters.persistence.storage.master_key.active_session import (
     current_active_bucket_session,
 )
 from ....domain.user_profile.errors import ProfileNotFoundError
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..login_session import login_profile
 from ..profile_record_repository import (
     ProfileRecordRepository,

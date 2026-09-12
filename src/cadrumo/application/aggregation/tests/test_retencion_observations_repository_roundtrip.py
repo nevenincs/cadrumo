@@ -27,7 +27,7 @@ from ....adapters.persistence.storage.errors import PathContainmentError, Secure
 from ....core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionScheme
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.period import Period
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..retencion_observations_repository import (
     RetencionObservationRepository,
     _RetencionObservationEnvelopePayload,

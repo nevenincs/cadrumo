@@ -132,12 +132,14 @@ def iva_wallet_pull_cmd(
     decisions are profile-local evidence.
     """
     from ...application.live.iva_remote_state import capture_iva_compensation_wallet
-    from .app_live_iva_remote_state_composition import cli_iva_remote_state_port
+    from ..live_state_composition import compose_live_state
 
     emit_live_auth_preflight()
+    composition = compose_live_state()
     report = asyncio.run(
         capture_iva_compensation_wallet(
-            ports=cli_iva_remote_state_port(),
+            ports=composition.iva_remote_state_port,
+            output_root=composition.output_root,
             target_year=year,
             target_period=_required_live_period_option(period, year=year),
             taxpayer_nif=taxpayer_nif,
@@ -195,9 +197,10 @@ def iva_wallet_history_cmd(
     profile storage without contacting AEAT.
     """
     from ...application.live.iva_remote_state import list_iva_compensation_history
-    from .app_live_iva_remote_state_composition import cli_iva_remote_state_port
+    from ..live_state_composition import compose_live_state
 
-    report = list_iva_compensation_history(ports=cli_iva_remote_state_port(), as_of_year=as_of_year)
+    composition = compose_live_state()
+    report = list_iva_compensation_history(ports=composition.iva_remote_state_port, as_of_year=as_of_year)
     result = _iva_wallet_history_result(report)
     emit_envelope(ctx, command="app.live.iva_wallet.history", result=result, lines=_iva_wallet_history_lines(report))
 
@@ -424,18 +427,20 @@ def iva_wallet_pull_history_cmd(
     """
     from ...application.live.iva_remote_state import capture_iva_compensation_history
     from ...core.config import load_settings
-    from .app_live_iva_remote_state_composition import cli_iva_remote_state_port
+    from ..live_state_composition import compose_live_state
 
     emit_live_auth_preflight()
+    resolved_root = resolve_optional_root(
+        output_root,
+        lambda: load_settings().cadrumo_iva_compensation_history_dir,
+    )
+    composition = compose_live_state(output_root=resolved_root)
     report = asyncio.run(
         capture_iva_compensation_history(
-            ports=cli_iva_remote_state_port(),
+            ports=composition.iva_remote_state_port,
             year_from=year_from,
             year_to=year_to,
-            output_root=resolve_optional_root(
-                output_root,
-                lambda: load_settings().cadrumo_iva_compensation_history_dir,
-            ),
+            output_root=resolved_root,
         ),
     )
     lines = (
@@ -488,20 +493,22 @@ def iva_wallet_pull_evidence_cmd(
     """
     from ...application.live.iva_remote_state import capture_iva_remote_state
     from ...core.config import load_settings
-    from .app_live_iva_remote_state_composition import cli_iva_remote_state_port
+    from ..live_state_composition import compose_live_state
 
     resolved_target_period = _required_live_period_option(target_period, year=target_year)
     emit_live_auth_preflight()
+    resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_iva_read_evidence_dir)
+    composition = compose_live_state(output_root=resolved_root)
     report = asyncio.run(
         _run_live_iva_evidence_pull_command(
             capture_iva_remote_state(
-                ports=cli_iva_remote_state_port(),
+                ports=composition.iva_remote_state_port,
                 year_from=year_from,
                 year_to=year_to,
                 target_year=target_year,
                 target_period=resolved_target_period,
                 taxpayer_nif=taxpayer_nif,
-                output_root=resolve_optional_root(output_root, lambda: load_settings().cadrumo_iva_read_evidence_dir),
+                output_root=resolved_root,
             ),
             timeout_ms=_live_iva_evidence_pull_command_timeout_ms(year_from=year_from, year_to=year_to),
         ),
@@ -1120,14 +1127,16 @@ def filed_pull_all_cmd(
     denominator note says what was actually measured.
     """
     from ...core.config import load_settings
-    from .app_live_iva_remote_state_composition import cli_iva_remote_state_port
+    from ..live_state_composition import compose_live_state
 
     profile = _active_taxpayer_profile_or_none()
     resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
+    composition = compose_live_state(output_root=resolved_root)
     emit_live_auth_preflight()
     run = asyncio.run(
         pull_filed_history(
-            iva_remote_state_port=cli_iva_remote_state_port(),
+            iva_remote_state_port=composition.iva_remote_state_port,
+            ports=composition.ports,
             output_root=resolved_root,
             profile=profile,
             limit=limit,
@@ -1322,14 +1331,18 @@ def _emit_single_filed_pull(
 ) -> None:
     """Capture and emit one modelo/year filed-declaration report."""
     from ...core.config import load_settings
+    from ..live_state_composition import compose_live_state
     from ._app_live_filed_payloads import FiledCaptureResult
 
     resolved_period = _live_period_option(period, year=year)
+    resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
+    composition = compose_live_state(output_root=resolved_root)
     report = asyncio.run(
         capture_filed_data(
             modelo=modelo,
             year=year,
-            output_root=resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir),
+            output_root=resolved_root,
+            ports=composition.ports,
             period=resolved_period,
             expediente_id=expediente_id,
             limit=limit,
@@ -1376,14 +1389,18 @@ def _emit_bulk_filed_pull(
 ) -> None:
     """Capture and emit a bulk filed-declaration report."""
     from ...core.config import load_settings
+    from ..live_state_composition import compose_live_state
     from ._app_live_filed_payloads import FiledCaptureFailurePayload, FiledCaptureResult
 
     resolved_from, resolved_to = resolve_pull_year_range(year=year, year_from=year_from, year_to=year_to)
+    resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
+    composition = compose_live_state(output_root=resolved_root)
     report = asyncio.run(
         capture_filed_data_bulk(
             year_from=resolved_from,
             year_to=resolved_to,
-            output_root=resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir),
+            output_root=resolved_root,
+            ports=composition.ports,
             modelos=selected_modelos or None,
             limit=limit,
             dry_run=dry_run,
@@ -1558,15 +1575,19 @@ def filed_pull_sources_cmd(
     command does not submit or mutate AEAT state.
     """
     from ...core.config import load_settings
+    from ..live_state_composition import compose_live_state
     from ._app_live_filed_payloads import FiledCaptureSourcesResult
 
     emit_live_auth_preflight()
+    resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
+    composition = compose_live_state(output_root=resolved_root)
     report = asyncio.run(
         capture_source_filed_data(
             modelo=modelo,
             year=year,
             period=_required_live_period_option(period, year=year),
-            output_root=resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir),
+            output_root=resolved_root,
+            ports=composition.ports,
         ),
     )
     lines = _source_filed_capture_lines(report)

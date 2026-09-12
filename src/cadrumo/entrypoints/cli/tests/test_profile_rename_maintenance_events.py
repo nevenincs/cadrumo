@@ -13,7 +13,7 @@ from __future__ import annotations
 import pytest
 
 from ....application.workflow.profile_bucket_scan import read_profile_bucket
-from ....tests.secure_sql import isolated_profile_storage
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]

@@ -26,7 +26,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..percepciones_observations_repository import PercepcionObservationRepository
 from ..source_mesh import CalculationSourceContext
 from ..withholding_source import WithholdingSourceResolver

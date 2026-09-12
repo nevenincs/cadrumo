@@ -49,7 +49,7 @@ from ....domain.modelos.verification_report import (
 )
 from ....domain.modelos.verification_repository import upsert_verification_report
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from .._modelo_payloads import WorkReviewPayload, WorkReviewResult
 from .._modelo_rendering import verification_report_notices
 from .._modelo_work_review_cli import _review_lines

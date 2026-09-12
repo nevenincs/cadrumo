@@ -13,7 +13,7 @@ from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
-from cadrumo.tests.secure_sql import TestRuntimeProfile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
 from cadrumo.domain.attachments.models import Attachment
@@ -65,7 +65,7 @@ def test_blob_and_manifest_round_trip_without_plaintext_files(
     assert tuple(store.iter_manifests()) == (attachment,)
     store.verify_blob(digest)
 
-    from cadrumo.tests.secure_sql import read_db_at_rest_bytes
+    from cadrumo.adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 
     database_bytes = read_db_at_rest_bytes(runtime_profile.paths.database_file)
     assert b"secure_objects" in database_bytes

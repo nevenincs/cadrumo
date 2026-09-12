@@ -9,7 +9,7 @@ import pytest
 
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.config_support import SecretStoreBackend
-from ....tests.secure_sql import dev_test_database_password, isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import dev_test_database_password, isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
 from .cli_runner import invoke_cached_cli
 

@@ -36,7 +36,7 @@ from ....domain.iva_compensation.reconciliation import (
     IvaCompensationDecisionReason,
     IvaCompensationReconciliationDecision,
 )
-from ....tests.secure_sql import (
+from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
     read_db_at_rest_bytes,

@@ -11,7 +11,7 @@ from pydantic import SecretStr
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core.config import override_settings
 from ...core.config_support import SecretStoreBackend
-from ...tests.secure_sql import dev_test_database_password
+from ...adapters.persistence.storage.tests.secure_sql import dev_test_database_password
 
 
 @pytest.fixture(autouse=True)

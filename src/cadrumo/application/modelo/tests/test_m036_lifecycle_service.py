@@ -21,7 +21,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.storage.secure_object_namespaces import LIVE_M036_DECLARATION_NAMESPACE
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.censo_modelos import CensoModeloEventKind
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....tests.write_unit_recorder import WriteUnitRecorder
 from ...live.errors import LiveApplicationInputError
 from ..m036_lifecycle import (

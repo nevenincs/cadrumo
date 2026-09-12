@@ -28,7 +28,7 @@ from ....adapters.persistence.storage.custody.recovery_artifact import (
     ProfileCustodyRecoveryArtifact,
     unlock_imported_profile_custody_recovery_artifact,
 )
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..capsule_record import (
     ProfileRecordIntegrityError,
     ProfileRecordSession,

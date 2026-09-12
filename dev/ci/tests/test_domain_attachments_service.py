@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
-from cadrumo.tests.secure_sql import isolated_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.domain.attachments import service as attachment_service
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.errors import AttachmentNotFoundError

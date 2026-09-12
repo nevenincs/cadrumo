@@ -15,7 +15,7 @@ from ......core.auth_provider import AuthProviderKind
 from ......core.errors.hierarchy import AeatLoginAssertionError
 from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
-from ......tests.secure_sql import isolated_runtime_profile
+from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import clave_permanente as clave_permanente_module
 from ..clave_permanente import ClavePermanenteAuthProvider
 from ..clave_permanente_support import clave_permanente_auth_browser_action_policy

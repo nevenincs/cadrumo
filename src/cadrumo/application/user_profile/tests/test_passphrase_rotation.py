@@ -29,7 +29,7 @@ from ....core.credentials import (
     ProfilePasswordRefusalReason,
 )
 from ....domain.buckets.event import BucketEventType
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..custody_ports import (
     profile_custody_recovery_envelope_path,
     unlock_profile_custody_password,

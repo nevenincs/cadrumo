@@ -34,7 +34,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....domain.buckets.event import BucketEventObjectType, BucketEventType
 from ....domain.buckets.event_repository import build_bucket_event, emit_bucket_events
 from ....domain.transactions.models import TransactionCatalogue
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..actions_common import _commit_with_guarded_events
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

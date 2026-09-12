@@ -27,7 +27,7 @@ from collections.abc import Sequence
 import pytest
 from click.testing import Result
 
-from ....tests.secure_sql import isolated_profile_storage
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]

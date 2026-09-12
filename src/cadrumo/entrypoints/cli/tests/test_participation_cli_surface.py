@@ -23,7 +23,7 @@ from ....domain.modelos.participation_index import (
     TransactionRevisionParticipation,
     TransactionRevisionParticipationIndex,
 )
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .._ledger_payloads import LedgerTrackResult, LedgerTransactionParticipationPayload
 from ..command_spec import ArgumentSpec, OptionSpec
 from ..command_specs import COMMAND_GRAPH

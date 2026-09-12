@@ -26,7 +26,7 @@ from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....tests.secure_sql import TestRuntimeProfile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ..actions_classification import bulk_classify_from_csv
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

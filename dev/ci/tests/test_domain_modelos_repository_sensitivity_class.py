@@ -41,7 +41,7 @@ from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.domain.buckets.event import BucketEventHistoryCatalogue
-from cadrumo.tests.secure_sql import isolated_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from cadrumo.domain.modelos.filing_record import ModeloRecordCatalogue
 from cadrumo.domain.modelos.verification_report import VerificationReportCatalogue

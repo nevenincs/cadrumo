@@ -8,7 +8,7 @@ accountant counter-signature over that signature -- both parties' keypairs
 minted and persisted through REAL encrypted
 :class:`~adapters.persistence.storage.SecureObjectRepository` instances
 scoped to two distinct genuine ``BUCKET_DEK_V1`` buckets
-(:func:`~tests.secure_sql.isolated_two_bucket_runtime`, no mocks or
+(:func:`~cadrumo.adapters.persistence.storage.tests.secure_sql.isolated_two_bucket_runtime`, no mocks or
 fakes): operator signs, accountant counter-signs, both-layer verify passes;
 tamper the archive, the note, the counter-signature, or swap either party's
 public key, and verification fails.
@@ -59,7 +59,7 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
-from ....tests.secure_sql import MultiBucketTestRuntime, isolated_two_bucket_runtime
+from ....adapters.persistence.storage.tests.secure_sql import MultiBucketTestRuntime, isolated_two_bucket_runtime
 from ..review_package_counter_sign import (
     CounterSignedReceipt,
     counter_sign_review_package,

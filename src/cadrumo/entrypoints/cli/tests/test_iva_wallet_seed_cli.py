@@ -18,7 +18,7 @@ from ....core.period import Period
 from ....domain.iva_compensation.carry_forward import IvaCompensationCarryForwardLot, IvaCompensationExpiryReviewState
 from ....domain.iva_compensation.errors import IvaCompensationSeedConflictError
 from ....tests.cli_envelope import require_schema_envelope
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ._iva_wallet_inspector_support import _NIF, _SEED_BUCKET_ID, _store_profile_with_nif
 from .cli_runner import invoke_cached_cli
 

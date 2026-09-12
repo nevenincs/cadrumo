@@ -20,7 +20,7 @@ from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.sql.session import session_scope
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
-from cadrumo.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -82,7 +82,7 @@ def repo() -> SubmissionRepository:
 
 
 def _database_bytes(runtime_profile: TestRuntimeProfile) -> bytes:
-    from cadrumo.tests.secure_sql import read_db_at_rest_bytes
+    from cadrumo.adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 
     return read_db_at_rest_bytes(runtime_profile.paths.database_file)
 

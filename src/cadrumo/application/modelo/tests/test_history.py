@@ -19,7 +19,7 @@ from ....domain.buckets.event import BucketEventObjectType, BucketEventType
 from ....domain.modelos.errors import ModeloError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..action_errors import WorkUnitNotFoundError
 from ..history import assemble_work_unit_history
 from ..work_lifecycle import (

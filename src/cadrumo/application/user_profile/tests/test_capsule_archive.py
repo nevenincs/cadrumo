@@ -15,7 +15,7 @@ import pytest
 
 from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from ....domain.user_profile.values import UserProfileFact
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..capsule_archive import (
     RECOVERY_SLOT_BYTES,
     ProfileCapsuleArchiveError,

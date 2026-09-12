@@ -17,7 +17,7 @@ from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.secure_sql import TestRuntimeProfile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from .._ledger_support import resolve_business_pct_with_censo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

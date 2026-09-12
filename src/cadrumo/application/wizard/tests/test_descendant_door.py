@@ -19,7 +19,7 @@ from ....application.wizard.descendant_door import (
     run_descendant_door,
 )
 from ....core.errors.hierarchy import CadrumoError
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.serial]
 

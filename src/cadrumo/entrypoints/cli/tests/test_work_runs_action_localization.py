@@ -43,7 +43,7 @@ from ....core.period import Period
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import open_test_profile_session, seed_test_profile_record
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from .._action_rendering import resolved_precondition_action_json_cell
 from .._modelo_work_runs_cli import _workflow_run_payload, _workflow_run_tab_line

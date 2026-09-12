@@ -30,7 +30,7 @@ from cadrumo.adapters.persistence.profile.participation_index import Transaction
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
-from cadrumo.tests.secure_sql import isolated_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.participation_index import (
     TransactionParticipationIndexPersistenceError,

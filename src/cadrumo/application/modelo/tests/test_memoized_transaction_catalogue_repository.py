@@ -32,7 +32,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, reset_secure_object_store
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, reset_secure_object_store
 from .._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

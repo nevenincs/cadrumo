@@ -26,7 +26,7 @@ from ....core.modelo import Modelo
 from ....core.prorrata_register import ProrrataProvisionalProvenance
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...calculations.cross_period_models import CrossPeriodCleanStateBlocker
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..seed import evaluate_carried_prior_definitiva_seed

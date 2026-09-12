@@ -36,7 +36,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
 )
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
-from ....tests.secure_sql import read_db_at_rest_bytes
+from ....adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 from ...calculations.binding_prefill import (
     extract_modelo_303_local_iva_compensation_recurrence,
     resolve_bindings_from_local_store,

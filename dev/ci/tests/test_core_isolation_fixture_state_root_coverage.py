@@ -1,7 +1,7 @@
 """Structural coverage gate: the canonical isolation fixture covers every
 state-root-derived output directory.
 
-``isolated_cli_backend`` (``tests.secure_sql``) exists so ~22 test modules
+``isolated_cli_backend`` (``cadrumo.adapters.persistence.storage.tests.secure_sql``) exists so ~22 test modules
 stop hand-declaring a private copy of the same storage-root override block.
 The promotion is only sound if the fixture actually relocates every
 generated-output directory the storage taxonomy's root-derived member set
@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.secure_sql import isolated_cli_backend
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend
 from cadrumo.core.config import load_settings
 from cadrumo.core.storage_taxonomy_locations import ROOT_DERIVED_STORAGE_FIELDS
 

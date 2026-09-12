@@ -37,7 +37,7 @@ from ....core.operations import (
     OperationTerminalCondition,
 )
 from ....tests.aeat_literal_fixtures import REDACTION_TOKEN_QUERY_URL_CANARY
-from ....tests.secure_sql import isolated_ephemeral_secure_sql, isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_ephemeral_secure_sql, isolated_runtime_profile
 from ..capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,

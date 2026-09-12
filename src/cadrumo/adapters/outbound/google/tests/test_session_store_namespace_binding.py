@@ -25,7 +25,7 @@ import pytest
 from sqlalchemy import select
 
 from .....core.google_credential_source import GoogleCredentialSourceKind
-from .....tests.secure_sql import isolated_runtime_profile
+from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage.secure_object_namespaces import (
     GOOGLE_CREDENTIAL_SOURCE_NAMESPACE,
     GOOGLE_DRIVE_CONFIG_NAMESPACE,

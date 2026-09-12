@@ -27,7 +27,7 @@ from .....application.user_profile.passphrase_rotation import (
 )
 from .....application.user_profile.registration import register_profile_with_credentials
 from .....core.credentials import assess_profile_password
-from .....tests.secure_sql import isolated_profile_storage_root
+from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZE_IDS, SUPPORTED_TERMINAL_SIZES
 from ...components.host import ScreenHostApp
 from ...components.status import PinnedStatusBar

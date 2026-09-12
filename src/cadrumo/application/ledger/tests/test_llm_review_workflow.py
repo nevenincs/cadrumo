@@ -32,7 +32,7 @@ from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.llm import LLMSplitResponse
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..llm_classification import (
     apply_evidence_split,
     apply_llm_classification,

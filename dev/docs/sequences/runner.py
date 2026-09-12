@@ -35,7 +35,7 @@ is set, and never sets it.
 
 Layering note: this docs-tooling engine deliberately consumes the shared
 in-package test substrate — :mod:`cadrumo.entrypoints.cli.tests.cli_runner` and
-:mod:`cadrumo.tests.secure_sql` — rather than duplicating a second engine on
+:mod:`cadrumo.adapters.persistence.storage.tests.secure_sql` — rather than duplicating a second engine on
 top of it. Both are public, non-underscore modules of the shipped
 ``cadrumo.tests`` package and are the canonical hermetic in-process
 CLI/storage providers; duplicating them here would create the parallel write
@@ -86,7 +86,7 @@ from cadrumo.tests.profile_capsule import (
     upsert_test_profile_facts,
 )
 from cadrumo.tests.profile_persistence import composed_profile_persistence_ports
-from cadrumo.tests.secure_sql import isolated_profile_storage_root
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from dev._paths import REPO_ROOT
 
 from .errors import SequenceExecutionError
@@ -613,7 +613,7 @@ def _isolated_diagnostic_log() -> Generator[None]:
     channel alone. A ``config repair logs`` frame then tails a file carrying
     other sequences' temp paths and timestamps, which no golden can pin.
 
-    Must be entered AFTER :func:`~cadrumo.tests.secure_sql.isolated_profile_storage_root`
+    Must be entered AFTER :func:`~cadrumo.adapters.persistence.storage.tests.secure_sql.isolated_profile_storage_root`
     so the derived path below is rooted under THIS sequence's own storage root,
     not the process default.
 

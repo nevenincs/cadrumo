@@ -49,7 +49,7 @@ from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutco
 from ....domain.buckets.errors import BucketDeleteRefusedError
 from ....domain.modelos.filing_record import ModeloRecord
 from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ..contracts import AssessBucketDeletionCommand, BucketDeletionAssessment
 from ..service import BucketMaintenanceService

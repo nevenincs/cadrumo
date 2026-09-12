@@ -27,7 +27,7 @@ import pytest
 
 from cadrumo.core.config_support import SecretStoreBackend
 from cadrumo.entrypoints.cli.language_argv import language_from_argv
-from cadrumo.tests.secure_sql import dev_test_database_password
+from cadrumo.adapters.persistence.storage.tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

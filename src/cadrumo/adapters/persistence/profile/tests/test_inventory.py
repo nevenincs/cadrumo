@@ -21,7 +21,7 @@ from .....domain.contribuyente.inventory.records import (
     MovementRecord,
     ValuationMethod,
 )
-from .....tests.secure_sql import TestRuntimeProfile
+from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ...tests.runtime_profile_fixture import default_bucket_runtime_profile_fixture
 from ..inventory import InventoryLedgerRepository, record_movement
 from ._inventory_acquisition_fixture import (
@@ -133,7 +133,7 @@ def test_inventory_persistence_is_encrypted_financial_secure_object(_runtime_pro
         ),
     )
 
-    from .....tests.secure_sql import read_db_at_rest_bytes
+    from .....adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 
     repository = InventoryLedgerRepository()
     repository.save(InventoryLedgerDocument(ledgers=(ledger,)))

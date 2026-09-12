@@ -31,7 +31,7 @@ from __future__ import annotations
 import pytest
 
 from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
 
 __all__ = ["isolated_profile_storage"]
 from ._profile_cli_support import (

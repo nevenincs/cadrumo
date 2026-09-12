@@ -29,7 +29,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..actions_manual import (
     attach_manual_transaction_evidence,
     create_manual_transaction,

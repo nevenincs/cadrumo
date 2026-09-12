@@ -56,7 +56,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...modelo.calculation_actions import calculate_modelo_revision
 from ...modelo.work_lifecycle import create_work_unit
 from ..binding_prefill import resolve_bindings_from_local_store

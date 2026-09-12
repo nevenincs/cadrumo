@@ -27,7 +27,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.filing import empty_prior_filing_observations_fingerprint, empty_profile_activity_fingerprint
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..conftest import _BUCKET_ID
 from ..draft_construction import binding_provenance, build_draft
 from ..draft_review import (

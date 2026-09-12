@@ -27,7 +27,7 @@ from ....core.operations import (
     OperationTerminalCondition,
 )
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,

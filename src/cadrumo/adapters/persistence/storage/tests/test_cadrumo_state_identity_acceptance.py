@@ -10,7 +10,7 @@ import pytest
 from .....core.config import Settings
 from .....core.config_state_root import FormerProductStateError
 from .....domain.buckets.errors import BucketImportError
-from .....tests.secure_sql import isolated_runtime_profile
+from .secure_sql import isolated_runtime_profile
 from ..bucket.export_archive_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
 from ..bucket.sealed_archive_reader import read_sealed_archive
 from ..bucket.sealed_archive_writer import write_sealed_archive

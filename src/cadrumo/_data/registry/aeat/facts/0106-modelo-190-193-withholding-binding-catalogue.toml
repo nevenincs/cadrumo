@@ -1,0 +1,37 @@
+[fact]
+fact_id = "modelo-190-193-withholding-binding-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-190-193-withholding-binding-catalogue:2024-01-01"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+legal_refs = [
+    "ley-35-2006:art-101",
+    "rd-439-2007:art-90",
+]
+source_refs = [
+    "aeat-modelo-190-procedure",
+    "aeat-modelo-193-procedure",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["Modelo"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["Modelo"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+    { key = "identification_block_claves", value = "A,B,D" },
+    { key = "retenciones_ingresadas.direct_claves", value = "C" },
+    { key = "retenciones_ingresadas.payment_values", value = "1,3" },
+    { key = "modelo.190.clave.field", value = "clave" },
+    { key = "modelo.190.subclave.field", value = "subclave" },
+    { key = "modelo.193.numero_orden.minimum", value = "1" },
+    { key = "modelo.193.numero_orden.maximum", value = "9999999" },
+]

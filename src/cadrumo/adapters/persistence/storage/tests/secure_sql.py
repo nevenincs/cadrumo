@@ -16,30 +16,30 @@ from sqlalchemy import Engine, Select
 from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import text as sa_text
 
-from ..adapters.persistence.storage.bucket.directory_layout import BucketPaths
-from ..adapters.persistence.storage.crypto.encrypted_columns import (
+from ..bucket.directory_layout import BucketPaths
+from ..crypto.encrypted_columns import (
     decrypt_secure_object_payload,
     encrypt_secure_object_payload,
     secure_object_payload_aad,
 )
-from ..adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
-from ..adapters.persistence.storage.master_key.active_session import activate_session
-from ..adapters.persistence.storage.master_key.bucket_session import BucketSession
-from ..adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
-from ..adapters.persistence.storage.runtime import StorageRuntime, inspect_storage_runtime
-from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ..adapters.persistence.storage.sql.engine import create_engine_from_settings, dispose_engine
-from ..adapters.persistence.storage.sql.orm import Base, SecureObjectRow
-from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ..adapters.persistence.storage.sql.session import session_scope
-from ..adapters.persistence.storage.storage_path_definitions import BUCKETS_DIRNAME, KEYSTORE_DIRNAME
-from ..adapters.persistence.storage.tests.profile_capsule_runtime import provision_test_profile_bucket_session
-from ..core.config import Settings, load_settings, override_settings
-from ..core.directory_scan import DirectoryEntryKind, scan_directory
-from ..core.errors.hierarchy import CadrumoError
-from ..core.storage_taxonomy import StorageCategory
-from .master_key import EphemeralMasterKeyProvider
-from .storage_scope import storage_overrides
+from ..custody.acceleration_receipt import delete_profile_session
+from ..master_key.active_session import activate_session
+from ..master_key.bucket_session import BucketSession
+from ..namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ..runtime import StorageRuntime, inspect_storage_runtime
+from ..runtime_repository import secure_object_repository_for_active_bucket
+from ..sql.engine import create_engine_from_settings, dispose_engine
+from ..sql.orm import Base, SecureObjectRow
+from ..sql.secure_objects import SecureObjectRepository
+from ..sql.session import session_scope
+from ..storage_path_definitions import BUCKETS_DIRNAME, KEYSTORE_DIRNAME
+from .profile_capsule_runtime import provision_test_profile_bucket_session
+from .....core.config import Settings, load_settings, override_settings
+from .....core.directory_scan import DirectoryEntryKind, scan_directory
+from .....core.errors.hierarchy import CadrumoError
+from .....core.storage_taxonomy import StorageCategory
+from .....tests.master_key import EphemeralMasterKeyProvider
+from .....tests.storage_scope import storage_overrides
 
 _DEFAULT_RUNTIME_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _DEFAULT_PRIMARY_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
@@ -290,7 +290,7 @@ def isolated_storage_root(tmp_path: Path) -> Iterator[None]:
     module. Import it directly rather than re-declaring the override block
     locally, e.g.::
 
-        from ....tests.secure_sql import isolated_storage_root as _isolated_storage
+        from ....adapters.persistence.storage.tests.secure_sql import isolated_storage_root as _isolated_storage
     """
 
     with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None) as settings:
@@ -655,7 +655,7 @@ def isolated_cli_backend(tmp_path: Path) -> Iterator[Path]:
     Import it directly into a test module rather than re-declaring the
     override block locally, e.g.::
 
-        from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
+        from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
 
     The re-bound name still carries ``autouse=True`` in the importing module
     because pytest resolves fixtures by the name bound in the requesting

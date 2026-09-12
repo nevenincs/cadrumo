@@ -17,7 +17,7 @@ from ......core.config import Settings
 from ......core.directory_scan import DirectoryEntryKind, scan_directory
 from ......core.period import Period
 from ......domain.calculations.registry.authority import bundled_authority
-from ......tests.secure_sql import TestRuntimeProfile
+from ......adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ..errors import SedeValidationError
 from ..observation_store import FiledDeclaracionObservationStore
 from ..schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
@@ -84,7 +84,7 @@ def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_ap
     assert b"12345678Z" not in persisted_bytes
     assert b"12.34" not in persisted_bytes
     assert b"202610013522222A" not in persisted_bytes
-    from ......tests.secure_sql import read_db_at_rest_bytes
+    from ......adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 
     database_bytes = read_db_at_rest_bytes(active_storage.paths.database_file)
     assert body not in database_bytes

@@ -31,7 +31,7 @@ from ....entrypoints.tui.secret.registration import (
     RegistrationRefusal,
     RegistrationScreen,
 )
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [
     pytest.mark.integration,

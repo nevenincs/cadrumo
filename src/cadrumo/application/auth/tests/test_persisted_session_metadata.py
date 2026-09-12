@@ -11,7 +11,7 @@ import pytest
 from ....adapters.outbound.aeat.auth import session_store
 from ....core.auth_provider import AuthProviderKind
 from ....core.external_constants import load_external_constants
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..sessions import load_persisted_session, storage_state_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

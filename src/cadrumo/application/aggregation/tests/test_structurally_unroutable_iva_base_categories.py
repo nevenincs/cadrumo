@@ -40,7 +40,7 @@ from ....domain.iva.schema import CUOTA_LESS_M303_IVA_CATEGORIES, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..modelo_bindings import LedgerIvaAggregationSourceResolver
 from ..source_mesh import CalculationSourceContext
 

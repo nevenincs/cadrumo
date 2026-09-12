@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from datetime import date
 from pathlib import Path
+from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt
 
@@ -64,6 +65,8 @@ from .filed_data_capture import (
     FiledHistoryPairOutcome,
     pull_filed_history,
 )
+from .filed_observation_ports import FiledObservationPersistencePorts
+from .iva_remote_state_ports import IvaRemoteStatePort
 
 FILED_HISTORY_OPERATION_DEFINITION_ID = "live.filed-history.pull"
 FILED_HISTORY_PHASE_PREFLIGHT = "filed-history.preflight"
@@ -100,17 +103,34 @@ class FiledHistoryOperationRequest(BaseModel):
     dry_run: bool = False
 
 
+class FiledHistoryComposition(Protocol):
+    """Outer-composed dependencies for one filed-history operation scope."""
+
+    @property
+    def ports(self) -> FiledObservationPersistencePorts:
+        """Return the immutable filed-observation persistence bundle."""
+        ...
+
+    @property
+    def iva_remote_state_port(self) -> IvaRemoteStatePort:
+        """Return the composed IVA remote-state application port."""
+        ...
+
+
 type FiledHistoryPull = Callable[
     [
         FiledHistoryOperationRequest,
         TaxpayerProfile | None,
         SyncRunRecordRepositoryProtocol,
         OperationEventEmitter,
+        FiledObservationPersistencePorts,
+        IvaRemoteStatePort,
     ],
     Awaitable[FiledHistoryOnboardingRun],
 ]
 type FiledHistoryProfileResolver = Callable[[], TaxpayerProfile | None]
 type FiledHistorySyncRunRepositoryFactory = Callable[[], SyncRunRecordRepositoryProtocol]
+type FiledHistoryCompositionFactory = Callable[[Path], FiledHistoryComposition]
 
 
 def _resolve_active_filed_history_profile() -> TaxpayerProfile | None:
@@ -131,9 +151,13 @@ async def _pull_recorded_filed_history(
     profile: TaxpayerProfile | None,
     repository: SyncRunRecordRepositoryProtocol,
     events: OperationEventEmitter,
+    ports: FiledObservationPersistencePorts,
+    iva_remote_state_port: IvaRemoteStatePort,
 ) -> FiledHistoryOnboardingRun:
     """Delegate every domain stage and write to the existing composition."""
     return await pull_filed_history(
+        iva_remote_state_port=iva_remote_state_port,
+        ports=ports,
         output_root=payload.output_root,
         profile=profile,
         today=payload.today,
@@ -303,11 +327,13 @@ class FiledHistoryOperationExecutor:
         self,
         *,
         sync_run_repository: SyncRunRecordRepositoryProtocol,
+        composition_factory: FiledHistoryCompositionFactory,
         pull: FiledHistoryPull = _pull_recorded_filed_history,
         profile_resolver: FiledHistoryProfileResolver = _resolve_active_filed_history_profile,
     ) -> None:
         """Initialize this public contract."""
         self._sync_run_repository = sync_run_repository
+        self._composition_factory = composition_factory
         self._pull = pull
         self._profile_resolver = profile_resolver
 
@@ -327,7 +353,15 @@ class FiledHistoryOperationExecutor:
         # whether none or some of those writes committed.
         if not request.payload.dry_run:
             await context.events.effect(OperationEffect.UNKNOWN)
-        run = await self._pull(request.payload, profile, self._sync_run_repository, context.events)
+        composition = self._composition_factory(request.payload.output_root)
+        run = await self._pull(
+            request.payload,
+            profile,
+            self._sync_run_repository,
+            context.events,
+            composition.ports,
+            composition.iva_remote_state_port,
+        )
         await context.events.phase(FILED_HISTORY_PHASE_RESULT)
         await context.events.phase(FILED_HISTORY_PHASE_CLEANUP)
         await context.events.effect(_settled_effect(run))
@@ -338,6 +372,7 @@ class FiledHistoryOperationExecutor:
 def build_filed_history_operation_definition(
     *,
     sync_run_repository_factory: FiledHistorySyncRunRepositoryFactory,
+    composition_factory: FiledHistoryCompositionFactory,
     pull: FiledHistoryPull = _pull_recorded_filed_history,
     profile_resolver: FiledHistoryProfileResolver = _resolve_active_filed_history_profile,
 ) -> OperationDefinition:
@@ -346,6 +381,7 @@ def build_filed_history_operation_definition(
     def build() -> FiledHistoryOperationExecutor:
         return FiledHistoryOperationExecutor(
             sync_run_repository=sync_run_repository_factory(),
+            composition_factory=composition_factory,
             pull=pull,
             profile_resolver=profile_resolver,
         )
@@ -437,6 +473,8 @@ __all__ = [
     "FILED_HISTORY_PHASE_RESULT",
     "FILED_HISTORY_PHASE_SETTLEMENT",
     "FILED_HISTORY_STAGE_REFUSAL_CODE",
+    "FiledHistoryComposition",
+    "FiledHistoryCompositionFactory",
     "FiledHistoryEvidenceNoticeV1",
     "FiledHistoryOperationExecutor",
     "FiledHistoryOperationRequest",

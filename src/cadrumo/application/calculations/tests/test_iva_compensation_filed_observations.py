@@ -27,7 +27,7 @@ from ....domain.iva_compensation.errors import (
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
 )
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..errors import IvaCompensationModeloError
 from ..iva_compensation_history import (
     IvaCompensationHistoryRepository,

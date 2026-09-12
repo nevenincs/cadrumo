@@ -29,7 +29,7 @@ _patch_secure_backend = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autous
 
 
 def _database_bytes(tmp_path: Path) -> bytes:
-    from ....tests.secure_sql import read_db_at_rest_bytes
+    from ....adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 
     return read_db_at_rest_bytes(bucket_paths(tmp_path / "cadrumo-storage", _BUCKET_ID).database_file)
 

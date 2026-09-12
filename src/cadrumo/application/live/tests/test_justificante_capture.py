@@ -25,7 +25,7 @@ from ....adapters.persistence.storage.secure_object_namespaces import (
 )
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..errors import LiveApplicationInputError
 from ..justificante import (
     JustificanteCaptureSnapshot,

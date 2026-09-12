@@ -48,7 +48,7 @@ from ....core.profile_session import ProfileSessionRefusalReason
 from ....core.time.clock import now as _now
 from ....domain.buckets.event_repository import BucketEventHistoryPersistenceError
 from ....tests.os_keychain_hook import require_os_credential_store
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..authentication import ProfileAuthenticationRefusedError
 from ..custody_ports import bind_profile_custody_port
 from ..login_session import (

@@ -1,39 +1,72 @@
-"""Concrete CLI composition for the live IVA remote-state application port."""
+"""Shared composition for live IVA state and filed-observation persistence.
+
+This is the single outer binding used by CLI, TUI, and recorded operations.
+It deliberately lives beside the entrypoint composition rather than inside the
+CLI package: shared operation registration must not acquire a transitive
+dependency on a frontend package.
+"""
 
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable
 from contextlib import AbstractContextManager, contextmanager
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from ...adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
-from ...adapters.outbound.aeat.sede.iva_compensation_wallet import (
+from ..adapters.inbound.justificante.parser import parse_justificante_bytes
+from ..adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
+from ..adapters.outbound.aeat.sede.declarations_observations import (
+    non_numeric_observed_casillas,
+    registry_observation_from_filed_declaration,
+)
+from ..adapters.outbound.aeat.sede.iva_compensation_wallet import (
     PRE303_PRESENTATION_SERVICE_URL,
     fetch_iva_compensation_wallet,
 )
-from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
-from ...adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation
-from ...adapters.persistence.profile.iva_remote_state import IvaRemoteStateAcquisitionManifestRepository
-from ...adapters.persistence.storage.errors import StorageValidationError
-from ...adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
-from ...application.auth.session_types import AeatSession
-from ...application.auth.sessions import AuthenticatedAeatSessionResult, ensure_authenticated_aeat_session
-from ...application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
-from ...application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
-from ...application.calculations.observations_repository import (
+from ..adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
+from ..adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation
+from ..adapters.outbound.aeat.sede.filed_observation_persistence import (
+    BaselineImportAdapter,
+    BucketEventRepositoryAdapter,
+    CalculationObservationRepositoryAdapter,
+    FiledDeclarationTransformationAdapter,
+    FiledObservationParserAdapter,
+    FiledObservationStoreAdapter,
+    FilingRepositoryAdapter,
+    IvaHistoryRepositoryAdapter,
+    IvaObservationPersistenceAdapter,
+    JustificanteRepositoryAdapter,
+)
+from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ..adapters.persistence.profile.iva_remote_state import IvaRemoteStateAcquisitionManifestRepository
+from ..adapters.persistence.profile.justificante import JustificanteRepository
+from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ..adapters.persistence.storage.errors import StorageValidationError
+from ..adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
+from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ..application.auth.session_types import AeatSession
+from ..application.auth.sessions import AuthenticatedAeatSessionResult, ensure_authenticated_aeat_session
+from ..application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
+from ..application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
+from ..application.calculations.observations_repository import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
     iva_wallet_decision_key,
 )
-from ...application.live.errors import LiveApplicationError
-from ...application.live.filed_data_capture import capture_report_path
-from ...application.live.filed_observation_persistence import (
+from ..application.live.errors import LiveApplicationError
+from ..application.live.filed_data_capture import capture_report_path
+from ..application.live.filed_observation_persistence import (
     latest_declarations_by_period,
     persist_iva_compensation_history_observations_strict,
 )
-from ...application.live.remote_state_models import (
+from ..application.live.filed_observation_ports import FiledObservationPersistencePorts
+from ..application.live.iva_remote_state_ports import IvaRemoteStatePort
+from ..application.live.remote_state_models import (
     IvaCompensationCarryForwardLotRow,
     IvaCompensationHistoryCaptureReport,
     IvaCompensationHistoryReport,
@@ -42,42 +75,125 @@ from ...application.live.remote_state_models import (
     IvaWalletAuthorityDecisionRow,
     IvaWalletCaptureReport,
 )
-from ...application.live.remote_state_outcomes import evidence_ref
-from ...application.live.session import active_verified_session
-from ...core.bucket_pointer import resolve_active_bucket_id
-from ...core.config import Settings
-from ...core.errors.hierarchy import CadrumoError
-from ...core.hashing import sha256_hex
-from ...core.identity.tax_id import tax_id_identity_token
-from ...core.modelo import Modelo
-from ...core.period import Period
-from ...core.storage_taxonomy import StorageCategory
-from ...core.storage_taxonomy_locations import storage_location
-from ...core.time.clock import now
-from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.iva_compensation.carry_forward import build_iva_compensation_carry_forward_report
+from ..application.live.remote_state_outcomes import evidence_ref
+from ..application.live.session import active_verified_session
+from ..core.bucket_pointer import require_active_bucket_id
+from ..core.config import Settings, load_settings
+from ..core.errors.hierarchy import CadrumoError
+from ..core.hashing import sha256_hex
+from ..core.identity.tax_id import tax_id_identity_token
+from ..core.modelo import Modelo
+from ..core.period import Period
+from ..core.storage_taxonomy import StorageCategory
+from ..core.storage_taxonomy_locations import storage_location
+from ..core.time.clock import now
+from ..domain.calculations.registry.authority import bundled_authority
+from ..domain.iva_compensation.carry_forward import build_iva_compensation_carry_forward_report
 
 _WALLET_DIRNAME = Path(storage_location(StorageCategory.LIVE_STATE_IVA_WALLET).subpath).name
 
 
-class CliIvaRemoteStatePort:
-    """CLI-owned assembly of AEAT and encrypted storage adapters."""
+@dataclass(frozen=True, slots=True)
+class LiveStateComposition:
+    """One immutable live-state dependency bundle for one bucket and root."""
+
+    bucket_id: str
+    output_root: Path
+    objects: SecureObjectRepository
+    ports: FiledObservationPersistencePorts
+    iva_remote_state_port: IvaRemoteStatePort
+
+
+def compose_filed_observation_persistence_ports(
+    *,
+    bucket_id: str,
+    output_root: Path,
+    objects: SecureObjectRepository,
+) -> FiledObservationPersistencePorts:
+    """Compose every filed-observation port against one secure backend."""
+    work_unit_repository = WorkUnitCatalogueRepository(bucket_id=bucket_id, objects=objects)
+    calculation_revision_repository = CalculationRevisionCatalogueRepository(bucket_id=bucket_id, objects=objects)
+    filing_repository = ModeloRecordCatalogueRepository(bucket_id=bucket_id, objects=objects)
+    bucket_event_repository = BucketEventHistoryRepository(objects=objects)
+    justificante_repository = JustificanteRepository(objects=objects)
+    calculation_repository = CalculationObservationRepository(bucket_id=bucket_id, objects=objects)
+    iva_history_repository = IvaCompensationHistoryRepository(bucket_id=bucket_id, objects=objects)
+    return FiledObservationPersistencePorts(
+        parser=FiledObservationParserAdapter(),
+        transformation=FiledDeclarationTransformationAdapter(),
+        observation_persistence=FiledObservationStoreAdapter(root=output_root, objects=objects),
+        calculation_repository=CalculationObservationRepositoryAdapter(repository=calculation_repository),
+        iva_history_repository=IvaHistoryRepositoryAdapter(repository=iva_history_repository),
+        iva_observation_persistence=IvaObservationPersistenceAdapter(),
+        justificante_repository=JustificanteRepositoryAdapter(repository=justificante_repository),
+        filing_repository=FilingRepositoryAdapter(repository=filing_repository),
+        bucket_event_repository=BucketEventRepositoryAdapter(repository=bucket_event_repository),
+        baseline_import=BaselineImportAdapter(
+            work_unit_repository=work_unit_repository,
+            calculation_repository=calculation_revision_repository,
+            filing_repository=filing_repository,
+            bucket_event_repository=bucket_event_repository,
+            justificante_repository=justificante_repository,
+            observation_repository=calculation_repository,
+        ),
+    )
+
+
+def compose_live_state(
+    *,
+    output_root: Path | None = None,
+    bucket_id: str | None = None,
+    objects: SecureObjectRepository | None = None,
+) -> LiveStateComposition:
+    """Compose the shared live-state port and filed-observation ports once."""
+    settings = load_settings()
+    resolved_bucket_id = (bucket_id or require_active_bucket_id()).strip()
+    if not resolved_bucket_id:
+        raise LiveApplicationError(translated_message="application.workflow.errors.no_active_profile_bucket")
+    resolved_root = Path(output_root) if output_root is not None else settings.cadrumo_live_state_dir / _WALLET_DIRNAME
+    secure_objects = objects or secure_object_repository_for_bucket(resolved_bucket_id)
+    filed_ports = compose_filed_observation_persistence_ports(
+        bucket_id=resolved_bucket_id,
+        output_root=resolved_root,
+        objects=secure_objects,
+    )
+    remote_port = AppIvaRemoteStatePort(objects=secure_objects, filed_observation_ports=filed_ports)
+    return LiveStateComposition(
+        bucket_id=resolved_bucket_id,
+        output_root=resolved_root,
+        objects=secure_objects,
+        ports=filed_ports,
+        iva_remote_state_port=remote_port,
+    )
+
+
+class AppIvaRemoteStatePort:
+    """Outer implementation of the live IVA application port."""
+
+    def __init__(self, *, objects: SecureObjectRepository, filed_observation_ports: FiledObservationPersistencePorts) -> None:
+        """Bind the port to one secure backend and filed-observation bundle."""
+        self._objects = objects
+        self._filed_observation_ports = filed_observation_ports
 
     @property
     def wallet_target_url(self) -> str:
+        """Return the read-only AEAT wallet endpoint."""
         return PRE303_PRESENTATION_SERVICE_URL
 
     @contextmanager
     def active_storage_span(self) -> AbstractContextManager[None]:
-        bucket_id = resolve_active_bucket_id()
-        if bucket_id is None or not active_bucket_session_serves(bucket_id):
+        """Require the active bucket session for every storage operation."""
+        bucket_id = require_active_bucket_id()
+        if not active_bucket_session_serves(bucket_id):
             raise StorageValidationError(translated_message="errors.storage.runtime.not_ready")
         yield
 
     def persist_manifest(self, manifest: IvaRemoteStateAcquisitionManifest) -> None:
-        IvaRemoteStateAcquisitionManifestRepository().save(manifest)
+        """Persist one redacted remote-state acquisition manifest."""
+        IvaRemoteStateAcquisitionManifestRepository(objects=self._objects).save(manifest)
 
     async def active_verified_session(self, *, operation: str, target_url: str | None) -> tuple[AeatSession, Settings]:
+        """Resolve the active authenticated AEAT session."""
         return await active_verified_session(operation=operation, target_url=target_url)
 
     def ensure_authenticated_session(
@@ -87,11 +203,13 @@ class CliIvaRemoteStatePort:
         operation: str,
         target_url: str | None,
     ) -> Awaitable[AuthenticatedAeatSessionResult]:
+        """Start the configured authentication flow."""
         return ensure_authenticated_aeat_session(settings, operation=operation, target_url=target_url)
 
     def list_history(self, *, as_of_year: int | None) -> IvaCompensationHistoryReport:
-        states = IvaCompensationHistoryRepository().list_periods()
-        decisions = IvaWalletDecisionRepository().list_decisions()
+        """List persisted IVA history and authority decisions."""
+        states = IvaCompensationHistoryRepository(objects=self._objects).list_periods()
+        decisions = IvaWalletDecisionRepository(objects=self._objects).list_decisions()
         carry_forward = build_iva_compensation_carry_forward_report(states, as_of_year=as_of_year or now().year)
         return IvaCompensationHistoryReport(
             row_count=len(states),
@@ -114,7 +232,8 @@ class CliIvaRemoteStatePort:
         output_root: Path,
         progress_context: dict[str, object] | None,
     ) -> IvaCompensationHistoryCaptureReport:
-        store = FiledDeclaracionObservationStore(output_root)
+        """Capture and persist filed Modelo 303 history."""
+        store = FiledDeclaracionObservationStore(output_root, objects=self._objects)
         paths: list[str] = []
         artefacts: list[str] = []
         observations = []
@@ -157,7 +276,10 @@ class CliIvaRemoteStatePort:
                     )
                     casilla_count += len(observation.casillas)
                     observations.append(observation)
-        keys = persist_iva_compensation_history_observations_strict(tuple(observations))
+        keys = persist_iva_compensation_history_observations_strict(
+            tuple(observations),
+            ports=self._filed_observation_ports,
+        )
         reloaded = self.list_history(as_of_year=None)
         return IvaCompensationHistoryCaptureReport(
             output_root=str(output_root),
@@ -186,6 +308,7 @@ class CliIvaRemoteStatePort:
         output_root: Path | None,
         progress_context: dict[str, object] | None,
     ) -> IvaWalletCaptureReport:
+        """Capture, persist, and reconcile one IVA wallet observation."""
         if progress_context is not None:
             progress_context.update(
                 {
@@ -195,27 +318,40 @@ class CliIvaRemoteStatePort:
                 }
             )
         observation = await fetch_iva_compensation_wallet(
-            session, target_year=target_year, target_period=target_period, taxpayer_nif=taxpayer_nif, settings=settings
+            session,
+            target_year=target_year,
+            target_period=target_period,
+            taxpayer_nif=taxpayer_nif,
+            settings=settings,
         )
         root = output_root or settings.cadrumo_live_state_dir / _WALLET_DIRNAME
-        return persist_and_reconcile_iva_compensation_wallet(observation, output_root=root)
-
-
-def cli_iva_remote_state_port() -> CliIvaRemoteStatePort:
-    """Construct the CLI's concrete remote-state port at the composition root."""
-    return CliIvaRemoteStatePort()
+        return persist_and_reconcile_iva_compensation_wallet(
+            observation,
+            output_root=root,
+            objects=self._objects,
+        )
 
 
 def persist_and_reconcile_iva_compensation_wallet(
     observation: IvaCompensationWalletObservation,
     *,
     output_root: Path,
+    objects: SecureObjectRepository | None = None,
     repository: CalculationObservationRepository | None = None,
     decision_repository: IvaWalletDecisionRepository | None = None,
     decided_at: datetime | None = None,
 ) -> IvaWalletCaptureReport:
-    """Persist, reload, reconcile, and project one wallet observation at the CLI boundary."""
-    store = FiledDeclaracionObservationStore(output_root)
+    """Persist, reload, reconcile, and project one wallet observation."""
+    if repository is None and objects is None:
+        raise LiveApplicationError(
+            translated_message="application.live.iva_wallet.errors.observation_reload_diverged",
+            context={"reason": "secure_backend_required"},
+        )
+    resolved_repository = repository or CalculationObservationRepository(objects=objects)
+    store = FiledDeclaracionObservationStore(
+        output_root,
+        objects=resolved_repository.secure_object_repository,
+    )
     path = store.persist_iva_wallet_observation(observation)
     reloaded = store.load_iva_wallet_observation(path)
     if reloaded != observation:
@@ -227,13 +363,16 @@ def persist_and_reconcile_iva_compensation_wallet(
             },
         )
     snapshot = bundled_authority().snapshot(
-        Modelo.M303.value, filing_year=reloaded.target_year, period=reloaded.target_period.registry_token
+        Modelo.M303.value,
+        filing_year=reloaded.target_year,
+        period=reloaded.target_period.registry_token,
     )
-    resolved_repository = repository if repository is not None else CalculationObservationRepository()
-    from ...application.calculations.binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
+    from ..application.calculations.binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
 
     recurrence, prefill = extract_modelo_303_local_iva_compensation_recurrence(
-        snapshot, repository=resolved_repository, captured_at=decided_at
+        snapshot,
+        repository=resolved_repository,
+        captured_at=decided_at,
     )
     reconciliation = reconcile_modelo_303_iva_compensation(
         snapshot,
@@ -246,10 +385,8 @@ def persist_and_reconcile_iva_compensation_wallet(
         prefill_report=prefill,
     )
     decision = reconciliation.decision
-    resolved_decision_repository = (
-        decision_repository
-        if decision_repository is not None
-        else IvaWalletDecisionRepository(objects=resolved_repository.secure_object_repository)
+    resolved_decision_repository = decision_repository or IvaWalletDecisionRepository(
+        objects=resolved_repository.secure_object_repository,
     )
     loaded = resolved_decision_repository.load_decision(decision.taxpayer_nif, decision.target_period)
     if loaded != decision:
@@ -283,8 +420,9 @@ def aggregate_iva_compensation_history_reports(
     year_from: int,
     year_to: int,
 ) -> IvaCompensationHistoryCaptureReport:
-    """Combine per-year filed-history capture reports at the CLI composition boundary."""
-    reloaded = CliIvaRemoteStatePort().list_history(as_of_year=None)
+    """Combine per-year history reports at the shared composition boundary."""
+    composition = compose_live_state(output_root=output_root)
+    reloaded = composition.iva_remote_state_port.list_history(as_of_year=None)
     return IvaCompensationHistoryCaptureReport(
         output_root=str(output_root),
         year_from=year_from,
@@ -302,12 +440,20 @@ def aggregate_iva_compensation_history_reports(
     )
 
 
-async def pull_filed_history_with_cli_port(payload: object, profile: object, repository: object, events: object):
-    """Invoke the filed-history composition with the CLI-owned IVA port."""
-    from ...application.live.filed_data_capture import pull_filed_history
+async def pull_filed_history_with_shared_composition(
+    payload: object,
+    profile: object,
+    repository: object,
+    events: object,
+    ports: FiledObservationPersistencePorts,
+    iva_remote_state_port: IvaRemoteStatePort,
+):
+    """Invoke the filed-history service with the explicitly composed bundle."""
+    from ..application.live.filed_data_capture import pull_filed_history
 
     return await pull_filed_history(
-        iva_remote_state_port=cli_iva_remote_state_port(),
+        iva_remote_state_port=iva_remote_state_port,
+        ports=ports,
         output_root=payload.output_root,
         profile=profile,
         today=payload.today,
@@ -319,6 +465,7 @@ async def pull_filed_history_with_cli_port(payload: object, profile: object, rep
 
 
 def taxpayer_ref(value: str | None) -> str:
+    """Return a redacted taxpayer identity reference."""
     token = tax_id_identity_token(value) if value is not None else ""
     return "absent" if not token else f"sha256:{sha256_hex(token.encode('utf-8'))[:12]}"
 
@@ -394,11 +541,13 @@ def _decimal(value: object) -> str | None:
 
 
 __all__ = [
-    "CliIvaRemoteStatePort",
+    "AppIvaRemoteStatePort",
+    "LiveStateComposition",
     "aggregate_iva_compensation_history_reports",
     "carry_forward_lot_row",
-    "cli_iva_remote_state_port",
+    "compose_filed_observation_persistence_ports",
+    "compose_live_state",
     "persist_and_reconcile_iva_compensation_wallet",
-    "pull_filed_history_with_cli_port",
+    "pull_filed_history_with_shared_composition",
     "taxpayer_ref",
 ]

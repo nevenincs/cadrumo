@@ -28,7 +28,7 @@ from ....adapters.outbound.aeat.verify.contract import VerifyBrowserSessionLike
 from ....core.config import Settings
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..justificante import (
     JustificanteAuthenticity,
     JustificanteCaptureSnapshot,

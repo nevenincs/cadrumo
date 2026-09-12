@@ -3,7 +3,7 @@
 Exercises :mod:`~application.modelo.review_package_collab_audit` against
 a REAL encrypted :class:`~adapters.persistence.storage.SecureObjectRepository`-backed
 :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository`
-(:func:`~tests.secure_sql.isolated_runtime_profile` -- a genuine
+(:func:`~cadrumo.adapters.persistence.storage.tests.secure_sql.isolated_runtime_profile` -- a genuine
 ``BUCKET_DEK_V1`` bucket, no mocks): every collaboration boundary (recipient
 registered/removed, package encrypted/decrypted, and package counter-signed)
 appends a typed
@@ -57,7 +57,7 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..review_package_collab_audit import (
     emit_collab_package_counter_signed_event,
     emit_collab_package_decrypted_event,

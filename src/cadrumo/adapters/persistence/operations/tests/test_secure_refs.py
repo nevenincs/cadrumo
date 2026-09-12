@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 
 from .....core.classification.policies import SensitivityClass
 from .....core.hashing import sha256_hex
-from .....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
+from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from ...storage.errors import RepositoryError
 from ...storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ...storage.namespace_taxonomy import StorageCustodyDisposition, StorageNamespaceScope

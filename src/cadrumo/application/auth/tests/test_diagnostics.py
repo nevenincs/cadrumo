@@ -17,7 +17,7 @@ from ....core.errors.error_codes import build_error_envelope
 from ....core.external_constants import UTF_8_ENCODING, load_external_constants
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..diagnostics import (
     AUTH_DIAGNOSTIC_PHONE_STATES,
     AuthDiagnosticPhoneState,

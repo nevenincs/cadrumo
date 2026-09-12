@@ -3,7 +3,7 @@
 ``compose_runtime_ports`` is declared in `src/cadrumo/conftest.py` as
 session-scoped and AUTOUSE, which means it reaches every test inside that
 directory tree and no test outside it. These evaluation tests open isolated CLI
-runtime profiles through the shipped `cadrumo.tests.secure_sql` helpers, and
+runtime profiles through the shipped `cadrumo.adapters.persistence.storage.tests.secure_sql` helpers, and
 those helpers need the real persistence and authentication adapters bound - so
 outside the tree they fail at setup with ``profile custody infrastructure has
 not been composed``, before a single assertion runs.

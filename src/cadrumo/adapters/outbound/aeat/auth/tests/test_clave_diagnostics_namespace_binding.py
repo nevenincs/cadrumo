@@ -28,7 +28,7 @@ import pytest
 from sqlalchemy import select
 
 from ......core import external_constants
-from ......tests.secure_sql import isolated_runtime_profile
+from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .....persistence.storage.secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from .....persistence.storage.sql.orm import SecureObjectRow

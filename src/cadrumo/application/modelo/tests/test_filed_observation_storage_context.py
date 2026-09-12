@@ -35,7 +35,7 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...calculations.iva_compensation_history import IvaCompensationHistoryRepository
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..action_errors import ModeloLocalObservationError

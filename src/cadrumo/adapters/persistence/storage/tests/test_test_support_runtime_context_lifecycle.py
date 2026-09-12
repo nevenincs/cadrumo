@@ -12,7 +12,7 @@ from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
 from .....core.time.clock import now as _now
 from .....tests.os_keychain_hook import require_os_credential_store
-from .....tests.secure_sql import (
+from .secure_sql import (
     isolated_cli_runtime_profile,
     isolated_ephemeral_secure_sql,
     isolated_profile_storage_root,

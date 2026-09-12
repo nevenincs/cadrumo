@@ -30,7 +30,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
-from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..binding_prefill import resolve_bindings_from_local_store
 from ..cross_period_clean_state import (
     cross_period_dependency_requirements,

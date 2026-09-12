@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from sqlalchemy import select
 
 from .....application.modelo.edit_contract import ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
-from .....tests.secure_sql import (
+from .....adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
     read_db_at_rest_bytes,

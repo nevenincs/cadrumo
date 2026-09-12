@@ -11,7 +11,7 @@ from PIL import Image
 
 from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ..application.ledger.evidence import PurchaseInvoiceEvidenceService
-from .secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ..adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 

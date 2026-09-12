@@ -16,7 +16,7 @@ from ....domain.buckets.event import (
     BucketEventType,
     derive_bucket_event_id,
 )
-from ....tests.secure_sql import isolated_two_bucket_runtime
+from ....adapters.persistence.storage.tests.secure_sql import isolated_two_bucket_runtime
 from ..custody_carry import build_secure_object_custody_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

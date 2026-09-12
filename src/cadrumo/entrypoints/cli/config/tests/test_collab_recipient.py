@@ -25,7 +25,7 @@ See Also:
         JSON result schema asserted after ``recipient remove``.
     :func:`~tests.cli_runner.invoke_typer_app`
         Real Typer runner used to exercise the config root.
-    :func:`~tests.secure_sql.isolated_profile_storage_root`
+    :func:`~cadrumo.adapters.persistence.storage.tests.secure_sql.isolated_profile_storage_root`
         Encrypted profile-storage harness used by these integration tests.
 """
 
@@ -38,7 +38,7 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from pydantic import ValidationError
 
 from .....tests.cli_envelope import unwrap_schema_envelope as _payload
-from .....tests.secure_sql import isolated_profile_storage_root
+from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .....tests.user_profile import register_cli_profile
 from ...main import app as root_app
 from ...tests.cli_runner import invoke_typer_app

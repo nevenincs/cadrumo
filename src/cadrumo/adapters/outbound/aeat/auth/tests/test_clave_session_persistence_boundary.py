@@ -30,7 +30,7 @@ import pytest
 
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config import Settings
-from ......tests.secure_sql import isolated_runtime_profile
+from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import session_store as session_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

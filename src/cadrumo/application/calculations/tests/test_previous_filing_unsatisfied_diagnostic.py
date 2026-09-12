@@ -44,7 +44,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
 )
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...aggregation.source_mesh import CalculationSourceContext
 from ..multi_year import PreviousFilingSourceResolver
 from ..observations_repository import CalculationObservationRepository, ObservationSourceKind

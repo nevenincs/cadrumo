@@ -39,7 +39,7 @@ from ....domain.calculations.registry.bindings import CasillaObservation, Regist
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft
 from ....domain.submission.models import ModeloDraftStatus
-from ....tests.secure_sql import TestRuntimeProfile
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..draft_construction import build_draft
 from ..draft_review import ModeloApprovalStaleReason, approval_stale_reasons, approve_draft

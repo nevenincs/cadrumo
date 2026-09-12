@@ -38,7 +38,7 @@ from ....adapters.persistence.storage.master_key.login_throttle import login_thr
 from ....core.bucket_pointer import read_pointer
 from ....core.profile_session import ProfileSessionRefusalReason
 from ....core.time.clock import now as _now
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..login_session import (
     bind_resumed_profile_session,
     login_profile,

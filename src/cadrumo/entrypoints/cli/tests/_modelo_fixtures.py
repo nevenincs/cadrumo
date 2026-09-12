@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from ....core.config import override_settings
-from ....tests.secure_sql import isolated_cli_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_runtime_profile
 
 
 @pytest.fixture(name="_active_cli_profile")

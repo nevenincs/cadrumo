@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 from .....core.config_support import LLMProvider
-from .....tests.secure_sql import TestRuntimeProfile, mutate_encrypted_secure_object_json
+from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, mutate_encrypted_secure_object_json
 from ....persistence.storage.secure_object_namespaces import LLM_CACHE_NAMESPACE
 from ..cache import LLMCache
 from ..models import LLMRequest, LLMResponse

@@ -22,7 +22,7 @@ from cadrumo.core.config import Settings
 from cadrumo.core.identity.documents import nif_check_letter
 from cadrumo.core.period import Period
 from cadrumo.tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
-from cadrumo.tests.secure_sql import isolated_runtime_profile, isolated_sessionless_storage_root, read_db_at_rest_bytes
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_sessionless_storage_root, read_db_at_rest_bytes
 from cadrumo.entrypoints.cli.app_live_iva_remote_state_composition import aggregate_iva_compensation_history_reports
 from cadrumo.application.auth.session_types import (
     AeatLoginAssertion,

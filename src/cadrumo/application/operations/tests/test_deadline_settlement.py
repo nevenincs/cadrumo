@@ -41,7 +41,7 @@ from ....core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,

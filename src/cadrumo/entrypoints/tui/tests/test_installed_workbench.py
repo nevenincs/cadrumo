@@ -175,7 +175,7 @@ def test_an_empty_profile_store_ends_the_headless_session_without_creating_one(t
     register a profile as a side effect of that proof, and it must not sit
     waiting for credentials nobody is there to type.
     """
-    from ....tests.secure_sql import isolated_profile_storage_root
+    from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
     from ..installed_session import SESSION_COMPLETED
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:

@@ -20,7 +20,7 @@ from ....core.operations import (
     OperationDurability,
     OperationEffect,
 )
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,

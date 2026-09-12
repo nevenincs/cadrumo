@@ -15,7 +15,7 @@ from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.errors import LedgerNoActiveBucketError
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ..active_profile import active_transaction_catalogue_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -22,7 +22,7 @@ from .....core.google_credential_source import GoogleCredentialSourceKind
 from .....core.i18n.render import tr
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.env_scope import scoped_env_var
-from .....tests.secure_sql import isolated_runtime_profile
+from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...google.impersonation import (
     GoogleAuthAdcUnavailableError,
     GoogleCredentialSourceSelection,

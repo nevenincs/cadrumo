@@ -20,7 +20,7 @@ See Also:
     :class:`~domain.prorrata_register.ProrrataRegisterEntry`
         Per-ejercicio register row whose defaultable fields are populated for
         the anti-tautology roundtrip.
-    :func:`~tests.secure_sql.isolated_runtime_profile`
+    :func:`~cadrumo.adapters.persistence.storage.tests.secure_sql.isolated_runtime_profile`
         Real SQLite + encrypted runtime profile used instead of mocks or
         shadow persistence.
 """
@@ -55,7 +55,7 @@ from .....domain.prorrata_register.register import (
     ProrrataRegisterError,
     SectorDefinition,
 )
-from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
+from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ....persistence.storage.errors import EnvelopeVersionError, SecureObjectRevisionConflictError
 from ....persistence.storage.sql.engine import get_engine
 from ..prorrata_register import ProrrataRegisterRepository

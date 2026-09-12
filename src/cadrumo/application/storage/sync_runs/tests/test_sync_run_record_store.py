@@ -39,7 +39,7 @@ from .....core.directory_scan import scan_directory
 from .....core.sync_surface import SyncSurface
 from .....domain.buckets.event import BucketEventType
 from .....tests.profile_capsule import open_test_profile_session
-from .....tests.secure_sql import isolated_profile_storage_root
+from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .....tests.user_profile import register_minimal_profile
 from ....workflow.persistence import workflow_state_repository
 from ..persist import record_sync_run

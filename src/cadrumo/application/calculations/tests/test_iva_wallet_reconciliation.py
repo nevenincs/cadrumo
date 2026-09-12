@@ -27,7 +27,7 @@ from ....domain.iva_compensation.reconciliation import (
     IvaCompensationWalletObservationProtocol,
     reconcile_iva_compensation_wallet,
 )
-from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation.source_mesh import CalculationSourceContext
 from ..binding_prefill import BindingPrefillReport, extract_modelo_303_local_iva_compensation_recurrence
 from ..iva_compensation_history import IvaCompensationHistoryRepository

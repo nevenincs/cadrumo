@@ -26,7 +26,7 @@ from pydantic import SecretStr
 from ......core.config import Settings
 from ......core.errors.hierarchy import AeatLoginAssertionError
 from ......core.i18n.render import tr
-from ......tests.secure_sql import isolated_runtime_profile
+from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..clave_movil import ClaveMovilAuthProvider
 from ..clave_movil_metadata import ClaveMovilSessionMetadata
 

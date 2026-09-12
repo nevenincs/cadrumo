@@ -28,7 +28,7 @@ _OVERRIDE_REASON = "Court order requiring erasure before the statutory retention
 
 @contextmanager
 def _isolated_reset_root(tmp_path: Path) -> Generator[Path]:
-    from ...tests.secure_sql import isolated_profile_storage_root
+    from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         yield root

@@ -26,7 +26,7 @@ from ....domain.iva.schema import (
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..iva_ledger import (
     IvaLedgerAggregation,
     aggregate_iva_ledger_observations_from_repositories,

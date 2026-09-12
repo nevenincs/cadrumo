@@ -42,7 +42,7 @@ from ....domain.calculations.registry.applicability_modelo202 import Modelo202Mo
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ....tests.secure_sql import isolated_cli_backend as _isolated_storage  # noqa: F401 - autouse fixture
+from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_storage  # noqa: F401 - autouse fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

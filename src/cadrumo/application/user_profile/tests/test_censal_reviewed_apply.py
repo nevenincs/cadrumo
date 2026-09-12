@@ -18,7 +18,7 @@ from ....core.config import override_settings
 from ....domain.buckets.event import BucketEventType
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...workflow.state_models import WorkflowState
 from ..capsule_record import (
     ProfileRecordConflictError,

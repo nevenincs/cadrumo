@@ -45,6 +45,17 @@ The shape is deliberately narrow:
 - It carries a ``reason`` and an ``authority``. The authority is the official
   source that settles the question; a disposition without one is an opinion.
 
+  What counts as official depends on the claim being made, and the two
+  classifications do not accept the same grade of evidence. ``unauthored``
+  claims the modelo existed and was filed in that year, which a hash-verified
+  AEAT record design for that exact ejercicio evidences directly -- often more
+  directly than a founding orden two decades earlier. ``inception`` claims a
+  legal absence, and only a legal norm can establish that a filing obligation
+  did not exist; no quantity of design evidence can prove a negative about the
+  law. This rule is the author's to hold: the loader cannot tell a norm id from
+  a source id without duplicating the legal catalogue, and a check that guessed
+  from the shape of a string would be worse than an honest convention.
+
 Reading refuses a malformed entry, an unknown kind, an unknown classification,
 or a coordinate named twice, rather than letting any of them quietly widen the
 exempt set.

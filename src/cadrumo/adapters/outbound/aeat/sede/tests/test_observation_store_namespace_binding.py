@@ -32,7 +32,7 @@ from sqlalchemy import select
 from ......core.config import Settings
 from ......core.period import Period
 from ......domain.calculations.registry.authority import bundled_authority
-from ......tests.secure_sql import isolated_runtime_profile
+from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....persistence.storage.secure_object_namespaces import (
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
