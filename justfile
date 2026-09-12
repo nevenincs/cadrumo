@@ -64,6 +64,11 @@ setup-python:
 setup-repository-tools:
     uv run --no-project --python 3.13.11 -- python -m dev.init tools{{propagate}}
 
+[doc('Install the pinned Hunspell dictionaries used by check-locales.')]
+[group('setup')]
+setup-locale-spelling:
+    npm ci --ignore-scripts --no-audit --no-fund{{propagate}}
+
 [doc('Check checkout setup state without writing a report or changing files.')]
 [group('setup')]
 setup-check:
@@ -251,6 +256,18 @@ check-docs-synonyms:
 [no-exit-message]
 check-registry:
     @uv run --no-sync python -m dev.test_runs.command --family test-runs --label check-registry --signal registry-health -- uv run --no-sync python -m dev.registry.analysis.registry_status --check --json
+
+[doc('Detect Python-owned regulatory facts and verify their registry relocation, consumers, publication, and accounting.')]
+[group('check')]
+[no-exit-message]
+check-facts:
+    @uv run --no-sync python -m dev.registry.facts
+
+[doc('Measure binding declarations, consumers, provider enrollment, temporal coherence, and advisory resolution routes.')]
+[group('check')]
+[no-exit-message]
+check-bindings:
+    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label check-bindings --signal binding-signal -- uv run --no-sync python -m dev.registry.bindings
 
 [doc('Prove one named generated registry target is current without publishing it.')]
 [group('check')]
@@ -905,6 +922,14 @@ test-integration: test-integration-parallel test-integration-serial
 test-product: test-pytest-harness test-unit test-integration-parallel test-integration-serial
 
 [private]
+_test-registry-collect:
+    @uv run --no-sync pytest --collect-only -v -n0 -m "(unit or integration) and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" --timeout=300 src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
+
+[private]
+_test-registry-load:
+    @uv run --no-sync python -m dev.registry.conformance runtime-load
+
+[private]
 _test-registry-calculations-parallel:
     @uv run --no-sync pytest -v -n {{ pytest_workers }} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests
 
@@ -914,13 +939,13 @@ _test-registry-calculations-serial:
 
 [private]
 _test-registry-conformance:
-    @uv run --no-sync pytest -v -n {{ pytest_workers }} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not tui_render" --timeout=300 dev/registry/tests dev/registry/conformance/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py --ignore=dev/registry/tests/test_workbook_parity.py
+    @uv run --no-sync pytest -v -n {{ pytest_workers }} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not tui_render" --timeout=300 dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
 
-[doc('Run calculation and registry-conformance populations as one normalized registry test signal.')]
+[doc('Collect and load the registry first, then run calculation and conformance populations as one normalized signal.')]
 [group('test')]
 [no-exit-message]
 test-registry:
-    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label test-registry --signal pytest-summary --expected-lane _test-registry-calculations-parallel --expected-lane _test-registry-calculations-serial --expected-lane _test-registry-conformance -- uv run --no-sync python -m dev.test_runs lanes --json-events --no-evidence _test-registry-calculations-parallel _test-registry-calculations-serial _test-registry-conformance
+    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label test-registry --signal pytest-summary --expected-lane _test-registry-collect --expected-lane _test-registry-load --expected-lane _test-registry-calculations-parallel --expected-lane _test-registry-calculations-serial --expected-lane _test-registry-conformance -- uv run --no-sync python -m dev.test_runs lanes --json-events --no-evidence --preflight-count 2 --lane-kind _test-registry-collect=collection --lane-kind _test-registry-load=load _test-registry-collect _test-registry-load _test-registry-calculations-parallel _test-registry-calculations-serial _test-registry-conformance
 
 [doc('Run the tooling-owned test-policy, repository-contract, and CI-contract populations.')]
 [group('test')]
@@ -944,21 +969,13 @@ test-ci-contracts:
     @uv run --no-sync pytest -v -n0 -m "serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/ci/tests dev/deploy/tests dev/release/tests
     @uv run --no-sync pytest -v -n0 -m "perf" dev/ci/tests dev/deploy/tests dev/release/tests
 
-# Run the registry conformance suite. It sits in its own lane rather than in
-# `test-registry` because of cost, not category: a sequential local run
-# measured roughly two minutes per test across 32 tests, where that whole
-# lane's other 24 directories finish in well under a minute. The composer
-# walks every revision in the bundled registry, which is the same reason
-# `dev/tests/test_registry_conformance_gate.py` records the real run as being
-# beyond the per-push budget.
-#
-# It is named here so the directory sits inside a lane at all. Left unnamed it
-# was one of six directories `dev/tests/test_lane_reachability.py` reported as
-# swept by nothing -- a suite that looks like coverage and reports to no one.
+# Run the same registry conformance population exposed inside `test-registry`
+# as a directly addressable recipe. The registry aggregate guards it with
+# collection and artifact-backed runtime-load preflights before execution.
 [doc('Run the registry conformance suite (slow: walks every bundled revision).')]
 [group('test')]
 test-registry-conformance:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not tui_render" --timeout=300 dev/registry/tests dev/registry/conformance/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py --ignore=dev/registry/tests/test_workbook_parity.py
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not tui_render" --timeout=300 dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
 
 [doc('Run only the parallel integration lane, holding the isolation-sensitive serial tests out.')]
 [group('test')]
@@ -1037,7 +1054,7 @@ test-smoke:
 [doc('Run the LibreOffice workbook parity tests (external_tool marker, outside the default unit lane).')]
 [group('test')]
 test-workbook-parity:
-    uv run --no-sync pytest -v -n0 -m external_tool dev/registry/tests/test_workbook_parity.py
+    uv run --no-sync pytest -v -n0 -m external_tool dev/registry/parity/tests/test_workbook_parity.py
 
 # Run the Homebrew/Scoop channel-artifact conformance tests. These bind
 # the generated formula and manifest to a real built cohort. Explicit paths
@@ -1156,15 +1173,25 @@ report-registry-aeip:
 # inherited one materialise identically and the authority cannot see the
 # difference. Sibling to `delta_minimality`, which owns the separate question of
 # whether a stated row equals the row it would inherit.
-[doc('Report edition delta-authoring status and remaining restatement per modelo; always exits zero.')]
+[doc('Report the edition union status per family and modelo as a grouped readable report; pass --lines for the diffable record form, --json for the payload; always exits zero.')]
 [group('report')]
 report-registry-edition-delta-status *ARGS:
     @uv run --no-sync python -m dev.test_runs.command --family test-runs --label report-registry-edition-delta-status -- uv run --no-sync python -m dev.registry.analysis.edition_delta_status {{ARGS}}
+
+[doc('Report whether every casilla continuity chain runs down its modelo edition sequence without a hole, and whether each evolution states one step; pass --findings for the located rows, --lines for the diffable record form, --json for the payload; always exits zero.')]
+[group('report')]
+report-registry-chain-contiguity *ARGS:
+    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label report-registry-chain-contiguity -- uv run --no-sync python -m dev.registry.analysis.chain_contiguity {{ARGS}}
 
 [doc('Report only the corpus-wide edition delta-authoring totals, without the per-modelo worklist; always exits zero.')]
 [group('report')]
 report-registry-edition-delta-totals:
     @uv run --no-sync python -m dev.test_runs.command --family test-runs --label report-registry-edition-delta-totals -- uv run --no-sync python -m dev.registry.analysis.edition_delta_status --totals-only
+
+[doc('Report which fields exist on disk per declaration family: presence, schema class, convergence and intra-modelo divergence; always exits zero.')]
+[group('report')]
+report-registry-field-census *ARGS:
+    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label report-registry-field-census -- uv run --no-sync python -m dev.registry.analysis.edition_field_census {{ARGS}}
 
 # ── Documentation ────────────────────────────────────────────────────────────
 

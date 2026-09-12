@@ -7594,8 +7594,8 @@
               "operand_refs": [
                 "0180",
                 "0218",
-                "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
-                "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-cap"
+                "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
+                "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-cap"
               ],
               "operand_values": [
                 "0.00",
@@ -14931,7 +14931,7 @@
               "op": "sum",
               "operand_casilla_refs": [],
               "operand_refs": [
-                "renta-2025-minimo-contribuyente-base-2025",
+                "renta-minimo-contribuyente-base",
                 "renta-2025-profile-taxpayer-birth-date"
               ],
               "operand_values": [
@@ -14958,7 +14958,7 @@
               "operand_casilla_refs": [],
               "operand_refs": [
                 "renta-2025-profile-tax-residence-ccaa",
-                "renta-2025-minimo-contribuyente-base-2025"
+                "renta-minimo-contribuyente-base"
               ],
               "operand_values": [
                 "5550"
@@ -15398,7 +15398,7 @@
               "operand_refs": [
                 "0527",
                 "0505",
-                "renta-2025-escala-estatal-base-general"
+                "renta-escala-estatal-base-general"
               ],
               "operand_values": [
                 "0.00",
@@ -15430,7 +15430,7 @@
                 "0527",
                 "0505",
                 "renta-2025-profile-tax-residence-ccaa",
-                "renta-2025-escala-autonomica-madrid-base-general"
+                "renta-escala-autonomica-madrid-base-general"
               ],
               "operand_values": [
                 "0.00",
@@ -15461,7 +15461,7 @@
               "operand_refs": [
                 "0527",
                 "0521",
-                "renta-2025-escala-estatal-base-general"
+                "renta-escala-estatal-base-general"
               ],
               "operand_values": [
                 "0.00",
@@ -15493,7 +15493,7 @@
                 "0527",
                 "0521",
                 "renta-2025-profile-tax-residence-ccaa",
-                "renta-2025-escala-autonomica-madrid-base-general"
+                "renta-escala-autonomica-madrid-base-general"
               ],
               "operand_values": [
                 "0.00",
@@ -15635,7 +15635,7 @@
               ],
               "operand_refs": [
                 "0510",
-                "renta-2025-escala-estatal-base-ahorro"
+                "renta-escala-estatal-base-ahorro"
               ],
               "operand_values": [
                 "0.00",
@@ -15661,7 +15661,7 @@
               ],
               "operand_refs": [
                 "0510",
-                "renta-2025-escala-autonomica-base-ahorro"
+                "renta-escala-autonomica-base-ahorro"
               ],
               "operand_values": [
                 "0.00",
@@ -15688,7 +15688,7 @@
               ],
               "operand_refs": [
                 "0522",
-                "renta-2025-escala-estatal-base-ahorro"
+                "renta-escala-estatal-base-ahorro"
               ],
               "operand_values": [
                 "0.00",
@@ -15715,7 +15715,7 @@
               ],
               "operand_refs": [
                 "0524",
-                "renta-2025-escala-autonomica-base-ahorro"
+                "renta-escala-autonomica-base-ahorro"
               ],
               "operand_values": [
                 "0.00",
@@ -27596,13 +27596,13 @@
                 "0435",
                 "0460",
                 "renta-2025-profile-declaration-type",
-                "renta-2025-deduccion-madrid-nacimiento-adopcion-limite-contribuyente-individual",
+                "renta-deduccion-madrid-nacimiento-adopcion-limite-contribuyente-individual",
                 "0435",
                 "0460",
                 "renta-2025-profile-unidad-familiar-otros-miembros-base",
-                "renta-2025-deduccion-madrid-nacimiento-adopcion-limite-unidad-familiar",
+                "renta-deduccion-madrid-nacimiento-adopcion-limite-unidad-familiar",
                 "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count",
-                "renta-2025-deduccion-madrid-nacimiento-adopcion-cuantia"
+                "renta-deduccion-madrid-nacimiento-adopcion-cuantia"
               ],
               "operand_values": [
                 "22000.00",
@@ -40431,8 +40431,8 @@
               ],
               "operand_refs": [
                 "eo-agraria-reduccion-irregularidad-base",
-                "renta-2025-eo-agraria-reduccion-irregularidad-cap",
-                "renta-2025-eo-agraria-reduccion-irregularidad-rate"
+                "renta-eo-agraria-reduccion-irregularidad-cap",
+                "renta-eo-agraria-reduccion-irregularidad-rate"
               ],
               "operand_values": [
                 "0",
@@ -64802,8 +64802,8 @@
               "operand_refs": [
                 "0180",
                 "0218",
-                "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
-                "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-cap"
+                "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
+                "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-cap"
               ],
               "operand_values": [
                 "0.00",
@@ -72139,7 +72139,7 @@
               "op": "sum",
               "operand_casilla_refs": [],
               "operand_refs": [
-                "renta-2025-minimo-contribuyente-base-2025",
+                "renta-minimo-contribuyente-base",
                 "renta-2025-profile-taxpayer-birth-date"
               ],
               "operand_values": [
@@ -72166,7 +72166,7 @@
               "operand_casilla_refs": [],
               "operand_refs": [
                 "renta-2025-profile-tax-residence-ccaa",
-                "renta-2025-minimo-contribuyente-base-2025"
+                "renta-minimo-contribuyente-base"
               ],
               "operand_values": [
                 "5550"
@@ -72606,7 +72606,7 @@
               "operand_refs": [
                 "0527",
                 "0505",
-                "renta-2025-escala-estatal-base-general"
+                "renta-escala-estatal-base-general"
               ],
               "operand_values": [
                 "0.00",
@@ -72638,7 +72638,7 @@
                 "0527",
                 "0505",
                 "renta-2025-profile-tax-residence-ccaa",
-                "renta-2025-escala-autonomica-madrid-base-general"
+                "renta-escala-autonomica-madrid-base-general"
               ],
               "operand_values": [
                 "0.00",
@@ -72669,7 +72669,7 @@
               "operand_refs": [
                 "0527",
                 "0521",
-                "renta-2025-escala-estatal-base-general"
+                "renta-escala-estatal-base-general"
               ],
               "operand_values": [
                 "0.00",
@@ -72701,7 +72701,7 @@
                 "0527",
                 "0521",
                 "renta-2025-profile-tax-residence-ccaa",
-                "renta-2025-escala-autonomica-madrid-base-general"
+                "renta-escala-autonomica-madrid-base-general"
               ],
               "operand_values": [
                 "0.00",
@@ -72843,7 +72843,7 @@
               ],
               "operand_refs": [
                 "0510",
-                "renta-2025-escala-estatal-base-ahorro"
+                "renta-escala-estatal-base-ahorro"
               ],
               "operand_values": [
                 "0.00",
@@ -72869,7 +72869,7 @@
               ],
               "operand_refs": [
                 "0510",
-                "renta-2025-escala-autonomica-base-ahorro"
+                "renta-escala-autonomica-base-ahorro"
               ],
               "operand_values": [
                 "0.00",
@@ -72896,7 +72896,7 @@
               ],
               "operand_refs": [
                 "0522",
-                "renta-2025-escala-estatal-base-ahorro"
+                "renta-escala-estatal-base-ahorro"
               ],
               "operand_values": [
                 "0.00",
@@ -72923,7 +72923,7 @@
               ],
               "operand_refs": [
                 "0524",
-                "renta-2025-escala-autonomica-base-ahorro"
+                "renta-escala-autonomica-base-ahorro"
               ],
               "operand_values": [
                 "0.00",
@@ -84804,13 +84804,13 @@
                 "0435",
                 "0460",
                 "renta-2025-profile-declaration-type",
-                "renta-2025-deduccion-madrid-nacimiento-adopcion-limite-contribuyente-individual",
+                "renta-deduccion-madrid-nacimiento-adopcion-limite-contribuyente-individual",
                 "0435",
                 "0460",
                 "renta-2025-profile-unidad-familiar-otros-miembros-base",
-                "renta-2025-deduccion-madrid-nacimiento-adopcion-limite-unidad-familiar",
+                "renta-deduccion-madrid-nacimiento-adopcion-limite-unidad-familiar",
                 "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count",
-                "renta-2025-deduccion-madrid-nacimiento-adopcion-cuantia"
+                "renta-deduccion-madrid-nacimiento-adopcion-cuantia"
               ],
               "operand_values": [
                 "22000.00",
@@ -97639,8 +97639,8 @@
               ],
               "operand_refs": [
                 "eo-agraria-reduccion-irregularidad-base",
-                "renta-2025-eo-agraria-reduccion-irregularidad-cap",
-                "renta-2025-eo-agraria-reduccion-irregularidad-rate"
+                "renta-eo-agraria-reduccion-irregularidad-cap",
+                "renta-eo-agraria-reduccion-irregularidad-rate"
               ],
               "operand_values": [
                 "0",

@@ -21,6 +21,7 @@ from .paths import allocate_run_directory
 _UTF_8: Final[str] = UTF_8
 _IMPORT_BOUNDARIES_SIGNAL: Final[str] = "import-boundaries"
 _REGISTRY_HEALTH_SIGNAL: Final[str] = "registry-health"
+_BINDING_SIGNAL: Final[str] = "binding-signal"
 _PYTEST_SUMMARY_SIGNAL: Final[str] = "pytest-summary"
 _AUDIT_DEAD_WEIGHT_SIGNAL: Final[str] = "audit-dead-weight"
 _LOCALES_STATUS_SIGNAL: Final[str] = "locales-status"
@@ -41,7 +42,7 @@ _PYTEST_SUMMARY_RE: Final[re.Pattern[str]] = re.compile(
     r"(?:\s+\(\d+:\d{2}:\d{2}\))?\s*=+$"
 )
 _PYTEST_COUNT_RE: Final[re.Pattern[str]] = re.compile(
-    r"(?P<count>\d+)\s+(?P<outcome>passed|failed|errors?|skipped|deselected|"
+    r"(?P<count>\d+)\s+(?:tests?\s+)?(?P<outcome>collected|passed|failed|errors?|skipped|deselected|"
     r"xfailed|xpassed|warnings?)\b"
 )
 _TEST_IDENTITY_RE: Final[re.Pattern[str]] = re.compile(
@@ -51,6 +52,7 @@ _ROOT_CAUSE_RE: Final[re.Pattern[str]] = re.compile(
     r"^(?:E\s+)?(?P<type>[A-Za-z_][A-Za-z0-9_.]*(?:Error|Exception)):\s*(?P<message>.+)$"
 )
 _PYTEST_OUTCOME_KEYS: Final[dict[str, str]] = {
+    "collected": "collected",
     "passed": "passed",
     "failed": "failed",
     "error": "error",
@@ -188,6 +190,11 @@ class _PytestSummaryProcessor:
                 "failed_nodes": set(),
                 "root_causes": Counter(),
                 "internal_error": False,
+                "kind": "command",
+                "role": "execution",
+                "skipped": False,
+                "blocked_by": (),
+                "skip_reason": None,
                 "status": None,
                 "seconds": None,
             },
@@ -201,24 +208,58 @@ class _PytestSummaryProcessor:
                 candidate = json.loads(text)
             except json.JSONDecodeError:
                 candidate = None
-            if isinstance(candidate, dict) and candidate.get("event") in {"lane_started", "lane_finished"}:
+            if isinstance(candidate, dict) and candidate.get("event") in {
+                "lane_started",
+                "lane_finished",
+                "lane_skipped",
+            }:
                 marker = candidate
         if marker is not None and marker["event"] == "lane_started":
             self.current_lane = str(marker["lane"])
-            self._lane()
-            return {"event": "lane_started", "lane": self.current_lane, "status": "running"}
+            lane = self._lane()
+            lane["kind"] = str(marker.get("kind", "command"))
+            lane["role"] = str(marker.get("role", "execution"))
+            return {
+                "event": "lane_started",
+                "kind": lane["kind"],
+                "lane": self.current_lane,
+                "role": lane["role"],
+                "status": "running",
+            }
         if marker is not None and marker["event"] == "lane_finished":
             self.current_lane = str(marker["lane"])
             lane = self._lane()
             status = int(marker["exit_status"])
+            lane["kind"] = str(marker.get("kind", lane["kind"]))
+            lane["role"] = str(marker.get("role", lane["role"]))
             lane["status"] = status
             lane["seconds"] = int(marker["seconds"])
             return {
                 "event": "lane_finished",
+                "kind": lane["kind"],
                 "lane": self.current_lane,
+                "role": lane["role"],
                 "seconds": lane["seconds"],
                 "status": "passed" if status == 0 else "failed",
                 "exit_status": status,
+            }
+        if marker is not None and marker["event"] == "lane_skipped":
+            self.current_lane = str(marker["lane"])
+            lane = self._lane()
+            blocked_by = tuple(str(item) for item in marker.get("blocked_by", ()))
+            lane["kind"] = str(marker.get("kind", "command"))
+            lane["role"] = str(marker.get("role", "execution"))
+            lane["skipped"] = True
+            lane["blocked_by"] = blocked_by
+            lane["skip_reason"] = str(marker.get("reason", "preflight_failed"))
+            return {
+                "blocked_by": list(blocked_by),
+                "event": "lane_skipped",
+                "kind": lane["kind"],
+                "lane": self.current_lane,
+                "reason": lane["skip_reason"],
+                "role": lane["role"],
+                "status": "blocked",
             }
         identity = _TEST_IDENTITY_RE.fullmatch(text)
         if identity is not None:
@@ -262,6 +303,20 @@ class _PytestSummaryProcessor:
             if data is None:
                 lanes.append({"name": name, "result": "not_run"})
                 continue
+            if data["skipped"]:
+                blocked_by = data["blocked_by"]
+                assert isinstance(blocked_by, tuple)
+                lanes.append(
+                    {
+                        "blocked_by": list(blocked_by),
+                        "classification": "blocked_by_preflight",
+                        "kind": data["kind"],
+                        "name": name,
+                        "reason": data["skip_reason"],
+                        "result": "blocked",
+                    }
+                )
+                continue
             counts = data["counts"]
             failed_nodes = data["failed_nodes"]
             root_causes = data["root_causes"]
@@ -270,18 +325,24 @@ class _PytestSummaryProcessor:
             assert isinstance(root_causes, Counter)
             files = Counter(file for _, file in failed_nodes)
             internal_error = bool(data["internal_error"])
+            kind = str(data["kind"])
+            summaryless_failure = data["status"] not in (None, 0) and not counts
+            collection_failure = not internal_error and (
+                (summaryless_failure and kind == "collection")
+                or (counts["error"] and not (counts["passed"] or counts["failed"]))
+            )
             phase = (
                 "tool"
-                if internal_error
+                if internal_error or (summaryless_failure and kind != "collection")
                 else "collection"
-                if counts["error"] and not (counts["passed"] or counts["failed"])
+                if collection_failure
                 else "execution"
             )
             classification = (
                 "tool_failure"
-                if internal_error
+                if internal_error or (summaryless_failure and kind != "collection")
                 else "collection_failure"
-                if counts["error"] and not (counts["passed"] or counts["failed"])
+                if collection_failure
                 else "clean"
                 if data["status"] == 0
                 else "blocking_findings"
@@ -293,6 +354,8 @@ class _PytestSummaryProcessor:
                     "classification": classification,
                     "exit_status": data["status"],
                     "duration_seconds": data["seconds"],
+                    "kind": kind,
+                    "role": data["role"],
                     "summary": dict(sorted(counts.items())),
                     "failed_test_identities": len(failed_nodes),
                     "top_affected_files": _top(files),
@@ -306,6 +369,22 @@ class _PytestSummaryProcessor:
             )
         return lanes
 
+    def _completion(self) -> tuple[int, int, int, bool]:
+        """Return completed, blocked, expected, and complete lane counts."""
+        names = self.expected_lanes or tuple(self.lane_data)
+        completed = sum(self.lane_data.get(name, {}).get("status") is not None for name in names)
+        blocked = sum(bool(self.lane_data.get(name, {}).get("skipped")) for name in names)
+        expected = len(names)
+        return completed, blocked, expected, completed + blocked == expected
+
+    def effective_exit_status(self, child_exit_status: int) -> int:
+        """Fail closed when an expected lane never reaches a terminal event."""
+        if child_exit_status != 0 or not self.expected_lanes:
+            return child_exit_status
+        _, blocked, _, complete = self._completion()
+        lane_failed = any(data["status"] not in (None, 0) for data in self.lane_data.values())
+        return child_exit_status if complete and not blocked and not lane_failed else 7
+
     def envelope(
         self,
         *,
@@ -318,18 +397,45 @@ class _PytestSummaryProcessor:
     ) -> dict[str, object]:
         failures = self.counts["failed"]
         errors = self.counts["error"]
-        completed = sum(data["status"] is not None for data in self.lane_data.values())
-        expected = len(self.expected_lanes) or len(self.lane_data)
-        complete = completed == expected
-        if exit_status == 0:
-            classification = "clean"
-            headline = f"{label} passed: {self.counts['passed']} tests passed across {self.lanes} lanes."
-        elif not complete:
+        completed, blocked, expected, complete = self._completion()
+        summaryless_collection_failed = sum(
+            data["status"] not in (None, 0) and not data["counts"] and data["kind"] == "collection"
+            for data in self.lane_data.values()
+        )
+        summaryless_tool_failed = sum(
+            data["status"] not in (None, 0) and not data["counts"] and data["kind"] != "collection"
+            for data in self.lane_data.values()
+        )
+        if not complete:
             classification = "incomplete"
             headline = f"{label} was incomplete: {completed} of {expected} lanes completed; inspect the run log."
+        elif blocked:
+            classification = "preflight_failure"
+            headline = (
+                f"{label} stopped after a failed preflight: {blocked} granular lanes were blocked; "
+                "inspect the preflight lane evidence."
+            )
+        elif exit_status == 0:
+            classification = "clean"
+            headline = (
+                f"{label} passed: {self.counts['passed']} tests passed across "
+                f"{self.lanes} pytest invocations and {completed} lanes."
+            )
+        elif summaryless_tool_failed:
+            classification = "tool_failure"
+            headline = (
+                f"{label} had {summaryless_tool_failed} lane(s) fail before producing a terminal summary; "
+                "inspect the run log."
+            )
+        elif summaryless_collection_failed:
+            classification = "collection_failure"
+            headline = (
+                f"{label} had {summaryless_collection_failed} collection lane(s) fail before a terminal summary; "
+                "inspect the collection evidence."
+            )
         elif self.lanes == 0:
             classification = "tool_failure"
-            headline = f"{label} failed before pytest produced a terminal summary; inspect the run log."
+            headline = f"{label} failed before any pytest invocation produced a terminal summary; inspect the run log."
         elif errors and not (self.counts["passed"] or failures):
             classification = "collection_failure"
             headline = f"{label} could not collect tests: {errors} collection errors across {self.lanes} lanes."
@@ -338,7 +444,17 @@ class _PytestSummaryProcessor:
             headline = f"{label} failed: {failures} tests failed and {errors} errors across {self.lanes} lanes."
         outcomes = {
             outcome: self.counts[outcome]
-            for outcome in ("passed", "failed", "error", "skipped", "deselected", "xfailed", "xpassed", "warning")
+            for outcome in (
+                "collected",
+                "passed",
+                "failed",
+                "error",
+                "skipped",
+                "deselected",
+                "xfailed",
+                "xpassed",
+                "warning",
+            )
         }
         outcomes["total_selected"] = sum(
             self.counts[outcome] for outcome in ("passed", "failed", "error", "skipped", "xfailed", "xpassed")
@@ -360,8 +476,13 @@ class _PytestSummaryProcessor:
                 "lanes_completed": completed,
                 "lanes_expected": expected,
                 "lanes_failed": sum(data["status"] not in (None, 0) for data in self.lane_data.values()),
-                "lanes_tool_failed": sum(bool(data["internal_error"]) for data in self.lane_data.values()),
-                "lanes_not_run": expected - completed,
+                "lanes_tool_failed": sum(
+                    bool(data["internal_error"])
+                    or (data["status"] not in (None, 0) and not data["counts"] and data["kind"] != "collection")
+                    for data in self.lane_data.values()
+                ),
+                "lanes_blocked": blocked,
+                "lanes_not_run": expected - completed - blocked,
                 "pytest_invocations": self.lanes,
                 **outcomes,
             },
@@ -458,9 +579,17 @@ class _ImportBoundariesProcessor:
         self._diagnostic_locations_by_code: defaultdict[str, set[str]] = defaultdict(set)
         self._diagnostic_test_scoped: Counter[str] = Counter()
         self._diagnostic_targets: defaultdict[str, Counter[str]] = defaultdict(Counter)
+        self._health_payload: dict[str, object] | None = None
 
     def consume(self, line: str) -> None:
         text = line.rstrip("\r\n")
+        try:
+            structured = json.loads(text)
+        except json.JSONDecodeError:
+            structured = None
+        if isinstance(structured, dict) and structured.get("event") == "import_health":
+            self._health_payload = structured
+            return
         forbidden_edge = _FORBIDDEN_EDGE_RE.fullmatch(text)
         if forbidden_edge:
             self._finish_contract_path()
@@ -516,6 +645,19 @@ class _ImportBoundariesProcessor:
                 target = _diagnostic_target(code, detail.group("message"), path)
                 if target is not None:
                     self._diagnostic_targets[code][target] += 1
+
+    def effective_exit_status(self, child_exit_status: int) -> int:
+        """Fail operationally when the child omits or contradicts its health payload."""
+        if self._health_payload is None or self._health_payload.get("schema_version") != 2:
+            return 7
+        verdict = self._health_payload.get("verdict")
+        if verdict not in {"clean", "passing_with_debt", "failed"}:
+            return 7
+        if verdict in {"clean", "passing_with_debt"} and child_exit_status != 0:
+            return 7
+        if verdict == "failed" and child_exit_status == 0:
+            return 7
+        return child_exit_status
 
     def _finish_contract_path(self) -> None:
         """Commit one wrapped Import Linter path to its normalized form."""
@@ -643,7 +785,43 @@ class _ImportBoundariesProcessor:
     ) -> dict[str, object]:
         broken = self.contracts["broken"]
         diagnostic_total = sum(self.diagnostics.values())
-        if exit_status == 0:
+        contract_deductions = self._contract_path_deductions()
+        diagnostic_deductions = self._diagnostic_deductions()
+        if self._health_payload is not None:
+            payload = dict(self._health_payload)
+            payload.pop("event", None)
+            payload.update(
+                {
+                    "command": label,
+                    "duration_seconds": round((finished - started).total_seconds(), 3),
+                    "event": "run_finished",
+                    "exit_status": exit_status,
+                    "finished_at": finished.isoformat(),
+                    "run_id": run_dir.name,
+                    "run_outputs": {
+                        "artifacts": str(run_dir / "artifacts"),
+                        "candidate_inventory": str(run_dir / "artifacts" / "import-boundary-candidate.json"),
+                        "log": str(log_path),
+                        "metadata": str(run_dir / "run.json"),
+                    },
+                    "started_at": started.isoformat(),
+                }
+            )
+            payload["impact"] = {
+                "contract_paths": contract_deductions,
+                "diagnostic_signal": diagnostic_deductions,
+            }
+            (run_dir / "artifacts" / "import-health.json").write_text(
+                json.dumps(payload, indent=2, sort_keys=True) + "\n",
+                encoding=_UTF_8,
+                newline="\n",
+            )
+            payload["run_outputs"]["report"] = str(run_dir / "artifacts" / "import-health.json")
+            return payload
+        if self._health_payload is None:
+            classification = "tool_failure"
+            headline = "Import boundaries did not produce a schema-v2 health payload; inspect the run log."
+        elif exit_status == 0:
             classification = "clean"
             headline = "Import boundaries passed with no blocking findings."
         elif self.operational_failure:
@@ -663,8 +841,8 @@ class _ImportBoundariesProcessor:
             "classification": classification,
             "command": label,
             "deductions": {
-                "contract_paths": self._contract_path_deductions(),
-                "diagnostic_signal": self._diagnostic_deductions(),
+                "contract_paths": contract_deductions,
+                "diagnostic_signal": diagnostic_deductions,
                 "hotspot_limit": _HOTSPOT_LIMIT,
                 "remediation_lanes": self._remediation_lanes(),
                 "schema_version": 1,
@@ -1027,7 +1205,7 @@ def run(
     log_path = run_dir / "run.log"
     if signal == _IMPORT_BOUNDARIES_SIGNAL:
         processor = _ImportBoundariesProcessor()
-    elif signal == _REGISTRY_HEALTH_SIGNAL:
+    elif signal in {_BINDING_SIGNAL, _REGISTRY_HEALTH_SIGNAL}:
         processor = _RegistryHealthProcessor()
     elif signal == _PYTEST_SUMMARY_SIGNAL:
         processor = _PytestSummaryProcessor(expected_lanes)
@@ -1105,7 +1283,7 @@ def run(
             transcript.write(line)
             transcript.flush()
         exit_status = process.wait()
-        if isinstance(processor, _LocalesStatusSignalProcessor):
+        if isinstance(processor, (_ImportBoundariesProcessor, _LocalesStatusSignalProcessor, _PytestSummaryProcessor)):
             exit_status = processor.effective_exit_status(exit_status)
         finished = datetime.now(tz=UTC)
         transcript.write(f"FINISH {finished.isoformat()} exit={exit_status}\n")
@@ -1159,6 +1337,7 @@ def main() -> int:
         "--signal",
         choices=(
             _AUDIT_DEAD_WEIGHT_SIGNAL,
+            _BINDING_SIGNAL,
             _IMPORT_BOUNDARIES_SIGNAL,
             _LOCALES_STATUS_SIGNAL,
             _PYTEST_SUMMARY_SIGNAL,

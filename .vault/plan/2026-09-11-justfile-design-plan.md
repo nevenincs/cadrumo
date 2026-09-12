@@ -8,9 +8,9 @@ related:
   - '[[2026-09-11-justfile-design-adr]]'
   - '[[2026-09-11-justfile-design-research]]'
   - '[[2026-09-11-justfile-design-audit]]'
-modified: '2026-09-11'
+modified: '2026-09-12'
 body_schema: body-v2
-body_hash: 'sha256:2d5b09e3ab00fa8d068398c5d8273901d461640b18348280bfd7d0759840126c'
+body_hash: 'sha256:73446f1b53963223f07ef40732f14f78ab7da3a9b8b7db47c0a3192d40425205'
 ---
 
 <!-- RETIRED: P07 -->
@@ -196,6 +196,7 @@ Prove recipe taxonomy, caller reachability, registry lifecycle claims, aggregate
 - [ ] `W05.P11.S71` - Prove installed-artifact tests consume the intended built cohort rather than stale scratch; `dev/packaging/tests`.
 - [ ] `W05.P11.S72` - Prove advisory aggregates normalize scanner finding exits to non-blocking results; `dev/audit/tests`.
 - [ ] `W05.P11.S74` - Prove unavailable dependency-advisory data fails the connected local gate without contaminating portable subject checks; `dev/audit/tests`.
+- [x] `W05.P11.S78` - Make the registry test signal fail closed through collection and exact artifact-backed load preflights before granular lanes, and enroll every registry-owned test population; `Justfile, dev/test_runs, dev/tests/test_lane_reachability.py`.
 
 ## Parallelization
 

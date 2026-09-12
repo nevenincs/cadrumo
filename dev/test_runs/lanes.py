@@ -7,9 +7,11 @@ after a failing lane, while the PowerShell body opened with
 `$ErrorActionPreference = 'Stop'`, so the two disagreed about the recipe's
 single most important property - whether a red lane stops the sweep.
 
-Continuing is the correct behaviour and the one this module implements: the
+Continuing is the default behaviour and the one this module implements: the
 lanes are independent, and a sweep that stops at the first failure reports one
-problem where there may be five.
+problem where there may be five. Callers may also declare an initial preflight
+prefix. Every preflight still runs, but a failed preflight blocks later lanes
+whose evidence would only repeat the prerequisite failure.
 """
 
 from __future__ import annotations
@@ -27,7 +29,7 @@ from dev._paths import REPO_ROOT, UTF_8
 from .paths import allocate_run_directory
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Mapping, Sequence
     from pathlib import Path
 
 #: The private transport variable each lane reads for the run's evidence root.
@@ -39,6 +41,10 @@ RUN_SUBDIRECTORIES = ("artifacts", "cache", "scratch")
 
 #: Width of the lane-name column in the closing summary.
 _NAME_WIDTH = 34
+
+#: Stable event vocabulary for why a lane exists. Callers declare specialized
+#: purposes explicitly; ordinary lanes remain generic commands.
+LANE_KINDS = frozenset({"collection", "command", "load"})
 
 
 @dataclass(frozen=True)
@@ -54,6 +60,14 @@ class LaneResult:
     name: str
     status: int
     seconds: int
+
+
+@dataclass(frozen=True)
+class SkippedLane:
+    """One lane blocked by failed preflights."""
+
+    name: str
+    blocked_by: tuple[str, ...]
 
 
 class _Tee:
@@ -107,7 +121,7 @@ def _run_lane(lane: str, env: dict[str, str]) -> LaneResult:
     return LaneResult(lane, status, elapsed)
 
 
-def _summarise(results: Sequence[LaneResult]) -> None:
+def _summarise(results: Sequence[LaneResult | SkippedLane]) -> None:
     """Print the per-lane summary table.
 
     Args:
@@ -115,18 +129,65 @@ def _summarise(results: Sequence[LaneResult]) -> None:
     """
     print("\nLane run summary", flush=True)
     for result in results:
-        print(
-            f"  {result.name:<{_NAME_WIDTH}} exit={result.status:<3} {result.seconds}s",
-            flush=True,
+        if isinstance(result, SkippedLane):
+            print(f"  {result.name:<{_NAME_WIDTH}} blocked by {', '.join(result.blocked_by)}", flush=True)
+        else:
+            print(
+                f"  {result.name:<{_NAME_WIDTH}} exit={result.status:<3} {result.seconds}s",
+                flush=True,
+            )
+
+
+def _run_all(
+    lanes: Sequence[str],
+    env: dict[str, str],
+    *,
+    json_events: bool,
+    preflight_count: int,
+    lane_kinds: Mapping[str, str],
+) -> list[LaneResult | SkippedLane]:
+    """Execute lanes, blocking the non-preflight suffix after a failed preflight."""
+    if not 0 <= preflight_count <= len(lanes):
+        raise ValueError("preflight_count must identify a prefix of the requested lanes")
+    if unknown_lanes := set(lane_kinds).difference(lanes):
+        raise ValueError(f"lane kinds name unrequested lanes: {sorted(unknown_lanes)!r}")
+    if unknown_kinds := set(lane_kinds.values()).difference(LANE_KINDS):
+        raise ValueError(f"unknown lane kinds: {sorted(unknown_kinds)!r}")
+    results: list[LaneResult | SkippedLane] = []
+    for index, lane in enumerate(lanes):
+        kind = lane_kinds.get(lane, "command")
+        failed_preflights = tuple(
+            result.name for result in results[:preflight_count] if isinstance(result, LaneResult) and result.status != 0
         )
-
-
-def _run_all(lanes: Sequence[str], env: dict[str, str], *, json_events: bool) -> list[LaneResult]:
-    """Execute every requested lane, optionally bracketing it with JSON events."""
-    results: list[LaneResult] = []
-    for lane in lanes:
+        if index >= preflight_count and failed_preflights:
+            blocked = SkippedLane(lane, failed_preflights)
+            results.append(blocked)
+            print(f"BLOCKED {lane} (preflight: {', '.join(failed_preflights)})", file=sys.stderr, flush=True)
+            if json_events:
+                print(
+                    json.dumps(
+                        {
+                            "blocked_by": list(failed_preflights),
+                            "event": "lane_skipped",
+                            "kind": kind,
+                            "lane": lane,
+                            "reason": "preflight_failed",
+                            "role": "execution",
+                        },
+                        separators=(",", ":"),
+                    ),
+                    flush=True,
+                )
+            continue
         if json_events:
-            print(json.dumps({"event": "lane_started", "lane": lane}, separators=(",", ":")), flush=True)
+            role = "preflight" if index < preflight_count else "execution"
+            print(
+                json.dumps(
+                    {"event": "lane_started", "kind": kind, "lane": lane, "role": role},
+                    separators=(",", ":"),
+                ),
+                flush=True,
+            )
         result = _run_lane(lane, env)
         results.append(result)
         if json_events:
@@ -135,7 +196,9 @@ def _run_all(lanes: Sequence[str], env: dict[str, str], *, json_events: bool) ->
                     {
                         "event": "lane_finished",
                         "exit_status": result.status,
+                        "kind": kind,
                         "lane": lane,
+                        "role": "preflight" if index < preflight_count else "execution",
                         "seconds": result.seconds,
                     },
                     separators=(",", ":"),
@@ -151,12 +214,17 @@ def run_lanes(
     *,
     json_events: bool = False,
     persist_evidence: bool = True,
+    preflight_count: int = 0,
+    lane_kinds: Mapping[str, str] | None = None,
 ) -> int:
     """Run every lane in order, continuing past failures, and summarise.
 
     Args:
         lanes: The just recipes to run, in order.
         repository: The checkout the run evidence is written beneath.
+        preflight_count: Number of leading lanes that must all pass before the
+            remaining lanes may run. All leading lanes run even when one fails.
+        lane_kinds: Explicit machine-readable purposes for specialized lanes.
 
     Returns:
         0 when every lane passed, otherwise the FIRST non-zero status any lane
@@ -165,10 +233,17 @@ def run_lanes(
         looked exactly like a lane whose tests failed (1). See
         ``dev/EXIT-CODES.md``.
     """
+    declared_kinds = lane_kinds or {}
     if not persist_evidence:
-        results = _run_all(lanes, dict(os.environ), json_events=json_events)
+        results = _run_all(
+            lanes,
+            dict(os.environ),
+            json_events=json_events,
+            preflight_count=preflight_count,
+            lane_kinds=declared_kinds,
+        )
         _summarise(results)
-        return next((r.status for r in results if r.status != 0), 0)
+        return next((r.status for r in results if isinstance(r, LaneResult) and r.status != 0), 0)
 
     run_root = allocate_run_directory(repository, family="lane-runs", label="lanes")
     for name in RUN_SUBDIRECTORIES:
@@ -183,10 +258,16 @@ def run_lanes(
         sys.stderr = _Tee(original_err, handle)  # type: ignore[assignment]
         try:
             print(f"lane run log: {log_path}", flush=True)
-            results = _run_all(lanes, env, json_events=json_events)
+            results = _run_all(
+                lanes,
+                env,
+                json_events=json_events,
+                preflight_count=preflight_count,
+                lane_kinds=declared_kinds,
+            )
             _summarise(results)
             print(f"lane run log: {log_path}", flush=True)
         finally:
             sys.stdout, sys.stderr = original_out, original_err
 
-    return next((r.status for r in results if r.status != 0), 0)
+    return next((r.status for r in results if isinstance(r, LaneResult) and r.status != 0), 0)

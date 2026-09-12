@@ -163,6 +163,7 @@ celerybeat.pid
 .env
 .envrc
 .venv
+node_modules/
 # env/ is the canonical container for .env files; ignore everything
 # inside it except the tracked example template.
 env/*

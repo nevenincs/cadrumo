@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#justfile-design'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-09-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:1afb500d3d2db66d8028418ccd76796505e4affb0d23f67a39a8147c8b073594'
+body_hash: 'sha256:45b53500dad49bef2e2bf512df876edf2bfcc31f4603989919718dd45d51b0d6'
 related:
   - '[[2026-09-11-justfile-design-W01-P01-S01]]'
   - '[[2026-09-11-justfile-design-W01-P01-S02]]'
@@ -62,6 +62,7 @@ related:
   - '[[2026-09-11-justfile-design-W04-P13-S63]]'
   - '[[2026-09-11-justfile-design-W04-P13-S64]]'
   - '[[2026-09-11-justfile-design-W04-P13-summary]]'
+  - '[[2026-09-11-justfile-design-W05-P11-S78]]'
   - '[[2026-09-11-justfile-design-adr]]'
   - '[[2026-09-11-justfile-design-audit]]'
   - '[[2026-09-11-justfile-design-lane1-code-review-audit]]'
@@ -71,6 +72,7 @@ related:
   - '[[2026-09-11-justfile-design-research]]'
   - '[[2026-09-11-justfile-design-w02-code-review-audit]]'
   - '[[2026-09-11-justfile-design-w04-review-audit]]'
+  - '[[2026-09-12-justfile-design-registry-test-signal-review-audit]]'
 ---
 
 # `justfile-design` feature index
@@ -90,6 +92,7 @@ Auto-generated index of all documents tagged with `#justfile-design`.
 - `2026-09-11-justfile-design-lane3-review-audit` - `justfile-design` audit: `Lane 3 justfile and packaging implementation review`
 - `2026-09-11-justfile-design-w02-code-review-audit` - `justfile-design` audit: `w02 code review`
 - `2026-09-11-justfile-design-w04-review-audit` - `justfile-design` audit: `W04 documentation and domain recipe review`
+- `2026-09-12-justfile-design-registry-test-signal-review-audit` - `justfile-design` audit: `registry test signal review`
 
 ### exec
 
@@ -147,6 +150,7 @@ Auto-generated index of all documents tagged with `#justfile-design`.
 - `2026-09-11-justfile-design-W04-P13-S63` - Replace the generic TUI review and harness pass-throughs with authority-consistent operations or demote them
 - `2026-09-11-justfile-design-W04-P13-S64` - Replace database migration creation and upgrade with separately named mutation recipes
 - `2026-09-11-justfile-design-W04-P13-summary` - `justfile-design` `W04.P13` summary
+- `2026-09-11-justfile-design-W05-P11-S78` - Make the registry test signal fail closed through collection and exact artifact-backed load preflights before granular lanes, and enroll every registry-owned test population
 
 ### plan
 
