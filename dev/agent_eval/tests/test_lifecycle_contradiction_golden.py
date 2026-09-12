@@ -40,9 +40,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.secure_sql import (
+    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
+)
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import parse_json_object, require_error_document, require_schema_envelope
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from cadrumo_harness.mcp.tools import build_tool_descriptors
 from dev.scripted_registration_channels import scripted_registration_descriptors
 

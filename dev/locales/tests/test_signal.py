@@ -335,8 +335,7 @@ def test_documentation_inventory_extracts_live_source_and_enrols_english_for_spe
         docs,
         "guide.md",
         "# Filing guide\n\nReview the current return.\n",
-        'msgid ""\nmsgstr ""\n\nmsgid "Filing guide"\nmsgstr ""\n\n'
-        'msgid "Review the current return."\nmsgstr ""\n',
+        'msgid ""\nmsgstr ""\n\nmsgid "Filing guide"\nmsgstr ""\n\nmsgid "Review the current return."\nmsgstr ""\n',
     )
     catalogue_messages = {
         ("guide.po", "Filing guide"): {"ca": True, "es": True, "hu": True},
@@ -351,19 +350,22 @@ def test_documentation_inventory_extracts_live_source_and_enrols_english_for_spe
     )
 
     assert findings == []
-    assert {key: inventory[key] for key in (
-        "docs_source_pages",
-        "docs_source_messages",
-        "docs_catalogue_files_expected",
-        "docs_catalogue_files_read",
-        "docs_source_drift_pages",
-        "docs_source_messages_missing",
-        "docs_catalogue_messages_stale",
-        "docs_extraction_failures",
-        "docs_orphan_catalogue_files",
-        "docs_orphan_source_templates",
-        "docs_generated_english_only_pages",
-    )} == {
+    assert {
+        key: inventory[key]
+        for key in (
+            "docs_source_pages",
+            "docs_source_messages",
+            "docs_catalogue_files_expected",
+            "docs_catalogue_files_read",
+            "docs_source_drift_pages",
+            "docs_source_messages_missing",
+            "docs_catalogue_messages_stale",
+            "docs_extraction_failures",
+            "docs_orphan_catalogue_files",
+            "docs_orphan_source_templates",
+            "docs_generated_english_only_pages",
+        )
+    } == {
         "docs_source_pages": 1,
         "docs_source_messages": 2,
         "docs_catalogue_files_expected": 3,

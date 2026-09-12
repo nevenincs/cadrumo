@@ -1326,9 +1326,7 @@ def _casilla_producer_traces(revision: _ModeloRevision) -> tuple[RevisionCasilla
                     # relation producer kind, without reaching for a deleted
                     # relation declaration.
                     relation_id=(
-                        None
-                        if trace.producer_kind.value != "relation" or trace.binding is None
-                        else trace.binding.id
+                        None if trace.producer_kind.value != "relation" or trace.binding is None else trace.binding.id
                     ),
                     casilla_legal_refs=trace.casilla.legal_refs,
                     casilla_source_refs=trace.casilla.source_refs,

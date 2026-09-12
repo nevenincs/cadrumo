@@ -1108,9 +1108,7 @@ class _ConsumerQueryVisitor(ast.NodeVisitor):
                     "enclosing_symbol": "::".join(self.symbol_stack) or "<module>",
                     "date_axis": _date_axis_name(axis_expr),
                     "date_axis_expression": ast.unparse(axis_expr) if axis_expr is not None else None,
-                    "effective_date_expression": ast.unparse(effective_expr)
-                    if effective_expr is not None
-                    else None,
+                    "effective_date_expression": ast.unparse(effective_expr) if effective_expr is not None else None,
                     "source_kind": "ast_query_call",
                 }
                 self.observations.append(observation)
@@ -1329,9 +1327,7 @@ def _consumer_fact_scan(
                 "query_date_axis_resolution": axis_resolved,
                 "consumer_seam_loadability": not blockers,
             },
-            "consumer_seam_loadability": (
-                "query_shape_resolved" if not blockers else "blocked:" + ",".join(blockers)
-            ),
+            "consumer_seam_loadability": ("query_shape_resolved" if not blockers else "blocked:" + ",".join(blockers)),
             "associated_row_ids": associated_row_ids,
             "blockers": blockers,
             "blocking": bool(blockers),
@@ -1347,9 +1343,7 @@ def _consumer_fact_scan(
             "consumer_fact_required_count": len(observations),
             "consumer_fact_callsite_count": sum(len(item["source_call_sites"]) for item in observations),
             "consumer_fact_authored_present_count": sum(item["authored_presence"] for item in observations),
-            "consumer_fact_compiled_present_count": sum(
-                item["bundled_authority_presence"] for item in observations
-            ),
+            "consumer_fact_compiled_present_count": sum(item["bundled_authority_presence"] for item in observations),
             "consumer_fact_resolved_count": sum(not item["blocking"] for item in observations),
             "consumer_fact_blocker_count": len(blockers),
             "consumer_fact_error_count": len(consumer_errors := (parse_errors + external_errors + authored_errors)),
@@ -3356,15 +3350,15 @@ def _human(signal: dict[str, Any]) -> str:
         consumer_lines.append("(none)")
     else:
         for blocker in consumer_blockers:
-            callsites = "; ".join(
-                f"{callsite.get('file')}:{callsite.get('line', '?')}"
-                f" [{callsite.get('enclosing_symbol', '<unknown>')}]"
-                for callsite in blocker.get("source_call_sites", [])
-            ) or "<no source call site>"
-            consumer_lines.append(
-                f"- {blocker['fact_id']}: {', '.join(blocker['blockers'])}; "
-                f"source={callsites}"
+            callsites = (
+                "; ".join(
+                    f"{callsite.get('file')}:{callsite.get('line', '?')}"
+                    f" [{callsite.get('enclosing_symbol', '<unknown>')}]"
+                    for callsite in blocker.get("source_call_sites", [])
+                )
+                or "<no source call site>"
             )
+            consumer_lines.append(f"- {blocker['fact_id']}: {', '.join(blocker['blockers'])}; source={callsites}")
     heading_index = lines.index("named missing/unresolvable governed facts:")
     lines[heading_index + 1 : heading_index + 1] = consumer_lines
     lines.append(

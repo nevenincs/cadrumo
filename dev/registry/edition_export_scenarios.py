@@ -152,6 +152,7 @@ M131_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
     "2025": Period.from_year_and_code(2025, "1T"),
 }
 
+
 @cache
 def _presenter() -> PresenterIdentity:
     """Build the example presenter on first use.
@@ -163,9 +164,13 @@ def _presenter() -> PresenterIdentity:
     dependency where it belongs, at the scenario that actually renders.
     """
     return PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba")
+
+
 _TAXPAYER: Final = TaxpayerIdentityFacts(legal_name=None, given_name="Ana", surnames="Prueba", full_name="Ana Prueba")
 #: The Spanish IBAN published as a format example; it identifies no real account.
 _CHARGE_IBAN: Final = "ES9121000418450200051332"
+
+
 @cache
 def _m390_product_software_identity() -> AeatProductSoftwareIdentity:
     """Build Modelo 390's example software identity on first use; see :func:`_presenter`."""
@@ -186,6 +191,8 @@ def _product_software_identity() -> AeatProductSoftwareIdentity:
             AeatProductSoftwareEvidence(reference="aeat-software-registration:edition-round-trip", digest="a" * 64),
         ),
     )
+
+
 _EVIDENCE: Final = FilingEvidenceReference(reference="edition-round-trip:m303-facts")
 _M303_EXONERADO_ENDPOINT: Final = validated_casilla_id("79", surface="edition round-trip scenario")
 _M303_EXONERADO_ACTIVITY_SLOTS: Final = range(1, 7)

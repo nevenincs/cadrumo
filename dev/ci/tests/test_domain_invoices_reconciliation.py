@@ -13,16 +13,16 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from cadrumo.application.invoices.transaction_linking import link_invoice_transaction_repositories
 from cadrumo.core.invoice_link import LinkInconsistencyDirection
-from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.domain.transactions.enums import TransactionDirection
-from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from cadrumo.domain.invoices.service import (
     suggest_reconciliations,
     verify_link_consistency,
 )
+from cadrumo.domain.iva.classification import InvoiceKind
+from cadrumo.domain.transactions.enums import TransactionDirection
+from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
+from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

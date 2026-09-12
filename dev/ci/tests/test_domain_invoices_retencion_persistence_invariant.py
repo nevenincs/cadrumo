@@ -44,10 +44,10 @@ from pydantic import ValidationError
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.iva.classification import InvoiceKind
+from cadrumo.domain.iva.schema import IvaCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

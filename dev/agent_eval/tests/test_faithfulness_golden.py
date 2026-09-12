@@ -37,6 +37,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -46,7 +47,6 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.profile_capsule import open_test_profile_session, seed_test_profile_record
-from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from cadrumo_harness.mcp.faithfulness import faithfulness_check
 
 from .._models import NarrationFaithfulness

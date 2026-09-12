@@ -11,12 +11,12 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT, UTF_8
 from cadrumo.tests.module_target_inventory import (
     assert_all_target_sets_current,
     compile_inventory,
     load_all_target_sets,
 )
+from dev._paths import REPO_ROOT, UTF_8
 
 from .import_checker import Authority, RootPackage, read_authority
 
@@ -208,8 +208,7 @@ def main(argv: list[str] | None = None) -> int:
         newline="\n",
     )
     summary = {
-        key: payload.get(key)
-        for key in ("attempted", "failed", "loaded", "root_cause_count", "scope", "target_digest")
+        key: payload.get(key) for key in ("attempted", "failed", "loaded", "root_cause_count", "scope", "target_digest")
     }
     print(json.dumps(summary, sort_keys=True, separators=(",", ":")))
     return status

@@ -13,14 +13,6 @@ from cadrumo.core.iva_deduction_fact import (
     IvaDeductionEvidenceAuthority,
     IvaDeductionFactKind,
 )
-from cadrumo.domain.iva.flow import IvaFlowDirection
-from cadrumo.domain.iva.schema import (
-    IvaCashAccountingTreatment,
-    IvaCategory,
-    IvaExemptionArticle,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-)
 from cadrumo.domain.calculations.registry.binding_value_contract import (
     BindingDataType,
     BindingValueChannel,
@@ -36,6 +28,15 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
 )
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.iva.flow import IvaFlowDirection
+from cadrumo.domain.iva.schema import (
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaExemptionArticle,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
+
 from .ledger_iva_aggregation_support import (
     _M303_AUTOREPERCUTIDO_INTERIOR_DEDUCIBLE_CASILLA,
     _M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA,

@@ -33,8 +33,6 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
-from cadrumo.domain.iva.flow import IvaFlowDirection
-from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
@@ -43,6 +41,9 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.iva.flow import IvaFlowDirection
+from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
+
 from .ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

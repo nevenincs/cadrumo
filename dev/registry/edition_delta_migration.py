@@ -132,7 +132,6 @@ from dev._paths import REPO_ROOT
 from dev.test_runs.paths import allocate_run_directory
 
 from .analysis.delta_minimality import restatement_differences
-from .source_default_rule import edition_source_default
 from .compiler.authority import compile_validated_authority
 from .compiler.edition_materialisation import materialise_edition
 from .compiler.loader import load_modelo_directory
@@ -146,6 +145,7 @@ from .edition_round_trip import (
     edition_round_trip_report,
     merge_order,
 )
+from .source_default_rule import edition_source_default
 
 __all__ = [
     "BlockedCause",

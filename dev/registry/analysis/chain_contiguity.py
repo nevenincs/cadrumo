@@ -32,11 +32,18 @@ Conditions reported:
   before it while declaring a root FOR WANT OF LINEAGE. The root says the chain
   could not be stated; the rows state it. The root is stale, and each of these
   is evidence the edge is closer to migration than its own manifest claims.
+- ``chain_across_recoverable_root`` - the sharing across a root whose stated
+  cause is work rather than law: an unretired withdrawal, a row order the raw
+  tree cannot decide. Like a pending root this reads as stale, and for a
+  sharper reason -- the chain is not merely stated ahead of the root, it is
+  complete, and the only thing between the edge and migration is the cause the
+  root names.
 - ``chain_across_root_by_law`` - the same sharing across a root the LAW gives:
-  parallel scheme variants, or a successor withholding by design. Here the two
-  claims contradict rather than lag -- the editions do not succeed one another,
-  so rows asserting one identity across them assert something the edition
-  structure denies.
+  parallel scheme variants, a successor withholding by design, two editions
+  overlapping in period. Here the two claims contradict rather than lag -- the
+  editions do not succeed one another, so rows asserting one identity across
+  them assert something the edition structure denies. This is the only one of
+  the three where the CHAIN is the likelier error.
 - ``evolution_endpoint_unknown`` - an evolution whose ``from_revision`` or
   ``to_revision`` names an edition the modelo does not declare. The transition
   it records has no site.
@@ -110,6 +117,17 @@ _REVISIONS: Final = "revisions"
 _EVOLUTIONS: Final = "casilla_continuidad_evolutions"
 _LINEAGE: Final = "continuidad_id"
 _RETIRED: Final = "retired"
+#: What a crossing chain is called for each root kind, and the wording that
+#: says why. Keyed on the owning screen's own classification so the two cannot
+#: drift: when that screen learned to tell a recoverable root from a terminal
+#: one, a two-way split here would have kept reporting 355 crossings as
+#: contradictions of law when they are evidence of a stale root.
+_CHAIN_ROOT_KINDS: Final[dict[str, tuple[str, str]]] = {
+    "root_pending_lineage": ("chain_across_pending_root", "roots away from for want of lineage"),
+    "root_recoverable": ("chain_across_recoverable_root", "roots away from for a cause that is work, not law"),
+    "root_by_law": ("chain_across_root_by_law", "declares by law it does not succeed"),
+}
+
 #: The evolution kind that states a lineage moved to a different box. A
 #: repurpose is a legitimate reason for a lineage to be absent from an edition,
 #: so it excuses a hole the way a retirement does.
@@ -122,6 +140,7 @@ CONDITIONS: Final[tuple[str, ...]] = (
     "chain_resumed_after_retirement",
     "chain_ambiguous_in_edition",
     "chain_across_pending_root",
+    "chain_across_recoverable_root",
     "chain_across_root_by_law",
     "evolution_endpoint_unknown",
     "evolution_declared_off_endpoint",
@@ -311,13 +330,13 @@ def modelo_findings(
     for predecessor, successor in pairwise(ordered):
         if not successor.declares_no_predecessor:
             continue
-        pending = _root_kind(successor.root_reason) == "root_pending_lineage"
-        kind = "chain_across_pending_root" if pending else "chain_across_root_by_law"
-        detail = (
-            f"shared with {predecessor.edition}, which this edition roots away from for want of lineage"
-            if pending
-            else f"shared with {predecessor.edition}, which this edition declares by law it does not succeed"
-        )
+        # The three root kinds mean three different things for a crossing chain,
+        # and pooling any two of them loses the distinction. Read from the
+        # screen that owns the classification rather than re-derived here, so a
+        # kind added there cannot silently fall into the wrong bucket.
+        root = _root_kind(successor.root_reason)
+        kind, why = _CHAIN_ROOT_KINDS[root]
+        detail = f"shared with {predecessor.edition}, which this edition {why}"
         findings.extend(
             ChainFinding(modelo=modelo, edition=successor.edition, kind=kind, chain=chain, detail=detail)
             for chain in sorted(set(carried[predecessor.edition]) & set(carried[successor.edition]))

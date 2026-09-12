@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.toml import freeze_toml, read_toml
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
-from cadrumo.domain.calculations.registry.facts.schema import GovernedFact
+from cadrumo.domain.calculations.registry.facts.schema import FactOwnership, GovernedFact
 
 __all__ = ["is_governed_fact_filename", "load_governed_fact_file", "load_governed_facts"]
 
@@ -50,9 +50,15 @@ def load_governed_fact_file(path: Path) -> GovernedFact:
             f"{source_path}: governed fact provider_id is compiler-owned provenance and cannot be authored",
         )
     try:
-        return GovernedFact.model_validate(table)
+        fact = GovernedFact.model_validate(table)
     except ValidationError as exc:
         raise RegistryLoadError(f"{source_path}: invalid governed fact: {exc}") from exc
+    generated = tuple(variant.variant_id for variant in fact.variants if variant.ownership is FactOwnership.GENERATED)
+    if generated:
+        raise RegistryLoadError(
+            f"{source_path}: authored fact files cannot declare generated variants {generated!r}",
+        )
+    return fact
 
 
 def load_governed_facts(facts_dir: Path) -> tuple[GovernedFact, ...]:

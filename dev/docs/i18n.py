@@ -445,10 +445,7 @@ def extract_pot(repo_root: Path, out_dir: Path | None = None) -> Path:
         raise SystemExit(result.returncode)
     manifest = {
         "schema_version": SOURCE_MANIFEST_SCHEMA_VERSION,
-        "sources": {
-            page: hashlib.sha256((docs_root / page).read_bytes()).hexdigest()
-            for page in pages
-        },
+        "sources": {page: hashlib.sha256((docs_root / page).read_bytes()).hexdigest() for page in pages},
     }
     (out_dir / SOURCE_MANIFEST_NAME).write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n",

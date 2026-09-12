@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.invoice_devengo import (
     invoice_devengo_in_period,
     proxy_attributed_invoice_ids,
@@ -37,7 +38,6 @@ from cadrumo.domain.invoices.models import InvoiceLine
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.modelos.row_models import Modelo349OperadorRow
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 
 from ..maintenance_support import load_modelo_path
 

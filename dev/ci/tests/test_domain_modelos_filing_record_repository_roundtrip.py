@@ -24,9 +24,9 @@ from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import MODELO_FILING_RECORD_CATALOGUE_NAMESPACE
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.filing_record import (
     ExternalEvidence,

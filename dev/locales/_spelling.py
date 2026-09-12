@@ -51,10 +51,7 @@ class SpellingToolError(RuntimeError):
 
 def dictionary_roots(repository: Path) -> dict[str, Path]:
     """Return the Hunspell file stems for every supported locale."""
-    return {
-        spec.locale: repository / "node_modules" / spec.package / "index"
-        for spec in DICTIONARY_SPECS
-    }
+    return {spec.locale: repository / "node_modules" / spec.package / "index" for spec in DICTIONARY_SPECS}
 
 
 def _manifest_versions(repository: Path) -> dict[str, str]:

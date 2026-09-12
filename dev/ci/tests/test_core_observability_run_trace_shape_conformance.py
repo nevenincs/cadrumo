@@ -16,11 +16,18 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.storage_path_grammar import assert_path_matches_grammar
-from cadrumo.tests.storage_scope import storage_overrides
 from cadrumo.core.config import override_settings
-from cadrumo.core.storage_taxonomy import StorageCategory
-from cadrumo.core.observability.models import NavigationPayload, RunEvent, RunEventKind, RunEventPayload, RunOutcome, RunTrace
+from cadrumo.core.observability.models import (
+    NavigationPayload,
+    RunEvent,
+    RunEventKind,
+    RunEventPayload,
+    RunOutcome,
+    RunTrace,
+)
 from cadrumo.core.observability.store import save_envelope, save_events_append, save_trace
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.tests.storage_scope import storage_overrides
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
