@@ -8,7 +8,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from cadrumo.entrypoints.live_state_composition import aggregate_iva_compensation_history_reports
 from playwright._impl._errors import Error as PlaywrightError
 from playwright._impl._errors import TargetClosedError
 from pydantic import ValidationError
@@ -56,6 +55,7 @@ from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings
 from cadrumo.core.identity.documents import nif_check_letter
 from cadrumo.core.period import Period
+from cadrumo.entrypoints.live_state_composition import aggregate_iva_compensation_history_reports
 from cadrumo.tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

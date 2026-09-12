@@ -20,7 +20,6 @@ import pytest
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.modelo import Modelo
 
 from ..enums import ConceptDomain, TermStatus
 from ..errors import TerminologyLoadError, TerminologyValidationError
@@ -154,7 +153,7 @@ def test_record_is_frozen(tmp_path: Path) -> None:
 def test_scalar_casilla_domain_ref_is_rejected(tmp_path: Path) -> None:
     """Casilla domain refs must not reintroduce a combined scalar notation."""
     casilla_id: CasillaId = validated_casilla_id("00029", surface="terminology handbook fixture")
-    legacy_ref = ":".join(("casilla", Modelo.M303.value, casilla_id))
+    legacy_ref = ":".join(("casilla", "303", casilla_id))
     fragment = _BROADER_PARENT.replace(
         'domain = "concepto"',
         f'domain = "concepto"\ndomain_refs = ["{legacy_ref}"]',

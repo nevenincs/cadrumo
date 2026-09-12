@@ -63,7 +63,7 @@ def _real_casilla_target(score: float, *, index: int = 0) -> ResolvedTarget:
     """A ResolvedTarget built from a REAL M303 casilla projection record."""
     from ..casilla_projection import project_modelo_casillas
 
-    records = project_modelo_casillas(Modelo.M303)
+    records = project_modelo_casillas(Modelo("303"))
     unified = to_search_record(records[index])
     path = f"src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/casillas/{index:04d}-casillas.part-001.toml"
     return ResolvedTarget(surface=GroundingSurface.CASILLA, record=unified, source_hit=_hit(path, score))

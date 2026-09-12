@@ -87,13 +87,13 @@ def test_m303_emits_every_distinct_casilla_id() -> None:
     from ..casilla_projection import project_modelo_casillas
 
     authority = compiled_bundled_authority()
-    definition = authority.modelo(Modelo.M303.value)
+    definition = authority.modelo("303")
     identities: set[str] = set()
     for _revision_id, revision in definition.revisions.items():
         for casilla in revision.casillas:
             identities.add(casilla.id)
 
-    records = project_modelo_casillas(Modelo.M303)
+    records = project_modelo_casillas(Modelo("303"))
     projected = {record.casilla_id for record in records}  # type: ignore[attr-defined]
 
     assert projected == identities, (
@@ -141,7 +141,7 @@ def test_record_carries_contributing_revisions_latest_first() -> None:
     """
     from ..casilla_projection import project_modelo_casillas
 
-    records = project_modelo_casillas(Modelo.M303)
+    records = project_modelo_casillas(Modelo("303"))
     # At least one M303 identity appears in more than one revision.
     multi = [record for record in records if len(record.source_revisions) > 1]  # type: ignore[attr-defined]
     assert multi, "expected at least one cross-revision M303 casilla identity"
@@ -198,12 +198,12 @@ def test_m303_record_has_correct_identity_and_spanish_label() -> None:
     from ..casilla_projection import project_modelo_casillas
 
     authority = compiled_bundled_authority()
-    definition = authority.modelo(Modelo.M303.value)
+    definition = authority.modelo("303")
     # Pick a known casilla from the latest revision for a stable assertion.
     latest_revision = max(definition.revisions.values(), key=lambda revision: revision.valid_from)
     sample_casilla = latest_revision.casillas[0]
 
-    records = project_modelo_casillas(Modelo.M303)
+    records = project_modelo_casillas(Modelo("303"))
     match = next(
         (
             record
@@ -213,7 +213,7 @@ def test_m303_record_has_correct_identity_and_spanish_label() -> None:
         None,
     )
     assert match is not None, f"M303 casilla {sample_casilla.id} not projected"
-    assert match.modelo is Modelo.M303  # type: ignore[attr-defined]
+    assert match.modelo == Modelo("303")  # type: ignore[attr-defined]
     assert match.number == sample_casilla.number  # type: ignore[attr-defined]
     assert match.segmento == sample_casilla.segmento  # type: ignore[attr-defined]
     assert match.descriptions[OutputLanguage.ES] == sample_casilla.label  # type: ignore[attr-defined]
@@ -226,7 +226,7 @@ def test_m121_projection_preserves_canonical_id_distinct_from_display_number() -
 
     authority = compiled_bundled_authority()
     assert isinstance(authority, ValidatedRegistryAuthority)
-    definition = authority.modelo(Modelo.M121.value)
+    definition = authority.modelo("121")
     latest_revision = max(definition.revisions.values(), key=lambda revision: revision.valid_from)
     authoritative = next(casilla for casilla in latest_revision.casillas if casilla.id == "decl.ejercicio")
 
@@ -235,7 +235,7 @@ def test_m121_projection_preserves_canonical_id_distinct_from_display_number() -
     assert authoritative.id != authoritative.number
 
     projected = next(
-        record for record in project_modelo_casillas(Modelo.M121, authority) if record.casilla_id == authoritative.id
+        record for record in project_modelo_casillas(Modelo("121"), authority) if record.casilla_id == authoritative.id
     )
     assert projected.casilla_id == authoritative.id
     assert projected.number == authoritative.number
@@ -250,7 +250,7 @@ def test_segmented_modelo_200_projection_uses_canonical_casilla_id() -> None:
     """Segment-qualified M200 casillas project by ``casilla.id``, not by bare number."""
     from ..casilla_projection import project_modelo_casillas
 
-    records = project_modelo_casillas(Modelo.M200)
+    records = project_modelo_casillas(Modelo("200"))
     by_id = {record.casilla_id: record for record in records}  # type: ignore[attr-defined]
 
     assert "DP200014:00562" in by_id
@@ -269,7 +269,7 @@ def test_m303_has_multilingual_casilla_labels() -> None:
     """
     from ..casilla_projection import project_modelo_casillas
 
-    records = project_modelo_casillas(Modelo.M303)
+    records = project_modelo_casillas(Modelo("303"))
     multilingual = [record for record in records if len(record.descriptions) > 1]  # type: ignore[attr-defined]
     assert multilingual, "expected M303 casillas with non-Spanish localised labels"
 

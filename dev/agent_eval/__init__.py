@@ -11,12 +11,12 @@ value (that would be a tautological calculation test).
 
 Boundary posture: this is dev tooling built ON TOP of the shipped surfaces, not
 beside them. Harness-owned material — skills, personas, operator rules, workspace
-materialisation — comes from the ``cadrumo_harness`` distribution's public facade;
+materialisation — comes from canonical ``cadrumo_harness`` defining modules;
 taxpayer and application state comes from the real ``aeat`` CLI / ``cadrumo-mcp``
 dispatch the caller performs and hands in as decoded envelope data; and the only
-``cadrumo`` imports here are its public ``cadrumo.core`` primitives (the envelope
+``cadrumo`` imports here are canonical ``cadrumo.core`` defining modules (the envelope
 status enum, the encoding constant, the hashing helper, and the registry authority
-facade for the two registry-shaped dimensions no CLI verb projects). Nothing in
+object for the two registry-shaped dimensions no CLI verb projects). Nothing in
 this package imports ``cadrumo``'s adapters, application, domain or entrypoints
 layers, and nothing imports the MCP server layer.
 

@@ -95,7 +95,7 @@ def _projected_reference() -> CasillaSearchRecord:
     record the projection would never emit, and a page rendered from one
     proves nothing about a page the site will ever serve.
     """
-    for record in project_modelo_casillas(Modelo.M130):
+    for record in project_modelo_casillas(Modelo("130")):
         if record.casilla_id == _REFERENCE_CASILLA:
             return record
     raise AssertionError(f"the registry no longer projects modelo 130 casilla {_REFERENCE_CASILLA}")
@@ -139,7 +139,7 @@ def _schema(
 ) -> CompiledSchema:
     return CompiledSchema(
         casillas=facts or {},
-        modelos={Modelo.M130.value: overview} if overview is not None else {},
+        modelos={"130": overview} if overview is not None else {},
     )
 
 
@@ -284,12 +284,12 @@ def test_computed_casilla_names_the_boxes_it_derives_from() -> None:
         _record(casilla_id="01", number="01", input_kind=InputKind.MANUAL, formula_id=None),
         _record(casilla_id="02", number="02", input_kind=InputKind.MANUAL, formula_id=None),
     )
-    schema = _schema({(Modelo.M130.value, "03"): CasillaFacts(formula_inputs=("01", "02"))})
+    schema = _schema({("130", "03"): CasillaFacts(formula_inputs=("01", "02"))})
     rst = _render((*inputs, target), OutputLanguage.EN, schema)
 
     assert "casilla-fill--computed" in rst
     for casilla_id in ("01", "02"):
-        anchor = casilla_page_anchor(Modelo.M130, casilla_id)
+        anchor = casilla_page_anchor(Modelo("130"), casilla_id)
         assert f'href="#{anchor}" title="{casilla_id}">{casilla_id}</a>' in rst
     assert (
         f" {docs_chrome('docs.casilla.chrome.list_and', OutputLanguage.EN)} "
@@ -302,7 +302,7 @@ def test_bound_casilla_names_the_source_that_fills_it() -> None:
     """A bound casilla answers "filled from what", not merely "bound"."""
     record = _record(input_kind=InputKind.BOUND, formula_id=None, binding="modelo-130-ingresos")
     facts = CasillaFacts(binding_sources=(BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION.value,))
-    rst = _render((record,), OutputLanguage.EN, _schema({(Modelo.M130.value, "03"): facts}))
+    rst = _render((record,), OutputLanguage.EN, _schema({("130", "03"): facts}))
 
     assert "casilla-fill--bound" in rst
     assert (
@@ -322,7 +322,7 @@ def test_alternate_binding_sources_are_offered_as_alternatives() -> None:
             BindingSourceKind.PREVIOUS_FILING.value,
         ),
     )
-    rst = _render((record,), OutputLanguage.EN, _schema({(Modelo.M130.value, "03"): facts}))
+    rst = _render((record,), OutputLanguage.EN, _schema({("130", "03"): facts}))
     assert (
         docs_chrome(f"docs.casilla.binding_source.{BindingSourceKind.PREVIOUS_FILING.value}", OutputLanguage.EN) in rst
     )
@@ -352,7 +352,7 @@ def test_constraints_render_as_what_a_filer_may_enter() -> None:
         source_refs=("aeat-dr-130-2025",),
     )
     facts = CasillaFacts(constraints=constraints)
-    rst = _render((_record(),), OutputLanguage.EN, _schema({(Modelo.M130.value, "03"): facts}))
+    rst = _render((_record(),), OutputLanguage.EN, _schema({("130", "03"): facts}))
     assert docs_chrome("docs.casilla.value_range.between", OutputLanguage.EN, min=0, max=100) in rst
 
 
@@ -360,7 +360,7 @@ def test_printed_box_number_wins_over_the_record_design_number() -> None:
     """The badge shows the box a reader sees; the record-design value is demoted."""
     record = _record(casilla_id="iva.anual.total", number="iva.anual.total")
     facts = CasillaFacts(form_number="64")
-    rst = _render((record,), OutputLanguage.EN, _schema({(Modelo.M130.value, "iva.anual.total"): facts}))
+    rst = _render((record,), OutputLanguage.EN, _schema({("130", "iva.anual.total"): facts}))
 
     above, _, below = rst.partition('<details class="casilla-card__internals">')
     assert '<span class="casilla-card__number">64</span>' in above

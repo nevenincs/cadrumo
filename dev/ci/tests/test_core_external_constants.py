@@ -122,7 +122,7 @@ def _token_literal_offenders(
     return offenders
 
 
-def test_load_external_constants_returns_cached_model_used_by_settings_facade() -> None:
+def test_load_external_constants_returns_cached_model_used_by_settings() -> None:
     """The loader yields the canonical cached :class:`ExternalConstants`."""
 
     constants = load_external_constants()

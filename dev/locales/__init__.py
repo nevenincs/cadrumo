@@ -1,4 +1,4 @@
-"""Locale-catalogue maintenance facade for shared YAML translations.
+"""Inert namespace for locale-catalogue maintenance tooling.
 
 Contributor tooling: it maintains the four runtime catalogues that ship under
 ``src/cadrumo/locales/`` but is not itself part of the distribution. The

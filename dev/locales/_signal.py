@@ -314,6 +314,8 @@ def _spellcheck_catalogues(
     """Check authored prose with pinned Hunspell dictionaries through spylls."""
     unknown_by_cell: dict[tuple[str, str], set[str]] = defaultdict(set)
     keys_by_word: dict[str, dict[str, set[str]]] = {}
+    cell_words: dict[tuple[str, str], frozenset[str]] = {}
+    cell_text: dict[tuple[str, str], str] = {}
     checked_cells = 0
     for locale, leaves in sorted(locale_leaves.items()):
         locale_words: dict[str, set[str]] = defaultdict(set)
@@ -322,23 +324,44 @@ def _spellcheck_catalogues(
         for key, value in sorted(values.items()):
             if not isinstance(value, str):
                 continue
-            words = {word for word in _translation_words(_human_translation_text(value)) if len(word) > 1}
+            cell = (locale, value)
+            if cell not in cell_words:
+                cell_words[cell] = frozenset(
+                    word for word in _translation_words(_human_translation_text(value)) if len(word) > 1
+                )
+            words = cell_words[cell]
+            cell_text[(locale, key)] = value
             if words:
                 checked_cells += 1
             for word in words:
                 locale_words[word].add(key)
         keys_by_word[locale] = locale_words
     unknown_words: set[tuple[str, str]] = set()
+    unknown_word_cells: set[tuple[str, str]] = set()
     try:
         dictionaries = load_dictionaries(repository)
         for locale, words in keys_by_word.items():
             dictionary = dictionaries[locale]
-            for word, keys in words.items():
+            for word in words:
                 if dictionary.lookup(word):
                     continue
                 unknown_words.add((locale, word.casefold()))
+                unknown_word_cells.add((locale, word))
+
+        # Keep the complete unknown-word result for each exact authored value.  This
+        # covers catalogue cells and parallel/doc values, which share this helper,
+        # while retaining one finding per source cell below.
+        unknown_by_text = {
+            cell: tuple(sorted((word for word in words if (cell[0], word) in unknown_word_cells), key=str.casefold))
+            for cell, words in cell_words.items()
+        }
+        for locale, words in keys_by_word.items():
+            for word, keys in words.items():
+                if (locale, word) not in unknown_word_cells:
+                    continue
                 for key in keys:
-                    unknown_by_cell[(locale, key)].add(word)
+                    cell = (locale, key)
+                    unknown_by_cell[cell].update(unknown_by_text[(locale, cell_text[cell])])
     except SpellingToolError as exc:
         failure = {
             "classification": "blocking",

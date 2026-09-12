@@ -64,7 +64,8 @@ from __future__ import annotations
 
 import ast
 import re
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
+from contextlib import suppress
 from pathlib import Path
 from typing import Final
 
@@ -253,7 +254,7 @@ def _extract_error_constructor_keys(tree: ast.AST, extra_translators: frozenset[
     """
     findings: set[str] = set()
     tr_names = _translation_call_names(tree) | extra_translators
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         if isinstance(node, ast.FunctionDef):
             _collect_kwonly_default_keys(node, findings)
         elif isinstance(node, ast.Call):
@@ -272,7 +273,7 @@ def _translation_call_names(tree: ast.AST) -> frozenset[str]:
     reported as orphans and pruned.
     """
     names = {"tr", "t"}
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         if isinstance(node, ast.ImportFrom):
             for alias in node.names:
                 if alias.name in {"tr", "t"} and alias.asname:
@@ -302,7 +303,7 @@ def _flow_confirmed_class_attribute_keys(tree: ast.AST, wrappers: frozenset[str]
     count, which is the same bargain the dict and row-table shapes strike.
     """
     candidates: dict[str, set[str]] = {}
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         if not isinstance(node, ast.ClassDef):
             continue
         for statement in node.body:
@@ -321,7 +322,7 @@ def _flow_confirmed_class_attribute_keys(tree: ast.AST, wrappers: frozenset[str]
 
     tr_names = _translation_call_names(tree) | wrappers
     findings: set[str] = set()
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         if not isinstance(node, ast.Call):
             continue
         for argument in _call_site_key_argument_exprs(node, tr_names):
@@ -354,7 +355,7 @@ def _flow_confirmed_local_key_names(tree: ast.AST, wrappers: frozenset[str] = fr
     translator, which is the same bargain every other shape here strikes.
     """
     candidates: dict[str, set[str]] = {}
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         target: ast.expr | None = None
         value: ast.expr | None = None
         if isinstance(node, ast.Assign) and len(node.targets) == 1:
@@ -382,7 +383,7 @@ def _flow_confirmed_local_key_names(tree: ast.AST, wrappers: frozenset[str] = fr
 
     tr_names = _translation_call_names(tree) | wrappers
     findings: set[str] = set()
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         if not isinstance(node, ast.Call):
             continue
         for argument in _call_site_key_argument_exprs(node, tr_names):
@@ -416,7 +417,7 @@ def _key_factory_returns(tree: ast.AST) -> dict[str, set[str]]:
     becoming "any function that mentions a dotted string".
     """
     factories: dict[str, set[str]] = {}
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
             continue
         returns = [child for child in ast.walk(node) if isinstance(child, ast.Return)]
@@ -444,7 +445,7 @@ def _flow_confirmed_key_factory_keys(tree: ast.AST, wrappers: frozenset[str] = f
     if not factories:
         return set()
     bound: dict[str, set[str]] = {}
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         target: ast.expr | None = None
         value: ast.expr | None = None
         if isinstance(node, ast.Assign) and len(node.targets) == 1:
@@ -459,7 +460,7 @@ def _flow_confirmed_key_factory_keys(tree: ast.AST, wrappers: frozenset[str] = f
 
     tr_names = _translation_call_names(tree) | wrappers
     findings: set[str] = set()
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         if not isinstance(node, ast.Call):
             continue
         for argument in _call_site_key_argument_exprs(node, tr_names):
@@ -495,7 +496,7 @@ def _extract_locale_constant_keys(tree: ast.AST, wrappers: frozenset[str] = froz
         # against, so its keys are taken from the confirmed expression itself.
         if name.startswith(_ANONYMOUS_TABLE):
             _collect_row_table_key_column_literals(tree, value, findings, wrappers)
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         if isinstance(node, ast.Assign):
             named = any(_declares_locale_key_constant(target) for target in node.targets)
             shaped = any(
@@ -585,7 +586,7 @@ def _shape_candidate_locale_key_dicts(tree: ast.AST) -> dict[str, ast.expr]:
     set down to the ones actually read into a recognized locale-key sink.
     """
     candidates: dict[str, ast.expr] = {}
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         target: ast.expr | None = None
         value: ast.expr | None = None
         if isinstance(node, ast.Assign) and len(node.targets) == 1:
@@ -668,7 +669,7 @@ def _locale_key_dict_names_read_into_a_sink(
     """
     tr_names = _translation_call_names(tree) | wrappers
     confirmed: set[str] = set()
-    for func in ast.walk(tree):
+    for func in _walk_nodes(tree):
         if not isinstance(func, ast.FunctionDef | ast.AsyncFunctionDef):
             continue
         local_to_dict: dict[str, str] = {}
@@ -808,7 +809,7 @@ def _collect_row_table_key_column_literals(
         _collect_declared_locale_keys(value, findings)
         return
     key_columns: set[int] = set()
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         if not isinstance(node, ast.Call):
             continue
         for argument in _call_site_key_argument_exprs(node, tr_names):
@@ -824,7 +825,7 @@ def _collect_row_table_key_column_literals(
 def _shape_candidate_locale_key_row_tables(tree: ast.AST) -> dict[str, ast.expr]:
     """Return every ``Name -> row-table-literal`` pair shaped as a locale-key registry."""
     candidates: dict[str, ast.expr] = {}
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         target: ast.expr | None = None
         value: ast.expr | None = None
         if isinstance(node, ast.Assign) and len(node.targets) == 1:
@@ -882,7 +883,7 @@ def _row_table_names_iterated_into_a_sink(
                 if isinstance(target, ast.Name) and index in columns:
                     bound_to_table.setdefault(target.id, set()).add(table)
     confirmed: set[str] = set()
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         if not isinstance(node, ast.Call):
             continue
         for argument in _call_site_key_argument_exprs(node, tr_names):
@@ -912,7 +913,7 @@ def _iteration_bindings(tree: ast.AST) -> Iterator[ast.For | ast.AsyncFor | ast.
     reading only the statement form missed the table iterated inside a
     generator expression -- which is how the widest screen sizes its columns.
     """
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         if isinstance(node, ast.For | ast.AsyncFor):
             yield node
         elif isinstance(node, ast.ListComp | ast.SetComp | ast.DictComp | ast.GeneratorExp):
@@ -940,11 +941,11 @@ def _parameters_bound_to_a_candidate_table(tree: ast.AST, candidates: dict[str, 
     common case for being common.
     """
     parameters: dict[str, ast.arguments] = {}
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
             parameters[node.name] = node.args
     seen: dict[str, set[str]] = {}
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         if not isinstance(node, ast.Call):
             continue
         signature = parameters.get(_callee_name(node.func) or "")
@@ -1236,7 +1237,7 @@ def _dotted_prefix_tables(tree: ast.AST) -> dict[str, frozenset[str]]:
     guessing.
     """
     tables: dict[str, frozenset[str]] = {}
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         target: ast.expr | None = None
         value: ast.expr | None = None
         if isinstance(node, ast.Assign) and len(node.targets) == 1:
@@ -1256,7 +1257,7 @@ def _dotted_prefix_tables(tree: ast.AST) -> dict[str, frozenset[str]]:
 def _names_selected_from_a_prefix_table(tree: ast.AST, tables: dict[str, frozenset[str]]) -> dict[str, frozenset[str]]:
     """Return the local names bound by reading one prefix out of such a table."""
     bound: dict[str, frozenset[str]] = {}
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         target: ast.expr | None = None
         value: ast.expr | None = None
         if isinstance(node, ast.Assign) and len(node.targets) == 1:
@@ -1296,7 +1297,7 @@ def _extract_fstring_prefixes(tree: ast.AST) -> set[str]:
     does not.
     """
     findings: set[str] = set()
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         if not isinstance(node, ast.JoinedStr):
             continue
         if not node.values:
@@ -1334,7 +1335,7 @@ def _interpolated_head_prefixes(tree: ast.AST) -> set[str]:
     if not bound:
         return set()
     findings: set[str] = set()
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         if not isinstance(node, ast.JoinedStr) or len(node.values) < 2:
             continue
         head, following = node.values[0], node.values[1]
@@ -1361,7 +1362,7 @@ def _extract_concat_prefixes(tree: ast.AST) -> set[str]:
     """
     findings: set[str] = set()
     tr_names = _translation_call_names(tree)
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         if not isinstance(node, ast.Call):
             continue
         if _callee_name(node.func) not in tr_names:
@@ -1416,6 +1417,35 @@ def _parse_module_source(source: str, filename: str) -> ast.Module | None:
         return None
 
 
+_AST_WALK_CACHE_ATTR: Final[str] = "_locale_scan_walk_nodes"
+"""Private attribute used to memoise one module's deterministic walk order."""
+
+
+def _walk_nodes(root: ast.AST) -> tuple[ast.AST, ...]:
+    """Return ``ast.walk(root)``'s breadth-first order, cached on *root*.
+
+    The locale scanner asks several independent structural predicates the same
+    question about each parsed module.  Rebuilding ``ast.walk``'s deque for
+    every predicate was the dominant cost once the source tree grew beyond two
+    thousand modules.  AST nodes accept private attributes, so keeping the
+    immutable traversal tuple on the root avoids a process-global cache (and
+    therefore avoids retaining temporary fixture trees or crossing manager
+    boundaries).  If a caller supplies an AST implementation that does not
+    allow attributes, the uncached walk remains the safe fallback.
+
+    No scanner mutates AST structure while collecting findings; adding the
+    private cache attribute is not part of ``ast.iter_child_nodes`` and cannot
+    affect the traversal or its order.
+    """
+    cached = getattr(root, _AST_WALK_CACHE_ATTR, None)
+    if cached is not None:
+        return cached
+    nodes = tuple(ast.walk(root))
+    with suppress(AttributeError, TypeError):
+        setattr(root, _AST_WALK_CACHE_ATTR, nodes)
+    return nodes
+
+
 def scan_source_text(source: str, *, filename: str) -> set[str]:
     """Emit the concrete dotted locale keys one module's source text declares.
 
@@ -1452,20 +1482,36 @@ def _iter_parseable_python_modules(root: Path) -> Iterator[tuple[Path, ast.Modul
     put seventy-seven catalogue entries on the deletion path. Measured now:
     2119 modules declare locale keys, none undecodable and none unparsable.
     """
+    yield from _iter_parseable_python_modules_from_roots((root,))
+
+
+def _iter_parseable_python_modules_from_roots(roots: Iterable[Path]) -> Iterator[tuple[Path, ast.Module]]:
+    """Yield parseable modules from several roots and report unread files once.
+
+    A manager may scan the package and one or more adjacent source roots as one
+    logical corpus. Keeping those roots in one parse pass is both faster and
+    more accurate for the cross-module wrapper/signature analysis below. The
+    per-root public scanner retains its historical behaviour by delegating to
+    this helper with a one-item tuple.
+    """
     skipped: list[str] = []
-    for module in iter_directory(root, pattern="*.py", recursive=True):
-        if not declares_locale_keys(module):
-            continue
-        try:
-            source = module.read_text(encoding=_UTF_8)
-        except (OSError, UnicodeDecodeError) as exc:
-            skipped.append(f"{module}: {type(exc).__name__}: {exc}")
-            continue
-        tree = _parse_module_source(source, str(module))
-        if tree is None:
-            skipped.append(f"{module}: does not parse")
-            continue
-        yield module, tree
+    for root in roots:
+        for module in iter_directory(root, pattern="*.py", recursive=True):
+            if not declares_locale_keys(module):
+                continue
+            try:
+                source = module.read_text(encoding=_UTF_8)
+            except (OSError, UnicodeDecodeError) as exc:
+                # Files can disappear between directory enumeration and this
+                # read while another process edits the checkout. Treat that as
+                # an unread inventory item, never as a scan crash.
+                skipped.append(f"{module}: {type(exc).__name__}: {exc}")
+                continue
+            tree = _parse_module_source(source, str(module))
+            if tree is None:
+                skipped.append(f"{module}: does not parse")
+                continue
+            yield module, tree
     report_unread(
         "locale ast scan",
         "the keys they declare are absent from this scan and would look unused to a cleanup sweep",
@@ -1493,7 +1539,7 @@ def _translation_wrapper_names(modules: list[tuple[Path, ast.Module]]) -> frozen
     """
     definitions: list[tuple[str, str, ast.AST]] = []
     for _path, tree in modules:
-        for node in ast.walk(tree):
+        for node in _walk_nodes(tree):
             if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 continue
             parameters = [*node.args.posonlyargs, *node.args.args]
@@ -1543,7 +1589,7 @@ def _translated_value_names(
     names: set[str] = set()
     for _module, tree in modules:
         tr_names = _translation_call_names(tree) | wrappers
-        for node in ast.walk(tree):
+        for node in _walk_nodes(tree):
             if not isinstance(node, ast.Call):
                 continue
             for argument in _call_site_key_argument_exprs(node, tr_names):
@@ -1579,7 +1625,7 @@ def _membership_guard_keys(tree: ast.AST, translated_names: frozenset[str]) -> s
     if not translated_names:
         return set()
     containers: dict[str, set[str]] = {}
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         target: ast.expr | None = None
         value: ast.expr | None = None
         if isinstance(node, ast.Assign) and len(node.targets) == 1:
@@ -1596,7 +1642,7 @@ def _membership_guard_keys(tree: ast.AST, translated_names: frozenset[str]) -> s
             containers[target.id] = literals
 
     findings: set[str] = set()
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         if not isinstance(node, ast.Compare):
             continue
         if not any(isinstance(operator, ast.In | ast.NotIn) for operator in node.ops):
@@ -1638,7 +1684,7 @@ def _translation_key_parameter_positions(
     """
     per_definition: dict[str, list[set[int]]] = {}
     for _path, tree in modules:
-        for node in ast.walk(tree):
+        for node in _walk_nodes(tree):
             if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 continue
             parameters = [*node.args.posonlyargs, *node.args.args]
@@ -1661,7 +1707,7 @@ def _extract_positional_translation_key_arguments(
 ) -> set[str]:
     """Collect dotted literals filled positionally into a translation-key parameter."""
     findings: set[str] = set()
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         if not isinstance(node, ast.Call):
             continue
         name = getattr(node.func, "id", getattr(node.func, "attr", None))
@@ -1670,6 +1716,26 @@ def _extract_positional_translation_key_arguments(
         for index in positions.get(name, frozenset()):
             if index < len(node.args):
                 _collect_dotted_literals(node.args[index], findings)
+    return findings
+
+
+def scan_source_trees(roots: Iterable[Path]) -> set[str]:
+    """Scan several source roots as one cross-module locale-key corpus.
+
+    Parsing and indexing happen once for the combined roots. This matters for
+    the CLI, whose package, documentation, and harness roots all contribute to
+    one key set and therefore do not need independent scans.
+    """
+    modules = list(_iter_parseable_python_modules_from_roots(roots))
+    key_positions = _translation_key_parameter_positions(modules)
+    wrappers = _translation_wrapper_names(modules)
+    translated_names = _translated_value_names(modules, wrappers)
+    findings: set[str] = set()
+    for _module, tree in modules:
+        findings.update(_extract_error_constructor_keys(tree, wrappers))
+        findings.update(_membership_guard_keys(tree, translated_names))
+        findings.update(_extract_locale_constant_keys(tree, wrappers))
+        findings.update(_extract_positional_translation_key_arguments(tree, key_positions))
     return findings
 
 
@@ -1683,17 +1749,7 @@ def scan_source_tree(root: Path) -> set[str]:
     separate parity check that asserts at least one concrete locale
     entry exists under each declared namespace prefix.
     """
-    modules = list(_iter_parseable_python_modules(root))
-    key_positions = _translation_key_parameter_positions(modules)
-    wrappers = _translation_wrapper_names(modules)
-    translated_names = _translated_value_names(modules, wrappers)
-    findings: set[str] = set()
-    for _module, tree in modules:
-        findings.update(_extract_error_constructor_keys(tree, wrappers))
-        findings.update(_membership_guard_keys(tree, translated_names))
-        findings.update(_extract_locale_constant_keys(tree, wrappers))
-        findings.update(_extract_positional_translation_key_arguments(tree, key_positions))
-    return findings
+    return scan_source_trees((root,))
 
 
 def scan_namespace_markers(root: Path) -> set[str]:
@@ -1750,7 +1806,7 @@ def tr_constant_naming_violations_in_tree(tree: ast.AST) -> Iterator[tuple[int, 
     that key. This function does not read locale catalogue files.
     """
     tr_names = _translation_call_names(tree)
-    for node in ast.walk(tree):
+    for node in _walk_nodes(tree):
         if not isinstance(node, ast.Call):
             continue
         if _callee_name(node.func) not in tr_names:
@@ -1856,4 +1912,5 @@ __all__ = [
     "scan_namespace_markers_in_text",
     "scan_source_text",
     "scan_source_tree",
+    "scan_source_trees",
 ]

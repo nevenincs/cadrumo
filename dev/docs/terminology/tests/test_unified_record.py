@@ -91,7 +91,7 @@ def test_casilla_funnels_to_a_search_record_with_provenance() -> None:
     from ..search_record import SearchRecordKind
     from ..unified_record import to_search_record
 
-    records = project_modelo_casillas(Modelo.M303)
+    records = project_modelo_casillas(Modelo("303"))
     record = to_search_record(records[0])
 
     assert record.kind is SearchRecordKind.CASILLA
@@ -110,7 +110,7 @@ def test_segmented_casilla_funnels_with_opaque_id_and_canonical_metadata() -> No
     from ..casilla_projection import project_modelo_casillas
     from ..unified_record import to_search_record
 
-    projected = project_modelo_casillas(Modelo.M200)
+    projected = project_modelo_casillas(Modelo("200"))
     segmented = next(record for record in projected if record.casilla_id == "DP200014:00562")  # type: ignore[attr-defined]
     record = to_search_record(segmented)
 
@@ -188,7 +188,7 @@ def test_all_kinds_serialise_to_the_same_shape() -> None:
     from ..unified_record import SearchRecord, to_search_record
 
     cards, _ = project_concept_cards()
-    casillas = project_modelo_casillas(Modelo.M303)
+    casillas = project_modelo_casillas(Modelo("303"))
     legal = project_legal_search_records()[0]
     kinds = [
         to_search_record(cards[0]),

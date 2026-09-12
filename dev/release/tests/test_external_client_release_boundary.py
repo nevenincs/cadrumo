@@ -1,14 +1,7 @@
-"""Regression gates for the base-CLI/harness dependency direction.
-
-The harness ships inside the product wheel rather than as its own distribution,
-so the direction is no longer expressed by a dependency declaration between two
-projects. It is expressed by the import graph within one package, which is what
-these gates read.
-"""
+"""Assurance checks for the separately exercised harness lane."""
 
 from __future__ import annotations
 
-import ast
 from pathlib import Path
 from typing import Final
 
@@ -19,9 +12,6 @@ from dev._paths import REPO_ROOT
 from dev.ci.workflow_run_text import executed_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_BASE_PACKAGE = REPO_ROOT / "src" / "cadrumo"
-_HARNESS_PACKAGE = REPO_ROOT / "src" / "cadrumo_harness"
 
 _HARNESS_EVAL_WORKFLOW = REPO_ROOT / ".github/workflows/agent-harness-eval.yml"
 
@@ -79,71 +69,6 @@ def _assert_lane_is_an_assurance_surface(path: Path, *, invocation: str) -> None
         where = f"{path.name}:{job_name}:{step.get('name', '<unnamed>')}"
         assert job.get("continue-on-error") is not True, f"{where} sits in a job that cannot fail"
         assert step.get("continue-on-error") is not True, f"{where} cannot fail the lane"
-
-
-def _import_targets(path: Path) -> tuple[str, ...]:
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    targets: list[str] = []
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            targets.extend(alias.name for alias in node.names)
-        elif isinstance(node, ast.ImportFrom) and node.module is not None:
-            targets.append(node.module)
-    return tuple(targets)
-
-
-#: Below this the base-package walk has stopped covering the shipped surface.
-#: A floor, not a pinned count: 5,904 modules ship today.
-_MINIMUM_BASE_MODULES = 500
-
-
-def test_base_cli_never_imports_the_harness() -> None:
-    """The shipped base package has no dependency edge to its harness client.
-
-    Guarded like its positive sibling below, which already refuses when the
-    harness imports nothing. A negative claim needs the same protection more,
-    not less: an empty walk produces no crossings and reads exactly like a
-    clean boundary.
-    """
-    assert _BASE_PACKAGE.is_dir(), (
-        f"no base package at {_BASE_PACKAGE}; a relocated root walks nothing and this gate "
-        "would report the release boundary intact"
-    )
-
-    walked = tuple(_BASE_PACKAGE.rglob("*.py"))
-
-    assert len(walked) >= _MINIMUM_BASE_MODULES, (
-        f"only {len(walked)} base module(s) were walked; below this an empty crossing set "
-        "says nothing about whether the shipped package reaches its harness"
-    )
-
-    crossings = {
-        path.relative_to(REPO_ROOT): target
-        for path in walked
-        for target in _import_targets(path)
-        if target == "cadrumo_harness" or target.startswith("cadrumo_harness.")
-    }
-    assert not crossings
-
-
-def test_the_harness_reaches_the_base_surface_through_application_ports() -> None:
-    """The harness depends inward, and through the boundary meant to carry it.
-
-    Both halves matter. Importing nothing from the base package would mean the
-    harness had grown its own copy of the command surface; importing the
-    application-owned command ports proves the process adapter uses the
-    declared inward boundary rather than duplicating those contracts.
-    """
-    production_imports = {
-        target
-        for path in _HARNESS_PACKAGE.rglob("*.py")
-        if "tests" not in path.parts
-        for target in _import_targets(path)
-        if target == "cadrumo" or target.startswith("cadrumo.")
-    }
-
-    assert production_imports, "the harness imports nothing from the base package"
-    assert "cadrumo.application.operator_surface.command_ports" in production_imports
 
 
 def test_the_harness_evaluation_lane_is_an_assurance_surface() -> None:

@@ -745,6 +745,22 @@ registry-binding-rename-modelo MODELO REPORT="":
 report-registry-binding-rename-modelo MODELO REPORT="":
     @uv run --no-sync python -m dev.registry.rename_formula_binding_identifiers --modelo {{MODELO}} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
 
+[doc("Lift each edition family's shared source_refs onto its revision manifest through the owning CLI; pass a modelo id to scope it, or --all for the whole corpus.")]
+[group('maintenance')]
+registry-family-source-defaults-lift SCOPE="--all" REPORT="":
+    @uv run --no-sync python -m dev.registry.lift_family_source_defaults --apply {{ if SCOPE == "--all" { "--all" } else { "--modelo " + SCOPE } }} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
+    @echo "next_currentness=check-registry-valid-and-report-registry-status next_publication=registry-publish-authority-then-registry-publish-target"
+
+[doc("Report the edition family source_refs lift and its refusals without writing any file; pass a modelo id to scope it, or --all for the whole corpus.")]
+[group('report')]
+report-registry-family-source-defaults-lift SCOPE="--all" REPORT="":
+    @uv run --no-sync python -m dev.registry.lift_family_source_defaults --dry-run {{ if SCOPE == "--all" { "--all" } else { "--modelo " + SCOPE } }} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
+
+[doc("Report which successor binding members restate the member they would inherit, and prove the strip byte-identical, without writing any file; pass a modelo id to scope it, or --all for the whole corpus.")]
+[group('report')]
+report-registry-restated-bindings SCOPE="--all" REPORT="":
+    @uv run --no-sync python -m dev.registry.strip_restated_bindings --dry-run {{ if SCOPE == "--all" { "--all" } else { "--modelo " + SCOPE } }} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
+
 [doc('Generate registry result-disposition fragments through the owning CLI.')]
 [group('maintenance')]
 registry-result-fragments-generate:

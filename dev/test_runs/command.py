@@ -87,7 +87,6 @@ _REMEDIATION_CODE_FAMILIES: Final[dict[str, frozenset[str]]] = {
         }
     ),
     "initializer_hygiene": frozenset({"ACTIVE_INITIALIZER"}),
-    "canonical_import_spelling": frozenset({"CANONICAL_IMPORT_SPELLING"}),
     "private_encapsulation": frozenset({"PRIVATE_CROSS_PACKAGE"}),
 }
 

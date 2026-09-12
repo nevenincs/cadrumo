@@ -960,7 +960,7 @@ def _check_static_imports(authority: Authority, modules: Mapping[str, _Module], 
                         )
                     if not _is_first_party(target, root_names):
                         continue
-                    _check_absolute_spelling(module, target, node, findings)
+                    _report_import_spelling_advisory(module, target, node, findings)
                     _check_private(module, target, alias.name, modules, authority, findings, node.lineno)
                     if target not in known:
                         findings.append(
@@ -994,7 +994,7 @@ def _check_static_imports(authority: Authority, modules: Mapping[str, _Module], 
                     continue
                 if not _is_first_party(target, root_names):
                     continue
-                _check_absolute_spelling(module, target, node, findings)
+                _report_import_spelling_advisory(module, target, node, findings)
                 if target not in known:
                     findings.append(
                         Finding(
@@ -1060,7 +1060,7 @@ def _check_static_imports(authority: Authority, modules: Mapping[str, _Module], 
                         )
 
 
-def _check_absolute_spelling(
+def _report_import_spelling_advisory(
     module: _Module, target: str, node: ast.Import | ast.ImportFrom, findings: list[Finding]
 ) -> None:
     """Report absolute first-party spelling as non-architectural style advice."""

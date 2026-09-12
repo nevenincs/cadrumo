@@ -4,9 +4,8 @@ Two surfaces consume this. A sanitised PDF is checked against its own sidecar by
 :func:`scan_for_residual_identities` below; a working tree is checked by
 :mod:`dev.identity`, which reuses the same patterns, the same checksums and the
 same value-free finding discipline through :func:`checksum_valid_spans`. The
-detection lives in the sanitiser package rather than in its test package because
-it is a library with a non-test consumer, and it is reached only through the
-package facade.
+detection lives in this defining module rather than in its test package because
+it is a library with a non-test consumer, which imports the owner directly.
 
 The sanitiser replaces exactly what a ``TokenMap`` names, so an identity nobody
 listed passes through untouched. The existing adversarial gate cannot see that:
