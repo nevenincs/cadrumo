@@ -371,15 +371,18 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
         )
         tax_id_format = tax_id_format_from_catalogue(facts)
         decode_context = {**_TAGGED_DECODE_CONTEXT, TAX_ID_FORMAT_CONTEXT: tax_id_format}
+        # Registry-owned validators must resolve against the facts in this
+        # document while its typed graph is being rebuilt. Calling the
+        # bundled authority here would re-enter the shared artifact lock.
         with validating_governed_facts(CandidateFactAuthority(facts, authority_digest=identity_digest)):
             modelos = tuple(
-            ModeloDefinition.model_validate(
-                _immutable_json_value(_mapping_item(item, "modelos")),
-                strict=False,
-                context=decode_context,
+                ModeloDefinition.model_validate(
+                    _immutable_json_value(_mapping_item(item, "modelos")),
+                    strict=False,
+                    context=decode_context,
+                )
+                for item in modelos_document
             )
-            for item in modelos_document
-        )
             catalogues = RegistryCatalogues.model_validate(
                 _immutable_json_value(catalogues_document),
                 strict=False,
