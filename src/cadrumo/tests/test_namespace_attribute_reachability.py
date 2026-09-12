@@ -1,27 +1,20 @@
 """An attribute reached through a package namespace must actually be there.
 
-Retiring a package's PEP 562 export map makes its namespace inert. That is the
-campaign's intent, and the import statements that name a SYMBOL are repointed
-as part of the retirement. What survives the sweep unnoticed is the other
-shape: a module that binds the PACKAGE itself and reaches through it.
+A module can bind a package successfully and still fail later when it reads an
+attribute the package does not define:
 
     from . import crypto          # still resolves -- crypto is a real package
     ...
-    crypto.encrypt_record(...)    # AttributeError, once the map is gone
+    crypto.encrypt_record(...)    # AttributeError when the path runs
 
-Nothing catches that. The import is valid, the module imports cleanly, and only
-the attribute access fails -- at runtime, on whichever code path happens to
-reach it. The crypto retirement left exactly one such consumer behind and every
-profile passphrase encryption raised until it was repointed.
-
-This gate closes that class. It resolves each relative import that binds a
+The import is valid, the module imports cleanly, and only the attribute access
+fails at runtime. This gate resolves each relative import that binds a
 package name, collects every attribute read through that binding, and asserts
 the name is statically bound by the package initializer. Lazy export maps are
 not treated as valid namespace authority.
 
 The check is deliberately about REACHABILITY, not about whether reaching
-through a namespace is good style. `aeat-architecture-boundaries` already
-forbids the latter; this gate exists so a retirement cannot half-land.
+through a namespace is good style.
 """
 
 from __future__ import annotations

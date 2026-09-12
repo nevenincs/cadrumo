@@ -8,6 +8,8 @@ declarations.
 
 from __future__ import annotations
 
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit
@@ -20,12 +22,25 @@ def _selected_registry_ledger_declarations(work_unit: WorkUnit) -> tuple[object,
 
     snapshot = resolve_registry_snapshot_for_work_unit(work_unit)
     revision = snapshot.revision
+    query_service = RegistryQueryService(bundled_authority())
+    model_report = query_service.describe_modelo_for_scope(
+        str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    )
+    binding_report = query_service.bindings_for_scope(
+        str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    )
     fold_slots = relation_prefill_bindings_for_period(revision)
     return (
         tuple(revision.bindings),
         tuple(revision.verification_expectations),
         tuple(revision.export_layouts),
         tuple(binding.id for binding, _ in fold_slots),
+        model_report,
+        binding_report,
     )
 
 

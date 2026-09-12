@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...core.setup_answers import SETUP_ANSWER_FIELDS
+from ...domain.deadlines.setup_answer_projection import SETUP_ANSWER_FIELDS
 from .completeness import conditional_profile_missing_required
 
 #: Profile path to the long-option spelling an operator actually types, derived

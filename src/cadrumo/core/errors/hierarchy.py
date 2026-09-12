@@ -7,10 +7,9 @@ registry knows about the hierarchy, not the other way round, and keeping the
 arrow pointing one way is what lets :mod:`cadrumo.core.json_contract` depend on
 the hierarchy without dragging the registry in behind it.
 
-These classes previously lived in the package namespace. That bundling is what
-created the ``json_contract`` cycle the registry module used to work around
-with three deferred imports and a lazy attribute hook: a consumer wanting only
-:class:`CadrumoError` unavoidably loaded the envelope model too.
+Keeping these classes in their own defining module lets
+:mod:`cadrumo.core.json_contract` depend on the hierarchy without loading
+registry-owned envelope models.
 """
 
 from __future__ import annotations

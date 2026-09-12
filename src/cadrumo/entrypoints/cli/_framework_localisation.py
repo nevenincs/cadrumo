@@ -7,8 +7,8 @@ value`` prefixes raised during argument parsing. Neither ships a catalogue for
 any locale, so both resolve to English regardless of the operator's language
 while every ``tr()``-bound string beside them localises correctly.
 
-The rebinds live here rather than in the package facade because they are one
-concern with one caller: :func:`~cadrumo.entrypoints.cli.main` runs them once
+The rebinds live in this defining module because they are one concern with one
+caller: :func:`~cadrumo.entrypoints.cli.main` runs them once
 per console process, after the root language flag has been resolved and before
 the command tree is invoked. They are invocation-scoped by construction — a
 real ``aeat`` run is one process per invocation, so a module-global rebind

@@ -2,13 +2,13 @@
 
 The helper projects a ``ProfileRecord.values``-shaped mapping into an
 :class:`TaxpayerProfile` through
-:func:`~cadrumo.core.setup_answers.project_setup_answers`, which reads
+:func:`~cadrumo.domain.deadlines.setup_answer_projection.project_setup_answers`, which reads
 stored facts by their profile path and applies the canonical-token
 parsing every field declares.
 
-The projection deliberately depends on the core answer table and not on
-any interactive surface. Deciding which modelos a taxpayer must file is a
-regulatory computation that runs on stored facts; when it instead walked
+The projection deliberately depends on the registry answer declarations and
+not on any interactive surface. Deciding which modelos a taxpayer must file is
+a regulatory computation that runs on stored facts; when it instead walked
 the terminal wizard's question catalogue, a schedule could not be
 computed in a process that had never built a setup UI, and the UI could
 not be replaced without moving the tax logic with it.
@@ -27,7 +27,7 @@ from ...core.modelo import Modelo
 from ...core.parsing.dates import parse_date as _parse_date_canonical
 from ...core.parsing.utils import parse_bool as _parse_bool
 from ...core.period import Period
-from ...core.setup_answers import SetupAnswers, project_setup_answers
+from ...core.setup_answers import SetupAnswers
 from ..contribuyente.entity_type import EntityType, LegalEntityForm
 from ..contribuyente.renta_codes import FiscalResidency
 from .errors import ProfileError
@@ -44,6 +44,7 @@ from .models import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
+from .setup_answer_projection import project_setup_answers
 
 
 def taxpayer_profile_from_mapping(

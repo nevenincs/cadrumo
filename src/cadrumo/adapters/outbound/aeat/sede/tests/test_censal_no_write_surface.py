@@ -197,11 +197,8 @@ class TestCensalPublicSurfaceOffersNoWrite:
     def test_the_scan_covers_a_non_empty_censal_surface(self) -> None:
         """A clean result above means nothing if the module offered nothing to read.
 
-        This used to count censal names on the sede package facade. That facade
-        is retired and exports nothing, so the guard would have gone permanently
-        green-by-emptiness -- the exact false pass it exists to prevent. It now
-        reads the censal module's own public surface, which is where the reader
-        actually lives.
+        The guard reads the defining censal module's public surface and asserts
+        that the scan cannot pass vacuously.
         """
         from .. import censal_datos
 

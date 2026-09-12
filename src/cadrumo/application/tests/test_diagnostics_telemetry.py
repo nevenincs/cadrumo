@@ -1,9 +1,8 @@
 """Real-behavior tests for :mod:`~application.diagnostics_telemetry`.
 
 Exercises the status report and the dry-run-safe flush composition against
-real :class:`~core.config.Settings` and a real
-:class:`~adapters.outbound.llm.LLMRunTelemetryRecorder` (real encrypted
-secure-object persistence, no mocks). Proves the default-off posture, that
+real :class:`~core.config.Settings` and explicit application-owned diagnostic
+ports. Proves the default-off posture, that
 ``build_telemetry_flush_preview`` never performs a network call regardless of
 posture, and that :func:`~application.diagnostics_telemetry.flush_telemetry`
 composes the real core gate/sink primitives rather than re-implementing them
@@ -27,21 +26,23 @@ See Also:
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler
-from pathlib import Path
 from queue import Empty, Queue
 from typing import Any, ClassVar, cast, override
 
 import pytest
 
-from ...adapters.outbound.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
-from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...core.config import Settings
 from ...core.telemetry.tier import TelemetryTier
 from ...tests.loopback_recording_server import run_loopback_server, stop_loopback_server
+from ..diagnostics_run_health_ports import (
+    DiagnosticAuthProbePort,
+    DiagnosticAuthProbeResult,
+    DiagnosticRunRecord,
+    DiagnosticRunTelemetryPort,
+)
 from ..diagnostics_telemetry import (
     build_telemetry_flush_preview,
     build_telemetry_status_report,
@@ -50,13 +51,51 @@ from ..diagnostics_telemetry import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "66666666-6666-4666-8666-666666666666"
+
+class _FakeRunTelemetryPort(DiagnosticRunTelemetryPort):
+    """Supply deterministic run records without crossing an adapter boundary."""
+
+    def __init__(self, *, records: tuple[DiagnosticRunRecord, ...]) -> None:
+        self._records = records
+
+    def load_records(
+        self,
+        *,
+        since: date | None,
+        until: date | None,
+    ) -> tuple[DiagnosticRunRecord, ...]:
+        return tuple(
+            record
+            for record in self._records
+            if (since is None or record.started_at.date() >= since)
+            and (until is None or record.started_at.date() <= until)
+        )
 
 
-@pytest.fixture
-def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as p:
-        yield p
+class _FakeAuthProbePort(DiagnosticAuthProbePort):
+    """Supply the redacted auth verdict required by the telemetry aggregate."""
+
+    def probe(self) -> DiagnosticAuthProbeResult:
+        return DiagnosticAuthProbeResult()
+
+
+def _run_record(
+    run_id: str,
+    *,
+    duration_ms: int,
+    succeeded: bool,
+    started_at: datetime,
+    error_kind: str = "",
+) -> DiagnosticRunRecord:
+    return DiagnosticRunRecord(
+        run_id=run_id,
+        caller="test",
+        provider="llm:claude:test-model",
+        duration_ms=duration_ms,
+        succeeded=succeeded,
+        error_kind=error_kind,
+        started_at=started_at,
+    )
 
 
 class _RecordingTelemetryEndpoint(BaseHTTPRequestHandler):
@@ -81,7 +120,7 @@ class _RecordingTelemetryEndpoint(BaseHTTPRequestHandler):
         """Silence stdlib request logging during tests."""
 
 
-def test_status_report_defaults_to_the_fully_inert_posture(profile: TestRuntimeProfile) -> None:
+def test_status_report_defaults_to_the_fully_inert_posture() -> None:
     settings = Settings()
     report = build_telemetry_status_report(settings=settings)
 
@@ -92,7 +131,7 @@ def test_status_report_defaults_to_the_fully_inert_posture(profile: TestRuntimeP
     assert report.would_emit_if_acknowledged is False
 
 
-def test_status_report_reflects_a_fully_opted_in_posture(profile: TestRuntimeProfile) -> None:
+def test_status_report_reflects_a_fully_opted_in_posture() -> None:
     settings = Settings(cadrumo_telemetry_opt_in=True, cadrumo_telemetry_tier=TelemetryTier.FULL)
     report = build_telemetry_status_report(settings=settings)
 
@@ -101,35 +140,28 @@ def test_status_report_reflects_a_fully_opted_in_posture(profile: TestRuntimePro
     assert report.would_emit_if_acknowledged is True
 
 
-def test_flush_preview_aggregates_real_recorded_llm_runs_without_any_network_call(
-    profile: TestRuntimeProfile,
-) -> None:
-    """The preview reflects real seeded run data and never dials out."""
-    recorder = LLMRunTelemetryRecorder()
-    recorder.record(
-        LLMRunRecord(
-            run_id="a",
-            caller="test",
-            provider="llm:claude:test-model",
-            duration_ms=1000,
-            succeeded=True,
-            started_at=datetime(2026, 4, 1, tzinfo=UTC),
+def test_flush_preview_aggregates_explicit_run_ports_without_any_network_call() -> None:
+    """The preview reflects deterministic run-port data and never dials out."""
+    run_telemetry_port = _FakeRunTelemetryPort(
+        records=(
+            _run_record("a", duration_ms=1000, succeeded=True, started_at=datetime(2026, 4, 1, tzinfo=UTC)),
+            _run_record(
+                "b",
+                duration_ms=9000,
+                succeeded=False,
+                error_kind="LLMClassifierError",
+                started_at=datetime(2026, 4, 2, tzinfo=UTC),
+            ),
         ),
     )
-    recorder.record(
-        LLMRunRecord(
-            run_id="b",
-            caller="test",
-            provider="llm:claude:test-model",
-            duration_ms=9000,
-            succeeded=False,
-            error_kind="LLMClassifierError",
-            started_at=datetime(2026, 4, 2, tzinfo=UTC),
-        ),
-    )
+    auth_probe_port = _FakeAuthProbePort()
 
     settings = Settings()  # default-off posture
-    preview = build_telemetry_flush_preview(settings=settings)
+    preview = build_telemetry_flush_preview(
+        settings=settings,
+        run_telemetry_port=run_telemetry_port,
+        auth_probe_port=auth_probe_port,
+    )
 
     assert preview.payload.command == "diagnostics.llm_run"
     assert preview.payload.counters["runs"] == 2
@@ -156,13 +188,20 @@ def test_flush_preview_aggregates_real_recorded_llm_runs_without_any_network_cal
     assert preview.would_send is False
 
 
-def test_flush_telemetry_never_sends_when_consent_gate_refuses(profile: TestRuntimeProfile) -> None:
+def test_flush_telemetry_never_sends_when_consent_gate_refuses() -> None:
     """A fully-configured endpoint with the default-off posture never receives a POST."""
+    run_telemetry_port = _FakeRunTelemetryPort(records=())
+    auth_probe_port = _FakeAuthProbePort()
     server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
     try:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
         settings = Settings(cadrumo_telemetry_endpoint=endpoint)  # opt_in stays False
-        preview = flush_telemetry(settings=settings, acknowledged=True)
+        preview = flush_telemetry(
+            settings=settings,
+            acknowledged=True,
+            run_telemetry_port=run_telemetry_port,
+            auth_probe_port=auth_probe_port,
+        )
     finally:
         stop_loopback_server(server, thread)
 
@@ -172,31 +211,29 @@ def test_flush_telemetry_never_sends_when_consent_gate_refuses(profile: TestRunt
         events.get_nowait()
 
 
-def test_flush_telemetry_never_sends_without_a_configured_endpoint(profile: TestRuntimeProfile) -> None:
+def test_flush_telemetry_never_sends_without_a_configured_endpoint() -> None:
     """Full opt-in/tier/acknowledgement still never sends when no endpoint is configured."""
+    run_telemetry_port = _FakeRunTelemetryPort(records=())
+    auth_probe_port = _FakeAuthProbePort()
     settings = Settings(cadrumo_telemetry_opt_in=True, cadrumo_telemetry_tier=TelemetryTier.FULL)
-    preview = flush_telemetry(settings=settings, acknowledged=True)
+    preview = flush_telemetry(
+        settings=settings,
+        acknowledged=True,
+        run_telemetry_port=run_telemetry_port,
+        auth_probe_port=auth_probe_port,
+    )
 
     assert preview.gate_permits is True
     assert preview.endpoint_configured is False
     assert preview.would_send is False
 
 
-def test_flush_telemetry_sends_the_exact_previewed_payload_when_fully_permitted(
-    profile: TestRuntimeProfile,
-) -> None:
+def test_flush_telemetry_sends_the_exact_previewed_payload_when_fully_permitted() -> None:
     """A fully-permitted flush POSTs exactly the payload the preview showed."""
-    recorder = LLMRunTelemetryRecorder()
-    recorder.record(
-        LLMRunRecord(
-            run_id="a",
-            caller="test",
-            provider="llm:claude:test-model",
-            duration_ms=1000,
-            succeeded=True,
-            started_at=datetime(2026, 4, 1, tzinfo=UTC),
-        ),
+    run_telemetry_port = _FakeRunTelemetryPort(
+        records=(_run_record("a", duration_ms=1000, succeeded=True, started_at=datetime(2026, 4, 1, tzinfo=UTC)),),
     )
+    auth_probe_port = _FakeAuthProbePort()
 
     server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
     try:
@@ -210,8 +247,18 @@ def test_flush_telemetry_sends_the_exact_previewed_payload_when_fully_permitted(
         # the same construction path and therefore the same aggregate
         # shape -- except ``captured_at``, which is a fresh wall-clock
         # timestamp on every call by design.
-        dry_run_preview = build_telemetry_flush_preview(settings=settings, acknowledged=True)
-        sent_preview = flush_telemetry(settings=settings, acknowledged=True)
+        dry_run_preview = build_telemetry_flush_preview(
+            settings=settings,
+            acknowledged=True,
+            run_telemetry_port=run_telemetry_port,
+            auth_probe_port=auth_probe_port,
+        )
+        sent_preview = flush_telemetry(
+            settings=settings,
+            acknowledged=True,
+            run_telemetry_port=run_telemetry_port,
+            auth_probe_port=auth_probe_port,
+        )
         observed = events.get_nowait()
     finally:
         stop_loopback_server(server, thread)
@@ -229,8 +276,10 @@ def test_flush_telemetry_sends_the_exact_previewed_payload_when_fully_permitted(
     assert observed_body["counters"]["runs"] == 1
 
 
-def test_flush_telemetry_requires_per_invocation_acknowledgement(profile: TestRuntimeProfile) -> None:
+def test_flush_telemetry_requires_per_invocation_acknowledgement() -> None:
     """Opt-in, tier, and endpoint alone are not enough without ``acknowledged=True``."""
+    run_telemetry_port = _FakeRunTelemetryPort(records=())
+    auth_probe_port = _FakeAuthProbePort()
     server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
     try:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
@@ -239,7 +288,12 @@ def test_flush_telemetry_requires_per_invocation_acknowledgement(profile: TestRu
             cadrumo_telemetry_tier=TelemetryTier.FULL,
             cadrumo_telemetry_endpoint=endpoint,
         )
-        preview = flush_telemetry(settings=settings, acknowledged=False)
+        preview = flush_telemetry(
+            settings=settings,
+            acknowledged=False,
+            run_telemetry_port=run_telemetry_port,
+            auth_probe_port=auth_probe_port,
+        )
     finally:
         stop_loopback_server(server, thread)
 

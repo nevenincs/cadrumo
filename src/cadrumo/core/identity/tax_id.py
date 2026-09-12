@@ -23,20 +23,34 @@ checksum table is defined by :mod:`core.identity.documents`.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Annotated
 
 from pydantic import AfterValidator, BeforeValidator
 
-from .documents import IdentityError, validate_identity
+from .documents import (
+    CIF_KIND_LETTERS,
+    NIE_PREFIX_MAP,
+    PREFIXED_NIF_LEADERS,
+    IdentityError,
+    validate_identity,
+)
 from .nif_iva import normalise_nif_iva
 
+SPANISH_TAX_ID_WIDTH = 9
+"""Character width of every canonical Spanish NIF, NIE, and CIF.
 
-def _tax_id_format_declarations() -> Mapping[str, str]:
-    """Resolve identifier-shape declarations without a Python fallback catalogue."""
-    from ...domain.calculations.registry.tax_id_format import tax_id_format_declarations
+The width is fixed by the identifier grammar rather than chosen here: a NIF is 8
+digits plus a checksum letter, a ``K``/``L``/``M`` NIF and a NIE are a leader
+plus 7 digits plus a checksum, and a CIF is a leader plus 7 digits plus a
+control. Every branch of :func:`validate_spanish_tax_id` therefore operates on
+exactly this many characters, and the function refuses anything else outright.
 
-    return tax_id_format_declarations()
+Exposed as a constant because consumers outside this module need to assert a
+slot can hold a tax identifier at all -- a fixed-width AEAT record field bound
+to a taxpayer identifier but declared at some other width is holding something
+other than that identifier. Those consumers must read the width the validator
+actually enforces; a second literal elsewhere can drift from this one silently.
+"""
 
 
 def tax_id_identity_token(value: str) -> str:
@@ -106,11 +120,20 @@ def same_tax_identifier(left: str | None, right: str | None) -> bool:
 
 
 def validate_spanish_tax_id(value: str) -> str:
-    """Validate a Spanish tax identifier using registry-owned shape facts.
+    """Validate a Spanish NIF, NIE, or CIF and return its canonical form.
 
-    The checksum implementation remains in :mod:`core.identity.documents`;
-    this boundary only normalizes the envelope, resolves the current shape
-    declarations, and delegates checksum validation.
+    Implements the Agencia Tributaria algorithm:
+
+    * **NIF** — 8 digits, or current ``K``/``L``/``M`` plus 7 digits for
+      natural persons without DNI/NIE, followed by a checksum letter drawn
+      from ``TRWAGMYFPDXBNJZSQVHLCKE`` indexed by ``number % 23``.
+    * **NIE** — a leading ``X``/``Y``/``Z`` substituted with ``0``/``1``/``2``
+      before applying the NIF rule.
+    * **CIF** — a leading letter from ``ABCDEFGHJNPQRSUVW``, 7 digits, and
+      a 1-character control. Leading letters in ``PQRSNW`` require a
+      **letter** control drawn from ``JABCDEFGHI``; leading letters in
+      ``ABEH`` require a **digit** control; all other leaders accept
+      either form (both historically in circulation).
 
     Args:
         value: Raw tax identifier to validate.
@@ -124,32 +147,25 @@ def validate_spanish_tax_id(value: str) -> str:
     Raises:
         IdentityError: If the identifier is malformed or the checksum fails.
     """
-    declarations = _tax_id_format_declarations()
-    width = int(declarations["tax_id.width"])
-    country_prefix = declarations["tax_id.country_prefix"]
-    country_prefixed_width = int(declarations["tax_id.country_prefixed_width"])
-    country_prefix_strip_width = int(declarations["tax_id.country_prefix_strip_width"])
-    prefixed_nif_leaders = declarations["tax_id.leaders.prefixed_nif"]
-    nie_leaders = declarations["tax_id.leaders.nie"]
-    cif_leaders = declarations["tax_id.leaders.cif"]
-
     normalized = normalise_nif_iva(value)
     if not normalized:
         raise IdentityError(
             "tax identifier is empty",
             translated_message="errors.identity.document_empty",
         )
-    if len(normalized) == country_prefixed_width and normalized.startswith(country_prefix):
-        normalized = normalized[country_prefix_strip_width:]
-    if len(normalized) != width:
+    if len(normalized) == 11 and normalized.startswith("ES"):
+        normalized = normalized[2:]
+    if len(normalized) != SPANISH_TAX_ID_WIDTH:
         raise IdentityError(
-            f"tax identifier {normalized!r} must be exactly {width} characters, got {len(normalized)}",
+            f"tax identifier {normalized!r} must be exactly {SPANISH_TAX_ID_WIDTH} characters, got {len(normalized)}",
             translated_message="errors.identity.tax_id_invalid_length",
             context={"candidate": normalized, "length": len(normalized)},
         )
 
     leader = normalized[0]
-    recognised = leader.isdigit() or leader in prefixed_nif_leaders or leader in nie_leaders or leader in cif_leaders
+    recognised = (
+        leader.isdigit() or leader in PREFIXED_NIF_LEADERS or leader in NIE_PREFIX_MAP or leader in CIF_KIND_LETTERS
+    )
     if not recognised:
         raise IdentityError(
             f"tax identifier {normalized!r} does not start with a recognised leader {leader!r}",

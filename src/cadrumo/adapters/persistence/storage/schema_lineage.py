@@ -11,9 +11,9 @@ this build and is refused before decryption.
 *Layer two* guards the ``Envelope`` inside the decrypted payload, and its
 contract is strict EQUALITY — :func:`inner_envelope_version_is_current`.
 Equality is right there precisely because layer one has already established
-the current row version, so an inner deviation is drift or corruption. The two layers are
-deliberately absent from the storage package facade so a layer-two caller
-cannot reach for the wrong gate.
+the current row version, so an inner deviation is drift or corruption. The two
+layers have distinct defining modules so a layer-two caller cannot reach for
+the wrong gate.
 
 Layer two carries a second equality alongside the version one:
 :func:`inner_envelope_classification_is_expected` re-checks the inner

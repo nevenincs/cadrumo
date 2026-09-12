@@ -32,7 +32,6 @@ from pydantic import BaseModel, Field
 
 from ...core.calendar_shift import shift_by_calendar_years
 from ...core.filing_year import FilingYear
-from ...core.modelo import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now, today_madrid
 from ...domain.calculations.registry.applicability import (
@@ -42,6 +41,7 @@ from ...domain.calculations.registry.applicability import (
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import LegalRefId
+from ...domain.calculations.registry.modelo_obligation_scope import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
 from ...domain.deadlines.engine import DeadlineEngine
 from ...domain.deadlines.errors import DeadlineValidationError, NoDeadlineWindowsError
 from ...domain.deadlines.models import TaxpayerProfile
@@ -68,7 +68,9 @@ remains a typed surface rather than a ``dict[str, Any]`` escape hatch.
 _UNMODELED_MODELO_DESCRIPTIONS: dict[str, str] = {str(code): desc for code, desc in _UNMODELED_OBLIGATIONS.items()}
 """Recognized-but-unmodeled obligations keyed by bare modelo code.
 
-Derived once from :data:`~core.UNMODELED_OBLIGATIONS` so ``explain`` can
+Derived once from
+:data:`~domain.calculations.registry.modelo_obligation_scope.UNMODELED_OBLIGATIONS`
+so ``explain`` can
 tell an operator that a code like ``"216"`` is a real AEAT obligation the app
 does not model yet — distinct from an unknown-identifier typo.
 """

@@ -18,13 +18,11 @@ ambiguous. Renderers and CLI payloads can therefore treat the repair report as
 a typed contract, not a best-effort text scan.
 
 Secure-object repair helpers return :class:`SecureObjectIntegrityReport`
-instances shared with :mod:`application.repair_integrity`. Dry-run preview
-and quarantine use the same decryptability probe so the committed mutation has
-the same namespace counts the operator saw before confirming it.
+instances. Dry-run preview and quarantine use the same decryptability probe so
+the committed mutation has the same namespace counts the operator saw before
+confirming it.
 
 See Also:
-    :mod:`application.repair_integrity` owns metadata-only repair
-    decisions and active-bucket repair sessions.
     :mod:`application.workflow.profile_health` supplies the redacted
     active-profile health verdict when secure workflow state is readable or
     degraded.
@@ -935,10 +933,7 @@ def preview_quarantine_unreadable_secure_objects() -> _SecureObjectIntegrityRepo
     operator can confirm the blast radius before committing - the same
     preview shape ``reset-progress --dry-run`` already offers.
     """
-    from .repair_integrity import active_bucket_repair_session
-
-    with active_bucket_repair_session():
-        return _probe_secure_objects_integrity()
+    return _probe_secure_objects_integrity()
 
 
 def quarantine_unreadable_secure_objects() -> _SecureObjectIntegrityReport:
@@ -966,11 +961,9 @@ def quarantine_unreadable_secure_objects() -> _SecureObjectIntegrityReport:
     from ..adapters.persistence.storage.runtime_repository import (
         secure_object_repository_for_active_bucket_or_default_route,
     )
-    from .repair_integrity import active_bucket_repair_session
 
-    with active_bucket_repair_session():
-        repo = secure_object_repository_for_active_bucket_or_default_route()
-        namespaces = repo.quarantine_unreadable_rows()
+    repo = secure_object_repository_for_active_bucket_or_default_route()
+    namespaces = repo.quarantine_unreadable_rows()
     quarantined_total = sum(item.unreadable for item in namespaces)
     retained_total = sum(item.readable for item in namespaces)
     return _SecureObjectIntegrityReport(

@@ -30,7 +30,6 @@ path: ``cadrumo.core.setup_answers`` -> ``cadrumo.domain.deadlines.models`` ->
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
 from typing import Any, Final, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -134,107 +133,14 @@ def register_project_answers(fn: ProjectAnswersFn) -> None:
     _log.debug("project_answers registered: %r", fn)
 
 
-# ---------------------------------------------------------------------------
-# Profile-record projection
-#
-# The mapping below is what a persisted profile record needs to fill
-# :class:`SetupAnswers`: for each answer field, the profile path its value
-# is stored under, the type that value carries, and the default to assume
-# when the record is silent. Nothing else — no prompt, no widget, no
-# ordering, no visibility condition — participates in the projection.
-#
-# It lives here, beside the model it fills, because the deadline engine
-# projects a taxpayer profile out of stored facts on every schedule
-# computation, and that must not depend on the presence of an interactive
-# setup surface. Previously the engine reached the same information by
-# walking the terminal wizard's question catalogue, which coupled a
-# regulatory computation to a UI script and made the wizard undeletable.
-# ---------------------------------------------------------------------------
-
-
-@dataclass(frozen=True, slots=True)
-class SetupFieldSpec:
-    """Where one :class:`SetupAnswers` field is read from and how it parses."""
-
-    path: str
-    """Dotted profile-record path, e.g. ``identity.tax_id``.
-
-    Every path here is declared in the user-profile schema; the schema
-    remains the authority on which fields exist, this table only records
-    which answer field each one feeds.
-    """
-
-    answer_type: type[str] | type[bool]
-    """The stored token's type. Only these two occur in the setup answers."""
-
-    default: str | None = None
-    """Token to assume when the record carries no value for ``path``.
-
-    ``None`` means "leave the field to the model's own default", which is
-    not the same as an empty string: a blank token is a *declared* blank
-    and reaches the model, where an optional boolean reads it as
-    undeclared rather than as a positive ``False``.
-    """
-
-
 PROFILE_OUTPUT_LANGUAGE_PATH: Final[str] = "preferences.output_language"
 """Dotted profile-record path for the setup flow's output-language answer."""
 
 
-class _RegistrySetupAnswerFields(Mapping[str, SetupFieldSpec]):
-    """Lazy mapping view over the governed setup-field catalogue."""
-
-    def __init__(self) -> None:
-        self._resolved: dict[str, SetupFieldSpec] | None = None
-
-    def _values(self) -> dict[str, SetupFieldSpec]:
-        if self._resolved is None:
-            from ..domain.calculations.registry.setup_profile_bindings import setup_answer_declarations
-
-            self._resolved = {
-                field: SetupFieldSpec(path, answer_type, default)
-                for field, (path, answer_type, default) in setup_answer_declarations().items()
-            }
-        return self._resolved
-
-    def __getitem__(self, key: str) -> SetupFieldSpec:
-        return self._values()[key]
-
-    def __iter__(self):
-        return iter(self._values())
-
-    def __len__(self) -> int:
-        return len(self._values())
-
-
-SETUP_ANSWER_FIELDS: Mapping[str, SetupFieldSpec] = _RegistrySetupAnswerFields()
-"""Every :class:`SetupAnswers` field a persisted profile record can fill.
-
-A field absent from this table is filled by some other route (the
-descendant flow writes ``unidad_familiar_descendientes_exclusivos``) and
-keeps its model default here.
-"""
-
-
-def project_setup_answers(values: Mapping[str, str]) -> SetupAnswers:
-    """Build :class:`SetupAnswers` from a profile-record path mapping.
-
-    A path present in ``values`` wins even when its value is blank, because
-    a stored blank is a declared blank; only a genuinely absent path falls
-    back to the table's default. A blank boolean projects to the empty
-    string rather than ``False`` so that "not declared" survives the round
-    trip — collapsing it would let a persistence layer store a positive
-    ``"false"`` the operator never asserted.
-    """
-    typed: dict[str, object] = {}
-    for field, spec in SETUP_ANSWER_FIELDS.items():
-        raw = values.get(spec.path)
-        if raw is None:
-            raw = spec.default
-        if raw is None:
-            continue
-        typed[field] = (raw == "true" if raw else "") if spec.answer_type is bool else raw
-    return SetupAnswers.model_validate(typed)
+# The profile-record projection is registry-aware and is defined by
+# cadrumo.domain.deadlines.setup_answer_projection. Keeping that composition
+# outside core lets this module remain importable without loading registry
+# authority.
 
 
 # ---------------------------------------------------------------------------
@@ -255,8 +161,8 @@ def project_setup_answers(values: Mapping[str, str]) -> SetupAnswers:
 def _m() -> Any:
     """Return the module that defines the taxpayer-profile enums (lazy).
 
-    Was the ``cadrumo.domain.deadlines`` package namespace, which re-exported
-    these. The namespace is inert, so this names the module that defines them.
+    Loading is deferred to preserve the core/domain dependency boundary while
+    resolving answers that explicitly require these domain-owned values.
     """
     import importlib
 
@@ -882,13 +788,10 @@ class SetupAnswers(BaseModel):
 
 __all__ = [
     "PROFILE_OUTPUT_LANGUAGE_PATH",
-    "SETUP_ANSWER_FIELDS",
     "ProfileAnswerTypeError",
     "ProjectAnswersFn",
     "ProjectAnswersNotRegisteredError",
     "ProjectAnswersRegistrationError",
     "SetupAnswers",
-    "SetupFieldSpec",
-    "project_setup_answers",
     "register_project_answers",
 ]
