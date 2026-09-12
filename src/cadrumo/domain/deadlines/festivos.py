@@ -190,7 +190,7 @@ class DeadlineShift(BaseModel):
 #: falls on a Spanish holiday or weekend. Adding new modelos to this
 #: tuple keeps the exception list data-driven; :func:`shift_deadline`
 #: never grows a switch statement.
-MODELOS_WITHOUT_SHIFT: tuple[str, ...] = (Modelo("3"),)
+MODELOS_WITHOUT_SHIFT: tuple[str, ...] = (Modelo("369"),)
 
 
 # ---------------------------------------------------------------------------

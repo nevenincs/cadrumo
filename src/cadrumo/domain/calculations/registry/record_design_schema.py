@@ -350,7 +350,7 @@ def _validate_m220_closing_part_shape(parts: tuple[RecordDesignRelativeSuffixMar
         raise ValueError("composite relative closing requires six alphanumeric parts")
     if tuple(part.content for part in parts) != (
         "</T",
-        Modelo("2").value,
+        Modelo("220").value,
         "(*)[A|E|I|0]",
         None,
         "0A",

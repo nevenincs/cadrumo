@@ -156,7 +156,7 @@ class IvaCompensationPeriodState(BaseModel):
         if self.period.filing_year != self.filing_year:
             raise ValueError("period.filing_year must match filing_year")
         if (
-            self.registry_snapshot_ref.modelo != Modelo("3").value
+            self.registry_snapshot_ref.modelo != Modelo("303").value
             or self.registry_snapshot_ref.modelo_year != self.filing_year
             or self.registry_snapshot_ref.period != self.period.registry_token
         ):

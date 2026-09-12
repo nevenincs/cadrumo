@@ -1,23 +1,9 @@
 """Static CLI architecture guards for modelo command decomposition.
 
-The two cross-package private-import checks this module carried
-(``test_extracted_modelo_cli_modules_do_not_import_private_application_modules``
-and ``test_extracted_modelo_cli_modules_do_not_add_untracked_private_domain_imports``,
-the latter's ``_PRIVATE_DOMAIN_IMPORT_EXCEPTIONS`` allowlist covering
-``_modelo_iva_wallet_cli.py`` -> ``domain.iva_compensation.errors`` and
-``_modelo_maritime_cli.py`` -> ``domain.renta.errors``) are superseded by the
-project-wide ratcheting import-hygiene gate,
-``src/cadrumo/tests/test_import_hygiene_gate.py`` (backed by
-the import-hygiene scanner and its checked-in baseline).
-Both former allowlist entries are
-empty in practice at supersession time: neither modelo CLI module still
-imports its domain package's private submodule (both now import the public
-facade), and the general gate enforces the boundary for every production file
-under ``src/cadrumo``, not just the modelo CLI surface. The remaining checks
-below (legacy-root growth budgets, raw-id-regex placement, legacy-selector
-reintroduction, centralized-addressing bypass) are modelo-CLI-decomposition-
-specific structural rules, not import-hygiene duplicates, and remain this
-module's own authority.
+Dependency direction and private cross-package imports are owned by
+``just check-import-boundaries``.  This module keeps only the structural rules
+specific to modelo CLI decomposition: legacy-root shrinkage, raw-id-regex
+placement, selector ownership, and centralized addressing.
 
 See Also:
     :func:`~tests._inventory.package_python_files`
@@ -49,8 +35,6 @@ _MODELO_MODULE_PREFIX = "_modelo"
 _MODELO_LEGACY_ROOT = "_modelo.py"
 _MODELO_PAYLOADS = "_modelo_payloads.py"
 _MODELO_CLI_SUPPORT = "_modelo_cli_support.py"
-
-_LEGACY_ROOT_PRIVATE_IMPORT_MODULES: set[str] = set()
 
 _LEGACY_ROOT_REGISTRY_AUTHORITY_READ_BUDGET = 0
 _LEGACY_ROOT_REGISTRY_QUERY_SERVICE_CALL_BUDGET = 0
@@ -114,23 +98,6 @@ def _import_from_modules(path: Path, source_tree_ast: Mapping[Path, ast.AST]) ->
     return tuple(modules)
 
 
-def _normalized_module(level: int, module: str) -> str:
-    if level >= 3:
-        return module
-    return module.removeprefix("cadrumo.")
-
-
-def _private_backend_import_modules(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> tuple[str, ...]:
-    modules: list[str] = []
-    for _line_number, level, module in _import_from_modules(path, source_tree_ast):
-        normalized = _normalized_module(level, module)
-        is_private_application = normalized.startswith("application.") and "._" in normalized
-        is_private_domain = normalized.startswith("domain.") and "._" in normalized
-        if is_private_application or is_private_domain:
-            modules.append(normalized)
-    return tuple(sorted(modules))
-
-
 def _registry_query_service_call_count(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> int:
     tree = _tree_for_path(path, source_tree_ast)
     count = 0
@@ -173,15 +140,6 @@ def test_extracted_modelo_cli_modules_do_not_import_legacy_modelo_root(
                 offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}:{line_number}")
 
     assert offenders == [], "extracted modelo modules import _modelo.py:\n  " + "\n  ".join(offenders)
-
-
-def test_legacy_modelo_root_does_not_add_private_backend_imports(source_tree_ast: Mapping[Path, ast.AST]) -> None:
-    """The legacy root may shrink private backend debt, but it must not grow it."""
-    path = _CLI_ROOT / _MODELO_LEGACY_ROOT
-    private_imports = set(_private_backend_import_modules(path, source_tree_ast))
-    unexpected = sorted(private_imports - _LEGACY_ROOT_PRIVATE_IMPORT_MODULES)
-
-    assert unexpected == [], "new private backend imports in _modelo.py:\n  " + "\n  ".join(unexpected)
 
 
 def test_legacy_modelo_root_does_not_add_registry_authority_reads(source_tree_ast: Mapping[Path, ast.AST]) -> None:

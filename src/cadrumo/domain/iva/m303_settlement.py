@@ -18,7 +18,7 @@ def _m303_annual_settlement_period_tokens(
 ) -> tuple[str, ...]:
     """Read annual-settlement tokens from the selected M303 period surface."""
     report = RegistryQueryService(bundled_authority()).describe_modelo(
-        str(Modelo("3")),
+        str(Modelo("303")),
     )
     year = filing_year or report.filing_year or report.valid_from.year
     declared = tuple(Period.from_year_and_code(year, token) for token in report.periods)

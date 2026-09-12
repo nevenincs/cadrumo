@@ -453,7 +453,7 @@ class CrossPeriodGroupMemberRoster(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    source_modelo: Annotated[Modelo, BeforeValidator(_parse_modelo_identifier)] = Modelo("3")
+    source_modelo: Annotated[Modelo, BeforeValidator(_parse_modelo_identifier)] = Modelo("322")
     filing_year: FilingYear
     period: Period
     member_nifs: tuple[SubjectTaxId, ...] = Field(min_length=1)

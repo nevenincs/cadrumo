@@ -988,11 +988,6 @@ def _enumerate_frozen_universe() -> dict[str, Any]:
 
 
 CONSUMER_QUERY_SYMBOLS = frozenset({"MappingFactQuery", "ScalarFactQuery", "EntitySetFactQuery"})
-DATE_AXIS_NAMES = {
-    "FILING_PERIOD": "filing_period",
-    "DEVENGO_DATE": "devengo_date",
-    "SUBMISSION_DATE": "submission_date",
-}
 
 
 def _call_symbol(node: ast.AST) -> str | None:
@@ -1021,9 +1016,20 @@ def _static_string(node: ast.AST | None, constants: dict[str, str]) -> str | Non
 
 
 def _date_axis_name(node: ast.AST | None) -> str | None:
-    """Map a static DateAxis member to the registry's serialized axis name."""
-    if isinstance(node, ast.Attribute):
-        return DATE_AXIS_NAMES.get(node.attr)
+    """Map a static ``DateAxis`` enum member to its serialized axis name.
+
+    The enum members intentionally use the registry token as their lower-case
+    snake-case spelling. Reading the member attribute from the AST keeps this
+    detector closed over the enum owner while recognizing every current and
+    future member without a hand-maintained fact/callsite list. Dynamic axis
+    expressions remain unresolved and therefore blocking.
+    """
+    if (
+        isinstance(node, ast.Attribute)
+        and isinstance(node.value, ast.Name)
+        and node.value.id == "DateAxis"
+    ):
+        return node.attr.lower()
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return node.value
     return None

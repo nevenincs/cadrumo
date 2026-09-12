@@ -9,7 +9,7 @@ related:
   - '[[2026-09-10-registry-authority-artifact-boundary-research]]'
 modified: '2026-09-12'
 body_schema: body-v2
-body_hash: 'sha256:b49f2da03d0ea2329ad0620ab348971760788aef260eac7f0d756e65130a24d4'
+body_hash: 'sha256:4d419aed9ba825dcae69c82f7c103572b64cc269dfdc27864651e152043afa35'
 ---
 
 # `registry-authority-artifact-boundary` plan
@@ -78,16 +78,23 @@ Complete the authority boundary by removing bootstrap and parallel regulated-dat
 Publish v4 without authoring-source bootstrap, preserve the canonical typed graph, and remove schema-approved wire defaults without adding runtime delta interpretation.
 
 - [ ] `W04.P06.S11` - Implement syntax-only Modelo and TaxDomain value types and migrate enum-dependent callers; `src/cadrumo/core/modelo.py, src/cadrumo/core/tax_domain.py, src/cadrumo/entrypoints/, src/cadrumo/application/, src/cadrumo/domain/`.
+- [ ] `W04.P06.S12` - Implement the compact atomic v4 authority wire contract with exact typed reconstruction and no runtime delta interpreter; `src/cadrumo/domain/calculations/registry/authority_artifact.py`.
 
 ### Phase `W04.P07` - Typed runtime catalogue unification
 
 Compile every regulated AEAT runtime table into typed authority catalogues and route consumers, supported-year admission, and cache coordinates through one authority provider.
 
+- [ ] `W04.P07.S13` - Compile parallel IVA, territory, recargo and authorization inputs into canonical typed registry catalogues; `src/cadrumo/domain/calculations/registry/schema.py, dev/registry/compiler/, src/cadrumo/_data/registry/aeat/`.
+- [ ] `W04.P07.S14` - Route regulated runtime consumers through published typed authority providers and remove default raw authoring loaders; `src/cadrumo/domain/iva/, src/cadrumo/domain/deadlines/, src/cadrumo/domain/auth/apoderamientos/, src/cadrumo/domain/resources/`.
+- [ ] `W04.P07.S15` - Centralize supported filing-year admission and runtime cache identity on ValidatedRegistryAuthority; `src/cadrumo/domain/calculations/registry/authority.py, src/cadrumo/application/filing/`.
 
 ### Phase `W04.P08` - Installed boundary proof
 
 Regenerate the tracked v4 authority and prove compact semantic round-trip, raw-source isolation, fail-closed loading, centralized temporal limits, and installed artifact-only workflows.
 
+- [ ] `W04.P08.S16` - Regenerate and measure the tracked v4 artifact, proving semantic equality and the compactness budget; `src/cadrumo/_data/registry/authority/authority.json, dev/registry/pipeline/`.
+- [ ] `W04.P08.S17` - Prove installed artifact-only execution, corruption refusal, zero raw AEAT readers, typed operative-value consumption and centralized temporal admission; `tests/integration/, dev/packaging/tests/, src/cadrumo/tests/`.
+- [ ] `W04.P08.S18` - Document publication, recovery, schema migration and runtime ownership, then complete final architecture review; `docs/, .vault/audit/`.
 
 ## Parallelization
 

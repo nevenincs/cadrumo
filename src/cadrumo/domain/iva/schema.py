@@ -134,7 +134,25 @@ class IvaCashAccountingTreatment(StrEnum):
     """
 
     NONE = "none"
+    TAXPAYER_REGIME = "taxpayer_regime"
+    """The taxpayer is acogido al régimen especial del criterio de caja.
+
+    LIVA art. 163 terdecies governs this subject: the devengo of the
+    taxpayer's OWN supplies moves to the moment of cobro total o parcial, with
+    the 31 de diciembre del año inmediato posterior fallback, and the
+    taxpayer's right to deduct arises on payment.
+    """
     SUPPLIER_REGIME = "supplier_regime"
+    """The taxpayer is NOT acogido but is the destinatario of an operation
+    affected by the regime.
+
+    A legally distinct subject under LIVA art. 163 quinquiesdecies: nothing
+    moves the devengo of this taxpayer's own supplies, and only the deduction
+    of the received operation is deferred to the momento del pago total o
+    parcial. Collapsing this into :attr:`TAXPAYER_REGIME` -- or the reverse --
+    would assert that the taxpayer is acogido when it is not, so the axis
+    keeps all three states.
+    """
 
 
 class IvaLedgerObservationRole(StrEnum):
