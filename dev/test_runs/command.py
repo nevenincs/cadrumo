@@ -54,6 +54,10 @@ _TEST_IDENTITY_RE: Final[re.Pattern[str]] = re.compile(
 _ROOT_CAUSE_RE: Final[re.Pattern[str]] = re.compile(
     r"^(?:E\s+)?(?P<type>[A-Za-z_][A-Za-z0-9_.]*(?:Error|Exception)):\s*(?P<message>.+)$"
 )
+_REGISTRY_LOAD_FAILURE_RE: Final[re.Pattern[str]] = re.compile(
+    r"^registry-runtime-load\s+status=failed\s+loadable=false\s+detail="
+    r"(?P<type>[A-Za-z_][A-Za-z0-9_.]*(?:Error|Exception)):\s*(?P<message>.+)$"
+)
 _PYTEST_OUTCOME_KEYS: Final[dict[str, str]] = {
     "collected": "collected",
     "passed": "passed",
@@ -274,6 +278,8 @@ class _PytestSummaryProcessor:
             self._lane()["internal_error"] = True
             diagnostic_text = diagnostic_text.removeprefix("INTERNALERROR>").strip()
         root_cause = _ROOT_CAUSE_RE.fullmatch(diagnostic_text)
+        if root_cause is None and str(self._lane()["kind"]) == "load":
+            root_cause = _REGISTRY_LOAD_FAILURE_RE.fullmatch(diagnostic_text)
         if root_cause is not None:
             causes = self._lane()["root_causes"]
             assert isinstance(causes, Counter)
@@ -334,18 +340,23 @@ class _PytestSummaryProcessor:
                 (summaryless_failure and kind == "collection")
                 or (counts["error"] and not (counts["passed"] or counts["failed"]))
             )
+            load_failure = not internal_error and summaryless_failure and kind == "load" and bool(root_causes)
             phase = (
                 "tool"
-                if internal_error or (summaryless_failure and kind != "collection")
+                if internal_error or (summaryless_failure and kind not in {"collection", "load"})
                 else "collection"
                 if collection_failure
+                else "load"
+                if load_failure
                 else "execution"
             )
             classification = (
                 "tool_failure"
-                if internal_error or (summaryless_failure and kind != "collection")
+                if internal_error or (summaryless_failure and kind != "collection" and not load_failure)
                 else "collection_failure"
                 if collection_failure
+                else "load_failure"
+                if load_failure
                 else "clean"
                 if data["status"] == 0
                 else "blocking_findings"
@@ -406,7 +417,17 @@ class _PytestSummaryProcessor:
             for data in self.lane_data.values()
         )
         summaryless_tool_failed = sum(
-            data["status"] not in (None, 0) and not data["counts"] and data["kind"] != "collection"
+            data["status"] not in (None, 0)
+            and not data["counts"]
+            and data["kind"] != "collection"
+            and not (data["kind"] == "load" and bool(data["root_causes"]))
+            for data in self.lane_data.values()
+        )
+        summaryless_load_failed = sum(
+            data["status"] not in (None, 0)
+            and not data["counts"]
+            and data["kind"] == "load"
+            and bool(data["root_causes"])
             for data in self.lane_data.values()
         )
         if not complete:
@@ -436,6 +457,9 @@ class _PytestSummaryProcessor:
                 f"{label} had {summaryless_collection_failed} collection lane(s) fail before a terminal summary; "
                 "inspect the collection evidence."
             )
+        elif summaryless_load_failed:
+            classification = "load_failure"
+            headline = f"{label} had {summaryless_load_failed} registry load lane(s) fail; inspect the typed load evidence."
         elif self.lanes == 0:
             classification = "tool_failure"
             headline = f"{label} failed before any pytest invocation produced a terminal summary; inspect the run log."
@@ -481,9 +505,15 @@ class _PytestSummaryProcessor:
                 "lanes_failed": sum(data["status"] not in (None, 0) for data in self.lane_data.values()),
                 "lanes_tool_failed": sum(
                     bool(data["internal_error"])
-                    or (data["status"] not in (None, 0) and not data["counts"] and data["kind"] != "collection")
+                    or (
+                        data["status"] not in (None, 0)
+                        and not data["counts"]
+                        and data["kind"] != "collection"
+                        and not (data["kind"] == "load" and bool(data["root_causes"]))
+                    )
                     for data in self.lane_data.values()
                 ),
+                "lanes_load_failed": summaryless_load_failed,
                 "lanes_blocked": blocked,
                 "lanes_not_run": expected - completed - blocked,
                 "pytest_invocations": self.lanes,
@@ -1202,6 +1232,39 @@ def _stop_interrupted_process(process: subprocess.Popen[str]) -> None:
         pass
 
 
+def _write_run_metadata(
+    *,
+    run_dir: Path,
+    artifacts: Path,
+    cache: Path,
+    command: tuple[str, ...],
+    exit_status: int,
+    finished: datetime,
+    log_path: Path,
+    scratch: Path,
+    started: datetime,
+) -> None:
+    """Atomically persist the canonical run contract."""
+    payload = {
+        "artifacts": str(artifacts),
+        "cache": str(cache),
+        "command": list(command),
+        "exit_status": exit_status,
+        "finished_at": finished.isoformat(),
+        "log": str(log_path),
+        "run_id": run_dir.name,
+        "scratch": str(scratch),
+        "started_at": started.isoformat(),
+    }
+    temporary = scratch / "run.json.tmp"
+    temporary.write_text(
+        json.dumps(payload, indent=2) + "\n",
+        encoding=_UTF_8,
+        newline="\n",
+    )
+    os.replace(temporary, run_dir / "run.json")
+
+
 def run(
     command: tuple[str, ...],
     *,
@@ -1223,6 +1286,21 @@ def run(
     cache.mkdir()
     scratch.mkdir()
     log_path = run_dir / "run.log"
+    # PowerShell can terminate every native process in a Ctrl+C pipeline before
+    # Python receives a catchable KeyboardInterrupt. Seed a fail-closed record
+    # before entering that process tree; normal and catchable-interrupt exits
+    # atomically replace it with their actual completion timestamp and status.
+    _write_run_metadata(
+        run_dir=run_dir,
+        artifacts=artifacts,
+        cache=cache,
+        command=command,
+        exit_status=_INTERRUPTED_EXIT_STATUS,
+        finished=started,
+        log_path=log_path,
+        scratch=scratch,
+        started=started,
+    )
     if signal == _IMPORT_BOUNDARIES_SIGNAL:
         processor = _ImportBoundariesProcessor()
     elif signal in {_BINDING_SIGNAL, _REGISTRY_HEALTH_SIGNAL}:
@@ -1320,24 +1398,16 @@ def run(
         finished = datetime.now(tz=UTC)
         transcript.write(f"FINISH {finished.isoformat()} exit={exit_status}\n")
 
-    (run_dir / "run.json").write_text(
-        json.dumps(
-            {
-                "artifacts": str(artifacts),
-                "cache": str(cache),
-                "command": list(command),
-                "exit_status": exit_status,
-                "finished_at": finished.isoformat(),
-                "log": str(log_path),
-                "run_id": run_dir.name,
-                "scratch": str(scratch),
-                "started_at": started.isoformat(),
-            },
-            indent=2,
-        )
-        + "\n",
-        encoding=_UTF_8,
-        newline="\n",
+    _write_run_metadata(
+        run_dir=run_dir,
+        artifacts=artifacts,
+        cache=cache,
+        command=command,
+        exit_status=exit_status,
+        finished=finished,
+        log_path=log_path,
+        scratch=scratch,
+        started=started,
     )
     if processor is None:
         print(f"{label} run log: {log_path} (exit={exit_status}, metadata={run_dir / 'run.json'})", flush=True)
