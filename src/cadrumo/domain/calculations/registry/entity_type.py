@@ -1,0 +1,325 @@
+"""Typed projections for the taxpayer entity and legal-form vocabulary."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import date
+from functools import lru_cache
+from types import MappingProxyType
+from typing import TYPE_CHECKING
+
+from ...contribuyente.entity_type import EntityType, LegalEntityForm
+from .errors import RegistryValidationError
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .schema_base import DateAxis
+
+if TYPE_CHECKING:
+    from .authority import ValidatedRegistryAuthority
+
+
+_FACT_ID = "taxpayer-entity-vocabulary"
+_ENTITY_TYPE_ORDER_KEY = "entity_type.order"
+_ENTITY_TYPE_PREFIX = "entity_type."
+_LEGAL_FORM_ORDER_KEY = "legal_entity_form.order"
+_LEGAL_FORM_PREFIX = "legal_entity_form."
+
+
+@dataclass(frozen=True, slots=True)
+class EntityTypeDefinition:
+    """One registry-declared taxpayer entity type and its legal semantics."""
+
+    token: EntityType
+    description: str
+    tax_regime: str
+    legal_refs: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class LegalEntityFormDefinition:
+    """One registry-declared legal form and its governing entity axis."""
+
+    token: LegalEntityForm
+    description: str
+    entity_type: EntityType
+    legal_refs: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class EntityVocabulary:
+    """Complete typed projection of fact ``taxpayer-entity-vocabulary``."""
+
+    entity_types: tuple[EntityTypeDefinition, ...]
+    legal_entity_forms: tuple[LegalEntityFormDefinition, ...]
+
+    @property
+    def all_entity_types(self) -> frozenset[EntityType]:
+        return frozenset(item.token for item in self.entity_types)
+
+    @property
+    def all_legal_entity_forms(self) -> frozenset[LegalEntityForm]:
+        return frozenset(item.token for item in self.legal_entity_forms)
+
+    def require_entity_type(self, value: object) -> EntityType:
+        if isinstance(value, EntityType):
+            token = value
+        elif isinstance(value, str):
+            raw = value.strip()
+            if not raw:
+                raise RegistryValidationError("entity-type token must be non-empty")
+            try:
+                token = EntityType._from_registry(raw)
+            except (TypeError, ValueError) as exc:
+                raise RegistryValidationError("entity-type token must be a non-empty string") from exc
+        else:
+            raise RegistryValidationError("entity-type token must be a string token")
+        if token not in self.all_entity_types:
+            raise RegistryValidationError(
+                f"entity-type token {str(token)!r} is not declared by fact {_FACT_ID!r}",
+            )
+        return token
+
+    def require_legal_entity_form(self, value: object) -> LegalEntityForm:
+        if isinstance(value, LegalEntityForm):
+            token = value
+        elif isinstance(value, str):
+            raw = value.strip()
+            if not raw:
+                raise RegistryValidationError("legal-entity-form token must be non-empty")
+            try:
+                token = LegalEntityForm._from_registry(raw)
+            except (TypeError, ValueError) as exc:
+                raise RegistryValidationError("legal-entity-form token must be a non-empty string") from exc
+        else:
+            raise RegistryValidationError("legal-entity-form token must be a string token")
+        if token not in self.all_legal_entity_forms:
+            raise RegistryValidationError(
+                f"legal-entity-form token {str(token)!r} is not declared by fact {_FACT_ID!r}",
+            )
+        return token
+
+    def entity_type_definition(self, value: object) -> EntityTypeDefinition:
+        token = self.require_entity_type(value)
+        return next(item for item in self.entity_types if item.token == token)
+
+    def legal_entity_form_definition(self, value: object) -> LegalEntityFormDefinition:
+        token = self.require_legal_entity_form(value)
+        return next(item for item in self.legal_entity_forms if item.token == token)
+
+
+def _required(entries: Mapping[str, str], key: str) -> str:
+    value = entries.get(key)
+    if value is None or not value.strip():
+        raise RegistryValidationError(f"taxpayer entity vocabulary is missing {key!r}")
+    return value.strip()
+
+
+def _csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
+    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    if not values or len(values) != len(set(values)):
+        raise RegistryValidationError(f"taxpayer entity vocabulary {key!r} must contain unique tokens")
+    return values
+
+
+def _refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
+    values = tuple(token.strip() for token in _required(entries, key).split(",") if token.strip())
+    if not values or len(values) != len(set(values)):
+        raise RegistryValidationError(f"taxpayer entity vocabulary {key!r} must contain unique legal references")
+    return values
+
+
+def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
+    entries: dict[str, str] = {}
+    for entry in resolved.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            raise RegistryValidationError("taxpayer entity vocabulary entries must be string-to-string")
+        if entry.key in entries:
+            raise RegistryValidationError(f"duplicate taxpayer entity vocabulary key {entry.key!r}")
+        entries[entry.key] = entry.value
+    return MappingProxyType(entries)
+
+
+def _resolve_mapping_entries(
+    *,
+    effective_date: date,
+    authority: ValidatedRegistryAuthority,
+) -> Mapping[str, str]:
+    resolved = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id=_FACT_ID,
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise RegistryValidationError("taxpayer entity vocabulary must resolve as a mapping fact")
+    return _mapping_entries(resolved)
+
+
+@lru_cache(maxsize=64)
+def _bundled_mapping_entries(effective_date: date) -> Mapping[str, str]:
+    from .authority import bundled_authority
+
+    return _resolve_mapping_entries(effective_date=effective_date, authority=bundled_authority())
+
+
+def _selected_mapping_entries(
+    *,
+    effective_date: date | None,
+    authority: ValidatedRegistryAuthority | None,
+) -> Mapping[str, str]:
+    coordinate = effective_date or date.today()
+    if authority is None:
+        return _bundled_mapping_entries(coordinate)
+    return _resolve_mapping_entries(effective_date=coordinate, authority=authority)
+
+
+def resolve_entity_vocabulary(
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> EntityVocabulary:
+    """Resolve and validate all entity types and legal forms from fact 0124."""
+    entries = _selected_mapping_entries(effective_date=effective_date, authority=authority)
+    entity_types: list[EntityTypeDefinition] = []
+    for raw_token in _csv(entries, _ENTITY_TYPE_ORDER_KEY):
+        token = EntityType._from_registry(raw_token)
+        prefix = f"{_ENTITY_TYPE_PREFIX}{raw_token}."
+        if _required(entries, f"{prefix}value") != raw_token:
+            raise RegistryValidationError(f"entity-type token {raw_token!r} declares a mismatched value")
+        entity_types.append(
+            EntityTypeDefinition(
+                token=token,
+                description=_required(entries, f"{prefix}description"),
+                tax_regime=_required(entries, f"{prefix}tax_regime"),
+                legal_refs=_refs(entries, f"{prefix}legal_refs"),
+            ),
+        )
+    vocabulary = EntityVocabulary(entity_types=tuple(entity_types), legal_entity_forms=())
+    legal_entity_forms: list[LegalEntityFormDefinition] = []
+    for raw_token in _csv(entries, _LEGAL_FORM_ORDER_KEY):
+        token = LegalEntityForm._from_registry(raw_token)
+        prefix = f"{_LEGAL_FORM_PREFIX}{raw_token}."
+        if _required(entries, f"{prefix}value") != raw_token:
+            raise RegistryValidationError(f"legal-entity-form token {raw_token!r} declares a mismatched value")
+        entity_type = vocabulary.require_entity_type(_required(entries, f"{prefix}entity_type"))
+        if entity_type.value != "legal_entity":
+            raise RegistryValidationError(
+                f"legal-entity-form token {raw_token!r} must be scoped to legal_entity",
+            )
+        legal_entity_forms.append(
+            LegalEntityFormDefinition(
+                token=token,
+                description=_required(entries, f"{prefix}description"),
+                entity_type=entity_type,
+                legal_refs=_refs(entries, f"{prefix}legal_refs"),
+            ),
+        )
+    return EntityVocabulary(entity_types=vocabulary.entity_types, legal_entity_forms=tuple(legal_entity_forms))
+
+
+def require_entity_type(
+    value: object,
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> EntityType:
+    """Return an entity-type token only when fact 0124 declares it."""
+    return resolve_entity_vocabulary(effective_date=effective_date, authority=authority).require_entity_type(value)
+
+
+def require_legal_entity_form(
+    value: object,
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> LegalEntityForm:
+    """Return a legal-form token only when fact 0124 declares it."""
+    return resolve_entity_vocabulary(
+        effective_date=effective_date,
+        authority=authority,
+    ).require_legal_entity_form(value)
+
+
+def entity_type_tokens(
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> tuple[EntityType, ...]:
+    """Return entity-type choices in the authored order."""
+    return tuple(
+        item.token
+        for item in resolve_entity_vocabulary(effective_date=effective_date, authority=authority).entity_types
+    )
+
+
+def legal_entity_form_tokens(
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> tuple[LegalEntityForm, ...]:
+    """Return legal-form choices in the authored order."""
+    return tuple(
+        item.token
+        for item in resolve_entity_vocabulary(effective_date=effective_date, authority=authority).legal_entity_forms
+    )
+
+
+def _entity_type_token(
+    raw_token: str,
+    *,
+    effective_date: date | None,
+    authority: ValidatedRegistryAuthority | None,
+) -> EntityType:
+    return require_entity_type(raw_token, effective_date=effective_date, authority=authority)
+
+
+def entity_type_natural_person_token(
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> EntityType:
+    return _entity_type_token("natural_person", effective_date=effective_date, authority=authority)
+
+
+def entity_type_legal_entity_token(
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> EntityType:
+    return _entity_type_token("legal_entity", effective_date=effective_date, authority=authority)
+
+
+def entity_type_attribution_entity_token(
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> EntityType:
+    return _entity_type_token("attribution_entity", effective_date=effective_date, authority=authority)
+
+
+def legal_entity_form_sin_fines_lucrativos_token(
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> LegalEntityForm:
+    return resolve_entity_vocabulary(
+        effective_date=effective_date,
+        authority=authority,
+    ).require_legal_entity_form("sin_fines_lucrativos")
+
+
+__all__ = [
+    "EntityTypeDefinition",
+    "EntityVocabulary",
+    "LegalEntityFormDefinition",
+    "entity_type_attribution_entity_token",
+    "entity_type_legal_entity_token",
+    "entity_type_natural_person_token",
+    "entity_type_tokens",
+    "legal_entity_form_sin_fines_lucrativos_token",
+    "legal_entity_form_tokens",
+    "require_entity_type",
+    "require_legal_entity_form",
+    "resolve_entity_vocabulary",
+]

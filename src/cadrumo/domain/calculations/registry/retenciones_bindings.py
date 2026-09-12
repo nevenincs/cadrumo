@@ -28,10 +28,12 @@ from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_selector_utils import selector_against_model
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
+from .errors import RegistryValidationError
 from .ids import BindingId
 from .schema_base import coerce_enum_member, coerce_enum_tuple
 
 if TYPE_CHECKING:
+    from ....core.period import Period
     from .schema import BindingDefinition, ModeloRevision
 
 
@@ -51,6 +53,12 @@ RetencionesAggregationFactField = Annotated[
 
 class _RetencionesAggregationProtocol(Protocol):
     """The scalar totals the retenciones-aggregation source materialises."""
+
+    @property
+    def modelo(self) -> str: ...
+
+    @property
+    def period(self) -> Period: ...
 
     @property
     def rollups(self) -> tuple[_RetencionesRollupProtocol, ...]: ...
@@ -128,6 +136,44 @@ def resolve_retenciones_aggregation_binding_values(
     return resolved
 
 
+def _registry_schemes_for_modelo(
+    aggregation: _RetencionesAggregationProtocol,
+) -> frozenset[RetencionScheme]:
+    """Resolve the selected modelo's allowed scheme tokens from fact authority."""
+    from .authority import bundled_authority
+    from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+    from .queries import RegistryQueryService
+    from .schema_base import DateAxis
+
+    authority = bundled_authority()
+    RegistryQueryService(authority).describe_modelo(aggregation.modelo, as_of=aggregation.period.end_date)
+    resolved = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="m111-m115-m123-withholding-scheme-catalogue",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=aggregation.period.end_date,
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise RegistryValidationError("withholding scheme catalogue did not resolve as a mapping fact")
+    target_key = f"modelo.{aggregation.modelo}.schemes"
+    declarations = [entry.value for entry in resolved.payload.entries if entry.key == target_key]
+    if len(declarations) != 1 or not isinstance(declarations[0], str):
+        raise RegistryValidationError(
+            f"withholding scheme catalogue must declare exactly one {target_key!r} entry",
+        )
+    tokens = tuple(token.strip() for token in declarations[0].split(",") if token.strip())
+    if not tokens:
+        raise RegistryValidationError(f"withholding scheme catalogue entry {target_key!r} is empty")
+    try:
+        schemes = frozenset(RetencionScheme(token) for token in tokens)
+    except ValueError as exc:
+        raise RegistryValidationError(f"withholding scheme catalogue entry {target_key!r} is malformed") from exc
+    if len(schemes) != len(tokens):
+        raise RegistryValidationError(f"withholding scheme catalogue entry {target_key!r} contains duplicates")
+    return schemes
+
+
 def _retenciones_selector_value(
     selector: RetencionesAggregationProvider,
     aggregation: _RetencionesAggregationProtocol,
@@ -140,6 +186,13 @@ def _retenciones_selector_value(
         }
         return values[selector.fact]
 
+    declared_schemes = _registry_schemes_for_modelo(aggregation)
+    unknown_schemes = frozenset(selector.schemes).difference(declared_schemes)
+    if unknown_schemes:
+        rendered = ", ".join(sorted(scheme.value for scheme in unknown_schemes))
+        raise RegistryValidationError(
+            f"retenciones binding declares scheme token(s) outside the selected registry catalogue: {rendered}",
+        )
     selected = tuple(row for row in aggregation.rollups if row.scheme in selector.schemes)
     if selector.fact == "perceptor_count_distinct":
         return Decimal(len({row.perceptor_nif for row in selected}))

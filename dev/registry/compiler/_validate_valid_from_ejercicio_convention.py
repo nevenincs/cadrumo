@@ -42,7 +42,7 @@ def revision_declares_single_annual_period(revision: ModeloRevision) -> bool:
     has no single ejercicio for ``valid_from`` to name, and is excluded here
     rather than by a hand-maintained modelo-id allowlist.
     """
-    return revision.period_selector.periods == ("0A",)
+    return revision.period_selector.declared_periods == ("0A",)
 
 
 def _ejercicio_start(revision: ModeloRevision) -> date | None:

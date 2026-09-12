@@ -11,6 +11,8 @@
 # declares ONE top-level campo of 49 bytes, which is the extent declared here.
 [[revisions."2025".casillas]]
 id = "persona-relacion"
+continuidad_id = "m345-persona-relacion"
+continuidad_origin = "seeded"
 number = "tipo1.59-107"
 section = ["registro_declarante", "identificacion"]
 data_type = "text"
@@ -25,6 +27,8 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 # tres primeros digitos se correspondan con el codigo 345."
 [[revisions."2025".casillas]]
 id = "numero-identificativo-declaracion"
+continuidad_id = "m345-numero-identificativo-declaracion"
+continuidad_origin = "seeded"
 number = "tipo1.108-120"
 section = ["registro_declarante", "identificacion"]
 data_type = "integer"
@@ -38,6 +42,8 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 # 121 declaracion complementaria ("C"), 122 declaracion sustitutiva ("S").
 [[revisions."2025".casillas]]
 id = "declaracion-complementaria-sustitutiva"
+continuidad_id = "m345-declaracion-complementaria-sustitutiva"
+continuidad_origin = "seeded"
 number = "tipo1.121-122"
 section = ["registro_declarante", "identificacion"]
 data_type = "text"
@@ -53,6 +59,8 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 # Only carries content when campo 9 declares "C" or "S".
 [[revisions."2025".casillas]]
 id = "numero-identificativo-anterior"
+continuidad_id = "m345-numero-identificativo-anterior"
+continuidad_origin = "seeded"
 number = "tipo1.123-135"
 section = ["registro_declarante", "identificacion"]
 data_type = "integer"
@@ -68,6 +76,8 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 # cualquier otro caso el contenido de este campo se rellenara a espacios."
 [[revisions."2025".casillas]]
 id = "representante-legal-nif"
+continuidad_id = "m345-representante-legal-nif"
+continuidad_origin = "seeded"
 number = "tipo2.27-35"
 section = ["registro_declarado", "identificacion"]
 data_type = "nif"
@@ -89,6 +99,8 @@ additional_source_refs = ["boe-modelo-345-base-order"]
 # the fichero record writes.
 [[revisions."2025".casillas]]
 id = "datos-identificativos-empleador"
+continuidad_id = "m345-datos-identificativos-empleador"
+continuidad_origin = "seeded"
 number = "tipo2.272-320"
 section = ["registro_declarado", "empleador"]
 data_type = "text"

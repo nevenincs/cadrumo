@@ -1,0 +1,103 @@
+[revisions."2022-2024"]
+casilla_source_refs = ["aeat-dr-280-2022", "boe-modelo-280-base-order"]
+authority_grade = "applicability"
+# Modelo 280, declaración informativa anual de Planes de Ahorro a Largo Plazo,
+# filing years 2022, 2023 and 2024 as ONE span.
+#
+# ONE SPAN, AND WHAT THAT CLAIM ACTUALLY RESTS ON. The BOE consolidated text of
+# BOE-A-2015-11074 lists exactly three modifications to the anexo of Orden
+# HAP/2118/2015, where the diseños de registro live: Orden HFP/1822/2016, Orden
+# HAC/1276/2019 and Orden HFP/1192/2022. Nothing after 2022. There is therefore
+# no legal instrument by which the 2023 or 2024 design could differ from the 2022
+# one, and three revisions would assert a distinction no source states.
+#
+# THE CLAIM IS "NO AMENDING ORDEN EXISTS", NEVER "THE DESIGNS ARE BYTE-IDENTICAL".
+# Only ONE design is bundled -- aeat-dr-280-2022, whose window opens 2022-01-01
+# and does not close. A byte-identity claim would need three artefacts and this
+# tree holds one. Whether AEAT published a DR_280_2023 or DR_280_2024 that nobody
+# fetched is a question this tree cannot answer: it carries no negative-result
+# record for those URLs. ACQUISITION PENDING -- if either exists, this span
+# splits, and that is a real possibility rather than a formality.
+#
+# THE LOWER BOUND IS LOAD-BEARING AND MUST NOT BE EXTENDED EARLIER. Position 137
+# of the Tipo 2 record, «Extinción del Plan de Ahorro a Largo Plazo», was amended
+# by Orden HFP/1192/2022 art. cuarto: clave 3, extinción por fallecimiento del
+# tomador, was added, and clave 2 was rewritten to mean «en circunstancias
+# distintas a las definidas en las claves 1 y 3». The position did not move and
+# the caption did not change -- the entire change is in the Contenido cell.
+# Folding 2021 or earlier into this span would carry clave 3 into an ejercicio
+# where it did not exist.
+#
+# aeat-modelo-280-procedure IS DELIBERATELY NOT CITED. Its window opens
+# 2025-01-01 and overlaps no year of this span, so citing it would ground this
+# edition on a source that does not reach it. The 2025 sibling cites it
+# legitimately; this edition cannot.
+#
+# NO PREDECESSOR KEY IS DECLARED, and neither does the 2025 edition. That leaves
+# modelo 280 wholly undeclared, which the forest rule permits: it refuses a
+# second keyless edition only once some edition has named a predecessor or
+# declared a root. Declaring one here would require declaring the whole modelo in
+# the same pass, and asserting that the 2025 edition is derivable from this one
+# is a lineage claim no bundled source supports.
+valid_from = 2022-01-01
+valid_to = 2024-12-31
+period_selector = { year_from = 2022, year_to = 2024, periods = ["0A"] }
+orden_aplicabilidad = [
+    "orden-hap-2118-2015:art-1",
+    "orden-hfp-1822-2016:art-sexto",
+    "orden-hac-1276-2019:art-quinto",
+    "orden-hfp-1192-2022:art-cuarto",
+]
+legal_refs = [
+    "orden-hap-2118-2015:art-1",
+    "orden-hap-2118-2015:art-2",
+    "orden-hap-2118-2015:art-4",
+    "orden-hap-2118-2015:art-5",
+    "ley-35-2006:da-26",
+    "orden-hfp-1822-2016:art-sexto",
+    "orden-hac-1276-2019:art-quinto",
+    "orden-hfp-1192-2022:art-cuarto",
+]
+source_refs = [
+    "aeat-dr-280-2022",
+    "boe-modelo-280-base-order",
+    "boe-modelo-280-2016-amendment-hfp-1822",
+    "boe-modelo-280-2019-amendment-hac-1276",
+    "boe-modelo-280-2022-amendment-hfp-1192",
+]
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: authoring review of the modelo 280 2022-2024 span. VERIFIED -- ONE SPAN BY LAW: the \
+consolidated text of BOE-A-2015-11074 lists three and only three amendments to the anexo \
+(HFP/1822/2016, HAC/1276/2019, HFP/1192/2022), the last applying «por primera vez, para las \
+declaraciones correspondientes al ejercicio 2022». No instrument exists by which 2023 or 2024 \
+could differ. VERIFIED -- SOURCE WINDOWS: every cited source's window overlaps every year of \
+this span, checked with source_window_applies_across rather than by eye; \
+aeat-modelo-280-procedure fails that check for all three years and is excluded rather than \
+carried over from the 2025 sibling. VERIFIED -- GEOMETRY: both records tile 1..500 exactly \
+once with no gap and no overlap, asserted at generation. The casillas were emitted by \
+generator from aeat-dr-280-2022 with its sha256 checked against the catalogue declaration, \
+not transcribed; 27 casillas, matching the 2025 edition's 27 concept for concept. NOT CLAIMED \
+-- BYTE-IDENTICAL DESIGNS: only one design is bundled, so the span is a legal claim about \
+amending ordenes, not a comparison of three artefacts. ACQUISITION PENDING: a DR_280_2023 or \
+DR_280_2024 may exist unfetched and would split this span. VERIFIED -- DEADLINE WINDOWS: three rows, one per filing year, each close READ from the \nbundled calendario rather than computed. Each calendario lists this modelo under a «Hasta el \nN de febrero» heading and the row takes N from it: 28 February 2023, 29 February 2024, 28 \nFebruary 2025. The 2024 close being the 29th is why the calendarios were opened -- February \n2024 is a leap February, and assuming «the 28th» would have shortened a real filing window by \na day while looking entirely plausible. Each row cites the calendario of the year of \nPRESENTATION, the year after its filing_year. NOT CLAIMED -- FILING: no export layout, no application \
+links, no parity refs on this edition. NOT CLAIMED -- FORMULAS: declared not_applicable \
+below, on this modelo's nature. NOT CLAIMED -- no operator countersignature. NOT CLAIMED -- \
+independent_check_coverage is n/a: NO CLAIM, not zero."""
+reviewed_at = 2026-09-12
+
+[revisions."2022-2024".family_dispositions.formulas]
+reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
+legal_refs = [
+    "orden-hap-2118-2015:art-1",
+    "orden-hfp-1822-2016:art-sexto",
+    "orden-hac-1276-2019:art-quinto",
+    "orden-hfp-1192-2022:art-cuarto",
+]
+source_refs = [
+    "aeat-dr-280-2022",
+    "boe-modelo-280-base-order",
+    "boe-modelo-280-2016-amendment-hfp-1822",
+    "boe-modelo-280-2019-amendment-hac-1276",
+    "boe-modelo-280-2022-amendment-hfp-1192",
+]

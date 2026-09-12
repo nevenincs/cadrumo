@@ -29,7 +29,7 @@ from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from .errors import RegistryValidationError
 from .ids import LegalRefId
-from .schema_base import RegistryModel
+from .schema_base import DateAxis, RegistryModel
 
 if TYPE_CHECKING:
     from .facts.resolution import ResolvedOverrideFact
@@ -58,24 +58,24 @@ class ConvenioOverrideRow(RegistryModel):
     @field_validator("tipo_renta", mode="before")
     @classmethod
     def _coerce_tipo_renta(cls, value: object) -> object:
-        """Hydrate the TOML ``tipo_renta`` string into its :class:`~core.TipoRentaIrnr` member."""
+        """Hydrate the TOML token into the opaque tipo-renta wire type."""
         if isinstance(value, str) and not isinstance(value, TipoRentaIrnr):
-            return TipoRentaIrnr(value)
+            return TipoRentaIrnr._from_registry(value)
         return value
 
     @field_validator("kind", mode="before")
     @classmethod
     def _coerce_kind(cls, value: object) -> object:
-        """Hydrate the TOML ``kind`` string into its :class:`~core.ConvenioOverrideKind` member."""
+        """Hydrate the TOML ``kind`` string into an opaque registry token."""
         if isinstance(value, str) and not isinstance(value, ConvenioOverrideKind):
-            return ConvenioOverrideKind(value)
+            return ConvenioOverrideKind._from_registry(value)
         return value
 
     @model_validator(mode="after")
     def _validate_override_row(self) -> ConvenioOverrideRow:
         if self.valid_to is not None and self.valid_to < self.valid_from:
             raise RegistryValidationError("convenio override valid_to must be on or after valid_from")
-        if self.kind.carries_rate:
+        if self.kind.value in {"flat", "ceiling"}:
             if self.rate is None:
                 raise RegistryValidationError(
                     f"convenio override kind {self.kind.value!r} requires a rate for "
@@ -91,6 +91,10 @@ class ConvenioOverrideRow(RegistryModel):
                 raise RegistryValidationError(
                     f"convenio override rate must be within [0, 1]; got {self.rate!r}",
                 )
+        elif self.kind.value not in {"allocation_domestic_tariff", "exempt"}:
+            raise RegistryValidationError(
+                f"unsupported convenio override kind {self.kind.value!r}",
+            )
         elif self.rate is not None:
             raise RegistryValidationError(
                 f"convenio override kind {self.kind.value!r} must not declare a rate "
@@ -234,6 +238,9 @@ def resolve_convenio_override(
 
     if not isinstance(tipo_renta, TipoRentaIrnr):
         raise RegistryValidationError("convenio override requires a TipoRentaIrnr value")
+    from .irnr_tipo_renta import require_tipo_renta_irnr
+
+    tipo_renta = require_tipo_renta_irnr(tipo_renta, effective_date=devengo_date)
 
     authority = bundled_authority()
     authority.validate_registry()
@@ -265,11 +272,21 @@ def resolve_convenio_override(
     )
     if not isinstance(resolved, ResolvedOverrideFact):
         raise RegistryValidationError(f"convenio override resolved non-override fact {resolved.fact_id!r}")
-    try:
-        kind = ConvenioOverrideKind(resolved.payload.override_code)
-    except ValueError as exc:
+    raw_kind = resolved.payload.override_code
+    declared_override_codes = frozenset(
+        code
+        for variant in fact.variants
+        if isinstance(code := getattr(variant.payload, "override_code", None), str)
+    )
+    if raw_kind not in declared_override_codes:
         raise RegistryValidationError(
-            f"convenio override fact {resolved.fact_id!r} has unknown kind {resolved.payload.override_code!r}",
+            f"convenio override fact {resolved.fact_id!r} has undeclared kind {raw_kind!r}",
+        )
+    try:
+        kind = ConvenioOverrideKind._from_registry(raw_kind)
+    except (TypeError, ValueError) as exc:
+        raise RegistryValidationError(
+            f"convenio override fact {resolved.fact_id!r} has invalid kind {raw_kind!r}",
         ) from exc
     rate = resolved.payload.value
     if rate is not None and not isinstance(rate, Decimal):

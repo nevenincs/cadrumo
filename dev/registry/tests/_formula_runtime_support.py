@@ -15,7 +15,7 @@ from cadrumo.domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression, ParameterDefinition
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 
 def _evaluate(

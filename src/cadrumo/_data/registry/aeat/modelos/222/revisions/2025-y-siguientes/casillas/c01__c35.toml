@@ -14,6 +14,8 @@
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "01"
+continuidad_id = "is-pf-grupo-mod-40-2-lis-base-del-pago-fraccionado"
+continuidad_origin = "seeded"
 number = "01"
 section = ["liquidacion"]
 data_type = "money"
@@ -24,6 +26,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "02"
+continuidad_id = "is-pf-grupo-mod-40-2-lis-resultado-de-la-declaracion-anterior"
+continuidad_origin = "seeded"
 number = "02"
 section = ["liquidacion"]
 data_type = "money"
@@ -34,6 +38,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "03"
+continuidad_id = "is-pf-grupo-mod-40-2-lis-a-ingresar"
+continuidad_origin = "seeded"
 number = "03"
 section = ["liquidacion"]
 data_type = "money"
@@ -46,6 +52,8 @@ additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "04"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-suma-de-resultados-contables-individuales"
+continuidad_origin = "seeded"
 number = "04"
 section = ["liquidacion"]
 data_type = "money"
@@ -56,6 +64,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "05"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-correccion-por-impuesto-sobre-sociedades-aumentos"
+continuidad_origin = "seeded"
 number = "05"
 section = ["liquidacion"]
 data_type = "money"
@@ -66,6 +76,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "06"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-correccion-por-impuesto-sobre-sociedades-disminuciones"
+continuidad_origin = "seeded"
 number = "06"
 section = ["liquidacion"]
 data_type = "money"
@@ -76,6 +88,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "67"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_222/files/01-222-ejercicio-2025-y-siguientes.xlsx.extracted.md:78 (sha256 0a44cd6bcae3) prints box [67]; corpus/aeat_official/disenos_registro/modelo_222/files/02-222-ejercicios-2023-y-2024.xlsx.extracted.md (sha256 1c7482aba6d8) prints no box [67] and retires none"
 number = "67"
 section = ["liquidacion"]
 data_type = "money"
@@ -86,6 +100,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "37"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-reversion-del-30-del-importe-de-los-gastos-amortiz-disminuciones"
+continuidad_origin = "seeded"
 number = "37"
 section = ["liquidacion"]
 data_type = "money"
@@ -96,6 +112,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "07"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-resto-correcciones-al-resultado-contable-excepto-comp-bi-ne-aumentos"
+continuidad_origin = "seeded"
 number = "07"
 section = ["liquidacion"]
 data_type = "money"
@@ -106,6 +124,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "08"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-resto-correcciones-al-resultado-contable-excepto-comp-disminuciones"
+continuidad_origin = "seeded"
 number = "08"
 section = ["liquidacion"]
 data_type = "money"
@@ -116,6 +136,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "38"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-total-aumentos"
+continuidad_origin = "seeded"
 number = "38"
 section = ["liquidacion"]
 data_type = "money"
@@ -128,6 +150,8 @@ additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "39"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-total-disminuciones"
+continuidad_origin = "seeded"
 number = "39"
 section = ["liquidacion"]
 data_type = "money"
@@ -140,6 +164,8 @@ additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "59"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-ajustes-para-la-determinacion-de-la-base-imponible-del-grup-aumentos"
+continuidad_origin = "seeded"
 number = "59"
 section = ["liquidacion"]
 data_type = "money"
@@ -150,6 +176,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "60"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-ajustes-para-la-determinacion-de-la-base-imponible-del-disminuciones"
+continuidad_origin = "seeded"
 number = "60"
 section = ["liquidacion"]
 data_type = "money"
@@ -160,6 +188,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "10"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-suma-de-bases-imponibles-individuales-antes-de-compensar-bases-nega"
+continuidad_origin = "seeded"
 number = "10"
 section = ["liquidacion"]
 data_type = "money"
@@ -172,6 +202,8 @@ additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "11"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-correcciones-diferimiento-resultados-internos-y-otras-corre-aumentos"
+continuidad_origin = "seeded"
 number = "11"
 section = ["liquidacion"]
 data_type = "money"
@@ -182,6 +214,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "12"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-correcciones-diferimiento-resultados-internos-y-otras-disminuciones"
+continuidad_origin = "seeded"
 number = "12"
 section = ["liquidacion"]
 data_type = "money"
@@ -192,6 +226,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "13"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-base-imponible-previa"
+continuidad_origin = "seeded"
 number = "13"
 section = ["liquidacion"]
 data_type = "money"
@@ -204,6 +240,8 @@ additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "44"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-dotaciones-del-art-11-12-de-la-lis-del-grupo"
+continuidad_origin = "seeded"
 number = "44"
 section = ["liquidacion"]
 data_type = "money"
@@ -214,6 +252,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "45"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-dotaciones-del-art-11-12-de-la-lis-generados-a-nivel-individual-o-d"
+continuidad_origin = "seeded"
 number = "45"
 section = ["liquidacion"]
 data_type = "money"
@@ -224,6 +264,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "46"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-remanente-reserva-de-capitalizacion-no-aplicada-por-insuficiencia-d"
+continuidad_origin = "seeded"
 number = "46"
 section = ["liquidacion"]
 data_type = "money"
@@ -234,6 +276,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "14"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-compensacion-de-bases-imponibles-negativas-del-grupo-de-periodos-an"
+continuidad_origin = "seeded"
 number = "14"
 section = ["liquidacion"]
 data_type = "money"
@@ -244,6 +288,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "15"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-compensacion-de-bases-imponibles-negativas-de-entidades-o-de-grupos"
+continuidad_origin = "seeded"
 number = "15"
 section = ["liquidacion"]
 data_type = "money"
@@ -254,6 +300,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "47"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-especi-aumentos"
+continuidad_origin = "seeded"
 number = "47"
 section = ["liquidacion"]
 data_type = "money"
@@ -264,6 +312,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "48"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-e-disminuciones"
+continuidad_origin = "seeded"
 number = "48"
 section = ["liquidacion"]
 data_type = "money"
@@ -274,6 +324,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "16"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-base-del-pago-fraccionado"
+continuidad_origin = "seeded"
 number = "16"
 section = ["liquidacion"]
 data_type = "money"
@@ -286,6 +338,8 @@ additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "17"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-porcentaje"
+continuidad_origin = "seeded"
 number = "17"
 section = ["liquidacion"]
 data_type = "ratio"
@@ -296,6 +350,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "49"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-dotaciones-del-art-11-12-lis-del-grupo"
+continuidad_origin = "seeded"
 number = "49"
 section = ["liquidacion"]
 data_type = "money"
@@ -306,6 +362,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "50"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-dotaciones-del-art-11-12-lis-generadas-previa-a-la"
+continuidad_origin = "seeded"
 number = "50"
 section = ["liquidacion"]
 data_type = "money"
@@ -316,6 +374,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "51"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-compensacion-de-cuotas-negativas-del-grupo-de-peri"
+continuidad_origin = "seeded"
 number = "51"
 section = ["liquidacion"]
 data_type = "money"
@@ -326,6 +386,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "58"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-compensacion-de-cuotas-negativas-individuales-de-p"
+continuidad_origin = "seeded"
 number = "58"
 section = ["liquidacion"]
 data_type = "money"
@@ -336,6 +398,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "52"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-reserva-de-nivelacion-convertido-en-cuotas-aumentos"
+continuidad_origin = "seeded"
 number = "52"
 section = ["liquidacion"]
 data_type = "money"
@@ -346,6 +410,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "53"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-reserva-de-nivelacion-convertido-en-c-disminuciones"
+continuidad_origin = "seeded"
 number = "53"
 section = ["liquidacion"]
 data_type = "money"
@@ -356,6 +422,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "18"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-resutlado-previo"
+continuidad_origin = "seeded"
 number = "18"
 section = ["liquidacion"]
 data_type = "money"
@@ -368,6 +436,8 @@ additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "19"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-base-del-pago-fraccionado"
+continuidad_origin = "seeded"
 number = "19"
 section = ["liquidacion"]
 data_type = "money"
@@ -380,6 +450,8 @@ additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "20"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-base-a-tipo-1"
+continuidad_origin = "seeded"
 number = "20"
 section = ["liquidacion"]
 data_type = "money"
@@ -392,6 +464,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "21"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-porcentaje-1"
+continuidad_origin = "seeded"
 number = "21"
 section = ["liquidacion"]
 data_type = "ratio"
@@ -404,6 +478,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "22"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-importe-del-pago-fraccionado-1"
+continuidad_origin = "seeded"
 number = "22"
 section = ["liquidacion"]
 data_type = "money"
@@ -418,6 +494,8 @@ additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "23"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-base-a-tipo-2"
+continuidad_origin = "seeded"
 number = "23"
 section = ["liquidacion"]
 data_type = "money"
@@ -430,6 +508,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "24"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-porcentaje-2"
+continuidad_origin = "seeded"
 number = "24"
 section = ["liquidacion"]
 data_type = "ratio"
@@ -442,6 +522,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "25"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-importe-del-pago-fraccionado-2"
+continuidad_origin = "seeded"
 number = "25"
 section = ["liquidacion"]
 data_type = "money"
@@ -456,6 +538,8 @@ additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "61"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_222/files/01-222-ejercicio-2025-y-siguientes.xlsx.extracted.md:167 (sha256 0a44cd6bcae3) prints box [61]; corpus/aeat_official/disenos_registro/modelo_222/files/02-222-ejercicios-2023-y-2024.xlsx.extracted.md (sha256 1c7482aba6d8) prints no box [61] and retires none"
 number = "61"
 section = ["liquidacion"]
 data_type = "money"
@@ -468,6 +552,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "62"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_222/files/01-222-ejercicio-2025-y-siguientes.xlsx.extracted.md:168 (sha256 0a44cd6bcae3) prints box [62]; corpus/aeat_official/disenos_registro/modelo_222/files/02-222-ejercicios-2023-y-2024.xlsx.extracted.md (sha256 1c7482aba6d8) prints no box [62] and retires none"
 number = "62"
 section = ["liquidacion"]
 data_type = "ratio"
@@ -480,6 +566,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "63"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_222/files/01-222-ejercicio-2025-y-siguientes.xlsx.extracted.md:169 (sha256 0a44cd6bcae3) prints box [63]; corpus/aeat_official/disenos_registro/modelo_222/files/02-222-ejercicios-2023-y-2024.xlsx.extracted.md (sha256 1c7482aba6d8) prints no box [63] and retires none"
 number = "63"
 section = ["liquidacion"]
 data_type = "money"
@@ -494,6 +582,8 @@ additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "64"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_222/files/01-222-ejercicio-2025-y-siguientes.xlsx.extracted.md:170 (sha256 0a44cd6bcae3) prints box [64]; corpus/aeat_official/disenos_registro/modelo_222/files/02-222-ejercicios-2023-y-2024.xlsx.extracted.md (sha256 1c7482aba6d8) prints no box [64] and retires none"
 number = "64"
 section = ["liquidacion"]
 data_type = "money"
@@ -506,6 +596,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "65"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_222/files/01-222-ejercicio-2025-y-siguientes.xlsx.extracted.md:171 (sha256 0a44cd6bcae3) prints box [65]; corpus/aeat_official/disenos_registro/modelo_222/files/02-222-ejercicios-2023-y-2024.xlsx.extracted.md (sha256 1c7482aba6d8) prints no box [65] and retires none"
 number = "65"
 section = ["liquidacion"]
 data_type = "ratio"
@@ -518,6 +610,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "66"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_222/files/01-222-ejercicio-2025-y-siguientes.xlsx.extracted.md:172 (sha256 0a44cd6bcae3) prints box [66]; corpus/aeat_official/disenos_registro/modelo_222/files/02-222-ejercicios-2023-y-2024.xlsx.extracted.md (sha256 1c7482aba6d8) prints no box [66] and retires none"
 number = "66"
 section = ["liquidacion"]
 data_type = "money"
@@ -532,6 +626,8 @@ additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "54"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-dotaciones-del-art-11-12-lis-del-grupo"
+continuidad_origin = "seeded"
 number = "54"
 section = ["liquidacion"]
 data_type = "money"
@@ -542,6 +638,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "57"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-dotaciones-del-art-11-12-lis-generadas-previa"
+continuidad_origin = "seeded"
 number = "57"
 section = ["liquidacion"]
 data_type = "money"
@@ -552,6 +650,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "42"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-compensacion-de-cuotas-negativas-del-grupo-de"
+continuidad_origin = "seeded"
 number = "42"
 section = ["liquidacion"]
 data_type = "money"
@@ -562,6 +662,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "43"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-compensacion-de-cuotas-negativas-individuales"
+continuidad_origin = "seeded"
 number = "43"
 section = ["liquidacion"]
 data_type = "money"
@@ -572,6 +674,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "55"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-es-aumentos"
+continuidad_origin = "seeded"
 number = "55"
 section = ["liquidacion"]
 data_type = "money"
@@ -582,6 +686,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "56"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-reserva-de-nivelacion-solo-grupos-que-cumplan-los-disminuciones"
+continuidad_origin = "seeded"
 number = "56"
 section = ["liquidacion"]
 data_type = "money"
@@ -592,6 +698,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "26"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-resultado-previo"
+continuidad_origin = "seeded"
 number = "26"
 section = ["liquidacion"]
 data_type = "money"
@@ -606,6 +714,8 @@ additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "27"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-bonificaciones-correspondientes-al-periodo-co"
+continuidad_origin = "seeded"
 number = "27"
 section = ["liquidacion"]
 data_type = "money"
@@ -616,6 +726,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "28"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-retenciones-e-ingresos-a-cuenta-practicados-s"
+continuidad_origin = "seeded"
 number = "28"
 section = ["liquidacion"]
 data_type = "money"
@@ -626,6 +738,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "29"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-volumen-de-operaciones-en-territorio-comun"
+continuidad_origin = "seeded"
 number = "29"
 section = ["liquidacion"]
 data_type = "ratio"
@@ -636,6 +750,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "30"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-pagos-fraccionados-anteriores-correspondiente"
+continuidad_origin = "seeded"
 number = "30"
 section = ["liquidacion"]
 data_type = "money"
@@ -646,6 +762,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "31"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-resultado-de-la-declaracion-anterior"
+continuidad_origin = "seeded"
 number = "31"
 section = ["liquidacion"]
 data_type = "money"
@@ -656,6 +774,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "32"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-resultado"
+continuidad_origin = "seeded"
 number = "32"
 section = ["liquidacion"]
 data_type = "money"
@@ -670,6 +790,8 @@ additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "33"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-minimo-a-ingresar"
+continuidad_origin = "seeded"
 number = "33"
 section = ["liquidacion"]
 data_type = "money"
@@ -680,6 +802,8 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "34"
+continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-cantidad-a-ingresar"
+continuidad_origin = "seeded"
 number = "34"
 section = ["liquidacion"]
 data_type = "money"
@@ -692,6 +816,8 @@ additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "35"
+continuidad_id = "is-pf-grupo-informacion-adicional-resultado-consolidado-del-periodo"
+continuidad_origin = "seeded"
 number = "35"
 section = ["liquidacion"]
 data_type = "money"

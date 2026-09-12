@@ -281,6 +281,8 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Adquiriente. Apellidos y nombre o razón social [61]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p08.adquiriente-apellidos-y-nombre-o-razon-social-61"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The official M15108000 design introduces one 80-byte An field, Adquiriente. Apellidos y nombre o razón social [61], at byte position 237-316. The predecessor M15106000 design has no single [61] field there: it declares two distinct An concepts, Adquiriente. Apellidos o Razón social at 237-296 (60 bytes) and Adquiriente. Nombre at 297-316 (20 bytes). The combined successor is therefore new in representation, not a many-to-one continuity claim. Sources: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) and corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935)."
 number = "237-316"
 segmento = "M15108000"
 section = ["p08", "adquiriente_apellidos_y_nombre_o_razon_social"]
@@ -848,6 +850,8 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Adquiriente. Apellidos y nombre o razón social [61]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p08.adquiriente-apellidos-y-nombre-o-razon-social-61-02"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The official M15108000 design introduces one 80-byte An field, Adquiriente. Apellidos y nombre o razón social [61], at byte position 845-924. The predecessor M15106000 design has no single [61] field there: it declares two distinct An concepts, Adquiriente. Apellidos o Razón social at 845-904 (60 bytes) and Adquiriente. Nombre at 905-924 (20 bytes). The combined successor is therefore new in representation, not a many-to-one continuity claim. Sources: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) and corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935)."
 number = "845-924"
 segmento = "M15108000"
 section = ["p08", "adquiriente_apellidos_y_nombre_o_razon_social"]

@@ -27,6 +27,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Devengo - Periodo
 [[revisions."2015-2022".casillas]]
 id = "p01.devengo-periodo"
+continuidad_id = "p01-devengo-periodo"
 number = "107-108"
 segmento = "M15101000"
 section = ["p01", "devengo_periodo"]
@@ -218,6 +219,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Contribuyente. 56 - Código postal.
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-56-codigo-postal"
+continuidad_id = "p01-contribuyente-56-codigo-postal"
 number = "270-274"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -229,6 +231,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Contribuyente. 58 - Código de Provincia.
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-58-codigo-de-provincia"
+continuidad_id = "p01-contribuyente-58-codigo-de-provincia"
 number = "275-276"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -240,6 +243,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Contribuyente. 57 - Código de Municipio.
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-57-codigo-de-municipio"
+continuidad_id = "p01-contribuyente-57-codigo-de-municipio"
 number = "277-281"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -467,6 +471,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Representante. Apellidos
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-apellidos"
+continuidad_id = "p01-representante-apellidos"
 number = "652-711"
 segmento = "M15101000"
 section = ["p01", "representante"]
@@ -478,6 +483,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Representante. Nombre
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-nombre"
+continuidad_id = "p01-representante-nombre"
 number = "712-731"
 segmento = "M15101000"
 section = ["p01", "representante"]
@@ -621,6 +627,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Representante. 55 - Localidad/Población
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-55-localidad-poblacion"
+continuidad_id = "p01-representante-55-localidad-poblacion"
 number = "853-882"
 segmento = "M15101000"
 section = ["p01", "representante"]
@@ -632,6 +639,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Representante. 56 - Código postal.
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-56-codigo-postal"
+continuidad_id = "p01-representante-56-codigo-postal"
 number = "883-887"
 segmento = "M15101000"
 section = ["p01", "representante"]
@@ -643,6 +651,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Representante. 58 - Código de Provincia.
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-58-codigo-de-provincia"
+continuidad_id = "p01-representante-58-codigo-de-provincia"
 number = "888-889"
 segmento = "M15101000"
 section = ["p01", "representante"]
@@ -654,6 +663,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Representante. 57 - Código de Municipio.
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-57-codigo-de-municipio"
+continuidad_id = "p01-representante-57-codigo-de-municipio"
 number = "890-894"
 segmento = "M15101000"
 section = ["p01", "representante"]

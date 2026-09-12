@@ -1,0 +1,647 @@
+# Modelo 036 RECORD Pag. 2C -- declaracion censal de alta, modificacion y baja.
+#
+# Emitted from aeat-dr-036-2023, whose window runs 2023-01-01 to 2025-02-02.
+#
+# ONE CASILLA PER PRINTED NUMBER, NOT PER DESIGN ROW. AEAT splits every date
+# into dia, mes and ano rows under a single number, and repeats whole blocks --
+# Pag. 8 prints 800, 801, 818 and 859 four times each, once per repetition of
+# the socio block. The 2025 edition settled this and says so in its own
+# comments; emitting per row instead would have written 263 casillas sharing 85
+# ids, which is valid TOML and wrong. Each comment states the group's whole span
+# and every component it covers.
+#
+# THE 037 ASTERISK IS TRANSCRIBED, NOT NORMALISED. A trailing ' *' marks a field
+# that could be informed on a modelo 037, which Orden HAC/1526/2024 suppressed
+# effective 2025-02-03. The design's own legend gives it that meaning, so it is
+# part of what AEAT printed for these years and it is not in the 2025 captions.
+#
+# NOT MODELLED: the identifier envelope, the reservado runs, the CRLF terminator
+# and the tipo-declaracion discriminant.
+#
+# NOT CLAIMED: these casillas DECLARE the censo; none computes anything. Modelo
+# 036 carries no formula family at all.
+
+# @11+9 An. Establecimiento perm. de una per. jca. o ent. no residente. N.I.F.
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.identificacion-nif"
+continuidad_id = "ep-identificacion-nif"
+number = "C1"
+section = ["declaracion", "establecimiento_permanente", "identificacion"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @20+125 An. Establecimiento perm. de una per. jca. o ent. no residente. Razón o denominación social
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.identificacion-razon-social"
+continuidad_id = "ep-identificacion-razon-social"
+number = "C2"
+section = ["declaracion", "establecimiento_permanente", "identificacion"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @145+25 An. Establecimiento perm. de una per. jca. o ent. no residente. Anagrama
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.identificacion-anagrama"
+continuidad_id = "ep-identificacion-anagrama"
+number = "C3"
+section = ["declaracion", "establecimiento_permanente", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @170+2 An. Establecimiento perm. de una per. jca. o ent. no residente. Tipo de establ. permanente
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.identificacion-tipo-establecimiento"
+continuidad_id = "ep-identificacion-tipo-establecimiento"
+number = "C4"
+section = ["declaracion", "establecimiento_permanente", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @172+1 An. Establecimiento perm. de una per. jca. o ent. no residente. ¿Es una sucursal de la entidad no residente? | S, N o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.identificacion-es-sucursal"
+continuidad_id = "ep-identificacion-es-sucursal"
+number = "C5"
+section = ["declaracion", "establecimiento_permanente", "identificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @173+9 An. Establ. perm. de una per. jca. o ent. no resid. Pers. o ent. no resid. de la que depende. N.I.F. (si dispone)
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.identificacion-matriz-nif"
+continuidad_id = "ep-identificacion-matriz-nif"
+number = "C6"
+section = ["declaracion", "establecimiento_permanente", "identificacion"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @182+125 An. Establ. perm. de una per. jca. o ent. no resid. Pers. o ent. no resid. de la que dep. Razón o denom. Social
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.identificacion-matriz-razon-social"
+continuidad_id = "ep-identificacion-matriz-razon-social"
+number = "C7"
+section = ["declaracion", "establecimiento_permanente", "identificacion"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @307+2 An. Establ. perm. de una per. jca. o ent. no resid. Pers. o ent. no resid. de la que depende. Estado de resid. | codigo iso
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.identificacion-matriz-estado-residencia"
+continuidad_id = "ep-identificacion-matriz-estado-residencia"
+number = "C8"
+section = ["declaracion", "establecimiento_permanente", "identificacion"]
+data_type = "country_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @309+5 An. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio fiscal en España. Tipo de vía
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-fiscal-tipo-via"
+continuidad_id = "ep-domicilio-fiscal-tipo-via"
+number = "C11"
+section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @319+50 An. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio fiscal en España. Nombre de la vía públ
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-fiscal-nombre-via"
+continuidad_id = "ep-domicilio-fiscal-nombre-via"
+number = "C12"
+section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @369+3 An. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio fiscal en España.Tipo Num.
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-fiscal-tipo-numero"
+continuidad_id = "ep-domicilio-fiscal-tipo-numero"
+number = "C13"
+section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @372+5 Num. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio fiscal en España. Núm casa
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-fiscal-numero-casa"
+continuidad_id = "ep-domicilio-fiscal-numero-casa"
+number = "C14"
+section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @377+3 An. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio fiscal en España. Calif. Un
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-fiscal-calificador-numero"
+continuidad_id = "ep-domicilio-fiscal-calificador-numero"
+number = "C15"
+section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @380+3 An. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio fiscal en España. Bloque
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-fiscal-bloque"
+continuidad_id = "ep-domicilio-fiscal-bloque"
+number = "C16"
+section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @383+3 An. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio fiscal en España. Portal
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-fiscal-portal"
+continuidad_id = "ep-domicilio-fiscal-portal"
+number = "C17"
+section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @386+3 An. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio fiscal en España. Escal.
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-fiscal-escalera"
+continuidad_id = "ep-domicilio-fiscal-escalera"
+number = "C18"
+section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @389+3 An. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio fiscal en España. Planta
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-fiscal-planta"
+continuidad_id = "ep-domicilio-fiscal-planta"
+number = "C19"
+section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @392+3 An. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio fiscal en España. Puerta
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-fiscal-puerta"
+continuidad_id = "ep-domicilio-fiscal-puerta"
+number = "C20"
+section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @395+40 An. Establec perm. de una per.jca. o ent. no resid. Domic fiscal en España. Compl domic (ej. Urb, Pol. Ind...)
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-fiscal-complemento-domicilio"
+continuidad_id = "ep-domicilio-fiscal-complemento-domicilio"
+number = "C21"
+section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @435+30 An. Establec perm. de una per.jca. o ent. no resid. Domic fisc en España. Local / Poblac (si dist. de munic)
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-fiscal-localidad"
+continuidad_id = "ep-domicilio-fiscal-localidad"
+number = "C22"
+section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @465+5 Num. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio fiscal en España. C. Postal
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-fiscal-codigo-postal"
+continuidad_id = "ep-domicilio-fiscal-codigo-postal"
+number = "C23"
+section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
+data_type = "postal_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @475+30 An. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio fiscal en España. Nombre del municipio
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-fiscal-municipio"
+continuidad_id = "ep-domicilio-fiscal-municipio"
+number = "C24"
+section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @505+2 An. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio fiscal en España. Código de Provincia | ('01', '02',...'52')
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-fiscal-codigo-provincia"
+continuidad_id = "ep-domicilio-fiscal-codigo-provincia"
+number = "C25"
+section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
+data_type = "province_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @507+100 An. Establecimiento perm. de una per.jca. o ent. no resid. Datos de telefonos y direcciones para avisos. E-mail
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.avisos-email"
+continuidad_id = "ep-avisos-email"
+number = "C29"
+section = ["declaracion", "establecimiento_permanente", "avisos"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @634+5 An. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio a efectos de notificaciones. 1) Tipo de vía
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-tipo-via"
+continuidad_id = "ep-domicilio-notificaciones-tipo-via"
+number = "C41"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @644+50 An. Establecimiento perm. de una per.jca. o ent. no resid. Domic a efect de notific. 1) Nombre de la vía públ.
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-nombre-via"
+continuidad_id = "ep-domicilio-notificaciones-nombre-via"
+number = "C42"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @694+3 An. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio a efectos de notificaciones. 1) Tipo Num.
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-tipo-numero"
+continuidad_id = "ep-domicilio-notificaciones-tipo-numero"
+number = "C43"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @697+5 Num. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio a efectos de notificaciones. 1) Núm casa
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-numero-casa"
+continuidad_id = "ep-domicilio-notificaciones-numero-casa"
+number = "C44"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @702+3 An. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio a efectos de notificaciones. 1) Calif. Un
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-calificador-numero"
+continuidad_id = "ep-domicilio-notificaciones-calificador-numero"
+number = "C45"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @705+3 An. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio a efectos de notificaciones. 1) Bloque
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-bloque"
+continuidad_id = "ep-domicilio-notificaciones-bloque"
+number = "C46"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @708+3 An. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio a efectos de notificaciones. 1) Portal
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-portal"
+continuidad_id = "ep-domicilio-notificaciones-portal"
+number = "C47"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @711+3 An. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio a efectos de notificaciones. 1) Escal.
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-escalera"
+continuidad_id = "ep-domicilio-notificaciones-escalera"
+number = "C48"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @714+3 An. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio a efectos de notificaciones. 1) Planta
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-planta"
+continuidad_id = "ep-domicilio-notificaciones-planta"
+number = "C49"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @717+3 An. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio a efectos de notificaciones. 1) Puerta
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-puerta"
+continuidad_id = "ep-domicilio-notificaciones-puerta"
+number = "C50"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @720+40 An. Establec perm. de una per.jca. o ent. no resid. Domic a efectos de notfi. 1) Complemento domicilio
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-complemento-domicilio"
+continuidad_id = "ep-domicilio-notificaciones-complemento-domicilio"
+number = "C51"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @760+30 An. Establec perm. de una per.jca. o ent. no resid. Domic a efect. de notif. 1) Local / Pobl (si dist. de munic)
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-localidad"
+continuidad_id = "ep-domicilio-notificaciones-localidad"
+number = "C52"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @790+5 Num. Establecimiento perm. de una per.jca. o ent. no resid. Domicilio a efectos de notificaciones. 1) C. Postal
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-codigo-postal"
+continuidad_id = "ep-domicilio-notificaciones-codigo-postal"
+number = "C53"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "postal_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @800+30 An. Establecimiento perm. de una per.jca. o ent. no resid. Domic. a efectos de notif. 1) Nombre del municipio
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-municipio"
+continuidad_id = "ep-domicilio-notificaciones-municipio"
+number = "C54"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @830+2 An. Establecimiento perm. de una per.jca. o ent. no resid. Domic. a efectos de notificaciones. 1) Código de Provincia | ('01', '02',...'52')
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-codigo-provincia"
+continuidad_id = "ep-domicilio-notificaciones-codigo-provincia"
+number = "C55"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "province_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @832+100 An. Establecimiento perm. de una per.jca. o ent. no resid.Datos identificacion.Dominio o direccion internet
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.identificacion-dominio-internet"
+continuidad_id = "ep-identificacion-dominio-internet"
+number = "C27"
+section = ["declaracion", "establecimiento_permanente", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @932+4 An. Establecimiento perm. de una per.jca. o ent. no resid. Datos  tfnos y direc. electronicas para recibir avisos . Prefijo pais movil | blancos si el movil es español
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.avisos-prefijo-pais-movil"
+continuidad_id = "ep-avisos-prefijo-pais-movil"
+number = "C10"
+section = ["declaracion", "establecimiento_permanente", "avisos"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @936+15 An. Establecimiento perm. de una per.jca. o ent. no resid. Datos  tfnos y direc. electronicas para recibir avisos . Tfno. Móvil
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.avisos-telefono-movil"
+continuidad_id = "ep-avisos-telefono-movil"
+number = "C26"
+section = ["declaracion", "establecimiento_permanente", "avisos"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @959+50 An. Establ.perm. de una per.jca. o ent. no resid. Domicilio a efecto de notificaciones. 1) Destinatario (si es distinto del declarante)
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-destinatario"
+continuidad_id = "ep-domicilio-notificaciones-destinatario"
+number = "C59"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1009+2 An. Establ.perm. de una per.jca. o ent. no resid.. Domicilio a efecto de notificaciones. 1) En calidad de: (represent, apod, familiar, etc...)
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-calidad"
+continuidad_id = "ep-domicilio-notificaciones-calidad"
+number = "C60"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1011+10 Num. Establ. perm. de una per.jca. o ent. no resid.Domicilio a efecto de notificaciones. 2) Apartado de Correos Número:
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-apartado-correos"
+continuidad_id = "ep-domicilio-notificaciones-apartado-correos"
+number = "C61"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1021+30 An. Establ. perm. de una per.jca. o ent. no resid.Domicilio a efecto de notificaciones. 2) Población / Ciudad
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-apartado-poblacion"
+continuidad_id = "ep-domicilio-notificaciones-apartado-poblacion"
+number = "C62"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1051+5 Num. Establ. perm. de una per.jca. o ent. no resid. Domicilio a efecto de notificaciones. 2) Código Postal
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-apartado-codigo-postal"
+continuidad_id = "ep-domicilio-notificaciones-apartado-codigo-postal"
+number = "C63"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "postal_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1056+2 An. Establ. perm. de una per.jca. o ent. no resid.. Domicilio a efecto de notificaciones. 2) Código de Provincia | ('01', '02',...'52')
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-apartado-codigo-provincia"
+continuidad_id = "ep-domicilio-notificaciones-apartado-codigo-provincia"
+number = "C64"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "province_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1085+50 An. Persona Física. Domicilio a efecto de notificaciones. 2) Destinatario (si es distinto del declarante)
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-apartado-destinatario"
+continuidad_id = "ep-domicilio-notificaciones-apartado-destinatario"
+number = "C68"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1135+2 An. Persona Física. Domicilio a efecto de notificaciones. En calidad de: (represent, apod, familiar, etc...)
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-apartado-calidad"
+continuidad_id = "ep-domicilio-notificaciones-apartado-calidad"
+number = "C69"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1137+20 An. Establecimiento perm. de una per. jca. o ent. no residente.  Domicilio fiscal en España. Referencia Catastral
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-fiscal-referencia-catastral"
+continuidad_id = "ep-domicilio-fiscal-referencia-catastral"
+number = "C30"
+section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1157+25 An. Establecimiento perm. de una per. jca. o ent. no residente. Código de identificación fiscal del Estado de residencia/NVAT
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.identificacion-nif-estado-residencia"
+continuidad_id = "ep-identificacion-nif-estado-residencia"
+number = "C9"
+section = ["declaracion", "establecimiento_permanente", "identificacion"]
+data_type = "nif_iva"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1182+1 An. indicador de baja domicilio de notificaciones | S -  si o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-notificaciones-baja-domicilio"
+continuidad_id = "ep-domicilio-notificaciones-baja-domicilio"
+number = "C40"
+section = ["declaracion", "establecimiento_permanente", "domicilio_notificaciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1183+100 An. Establecimiento perm. de una per.jca. o ent. no resid.Datos identificacion.Dominio o direccion internet
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.identificacion-dominio-internet-secundario"
+continuidad_id = "ep-identificacion-dominio-internet-secundario"
+number = "C28"
+section = ["declaracion", "establecimiento_permanente", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1285+1 an. indicador referencia catastral del domicilio fiscal | blanco, '1','2','3','4' (ver Nota 1)
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.domicilio-fiscal-indicador-referencia-catastral"
+continuidad_id = "ep-domicilio-fiscal-indicador-referencia-catastral"
+number = "C39"
+section = ["declaracion", "establecimiento_permanente", "domicilio_fiscal"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1286+8 Num. Establecimiento perm. de una per.jca. o ent. no resid. Identificación. Fecha inscripción registro mercantil. Día [ONE casilla over 3 printed components: @1286+2, @1288+2, @1290+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.identificacion-fecha-inscripcion-registro-mercantil"
+number = "C70"
+section = ["declaracion", "establecimiento_permanente", "identificacion"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1294+8 Num. Establecimiento perm. de una per.jca. o ent. no resid.. Fecha de constitucion. Día [ONE casilla over 3 printed components: @1294+2, @1296+2, @1298+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "ep.identificacion-fecha-constitucion"
+number = "C71"
+section = ["declaracion", "establecimiento_permanente", "identificacion"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]

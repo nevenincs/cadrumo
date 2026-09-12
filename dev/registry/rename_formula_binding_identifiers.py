@@ -2394,6 +2394,105 @@ def binding_identifier_limit() -> int:
     raise RuntimeError("BindingId declares no max_length; the identifier-length gate has nothing to read")
 
 
+def identifier_cap_for_family(family: str) -> int | None:
+    """Return the ``id`` length cap the shipped model declares for one family, or ``None``.
+
+    Read off the live annotation rather than written here, so a name this tool
+    proposes can never be one the loader would refuse: the two numbers cannot
+    drift apart because there is only one. ``None`` means the family declares an
+    ``id`` with no cap, which is a real answer and not a failure.
+    """
+    import typing
+
+    from pydantic.fields import FieldInfo
+
+    from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
+    info = ModeloRevision.model_fields.get(family)
+    if info is None:
+        return None
+    (element, *_rest) = typing.get_args(info.annotation) or (None,)
+    candidates = [element] if hasattr(element, "model_fields") else list(typing.get_args(element))
+    for candidate in candidates:
+        field_info = getattr(candidate, "model_fields", {}).get("id")
+        if field_info is None:
+            continue
+        for constraint in field_info.metadata:
+            length = getattr(constraint, "max_length", None)
+            if isinstance(length, int):
+                return length
+        # The families spell ``id`` through a PEP 695 alias -- ``id: BindingId``
+        # -- so the annotation arrives as a TypeAliasType and the constraints
+        # live one level down, on what the alias stands for. Unwrapping it is
+        # what makes the cap readable for every family rather than only the one
+        # that happens to inline its Field().
+        annotation = typing.get_type_hints(candidate, include_extras=True).get("id")
+        annotation = getattr(annotation, "__value__", annotation)
+        for marker in typing.get_args(annotation):
+            constraints = list(marker.metadata) if isinstance(marker, FieldInfo) else [marker]
+            for constraint in constraints:
+                length = getattr(constraint, "max_length", None)
+                if isinstance(length, int):
+                    return length
+    return None
+
+
+class IdentifierExceedsSchemaCapError(Exception):
+    """A name this tool would write is longer than the schema accepts for its family."""
+
+    def __init__(self, offenders: Mapping[str, tuple[str, int, int]]) -> None:
+        """Record each over-long name with its family, its length, and the cap it broke."""
+        rendered = "; ".join(
+            f"{identifier} ({family}, {length} > {cap})"
+            for identifier, (family, length, cap) in sorted(offenders.items())
+        )
+        super().__init__(
+            f"refusing to write {len(offenders)} identifiers the schema would reject: {rendered}. The cap is "
+            "read off the shipped model, so this is what the loader will say; refusing before the write "
+            "keeps the corpus loadable rather than leaving it to fail at compile time."
+        )
+        self.offenders = dict(offenders)
+
+
+def refuse_identifiers_over_cap(named: Mapping[str, str]) -> None:
+    """Refuse before any write when a proposed ``family -> identifier`` pair breaks its schema cap.
+
+    Raises:
+        IdentifierExceedsSchemaCapError: When any identifier exceeds the cap its
+            own family declares.
+    """
+    offenders: dict[str, tuple[str, int, int]] = {}
+    for identifier, family in sorted(named.items()):
+        cap = identifier_cap_for_family(family)
+        if cap is not None and len(identifier) > cap:
+            offenders[identifier] = (family, len(identifier), cap)
+    if offenders:
+        raise IdentifierExceedsSchemaCapError(offenders)
+
+
+def refuse_invalid_identifier_evolutions(body: str, revision_id: str) -> None:
+    """Validate a rendered evolutions fragment through the shipped model before it is written.
+
+    Constructing the typed model is stronger than measuring a length: it applies
+    every constraint the family declares -- the cap on both identifier fields,
+    the identifier pattern, the closed ``kind`` union, and the refusal to
+    replace an identifier by itself -- so a fragment that passes here is one the
+    loader accepts.
+
+    The rows are retyped from TOML lists to tuples first, exactly as the loader
+    does, because the registry models validate in strict mode and a list where a
+    tuple is declared is a spelling difference rather than a finding.
+    """
+    from pydantic import TypeAdapter
+
+    from cadrumo.domain.calculations.registry.identifier_evolutions import IdentifierEvolution
+
+    rows = tomllib.loads(body).get("revisions", {}).get(revision_id, {}).get("identifier_evolutions", [])
+    adapter = TypeAdapter(IdentifierEvolution)
+    for row in rows:
+        adapter.validate_python({key: tuple(value) if isinstance(value, list) else value for key, value in row.items()})
+
+
 def _resolve_record_designs(
     modelo: str,
     modelos_root: Path,
@@ -2413,8 +2512,17 @@ def _resolve_record_designs(
     try:
         return dict(edition_record_designs(modelo, modelos_root))
     except RecordDesignUnavailableError as exc:
+        # Degrade per EDITION, not per modelo. One edition whose design cannot be
+        # read says nothing about its siblings, and dropping all of them would
+        # silently widen one broken link into a modelo-wide loss of evidence.
         plan.refusals.append(f"{modelo}: needs design evidence -- {exc}")
-        return {}
+        partial: dict[str, dict[tuple[str, int], Any]] = {}
+        for revision_dir in iter_revision_dirs(modelos_root / modelo):
+            try:
+                partial.update(edition_record_designs(modelo, modelos_root, editions=(revision_dir.name,)))
+            except RecordDesignUnavailableError as edition_exc:
+                plan.refusals.append(f"{modelo} {revision_dir.name}: needs design evidence -- {edition_exc}")
+        return partial
 
 
 def _design_named_identifier(
@@ -2541,6 +2649,16 @@ def _resolve_contested_names(
             continue
         provider = (member or {}).get("provider") or {}
         row = design.get((provider.get("record"), provider.get("offset")))
+        if len(holders.get(ordinal_name, ())) >= 1:
+            # The ordinal name is already somebody's. Leaving the strip where it
+            # is hands the whole modelo to the collision gate, which is safe but
+            # gives up a resolution this round could have made; saying so here
+            # is what turns a silent refusal into a reported one.
+            notes.append(
+                f"{modelo} {edition} bindings {strip.old_id}: its design row ordinal spells "
+                f"{ordinal_name!r}, which this edition already declares, so no second name is available"
+            )
+            continue
         others = sorted(set(holders[strip.new_id]) - {strip.old_id})
         label = design_slot_name(row.label) if row is not None else strip.new_id
         ordinal = "unknown" if row is None else row.ordinal
@@ -2550,6 +2668,10 @@ def _resolve_contested_names(
             f"{', '.join(others)}; named by its own design row ordinal {ordinal} instead"
         )
         strips[index] = replace(strip, new_id=ordinal_name, segment=f"{strip.segment}+design-row-ordinal")
+        # Keep the projection current, so a second contested row cannot be sent
+        # to a name this loop has just handed out.
+        holders[strip.new_id].remove(strip.old_id)
+        holders[ordinal_name].append(strip.old_id)
     return notes
 
 
@@ -2839,6 +2961,7 @@ def apply_span_strip(
     outside = references_outside_rewritten_editions(renamed, plan.modelo, editions, modelos_root, mappings_root)
     if outside:
         raise ReferenceOutsideEditionError(plan.modelo, ", ".join(sorted(by_edition)), outside)
+    refuse_identifiers_over_cap({strip.new_id: "bindings" for strip in plan.strips})
     notes = _notes_by_identifier(plan)
     return rewrite_identifier_references_by_edition(
         by_edition, plan.modelo, modelos_root, mappings_root, manifest=manifest, notes=notes
@@ -2875,6 +2998,9 @@ def _notes_by_identifier(plan: SpanStripPlan) -> dict[str, str]:
 
 #: The fragment an emitted evolutions run writes into the successor edition.
 _EVOLUTIONS_FRAGMENT = "0001-replaced-record-design-slot-repurpose.toml"
+
+#: The fragment a retirement run writes into the withdrawing edition.
+_RETIRED_FRAGMENT = "0001-retired-record-design-withdrawn-fields.toml"
 
 
 def render_identifier_evolutions(
@@ -3069,12 +3195,25 @@ def repurposed_addresses(
                     at_address[(record, offset)] = identifier
         ids[edition] = at_address
 
+    successor_ids = set(ids.get(successor, {}).values())
     for address, old_id in sorted(ids.get(predecessor, {}).items()):
         new_id = ids.get(successor, {}).get(address)
         was, now = designs.get(predecessor, {}).get(address), designs.get(successor, {}).get(address)
         if new_id is None or was is None or now is None or new_id == old_id:
             continue
         if was.length == now.length and design_field_component(was.label) == design_field_component(now.label):
+            continue
+        # The decisive test, and the one this rule originally missed. An
+        # identifier evolution is a statement about an IDENTIFIER: it says the
+        # old name is withdrawn from the successor edition onward. An address
+        # whose two editions carry different fields does NOT establish that --
+        # the field that used to live there may simply have moved, which is what
+        # modelo 714 does when the 2022 design inserts a 3-byte "Codigo pais"
+        # at 714-04 offset 927 and pushes "Descripcion 1" to 930. Both names
+        # survive; nothing is retired; and declaring one replaced would assert a
+        # withdrawal the successor edition itself contradicts by still declaring
+        # it, which is exactly what the enrolment check refuses.
+        if old_id in successor_ids:
             continue
         found[address] = (old_id, new_id)
     return found
@@ -3088,10 +3227,17 @@ def render_repurposed_evolutions(
     modelos_root: Path = REGISTRY_MODELOS_ROOT,
 ) -> str:
     """Render the ``identifier_evolutions`` fragment from the corpus and designs as they stand."""
-    from .record_design_labels import design_field_text, edition_record_designs
+    from .record_design_labels import design_field_text, edition_record_designs, record_design_source_ref
 
     designs = edition_record_designs(modelo, modelos_root)
     addresses = repurposed_addresses(modelo, predecessor, successor, modelos_root)
+    # Both designs are cited because the statement is ABOUT the difference
+    # between them, and each id is read off the edition that declares it rather
+    # than built from the modelo and the year: the corpus spells design sources
+    # several ways, and a constructed id is right by luck or wrong in silence.
+    design_sources = ", ".join(
+        f'"{record_design_source_ref(modelo, edition, modelos_root)}"' for edition in (predecessor, successor)
+    )
     rendered = [
         f"# Modelo {modelo} repurposed a fixed-width address between the {predecessor} and",
         f"# {successor} record designs: at each address below the {successor} diseno declares a",
@@ -3118,7 +3264,7 @@ def render_repurposed_evolutions(
             f'replaced_by = "{new_id}"',
             f'to_revision = "{successor}"',
             f"legal_refs = [{legal}]",
-            f'source_refs = ["aeat-dr-{modelo}-{predecessor}", "aeat-dr-{modelo}-{successor}"]',
+            f"source_refs = [{design_sources}]",
             "",
         ]
     return "\n".join(rendered)
@@ -3129,14 +3275,445 @@ def write_repurposed_evolutions(
     predecessor: str,
     successor: str,
     modelos_root: Path = REGISTRY_MODELOS_ROOT,
+    *,
+    removed_files: set[Path] | None = None,
 ) -> Path | None:
-    """Write the successor edition's ``identifier_evolutions`` fragment, or ``None`` when none is due."""
+    """Write the successor edition's ``identifier_evolutions`` fragment, or ``None`` when none is due.
+
+    A generator that can only add is not a generator, it is a one-way ratchet:
+    if the rule that justified a fragment no longer holds, the fragment it wrote
+    has to go, or the corpus keeps asserting something this tool no longer
+    believes. So an empty result RETRACTS a fragment this generator previously
+    wrote, recording the removal in *removed_files* for the directory sweep.
+    """
+    target = modelos_root / modelo / "revisions" / successor / "identifier_evolutions" / _EVOLUTIONS_FRAGMENT
     if not repurposed_addresses(modelo, predecessor, successor, modelos_root):
+        if target.is_file():
+            target.unlink()
+            if target.exists():
+                raise WriteNotObservedError(target)
+            if removed_files is not None:
+                removed_files.add(target)
         return None
     body = render_repurposed_evolutions(
         modelo, predecessor, successor, revision_legal_refs(modelo, successor, modelos_root), modelos_root
     )
-    target = modelos_root / modelo / "revisions" / successor / "identifier_evolutions" / _EVOLUTIONS_FRAGMENT
+    refuse_invalid_identifier_evolutions(body, successor)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(body, encoding="utf-8")
+    if target.read_text(encoding="utf-8") != body:
+        raise WriteNotObservedError(target)
+    return target
+
+
+#: A record-design row whose field has been withdrawn and whose bytes are held
+#: back. AEAT spells this "RESERVADO PARA LA A.E.A.T. (Dejar en blanco)", and it
+#: is the design's own way of saying the field that used to live here is gone --
+#: which is the evidence a ``retired`` identifier evolution needs.
+_RESERVED_DESIGN_ROW = re.compile(r"reservado\s+para\s+la\s+a\.?e\.?a\.?t", re.IGNORECASE)
+
+
+class RetirementNotGroundedError(Exception):
+    """A binding the successor edition omits, whose design still declares the field."""
+
+    def __init__(self, modelo: str, successor: str, omissions: Mapping[str, str]) -> None:
+        """Record the identifiers omitted without design grounding, and what the design still says."""
+        rendered = "; ".join(f"{identifier} ({reason})" for identifier, reason in sorted(omissions.items()))
+        super().__init__(
+            f"modelo {modelo} {successor}: {len(omissions)} bindings the predecessor declares are missing here, "
+            f"but the {successor} record design does not show the field withdrawn ({rendered}). An omission the "
+            "design contradicts is an under-declaration, not a retirement, and declaring it retired would make "
+            "a missing field look like a decided one."
+        )
+        self.omissions = dict(omissions)
+
+
+def _design_slot_name(label: str) -> str:
+    """The whole label as a comparable slot name; imported lazily to keep the rules independent."""
+    from .record_design_labels import design_slot_name
+
+    return design_slot_name(label)
+
+
+def _design_field_text(label: str) -> str:
+    """The design's own words for a field label; imported lazily to keep the rules independent."""
+    from .record_design_labels import design_field_text
+
+    return design_field_text(label)
+
+
+def withdrawn_identifiers(
+    modelo: str,
+    predecessor: str,
+    successor: str,
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+) -> tuple[dict[str, tuple[str, int]], dict[str, str]]:
+    """Return the bindings the successor edition genuinely retires, and the ungrounded omissions.
+
+    A binding present in *predecessor* and absent from *successor* is only
+    RETIRED when the successor's own record design shows the field gone: the row
+    at that address is marked reserved. AEAT withdraws a field by holding its
+    bytes back rather than by renumbering the record, so the reserved marker is
+    the design saying, in its own words, that nothing lives there any more.
+
+    An omission the design contradicts -- the field is still declared, the
+    corpus simply does not carry it -- is returned separately and never
+    declared retired. Those two states must not be collapsed: one is a decision,
+    the other is a gap, and writing a ``retired`` row for a gap would make the
+    gap look decided.
+    """
+    from .record_design_labels import edition_record_designs
+
+    designs = edition_record_designs(modelo, modelos_root)
+    declared: dict[str, dict[str, Mapping[str, Any]]] = {}
+    for edition in (predecessor, successor):
+        revision_dir = modelos_root / modelo / "revisions" / edition
+        members: dict[str, Mapping[str, Any]] = {}
+        for member in edition_declared_families(revision_dir, edition).get("bindings", ()):
+            if isinstance(member.get("id"), str):
+                members[member["id"]] = member
+        declared[edition] = members
+
+    retired: dict[str, tuple[str, int]] = {}
+    ungrounded: dict[str, str] = {}
+    for identifier in sorted(set(declared[predecessor]) - set(declared[successor])):
+        provider = declared[predecessor][identifier].get("provider")
+        if not isinstance(provider, Mapping):
+            ungrounded[identifier] = "the predecessor states no provider address to check the design at"
+            continue
+        record, offset = provider.get("record"), provider.get("offset")
+        if not isinstance(record, str) or not isinstance(offset, int) or isinstance(offset, bool):
+            ungrounded[identifier] = "the predecessor's provider states no (record, offset) address"
+            continue
+        was = designs.get(predecessor, {}).get((record, offset))
+        row = designs.get(successor, {}).get((record, offset))
+        if row is not None and _RESERVED_DESIGN_ROW.search(row.label):
+            # The design holds the bytes back and names nothing there.
+            retired[identifier] = (record, offset)
+            continue
+        if was is None:
+            ungrounded[identifier] = (
+                f"the {predecessor} design declares no row at ({record}, {offset}), so there is no field "
+                "label to look for in the successor"
+            )
+            continue
+        # Absence from the ADDRESS proves nothing on its own. The 2022 design of
+        # modelo 714 inserts fields and pushes later ones along, so an old start
+        # offset can land mid-field while the field itself is still declared a
+        # few bytes away, and 714-06 grows from 95 rows to 98 doing exactly
+        # that. The question is whether the FIELD is gone, so the successor's
+        # whole record is searched for the same label.
+        wanted = _design_field_text(was.label)
+        elsewhere = sorted(
+            other_offset
+            for (other_record, other_offset), other in designs.get(successor, {}).items()
+            if other_record == record and _design_field_text(other.label) == wanted
+        )
+        if elsewhere:
+            ungrounded[identifier] = (
+                f"the {successor} design still declares {wanted!r} in record {record} at offset "
+                f"{elsewhere[0]}, so the field moved rather than being withdrawn"
+            )
+            continue
+        retired[identifier] = (record, offset)
+    return retired, ungrounded
+
+
+def render_retired_evolutions(
+    modelo: str,
+    predecessor: str,
+    successor: str,
+    legal_refs: Sequence[str],
+    source_refs: Sequence[str],
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+) -> str:
+    """Render the successor edition's ``retired`` fragment for every grounded withdrawal."""
+    retired, _ungrounded = withdrawn_identifiers(modelo, predecessor, successor, modelos_root)
+    from .record_design_labels import edition_record_designs
+
+    designs = edition_record_designs(modelo, modelos_root)
+    rendered = [
+        f"# Modelo {modelo} withdrew these fields in the {successor} record design. Each row",
+        f"# below names a field the {predecessor} design declared and the {successor} design does",
+        "# not: either the address now reads RESERVADO PARA LA A.E.A.T., or the field's own",
+        "# label is gone from that record entirely. A field that merely MOVED is not here --",
+        f"# it is still declared. The identifier is not inherited into {successor}; it ends",
+        "# here, and saying so is what absence alone could not.",
+        "",
+    ]
+    legal = ", ".join(f'"{ref}"' for ref in legal_refs)
+    sources = ", ".join(f'"{ref}"' for ref in source_refs)
+    for identifier, (record, offset) in sorted(retired.items(), key=lambda item: item[1]):
+        row = designs.get(successor, {}).get((record, offset))
+        why = (
+            f"reserved in the {successor} diseno"
+            if row is not None and _RESERVED_DESIGN_ROW.search(row.label)
+            else f"the field is no longer declared anywhere in record {record} of the {successor} diseno"
+        )
+        rendered += [
+            f"# {record} offset {offset}: {why}.",
+            f'[[revisions."{successor}".identifier_evolutions]]',
+            'kind = "retired"',
+            'family = "bindings"',
+            f'identifier = "{identifier}"',
+            f'to_revision = "{successor}"',
+            f"legal_refs = [{legal}]",
+            f"source_refs = [{sources}]",
+            "",
+        ]
+    return "\n".join(rendered)
+
+
+def revision_binding_source_refs(
+    modelo: str,
+    edition: str,
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+) -> tuple[str, ...]:
+    """Return the edition's declared ``binding_source_refs``, its own citation for binding facts."""
+    manifest = modelos_root / modelo / "revisions" / edition / _MANIFEST_NAME
+    if not manifest.is_file():
+        return ()
+    declared = _load_toml(manifest).get("revisions", {}).get(edition, {}).get("binding_source_refs")
+    return tuple(str(ref) for ref in declared) if isinstance(declared, list) else ()
+
+
+def write_retired_evolutions(
+    modelo: str,
+    predecessor: str,
+    successor: str,
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+    *,
+    removed_files: set[Path] | None = None,
+    ungrounded_acknowledged: bool = False,
+) -> Path | None:
+    """Write the successor edition's ``retired`` fragment, grounded on that edition's own citations.
+
+    Refusing on ANY ungrounded omission is the default, because an
+    under-declaration and a retirement look identical from absence alone and
+    writing the grounded half would quietly imply the other half was considered.
+    ``ungrounded_acknowledged`` is the caller's statement that it has read the
+    list and is carrying those omissions forward as an open finding; the
+    grounded rows are then written and the ungrounded ones stay visible in the
+    caller's report rather than becoming declarations.
+
+    Raises:
+        RetirementNotGroundedError: When a binding is omitted without the design
+            showing the field withdrawn, and the caller has not acknowledged it.
+        RuntimeError: When the edition declares no citation to ground the
+            statement in; a retirement with no source is not a retirement.
+    """
+    retired, ungrounded = withdrawn_identifiers(modelo, predecessor, successor, modelos_root)
+    if ungrounded and not ungrounded_acknowledged:
+        raise RetirementNotGroundedError(modelo, successor, ungrounded)
+    target = modelos_root / modelo / "revisions" / successor / "identifier_evolutions" / _RETIRED_FRAGMENT
+    if not retired:
+        if target.is_file():
+            target.unlink()
+            if target.exists():
+                raise WriteNotObservedError(target)
+            if removed_files is not None:
+                removed_files.add(target)
+        return None
+    sources = revision_binding_source_refs(modelo, successor, modelos_root)
+    legal = revision_legal_refs(modelo, successor, modelos_root)
+    if not sources or not legal:
+        raise RuntimeError(
+            f"modelo {modelo} {successor} declares no binding_source_refs and legal_refs to ground a "
+            "retirement in; the statement would cite nothing, so it is not written"
+        )
+    body = render_retired_evolutions(modelo, predecessor, successor, legal, sources, modelos_root)
+    refuse_invalid_identifier_evolutions(body, successor)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(body, encoding="utf-8")
+    if target.read_text(encoding="utf-8") != body:
+        raise WriteNotObservedError(target)
+    return target
+
+
+#: The fragment a relabelling run writes into the successor edition.
+_RELABELLED_FRAGMENT = "0002-replaced-record-design-relabelled-fields.toml"
+
+
+class RelabelNotGroundedError(Exception):
+    """A candidate relabelling whose two design rows do not describe the same field."""
+
+    def __init__(self, modelo: str, successor: str, rejected: Mapping[str, str]) -> None:
+        """Record each rejected candidate and what disqualified it."""
+        rendered = "; ".join(f"{identifier} ({reason})" for identifier, reason in sorted(rejected.items()))
+        super().__init__(
+            f"modelo {modelo} {successor}: {len(rejected)} candidate relabellings do not describe the same "
+            f"field in both designs ({rendered}). Declaring one replaced would assert a continuity the "
+            "designs deny."
+        )
+        self.rejected = dict(rejected)
+
+
+def relabelled_identifiers(
+    modelo: str,
+    predecessor: str,
+    successor: str,
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+) -> tuple[dict[str, tuple[str, str, str, int]], dict[str, str]]:
+    """Return the identifiers that changed spelling while naming the SAME field, and the rejects.
+
+    A field can move without being withdrawn, and where the corpus names a slot
+    by the design's own row ordinal that ordinal is edition-scoped -- the design
+    renumbers its rows when a field is inserted -- so the same slot legitimately
+    carries a different id in the two editions. Modelo 714's ``714-06``
+    ``% participacion individual 1`` is one such field.
+
+    That is a ``replaced`` evolution and not a retirement: the old name ends, the
+    new name continues it, and the registry has a way to say so. The proof is
+    four-part and all of it comes from the designs and the corpus -- the
+    predecessor's design row and the successor's must carry the SAME label and
+    the SAME declared width, the old id must be absent from the successor, and
+    the successor must declare a binding at the row's new address.
+
+    Returns the accepted map ``old id -> (new id, record, label, new offset)``
+    and, separately, the candidates rejected with the reason, which the caller
+    reports rather than guessing at.
+    """
+    from .record_design_labels import edition_record_designs
+
+    designs = edition_record_designs(modelo, modelos_root)
+    declared: dict[str, dict[str, Mapping[str, Any]]] = {}
+    at_address: dict[str, dict[tuple[str, int], str]] = {}
+    for edition in (predecessor, successor):
+        revision_dir = modelos_root / modelo / "revisions" / edition
+        members: dict[str, Mapping[str, Any]] = {}
+        addressed: dict[tuple[str, int], str] = {}
+        for member in edition_declared_families(revision_dir, edition).get("bindings", ()):
+            identifier, provider = member.get("id"), member.get("provider")
+            if not isinstance(identifier, str):
+                continue
+            members[identifier] = member
+            if isinstance(provider, Mapping):
+                record, offset = provider.get("record"), provider.get("offset")
+                if isinstance(record, str) and isinstance(offset, int) and not isinstance(offset, bool):
+                    addressed[(record, offset)] = identifier
+        declared[edition] = members
+        at_address[edition] = addressed
+
+    accepted: dict[str, tuple[str, str, str, int]] = {}
+    rejected: dict[str, str] = {}
+    for identifier in sorted(set(declared[predecessor]) - set(declared[successor])):
+        provider = declared[predecessor][identifier].get("provider")
+        if not isinstance(provider, Mapping):
+            continue
+        record, offset = provider.get("record"), provider.get("offset")
+        if not isinstance(record, str) or not isinstance(offset, int) or isinstance(offset, bool):
+            continue
+        was = designs.get(predecessor, {}).get((record, offset))
+        if was is None:
+            continue
+        # The WHOLE label, not just its final component. One record carries
+        # several blocks -- 714-06 holds both H1 and H2 -- and each block has its
+        # own "% participacion individual 1", so comparing the last component
+        # alone makes two different fields look like one and the match ambiguous.
+        # The leading path is what tells the blocks apart.
+        wanted = _design_slot_name(was.label)
+        matches = sorted(
+            (other_offset, other)
+            for (other_record, other_offset), other in designs.get(successor, {}).items()
+            if other_record == record and _design_slot_name(other.label) == wanted
+        )
+        if not matches:
+            continue  # Genuinely withdrawn; withdrawn_identifiers owns that case.
+        if len(matches) > 1:
+            rejected[identifier] = (
+                f"the {successor} design declares {wanted!r} at {len(matches)} addresses in record {record}, "
+                "so which one continues this field is not established"
+            )
+            continue
+        new_offset, now = matches[0]
+        if now.length != was.length:
+            rejected[identifier] = (
+                f"{wanted!r} is {was.length} bytes in {predecessor} and {now.length} in {successor}; a field "
+                "that changed width is not the same field continued"
+            )
+            continue
+        new_id = at_address.get(successor, {}).get((record, new_offset))
+        if new_id is None:
+            rejected[identifier] = (
+                f"the {successor} corpus declares no binding at ({record}, {new_offset}) where the design "
+                f"now puts {wanted!r}, so there is no successor identifier to name"
+            )
+            continue
+        accepted[identifier] = (new_id, record, _design_field_text(was.label), new_offset)
+    return accepted, rejected
+
+
+def render_relabelled_evolutions(
+    modelo: str,
+    predecessor: str,
+    successor: str,
+    legal_refs: Sequence[str],
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+) -> str:
+    """Render the successor edition's ``replaced`` fragment for every relabelled field."""
+    from .record_design_labels import record_design_source_ref
+
+    accepted, _rejected = relabelled_identifiers(modelo, predecessor, successor, modelos_root)
+    sources = ", ".join(
+        f'"{record_design_source_ref(modelo, edition, modelos_root)}"' for edition in (predecessor, successor)
+    )
+    rendered = [
+        f"# Modelo {modelo}: these fields kept their meaning and changed address between the",
+        f"# {predecessor} and {successor} record designs. Where the corpus names a slot by the",
+        "# design's own row ordinal, that ordinal is edition-scoped -- the design renumbers its",
+        "# rows when a field is inserted -- so the same field legitimately carries a different",
+        "# identifier in the two editions. Each row below names the pair: the design label and",
+        "# the declared width are identical on both sides, which is what makes it one field.",
+        "",
+    ]
+    legal = ", ".join(f'"{ref}"' for ref in legal_refs)
+    for old_id, (new_id, record, label, new_offset) in sorted(accepted.items(), key=lambda item: item[1][3]):
+        rendered += [
+            f"# {record}: {label} moves to offset {new_offset} in the {successor} diseno.",
+            f'[[revisions."{successor}".identifier_evolutions]]',
+            'kind = "replaced"',
+            'family = "bindings"',
+            f'identifier = "{old_id}"',
+            f'replaced_by = "{new_id}"',
+            f'to_revision = "{successor}"',
+            f"legal_refs = [{legal}]",
+            f"source_refs = [{sources}]",
+            "",
+        ]
+    return "\n".join(rendered)
+
+
+def write_relabelled_evolutions(
+    modelo: str,
+    predecessor: str,
+    successor: str,
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+    *,
+    removed_files: set[Path] | None = None,
+) -> Path | None:
+    """Write the successor edition's relabelling fragment, refusing any candidate it cannot prove.
+
+    Raises:
+        RelabelNotGroundedError: When a candidate's two design rows disagree on
+            label or width, or the successor declares no binding to name.
+    """
+    accepted, rejected = relabelled_identifiers(modelo, predecessor, successor, modelos_root)
+    if rejected:
+        raise RelabelNotGroundedError(modelo, successor, rejected)
+    target = modelos_root / modelo / "revisions" / successor / "identifier_evolutions" / _RELABELLED_FRAGMENT
+    if not accepted:
+        if target.is_file():
+            target.unlink()
+            if target.exists():
+                raise WriteNotObservedError(target)
+            if removed_files is not None:
+                removed_files.add(target)
+        return None
+    legal = revision_legal_refs(modelo, successor, modelos_root)
+    if not legal:
+        raise RuntimeError(f"modelo {modelo} {successor} declares no legal_refs to ground a relabelling in")
+    body = render_relabelled_evolutions(modelo, predecessor, successor, legal, modelos_root)
+    refuse_invalid_identifier_evolutions(body, successor)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(body, encoding="utf-8")
     if target.read_text(encoding="utf-8") != body:
@@ -3182,14 +3759,17 @@ def write_identifier_evolutions(plan: SpanStripPlan, modelos_root: Path = REGIST
 class UnownedFragmentDirectoryError(Exception):
     """An empty fragment directory this pass did not empty itself, so it is not removed."""
 
-    def __init__(self, directory: Path) -> None:
-        """Record the directory whose emptiness this pass cannot account for."""
+    def __init__(self, directory: Path, directories: tuple[Path, ...] = ()) -> None:
+        """Record every empty directory whose emptiness this pass cannot account for."""
+        found = directories or (directory,)
+        listed = ", ".join(str(path) for path in found)
         super().__init__(
-            f"{directory}: this fragment directory is empty, but this pass did not remove the files that "
-            "emptied it. Something else did, and removing the directory would finish a change this tool "
-            "cannot see the rest of. It is left in place; remove it in the change that emptied it."
+            f"{listed}: {len(found)} fragment directories are empty, but this pass did not remove the files "
+            "that emptied them. Something else did, and removing them would finish a change this tool cannot "
+            "see the rest of. They are left in place; remove them in the change that emptied them."
         )
         self.directory = directory
+        self.directories = found
 
 
 def remove_emptied_fragment_directories(modelo_dir: Path, removed_files: Set[Path] = frozenset()) -> list[Path]:
@@ -3217,16 +3797,23 @@ def remove_emptied_fragment_directories(modelo_dir: Path, removed_files: Set[Pat
     """
     owned = {resolved.parent for resolved in (path.resolve() for path in removed_files)}
     removed: list[Path] = []
+    unowned: list[Path] = []
     for directory in sorted((path for path in modelo_dir.rglob("*") if path.is_dir()), reverse=True):
         if any(directory.iterdir()):
             continue
         if directory.resolve() not in owned:
-            raise UnownedFragmentDirectoryError(directory)
+            unowned.append(directory)
+            continue
         directory.rmdir()
         # Read back: the removal is only done when the directory is gone.
         if directory.exists():
             raise WriteNotObservedError(directory)
         removed.append(directory)
+    if unowned:
+        # Reported at the end rather than raised on the first one: aborting
+        # mid-sweep leaves this pass's own removals half applied because of a
+        # directory that has nothing to do with them.
+        raise UnownedFragmentDirectoryError(unowned[0], tuple(unowned))
     return removed
 
 
@@ -3560,6 +4147,7 @@ def apply_foreign_edition_token_collapse(
     renames = plan.rename_map
     if not renames:
         return [], 0
+    refuse_identifiers_over_cap({rename.new_id: rename.family for rename in plan.renames})
     code = list(code_reference_files()) if code_files is None else list(code_files)
     touched, hits = rewrite_in_files(
         renames, [*rewritable_files(modelos_root, mappings_root), *code], manifest=manifest

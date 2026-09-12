@@ -60,3 +60,8 @@ A dependency classification declares which OTHER modelo's filing a value here de
 exists to classify, so the family is inapplicable by this modelo's position in the chain."""
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-modelo-123-procedure", "boe-modelo-123-2007-form"]
+
+[revisions."2019-2023".source_default_dispositions.application_links]
+kind = "underivable"
+reason = """
+lift refuses: 2 source_refs statement(s) not textually rewritable: 0001-application-links.toml: source_refs = [; 0001-application-links.toml: source_refs = ["""

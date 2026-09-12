@@ -20,7 +20,7 @@ padding = "none"
 justification = "none"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+source_refs = ["aeat-dr-190-2024"]
 
 [[revisions."2024".export_layouts.records.fields]]
 id = "modelo-190-decl-modelo"
@@ -34,7 +34,7 @@ padding = "none"
 justification = "none"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+source_refs = ["aeat-dr-190-2024"]
 
 [[revisions."2024".export_layouts.records.fields]]
 id = "modelo-190-decl-year"
@@ -48,7 +48,7 @@ padding = "none"
 justification = "none"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+source_refs = ["aeat-dr-190-2024"]
 
 [[revisions."2024".export_layouts.records.fields]]
 id = "modelo-190-decl-nif"
@@ -65,7 +65,7 @@ padding = "none"
 justification = "none"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+source_refs = ["aeat-dr-190-2024"]
 
 [[revisions."2024".export_layouts.records.fields]]
 id = "modelo-190-decl-apellidos-razon-social"
@@ -83,7 +83,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+source_refs = ["aeat-dr-190-2024"]
 
 [[revisions."2024".export_layouts.records.fields]]
 id = "modelo-190-decl-tipo-soporte"
@@ -100,7 +100,7 @@ padding = "none"
 justification = "none"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+source_refs = ["aeat-dr-190-2024"]
 
 [[revisions."2024".export_layouts.records.fields]]
 id = "modelo-190-decl-persona-contacto-telefono"
@@ -120,7 +120,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+source_refs = ["aeat-dr-190-2024"]
 
 [[revisions."2024".export_layouts.records.fields]]
 id = "modelo-190-decl-persona-contacto-nombre"
@@ -137,7 +137,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+source_refs = ["aeat-dr-190-2024"]
 
 [[revisions."2024".export_layouts.records.fields]]
 id = "modelo-190-decl-numero-identificativo"
@@ -157,7 +157,7 @@ padding = "left_zero"
 justification = "right"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+source_refs = ["aeat-dr-190-2024"]
 
 [[revisions."2024".export_layouts.records.fields]]
 id = "modelo-190-decl-complementaria"
@@ -180,7 +180,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+source_refs = ["aeat-dr-190-2024"]
 
 [[revisions."2024".export_layouts.records.fields]]
 id = "modelo-190-decl-sustitutiva"
@@ -197,7 +197,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+source_refs = ["aeat-dr-190-2024"]
 
 [[revisions."2024".export_layouts.records.fields]]
 id = "modelo-190-decl-numero-identificativo-anterior"
@@ -215,7 +215,7 @@ padding = "left_zero"
 justification = "right"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+source_refs = ["aeat-dr-190-2024"]
 
 [[revisions."2024".export_layouts.records.fields]]
 id = "modelo-190-decl-total-percepciones"
@@ -229,7 +229,7 @@ padding = "left_zero"
 justification = "right"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+source_refs = ["aeat-dr-190-2024"]
 
 [[revisions."2024".export_layouts.records.fields]]
 id = "modelo-190-decl-percepciones-total"
@@ -247,7 +247,7 @@ justification = "right"
 signed = true
 sign_position = "blank_or_n"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+source_refs = ["aeat-dr-190-2024"]
 
 [[revisions."2024".export_layouts.records.fields]]
 id = "modelo-190-decl-retenciones-total"
@@ -263,7 +263,7 @@ padding = "left_zero"
 justification = "right"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+source_refs = ["aeat-dr-190-2024"]
 
 [[revisions."2024".export_layouts.records.fields]]
 id = "modelo-190-decl-correo-electronico"
@@ -282,7 +282,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+source_refs = ["aeat-dr-190-2024"]
 
 [[revisions."2024".export_layouts.records.fields]]
 id = "modelo-190-decl-blancos-226"
@@ -296,7 +296,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+source_refs = ["aeat-dr-190-2024"]
 
 [[revisions."2024".export_layouts.records.fields]]
 id = "modelo-190-decl-sello-electronico"
@@ -313,5 +313,5 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+source_refs = ["aeat-dr-190-2024"]
 

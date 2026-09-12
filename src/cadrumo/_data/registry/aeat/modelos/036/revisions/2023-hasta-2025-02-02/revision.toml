@@ -1,0 +1,245 @@
+[revisions."2023-hasta-2025-02-02"]
+casilla_source_refs = ["aeat-dr-036-2023"]
+authority_grade = "applicability"
+# Modelo 036, declaración censal de alta, modificación y baja, for the era the
+# bundled 2023 diseño de registro governs.
+#
+# THE SPAN IS THE DESIGN'S OWN WINDOW. aeat-dr-036-2023 declares applies_from
+# 2023-01-01 and applies_to 2025-02-02, and the successor edition opens
+# 2025-02-03 — the day Orden HAC/1526/2024 took effect and suppressed the modelo
+# 037. The two spans meet exactly: no day uncovered, none served twice. The tail
+# is 33 days of 2025 and it belongs to this edition because the form filed in
+# January 2025 is this design, not the one that replaced it in February.
+#
+# THERE IS NO aeat-dr-036-2024. One design covers 2023, 2024 and that tail. A
+# wave deriving a source id from its edition year would emit a ref resolving to
+# nothing, and this note exists so nobody adds one.
+#
+# aeat-modelo-036-procedure IS NOT CITED EITHER, and this was corrected rather
+# than authored right: it was copied from the 2025 sibling, and its window opens
+# 2025-02-03 so it covers no day of this span. The source-window screen caught it
+# minutes after the write. The layout authority aeat-dr-036-2023 covers the whole
+# span and is what these casillas actually rest on.
+#
+# orden-hac-1526-2024 IS DELIBERATELY NOT CITED. Its art. 1 and disposición final
+# are the 037 suppression and the 2025-02-03 entry into force; they are the
+# authority for the SUCCESSOR edition and reach no day of this one. The 2025
+# sibling cites them correctly; this edition cannot.
+#
+# 530 CASILLAS, ONE PER PRINTED NUMBER. AEAT splits every date into día, mes and
+# año rows under a single number and repeats whole blocks — Pag. 8 prints 800,
+# 801, 818 and 859 four times each, once per repetition of the socio block. The
+# 2025 edition settled this and says so in its own comments. Emitting one casilla
+# per design row instead would have written 263 casillas sharing 85 ids, which is
+# valid TOML and wrong; the generator now refuses that before writing anything.
+#
+# 99 NUMBER GROUPS ARE DECLINED AT PARITY, and they are not a gap. This design
+# prints them and NO edition declares them: 64 slots AEAT printed with no box
+# number at all, 33 whose number is a comma list (B1,B2 · 300,301,302 ·
+# 311,312), and the two plain numbers 613 and 614. Neither the lists nor their
+# parts appear in the 2025 edition. Two of the 64 are plainly deliberate rather
+# than overlooked — the VERSION AAAMMDD constant and the lugar-fecha-firma
+# block. They are enumerated one by one in the wave rather than swept by a rule,
+# so a row appearing later REFUSES instead of joining the declined set unnoticed.
+#
+# THE DECLINED COUNT WAS 115, THEN 117, AND IS NOW 99, AND THE ARITHMETIC IS
+# WORTH STATING BECAUSE ONE OF THE MOVES WAS A DEFECT. 613 and 614 came IN from
+# the deferred set (+2). Eighteen went OUT, and they were never declines at all:
+# on Pag. 9 the bundled extract prints boxes 921 through 943 WITH THE OPENING
+# BRACKET MISSING — "921]" where the sheet prints "[921]" — so the number
+# grammar could not see a number, the rows fell through to positional slot ids,
+# and they were swept into the declined set where they read as a scope decision.
+# They are not one. The 2025 edition declares all twenty-four of 920-943
+# (suc-a..suc-f), this design prints all twenty-four, and this edition emitted
+# only the six N.I.F. rows whose brackets survived the extraction. 82 unnumbered
+# minus those 18 is the 64 above.
+#
+# THE TWENTY MALFORMED-BRACKET ROWS ARE DECLARED, AND WITH THE TWO
+# RENUMBERED ONES THIS EDITION HOLDS 530. They were written
+# by a targeted merge of the Pag. 9 shard rather than by regenerating the
+# directory, because a regeneration would have destroyed the six existing rows'
+# continuidad_id along with 423 others. Preconditions checked directory-wide
+# before the write and refused on either: no id or number collides with any
+# other shard, and no existing id is lost. After: 530 casillas, 530 distinct
+# ids, 530 distinct numbers, 423 continuidad_id unchanged.
+#
+# LOAD-VERIFIED AFTER THE FACT, AND THE ORDER IS RECORDED BECAUSE IT MATTERS.
+# The merge was written while the registry loader was down (an unrelated
+# refactor had left M210_TIPO_RENTA_CODE_PROJECTION imported but undefined), so
+# at the moment of the write only parse, directory-wide id and number
+# uniqueness, and the generator's own tiling assertion (Pag. 9 emit=24
+# carried=24, 1300==1300) stood behind it. The loader recovered shortly after
+# and this edition was then loaded in a fresh process: 530 casillas, 530
+# distinct, alongside the successor's 706. Cross-family and revision-level
+# validation have now run and passed.
+#
+# NOTHING IS DEFERRED ON THIS EDITION. The count went four, then two, then
+# zero, and every step was taken on evidence rather than by decision.
+#
+# A3A (Pag. 2A @1846/1848/1850) and B3A (Pag. 2B @1946/1948/1950) ARE DECLARED,
+# under THEIR OWN design numbers, carrying the attributes of the successor rows
+# A3B and B3B. That the change is a RENUMBERING and not a replacement is proven
+# from a design pair this edition originally failed to compare: the corpus holds
+# TWO files for the 2025 edition, a provisional and a final, and the provisional
+# still prints A3A and B3A where the final prints A3B and B3B — same offsets,
+# same 2/2/4 lengths, same Num type, byte-identical captions. The label is the
+# only thing that moves, and it moves within one edition's own publication
+# cycle, which a replacement cannot do.
+#
+# THE NUMBER THIS EDITION EMITS IS ITS OWN, NOT THE SUCCESSOR'S. The rows say
+# A3A and B3A because that is what this design prints; writing A3B here would
+# make the edition assert something false about its own diseno. Only the
+# ATTRIBUTES are carried across the renumbering, and the continuity itself is
+# recorded as a grounded lineage pair rather than inferred from the number.
+#
+# 613 AND 614 WERE DEFERRED ON A PREMISE THAT WAS FALSE, AND ARE NOW DECLINED.
+# This revision previously recorded that they "have no 2025 counterpart at all,
+# so there is nothing to carry attributes from". They do have one: both appear
+# twelve times in the 2025 FINAL design at identical positions, lengths and
+# captions, differing only by the trailing 037 asterisk that the final drops.
+# What they lack is an EDITION declaration on either side, and both editions
+# decline the identical block — 604-615, 617, 619, 623-625, 627-632 — while
+# both declare the same sixteen 600-series numbers. Two independently authored
+# editions holding one scope line is parity, which is a settled claim rather
+# than an open question, so they join the declined set and the count above moved
+# from 115 to 117.
+# THE DESIGN CENSUS, SO THE NEXT READER HAS THE TRUE DENOMINATOR RATHER THAN
+# THE GRAMMAR'S FLOOR. Measured over the whole diseno, both editions:
+#
+#   2023 design: 608 numbers the number grammar can see, 21 hidden behind a
+#                malformed bracket, 629 distinct numbers actually printed.
+#   2025 design: 636 visible, the same 21 hidden, 657 distinct.
+#
+# A coverage figure computed from what the grammar sees is therefore measured
+# against a floor. The successor edition says the same thing in its own shard
+# prose and reached a different total by a different method; the numbers above
+# are the ones this edition measured and can reproduce.
+#
+# THE 21 HAVE THREE SEPARATE CAUSES, AND ONLY TWO OF THEM WERE DEFECTS HERE.
+# Eighteen (921-923, 925-927, 929-931, 933-935, 937-939, 941-943) lose the
+# OPENING bracket. A1 at @11 is opened and closed with a PARENTHESIS -- "[A1)".
+# A38 at @1033 keeps both brackets and holds a LEADING SPACE -- "[ A38]". All
+# twenty are now declared, each by a per-row alias rather than by loosening the
+# grammar.
+#
+# 332 AND 382 ARE THE REMAINING TWO AND THEY ARE CORRECTLY NOT DECLARED. They
+# are the tails of "[330 332]" and "[380 382]" on Pag. 3, where one byte carries
+# a bracket LISTING several numbers because the printed form has separate tick
+# boxes that the fichero collapses into a single selecting code. No one number
+# describes that field, so it keeps a positional slug. This is also why the
+# grammar was not simply made tolerant of a stray bracket: every loosening that
+# admits A1 or A38 also admits the tail of "[330 332]", and the generator
+# refused on exactly that when it was tried.
+#
+# THE SUCCESSOR EDITION HAD ALREADY FOUND THE BROKEN BRACKET AND WRITTEN IT
+# DOWN. This is worth recording because it means the defect above was never
+# undiscovered, only unread. The 2025 edition annotates every one of those
+# eighteen rows in its own shard comments -- "Bloque 13a. Apellidos y nombre,
+# razon o denominacion social del sucesor o beneficiario. 921] (malformed
+# bracket in the diseno)" -- and the phrase appears there exactly eighteen
+# times, on exactly these rows. That edition was authored by hand: there is no
+# 036/2025 generator, and its captions are editorial paraphrase where this
+# edition transcribes the design. A person read the sheet, hit the malformed
+# bracket, said so, and declared the row anyway.
+#
+# This wave carried ATTRIBUTES from that edition but never read its COMMENTS,
+# so a generator reproduced as a silent scope decision something its own source
+# edition had flagged in prose. A wave that carries from a prior edition should
+# read what that edition says about the design, not only the fields it declares.
+#
+# NO CASILLA ON THIS MODELO CARRIES A semantic_role, ON EITHER EDITION, AND
+# THAT IS AN UNFILLED GAP RATHER THAN A JUDGEMENT. Measured: zero roles across
+# this edition's 530 casillas, and two across the successor's 706 -- both of
+# those on synthetic declaration-header rows (decl.event-kind and
+# decl.vigencia-2025), neither on a design row. So not one of the modelo's
+# design casillas has a role on either side. Nothing here decided that; the
+# roles were never authored. It is recorded because the lineage seeder refuses
+# a bare chain when semantic_role is unstated on either side, so this absence
+# is why these rows need a grounded ruling rather than chaining mechanically.
+#
+# THE 2025 EDITION SHIPS AS TWO FILES, A PROVISIONAL AND A FINAL, AND THEY DO
+# NOT AGREE ON EVERY BOX NUMBER. Anyone comparing this edition against "the 2025
+# design" must say which: the provisional still prints A3A and B3A where the
+# final prints A3B and B3B. Comparing against one file alone is how the A3A
+# renumbering stayed an open question here for as long as it did, and it is the
+# same shape of error as trusting a grep that found nothing.
+#
+# SELECTION ON THIS MODELO REQUIRES A REFERENCE DATE, AND THAT IS THE DESIGN
+# RATHER THAN A DEFECT. This edition declares year_to = 2025 and the successor
+# declares year_from = 2025, so filing year 2025 is admitted by BOTH on all three
+# event periods, and a coverage screen reads that as a coordinate served twice.
+#
+# It cannot be expressed away. The period axis of a censal modelo carries EVENT
+# KIND -- alta, modificacion, baja -- not time, so periods cannot separate a
+# cutover that falls inside a year; PeriodOverride exists for a boundary inside a
+# year but overrides which PERIODS a year serves, and both editions serve all
+# three. The boundary here is a date, and only the date axis can carry it.
+#
+# NARROWING year_to TO 2024 WOULD BE WORSE THAN THE AMBIGUITY. Measured against
+# the live selector: an alta on 2025-01-15 resolves to THIS edition and an alta
+# on 2025-02-03 to the successor, with 2025-02-02 and 2025-02-03 landing either
+# side of the boundary exactly. Closing this selector at 2024 would send every
+# event between 1 January and 2 February 2025 to the February design -- the wrong
+# form for those 33 days -- and it would do so silently.
+#
+# What actually happens without a date is a REFUSAL:
+# AmbiguousRevisionSelectionError naming both editions. The system declines to
+# guess, which is the correct failure, and a censal event always carries the date
+# that triggered it. The ambiguity is stated here so it reads as a property of
+# this modelo rather than as an oversight.
+valid_from = 2023-01-01
+valid_to = 2025-02-02
+period_selector = { year_from = 2023, year_to = 2025, periods = ["alta", "modificacion", "baja"] }
+orden_aplicabilidad = [
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+]
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+]
+source_refs = [
+    "aeat-dr-036-2023",
+]
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: authoring review of the modelo 036 2023-to-2025-02-02 era. VERIFIED -- SPAN BOUNDARY: \
+aeat-dr-036-2023 declares 2023-01-01 to 2025-02-02 and the successor opens 2025-02-03, so the \
+two meet with no day uncovered and none served twice. VERIFIED -- GEOMETRY: all eleven records \
+tile their declared totals exactly once with no gap and no overlap (500, 2000, 2100, 1400, \
+1200, 900, 380, 400, 400, 1800, 1300), asserted at generation. The casillas were emitted by \
+generator from the design with its sha256 checked against the catalogue declaration, not \
+transcribed. VERIFIED -- ID UNIQUENESS: asserted across the whole edition BEFORE any file was \
+written, not discovered by a later load. VERIFIED -- SOURCE WINDOWS: every cited source covers \
+every day of this span; orden-hac-1526-2024 fails that check for all of it and is excluded \
+rather than carried over from the 2025 sibling. NOT CLAIMED -- 115 number groups this design \
+prints are declared by no edition and are declined at parity, enumerated individually. NOT \
+CLAIMED -- two groups (A3A, B3A) are DEFERRED pending their predecessor casillas, which is not \nthe same claim as declined. Row identity across A3A/A3B and B3A/B3B is NO LONGER unproven: \nthe corpus holds a PROVISIONAL and a FINAL file for the 2025 edition, the provisional prints \nA3A/B3A and the final prints A3B/B3B at the same offsets, lengths, type and captions, so the \nrenumbering is established from AEAT's own pair. CORRECTED -- 613 and 614 were deferred here \non the false premise that they have no 2025 counterpart; they appear twelve times each in the \n2025 final design, are declared by NEITHER edition, and are now declined at parity, moving \nthe declined count from 115 to 117. \
+VERIFIED -- CAPTION MEANING, TRIAGED AGAINST THE OTHER DESIGN RATHER THAN THE OTHER \nEDITION. The generator reports 474 carried rows whose caption differs from the 2025 \nedition's comments, but that is the wrong comparison to judge meaning by: those comments \nare editorial paraphrase ("Bloque 13a. N.I.F. del sucesor") where this edition transcribes \nthe design ("13a Relacion de sucesores. Sucesor o beneficiario. N.I.F."), so nearly every \nrow differs by convention. Comparing the two DESIGNS directly, per number, over the 619 \nnumbers both print: 437 captions byte-identical, 171 differing only by the 037 asterisk or \nthe version year, and 11 substantively. ALL ELEVEN fall in the declined or deferred set and \nNONE is a number this edition emits, so no emitted casilla carries a caption whose meaning \nchanged between the designs. The eleven are mostly 2025 appending an INE clarifier ("Codigo \nvia INE", "Codigo Municipio INE") to a domicilio caption, plus the VERSION constant moving \n20230421 to 20250203. NOT CLAIMED -- the 037 asterisk: a trailing ' *' marks a field informable \
+on the modelo 037, which HAC/1526/2024 suppressed effective 2025-02-03; it is transcribed as \
+printed because the design's own legend gives it meaning for these years, and no casilla \
+attribute records 037-eligibility. NOT CLAIMED -- FILING: no export layout on this edition. \
+NOT CLAIMED -- FORMULAS: this modelo carries no formula family at all; every casilla records \
+a censal fact, an obligation, a regime election or an identity. NOT CLAIMED -- no operator \
+countersignature. NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not zero."""
+reviewed_at = 2026-09-12
+
+[revisions."2023-hasta-2025-02-02".family_dispositions.deadline_windows]
+reason = """\
+The censal declaration has no calendar plazo: its period_selector declares the EVENT kinds \
+alta, modificacion and baja rather than calendar periods, and RD 1065/2007 anchors each to \
+its triggering event rather than to a date in the year. Article 11.2 states this verbatim for \
+the baja -- la declaracion de baja debera presentarse en el plazo de un mes desde que se \
+cumplan las condiciones previstas en el apartado 1 de este articulo -- so a deadline window \
+keyed to a calendar period would assert a plazo this modelo does not have."""
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+]
+source_refs = [
+    "aeat-dr-036-2023",
+]

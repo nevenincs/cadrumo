@@ -1,5 +1,8 @@
 [[revisions."2026".casillas]]
 id = "declarante-nif"
+continuidad_id = "m136-declarante-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text lines 732-737 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Datos de identificacion del declarante and Numero de identificacion fiscal (NIF); Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both 2022-2025 and 2026."
 number = "declarante.nif"
 section = ["declarante", "datos_identificacion"]
 data_type = "nif"
@@ -12,6 +15,9 @@ legal_refs = ["orden-hap-70-2013:art-5", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2026".casillas]]
 id = "declarante-nombre"
+continuidad_id = "m136-declarante-nombre"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text lines 732-743 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Datos de identificacion del declarante and Apellidos y nombre o razon social; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "declarante.nombre"
 section = ["declarante", "datos_identificacion"]
 data_type = "name"
@@ -22,6 +28,9 @@ legal_refs = ["orden-hap-70-2013:art-5", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2026".casillas]]
 id = "fecha-cobro-premio"
+continuidad_id = "m136-fecha-cobro-premio"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text lines 732-735 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Fecha de cobro del premio under Devengo; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "devengo.fecha-cobro-premio"
 section = ["devengo"]
 data_type = "date"
@@ -32,6 +41,9 @@ legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2026".casillas]]
 id = "ejercicio-declaracion"
+continuidad_id = "m136-ejercicio-declaracion"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text lines 742-744 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Ejercicio field in the declarant data block; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "devengo.ejercicio"
 section = ["devengo"]
 data_type = "year"
@@ -44,6 +56,9 @@ legal_refs = ["orden-hap-70-2013:art-11", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2026".casillas]]
 id = "periodo-declaracion"
+continuidad_id = "m136-periodo-declaracion"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text lines 742-744 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Periodo field paired with Ejercicio in the declarant data block; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "devengo.periodo"
 section = ["devengo"]
 data_type = "period_code"
@@ -57,6 +72,9 @@ source_refs = ["boe-modelo-136-base-order", "boe-modelo-136-current-form", "boe-
 
 [[revisions."2026".casillas]]
 id = "provincia-residencia-irpf"
+continuidad_id = "m136-provincia-residencia-irpf"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text line 748 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): IRPF residence province code at the award collection date; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "declarante.provincia-residencia-irpf"
 section = ["declarante", "residencia"]
 data_type = "province_code"
@@ -67,6 +85,9 @@ legal_refs = ["orden-hac-763-2018:art-tercero"]
 
 [[revisions."2026".casillas]]
 id = "organizador-denominacion"
+continuidad_id = "m136-organizador-denominacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text lines 753-759 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Organismo o entidad organizadora and Denominacion o razon social; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "loteria.organizador.denominacion"
 section = ["loteria_apuesta_premiada", "organizador"]
 data_type = "name"
@@ -77,6 +98,9 @@ legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2026".casillas]]
 id = "organizador-pais"
+continuidad_id = "m136-organizador-pais"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text lines 753-759 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Organismo o entidad organizadora with Pais field; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "loteria.organizador.pais"
 section = ["loteria_apuesta_premiada", "organizador"]
 data_type = "text"
@@ -87,6 +111,9 @@ legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2026".casillas]]
 id = "organizador-codigo-pais"
+continuidad_id = "m136-organizador-codigo-pais"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text lines 753-759 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Organismo o entidad organizadora with Pais and Codigo pais fields; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "loteria.organizador.codigo-pais"
 section = ["loteria_apuesta_premiada", "organizador"]
 data_type = "country_code"
@@ -97,6 +124,9 @@ legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2026".casillas]]
 id = "loteria-apuesta-denominacion"
+continuidad_id = "m136-loteria-apuesta-denominacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text lines 765-768 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Identificacion de la loteria o apuesta and Denominacion field; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "loteria.denominacion"
 section = ["loteria_apuesta_premiada", "identificacion"]
 data_type = "text"
@@ -107,6 +137,9 @@ legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2026".casillas]]
 id = "fecha-celebracion"
+continuidad_id = "m136-fecha-celebracion"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text lines 765-768 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Identificacion de la loteria o apuesta with Fecha de celebracion field; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "loteria.fecha-celebracion"
 section = ["loteria_apuesta_premiada", "identificacion"]
 data_type = "date"
@@ -117,6 +150,9 @@ legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2026".casillas]]
 id = "precio-unitario"
+continuidad_id = "m136-precio-unitario"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text lines 765-768 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Identificacion de la loteria o apuesta with Precio unitario (euros) field; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "loteria.precio-unitario"
 section = ["loteria_apuesta_premiada", "identificacion"]
 data_type = "money"
@@ -127,6 +163,9 @@ legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2026".casillas]]
 id = "01"
+continuidad_id = "m136-importe-premio-total"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text lines 773-774 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Importe del premio obtenido ... [01]; Orden HAC/763/2018 disposicion final unica applies this form to autoliquidaciones from 3T 2018 y siguientes, covering both 2022-2025 and 2026."
 number = "01"
 section = ["liquidacion", "premio"]
 data_type = "money"
@@ -137,6 +176,9 @@ legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2026".casillas]]
 id = "02"
+continuidad_id = "m136-importe-premio-declarante"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text lines 776-778 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Importe o valor del premio que corresponde individualmente al declarante [02], including shared-prize transfer instruction; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "02"
 section = ["liquidacion", "premio"]
 data_type = "money"
@@ -147,6 +189,9 @@ legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2026".casillas]]
 id = "03"
+continuidad_id = "m136-cuantia-exenta-gravamen"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text lines 780-785 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Cuantia exenta del gravamen especial [03] and its proportional rule; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "03"
 section = ["liquidacion", "exencion"]
 data_type = "money"
@@ -158,6 +203,9 @@ source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-f
 
 [[revisions."2026".casillas]]
 id = "04"
+continuidad_id = "m136-base-imponible-gravamen"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text line 788 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Base imponible (02 - 03) [04]; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "04"
 section = ["liquidacion", "base"]
 data_type = "money"
@@ -170,6 +218,9 @@ source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-f
 
 [[revisions."2026".casillas]]
 id = "05"
+continuidad_id = "m136-cuota-gravamen-especial"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text line 791 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Cuota del gravamen especial (20% of [04]) [05]; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "05"
 section = ["liquidacion", "cuota"]
 data_type = "money"
@@ -182,6 +233,9 @@ source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-f
 
 [[revisions."2026".casillas]]
 id = "06"
+continuidad_id = "m136-resultados-anteriores-mismo-premio"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text lines 793-795 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): prior-autoliquidation amounts for the same concept and same prize, deducted only for a complementary return [06]; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "06"
 section = ["liquidacion", "complementaria"]
 data_type = "money"
@@ -192,6 +246,9 @@ legal_refs = ["orden-hac-763-2018:art-tercero"]
 
 [[revisions."2026".casillas]]
 id = "07"
+continuidad_id = "cuota-a-ingresar"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text line 797 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Resultado a ingresar (05 - 06) [07]; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "07"
 section = ["liquidacion", "resultado"]
 data_type = "money"
@@ -204,6 +261,9 @@ legal_refs = ["orden-hap-70-2013:art-11", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2026".casillas]]
 id = "autoliquidacion-complementaria"
+continuidad_id = "m136-autoliquidacion-complementaria"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text lines 802-807 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): complementary-return mark by X for the same concept, exercise and period; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "complementaria.marca"
 section = ["complementaria"]
 data_type = "boolean"
@@ -214,6 +274,9 @@ legal_refs = ["orden-hac-763-2018:art-tercero"]
 
 [[revisions."2026".casillas]]
 id = "justificante-anterior"
+continuidad_id = "m136-justificante-anterior"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text lines 803-807 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): prior return identifying receipt number when the declaration is complementary; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "complementaria.justificante-anterior"
 section = ["complementaria"]
 data_type = "text"
@@ -224,6 +287,9 @@ legal_refs = ["orden-hac-763-2018:art-tercero"]
 
 [[revisions."2026".casillas]]
 id = "09"
+continuidad_id = "m136-importe-ingresado"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text line 814 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Importe (casilla 09) [I], followed by payment instructions and IBAN at lines 815-823; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "09"
 section = ["ingreso"]
 data_type = "money"
@@ -235,6 +301,9 @@ legal_refs = ["orden-hap-70-2013:art-11", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2026".casillas]]
 id = "forma-pago"
+continuidad_id = "m136-forma-pago"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text lines 814-817 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Forma de pago and the three choices for the amount in casilla I; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "ingreso.forma-pago"
 section = ["ingreso"]
 data_type = "text"
@@ -246,6 +315,9 @@ legal_refs = ["orden-hap-70-2013:art-12", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2026".casillas]]
 id = "iban"
+continuidad_id = "m136-codigo-iban"
+continuidad_origin = "grounded"
+continuidad_evidence = "BOE-A-2018-10064 current Modelo 136 form text lines 823-826 (sha256 37c8fd6459eed642a64ffcc318113229adb2d90eabb7e4e0d5e446348b4cbac5): Codigo IBAN account field for the payment amount; Orden HAC/763/2018 disposicion final unica applies this form to 3T 2018 y siguientes, covering both endpoints."
 number = "ingreso.iban"
 section = ["ingreso"]
 data_type = "iban"

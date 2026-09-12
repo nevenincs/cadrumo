@@ -14,7 +14,7 @@ from cadrumo.domain.calculations.registry.bindings_previous_filing import (
     previous_filing_binding_source_casilla_ids,
 )
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ._modelo_303_registry_support import (
     _M303_COMPENSACION_APLICADA_CASILLA,

@@ -220,8 +220,8 @@ def unsupported_ledger_renta_gastos_estimacion_directa_observations(
 def renta_first_slice_binding_target_casillas(revision: ModeloRevision) -> frozenset[CasillaId]:
     """Return the ``target_casilla_id`` set this revision's own bindings route to.
 
-    Unlike :data:`cadrumo.domain.renta._first_slice_routing.FIRST_SLICE_EXPENSE_CASILLAS`
-    (the universal BOE-prescribed routing table spanning every filing year the
+    Unlike the universal BOE-prescribed first-slice routing projection spanning
+    every filing year the
     application supports), this returns only the casillas a
     ``ledger_renta_gastos_estimacion_directa_aggregation`` binding on THIS revision actually
     targets. Older Modelo 100 revisions (2020-2023) declare no such bindings

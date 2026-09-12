@@ -2153,6 +2153,46 @@ required_text = [
     "Resumen anual",
 ]
 
+[legal."orden-hac-1432-2024:art-unico"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1432-2024.html#art-unico"
+document_id = "BOE-A-2024-26484"
+article = "unico"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-26484"
+published_at = 2024-12-19
+effective_from = 2024-12-20
+governs_periods_from = 2024-01-01
+governs_periods_to = 2024-12-31
+review_status = "agent_reviewed"
+reviewed_by = "agent: enrolled from the bundled BOE text. The modelo 190 ejercicio-2024 amendment was bundled as a sources payload (boe-modelo-190-2024-amendment) with NO legal table, so the 2024 revision had no 2024-generation legal authority to cite and cites orden-hac-1431-2025:art-2 instead -- an orden that applies to ejercicio 2025 y siguientes. Both required_text phrases confirmed present in the bundled payload. NOT CLAIMED -- no operator countersignature. NOT CLAIMED -- the per-apartado breakdown is not enrolled; a row grounded on one apartado alone should cite this article and say which."
+reviewed_at = 2026-09-12
+notes = """Orden HAC/1432/2024 articulo unico: modifies Orden EHA/3127/2009's modelo 190. Its apartados reach the SUBCLAVE field at positions 79-80 (clave C subclaves 07, 08 and 09), the CEUTA O MELILLA field at 152, the reducciones applicability at 171-183, and the new EXCESOS ENTREGA ACCIONES EMPRESAS EMERGENTES field at 388. THE APARTADOS DO NOT SHARE ONE EFFECTIVE DATE -- see orden-hac-1432-2024:df-unica, which defers apartado uno to ejercicio 2025 while the rest apply to 2024. governs_periods here records the article's principal application; a casilla or binding grounded on apartado uno alone is NOT covered by this window."""
+required_text = [
+    "Modificacion de la Orden EHA/3127/2009",
+    "EXCESOS ENTREGA ACCIONES EMPRESAS EMERGENTES",
+]
+
+[legal."orden-hac-1432-2024:df-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1432-2024.html#df-unica"
+document_id = "BOE-A-2024-26484"
+article = "df-unica"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-26484"
+published_at = 2024-12-19
+effective_from = 2024-12-20
+review_status = "agent_reviewed"
+reviewed_by = "agent: enrolled from the bundled BOE text alongside art-unico. This disposicion is enrolled SEPARATELY because it is the thing that splits the orden: without it a reader would take the whole article to apply to ejercicio 2024, which is false for apartado uno. Both required_text phrases confirmed present. NOT CLAIMED -- no operator countersignature."
+reviewed_at = 2026-09-12
+notes = """Disposicion final unica: THE ORDEN HAS TWO EFFECTIVE DATES. Its principal limb applies "por primera vez para la presentacion del modelo 190 correspondiente al ejercicio 2024 y cuyo plazo de presentacion se inicie a partir del 1 de enero de 2025". Its carve-out defers apartado uno -- the SUBCLAVE field at positions 79-80, where clave C subclaves 07, 08 and 09 are rewritten and created -- to ejercicio 2025. The bundled 2024 diseno de registro corroborates this from the other side: it PRINTS subclaves 07/08/09 in their post-amendment wording and stamps them "Esta modificacion no sera aplicable" three times, where the 2025 design stamps them zero times. A modelo 190 2024 row asserting clave C subclave 07, 08 or 09 content is therefore NOT grounded by this orden."""
+required_text = [
+    "No obstante, el apartado uno del articulo unico de esta orden sera aplicable por primera vez para la presentacion del modelo 190 correspondiente al ejercicio 2025",
+    "Disposicion final unica",
+]
+
 [legal."orden-hac-1431-2025:art-2"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -2777,6 +2817,35 @@ applies_from = 2025-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567"
 review_status = "pending_review"
 
+[sources."boe-modelo-190-2024-amendment"]
+# The governing modelo 190 amendment for ejercicio 2024. The corpus payload was
+# already bundled and hash-stable; only the catalogue entry was missing, so the
+# 2024 revision had no 2024-generation amendment to cite and cited the 2025 one.
+#
+# ITS DISPOSICION FINAL UNICA IS SPLIT, and the split is not flattened here. The
+# orden "sera aplicable por primera vez para la presentacion del modelo 190
+# correspondiente al ejercicio 2024 y cuyo plazo de presentacion se inicie a
+# partir del 1 de enero de 2025" -- EXCEPT that "el apartado uno del articulo
+# unico de esta orden sera aplicable por primera vez ... al ejercicio 2025".
+# A source window carries one span, so it records the orden's principal
+# application; apartado uno reaches a year this window does not, and a casilla
+# grounded on apartado uno alone must say so rather than lean on this entry.
+#
+# retrieved_at is the corpus payload's filesystem mtime, which matches the bulk
+# fetch the rest of this corpus carries. It is an observation, not an attested
+# fetch by this author.
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-1432-2024.html"
+sha256 = "d8f0ced803da91403c8a474d698a047153a6e948a69e2b2cb896093f1239524b"
+bytes = 45812
+retrieved_at = 2026-08-07
+published_at = 2024-12-19
+applies_from = 2024-01-01
+source_url = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-26484"
+review_status = "pending_review"
+
 [sources."boe-modelo-190-2025-amendment"]
 evidence_tier = "layout_authority"
 authority = "boe"
@@ -2932,6 +3001,25 @@ required_text = [
     "método de estimación directa",
     "normal y la simplificada",
     "gastos de difícil justificación",
+]
+
+[legal."ley-35-2006:da-26"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#davigesimosexta"
+document_id = "BOE-A-2006-20764"
+article = "DA-26"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent: enrolled from the bundled consolidated IRPF law (ley-35-2006.html). The modelo 280 diseno de registro invokes this disposicion four times as the substantive authority for the PALP regime, for the retention base and for the imputable negative return, and no table existed for it, so the 2022-2024 authoring could not cite what its own design rests on. Both required_text phrases confirmed present in the bundled payload. NOT CLAIMED -- no operator countersignature; the effective_from records when the PALP regime began under Ley 26/2014, not this law's own 2006 entry into force."
+reviewed_at = 2026-09-12
+notes = """IRPF DA 26: configures the Plan de Ahorro a Largo Plazo as a contract between the contribuyente and an aseguradora or entidad de credito, instrumented either as a Seguro Individual de Vida a Largo Plazo or as a Cuenta Individual de Ahorro a Largo Plazo. It is the substantive regime modelo 280 reports on; the approving orden HAP/2118/2015 creates the declaration, this disposicion creates the thing declared."""
+required_text = [
+    "Planes de Ahorro a Largo Plazo",
+    "contratos celebrados entre el contribuyente y una entidad aseguradora o de credito",
 ]
 
 [legal."ley-35-2006:da-56"]

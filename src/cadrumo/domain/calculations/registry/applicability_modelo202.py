@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field, StringConstraints
 
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...contribuyente.entity_type import EntityType
+from ...contribuyente.entity_type import EntityType, entity_type_legal_entity_token
 from ...deadlines.models import TaxpayerProfile
 from .errors import RegistryFailureClassification, RegistryFailureCondition
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, ResolvedScalarFact, ScalarFactQuery
@@ -169,7 +169,7 @@ def modelo_202_modality_from_inputs(
         effective_date=effective_date,
         authority=authority,
     )
-    if entity_type is None or entity_type is not EntityType.LEGAL_ENTITY:
+    if entity_type is None or entity_type != entity_type_legal_entity_token():
         return Modelo202ModalityVerdict(
             modality=Modelo202Modality.INCOMPLETE,
             reason=declarations["reason.not_applicable"],

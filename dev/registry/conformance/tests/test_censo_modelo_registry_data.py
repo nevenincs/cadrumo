@@ -12,7 +12,7 @@ from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.tests.inventory import REPO_ROOT
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ...compiler.corpus_catalogue import verify_source_file
 from ...compiler.loader import load_modelo_directory

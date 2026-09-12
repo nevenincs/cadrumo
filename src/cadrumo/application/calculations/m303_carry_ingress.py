@@ -20,6 +20,7 @@ from ...core.decimal.constants import ZERO
 from ...core.errors.hierarchy import CoreValidationError, TerminalPreconditionErrorMixin
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority_artifact import AuthorityArtifactError
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -40,67 +41,102 @@ if TYPE_CHECKING:
     _M303CarryIngressErrorMixin = TerminalPreconditionErrorMixin[PreconditionVerdict]
 else:
     _M303CarryIngressErrorMixin = TerminalPreconditionErrorMixin
+from . import observations_repository as _observations_repository
 from .errors import (
     CalculationRefusalPrecondition,
     calculation_no_recovery_verdict,
 )
 from .observations_repository import ObservationEnvelopePayload, ObservationSourceKind
-from . import observations_repository as _observations_repository
 
 _DispositionProjection = getattr(_observations_repository, "Result" + "Disposition" + "Projection")
 
 
 def _required_registry_value(entries: Mapping[str, str], key: str) -> str:
     value = entries.get(key)
-    if value is None or not value.strip():
+    if not isinstance(value, str) or not value.strip():
         raise ValueError(f"M303 carry mapping is missing {key!r}")
     return value
 
 
 def _selected_registry_mapping(*, modelo: str, filing_year: int, period: str) -> dict[str, str]:
     """Resolve the dated carry declaration through the validated registry."""
-    authority = bundled_authority()
-    effective_date = date(filing_year, 12, 31)
-    query_service = RegistryQueryService(authority)
-    query_service.describe_modelo_for_scope(
-        modelo,
-        filing_year=filing_year,
-        period=period,
-        as_of=effective_date,
-    )
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id="modelo-303-carry-disposition-verification-mapping",
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise TypeError("M303 carry declarations must resolve as a mapping fact")
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise TypeError("M303 carry declaration entries must be string-to-string")
-        if entry.key in entries:
-            raise ValueError(f"duplicate M303 carry declaration key {entry.key!r}")
-        entries[entry.key] = entry.value
-    for key in (
-        "modelo",
-        "disposition.header_key",
-        "disposition.admissible",
-        "sign.negative",
-        "sign.positive",
-        "sign.zero",
-        "validation.error_namespace",
-        "casilla.posterior",
-        "casilla.generated",
-        "casilla.available",
-        "casilla.result",
-    ):
-        _required_registry_value(entries, key)
-    if _required_registry_value(entries, "modelo") != modelo:
-        raise ValueError("M303 carry mapping does not match the selected modelo")
-    return entries
+    normalized_modelo = modelo.strip() if isinstance(modelo, str) else ""
+    normalized_period = period.strip() if isinstance(period, str) else ""
+    if not normalized_modelo or not normalized_period:
+        raise M303CarryIngressError(
+            translated_message=_translated_error(None, "registry_scope_invalid"),
+            context={"modelo": modelo, "filing_year": filing_year, "period": period},
+        )
+    try:
+        authority = bundled_authority()
+        effective_date = date(filing_year, 12, 31)
+        query_service = RegistryQueryService(authority)
+        model_report = query_service.describe_modelo_for_scope(
+            normalized_modelo,
+            filing_year=filing_year,
+            period=normalized_period,
+            as_of=effective_date,
+        )
+        if (
+            str(model_report.code) != normalized_modelo
+            or model_report.filing_year is None
+            or int(model_report.filing_year) != filing_year
+            or model_report.period is None
+            or str(model_report.period) != normalized_period
+            or not isinstance(model_report.revision, str)
+            or not model_report.revision.strip()
+        ):
+            raise ValueError("selected M303 modelo report does not match the filing scope")
+
+        # This fact is revision/date-scoped and declares no period_selector, so
+        # the fact resolver's supported coordinate is the effective date. The
+        # filing year and period are still validated above by the model report.
+        resolved = authority.resolve_governed_fact(
+            MappingFactQuery(
+                fact_id="modelo-303-carry-disposition-verification-mapping",
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=effective_date,
+            ),
+        )
+        if not isinstance(resolved, ResolvedMappingFact):
+            raise TypeError("M303 carry declarations must resolve as a mapping fact")
+        entries: dict[str, str] = {}
+        for entry in resolved.payload.entries:
+            if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+                raise TypeError("M303 carry declaration entries must be string-to-string")
+            if entry.key in entries:
+                raise ValueError(f"duplicate M303 carry declaration key {entry.key!r}")
+            entries[entry.key] = entry.value
+        for key in (
+            "modelo",
+            "revision",
+            "disposition.header_key",
+            "disposition.admissible",
+            "sign.negative",
+            "sign.positive",
+            "sign.zero",
+            "validation.error_namespace",
+            "casilla.posterior",
+            "casilla.generated",
+            "casilla.available",
+            "casilla.result",
+        ):
+            _required_registry_value(entries, key)
+        if _required_registry_value(entries, "modelo") != str(model_report.code):
+            raise ValueError("M303 carry mapping does not match the selected modelo")
+        if _required_registry_value(entries, "revision") != model_report.revision:
+            raise ValueError("M303 carry mapping does not match the selected modelo revision")
+        _validate_disposition_code_mapping(entries)
+        return entries
+    except (AuthorityArtifactError, AttributeError, TypeError, ValueError) as exc:
+        raise M303CarryIngressError(
+            translated_message=_translated_error(None, "registry_resolution_unavailable"),
+            context={
+                "modelo": normalized_modelo,
+                "filing_year": filing_year,
+                "period": normalized_period,
+            },
+        ) from exc
 
 
 def _translated_error(entries: Mapping[str, str] | None, key: str) -> str:
@@ -119,6 +155,32 @@ def _mapping_tokens(entries: Mapping[str, str], key: str) -> frozenset[str]:
     if not tokens:
         raise ValueError(f"M303 carry mapping {key!r} has no values")
     return tokens
+
+
+def _validate_disposition_code_mapping(entries: Mapping[str, str]) -> None:
+    """Require an explicit registry code-to-semantic projection for M303."""
+    admissible = _mapping_tokens(entries, "disposition.admissible")
+    prefix = "disposition.code."
+    code_to_semantic: dict[str, str] = {}
+    for key, value in entries.items():
+        if not isinstance(key, str) or not key.startswith(prefix):
+            continue
+        code = key.removeprefix(prefix)
+        if len(code) != 1 or not code.isascii() or not code.isalpha() or not code.isupper():
+            raise ValueError(f"M303 carry disposition code key {key!r} is invalid")
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f"M303 carry disposition code {code!r} has no semantic name")
+        code_to_semantic[code] = value
+    if not code_to_semantic:
+        raise ValueError("M303 carry mapping has no explicit disposition code mapping")
+    mapped_semantics = frozenset(code_to_semantic.values())
+    if mapped_semantics != admissible:
+        raise ValueError("M303 carry disposition code mapping does not cover admissible semantics")
+    if len(code_to_semantic) != len(mapped_semantics):
+        raise ValueError("M303 carry disposition code mapping contains duplicate semantic names")
+    for sign_key in ("sign.negative", "sign.positive", "sign.zero"):
+        if not _mapping_tokens(entries, sign_key).issubset(admissible):
+            raise ValueError(f"M303 carry mapping {sign_key!r} contains an undeclared disposition")
 
 
 def _selected_casilla_ids(entries: Mapping[str, str]) -> dict[str, CasillaId]:
@@ -148,8 +210,29 @@ def _registry_disposition_type() -> type:
     return annotation
 
 
-def _disposition_token(disposition: object) -> str:
-    return str(getattr(disposition, "value", disposition))
+def _disposition_token(disposition: object, *, entries: Mapping[str, str]) -> str:
+    """Translate an enum code through the registry-owned semantic projection."""
+    raw_code = getattr(disposition, "value", disposition)
+    if not isinstance(raw_code, str) or not raw_code.strip():
+        raise M303CarryIngressError(
+            translated_message=_translated_error(entries, "disposition_code_undeclared"),
+            context={"disposition": str(disposition)},
+        )
+    code = raw_code.strip()
+    try:
+        semantic = _required_registry_value(entries, f"disposition.code.{code}")
+        admissible = _mapping_tokens(entries, "disposition.admissible")
+    except (TypeError, ValueError) as exc:
+        raise M303CarryIngressError(
+            translated_message=_translated_error(entries, "disposition_code_undeclared"),
+            context={"code": code},
+        ) from exc
+    if semantic not in admissible:
+        raise M303CarryIngressError(
+            translated_message=_translated_error(entries, "disposition_code_not_admitted"),
+            context={"code": code, "semantic": semantic},
+        )
+    return semantic
 
 
 def _coerce_registry_disposition(
@@ -250,7 +333,10 @@ def _resolve_result_disposition(
     """Recover one valid disposition without selecting a convenient default."""
     header_projection = _project_disposition_header(envelope, registry_mapping)
     supplied = envelope.result_disposition
-    if supplied is not None and _disposition_token(supplied.disposition) not in _mapping_tokens(
+    if supplied is not None and _disposition_token(
+        supplied.disposition,
+        entries=registry_mapping,
+    ) not in _mapping_tokens(
         registry_mapping,
         "disposition.admissible",
     ):
@@ -268,9 +354,10 @@ def _resolve_result_disposition(
                     "header_key": _required_registry_value(registry_mapping, "disposition.header_key"),
                 },
             )
-        if supplied is not None and _disposition_token(supplied.disposition) != _disposition_token(
-            header_projection.disposition,
-        ):
+        if supplied is not None and _disposition_token(
+            supplied.disposition,
+            entries=registry_mapping,
+        ) != _disposition_token(header_projection.disposition, entries=registry_mapping):
             raise M303CarryIngressError(
                 translated_message=_translated_error(registry_mapping, "official_disposition_header_disagreement"),
                 context={
@@ -299,9 +386,10 @@ def _resolve_result_disposition(
                 translated_message=_translated_error(registry_mapping, "local_filing_provenance_required"),
                 context={"provenance_kind": supplied.provenance_kind},
             )
-        if header_projection is not None and _disposition_token(supplied.disposition) != _disposition_token(
-            header_projection.disposition,
-        ):
+        if header_projection is not None and _disposition_token(
+            supplied.disposition,
+            entries=registry_mapping,
+        ) != _disposition_token(header_projection.disposition, entries=registry_mapping):
             raise M303CarryIngressError(
                 translated_message=_translated_error(registry_mapping, "local_disposition_header_disagreement"),
                 context={
@@ -345,7 +433,10 @@ def _project_disposition_header(
         entries=registry_mapping,
         source_locator=fact.source_locator,
     )
-    if _disposition_token(disposition) not in _mapping_tokens(registry_mapping, "disposition.admissible"):
+    if _disposition_token(disposition, entries=registry_mapping) not in _mapping_tokens(
+        registry_mapping,
+        "disposition.admissible",
+    ):
         raise M303CarryIngressError(
             translated_message=_translated_error(registry_mapping, "header_code_not_admitted"),
             context={"value": fact.value, "source_locator": fact.source_locator},
@@ -370,7 +461,7 @@ def _validate_disposition_result_sign(
             translated_message=_translated_error(registry_mapping, "result_casilla_required"),
             context={"casilla_id": casilla_ids["result"]},
         )
-    token = _disposition_token(disposition)
+    token = _disposition_token(disposition, entries=registry_mapping)
     compatible = (
         (token in _mapping_tokens(registry_mapping, "sign.negative") and resultado < ZERO)
         or (token in _mapping_tokens(registry_mapping, "sign.positive") and resultado > ZERO)
@@ -426,7 +517,8 @@ def _normalize_carry_observation(
             generated=casilla_ids["generated"],
             result=casilla_ids["result"],
         ),
-        refunded=_disposition_token(disposition) in _mapping_tokens(registry_mapping, "sign.negative"),
+        refunded=_disposition_token(disposition, entries=registry_mapping)
+        in _mapping_tokens(registry_mapping, "sign.negative"),
     )
     if derivation is None:
         raise M303CarryIngressError(

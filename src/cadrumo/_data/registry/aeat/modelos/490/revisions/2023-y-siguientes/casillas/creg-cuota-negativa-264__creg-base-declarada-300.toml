@@ -2,6 +2,9 @@
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-cuota-negativa-264"
+continuidad_id = "reg-cuota-negativa-264"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 34, posicion 420, longitud 17, tipo N: 'Regularizacion negativa (cuota integra) (g) = (c) x ( e ). 4T [264]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "264"
 section = ["490_03"]
 data_type = "money"
@@ -11,6 +14,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-cuota-total-202"
+continuidad_id = "reg-cuota-total-202"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 35, posicion 437, longitud 17, tipo N: 'Total regularizacion (cuota integra) (h) = (f) + (g) 1T [202]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "202"
 section = ["490_03"]
 data_type = "money"
@@ -20,6 +26,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-cuota-total-223"
+continuidad_id = "reg-cuota-total-223"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 36, posicion 454, longitud 17, tipo N: 'Total regularizacion (cuota integra) (h) = (f) + (g) 2T [223]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "223"
 section = ["490_03"]
 data_type = "money"
@@ -29,6 +38,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-cuota-total-244"
+continuidad_id = "reg-cuota-total-244"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 37, posicion 471, longitud 17, tipo N: 'Total regularizacion (cuota integra) (h) = (f) + (g) 3T [244]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "244"
 section = ["490_03"]
 data_type = "money"
@@ -38,6 +50,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-cuota-total-265"
+continuidad_id = "reg-cuota-total-265"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 38, posicion 488, longitud 17, tipo N: 'Total regularizacion (cuota integra) (h) = (f) + (g) 4T [265]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "265"
 section = ["490_03"]
 data_type = "money"
@@ -47,6 +62,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-cuota-estado-203"
+continuidad_id = "reg-cuota-estado-203"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 39, posicion 505, longitud 17, tipo N: 'Regularizacion cuota atribuible al Estado (i) = (h) x (m) 1T [203]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "203"
 section = ["490_03"]
 data_type = "money"
@@ -56,6 +74,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-cuota-estado-224"
+continuidad_id = "reg-cuota-estado-224"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 40, posicion 522, longitud 17, tipo N: 'Regularizacion cuota atribuible al Estado (i) = (h) x (m) 2T [224]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "224"
 section = ["490_03"]
 data_type = "money"
@@ -65,6 +86,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-cuota-estado-245"
+continuidad_id = "reg-cuota-estado-245"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 41, posicion 539, longitud 17, tipo N: 'Regularizacion cuota atribuible al Estado (i) = (h) x (m) 3T [245]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "245"
 section = ["490_03"]
 data_type = "money"
@@ -74,6 +98,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-cuota-estado-266"
+continuidad_id = "reg-cuota-estado-266"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 42, posicion 556, longitud 17, tipo N: 'Regularizacion cuota atribuible al Estado (i) = (h) x (m) 4T [266]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "266"
 section = ["490_03"]
 data_type = "money"
@@ -83,6 +110,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-ajuste-distribucion-204"
+continuidad_id = "reg-ajuste-distribucion-204"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 43, posicion 573, longitud 17, tipo N: 'Ajuste en regularizacion cuota atribuible al Estado por cambio en la distribucion territorio (j) = (a) x (e) x [ (m) - (l) ] 1T [204]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "204"
 section = ["490_03"]
 data_type = "money"
@@ -92,6 +122,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-ajuste-distribucion-225"
+continuidad_id = "reg-ajuste-distribucion-225"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 44, posicion 590, longitud 17, tipo N: 'Ajuste en regularizacion cuota atribuible al Estado por cambio en la distribucion territorio (j) = (a) x (e) x [ (m) - (l) ] 2T [225]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "225"
 section = ["490_03"]
 data_type = "money"
@@ -101,6 +134,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-ajuste-distribucion-246"
+continuidad_id = "reg-ajuste-distribucion-246"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 45, posicion 607, longitud 17, tipo N: 'Ajuste en regularizacion cuota atribuible al Estado por cambio en la distribucion territorio (j) = (a) x (e) x [ (m) - (l) ] 3T [246]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "246"
 section = ["490_03"]
 data_type = "money"
@@ -110,6 +146,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-ajuste-distribucion-267"
+continuidad_id = "reg-ajuste-distribucion-267"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 46, posicion 624, longitud 17, tipo N: 'Ajuste en regularizacion cuota atribuible al Estado por cambio en la distribucion territorio (j) = (a) x (e) x [ (m) - (l) ] 1T [267]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "267"
 section = ["490_03"]
 data_type = "money"
@@ -119,6 +158,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-ajuste-total-estado-205"
+continuidad_id = "reg-ajuste-total-estado-205"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 47, posicion 641, longitud 17, tipo N: 'Total ajuste en cuota integra periodo de regularizacion atribuible al Estado(k) = (i) + (j) 1T [205]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "205"
 section = ["490_03"]
 data_type = "money"
@@ -128,6 +170,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-ajuste-total-estado-226"
+continuidad_id = "reg-ajuste-total-estado-226"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 48, posicion 658, longitud 17, tipo N: 'Total ajuste en cuota integra periodo de regularizacion atribuible al Estado(k) = (i) + (j) 2T [226]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "226"
 section = ["490_03"]
 data_type = "money"
@@ -137,6 +182,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-ajuste-total-estado-247"
+continuidad_id = "reg-ajuste-total-estado-247"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 49, posicion 675, longitud 17, tipo N: 'Total ajuste en cuota integra periodo de regularizacion atribuible al Estado(k) = (i) + (j) 3T [247]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "247"
 section = ["490_03"]
 data_type = "money"
@@ -146,6 +194,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-ajuste-total-estado-268"
+continuidad_id = "reg-ajuste-total-estado-268"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 50, posicion 692, longitud 17, tipo N: 'Total ajuste en cuota integra periodo de regularizacion atribuible al Estado(k) = (i) + (j) 4T [268]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "268"
 section = ["490_03"]
 data_type = "money"
@@ -155,6 +206,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-alava-per-206"
+continuidad_id = "terr-alava-per-206"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 51, posicion 709, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Alava % periodo objeto de regularizacion 1T [206]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "206"
 section = ["490_03"]
 data_type = "ratio"
@@ -164,6 +218,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-alava-per-227"
+continuidad_id = "terr-alava-per-227"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 52, posicion 714, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Alava % periodo objeto de regularizacion 2T [227]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "227"
 section = ["490_03"]
 data_type = "ratio"
@@ -173,6 +230,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-alava-per-248"
+continuidad_id = "terr-alava-per-248"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 53, posicion 719, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Alava % periodo objeto de regularizacion 3T [248]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "248"
 section = ["490_03"]
 data_type = "ratio"
@@ -182,6 +242,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-alava-per-269"
+continuidad_id = "terr-alava-per-269"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 54, posicion 724, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Alava % periodo objeto de regularizacion 4T [269]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "269"
 section = ["490_03"]
 data_type = "ratio"
@@ -191,6 +254,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-alava-con-reg-207"
+continuidad_id = "terr-alava-con-reg-207"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 55, posicion 729, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Alava % con regularizacion incluida 1T [207]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "207"
 section = ["490_03"]
 data_type = "ratio"
@@ -200,6 +266,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-alava-con-reg-228"
+continuidad_id = "terr-alava-con-reg-228"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 56, posicion 734, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Alava % con regularizacion incluida 2T [228]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "228"
 section = ["490_03"]
 data_type = "ratio"
@@ -209,6 +278,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-alava-con-reg-249"
+continuidad_id = "terr-alava-con-reg-249"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 57, posicion 739, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Alava % con regularizacion incluida 3T [249]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "249"
 section = ["490_03"]
 data_type = "ratio"
@@ -218,6 +290,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-alava-con-reg-270"
+continuidad_id = "terr-alava-con-reg-270"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 58, posicion 744, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Alava % con regularizacion incluida 4T [270]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "270"
 section = ["490_03"]
 data_type = "ratio"
@@ -227,6 +302,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-guipuzcoa-per-208"
+continuidad_id = "terr-guipuzcoa-per-208"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 59, posicion 749, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Guipuzcoa % periodo objeto de regularizacion 1T [208]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "208"
 section = ["490_03"]
 data_type = "ratio"
@@ -236,6 +314,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-guipuzcoa-per-229"
+continuidad_id = "terr-guipuzcoa-per-229"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 60, posicion 754, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Guipuzcoa % periodo objeto de regularizacion 2T [229]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "229"
 section = ["490_03"]
 data_type = "ratio"
@@ -245,6 +326,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-guipuzcoa-per-250"
+continuidad_id = "terr-guipuzcoa-per-250"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 61, posicion 759, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Guipuzcoa % periodo objeto de regularizacion 3T [250]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "250"
 section = ["490_03"]
 data_type = "ratio"
@@ -254,6 +338,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-guipuzcoa-per-271"
+continuidad_id = "terr-guipuzcoa-per-271"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 62, posicion 764, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Guipuzcoa % periodo objeto de regularizacion 4T [271]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "271"
 section = ["490_03"]
 data_type = "ratio"
@@ -263,6 +350,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-guipuzcoa-con-reg-209"
+continuidad_id = "terr-guipuzcoa-con-reg-209"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 63, posicion 769, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Guipuzcoa % con regularizacion incluida 1T [209]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "209"
 section = ["490_03"]
 data_type = "ratio"
@@ -272,6 +362,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-guipuzcoa-con-reg-230"
+continuidad_id = "terr-guipuzcoa-con-reg-230"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 64, posicion 774, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Guipuzcoa % con regularizacion incluida 2T [230]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "230"
 section = ["490_03"]
 data_type = "ratio"
@@ -281,6 +374,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-guipuzcoa-con-reg-251"
+continuidad_id = "terr-guipuzcoa-con-reg-251"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 65, posicion 779, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Guipuzcoa % con regularizacion incluida 3T [251]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "251"
 section = ["490_03"]
 data_type = "ratio"
@@ -290,6 +386,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-guipuzcoa-con-reg-272"
+continuidad_id = "terr-guipuzcoa-con-reg-272"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 66, posicion 784, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Guipuzcoa % con regularizacion incluida 4T [272]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "272"
 section = ["490_03"]
 data_type = "ratio"
@@ -299,6 +398,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-vizcaya-per-210"
+continuidad_id = "terr-vizcaya-per-210"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 67, posicion 789, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Vizcaya % periodo objeto de regularizacion 1T [210]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "210"
 section = ["490_03"]
 data_type = "ratio"
@@ -308,6 +410,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-vizcaya-per-231"
+continuidad_id = "terr-vizcaya-per-231"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 68, posicion 794, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Vizcaya % periodo objeto de regularizacion 2T [231]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "231"
 section = ["490_03"]
 data_type = "ratio"
@@ -317,6 +422,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-vizcaya-per-252"
+continuidad_id = "terr-vizcaya-per-252"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 69, posicion 799, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Vizcaya % periodo objeto de regularizacion 3T [252]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "252"
 section = ["490_03"]
 data_type = "ratio"
@@ -326,6 +434,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-vizcaya-per-273"
+continuidad_id = "terr-vizcaya-per-273"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 70, posicion 804, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Vizcaya % periodo objeto de regularizacion 4T [273]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "273"
 section = ["490_03"]
 data_type = "ratio"
@@ -335,6 +446,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-vizcaya-con-reg-211"
+continuidad_id = "terr-vizcaya-con-reg-211"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 71, posicion 809, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Vizcaya % con regularizacion incluida 1T [211]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "211"
 section = ["490_03"]
 data_type = "ratio"
@@ -344,6 +458,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-vizcaya-con-reg-232"
+continuidad_id = "terr-vizcaya-con-reg-232"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 72, posicion 814, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Vizcaya % con regularizacion incluida 2T [232]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "232"
 section = ["490_03"]
 data_type = "ratio"
@@ -353,6 +470,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-vizcaya-con-reg-253"
+continuidad_id = "terr-vizcaya-con-reg-253"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 73, posicion 819, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Vizcaya % con regularizacion incluida 3T [253]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "253"
 section = ["490_03"]
 data_type = "ratio"
@@ -362,6 +482,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-vizcaya-con-reg-274"
+continuidad_id = "terr-vizcaya-con-reg-274"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 74, posicion 824, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Vizcaya % con regularizacion incluida 4T [274]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "274"
 section = ["490_03"]
 data_type = "ratio"
@@ -459,6 +582,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-per-214"
+continuidad_id = "terr-comun-per-214"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 83, posicion 869, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Territorio comun % periodo objeto de regularizacion (l) 1T [214]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "214"
 section = ["490_03"]
 data_type = "ratio"
@@ -468,6 +594,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-per-235"
+continuidad_id = "terr-comun-per-235"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 84, posicion 874, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Territorio comun % periodo objeto de regularizacion (l) 2T [235]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "235"
 section = ["490_03"]
 data_type = "ratio"
@@ -477,6 +606,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-per-256"
+continuidad_id = "terr-comun-per-256"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 85, posicion 879, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Territorio comun % periodo objeto de regularizacion (l) 3T [256]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "256"
 section = ["490_03"]
 data_type = "ratio"
@@ -486,6 +618,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-per-277"
+continuidad_id = "terr-comun-per-277"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 86, posicion 884, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Territorio comun % periodo objeto de regularizacion (l) 4T [277]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "277"
 section = ["490_03"]
 data_type = "ratio"
@@ -495,6 +630,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-con-reg-215"
+continuidad_id = "terr-comun-con-reg-215"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 87, posicion 889, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Territorio comun % con regularizacion incluida (m) 1T [215]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "215"
 section = ["490_03"]
 data_type = "ratio"
@@ -504,6 +642,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-con-reg-236"
+continuidad_id = "terr-comun-con-reg-236"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 88, posicion 894, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Territorio comun % con regularizacion incluida (m) 2T [236]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "236"
 section = ["490_03"]
 data_type = "ratio"
@@ -513,6 +654,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-con-reg-257"
+continuidad_id = "terr-comun-con-reg-257"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 89, posicion 899, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Territorio comun % con regularizacion incluida (m) 3T [257]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "257"
 section = ["490_03"]
 data_type = "ratio"
@@ -522,6 +666,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "terr-comun-con-reg-278"
+continuidad_id = "terr-comun-con-reg-278"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 90, posicion 904, longitud 5, tipo Num: 'Informacion de la tributacion por razon de territorio - Territorio comun % con regularizacion incluida (m) 4T [278]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "278"
 section = ["490_03"]
 data_type = "ratio"
@@ -531,6 +678,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "490-03-regularizacion-ejercicio-909"
+continuidad_id = "490-03-regularizacion-ejercicio-909"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 91, posicion 909, longitud 4, tipo Num: 'Regularizacion (art. 10.3 Ley 4/2020).Ejercicio', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "490-03-regularizacion-ejercicio-909"
 section = ["490_03"]
 data_type = "year"
@@ -540,6 +690,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-base-declarada-279"
+continuidad_id = "reg-base-declarada-279"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 92, posicion 913, longitud 17, tipo Num: 'Base imponible declarada en periodo objeto de regularizacion (a).1T [279]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "279"
 section = ["490_03"]
 data_type = "money"
@@ -549,6 +702,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "reg-base-declarada-300"
+continuidad_id = "reg-base-declarada-300"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49003 campo 93, posicion 930, longitud 17, tipo Num: 'Base imponible declarada en periodo objeto de regularizacion (a).2T [300]', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso). Los dos disenos solo difieren en 33 posiciones que 2022-2t-4t reserva a la Administracion y 2023 activa como tributacion por razon de territorio - Navarra; esta no es una de ellas."
 number = "300"
 section = ["490_03"]
 data_type = "money"

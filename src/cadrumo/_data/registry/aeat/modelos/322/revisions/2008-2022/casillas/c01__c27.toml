@@ -120,8 +120,10 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2008-2022".casillas]]
 id = "107"
+continuidad_id = "m322-informacion-tributacion-territorio-comun"
 number = "107"
 section = ["iva", "tributacion_territorio"]
+semantic_role = "m322_informacion_tributacion_territorio_comun"
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -228,6 +230,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2008-2022".casillas]]
 id = "128"
+continuidad_id = "m322-operaciones-intragrupo-valoradas-arts-78-79-liva"
 number = "128"
 section = ["iva", "regimen_general", "intragrupo", "devengado"]
 data_type = "money"

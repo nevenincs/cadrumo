@@ -102,9 +102,7 @@ def _publish(path: Path) -> None:
 def _write_frame(path: Path, payload: object, **extra: object) -> None:
     """Write a frame whose digest is consistent with its content, as a correct publisher would."""
     path.write_bytes(
-        canonical_json_bytes(
-            {"payload": payload, "payload_sha256": sha256_hex(canonical_json_bytes(payload)), **extra}
-        )
+        canonical_json_bytes({"payload": payload, "payload_sha256": sha256_hex(canonical_json_bytes(payload)), **extra})
     )
 
 
@@ -126,7 +124,7 @@ def test_published_authority_round_trips_as_the_complete_typed_payload(tmp_path:
 
 
 def test_current_frame_omits_schema_defaults_and_restores_the_same_typed_model(tmp_path: Path) -> None:
-    """The current frame omits only declared defaults; strict hydration restores their meaning."""
+    """The compact frame may omit only declared defaults and restores their meaning."""
     artifact_path = tmp_path / "authority.json"
     published = AuthorityArtifact(
         modelos=(_minimal_modelo(_minimal_revision()),),
@@ -226,6 +224,40 @@ def test_a_digest_consistent_frame_does_not_admit_an_invalid_typed_payload(tmp_p
     _publish(artifact_path)
     frame = json.loads(artifact_path.read_bytes())
     frame["payload"]["catalogues"] = {}
+    _write_frame(artifact_path, frame["payload"])
+
+    with pytest.raises(AuthorityArtifactFormatError, match="invalid authority payload"):
+        read_authority_artifact(artifact_path)
+
+
+@pytest.mark.parametrize(
+    ("key", "value"),
+    (
+        pytest.param("tax_id.check.nif_letters", None, id="missing-checksum-table"),
+        pytest.param("tax_id.check.nif_letters", "TRWAGMYFPDXBNJZSQVHLCKT", id="duplicate-checksum-table-entry"),
+        pytest.param(
+            "tax_id.check.nie_prefix.X",
+            "\N{ARABIC-INDIC DIGIT ZERO}",
+            id="unicode-nie-substitution",
+        ),
+        pytest.param("tax_id.check.cif_digit_only_kinds", "AABEH", id="duplicate-cif-partition-leader"),
+        pytest.param("tax_id.check.cif_letter_table", "JABCDEFGHJ", id="duplicate-cif-table-entry"),
+    ),
+)
+def test_artifact_with_malformed_embedded_tax_id_format_fails_closed(
+    tmp_path: Path, key: str, value: str | None
+) -> None:
+    """A valid frame digest cannot make malformed fact 0102 operative."""
+    artifact_path = tmp_path / "authority.json"
+    _publish(artifact_path)
+    frame = json.loads(artifact_path.read_bytes())
+    entries = frame["payload"]["catalogues"]["facts"]["facts"]["spanish-tax-identifier-format"]["variants"][0][
+        "payload"
+    ]["entries"]
+    if value is None:
+        entries[:] = [entry for entry in entries if entry["key"] != key]
+    else:
+        next(entry for entry in entries if entry["key"] == key)["value"] = value
     _write_frame(artifact_path, frame["payload"])
 
     with pytest.raises(AuthorityArtifactFormatError, match="invalid authority payload"):

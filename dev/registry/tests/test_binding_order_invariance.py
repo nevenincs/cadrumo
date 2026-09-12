@@ -45,19 +45,6 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 
-from cadrumo.application.calculations.prorrata_regularizacion import (
-    # The four positional role reads in prorrata_regularizacion all index this
-    # one derived tuple, so it is the exact surface an order dependency would
-    # move. The public carrier of the same tuple is
-    # CalculationSourceProvenance.source_casilla_ids, but every public route to
-    # one -- ProrrataRegularizacionSourceResolver.resolve -- requires a live
-    # prorrata register repository and a live calculation observation
-    # repository. A corpus gate cannot stand those up honestly, and supplying
-    # stand-ins would make the assertion depend on the stand-ins rather than on
-    # the registry. The private tuple is read directly instead, and the public
-    # record is proven to carry it verbatim by the resolver's own tests.
-    _prorrata_source_casilla_ids,
-)
 from cadrumo.core.aggregation import BindingAggregationOp
 from cadrumo.domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from cadrumo.domain.calculations.registry.binding_selector_utils import (
@@ -71,7 +58,10 @@ from cadrumo.domain.calculations.registry.m303_regimen_simplificado_annual_summa
     m303_regimen_simplificado_annual_summary_requirement,
     validate_m303_regimen_simplificado_annual_summary_revision,
 )
-from cadrumo.domain.calculations.registry.prorrata_regularizacion_bindings import ProrrataRegularizacionProvider
+from cadrumo.domain.calculations.registry.prorrata_regularizacion_bindings import (
+    ProrrataRegularizacionProvider,
+    prorrata_source_casilla_ids,
+)
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 
 from ..compiler.loader import load_modelo_directory
@@ -143,9 +133,9 @@ def _prorrata_bindings(revision: ModeloRevision) -> tuple[BindingDefinition, ...
 @pytest.mark.parametrize(("modelo_id", "revision"), _revision_params())
 def test_prorrata_source_roles_do_not_move_with_binding_order(modelo_id: str, revision: ModeloRevision) -> None:
     """The ordered source tuple the four role reads index is permutation-stable."""
-    baseline = _prorrata_source_casilla_ids(revision)
+    baseline = prorrata_source_casilla_ids(revision.bindings)
     for seed in _SEEDS:
-        assert _prorrata_source_casilla_ids(_shuffled(revision, seed)) == baseline, (
+        assert prorrata_source_casilla_ids(_shuffled(revision, seed).bindings) == baseline, (
             f"modelo {modelo_id}: permuting the binding fragments reordered the prorrata source casillas, "
             f"so the cuota/volumen/porcentaje roles read at positions 0-3 now name different casillas"
         )
@@ -183,7 +173,7 @@ def test_a_second_prorrata_binding_would_make_the_roles_order_dependent(
     )
     defective = _with_bindings(revision, (*revision.bindings, planted))
 
-    permuted = {_prorrata_source_casilla_ids(_shuffled(defective, seed)) for seed in _SEEDS}
+    permuted = {prorrata_source_casilla_ids(_shuffled(defective, seed).bindings) for seed in _SEEDS}
     assert len(permuted) > 1, (
         f"modelo {modelo_id}: a second prorrata binding declaring a different source order left the derived "
         f"role tuple identical under every permutation, so the invariance gate cannot see a duplicate at all"

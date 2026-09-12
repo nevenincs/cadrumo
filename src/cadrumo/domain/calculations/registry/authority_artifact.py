@@ -45,10 +45,19 @@ from pydantic import BaseModel, ValidationError
 
 from ....core.atomic_write import atomic_write_bytes
 from ....core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
-from .facts.schema import TAGGED_FACT_ATOM_CONTEXT, FactAtomField, OptionalFactAtomField, tagged_fact_atom_json
+from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT
+from .facts.schema import (
+    TAGGED_FACT_ATOM_CONTEXT,
+    FactAtomField,
+    GovernedFactCatalogue,
+    OptionalFactAtomField,
+    tagged_fact_atom_json,
+)
+from .governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from .provenance import NormativeCorpusProvenance
 from .revision_contracts import DeclaredPredecessor, NoPredecessor
 from .schema import ModeloDefinition, RegistryCatalogues
+from .tax_id_format import tax_id_format_from_catalogue
 
 __all__ = [
     "AuthorityArtifact",
@@ -299,6 +308,7 @@ def _artifact_file_identity(path: Path) -> _ArtifactFileIdentity:
 def _encode_artifact(artifact: AuthorityArtifact) -> bytes:
     """Return the canonical digest-checked JSON frame for ``artifact``."""
     artifact.catalogues.runtime.require_complete()
+    tax_id_format_from_catalogue(artifact.catalogues.facts)
     payload = _artifact_document(artifact)
     return canonical_json_bytes({"payload": payload, "payload_sha256": sha256_hex(canonical_json_bytes(payload))})
 
@@ -352,16 +362,27 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
         catalogues_document = _required_mapping(payload, "catalogues")
         identity_digest = _required_string(payload, "identity_digest")
         evidence_document = _required_mapping(payload, "evidence")
+        try:
+            facts_document = _required_mapping(catalogues_document, "facts")
+        except AuthorityArtifactFormatError as exc:
+            raise AuthorityArtifactFormatError("published authority artifact has an invalid authority payload") from exc
+        facts = GovernedFactCatalogue.model_validate(
+            _immutable_json_value(facts_document), strict=False, context=_TAGGED_DECODE_CONTEXT
+        )
+        tax_id_format = tax_id_format_from_catalogue(facts)
+        decode_context = {**_TAGGED_DECODE_CONTEXT, TAX_ID_FORMAT_CONTEXT: tax_id_format}
         modelos = tuple(
-            ModeloDefinition.model_validate_json(
-                canonical_json_bytes(_mapping_item(item, "modelos")),
-                context=_TAGGED_DECODE_CONTEXT,
+            ModeloDefinition.model_validate(
+                _immutable_json_value(_mapping_item(item, "modelos")),
+                strict=False,
+                context=decode_context,
             )
             for item in modelos_document
         )
-        catalogues = RegistryCatalogues.model_validate_json(
-            canonical_json_bytes(catalogues_document),
-            context=_TAGGED_DECODE_CONTEXT,
+        catalogues = RegistryCatalogues.model_validate(
+            _immutable_json_value(catalogues_document),
+            strict=False,
+            context=decode_context,
         )
         legal_evidence = tuple(
             PublishedLegalEvidence(

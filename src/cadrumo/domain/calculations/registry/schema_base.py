@@ -9,12 +9,12 @@ per-revision ``authority_grade`` token.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 from types import UnionType
-from typing import Annotated, Final, Literal, Union, get_args, get_origin
+from typing import Annotated, Final, Literal, Union, cast, get_args, get_origin
 
 from pydantic import BaseModel, BeforeValidator, Field, TypeAdapter, field_validator
 
@@ -47,6 +47,7 @@ __all__ = [
     "GovernanceStampMarker",
     "LegalRefs",
     "ManifestOnlyMarker",
+    "ModeloFilingCapabilities",
     "ModeloFilingCapability",
     "RegistryAuthorityGradeField",
     "RegistryModel",
@@ -66,6 +67,7 @@ __all__ = [
     "is_schema_model_element",
     "manifest_only_fields",
     "schema_family_fields",
+    "sorted_unique_capabilities",
 ]
 
 
@@ -405,6 +407,32 @@ ModeloFilingCapability = Literal["borrador", "renta_ledger_default"]
 - ``summary``: The modelo aggregates other modelos (e.g. 390 over 303)
   and may declare cross-model relations but is not a filing modelo.
 """
+
+
+def sorted_unique_capabilities(value: object) -> object:
+    """Order declared modelo capabilities and refuse a repeated declaration.
+
+    A set-shaped container orders its members by hash, which varies between
+    processes, so the same declaration would serialise and digest differently
+    from one run to the next. Sorting on construction makes the declared order
+    irrelevant to the stored value; rejecting duplicates keeps the tuple's
+    length a truthful count of what was declared.
+    """
+    if isinstance(value, str) or not isinstance(value, Iterable):
+        return value
+    items = tuple(value)
+    if not all(isinstance(item, str) for item in items):
+        return items
+    if len(set(items)) != len(items):
+        raise RegistryValidationError("modelo capabilities must be declared at most once each")
+    return tuple(sorted(cast("tuple[str, ...]", items)))
+
+
+ModeloFilingCapabilities = Annotated[
+    tuple[ModeloFilingCapability, ...],
+    BeforeValidator(sorted_unique_capabilities),
+]
+"""Declared modelo capabilities, stored sorted so serialisation is deterministic."""
 
 
 DesignAuthority = Literal["authoritative", "provenance_only"]

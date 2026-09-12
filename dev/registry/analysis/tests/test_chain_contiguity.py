@@ -16,13 +16,13 @@ import pytest
 from ..chain_contiguity import (
     CONDITIONS,
     MEASUREMENTS,
-    _bundled_registry_root,
     census,
     read_evolutions,
+    ruling_reference_findings,
     screen,
     spans_over_absent_editions,
 )
-from ..edition_delta_status import scan_registry
+from ..edition_delta_status import _bundled_registry_root, scan_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -240,3 +240,69 @@ class TestLiveCorpus:
         statuses = scan_registry(root)
         counts = census(statuses, read_evolutions(root))
         assert set(MEASUREMENTS) <= set(counts)
+
+
+class TestRulingReferences:
+    """A ruling naming a row its edition does not carry takes the whole modelo.
+
+    It does not refuse one row: it raises out of the ruling application. And it
+    stays invisible while the modelo sits on the seeder's exclusion list, which
+    is where adjudication-only modelos live — so a corpus can accrue these and
+    meet them all at once when a campaign finishes and the exclusion lifts.
+    """
+
+    def _corpus(self, root: Path) -> tuple:
+        _edition(root, "2021", valid_from="2021-01-01", chains=("c1",))
+        _edition(root, "2022", valid_from="2022-01-01", chains=("c1",))
+        return scan_registry(root)
+
+    def _rulings(self, root: Path, body: str) -> Path:
+        path = root / "rulings.toml"
+        path.write_text(body, encoding="utf-8")
+        return path
+
+    def test_a_predecessor_row_the_edition_does_not_carry_is_named(self, tmp_path: Path) -> None:
+        statuses = self._corpus(tmp_path)
+        path = self._rulings(
+            tmp_path,
+            '[[ruling]]\nmodelo = "999"\npredecessor = "2021"\nsuccessor = "2022"\n'
+            'grounded = ["box-nobody-has>box-c1"]\n',
+        )
+        (finding,) = ruling_reference_findings(statuses, path)
+        assert finding.kind == "ruling_reference_unknown"
+        assert finding.chain == "box-nobody-has"
+        assert finding.edition == "2021"
+
+    def test_a_ruling_whose_rows_all_exist_is_silent(self, tmp_path: Path) -> None:
+        statuses = self._corpus(tmp_path)
+        path = self._rulings(
+            tmp_path,
+            '[[ruling]]\nmodelo = "999"\npredecessor = "2021"\nsuccessor = "2022"\ngrounded = ["box-c1>box-c1"]\n',
+        )
+        assert ruling_reference_findings(statuses, path) == ()
+
+    def test_a_merged_entry_is_not_read_as_an_identifier(self, tmp_path: Path) -> None:
+        """`merged` entries are compound `A + B` expressions, not ids.
+
+        Treating them as ids reported every one of them as broken — eleven
+        false findings in the sweep that found the two real ones.
+        """
+        statuses = self._corpus(tmp_path)
+        path = self._rulings(
+            tmp_path,
+            '[[ruling]]\nmodelo = "999"\npredecessor = "2021"\nsuccessor = "2022"\nmerged = ["box-c1 + box-other"]\n',
+        )
+        assert ruling_reference_findings(statuses, path) == ()
+
+    def test_a_single_id_list_is_checked_against_the_successor_only(self, tmp_path: Path) -> None:
+        """`new_on_form` names a SUCCESSOR row; checking it against the predecessor
+        reported 167 breakages where there were 2."""
+        statuses = self._corpus(tmp_path)
+        path = self._rulings(
+            tmp_path,
+            '[[ruling]]\nmodelo = "999"\npredecessor = "2021"\nsuccessor = "2022"\nnew_on_form = ["box-c1"]\n',
+        )
+        assert ruling_reference_findings(statuses, path) == (), "box-c1 exists in the successor"
+
+    def test_an_absent_rulings_file_reports_nothing(self, tmp_path: Path) -> None:
+        assert ruling_reference_findings(self._corpus(tmp_path), tmp_path / "absent.toml") == ()

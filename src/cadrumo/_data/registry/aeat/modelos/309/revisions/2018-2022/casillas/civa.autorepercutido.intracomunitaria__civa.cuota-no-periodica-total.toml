@@ -1,5 +1,8 @@
 [[revisions."2018-2022".casillas]]
 id = "iva.autorepercutido.intracomunitaria"
+continuidad_id = "iva-cuota-autorepercutida-intracomunitaria"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 preserve the same Modelo 309 non-periodic IVA liquidation and its intra-community acquisition/reverse-charge role under Orden HAC/3625/2003 apartado 1 and LIVA art. 84. This reviewed cuota leaf remains money, bound, in the same inversion_sujeto_pasivo section, with the same binding id."
 number = "iva.autorepercutido.intracomunitaria"
 section = ["iva", "no_periodica", "inversion_sujeto_pasivo"]
 data_type = "money"
@@ -11,6 +14,9 @@ legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-hac-3625-2003:
 
 [[revisions."2018-2022".casillas]]
 id = "iva.soportado.recargo-equivalencia"
+continuidad_id = "iva-cuota-soportada-recargo-equivalencia"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 preserve the same Modelo 309 non-periodic IVA liquidation and its recargo de equivalencia quota role: the official instructions retain the 10–21 recargo-equivalencia quota lines. This reviewed cuota leaf remains money, bound, in the same soportado section, with the same binding id."
 number = "iva.soportado.recargo-equivalencia"
 section = ["iva", "no_periodica", "soportado"]
 data_type = "money"
@@ -22,6 +28,9 @@ legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-hac-3625-2003:
 
 [[revisions."2018-2022".casillas]]
 id = "iva.cuota-no-periodica-total"
+continuidad_id = "iva-cuota-no-periodica-total"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 preserve the same Modelo 309 liquidation totals, including the printed [22] total cuota devengada and [24] result. The reviewed internal non-periodic total keeps the same money/computed role, target formula, two cuota-leaf inputs, and legal/source grounding in both revisions."
 internal_only = true
 number = "iva.cuota-no-periodica-total"
 section = ["iva", "no_periodica", "totales"]

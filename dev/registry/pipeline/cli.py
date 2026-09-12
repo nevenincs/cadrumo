@@ -12,6 +12,7 @@ from __future__ import annotations
 import re
 import shutil
 import tempfile
+from collections import Counter
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from enum import StrEnum
@@ -34,9 +35,9 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     casilla_occurrence_locale_key,
 )
 from dev.locales.manager import LocaleManager, discover_locale_codes
-
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.edition_materialisation import MaterialisedEdition, materialise_edition
+from ..compiler.fact_providers import AUTHORED_FACT_PROVIDER_ID
 from ._export_tree import RenderedExportTree, _render_toml_bytes, render_complete_export_tree
 from ._tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
 from ._tree_publication import (
@@ -134,7 +135,7 @@ def publish_facts_authority_candidate_workflow(
     registry_root: Path,
     artifact_path: Path,
 ) -> AuthorityArtifact:
-    """Publish only authored governed facts through the canonical authority writer."""
+    """Publish authored facts plus retained provider facts through the canonical writer."""
     return publish_facts_authority_candidate(
         registry_root=registry_root,
         artifact_path=artifact_path,
@@ -154,20 +155,34 @@ def publish_facts_authority(
 ) -> None:
     """Compile authored facts and merge them into the current typed authority artifact.
 
-    The facts-only boundary does not load or validate Modelo revisions.  It
-    refuses when the existing authority is missing or unreadable so
-    unrelated published sections cannot be silently discarded.
+    The facts-only boundary compiles authored facts and retains existing
+    provider-owned generated facts from the validated authority merge base; it
+    does not load or refresh Modelo revisions.  It refuses when the existing
+    authority is missing or unreadable, when authored/provider payloads differ,
+    or when unrelated published fact IDs would be discarded.
     """
     artifact_path = artifact or bundled_authority_artifact_path()
     published = publish_facts_authority_candidate_workflow(
         registry_root=registry_root or bundled_path("registry", "aeat"),
         artifact_path=artifact_path,
     )
+    provider_counts = Counter(
+        str(fact.provider_id)
+        for fact in published.catalogues.facts.facts.values()
+        if fact.provider_id is not None
+    )
+    authored_count = provider_counts.get(AUTHORED_FACT_PROVIDER_ID, 0)
+    provider_owned_count = sum(
+        count for provider_id, count in provider_counts.items() if provider_id != AUTHORED_FACT_PROVIDER_ID
+    )
     typer.echo(
         "publish-facts-authority"
         f"\tartifact={artifact_path}"
         f"\tidentity_digest={published.identity_digest}"
-        f"\tfacts={len(published.catalogues.facts.facts)}",
+        f"\tfacts={len(published.catalogues.facts.facts)}"
+        f"\tauthored={authored_count}"
+        f"\tprovider_owned={provider_owned_count}"
+        f"\tretained_provider_owned={provider_owned_count}",
     )
 
 
@@ -665,12 +680,13 @@ def target_currentness(
         if len(design_refs) != 1:
             raise ValueError(f"{modelo}/{revision} requires an explicit record-design source for currentness")
         source_ref = str(design_refs[0])
-    effective_period = period or str(selected.period_selector.periods[0])
+    effective_filing_year = selected.valid_from.year if filing_year is None else filing_year
+    effective_period = period or str(selected.period_selector.periods_for_year(effective_filing_year)[0])
     invocation = _Invocation(
         modelo,
         revision,
         source_ref,
-        selected.valid_from.year if filing_year is None else filing_year,
+        effective_filing_year,
         effective_period,
     )
     with tempfile.TemporaryDirectory(prefix="cadrumo-generated-export-currentness-") as temporary_name:

@@ -21,7 +21,7 @@ from cadrumo.domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from cadrumo.domain.calculations.registry.schema_formula import KeyedBracketEntry
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.authority import compile_registry_tree, compiled_bundled_authority
 

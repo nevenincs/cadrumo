@@ -58,25 +58,7 @@ filing_year = 2022
 period = "*"
 kind = "promised_year_unserved"
 classification = "unauthored"
-reason = "Approved 2007, fifteen years before the first gap year, and the corpus carries an AEAT design series spanning 2021 to 2025-02-02."
-authority = "orden-eha-1274-2007:art-1 (BOE-A-2007-9508)"
-
-[[disposition]]
-modelo = "036"
-filing_year = 2023
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "Approved 2007, fifteen years before the first gap year, and the corpus carries an AEAT design series spanning 2021 to 2025-02-02."
-authority = "orden-eha-1274-2007:art-1 (BOE-A-2007-9508)"
-
-[[disposition]]
-modelo = "036"
-filing_year = 2024
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "Approved 2007, fifteen years before the first gap year, and the corpus carries an AEAT design series spanning 2021 to 2025-02-02."
+reason = "Approved 2007. 2023 onward is now authored, but NO bundled design carries a declared window reaching 2022: aeat-dr-036-2023 opens 2023-01-01, and the two 2021-era artefacts aeat-dr-036-v40 and v35 are held with NO applies_from or applies_to because the catalogue declines to make an applicability claim on them until reviewed. Authoring 2022 needs that review or a 2022-window design, not more transcription."
 authority = "orden-eha-1274-2007:art-1 (BOE-A-2007-9508)"
 
 [[disposition]]
@@ -98,42 +80,6 @@ reason = "Approved 2002, twenty years before the first gap year."
 authority = "orden-hac-66-2002:art-1 (BOE-A-2002-1041)"
 
 [[disposition]]
-modelo = "136"
-filing_year = 2022
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "Approved 2013, and the corpus's own required_text brackets every gap year with 'tercer trimestre del ano 2018 y siguientes' and no design change in between."
-authority = "orden-hap-70-2013:art-5 (BOE-A-2013-952)"
-
-[[disposition]]
-modelo = "136"
-filing_year = 2023
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "Approved 2013, and the corpus's own required_text brackets every gap year with 'tercer trimestre del ano 2018 y siguientes' and no design change in between."
-authority = "orden-hap-70-2013:art-5 (BOE-A-2013-952)"
-
-[[disposition]]
-modelo = "136"
-filing_year = 2024
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "Approved 2013, and the corpus's own required_text brackets every gap year with 'tercer trimestre del ano 2018 y siguientes' and no design change in between."
-authority = "orden-hap-70-2013:art-5 (BOE-A-2013-952)"
-
-[[disposition]]
-modelo = "136"
-filing_year = 2025
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "Approved 2013, and the corpus's own required_text brackets every gap year with 'tercer trimestre del ano 2018 y siguientes' and no design change in between."
-authority = "orden-hap-70-2013:art-5 (BOE-A-2013-952)"
-
-[[disposition]]
 modelo = "182"
 filing_year = 2022
 period = "*"
@@ -152,24 +98,6 @@ reason = "Approved 2007, and aeat-dr-182-2024 covers the last gap year directly.
 authority = "orden-eha-3021-2007:art-1 (BOE-A-2007-18192)"
 
 [[disposition]]
-modelo = "182"
-filing_year = 2024
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "Approved 2007, and aeat-dr-182-2024 covers the last gap year directly."
-authority = "orden-eha-3021-2007:art-1 (BOE-A-2007-18192)"
-
-[[disposition]]
-modelo = "188"
-filing_year = 2022
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "Approved 1999, twenty-three years before the gap year."
-authority = "orden-1999-11-17:apartado-quinto (BOE-A-1999-22372)"
-
-[[disposition]]
 modelo = "189"
 filing_year = 2022
 period = "*"
@@ -177,64 +105,6 @@ kind = "promised_year_unserved"
 classification = "unauthored"
 reason = "Approved 2008, fourteen years before the first gap year."
 authority = "orden-eha-3481-2008:art-1 (BOE-A-2008-19523)"
-
-[[disposition]]
-modelo = "189"
-filing_year = 2023
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "Approved 2008, fourteen years before the first gap year."
-authority = "orden-eha-3481-2008:art-1 (BOE-A-2008-19523)"
-
-[[disposition]]
-modelo = "189"
-filing_year = 2024
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "Approved 2008, fourteen years before the first gap year."
-authority = "orden-eha-3481-2008:art-1 (BOE-A-2008-19523)"
-
-[[disposition]]
-modelo = "190"
-filing_year = 2022
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "Approved 2009, and aeat-dr-190-2020 runs to 2022-12-31 while aeat-dr-190-2023 covers 2023: both gap years are designed for in the corpus."
-authority = "orden-eha-3127-2009:art-1 (BOE-A-2009-18567)"
-
-[[disposition]]
-modelo = "190"
-filing_year = 2023
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "Approved 2009, and aeat-dr-190-2020 runs to 2022-12-31 while aeat-dr-190-2023 covers 2023: both gap years are designed for in the corpus."
-authority = "orden-eha-3127-2009:art-1 (BOE-A-2009-18567)"
-
-[[disposition]]
-modelo = "193"
-filing_year = 2022
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "Approved 2011, and the corpus carries designs covering both gap years."
-authority = "orden-eha-3377-2011:art-1 (BOE-A-2011-19396)"
-
-[[disposition]]
-modelo = "193"
-filing_year = 2023
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "Approved 2011, and the corpus carries designs covering both gap years."
-authority = "orden-eha-3377-2011:art-1 (BOE-A-2011-19396)"
-
-# ---------------------------------------------------------------------------
-# The one cell on the leading edge that is a legal absence rather than debt.
-# ---------------------------------------------------------------------------
 
 [[disposition]]
 modelo = "721"
@@ -299,51 +169,6 @@ reason = "The bundled consolidated text shows the modelo already filed telematic
 authority = "orden-eha-3290-2008:art-1"
 
 [[disposition]]
-modelo = "222"
-filing_year = 2023
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "Approved 2017, six years before the first gap year covered by this entry."
-authority = "orden-hfp-227-2017:art-2"
-
-[[disposition]]
-modelo = "222"
-filing_year = 2024
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "Approved 2017, six years before the first gap year covered by this entry."
-authority = "orden-hfp-227-2017:art-2"
-
-[[disposition]]
-modelo = "280"
-filing_year = 2022
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "Approved 2015, and an amending orden (orden-hfp-1192-2022) was published during the first gap year itself."
-authority = "orden-hap-2118-2015:art-1"
-
-[[disposition]]
-modelo = "280"
-filing_year = 2023
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "Approved 2015, and an amending orden (orden-hfp-1192-2022) was published during the first gap year itself."
-authority = "orden-hap-2118-2015:art-1"
-
-[[disposition]]
-modelo = "280"
-filing_year = 2024
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "Approved 2015, and an amending orden (orden-hfp-1192-2022) was published during the first gap year itself."
-authority = "orden-hap-2118-2015:art-1"
-
-[[disposition]]
 modelo = "296"
 filing_year = 2023
 period = "*"
@@ -351,33 +176,6 @@ kind = "promised_year_unserved"
 classification = "unauthored"
 reason = "The bundled consolidated text shows the modelo already filed telematically under the Orden de 21 de diciembre de 2000."
 authority = "orden-eha-3290-2008:art-6"
-
-[[disposition]]
-modelo = "345"
-filing_year = 2022
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "The orden's Disposicion final segunda states it applies for the first time to the ejercicio 2022 declarations, and its Disposicion derogatoria repeals only one apartado of the 2001 orden that approved the modelo. Cited at art-1 because df-segunda is not enrolled in the legal catalogue; the operative clause is the disposicion final."
-authority = "orden-hfp-823-2022:art-1"
-
-[[disposition]]
-modelo = "345"
-filing_year = 2023
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "The orden's Disposicion final segunda states it applies for the first time to the ejercicio 2022 declarations, and its Disposicion derogatoria repeals only one apartado of the 2001 orden that approved the modelo. Cited at art-1 because df-segunda is not enrolled in the legal catalogue; the operative clause is the disposicion final."
-authority = "orden-hfp-823-2022:art-1"
-
-[[disposition]]
-modelo = "345"
-filing_year = 2024
-period = "*"
-kind = "promised_year_unserved"
-classification = "unauthored"
-reason = "The orden's Disposicion final segunda states it applies for the first time to the ejercicio 2022 declarations, and its Disposicion derogatoria repeals only one apartado of the 2001 orden that approved the modelo. Cited at art-1 because df-segunda is not enrolled in the legal catalogue; the operative clause is the disposicion final."
-authority = "orden-hfp-823-2022:art-1"
 
 [[disposition]]
 modelo = "220"
@@ -632,3 +430,12 @@ kind = "promised_year_unserved"
 classification = "unauthored"
 reason = "Modelo 296, the declaracion anual de retenciones e ingresos a cuenta del IRNR de no residentes sin establecimiento permanente, was approved by Orden EHA/3290/2008 art. 6, whose texto original entered into force on 18 November 2008, fourteen years before this gap year. Art. 11 of the same orden fixes the plazo as el comprendido entre el 1 de enero y el 31 de enero del ano siguiente al que corresponde la declaracion anual, an unconditional annual obligation that names no terminal ejercicio and was still being amended in 2024 by Orden HAC/56/2024 art. 2.3, which proves the modelo was live across 2022. The modelo existed and was filed for this ejercicio; no revision was authored for it. This entry NAMES the gap and does not close it."
 authority = "orden-eha-3290-2008:art-6 (BOE-A-2008-18497); orden-eha-3290-2008:art-11 (BOE-A-2008-18111, consolidated)"
+
+[[disposition]]
+modelo = "763"
+filing_year = 2012
+period = "4T"
+kind = "promised_coordinate_unserved"
+classification = "unauthored"
+reason = "Modelo 763 was approved by Orden EHA/1881/2011 art. 1, in force from 7 July 2011, more than a year before this trimestre, and art. 4 of the same orden fixes the plazo as la presentacion sera trimestral y se efectuara durante el mes siguiente a la finalizacion de cada trimestre natural del ano -- an unconditional quarterly obligation naming every trimestre natural, with no terminal date and no exception for the fourth of 2012. The gap is NOT in the source: aeat-dr-763-2012 declares applies_from 2012-04-01 and applies_to 2014-12-31, one continuous window that covers this trimestre, and the bundled design's own periodo de autoliquidacion field admits the values 1T a 4T with no restriction. The corpus filename names ejercicios 2t-3t-2012-2013-y-2014, which records the first applicable trimestres rather than excluding the fourth. What leaves the coordinate unserved is the edition split alone: revision 2012-2t-3t closes 2012-09-30 and revision 2013-2014 opens 2013-01-01, so October to December 2012 is authored by neither. The modelo existed and was filable in this trimestre; no revision serves it. This entry NAMES the gap and does not close it."
+authority = "orden-eha-1881-2011:art-1 (BOE-A-2011-11704); orden-eha-1881-2011:art-4 (plazo trimestral)"

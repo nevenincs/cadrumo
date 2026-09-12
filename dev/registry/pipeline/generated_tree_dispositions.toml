@@ -1,32 +1,41 @@
-# Why a published generated export tree is UNSAFE to republish today. This
-# ledger carries the `record_drift` class only: trees whose shipped record bytes
-# are not what the current inputs produce, so regenerating them would ship
-# whatever the inputs now say - which may be worse than what is there.
-#
-# The gate refuses in both directions. A record-drifting tree with no row here
-# fails, because an unexplained difference in filing data is exactly what nobody
-# notices. A row whose tree has been repaired fails too, so an explanation
-# cannot outlive its cause.
-#
-# Manifest-only staleness is deliberately NOT ledgered. A tree whose records
-# reproduce byte-for-byte and differs only in its generation manifest is safe to
-# republish, and that state arrives in bulk: any refactor of the generator
-# invalidates every manifest at once, twenty-one of them in one sweep on
-# 2026-09-03. Twenty-one rows saying "a refactor moved the generator" would be
-# churn, not explanation. The gate instead asserts the property that makes the
-# class safe - that every such tree really does reproduce its records - and the
-# screen reports the population.
-#
-# A third class, `type_column_contradiction`, carries a tree that REPRODUCES and
-# still contradicts its design: shipped bytes and inputs agree, and the inputs
-# are what the official type column contradicts. Regenerating changes nothing,
-# so a drift row would be dormant on arrival and the reproduction gate would
-# fail it. These rows carry a field_count instead, which is the only count in
-# this file that is load-bearing: it is the size of the contradiction being
-# explained, and it fails when the population moves in either direction.
-#
-# This is not a ratchet. It stores no counts and no ceilings, and shrinking it
-# is not the measure of progress.
-
-schema_version = 4
-dispositions = []
+# Why a published generated export tree is UNSAFE to republish today. This
+# ledger carries the `record_drift` class only: trees whose shipped record bytes
+# are not what the current inputs produce, so regenerating them would ship
+# whatever the inputs now say - which may be worse than what is there.
+#
+# The gate refuses in both directions. A record-drifting tree with no row here
+# fails, because an unexplained difference in filing data is exactly what nobody
+# notices. A row whose tree has been repaired fails too, so an explanation
+# cannot outlive its cause.
+#
+# Manifest-only staleness is deliberately NOT ledgered. A tree whose records
+# reproduce byte-for-byte and differs only in its generation manifest is safe to
+# republish, and that state arrives in bulk: any refactor of the generator
+# invalidates every manifest at once, twenty-one of them in one sweep on
+# 2026-09-03. Twenty-one rows saying "a refactor moved the generator" would be
+# churn, not explanation. The gate instead asserts the property that makes the
+# class safe - that every such tree really does reproduce its records - and the
+# screen reports the population.
+#
+# A third class, `type_column_contradiction`, carries a tree that REPRODUCES and
+# still contradicts its design: shipped bytes and inputs agree, and the inputs
+# are what the official type column contradicts. Regenerating changes nothing,
+# so a drift row would be dormant on arrival and the reproduction gate would
+# fail it. These rows carry a field_count instead, which is the only count in
+# this file that is load-bearing: it is the size of the contradiction being
+# explained, and it fails when the population moves in either direction.
+#
+# This is not a ratchet. It stores no counts and no ceilings, and shrinking it
+# is not the measure of progress.
+
+schema_version = 4
+[[dispositions]]
+kind = 'below_floor'
+modelo = '232'
+revision = '2016-2017'
+source_ref = 'aeat-dr-232-2016'
+source_sha256 = 'fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad'
+supported_filing_years_floor = 2022
+revision_last_filing_year = 2017
+reason = '''Every filing year this revision declares (2016 and 2017) lies below the registry-wide supported-filing-years floor of 2022 declared in the legal tree's supported-filing-years declaration, so revision selection admits no coordinate for it: the publisher refuses with "modelo 232: no revision for year=... period='0A' revision='2016-2017'" before it renders or compares anything. Its shipped records still quote binding identifier spellings that were re-spelled to drop record-design span and offset segments - the identifiers are semantic and the record layout, offsets and widths are unchanged - but that difference cannot be regenerated away while the revision is unreachable, so it is a listed non-issue rather than an unexplained one.'''
+reconsideration_condition = 'The supported-filing-years floor is lowered to admit this revision, or the revision is retired.'

@@ -1,0 +1,31 @@
+# Editions whose declared export scenario has actually been RENDERED.
+#
+# This file exists because declaring a scenario silences `export_scenario_missing`
+# without proving anything. Eight editions were declared in one pass while
+# `compile_validated_authority` was refusing, so not one of them could be
+# rendered, and the screen nonetheless read them as no longer blocked. That is a
+# suppression: the blocker cleared because the instrument stopped asking, not
+# because the work was done.
+#
+# So declaration and proof are now two different facts in two different places.
+# `dev/registry/edition_export_scenarios.py` says a scenario EXISTS. This file
+# says it RAN. An edge whose successor is declared here but absent from this file
+# carries `export_scenario_unrendered` and stays blocked.
+#
+# Write an entry ONLY after rendering that exact edition and observing the bytes.
+# `rendered_bytes` and `selected_revision` are the observation: a hand-written
+# entry with no render behind it is the defect this file was built to prevent,
+# and the byte count is what makes the claim checkable later.
+#
+# Fields:
+#   modelo             the modelo identifier, as a string
+#   edition            the revision key exactly as the registry directory spells it
+#   selected_revision  the revision the render actually selected (must equal
+#                      `edition`; a mismatch means the scenario picked the wrong
+#                      edition and the entry must be withdrawn, not corrected)
+#   rendered_bytes     length of the emitted payload
+#   observed           the date the render was run
+
+# No render entries yet. Every one of the eight scenarios declared on
+# 2026-09-12 was declared while the authority would not compile, so not one
+# could be proven. The first real entry replaces this comment.

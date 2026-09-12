@@ -470,6 +470,8 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.10-signo-cuota-rectificaciones-estado"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_604/files/03-604-ejercicio-2024.xlsx.extracted.md:89 (source aeat-dr-604-2024, sha256 98f7022a391e) prints «Liquidación (3) - Signo Cuota de rectificaciones realizadas en el período atribuible a la Administración del Estado [10]» at offset 737, width 1. corpus/aeat_official/disenos_registro/modelo_604/files/04-604-ejercicios-2021-a-2023.xlsx.extracted.md (source aeat-dr-604-2021, sha256 262e743deecf) prints only boxes [01] to [07] — its whole printed box set — carries no «Información de la tributación por razón de territorio» record at all, and prints exactly two Signo fields, «Signo BI [03]» (line 82) and «Signo Cuota [04]» (line 84). It prints this field at no offset and retires none. The field is new on this edition's official form."
 number = "liq-10-signo-cuota-rectificaciones-estado"
 section = ["liquidacion"]
 data_type = "text"
@@ -479,6 +481,8 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.10-cuota-rectificaciones-estado"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_604/files/03-604-ejercicio-2024.xlsx.extracted.md:90 (source aeat-dr-604-2024, sha256 98f7022a391e) prints «Liquidación (3) - Cuota de rectificaciones realizadas en el período atribuible a la Administración del Estado [10]» at offset 738, width 18. corpus/aeat_official/disenos_registro/modelo_604/files/04-604-ejercicios-2021-a-2023.xlsx.extracted.md (source aeat-dr-604-2021, sha256 262e743deecf) prints only boxes [01] to [07] — its whole printed box set — carries no «Información de la tributación por razón de territorio» record at all, and prints exactly two Signo fields, «Signo BI [03]» (line 82) and «Signo Cuota [04]» (line 84). It prints this field at no offset and retires none. The field is new on this edition's official form."
 number = "10"
 section = ["liquidacion"]
 data_type = "money"
@@ -569,6 +573,8 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.alava.signo-cuota-rectificaciones"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_604/files/03-604-ejercicio-2024.xlsx.extracted.md:127 (source aeat-dr-604-2024, sha256 98f7022a391e) prints «Información de la tributación por razón de territorio (6) - Signo Cuota de rectificaciones realizadas en el periodo. Álava [14]» at offset 120, width 1. corpus/aeat_official/disenos_registro/modelo_604/files/04-604-ejercicios-2021-a-2023.xlsx.extracted.md (source aeat-dr-604-2021, sha256 262e743deecf) prints only boxes [01] to [07] — its whole printed box set — carries no «Información de la tributación por razón de territorio» record at all, and prints exactly two Signo fields, «Signo BI [03]» (line 82) and «Signo Cuota [04]» (line 84). It prints this field at no offset and retires none. The field is new on this edition's official form."
 number = "terr-alava-signo-cuota-rectificaciones"
 section = ["territorio", "alava"]
 data_type = "text"
@@ -578,6 +584,8 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.alava.cuota-rectificaciones"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_604/files/03-604-ejercicio-2024.xlsx.extracted.md:128 (source aeat-dr-604-2024, sha256 98f7022a391e) prints «Información de la tributación por razón de territorio (6) - Cuota de rectificaciones realizadas en el periodo. Álava [14]» at offset 121, width 18. corpus/aeat_official/disenos_registro/modelo_604/files/04-604-ejercicios-2021-a-2023.xlsx.extracted.md (source aeat-dr-604-2021, sha256 262e743deecf) prints only boxes [01] to [07] — its whole printed box set — carries no «Información de la tributación por razón de territorio» record at all, and prints exactly two Signo fields, «Signo BI [03]» (line 82) and «Signo Cuota [04]» (line 84). It prints this field at no offset and retires none. The field is new on this edition's official form."
 number = "14"
 section = ["territorio", "alava"]
 data_type = "money"
@@ -631,6 +639,8 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.guipuzcoa.signo-cuota-rectificaciones"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_604/files/03-604-ejercicio-2024.xlsx.extracted.md:133 (source aeat-dr-604-2024, sha256 98f7022a391e) prints «Información de la tributación por razón de territorio (6) - Signo Cuota de rectificaciones realizadas en el periodo. Guipúzcoa [19]» at offset 200, width 1. corpus/aeat_official/disenos_registro/modelo_604/files/04-604-ejercicios-2021-a-2023.xlsx.extracted.md (source aeat-dr-604-2021, sha256 262e743deecf) prints only boxes [01] to [07] — its whole printed box set — carries no «Información de la tributación por razón de territorio» record at all, and prints exactly two Signo fields, «Signo BI [03]» (line 82) and «Signo Cuota [04]» (line 84). It prints this field at no offset and retires none. The field is new on this edition's official form."
 number = "terr-guipuzcoa-signo-cuota-rectificaciones"
 section = ["territorio", "guipuzcoa"]
 data_type = "text"
@@ -640,6 +650,8 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.guipuzcoa.cuota-rectificaciones"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_604/files/03-604-ejercicio-2024.xlsx.extracted.md:134 (source aeat-dr-604-2024, sha256 98f7022a391e) prints «Información de la tributación por razón de territorio (6) - Cuota de rectificaciones realizadas en el periodo. Guipúzcoa [19]» at offset 201, width 18. corpus/aeat_official/disenos_registro/modelo_604/files/04-604-ejercicios-2021-a-2023.xlsx.extracted.md (source aeat-dr-604-2021, sha256 262e743deecf) prints only boxes [01] to [07] — its whole printed box set — carries no «Información de la tributación por razón de territorio» record at all, and prints exactly two Signo fields, «Signo BI [03]» (line 82) and «Signo Cuota [04]» (line 84). It prints this field at no offset and retires none. The field is new on this edition's official form."
 number = "19"
 section = ["territorio", "guipuzcoa"]
 data_type = "money"
@@ -693,6 +705,8 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.vizcaya.signo-cuota-rectificaciones"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_604/files/03-604-ejercicio-2024.xlsx.extracted.md:139 (source aeat-dr-604-2024, sha256 98f7022a391e) prints «Información de la tributación por razón de territorio (6) - Signo Cuota de rectificaciones realizadas en el periodo. Vizcaya [24]» at offset 280, width 1. corpus/aeat_official/disenos_registro/modelo_604/files/04-604-ejercicios-2021-a-2023.xlsx.extracted.md (source aeat-dr-604-2021, sha256 262e743deecf) prints only boxes [01] to [07] — its whole printed box set — carries no «Información de la tributación por razón de territorio» record at all, and prints exactly two Signo fields, «Signo BI [03]» (line 82) and «Signo Cuota [04]» (line 84). It prints this field at no offset and retires none. The field is new on this edition's official form."
 number = "terr-vizcaya-signo-cuota-rectificaciones"
 section = ["territorio", "vizcaya"]
 data_type = "text"
@@ -702,6 +716,8 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.vizcaya.cuota-rectificaciones"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_604/files/03-604-ejercicio-2024.xlsx.extracted.md:140 (source aeat-dr-604-2024, sha256 98f7022a391e) prints «Información de la tributación por razón de territorio (6) - Cuota de rectificaciones realizadas en el periodo. Vizcaya [24]» at offset 281, width 18. corpus/aeat_official/disenos_registro/modelo_604/files/04-604-ejercicios-2021-a-2023.xlsx.extracted.md (source aeat-dr-604-2021, sha256 262e743deecf) prints only boxes [01] to [07] — its whole printed box set — carries no «Información de la tributación por razón de territorio» record at all, and prints exactly two Signo fields, «Signo BI [03]» (line 82) and «Signo Cuota [04]» (line 84). It prints this field at no offset and retires none. The field is new on this edition's official form."
 number = "24"
 section = ["territorio", "vizcaya"]
 data_type = "money"
@@ -755,6 +771,8 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.navarra.signo-cuota-rectificaciones"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_604/files/03-604-ejercicio-2024.xlsx.extracted.md:145 (source aeat-dr-604-2024, sha256 98f7022a391e) prints «Información de la tributación por razón de territorio (6) - Signo Cuota de rectificaciones realizadas en el periodo. Navarra [29]» at offset 360, width 1. corpus/aeat_official/disenos_registro/modelo_604/files/04-604-ejercicios-2021-a-2023.xlsx.extracted.md (source aeat-dr-604-2021, sha256 262e743deecf) prints only boxes [01] to [07] — its whole printed box set — carries no «Información de la tributación por razón de territorio» record at all, and prints exactly two Signo fields, «Signo BI [03]» (line 82) and «Signo Cuota [04]» (line 84). It prints this field at no offset and retires none. The field is new on this edition's official form."
 number = "terr-navarra-signo-cuota-rectificaciones"
 section = ["territorio", "navarra"]
 data_type = "text"
@@ -764,6 +782,8 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.navarra.cuota-rectificaciones"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_604/files/03-604-ejercicio-2024.xlsx.extracted.md:146 (source aeat-dr-604-2024, sha256 98f7022a391e) prints «Información de la tributación por razón de territorio (6) - Cuota de rectificaciones realizadas en el periodo. Navarra [29]» at offset 361, width 18. corpus/aeat_official/disenos_registro/modelo_604/files/04-604-ejercicios-2021-a-2023.xlsx.extracted.md (source aeat-dr-604-2021, sha256 262e743deecf) prints only boxes [01] to [07] — its whole printed box set — carries no «Información de la tributación por razón de territorio» record at all, and prints exactly two Signo fields, «Signo BI [03]» (line 82) and «Signo Cuota [04]» (line 84). It prints this field at no offset and retires none. The field is new on this edition's official form."
 number = "29"
 section = ["territorio", "navarra"]
 data_type = "money"
@@ -817,6 +837,8 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.estado.signo-cuota-rectificaciones"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_604/files/03-604-ejercicio-2024.xlsx.extracted.md:151 (source aeat-dr-604-2024, sha256 98f7022a391e) prints «Información de la tributación por razón de territorio (6) - Signo Cuota de rectificaciones realizadas en el periodo. Estado [34]» at offset 440, width 1. corpus/aeat_official/disenos_registro/modelo_604/files/04-604-ejercicios-2021-a-2023.xlsx.extracted.md (source aeat-dr-604-2021, sha256 262e743deecf) prints only boxes [01] to [07] — its whole printed box set — carries no «Información de la tributación por razón de territorio» record at all, and prints exactly two Signo fields, «Signo BI [03]» (line 82) and «Signo Cuota [04]» (line 84). It prints this field at no offset and retires none. The field is new on this edition's official form."
 number = "terr-estado-signo-cuota-rectificaciones"
 section = ["territorio", "estado"]
 data_type = "text"
@@ -826,6 +848,8 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.estado.cuota-rectificaciones"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_604/files/03-604-ejercicio-2024.xlsx.extracted.md:152 (source aeat-dr-604-2024, sha256 98f7022a391e) prints «Información de la tributación por razón de territorio (6) - Cuota de rectificaciones realizadas en el periodo. Estado [34]» at offset 441, width 18. corpus/aeat_official/disenos_registro/modelo_604/files/04-604-ejercicios-2021-a-2023.xlsx.extracted.md (source aeat-dr-604-2021, sha256 262e743deecf) prints only boxes [01] to [07] — its whole printed box set — carries no «Información de la tributación por razón de territorio» record at all, and prints exactly two Signo fields, «Signo BI [03]» (line 82) and «Signo Cuota [04]» (line 84). It prints this field at no offset and retires none. The field is new on this edition's official form."
 number = "34"
 section = ["territorio", "estado"]
 data_type = "money"

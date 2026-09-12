@@ -1,5 +1,7 @@
 [[revisions."2025".casillas]]
 id = "declarante-nif"
+continuidad_id = "irpf-declarante-nif"
+continuidad_origin = "seeded"
 number = "tipo1.nif-declarante"
 section = ["identificacion_declaracion"]
 data_type = "nif"
@@ -10,6 +12,8 @@ legal_refs = ["orden-eha-3481-2008:art-1"]
 
 [[revisions."2025".casillas]]
 id = "ejercicio-declaracion"
+continuidad_id = "filing-year"
+continuidad_origin = "seeded"
 number = "tipo1.ejercicio"
 section = ["identificacion_declaracion"]
 data_type = "year"
@@ -21,6 +25,8 @@ additional_source_refs = ["aeat-modelo-189-procedure"]
 
 [[revisions."2025".casillas]]
 id = "declarado-nif"
+continuidad_id = "m189-declarado-nif"
+continuidad_origin = "seeded"
 number = "tipo2.nif-declarado"
 section = ["declarado"]
 data_type = "nif"
@@ -31,6 +37,8 @@ legal_refs = ["orden-eha-3481-2008:art-1"]
 
 [[revisions."2025".casillas]]
 id = "declarado-nombre"
+continuidad_id = "m189-declarado-nombre"
+continuidad_origin = "seeded"
 number = "tipo2.nombre-declarado"
 section = ["declarado"]
 data_type = "name"
@@ -41,6 +49,8 @@ legal_refs = ["orden-eha-3481-2008:art-1"]
 
 [[revisions."2025".casillas]]
 id = "codigo-pais"
+continuidad_id = "m189-codigo-pais"
+continuidad_origin = "seeded"
 number = "tipo2.78-79"
 section = ["declarado", "localizacion"]
 data_type = "country_code"
@@ -52,6 +62,8 @@ additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1284"]
 
 [[revisions."2025".casillas]]
 id = "clave-valor"
+continuidad_id = "m189-clave-valor"
+continuidad_origin = "seeded"
 number = "tipo2.81"
 section = ["valores_seguros_rentas", "identificacion_valor"]
 data_type = "text"
@@ -63,6 +75,8 @@ additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1180"]
 
 [[revisions."2025".casillas]]
 id = "valoracion"
+continuidad_id = "m189-valoracion"
+continuidad_origin = "seeded"
 number = "tipo2.108-123"
 section = ["valores_seguros_rentas", "valoracion"]
 data_type = "money"
@@ -74,6 +88,8 @@ additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-
 
 [[revisions."2025".casillas]]
 id = "numero-valores"
+continuidad_id = "m189-numero-valores"
+continuidad_origin = "seeded"
 number = "tipo2.130-146"
 section = ["valores_seguros_rentas", "detalle_valor"]
 data_type = "decimal"
@@ -85,6 +101,8 @@ additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1284", "boe-modelo-
 
 [[revisions."2025".casillas]]
 id = "nominal-unitario-valores"
+continuidad_id = "m189-nominal-unitario-valores"
+continuidad_origin = "seeded"
 number = "tipo2.147-164"
 section = ["valores_seguros_rentas", "detalle_valor"]
 data_type = "money"

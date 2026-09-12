@@ -1,0 +1,51 @@
+[fact]
+fact_id = "eu-eea-country-membership"
+family = "entity_set"
+
+[[fact.variants]]
+variant_id = "eu-eea-country-membership:2021-01-01"
+date_axis = "filing_period"
+valid_from = 2021-01-01
+legal_refs = ["trlirnr-rdleg-5-2004:art-10", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["residentes en otro Estado miembro de la Unión Europea", "Espacio Económico Europeo"]
+
+[fact.variants.payload]
+kind = "entity_set"
+entities = [
+  "AT",
+  "BE",
+  "BG",
+  "CY",
+  "CZ",
+  "DE",
+  "DK",
+  "EE",
+  "ES",
+  "FI",
+  "FR",
+  "GR",
+  "HR",
+  "HU",
+  "IE",
+  "IS",
+  "IT",
+  "LI",
+  "LT",
+  "LU",
+  "LV",
+  "MT",
+  "NL",
+  "NO",
+  "PL",
+  "PT",
+  "RO",
+  "SE",
+  "SI",
+  "SK",
+]

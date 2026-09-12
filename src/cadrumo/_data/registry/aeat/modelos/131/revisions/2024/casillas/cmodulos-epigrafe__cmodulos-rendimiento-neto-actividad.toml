@@ -34,6 +34,8 @@
 [[revisions."2024".casillas]]
 id = "modulos-epigrafe"
 number = "modulos-epigrafe"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx.extracted.md:53 (sha256 2b36ae9d4712) imprime el campo 12, posicion 109, longitud 4, An: Liquidacion (3) - I. Activ. economicas estimac. objetiva - Actividad (epigrafe I.A.E.) - 1. corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx.extracted.md:54 (sha256 83e40d7d4d64) conserva el mismo campo en Pag. 1 (campo 13, posicion 110, longitud 4, An) y corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx.extracted.md:141 lo repite en el nuevo registro DPA00 (campo 6, posicion 13, longitud 4, An). El epigrafe IAE de la actividad ya figuraba en el formulario predecesor; la edicion 2019-2023 del corpus no declara fila de casilla para el. Es un hueco de declaracion, no una casilla nueva."
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "text"
 semantic_role = "irpf_pf_modulos_epigrafe_iae"
@@ -45,6 +47,8 @@ legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]
 [[revisions."2024".casillas]]
 id = "modulos-1-unidades"
 number = "modulos-1-unidades"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx.extracted.md:178 (sha256 83e40d7d4d64) declara este dato en el registro DPA00, campo 42, posicion 136, longitud 10, Num: Actividad - Modulo 1 - N Unidades. El diseno predecesor corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx.extracted.md (sha256 2b36ae9d4712) es una pagina unica Pag. 1 de 751 posiciones cuyo bloque de estimacion objetiva declara solo, por cada actividad 1 a 5, Actividad (epigrafe I.A.E.), Rdto. neto actividad, Porcentaje aplicable y Resultado aplicacion porcentaje (campos 12 a 31, posiciones 109 a 323): no contiene registro de detalle por modulos ni campo alguno para este dato. El registro DPA00 de 598 posiciones aparece por primera vez en el diseno 2024."
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_1_unidades"
@@ -57,6 +61,8 @@ legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]
 [[revisions."2024".casillas]]
 id = "modulos-1-unidades-anterior"
 number = "modulos-1-unidades-anterior"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx.extracted.md (sha256 83e40d7d4d64) declara en DPA00 unidades de modulo del periodo de devengo (campos 42 a 55, posiciones 136 a 324) y recoge los Incentivos al empleo como importe ya calculado (campo 56, posicion 325); ningun campo de ese diseno ni del predecesor corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx.extracted.md (sha256 2b36ae9d4712) declara el numero de unidades del ano anterior que la Orden HFP/1359/2023 instruccion 2.2.a hace comparar. Ninguno de los dos disenos numera casilla para esta fila y la fila no declara ninguna: es un concepto de producto interno al motor, no un campo del modelo oficial."
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_1_unidades_anterior"
@@ -69,6 +75,8 @@ legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:instruccion-2-2-a"]
 [[revisions."2024".casillas]]
 id = "modulos-2-unidades"
 number = "modulos-2-unidades"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx.extracted.md:180 (sha256 83e40d7d4d64) declara este dato en el registro DPA00, campo 44, posicion 163, longitud 10, Num: Actividad - Modulo 2 - N Unidades. El diseno predecesor corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx.extracted.md (sha256 2b36ae9d4712) es una pagina unica Pag. 1 de 751 posiciones cuyo bloque de estimacion objetiva declara solo, por cada actividad 1 a 5, Actividad (epigrafe I.A.E.), Rdto. neto actividad, Porcentaje aplicable y Resultado aplicacion porcentaje (campos 12 a 31, posiciones 109 a 323): no contiene registro de detalle por modulos ni campo alguno para este dato. El registro DPA00 de 598 posiciones aparece por primera vez en el diseno 2024."
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_2_unidades"
@@ -81,6 +89,8 @@ legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]
 [[revisions."2024".casillas]]
 id = "modulos-3-unidades"
 number = "modulos-3-unidades"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx.extracted.md:182 (sha256 83e40d7d4d64) declara este dato en el registro DPA00, campo 46, posicion 190, longitud 10, Num: Actividad - Modulo 3 - N Unidades. El diseno predecesor corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx.extracted.md (sha256 2b36ae9d4712) es una pagina unica Pag. 1 de 751 posiciones cuyo bloque de estimacion objetiva declara solo, por cada actividad 1 a 5, Actividad (epigrafe I.A.E.), Rdto. neto actividad, Porcentaje aplicable y Resultado aplicacion porcentaje (campos 12 a 31, posiciones 109 a 323): no contiene registro de detalle por modulos ni campo alguno para este dato. El registro DPA00 de 598 posiciones aparece por primera vez en el diseno 2024."
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_3_unidades"
@@ -93,6 +103,8 @@ legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]
 [[revisions."2024".casillas]]
 id = "modulos-4-unidades"
 number = "modulos-4-unidades"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx.extracted.md:184 (sha256 83e40d7d4d64) declara este dato en el registro DPA00, campo 48, posicion 217, longitud 10, Num: Actividad - Modulo 4 - N Unidades. El diseno predecesor corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx.extracted.md (sha256 2b36ae9d4712) es una pagina unica Pag. 1 de 751 posiciones cuyo bloque de estimacion objetiva declara solo, por cada actividad 1 a 5, Actividad (epigrafe I.A.E.), Rdto. neto actividad, Porcentaje aplicable y Resultado aplicacion porcentaje (campos 12 a 31, posiciones 109 a 323): no contiene registro de detalle por modulos ni campo alguno para este dato. El registro DPA00 de 598 posiciones aparece por primera vez en el diseno 2024."
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_4_unidades"
@@ -105,6 +117,8 @@ legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]
 [[revisions."2024".casillas]]
 id = "modulos-5-unidades"
 number = "modulos-5-unidades"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx.extracted.md:186 (sha256 83e40d7d4d64) declara este dato en el registro DPA00, campo 50, posicion 244, longitud 10, Num: Actividad - Modulo 5 - N Unidades. El diseno predecesor corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx.extracted.md (sha256 2b36ae9d4712) es una pagina unica Pag. 1 de 751 posiciones cuyo bloque de estimacion objetiva declara solo, por cada actividad 1 a 5, Actividad (epigrafe I.A.E.), Rdto. neto actividad, Porcentaje aplicable y Resultado aplicacion porcentaje (campos 12 a 31, posiciones 109 a 323): no contiene registro de detalle por modulos ni campo alguno para este dato. El registro DPA00 de 598 posiciones aparece por primera vez en el diseno 2024."
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_5_unidades"
@@ -117,6 +131,8 @@ legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]
 [[revisions."2024".casillas]]
 id = "modulos-6-unidades"
 number = "modulos-6-unidades"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx.extracted.md:188 (sha256 83e40d7d4d64) declara este dato en el registro DPA00, campo 52, posicion 271, longitud 10, Num: Actividad - Modulo 6 - N Unidades. El diseno predecesor corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx.extracted.md (sha256 2b36ae9d4712) es una pagina unica Pag. 1 de 751 posiciones cuyo bloque de estimacion objetiva declara solo, por cada actividad 1 a 5, Actividad (epigrafe I.A.E.), Rdto. neto actividad, Porcentaje aplicable y Resultado aplicacion porcentaje (campos 12 a 31, posiciones 109 a 323): no contiene registro de detalle por modulos ni campo alguno para este dato. El registro DPA00 de 598 posiciones aparece por primera vez en el diseno 2024."
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_6_unidades"
@@ -129,6 +145,8 @@ legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]
 [[revisions."2024".casillas]]
 id = "modulos-7-unidades"
 number = "modulos-7-unidades"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx.extracted.md:190 (sha256 83e40d7d4d64) declara este dato en el registro DPA00, campo 54, posicion 298, longitud 10, Num: Actividad - Modulo 7 - N Unidades. El diseno predecesor corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx.extracted.md (sha256 2b36ae9d4712) es una pagina unica Pag. 1 de 751 posiciones cuyo bloque de estimacion objetiva declara solo, por cada actividad 1 a 5, Actividad (epigrafe I.A.E.), Rdto. neto actividad, Porcentaje aplicable y Resultado aplicacion porcentaje (campos 12 a 31, posiciones 109 a 323): no contiene registro de detalle por modulos ni campo alguno para este dato. El registro DPA00 de 598 posiciones aparece por primera vez en el diseno 2024."
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_7_unidades"
@@ -141,6 +159,8 @@ legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]
 [[revisions."2024".casillas]]
 id = "modulos-minoracion-inversion"
 continuidad_id = "irpf-pf-modulos-minoracion-inversion"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx.extracted.md:193 (sha256 83e40d7d4d64) declara este dato en el registro DPA00, campo 57, posicion 335, longitud 10, Num: Actividad - B. Rendimiento a efectos de pagos fraccionados - Incentivos a la inversion. El diseno predecesor corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx.extracted.md (sha256 2b36ae9d4712) es una pagina unica Pag. 1 de 751 posiciones cuyo bloque de estimacion objetiva declara solo, por cada actividad 1 a 5, Actividad (epigrafe I.A.E.), Rdto. neto actividad, Porcentaje aplicable y Resultado aplicacion porcentaje (campos 12 a 31, posiciones 109 a 323): no contiene registro de detalle por modulos ni campo alguno para este dato. El registro DPA00 de 598 posiciones aparece por primera vez en el diseno 2024."
 number = "modulos-minoracion-inversion"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "money"
@@ -153,6 +173,8 @@ legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:instruccion-2-2-b"]
 [[revisions."2024".casillas]]
 id = "modulos-indice-pequena-dimension"
 continuidad_id = "irpf-pf-modulos-indice-pequena-dimension"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx.extracted.md:195 (sha256 83e40d7d4d64) declara este dato en el registro DPA00, campo 59, posicion 349, longitud 4, Num: Actividad - B1. Indices correctores - 2. Empresas de pequena dimension. El diseno predecesor corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx.extracted.md (sha256 2b36ae9d4712) es una pagina unica Pag. 1 de 751 posiciones cuyo bloque de estimacion objetiva declara solo, por cada actividad 1 a 5, Actividad (epigrafe I.A.E.), Rdto. neto actividad, Porcentaje aplicable y Resultado aplicacion porcentaje (campos 12 a 31, posiciones 109 a 323): no contiene registro de detalle por modulos ni campo alguno para este dato. El registro DPA00 de 598 posiciones aparece por primera vez en el diseno 2024."
 number = "modulos-indice-pequena-dimension"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
@@ -165,6 +187,8 @@ legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:anexo-ii-instruccion-2-
 [[revisions."2024".casillas]]
 id = "modulos-indice-temporada"
 continuidad_id = "irpf-pf-modulos-indice-temporada"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx.extracted.md:196 (sha256 83e40d7d4d64) declara este dato en el registro DPA00, campo 60, posicion 353, longitud 4, Num: Actividad - B1. Indices correctores - 3. De temporada. El diseno predecesor corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx.extracted.md (sha256 2b36ae9d4712) es una pagina unica Pag. 1 de 751 posiciones cuyo bloque de estimacion objetiva declara solo, por cada actividad 1 a 5, Actividad (epigrafe I.A.E.), Rdto. neto actividad, Porcentaje aplicable y Resultado aplicacion porcentaje (campos 12 a 31, posiciones 109 a 323): no contiene registro de detalle por modulos ni campo alguno para este dato. El registro DPA00 de 598 posiciones aparece por primera vez en el diseno 2024."
 number = "modulos-indice-temporada"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
@@ -177,6 +201,8 @@ legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:anexo-ii-instruccion-2-
 [[revisions."2024".casillas]]
 id = "modulos-indice-inicio-actividad"
 continuidad_id = "irpf-pf-modulos-indice-inicio-actividad"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx.extracted.md:198 (sha256 83e40d7d4d64) declara este dato en el registro DPA00, campo 62, posicion 361, longitud 4, Num: Actividad - B1. Indices correctores - 5. De inicio de nueva actividad. El diseno predecesor corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx.extracted.md (sha256 2b36ae9d4712) es una pagina unica Pag. 1 de 751 posiciones cuyo bloque de estimacion objetiva declara solo, por cada actividad 1 a 5, Actividad (epigrafe I.A.E.), Rdto. neto actividad, Porcentaje aplicable y Resultado aplicacion porcentaje (campos 12 a 31, posiciones 109 a 323): no contiene registro de detalle por modulos ni campo alguno para este dato. El registro DPA00 de 598 posiciones aparece por primera vez en el diseno 2024."
 number = "modulos-indice-inicio-actividad"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
@@ -189,6 +215,8 @@ legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:anexo-ii-instruccion-2-
 [[revisions."2024".casillas]]
 id = "modulos-pequena-dimension-ignorado-flag"
 continuidad_id = "irpf-pf-modulos-pequena-dimension-ignorado-flag"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx.extracted.md (sha256 83e40d7d4d64) declara los indices correctores como importes (campos 58 a 62, posiciones 345 a 364) y no declara campo indicador de incompatibilidad entre ellos; tampoco lo hace el predecesor corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx.extracted.md (sha256 2b36ae9d4712). Esta fila es una senal interna (internal_only) del motor sobre la incompatibilidad de la Orden HFP/1359/2023 anexo II instruccion 2.3. Ninguno de los dos disenos numera casilla para esta fila y la fila no declara ninguna: es un concepto de producto interno al motor, no un campo del modelo oficial."
 number = "modulos-pequena-dimension-ignorado-flag"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
@@ -202,6 +230,8 @@ legal_refs = ["orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades"]
 [[revisions."2024".casillas]]
 id = "modulos-temporada-inicio-actividad-conflicto-flag"
 continuidad_id = "irpf-pf-modulos-temporada-inicio-actividad-conflicto-flag"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx.extracted.md (sha256 83e40d7d4d64) declara los indices correctores como importes (campos 58 a 62, posiciones 345 a 364) y no declara campo indicador de conflicto entre el indice de temporada y el de inicio de nueva actividad; tampoco lo hace el predecesor corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx.extracted.md (sha256 2b36ae9d4712). Esta fila es una senal interna (internal_only) del motor. Ninguno de los dos disenos numera casilla para esta fila y la fila no declara ninguna: es un concepto de producto interno al motor, no un campo del modelo oficial."
 number = "modulos-temporada-inicio-actividad-conflicto-flag"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
@@ -215,6 +245,8 @@ legal_refs = ["orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades"]
 [[revisions."2024".casillas]]
 id = "modulos-rendimiento-neto-previo"
 continuidad_id = "irpf-pf-modulos-rendimiento-neto-previo"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx.extracted.md (sha256 83e40d7d4d64) declara en DPA00 el Rendimiento neto por modulo de cada modulo (campos 43 a 55) y en Pag. 1 el Rdto. neto actividad por actividad, pero ningun campo para el total de la fase 1a; el predecesor corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx.extracted.md (sha256 2b36ae9d4712) tampoco. Es una etapa de calculo interna (internal_only). Ninguno de los dos disenos numera casilla para esta fila y la fila no declara ninguna: es un concepto de producto interno al motor, no un campo del modelo oficial."
 number = "modulos-rendimiento-neto-previo"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "money"
@@ -229,6 +261,8 @@ legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]
 [[revisions."2024".casillas]]
 id = "modulos-rendimiento-neto-minorado"
 continuidad_id = "irpf-pf-modulos-rendimiento-neto-minorado"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx.extracted.md (sha256 83e40d7d4d64) declara en DPA00 los Incentivos al empleo y a la inversion como importes (campos 56 y 57, posiciones 325 y 335) pero ningun campo para el rendimiento neto minorado resultante; el predecesor corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx.extracted.md (sha256 2b36ae9d4712) tampoco. Es una etapa de calculo interna (internal_only). Ninguno de los dos disenos numera casilla para esta fila y la fila no declara ninguna: es un concepto de producto interno al motor, no un campo del modelo oficial."
 number = "modulos-rendimiento-neto-minorado"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "money"
@@ -242,6 +276,8 @@ legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:instruccion-2-2-a", "or
 [[revisions."2024".casillas]]
 id = "modulos-rendimiento-neto-modulos"
 continuidad_id = "irpf-pf-modulos-rendimiento-neto-modulos"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx.extracted.md (sha256 83e40d7d4d64) declara en DPA00 los indices correctores como importes (campos 58 a 62, posiciones 345 a 364) pero ningun campo para el rendimiento neto de modulos resultante de aplicarlos; el predecesor corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx.extracted.md (sha256 2b36ae9d4712) tampoco. Es una etapa de calculo interna (internal_only). Ninguno de los dos disenos numera casilla para esta fila y la fila no declara ninguna: es un concepto de producto interno al motor, no un campo del modelo oficial."
 number = "modulos-rendimiento-neto-modulos"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "money"
@@ -262,6 +298,8 @@ legal_refs = [
 [[revisions."2024".casillas]]
 id = "modulos-rendimiento-neto-actividad"
 continuidad_id = "irpf-pf-modulos-rendimiento-neto-actividad"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_131/files/05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx.extracted.md:54 (sha256 2b36ae9d4712) imprime el campo 13, posicion 113, longitud 17, N: Liquidacion (3) - I. Activ. economicas estimac. objetiva - Rdto. neto actividad - 1. corpus/aeat_official/disenos_registro/modelo_131/files/06-131-ejercicios-2024-actualizado-13-12-24-180-kb-xlsx.xlsx.extracted.md:55 (sha256 83e40d7d4d64) conserva el mismo campo con igual longitud y rol (campo 14, posicion 114, longitud 17, N, Actividad 1 - Rdto. neto actividad), alimentando en ambos disenos la Suma de rendimientos netos [01]. El concepto figura en el diseno predecesor; la edicion 2019-2023 no declara fila de casilla para el."
 number = "modulos-rendimiento-neto-actividad"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "money"

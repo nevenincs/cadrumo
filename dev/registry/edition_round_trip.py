@@ -111,7 +111,6 @@ from cadrumo.application.filing.runtime import ModeloOperatorProfile, schema_pro
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
-from cadrumo.core.product_identity import AeatProductSoftwareIdentity
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.bindings import binding_source_modelo
 from cadrumo.domain.calculations.registry.errors import RegistryError
@@ -124,6 +123,7 @@ from cadrumo.domain.calculations.registry.reference_sections import FAMILY_SOURC
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.filing.protocols import ModeloInputs
+from cadrumo.domain.filing.software_identity import AeatProductSoftwareIdentity
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
 from .compiler.authority import compile_validated_authority

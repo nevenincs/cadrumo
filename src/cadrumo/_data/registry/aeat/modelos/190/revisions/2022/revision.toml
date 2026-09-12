@@ -1,4 +1,12 @@
 [revisions."2022"]
+# CARRIED FROM AN OLDER DESIGN, DELIBERATELY. aeat-dr-190-2020 is the design
+# named here and it predates this edition, which reads like an error until its
+# window is checked: it declares applies_from 2020-01-01 and applies_to
+# 2022-12-31, so it governs through the last day of this edition and no later
+# design covers 2022. The successor aeat-dr-190-2023 opens 2023-01-01 and
+# reaches no day of this edition. The id alone suggests staleness; the window
+# says it is the correct authority, and this comment exists so the next reader
+# does not "fix" it.
 casilla_source_refs = ["aeat-dr-190-2020"]
 # Applicability-grade historical epoch for modelo 190, filing year 2022.
 #

@@ -29,7 +29,7 @@ import hashlib
 import re
 import tomllib
 import unicodedata
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -223,18 +223,62 @@ def _sidecar_for(source_id: str, source: Mapping[str, object]) -> Path:
     return sidecar
 
 
+def record_design_source_ref(
+    modelo: str,
+    edition: str,
+    modelos_root: Path = MODELOS_ROOT,
+) -> str:
+    """Return the ``record_design`` source id one edition cites, read from the registry.
+
+    Provenance is READ, never spelled. The corpus does not name design sources
+    to one pattern -- ``aeat-dr-714-2021`` sits beside ``aeat-dr-111-2019-v18``
+    -- so constructing the id from the modelo and the year produces a citation
+    that happens to be right for some modelos and silently wrong for others. The
+    edition already states which source it means; this returns that.
+
+    Raises:
+        RecordDesignUnavailableError: When the edition cites no readable
+            ``record_design`` source. A statement that cites nothing is not a
+            statement, so the caller refuses rather than inventing one.
+    """
+    sources = _legal_sources()
+    manifest = modelos_root / modelo / "revisions" / edition / "revision.toml"
+    if manifest.is_file():
+        with manifest.open("rb") as handle:
+            table = tomllib.load(handle).get("revisions", {}).get(edition, {})
+        refs = table.get("source_refs") if isinstance(table, dict) else None
+        for ref in refs if isinstance(refs, list) else ():
+            source = sources.get(str(ref))
+            if isinstance(source, dict) and source.get("kind") == _RECORD_DESIGN_KIND:
+                return str(ref)
+    raise RecordDesignUnavailableError(
+        f"modelo {modelo} {edition} cites no record_design source, so a statement about its record "
+        "design has nothing to cite; refusing to name one from a pattern"
+    )
+
+
 def edition_record_designs(
     modelo: str,
     modelos_root: Path = MODELOS_ROOT,
+    editions: Sequence[str] | None = None,
 ) -> dict[str, dict[tuple[str, int], RecordDesignRow]]:
     """Return each edition's record-design rows, resolved through the registry's own citations.
 
     The chain is the registry's, not this module's: an edition's
     ``revision.toml`` names its ``source_refs``, a legal table declares which of
     those is a ``record_design`` and where its file sits, and the file is hashed
-    before its sidecar is read. An edition citing no readable design is simply
-    absent from the result, and the caller treats its rows as needing design
-    evidence rather than naming them from somewhere else.
+    before its sidecar is read. An edition citing no ``record_design`` source at
+    all is simply absent from the result.
+
+    An edition citing one that cannot be TRUSTED is different, and fails closed:
+    a missing file, a missing sidecar, or a binary whose hash no longer matches
+    the registry's declaration raises rather than returning a partial map. A
+    silently absent edition there would read as "this edition has no design",
+    which is the one thing the caller must not conclude from a broken link.
+
+    Raises:
+        RecordDesignUnavailableError: When a cited design cannot be read or does
+            not hash to the declared value.
     """
     sources = _legal_sources()
     designs: dict[str, dict[tuple[str, int], RecordDesignRow]] = {}
@@ -242,6 +286,8 @@ def edition_record_designs(
     if not revisions_dir.is_dir():
         return designs
     for revision_dir in sorted(path for path in revisions_dir.iterdir() if path.is_dir()):
+        if editions is not None and revision_dir.name not in editions:
+            continue
         manifest = revision_dir / "revision.toml"
         if not manifest.is_file():
             continue

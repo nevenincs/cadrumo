@@ -12,12 +12,12 @@ from __future__ import annotations
 
 from collections.abc import Collection
 
-from cadrumo.core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
 from cadrumo.domain.calculations.registry.deadline_coordinate import (
     DeadlineSemanticCoordinate,
     deadline_window_semantic_coordinates,
 )
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
+from cadrumo.domain.calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 from cadrumo.domain.calculations.registry.period_selector_overlap import period_selectors_overlap
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_deadlines import filing_schedule_period_kind_mismatches
@@ -250,8 +250,9 @@ def validate_m210_tipo_renta_code_projection_parity(
     The official Modelo 210 tipo-de-renta code axis is declared in two places
     that MUST agree: the registry parameter ``m210-tipo-renta-code-<year>``
     (which codes the revision accepts, carrying the registry legal-grounding)
-    and the core :data:`~cadrumo.core.M210_TIPO_RENTA_CODE_PROJECTION` (each code's
-    :class:`~cadrumo.core.TipoRentaIrnr` rate concept). This gate fails the
+    and the governed-fact catalogue projected by
+    :func:`~cadrumo.domain.calculations.registry.irnr_tipo_renta.m210_tipo_renta_code_projection`
+    (each code's :class:`~cadrumo.core.irnr.TipoRentaIrnr` rate concept). This gate fails the
     registry build in BOTH directions: a code declared in the registry with no
     core projection, and a code the core projects that the registry does not
     declare. It keeps the two axes from drifting so no declared code resolves to
@@ -262,10 +263,10 @@ def validate_m210_tipo_renta_code_projection_parity(
             an ``m210-tipo-renta-code-`` parameter are inspected; every other
             modelo is a no-op.
         projected_codes: Optional code set used for the comparison. When omitted,
-            the shipped core projection is used.
+            the shipped registry projection is resolved at the point of use.
     """
     failures: list[str] = []
-    projected = set(M210_TIPO_RENTA_CODE_PROJECTION if projected_codes is None else projected_codes)
+    projected = set(m210_tipo_renta_code_projection() if projected_codes is None else projected_codes)
     for revision in modelo.revisions.values():
         for parameter in revision.parameters:
             if not parameter.id.startswith(_M210_TIPO_RENTA_CODE_PARAMETER_PREFIX):

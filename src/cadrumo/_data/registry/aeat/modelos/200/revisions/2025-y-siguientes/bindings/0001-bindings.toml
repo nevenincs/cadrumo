@@ -5,7 +5,6 @@ applicability = { kind = "target_periods", periods = ["0A"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-200-manual-2025"
@@ -26,7 +25,6 @@ applicability = { kind = "target_periods", periods = ["0A"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
-source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-200-manual-2025"
@@ -49,7 +47,6 @@ provider = { kind = "profile", profile_model = "taxpayer", field = "legal_entity
 value = { data_type = "enum", channel = "enum", typed_enum = "LegalEntityForm" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-29"]
-source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-200-manual-2025"
@@ -68,7 +65,6 @@ provider = { kind = "profile", profile_model = "taxpayer", field = "new_entity_f
 value = { data_type = "boolean", channel = "boolean" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-29"]
-source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-200-manual-2025"
@@ -91,7 +87,6 @@ provider = { kind = "profile", profile_model = "taxpayer", field = "incn_prior_1
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-29"]
-source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-200-manual-2025"
@@ -114,7 +109,6 @@ provider = { kind = "profile", profile_model = "taxpayer", field = "tributacion_
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30"]
-source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-200-manual-2025"
@@ -133,7 +127,6 @@ provider = { kind = "profile", profile_model = "taxpayer", field = "sal_reserva_
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-44-2015:art-14", "ley-44-2015:art-13"]
-source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-200-manual-2025"
@@ -149,7 +142,6 @@ provider = { kind = "profile", profile_model = "taxpayer", field = "sal_capital_
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-44-2015:art-14", "ley-44-2015:art-13"]
-source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-200-manual-2025"
@@ -173,7 +165,6 @@ applicability = { kind = "target_periods", periods = ["0A"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-26", "ley-27-2014:art-25"]
-source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-200-manual-2025"
@@ -202,7 +193,6 @@ applicability = { kind = "target_periods", periods = ["0A"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-13"]
-source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-200-manual-2025"
@@ -215,7 +205,6 @@ applicability = { kind = "target_periods", periods = ["0A"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-13"]
-source_refs = ["aeat-modelo-200-manual-2025"]
 
 [[revisions."2025-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-200-manual-2025"

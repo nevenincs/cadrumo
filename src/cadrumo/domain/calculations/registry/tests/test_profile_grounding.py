@@ -28,7 +28,7 @@ def index() -> dict[str, ProfileKeyGrounding]:
 def test_index_inverts_the_censo_status_binding(index: dict[str, ProfileKeyGrounding]) -> None:
     """The M036 censo-status binding's declared grounding survives inversion intact."""
     grounding = index["censo.status"]
-    assert Modelo.M036 in grounding.modelos
+    assert Modelo("036") in grounding.modelos
     assert "rd-1065-2007:art-9" in grounding.legal_refs
     assert "orden-eha-1274-2007:art-1" in grounding.legal_refs
     assert "aeat-modelo-036-procedure" in grounding.source_refs
@@ -54,7 +54,7 @@ def test_index_spans_multiple_modelos(index: dict[str, ProfileKeyGrounding]) -> 
     """Profile bindings exist across several modelos, not only M036."""
     consuming = {modelo for grounding in index.values() for modelo in grounding.modelos}
     assert len(consuming) >= 3
-    assert Modelo.M036 in consuming
+    assert Modelo("036") in consuming
 
 
 def _minimal_profile_binding(selector: dict[str, object]) -> BindingDefinition:

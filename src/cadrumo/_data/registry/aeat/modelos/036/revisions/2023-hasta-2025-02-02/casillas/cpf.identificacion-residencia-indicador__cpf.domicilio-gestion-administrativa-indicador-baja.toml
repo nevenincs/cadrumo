@@ -1,0 +1,953 @@
+# Modelo 036 RECORD Pag. 2A -- declaracion censal de alta, modificacion y baja.
+#
+# Emitted from aeat-dr-036-2023, whose window runs 2023-01-01 to 2025-02-02.
+#
+# ONE CASILLA PER PRINTED NUMBER, NOT PER DESIGN ROW. AEAT splits every date
+# into dia, mes and ano rows under a single number, and repeats whole blocks --
+# Pag. 8 prints 800, 801, 818 and 859 four times each, once per repetition of
+# the socio block. The 2025 edition settled this and says so in its own
+# comments; emitting per row instead would have written 263 casillas sharing 85
+# ids, which is valid TOML and wrong. Each comment states the group's whole span
+# and every component it covers.
+#
+# THE 037 ASTERISK IS TRANSCRIBED, NOT NORMALISED. A trailing ' *' marks a field
+# that could be informed on a modelo 037, which Orden HAC/1526/2024 suppressed
+# effective 2025-02-03. The design's own legend gives it that meaning, so it is
+# part of what AEAT printed for these years and it is not in the 2025 captions.
+#
+# NOT MODELLED: the identifier envelope, the reservado runs, the CRLF terminator
+# and the tipo-declaracion discriminant.
+#
+# NOT CLAIMED: these casillas DECLARE the censo; none computes anything. Modelo
+# 036 carries no formula family at all.
+
+# @11+1 An. Persona Física. Persona física residente en España / no residente en España  [A1) | S, N ,2 (art.10),4 (art 9.), blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.identificacion-residencia-indicador"
+number = "A1"
+section = ["declaracion", "persona_fisica", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @12+2 An. Persona Física. Persona física no residente en España. Nacionalidad | (codigo iso)
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.identificacion-nacionalidad"
+continuidad_id = "pf-identificacion-nacionalidad"
+number = "A3"
+section = ["declaracion", "persona_fisica", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @14+9 An. Persona Física. Identificación. N.I.F./N.I.E.  *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.identificacion-nif"
+continuidad_id = "pf-identificacion-nif"
+number = "A4"
+section = ["declaracion", "persona_fisica", "identificacion"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @23+50 An. Persona Física. Identificación. Apellido 1  *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.identificacion-apellido-1"
+continuidad_id = "pf-identificacion-apellido-1"
+number = "A5"
+section = ["declaracion", "persona_fisica", "identificacion"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @73+50 An. Persona Física. Identificación. Apellido 2  *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.identificacion-apellido-2"
+continuidad_id = "pf-identificacion-apellido-2"
+number = "A6"
+section = ["declaracion", "persona_fisica", "identificacion"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @123+25 An. Persona Física. Identificación. Nombre  *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.identificacion-nombre"
+continuidad_id = "pf-identificacion-nombre"
+number = "A7"
+section = ["declaracion", "persona_fisica", "identificacion"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @148+25 An. Persona Física. Identificación. Nombre comercial  *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.identificacion-nombre-comercial"
+continuidad_id = "pf-identificacion-nombre-comercial"
+number = "A8"
+section = ["declaracion", "persona_fisica", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @173+5 An. Persona fisica.  Domicilio fiscal en España. Tipo de vía   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-fiscal-tipo-via"
+continuidad_id = "pf-domicilio-fiscal-tipo-via"
+number = "A11"
+section = ["declaracion", "persona_fisica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @183+50 An. Persona fisica.  Domicilio fiscal en España. Nombre de la vía pública   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-fiscal-nombre-via"
+continuidad_id = "pf-domicilio-fiscal-nombre-via"
+number = "A12"
+section = ["declaracion", "persona_fisica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @233+3 An. Persona fisica.  Domicilio fiscal en España.Tipo Num.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-fiscal-tipo-numero"
+continuidad_id = "pf-domicilio-fiscal-tipo-numero"
+number = "A13"
+section = ["declaracion", "persona_fisica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @236+5 Num. Persona fisica.  Domicilio fiscal en España. Núm casa   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-fiscal-numero-casa"
+continuidad_id = "pf-domicilio-fiscal-numero-casa"
+number = "A14"
+section = ["declaracion", "persona_fisica", "domicilio_fiscal"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @241+3 An. Persona fisica.  Domicilio fiscal en España. Calif. Un   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-fiscal-calificador-numero"
+continuidad_id = "pf-domicilio-fiscal-calificador-numero"
+number = "A15"
+section = ["declaracion", "persona_fisica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @244+3 An. Persona fisica.  Domicilio fiscal en España. Bloque   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-fiscal-bloque"
+continuidad_id = "pf-domicilio-fiscal-bloque"
+number = "A16"
+section = ["declaracion", "persona_fisica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @247+3 An. Persona fisica.  Domicilio fiscal en España. Portal   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-fiscal-portal"
+continuidad_id = "pf-domicilio-fiscal-portal"
+number = "A17"
+section = ["declaracion", "persona_fisica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @250+3 An. Persona fisica.  Domicilio fiscal en España. Escal.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-fiscal-escalera"
+continuidad_id = "pf-domicilio-fiscal-escalera"
+number = "A18"
+section = ["declaracion", "persona_fisica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @253+3 An. Persona fisica.  Domicilio fiscal en España. Planta   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-fiscal-planta"
+continuidad_id = "pf-domicilio-fiscal-planta"
+number = "A19"
+section = ["declaracion", "persona_fisica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @256+3 An. Persona fisica.  Domicilio fiscal en España. Puerta   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-fiscal-puerta"
+continuidad_id = "pf-domicilio-fiscal-puerta"
+number = "A20"
+section = ["declaracion", "persona_fisica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @259+40 An. Persona fisica.  Domicilio fiscal en España. Complemento domicilio (ej. Urbanización, Pol. Ind, C.C...)   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-fiscal-complemento-domicilio"
+continuidad_id = "pf-domicilio-fiscal-complemento-domicilio"
+number = "A21"
+section = ["declaracion", "persona_fisica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @299+30 An. Persona fisica.  Domicilio fiscal en España. Localidad / Población (si es distinta de municipio)   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-fiscal-localidad"
+continuidad_id = "pf-domicilio-fiscal-localidad"
+number = "A22"
+section = ["declaracion", "persona_fisica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @329+5 Num. Persona fisica.  Domicilio fiscal en España. C. Postal   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-fiscal-codigo-postal"
+continuidad_id = "pf-domicilio-fiscal-codigo-postal"
+number = "A23"
+section = ["declaracion", "persona_fisica", "domicilio_fiscal"]
+data_type = "postal_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @339+30 An. Persona fisica.  Domicilio fiscal en España. Nombre del municipio   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-fiscal-municipio"
+continuidad_id = "pf-domicilio-fiscal-municipio"
+number = "A24"
+section = ["declaracion", "persona_fisica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @369+2 An. Persona fisica.  Domicilio fiscal en España. Código de Provincia   * | ('01', '02',...'52')
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-fiscal-codigo-provincia"
+continuidad_id = "pf-domicilio-fiscal-codigo-provincia"
+number = "A25"
+section = ["declaracion", "persona_fisica", "domicilio_fiscal"]
+data_type = "province_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @371+100 An. Persona fisica.  Datos telefonos y direccione para recibir avisos.. E-mail   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.avisos-email"
+continuidad_id = "pf-avisos-email"
+number = "A26"
+section = ["declaracion", "persona_fisica", "avisos"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @498+50 An. Persona fisica.  Domicilio fiscal en el Est. de resid. (no resid). Domicilio (Adress)
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-residencia-extranjero-domicilio"
+continuidad_id = "pf-domicilio-residencia-extranjero-domicilio"
+number = "A31"
+section = ["declaracion", "persona_fisica", "domicilio_residencia_extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @548+40 An. Persona fisica.  Domicilio fiscal en el Est. de resid. (no resid). Compl. de domicilio (si fuese necesario)
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-residencia-extranjero-complemento-domicilio"
+continuidad_id = "pf-domicilio-residencia-extranjero-complemento-domicilio"
+number = "A32"
+section = ["declaracion", "persona_fisica", "domicilio_residencia_extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @588+30 An. Persona fisica.  Domicilio fiscal en el Est. de resid. (no residentes). Población / Ciudad
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-residencia-extranjero-poblacion"
+continuidad_id = "pf-domicilio-residencia-extranjero-poblacion"
+number = "A34"
+section = ["declaracion", "persona_fisica", "domicilio_residencia_extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @618+100 An. Persona fisica.  Identificacion . Dominio o direccion de internet .
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.identificacion-dominio-internet"
+continuidad_id = "pf-identificacion-dominio-internet"
+number = "A27"
+section = ["declaracion", "persona_fisica", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @718+10 An. Persona fisica.  Domicilio fiscal en el Est. de resid. (no residentes). C. Postal (ZIP)
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-residencia-extranjero-codigo-postal"
+continuidad_id = "pf-domicilio-residencia-extranjero-codigo-postal"
+number = "A33"
+section = ["declaracion", "persona_fisica", "domicilio_residencia_extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @728+30 An. Persona fisica.  Domicilio fiscal en el Est. de resid. (no residentes). Provincia/ Región/ Estado
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-residencia-extranjero-provincia-region"
+continuidad_id = "pf-domicilio-residencia-extranjero-provincia-region"
+number = "A35"
+section = ["declaracion", "persona_fisica", "domicilio_residencia_extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @758+30 An. Persona fisica.  Domicilio fiscal en el Est. de resid. (no residentes). País RESERVADO
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-residencia-extranjero-pais"
+continuidad_id = "pf-domicilio-residencia-extranjero-pais"
+number = "A36"
+section = ["declaracion", "persona_fisica", "domicilio_residencia_extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @788+2 An. Persona fisica.  Domicilio fiscal en el Est. de resid. (no residentes). Cod. Pais
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-residencia-extranjero-codigo-pais"
+continuidad_id = "pf-domicilio-residencia-extranjero-codigo-pais"
+number = "A37"
+section = ["declaracion", "persona_fisica", "domicilio_residencia_extranjero"]
+data_type = "country_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @794+15 An. Persona fisica. Datos telefonos y direcciones aviso . Tfno. Móvil
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.avisos-telefono-movil"
+continuidad_id = "pf-avisos-telefono-movil"
+number = "A29"
+section = ["declaracion", "persona_fisica", "avisos"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @835+5 An. Persona fisica.  Domicilio a efectos de notificaciones. 1)  Tipo de vía   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-tipo-via"
+continuidad_id = "pf-domicilio-notificaciones-tipo-via"
+number = "A41"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @845+50 An. Persona fisica.  Domicilio a efectos de notificaciones. 1)  Nombre de la vía pública   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-nombre-via"
+continuidad_id = "pf-domicilio-notificaciones-nombre-via"
+number = "A42"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @895+3 An. Persona fisica.  Domicilio a efectos de notificaciones. 1) Tipo Num.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-tipo-numero"
+continuidad_id = "pf-domicilio-notificaciones-tipo-numero"
+number = "A43"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @898+5 Num. Persona fisica.  Domicilio a efectos de notificaciones. 1)  Núm casa   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-numero-casa"
+continuidad_id = "pf-domicilio-notificaciones-numero-casa"
+number = "A44"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @903+3 An. Persona fisica.  Domicilio a efectos de notificaciones. 1)  Calif. Un   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-calificador-numero"
+continuidad_id = "pf-domicilio-notificaciones-calificador-numero"
+number = "A45"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @906+3 An. Persona fisica.  Domicilio a efectos de notificaciones. 1)  Bloque   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-bloque"
+continuidad_id = "pf-domicilio-notificaciones-bloque"
+number = "A46"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @909+3 An. Persona fisica.  Domicilio a efectos de notificaciones. 1)  Portal   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-portal"
+continuidad_id = "pf-domicilio-notificaciones-portal"
+number = "A47"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @912+3 An. Persona fisica.  Domicilio a efectos de notificaciones. 1)  Escal.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-escalera"
+continuidad_id = "pf-domicilio-notificaciones-escalera"
+number = "A48"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @915+3 An. Persona fisica.  Domicilio a efectos de notificaciones. 1)  Planta   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-planta"
+continuidad_id = "pf-domicilio-notificaciones-planta"
+number = "A49"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @918+3 An. Persona fisica.  Domicilio a efectos de notificaciones. 1)  Puerta   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-puerta"
+continuidad_id = "pf-domicilio-notificaciones-puerta"
+number = "A50"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @921+40 An. Persona fisica.  Domicilio a efectos de notificaciones. 1)  Compl. Domicilio (ej. Urb, Pol. Ind, C.C...)   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-complemento-domicilio"
+continuidad_id = "pf-domicilio-notificaciones-complemento-domicilio"
+number = "A51"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @961+30 An. Persona fisica.  Domicilio a efectos de notificaciones. 1)  Localidad / Población (si es dist. de munic.)   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-localidad"
+continuidad_id = "pf-domicilio-notificaciones-localidad"
+number = "A52"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @991+5 Num. Persona fisica.  Domicilio a efectos de notificaciones. 1)  C. Postal   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-codigo-postal"
+continuidad_id = "pf-domicilio-notificaciones-codigo-postal"
+number = "A53"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "postal_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1001+30 An. Persona fisica.  Domicilio a efectos de notificaciones. 1)  Nombre del municipio   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-municipio"
+continuidad_id = "pf-domicilio-notificaciones-municipio"
+number = "A54"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1031+2 An. Persona fisica.  Domicilio a efectos de notificaciones. 1)  Código de Provincia   * | ('01', '02',...'52')
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-codigo-provincia"
+continuidad_id = "pf-domicilio-notificaciones-codigo-provincia"
+number = "A55"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "province_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1033+100 An. Persona fisica. Identificacion. dominio o direccion de internet [ A38]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.identificacion-dominio-internet-secundario"
+number = "A38"
+section = ["declaracion", "persona_fisica", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1160+50 An. Persona Física. Domicilio a efecto de notificaciones. 1) Destinatario (si es distinto del declarante)   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-destinatario"
+continuidad_id = "pf-domicilio-notificaciones-destinatario"
+number = "A59"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1210+2 An. Persona Física. Domicilio a efecto de notificaciones. 1) En calidad de: (represent, apoder, familiar, etc.)  *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-calidad"
+continuidad_id = "pf-domicilio-notificaciones-calidad"
+number = "A60"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1212+10 Num. Persona Física. Domicilio a efecto de notificaciones. 2) Apartado de Correos Número:   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-apartado-correos"
+continuidad_id = "pf-domicilio-notificaciones-apartado-correos"
+number = "A61"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1222+30 An. Persona Física. Domicilio a efecto de notificaciones. 2) Población / Ciudad   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-apartado-poblacion"
+continuidad_id = "pf-domicilio-notificaciones-apartado-poblacion"
+number = "A62"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1252+5 Num. Persona Física. Domicilio a efecto de notificaciones. 2) Código Postal   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-apartado-codigo-postal"
+continuidad_id = "pf-domicilio-notificaciones-apartado-codigo-postal"
+number = "A63"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "postal_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1257+2 An. Persona Física. Domicilio a efecto de notificaciones. 2) Código de Provincia   * | ('01', '02',...'52')
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-apartado-codigo-provincia"
+continuidad_id = "pf-domicilio-notificaciones-apartado-codigo-provincia"
+number = "A64"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "province_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1286+50 An. Persona Física. Domicilio a efecto de notificaciones. 2) Destinatario (si es distinto del declarante)   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-apartado-destinatario"
+continuidad_id = "pf-domicilio-notificaciones-apartado-destinatario"
+number = "A68"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1336+2 An. Persona Física. Domicilio a efecto de notificaciones. En calidad de: (represent, apoder, familiar, etc.)   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-apartado-calidad"
+continuidad_id = "pf-domicilio-notificaciones-apartado-calidad"
+number = "A69"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1338+5 An. Persona fisica.  Domicilio gestión administrativa (si distinto del fiscal).  Tipo de vía
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-gestion-administrativa-tipo-via"
+continuidad_id = "pf-domicilio-gestion-administrativa-tipo-via"
+number = "A71"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1348+50 An. Persona fisica.  Domicilio gestión administrativa (si distinto del fiscal).  Nombre de la vía pública
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-gestion-administrativa-nombre-via"
+continuidad_id = "pf-domicilio-gestion-administrativa-nombre-via"
+number = "A72"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1398+3 An. Persona fisica.  Domicilio gestión administrativa (si distinto del fiscal). Tipo Num.
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-gestion-administrativa-tipo-numero"
+continuidad_id = "pf-domicilio-gestion-administrativa-tipo-numero"
+number = "A73"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1401+5 Num. Persona fisica.  Domicilio gestión administrativa (si distinto del fiscal).  Núm casa
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-gestion-administrativa-numero-casa"
+continuidad_id = "pf-domicilio-gestion-administrativa-numero-casa"
+number = "A74"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1406+3 An. Persona fisica.  Domicilio gestión administrativa (si distinto del fiscal).  Calif. Un
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-gestion-administrativa-calificador-numero"
+continuidad_id = "pf-domicilio-gestion-administrativa-calificador-numero"
+number = "A75"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1409+3 An. Persona fisica.  Domicilio gestión administrativa (si distinto del fiscal).  Bloque
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-gestion-administrativa-bloque"
+continuidad_id = "pf-domicilio-gestion-administrativa-bloque"
+number = "A76"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1412+3 An. Persona fisica.  Domicilio gestión administrativa (si distinto del fiscal).  Portal
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-gestion-administrativa-portal"
+continuidad_id = "pf-domicilio-gestion-administrativa-portal"
+number = "A77"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1415+3 An. Persona fisica.  Domicilio gestión administrativa (si distinto del fiscal).  Escal.
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-gestion-administrativa-escalera"
+continuidad_id = "pf-domicilio-gestion-administrativa-escalera"
+number = "A78"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1418+3 An. Persona fisica.  Domicilio gestión administrativa (si distinto del fiscal).  Planta
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-gestion-administrativa-planta"
+continuidad_id = "pf-domicilio-gestion-administrativa-planta"
+number = "A79"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1421+3 An. Persona fisica.  Domicilio gestión administrativa (si distinto del fiscal).  Puerta
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-gestion-administrativa-puerta"
+continuidad_id = "pf-domicilio-gestion-administrativa-puerta"
+number = "A80"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1424+40 An. Persona fisica.  Domicilio gestión administrativa (si dist. del fiscal). Compl. domic (ej. Urb, Pol. Ind, C.C...)
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-gestion-administrativa-complemento-domicilio"
+continuidad_id = "pf-domicilio-gestion-administrativa-complemento-domicilio"
+number = "A81"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1464+30 An. Persona fisica.  Domicilio gestión administrativa (si dist. del fiscal). Local. / Poblac. (si es dist. de munic.)
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-gestion-administrativa-localidad"
+continuidad_id = "pf-domicilio-gestion-administrativa-localidad"
+number = "A82"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1494+5 Num. Persona fisica.  Domicilio gestión administrativa (si distinto del fiscal).  C. Postal
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-gestion-administrativa-codigo-postal"
+continuidad_id = "pf-domicilio-gestion-administrativa-codigo-postal"
+number = "A83"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "postal_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1504+30 An. Persona fisica.  Domicilio gestión administrativa (si distinto del fiscal).  Nombre del municipio
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-gestion-administrativa-municipio"
+continuidad_id = "pf-domicilio-gestion-administrativa-municipio"
+number = "A84"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1534+2 An. Persona fisica.  Domicilio gestión administrativa (si distinto del fiscal).  Código de Provincia | ('01', '02',...'52')
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-gestion-administrativa-codigo-provincia"
+continuidad_id = "pf-domicilio-gestion-administrativa-codigo-provincia"
+number = "A85"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "province_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1663+1 An. P.F. Establecimientos Permanentes. ¿Opera en España a través de establec. permanente? | S, N o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.establecimientos-permanentes-opera-establecimiento-permanente"
+continuidad_id = "pf-establecimientos-permanentes-opera-establecimiento-permanente"
+number = "A91"
+section = ["declaracion", "persona_fisica", "establecimientos_permanentes"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1664+3 Num. Persona Física. Establecimientos Permanentes. ¿Cuántos?
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.establecimientos-permanentes-cuantos"
+continuidad_id = "pf-establecimientos-permanentes-cuantos"
+number = "A92"
+section = ["declaracion", "persona_fisica", "establecimientos_permanentes"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1667+40 An. Persona Física. Establecimientos Permanentes. Denominación 1
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.establecimientos-permanentes-denominacion-1"
+continuidad_id = "pf-establecimientos-permanentes-denominacion-1"
+number = "A94"
+section = ["declaracion", "persona_fisica", "establecimientos_permanentes"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1707+40 An. Persona Física. Establecimientos Permanentes. Denominación 2
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.establecimientos-permanentes-denominacion-2"
+continuidad_id = "pf-establecimientos-permanentes-denominacion-2"
+number = "A96"
+section = ["declaracion", "persona_fisica", "establecimientos_permanentes"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1747+40 An. Persona Física. Establecimientos Permanentes. Denominación 3
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.establecimientos-permanentes-denominacion-3"
+continuidad_id = "pf-establecimientos-permanentes-denominacion-3"
+number = "A98"
+section = ["declaracion", "persona_fisica", "establecimientos_permanentes"]
+data_type = "name"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1787+1 An. Persona Física. Identificación. Empresario de Responsabilidad Limitada. Alta y baja  * | A, B o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.identificacion-erl-alta-baja"
+continuidad_id = "pf-identificacion-erl-alta-baja"
+number = "A9"
+section = ["declaracion", "persona_fisica", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1788+8 Num. Persona Física. Identificación. Empresario de Responsabilidad Limitada. Alta y baja. Fecha. Día   * [ONE casilla over 3 printed components: @1788+2, @1790+2, @1792+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.identificacion-erl-fecha"
+number = "A10"
+section = ["declaracion", "persona_fisica", "identificacion"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1796+20 An. Persona fisica.  Domicilio fiscal en España. Referencia Catastral   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-fiscal-referencia-catastral"
+continuidad_id = "pf-domicilio-fiscal-referencia-catastral"
+number = "A30"
+section = ["declaracion", "persona_fisica", "domicilio_fiscal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1816+25 An. Persona fisica.  Identificación. Código de identificación fiscal del Estado de residencia/NIF-IVA (NVAT)
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.identificacion-nif-estado-residencia"
+continuidad_id = "pf-identificacion-nif-estado-residencia"
+number = "A90"
+section = ["declaracion", "persona_fisica", "identificacion"]
+data_type = "nif_iva"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1841+2 An. Persona fisica.  Identificación. Codigo pais en estado de residencia . (no residentes). Cod. Pais
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.identificacion-codigo-pais-residencia"
+continuidad_id = "pf-identificacion-codigo-pais-residencia"
+number = "A2"
+section = ["declaracion", "persona_fisica", "identificacion"]
+data_type = "country_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1843+1 An. Persona fisica. Baja de domicilio de  notificaciones | S o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-notificaciones-baja-domicilio"
+continuidad_id = "pf-domicilio-notificaciones-baja-domicilio"
+number = "A40"
+section = ["declaracion", "persona_fisica", "domicilio_notificaciones"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1846+8 Num. Persona Física. Identificación. Fecha de efectos residencia fiscal .  Día [ONE casilla over 3 printed components: @1846+2, @1848+2, @1850+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.identificacion-fecha-efectos-residencia"
+number = "A3A"
+section = ["declaracion", "persona_fisica", "identificacion"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1854+1 An. indicador referencia catastral del domicilio fiscal | blanco, '1','2','3','4' (Ver nota1)
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-fiscal-indicador-referencia-catastral"
+continuidad_id = "pf-domicilio-fiscal-indicador-referencia-catastral"
+number = "A39"
+section = ["declaracion", "persona_fisica", "domicilio_fiscal"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @1855+1 An. Indcador  de baja domicilio gestion administrativa | S o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "pf.domicilio-gestion-administrativa-indicador-baja"
+continuidad_id = "pf-domicilio-gestion-administrativa-indicador-baja"
+number = "A70"
+section = ["declaracion", "persona_fisica", "domicilio_gestion_administrativa"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]

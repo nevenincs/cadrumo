@@ -26,6 +26,7 @@ import subprocess
 import sys
 import tokenize
 from collections import Counter
+from collections.abc import Mapping, Sequence
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -77,6 +78,7 @@ REGISTRY_QUERY_SYMBOLS = frozenset(
         "OverrideFactQuery",
         "EventFactQuery",
         "MultiOutputFactQuery",
+        "RegistrySnapshot",
     }
 )
 RETAIN_KINDS = frozenset(
@@ -109,10 +111,6 @@ REQUIRED_CANDIDATE = {
 AUTHORITY_REQUIRED_FIELDS = frozenset(
     {
         "artifact",
-        "digest",
-        "compiled",
-        "published",
-        "provenance_digest",
         "model",
         "revision",
         "family",
@@ -123,6 +121,7 @@ AUTHORITY_REQUIRED_FIELDS = frozenset(
         "authoring_paths",
     }
 )
+AUTHORITY_LEGACY_FIELDS = frozenset({"digest", "compiled", "published", "provenance_digest"})
 PLACEMENT_CLOSURE_KIND = "placement"
 PLACEMENT_REQUIRED_FIELDS = frozenset(
     {
@@ -1108,6 +1107,7 @@ QUERY_FAMILY_BY_SYMBOL = {
     "EventFactQuery": "event",
     "MultiOutputFactQuery": "multi_output",
 }
+CLOSED_WORLD_A_HELPER_NAMES = frozenset({"_resolved_scalar_fact", "_excluded_concepts"})
 
 
 def _call_symbol(node: ast.AST) -> str | None:
@@ -1168,6 +1168,339 @@ def _target_names(node: ast.AST) -> list[str]:
     return []
 
 
+def _literal_string(node: ast.AST | None) -> str | None:
+    """Resolve one literal string without evaluating Python source."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+        left = _literal_string(node.left)
+        right = _literal_string(node.right)
+        if left is not None and right is not None:
+            return left + right
+    return None
+
+
+def _literal_string_sequence(node: ast.AST | None) -> tuple[str, ...] | None:
+    """Resolve only a finite tuple/list made entirely from literal strings.
+
+    This deliberately does not follow names, calls, comprehensions, starred
+    values, or arbitrary iterable protocols.  The consumer scanner may use
+    the result as a loop domain only when the source contains this closed
+    literal shape.
+    """
+    if not isinstance(node, (ast.Tuple, ast.List)):
+        return None
+    values: list[str] = []
+    for element in node.elts:
+        value = _literal_string(element)
+        if value is None:
+            return None
+        values.append(value)
+    return tuple(values)
+
+
+def _literal_string_mapping(node: ast.AST | None) -> dict[str, str] | None:
+    """Resolve a finite mapping whose keys and values are literal strings."""
+    if not isinstance(node, ast.Dict) or any(key is None for key in node.keys):
+        return None
+    mapping: dict[str, str] = {}
+    for key_node, value_node in zip(node.keys, node.values):
+        key = _literal_string(key_node)
+        value = _literal_string(value_node)
+        if key is None or value is None or key in mapping:
+            return None
+        mapping[key] = value
+    return mapping
+
+
+def _simple_assignment_names(targets: Sequence[ast.AST]) -> list[str]:
+    """Return names for direct ``name = value`` targets only."""
+    names: list[str] = []
+    for target in targets:
+        if not isinstance(target, ast.Name):
+            return []
+        names.append(target.id)
+    return names
+
+
+class _ScopeWriteCollector(ast.NodeVisitor):
+    """Collect writes in one lexical scope, excluding nested scopes."""
+
+    def __init__(self) -> None:
+        self.counts: Counter[str] = Counter()
+        self.assignments: list[ast.Assign | ast.AnnAssign] = []
+
+    def visit_Name(self, node: ast.Name) -> None:
+        if isinstance(node.ctx, ast.Store):
+            self.counts[node.id] += 1
+
+    def visit_Assign(self, node: ast.Assign) -> None:
+        self.assignments.append(node)
+        self.generic_visit(node)
+
+    def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
+        self.assignments.append(node)
+        self.generic_visit(node)
+
+    def visit_arg(self, node: ast.arg) -> None:
+        self.counts[node.arg] += 1
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self.counts[node.name] += 1
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        self.counts[node.name] += 1
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        self.counts[node.name] += 1
+
+    def visit_Lambda(self, node: ast.Lambda) -> None:
+        # Lambda arguments/body belong to a nested scope.  A named expression
+        # in a lambda is intentionally not used as a static binding here.
+        return
+
+    def visit_comprehension(self, node: ast.comprehension) -> None:
+        # Comprehension targets have their own Python 3 scope.  The consumer
+        # visitor handles them separately as finite loop domains.
+        return
+
+    def visit_GeneratorExp(self, node: ast.GeneratorExp) -> None:
+        return
+
+    def visit_ListComp(self, node: ast.ListComp) -> None:
+        return
+
+    def visit_SetComp(self, node: ast.SetComp) -> None:
+        return
+
+    def visit_DictComp(self, node: ast.DictComp) -> None:
+        return
+
+
+def _scope_bindings(
+    body: Sequence[ast.stmt],
+    *,
+    arguments: ast.arguments | None = None,
+) -> dict[str, Any]:
+    """Build conservative literal bindings for one lexical scope.
+
+    A name is usable only when it has exactly one write in this scope and the
+    write is a direct literal string or literal string sequence assignment.
+    Any other write blocks fallback to an outer scope.  This prevents a later
+    reassignment from being mistaken for a constant.
+    """
+    collector = _ScopeWriteCollector()
+    for statement in body:
+        collector.visit(statement)
+    if arguments is not None:
+        for argument in (
+            *arguments.posonlyargs,
+            *arguments.args,
+            *arguments.kwonlyargs,
+        ):
+            collector.visit(argument)
+        if arguments.vararg is not None:
+            collector.visit(arguments.vararg)
+        if arguments.kwarg is not None:
+            collector.visit(arguments.kwarg)
+
+    literal_mapping_candidates: dict[str, list[dict[str, str]]] = {}
+    for statement in collector.assignments:
+        if isinstance(statement, ast.Assign):
+            targets = _simple_assignment_names(statement.targets)
+            mapping = _literal_string_mapping(statement.value)
+        elif isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
+            targets = [statement.target.id]
+            mapping = _literal_string_mapping(statement.value)
+        else:
+            continue
+        if mapping is not None:
+            for target in targets:
+                literal_mapping_candidates.setdefault(target, []).append(mapping)
+    literal_mappings = {
+        name: candidates[0]
+        for name, candidates in literal_mapping_candidates.items()
+        if collector.counts.get(name) == 1 and len(candidates) == 1
+    }
+
+    candidates: dict[str, list[tuple[str, str | tuple[str, ...] | dict[str, str]]]] = {}
+    for statement in collector.assignments:
+        if isinstance(statement, ast.Assign):
+            targets = _simple_assignment_names(statement.targets)
+            value_string = _literal_string(statement.value)
+            value_sequence = _literal_string_sequence(statement.value)
+            value_mapping = _literal_string_mapping(statement.value)
+        elif isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
+            targets = [statement.target.id]
+            value_string = _literal_string(statement.value)
+            value_sequence = _literal_string_sequence(statement.value)
+            value_mapping = _literal_string_mapping(statement.value)
+        else:
+            continue
+        value: str | tuple[str, ...] | dict[str, str] | None
+        if value_mapping is not None:
+            value = value_mapping
+        elif value_sequence is not None:
+            value = value_sequence
+        else:
+            value = value_string
+        if value is None and isinstance(statement, (ast.Assign, ast.AnnAssign)):
+            value_node = statement.value
+            if isinstance(value_node, ast.Subscript) and isinstance(value_node.value, ast.Name):
+                mapping = literal_mappings.get(value_node.value.id)
+                if mapping is not None:
+                    key = _literal_string(value_node.slice)
+                    if key is not None:
+                        value = (mapping[key],) if key in mapping else None
+                    else:
+                        value = tuple(mapping.values())
+        if value is None:
+            continue
+        for target in targets:
+            kind = "mapping" if isinstance(value, dict) else "sequence" if isinstance(value, tuple) else "string"
+            candidates.setdefault(target, []).append((kind, value))
+
+    strings: dict[str, str] = {}
+    sequences: dict[str, tuple[str, ...]] = {}
+    mappings: dict[str, dict[str, str]] = {}
+    blocked: set[str] = set()
+    for name, count in collector.counts.items():
+        entries = candidates.get(name, [])
+        if count == 1 and len(entries) == 1:
+            kind, value = entries[0]
+            if kind == "sequence" and isinstance(value, tuple):
+                sequences[name] = value
+                continue
+            if kind == "string" and isinstance(value, str):
+                strings[name] = value
+                continue
+            if kind == "mapping" and isinstance(value, dict):
+                mappings[name] = value
+                continue
+        blocked.add(name)
+    return {"strings": strings, "sequences": sequences, "mappings": mappings, "blocked": blocked}
+
+
+def _all_binding_writes(tree: ast.AST) -> set[str]:
+    """Collect conservative writes used to reject reassigned imports."""
+    writes: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
+            writes.add(node.id)
+        elif isinstance(node, ast.arg):
+            writes.add(node.arg)
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)):
+            if isinstance(node, ast.Lambda):
+                continue
+            writes.add(node.name)
+    return writes
+
+
+def _python_module_name(relative: str) -> str | None:
+    parts = list(PurePosixPath(relative).parts)
+    if len(parts) < 3 or parts[0] != "src" or parts[1] != "cadrumo":
+        return None
+    if parts[-1] == "__init__.py":
+        parts = parts[:-1]
+    elif parts[-1].endswith(".py"):
+        parts[-1] = parts[-1][:-3]
+    else:
+        return None
+    return ".".join(parts[1:]) or None
+
+
+def _resolve_import_module(relative: str, *, level: int, module: str | None) -> str | None:
+    """Resolve a relative import name without importing its module."""
+    current = _python_module_name(relative)
+    if current is None or level < 0:
+        return None
+    if level == 0:
+        base: list[str] = []
+    else:
+        package = current.split(".")[:-1]
+        remove = level - 1
+        if remove > len(package):
+            return None
+        base = package[: len(package) - remove]
+    if module:
+        base.extend(part for part in module.split(".") if part)
+    resolved = ".".join(base)
+    return resolved if resolved.startswith("cadrumo") else None
+
+
+def _local_module_path(module: str) -> Path | None:
+    if not module.startswith("cadrumo"):
+        return None
+    parts = module.split(".")
+    if not parts or parts[0] != "cadrumo":
+        return None
+    base = SOURCE_ROOT.joinpath(*parts[1:])
+    candidates = [base.with_suffix(".py"), base / "__init__.py"]
+    existing = [candidate for candidate in candidates if candidate.is_file()]
+    return existing[0] if len(existing) == 1 else None
+
+
+def _module_top_level_literal_string(tree: ast.AST, name: str) -> str | None:
+    """Resolve one direct module-level literal assignment only."""
+    if not isinstance(tree, ast.Module):
+        return None
+    candidates: list[str] = []
+    for statement in tree.body:
+        if isinstance(statement, ast.Assign):
+            targets = _simple_assignment_names(statement.targets)
+            if name in targets:
+                value = _literal_string(statement.value)
+                if value is not None:
+                    candidates.append(value)
+        elif isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
+            if statement.target.id == name:
+                value = _literal_string(statement.value)
+                if value is not None:
+                    candidates.append(value)
+    if len(candidates) != 1:
+        return None
+    writes = sum(
+        1
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store) and node.id == name
+    )
+    return candidates[0] if writes == 1 else None
+
+
+def _module_enum_member_literal(tree: ast.AST, class_name: str, member_name: str) -> str | None:
+    """Resolve one member of an explicitly imported ``StrEnum`` class."""
+    if not isinstance(tree, ast.Module):
+        return None
+    has_strenum_import = any(
+        isinstance(statement, ast.ImportFrom)
+        and statement.module == "enum"
+        and any(alias.name == "StrEnum" and alias.asname in {None, "StrEnum"} for alias in statement.names)
+        for statement in tree.body
+    )
+    if not has_strenum_import:
+        return None
+    classes = [statement for statement in tree.body if isinstance(statement, ast.ClassDef) and statement.name == class_name]
+    if len(classes) != 1:
+        return None
+    class_node = classes[0]
+    if not any(isinstance(base, ast.Name) and base.id == "StrEnum" for base in class_node.bases):
+        return None
+    candidates: list[str] = []
+    for statement in class_node.body:
+        if isinstance(statement, ast.Assign):
+            targets = _simple_assignment_names(statement.targets)
+            if member_name in targets:
+                value = _literal_string(statement.value)
+                if value is not None:
+                    candidates.append(value)
+        elif isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
+            if statement.target.id == member_name:
+                value = _literal_string(statement.value)
+                if value is not None:
+                    candidates.append(value)
+    return candidates[0] if len(candidates) == 1 else None
+
+
 def _module_string_constants(tree: ast.AST) -> dict[str, str]:
     """Collect literal string assignments used as fact-id aliases."""
     constants: dict[str, str] = {}
@@ -1196,17 +1529,1553 @@ def _module_string_constants(tree: ast.AST) -> dict[str, str]:
     return constants
 
 
+def _immutable_module_values(tree: ast.AST) -> dict[str, tuple[str, ...]]:
+    """Resolve direct module constants whose finite string values are closed.
+
+    Unlike ``_module_string_constants`` this also follows a tuple of immutable
+    string aliases.  Every candidate must have exactly one store in the module
+    tree and a direct top-level assignment; conditional, dynamic, or repeated
+    bindings are intentionally omitted.
+    """
+    if not isinstance(tree, ast.Module):
+        return {}
+    assignments: dict[str, list[ast.AST]] = {}
+    for statement in tree.body:
+        if isinstance(statement, ast.Assign):
+            targets = _simple_assignment_names(statement.targets)
+            for target in targets:
+                assignments.setdefault(target, []).append(statement.value)
+        elif isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
+            assignments.setdefault(statement.target.id, []).append(statement.value)
+    writes = Counter(
+        node.id
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store)
+    )
+    values: dict[str, tuple[str, ...]] = {}
+
+    def resolve(node: ast.AST | None) -> tuple[str, ...] | None:
+        literal = _literal_string(node)
+        if literal is not None:
+            return (literal,)
+        if isinstance(node, ast.Name):
+            return values.get(node.id)
+        if isinstance(node, (ast.Tuple, ast.List)):
+            result: list[str] = []
+            for element in node.elts:
+                if isinstance(element, ast.Starred):
+                    return None
+                element_value = resolve(element)
+                if element_value is None:
+                    return None
+                result.extend(element_value)
+            return tuple(result)
+        return None
+
+    for _ in range(max(4, len(assignments) + 1)):
+        changed = False
+        for name, candidates in assignments.items():
+            if writes.get(name) != 1 or len(candidates) != 1:
+                continue
+            value = resolve(candidates[0])
+            if value is not None and values.get(name) != value:
+                values[name] = value
+                changed = True
+        if not changed:
+            break
+    return values
+
+
+def _module_exported_names(tree: ast.AST) -> set[str]:
+    if not isinstance(tree, ast.Module):
+        return set()
+    for statement in tree.body:
+        if isinstance(statement, ast.Assign) and "__all__" in _simple_assignment_names(statement.targets):
+            values = _literal_string_sequence(statement.value)
+            return set(values or ())
+        if isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name) and statement.target.id == "__all__":
+            values = _literal_string_sequence(statement.value)
+            return set(values or ())
+    return set()
+
+
+def _function_parameter_names(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[str]:
+    arguments = node.args
+    names = [argument.arg for argument in arguments.posonlyargs]
+    names.extend(argument.arg for argument in arguments.args)
+    names.extend(argument.arg for argument in arguments.kwonlyargs)
+    if arguments.vararg is not None:
+        names.append(arguments.vararg.arg)
+    if arguments.kwarg is not None:
+        names.append(arguments.kwarg.arg)
+    return names
+
+
+def _merge_finite_values(
+    left: tuple[str, ...] | None,
+    right: tuple[str, ...] | None,
+) -> tuple[str, ...] | None:
+    """Union finite alternatives, with ``None`` representing unknown."""
+    if left is None or right is None:
+        return None
+    result = list(left)
+    for value in right:
+        if value not in result:
+            result.append(value)
+    return tuple(result)
+
+
+class _ClosedWorldFlowVisitor(ast.NodeVisitor):
+    """Propagate finite argument alternatives through one local function."""
+
+    def __init__(
+        self,
+        *,
+        caller: str,
+        functions: dict[str, ast.FunctionDef | ast.AsyncFunctionDef],
+        module_values: dict[str, tuple[str, ...]],
+        parameter_values: dict[str, tuple[str, ...] | None],
+    ) -> None:
+        self.caller = caller
+        self.functions = functions
+        self.module_values = module_values
+        self.environment = dict(parameter_values)
+        self.edges: list[tuple[str, dict[str, tuple[str, ...] | None]]] = []
+
+    def _expression_values(self, node: ast.AST | None) -> tuple[str, ...] | None:
+        literal = _literal_string(node)
+        if literal is not None:
+            return (literal,)
+        if isinstance(node, ast.Name):
+            if node.id in self.environment:
+                return self.environment[node.id]
+            return self.module_values.get(node.id)
+        if isinstance(node, (ast.Tuple, ast.List)):
+            result: list[str] = []
+            for element in node.elts:
+                if isinstance(element, ast.Starred):
+                    return None
+                values = self._expression_values(element)
+                if values is None:
+                    return None
+                result.extend(values)
+            return tuple(result)
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+            left = self._expression_values(node.left)
+            right = self._expression_values(node.right)
+            if left is not None and right is not None and len(left) == len(right) == 1:
+                return (left[0] + right[0],)
+        return None
+
+    def _assign(self, name: str, values: tuple[str, ...] | None) -> None:
+        if name in self.environment:
+            # Parameters and prior local assignments are not immutable after a
+            # write, even when the replacement happens to have the same value.
+            self.environment[name] = None
+        else:
+            self.environment[name] = values
+
+    def _call_arguments(
+        self,
+        node: ast.Call,
+        callee: ast.FunctionDef | ast.AsyncFunctionDef,
+    ) -> dict[str, tuple[str, ...] | None]:
+        parameters = _function_parameter_names(callee)
+        values: dict[str, tuple[str, ...] | None] = {parameter: None for parameter in parameters}
+        positional = [
+            argument
+            for argument in node.args
+            if not isinstance(argument, ast.Starred)
+        ]
+        if any(isinstance(argument, ast.Starred) for argument in node.args):
+            return values
+        for index, argument in enumerate(positional):
+            if index >= len(parameters):
+                return {parameter: None for parameter in parameters}
+            values[parameters[index]] = self._expression_values(argument)
+        for keyword in node.keywords:
+            if keyword.arg is None or keyword.arg not in values:
+                return {parameter: None for parameter in parameters}
+            values[keyword.arg] = self._expression_values(keyword.value)
+        return values
+
+    def visit_Call(self, node: ast.Call) -> None:
+        if isinstance(node.func, ast.Name) and node.func.id in self.functions:
+            callee = self.functions[node.func.id]
+            self.edges.append((node.func.id, self._call_arguments(node, callee)))
+        self.generic_visit(node)
+
+    def _visit_loop(self, node: ast.For | ast.AsyncFor) -> None:
+        iterable = self._expression_values(node.iter)
+        self.visit(node.iter)
+        saved = dict(self.environment)
+        target_names = _target_names(node.target)
+        if not isinstance(node.target, ast.Name):
+            iterable = None
+        for name in target_names:
+            self._assign(name, iterable)
+        for statement in node.body:
+            self.visit(statement)
+        self.environment = saved
+        for statement in node.orelse:
+            self.visit(statement)
+        self.environment = saved
+
+    def visit_For(self, node: ast.For) -> None:
+        self._visit_loop(node)
+
+    def visit_AsyncFor(self, node: ast.AsyncFor) -> None:
+        self._visit_loop(node)
+
+    def visit_Assign(self, node: ast.Assign) -> None:
+        values = self._expression_values(node.value)
+        target_names = _target_names(node.targets[0]) if node.targets else []
+        if node.targets and not isinstance(node.targets[0], ast.Name):
+            values = None
+        for name in target_names:
+            self._assign(name, values)
+        self.visit(node.value)
+
+    def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
+        values = self._expression_values(node.value)
+        for name in _target_names(node.target):
+            self._assign(name, values)
+        if node.value is not None:
+            self.visit(node.value)
+
+    def visit_AugAssign(self, node: ast.AugAssign) -> None:
+        for name in _target_names(node.target):
+            self._assign(name, None)
+        self.visit(node.value)
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        return
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        return
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        return
+
+    def visit_Lambda(self, node: ast.Lambda) -> None:
+        return
+
+
+def _closed_world_parameter_values(
+    tree: ast.AST,
+) -> dict[tuple[str, str], tuple[str, ...] | None]:
+    """Resolve parameters of private functions only through proven local callers."""
+    if not isinstance(tree, ast.Module):
+        return {}
+    functions: dict[str, ast.FunctionDef | ast.AsyncFunctionDef] = {}
+    duplicate_names: set[str] = set()
+    for statement in tree.body:
+        if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if statement.name in functions:
+                duplicate_names.add(statement.name)
+            else:
+                functions[statement.name] = statement
+    exported = _module_exported_names(tree)
+    private = {
+        name
+        for name in functions
+        if name.startswith("_") and name not in exported and name not in duplicate_names
+    }
+    targets = private & CLOSED_WORLD_A_HELPER_NAMES
+    if not targets:
+        return {}
+
+    parents: dict[ast.AST, ast.AST] = {}
+    for parent in ast.walk(tree):
+        for child in ast.iter_child_nodes(parent):
+            parents[child] = parent
+
+    def enclosing_function(node: ast.AST) -> str | None:
+        parent = parents.get(node)
+        while parent is not None:
+            if isinstance(parent, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                return parent.name
+            if isinstance(parent, ast.Lambda):
+                return None
+            parent = parents.get(parent)
+        return None
+
+    call_sites: dict[str, list[str | None]] = {name: [] for name in private}
+    invalid_reference: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in private:
+            call_sites[node.func.id].append(enclosing_function(node))
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load) and node.id in private:
+            parent = parents.get(node)
+            if not (isinstance(parent, ast.Call) and parent.func is node):
+                invalid_reference.add(node.id)
+
+    module_values = _immutable_module_values(tree)
+    contexts: dict[str, dict[str, tuple[str, ...] | None]] = {}
+    queue: list[str] = []
+    for name, function in functions.items():
+        if name in private:
+            continue
+        contexts[name] = {parameter: None for parameter in _function_parameter_names(function)}
+        queue.append(name)
+
+    def merge_context(
+        name: str,
+        incoming: dict[str, tuple[str, ...] | None],
+    ) -> bool:
+        function = functions[name]
+        parameters = _function_parameter_names(function)
+        if name not in contexts:
+            contexts[name] = {parameter: incoming.get(parameter) for parameter in parameters}
+            return True
+        current = contexts[name]
+        changed = False
+        for parameter in parameters:
+            merged = _merge_finite_values(current.get(parameter), incoming.get(parameter))
+            if merged != current.get(parameter):
+                current[parameter] = merged
+                changed = True
+        return changed
+
+    processed = 0
+    while processed < len(queue):
+        caller = queue[processed]
+        processed += 1
+        flow = _ClosedWorldFlowVisitor(
+            caller=caller,
+            functions=functions,
+            module_values=module_values,
+            parameter_values=contexts[caller],
+        )
+        for statement in functions[caller].body:
+            flow.visit(statement)
+        for callee, incoming in flow.edges:
+            if callee not in private:
+                continue
+            if merge_context(callee, incoming):
+                queue.append(callee)
+
+    # Re-run each proven context once to collect final argument alternatives.
+    edge_values: dict[tuple[str, str, str], tuple[str, ...] | None] = {}
+    for caller, context in contexts.items():
+        flow = _ClosedWorldFlowVisitor(
+            caller=caller,
+            functions=functions,
+            module_values=module_values,
+            parameter_values=context,
+        )
+        for statement in functions[caller].body:
+            flow.visit(statement)
+        for callee, incoming in flow.edges:
+            for parameter in _function_parameter_names(functions[callee]):
+                key = (caller, callee, parameter)
+                incoming_value = incoming.get(parameter)
+                if key not in edge_values:
+                    edge_values[key] = incoming_value
+                else:
+                    edge_values[key] = _merge_finite_values(edge_values[key], incoming_value)
+
+    function_query_families = _function_query_families(tree)
+    query_parameters = {
+        function_name: {
+            parameter
+            for (candidate_function, parameter) in function_query_families
+            if candidate_function == function_name
+        }
+        for function_name in functions
+    }
+    result: dict[tuple[str, str], tuple[str, ...] | None] = {}
+    for callee in targets:
+        sites = call_sites[callee]
+        if not sites or callee in invalid_reference or any(caller not in contexts for caller in sites):
+            continue
+        parameters = _function_parameter_names(functions[callee])
+        for parameter in parameters:
+            if parameter not in query_parameters.get(callee, set()):
+                continue
+            body_collector = _ScopeWriteCollector()
+            for statement in functions[callee].body:
+                body_collector.visit(statement)
+            if body_collector.counts.get(parameter, 0):
+                # The parameter is no longer an immutable call input once the
+                # helper writes it, even if every caller supplied a literal.
+                continue
+            values: tuple[str, ...] | None = ()
+            proven = True
+            for caller in sites:
+                if caller is None:
+                    proven = False
+                    break
+                edge = edge_values.get((caller, callee, parameter))
+                if edge is None:
+                    proven = False
+                    break
+                values = _merge_finite_values(values, edge)
+            if proven and values:
+                result[(callee, parameter)] = values
+    return result
+
+
+def _function_query_families(tree: ast.AST) -> dict[tuple[str, str], set[str]]:
+    """Map function parameters used as query IDs to their query families."""
+    if not isinstance(tree, ast.Module):
+        return {}
+    query_families = dict(QUERY_FAMILY_BY_SYMBOL)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                if alias.name in QUERY_FAMILY_BY_SYMBOL:
+                    query_families[alias.asname or alias.name] = QUERY_FAMILY_BY_SYMBOL[alias.name]
+    result: dict[tuple[str, str], set[str]] = {}
+    for function in tree.body:
+        if not isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        parameters = set(_function_parameter_names(function))
+        for node in ast.walk(function):
+            if not isinstance(node, ast.Call) or not isinstance(node.func, (ast.Name, ast.Attribute)):
+                continue
+            family = query_families.get(_call_symbol(node.func))
+            if family is None:
+                continue
+            fact_expr = next((keyword.value for keyword in node.keywords if keyword.arg == "fact_id"), None)
+            if isinstance(fact_expr, ast.Name) and fact_expr.id in parameters:
+                result.setdefault((function.name, fact_expr.id), set()).add(family)
+    return result
+
+
+MAPPING_PROVENANCE_HELPER_NAMES = frozenset({"_modelo_202_applicability_declarations"})
+_MAPPING_CANDIDATE_CACHE: dict[tuple[str, str], tuple[str, ...] | None] = {}
+
+
+def _mapping_return_fact_ids(tree: ast.AST) -> dict[str, str]:
+    """Find the registry mapping fact returned by the bounded helper set."""
+    if not isinstance(tree, ast.Module):
+        return {}
+    module_values = _immutable_module_values(tree)
+    constants = _module_string_constants(tree)
+    result: dict[str, str] = {}
+    for function in tree.body:
+        if not isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        if function.name not in MAPPING_PROVENANCE_HELPER_NAMES:
+            continue
+        fact_ids: list[str] = []
+        for node in ast.walk(function):
+            if not isinstance(node, ast.Call) or _call_symbol(node.func) != "MappingFactQuery":
+                continue
+            expression = next((keyword.value for keyword in node.keywords if keyword.arg == "fact_id"), None)
+            if isinstance(expression, ast.Constant) and isinstance(expression.value, str):
+                fact_ids.append(expression.value)
+            elif isinstance(expression, ast.Name):
+                values = module_values.get(expression.id)
+                if values is None:
+                    value = constants.get(expression.id)
+                    if value is not None:
+                        values = (value,)
+                if values is not None and len(values) == 1:
+                    fact_ids.append(values[0])
+        if len(set(fact_ids)) == 1:
+            result[function.name] = fact_ids[0]
+    return result
+
+
+def _registry_mapping_candidates(mapping_fact_id: str, key: str) -> tuple[str, ...] | None:
+    """Return all authored mapping values for one key, or ``None`` if unproven."""
+    cache_key = (mapping_fact_id, key)
+    if cache_key in _MAPPING_CANDIDATE_CACHE:
+        return _MAPPING_CANDIDATE_CACHE[cache_key]
+    try:
+        artifact_payload, artifact_status = _load_authority_artifact(BUNDLED_AUTHORITY_ARTIFACT)
+        compiled = _compiled_fact_index(artifact_payload) if artifact_status == "ok" else {}
+    except (NameError, OSError, UnicodeDecodeError, json.JSONDecodeError, TypeError, ValueError):
+        compiled = {}
+    fact = compiled.get(mapping_fact_id)
+    variants = fact.get("variants") if isinstance(fact, dict) else None
+    values: list[str] = []
+    if not isinstance(variants, list) or not variants or not isinstance(fact, dict) or fact.get("family") != "mapping":
+        _MAPPING_CANDIDATE_CACHE[cache_key] = None
+        return None
+    for variant in variants:
+        payload = variant.get("payload") if isinstance(variant, dict) else None
+        entries = payload.get("entries") if isinstance(payload, dict) else None
+        matches = [
+            entry.get("value")
+            for entry in entries
+            if isinstance(entry, dict) and entry.get("key") == key
+        ] if isinstance(entries, list) else []
+        if len(matches) != 1 or not isinstance(matches[0], str) or not matches[0].strip():
+            _MAPPING_CANDIDATE_CACHE[cache_key] = None
+            return None
+        values.append(matches[0])
+    result = tuple(dict.fromkeys(values))
+    _MAPPING_CANDIDATE_CACHE[cache_key] = result or None
+    return _MAPPING_CANDIDATE_CACHE[cache_key]
+
+
+# These are intentionally named seams rather than concrete fact consumers.  A
+# generic resolver must not be made to look like one required fact merely
+# because its ``fact_id`` parameter is not statically known at the definition
+# site.  The scanner therefore records them separately and only clears one
+# when the source proves the query family, temporal coordinate, closed failure
+# behaviour, and a real authored/bundled caller or catalogue.
+DYNAMIC_SEAM_SPECS: tuple[dict[str, Any], ...] = (
+    {
+        "file": "src/cadrumo/application/modelo/_objective_estimation_advisory.py",
+        "symbol": "_resolve_objective_estimation_threshold",
+        "query_family": "scalar",
+        "fact_parameter": "fact_id",
+        "axis_mode": "direct",
+        "candidate_mode": "helper_calls",
+        "candidate_helper": "_resolve_objective_estimation_threshold",
+        "candidate_constant_names": (
+            "_OBJECTIVE_ESTIMATION_SETTLED_MIN_FACT_ID",
+            "_OBJECTIVE_ESTIMATION_SETTLED_MAX_FACT_ID",
+        ),
+    },
+    {
+        "file": "src/cadrumo/domain/calculations/registry/setup_profile_bindings.py",
+        "symbol": "mapping_fact_entries",
+        "query_family": "mapping",
+        "fact_parameter": "fact_id",
+        "axis_mode": "direct",
+        "candidate_mode": "helper_calls",
+        "candidate_helper": "mapping_fact_entries",
+    },
+    {
+        "file": "src/cadrumo/domain/contribuyente/family_fact_context.py",
+        "symbol": "FamilyFactResolutionContext::resolved_scalar",
+        "query_family": "scalar",
+        "fact_parameter": "fact_id",
+        "axis_mode": "typed_module_mapping",
+        "axis_mapping": "_FAMILY_FACT_DATE_AXES",
+        "candidate_mode": "module_mapping_keys",
+        "candidate_mapping": "_FAMILY_FACT_DATE_AXES",
+    },
+    {
+        "file": "src/cadrumo/domain/deadlines/fact_context.py",
+        "symbol": "DeadlineFactResolutionContext::resolved_scalar",
+        "query_family": "scalar",
+        "fact_parameter": "fact_id",
+        "axis_mode": "registry_mapping_helper",
+        "candidate_mode": "module_constants",
+        "candidate_constant_names": ("_DEADLINE_FACT_DATE_AXIS_MAPPING_FACT_ID",),
+    },
+    {
+        "file": "src/cadrumo/domain/deadlines/fact_context.py",
+        "symbol": "DeadlineFactResolutionContext::resolved_mapping",
+        "query_family": "mapping",
+        "fact_parameter": "fact_id",
+        "axis_mode": "registry_mapping_helper",
+        "candidate_mode": "module_constants",
+        "candidate_constant_names": ("_DEADLINE_FACT_DATE_AXIS_MAPPING_FACT_ID",),
+    },
+    {
+        "file": "src/cadrumo/domain/modelos/modelo_fact_context.py",
+        "symbol": "ModeloFactResolutionContext::resolved_scalar",
+        "query_family": "scalar",
+        "fact_parameter": "fact_id",
+        "axis_mode": "typed_module_mapping",
+        "axis_mapping": "_MODELO_FACT_DATE_AXES",
+        "candidate_mode": "module_mapping_keys",
+        "candidate_mapping": "_MODELO_FACT_DATE_AXES",
+    },
+    {
+        "file": "src/cadrumo/domain/renta/_first_slice_routing.py",
+        "symbol": "resolve_first_slice_expense_routing",
+        "query_family": "mapping",
+        "fact_parameter": "fact_id",
+        "axis_mode": "direct",
+        "candidate_mode": "helper_calls",
+        "candidate_helper": "resolve_first_slice_expense_routing",
+        "requires_query_service": True,
+    },
+    {
+        "file": "src/cadrumo/domain/transactions/tipo_actividad_partitions.py",
+        "symbol": "resolve_tipo_actividad_selector",
+        "query_family": "entity_set",
+        "fact_parameter": "fact_id",
+        "query_fact_parameter": "normalized_fact_id",
+        "axis_mode": "direct",
+        "candidate_mode": "query_literals",
+        "candidate_query": "MappingFactQuery",
+        "requires_catalogue_membership": True,
+    },
+)
+
+
+def _dynamic_seam_spec(file: str, symbol: str) -> dict[str, Any] | None:
+    """Return the reviewed rule for one deliberately generic resolver seam."""
+    for spec in DYNAMIC_SEAM_SPECS:
+        if file == spec["file"] and symbol == spec["symbol"]:
+            return spec
+    return None
+
+
+def _call_argument_for_parameter(
+    node: ast.Call,
+    parameter_names: Sequence[str],
+    parameter: str,
+) -> ast.AST | None:
+    """Resolve one call argument without executing or guessing Python binding."""
+    for keyword in node.keywords:
+        if keyword.arg == parameter:
+            return keyword.value
+        if keyword.arg is None:
+            return None
+    try:
+        index = parameter_names.index(parameter)
+    except ValueError:
+        return None
+    return node.args[index] if index < len(node.args) else None
+
+
+def _target_contains_name(node: ast.AST, name: str) -> bool:
+    if isinstance(node, ast.Name):
+        return node.id == name
+    if isinstance(node, (ast.Tuple, ast.List)):
+        return any(_target_contains_name(element, name) for element in node.elts)
+    if isinstance(node, ast.Starred):
+        return _target_contains_name(node.value, name)
+    return False
+
+
+def _static_mapping_query_ids(
+    function_node: ast.FunctionDef | ast.AsyncFunctionDef,
+    constants: dict[str, str],
+) -> tuple[str, ...] | None:
+    """Return a function's fully static, typed mapping-query IDs."""
+    query_ids: list[str] = []
+    query_count = 0
+    for node in ast.walk(function_node):
+        if not isinstance(node, ast.Call) or _call_symbol(node.func) != "MappingFactQuery":
+            continue
+        query_count += 1
+        fact_expression = next((keyword.value for keyword in node.keywords if keyword.arg == "fact_id"), None)
+        fact_id = _static_string(fact_expression, constants)
+        date_axis = next((keyword.value for keyword in node.keywords if keyword.arg == "date_axis"), None)
+        effective_date = next((keyword.value for keyword in node.keywords if keyword.arg == "effective_date"), None)
+        if fact_id is None or _date_axis_name(date_axis) is None or effective_date is None:
+            return None
+        query_ids.append(fact_id)
+    return tuple(dict.fromkeys(query_ids)) if query_count else None
+
+
+def _generic_mapping_producers(
+    tree: ast.AST,
+    constants: dict[str, str],
+) -> dict[str, tuple[str, ...]]:
+    """Find private helpers that validate and return a finite mapping result."""
+    if not isinstance(tree, ast.Module):
+        return {}
+    producers: dict[str, tuple[str, ...]] = {}
+    for function_node in tree.body:
+        if not isinstance(function_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        if not function_node.name.startswith("_"):
+            continue
+        mapping_ids = _static_mapping_query_ids(function_node, constants)
+        if not mapping_ids:
+            continue
+        if not _function_has_authority_query(function_node):
+            continue
+        if not _function_has_raise(function_node) or _function_has_fallback_return_in_except(function_node):
+            continue
+        if not any(
+            isinstance(node, ast.Name) and node.id == "ResolvedMappingFact"
+            for node in ast.walk(function_node)
+        ):
+            continue
+        mapping_names: set[str] = set()
+        for node in ast.walk(function_node):
+            if isinstance(node, ast.Assign) and isinstance(node.value, ast.Dict):
+                mapping_names.update(_simple_assignment_names(node.targets))
+            elif isinstance(node, ast.AnnAssign) and isinstance(node.value, ast.Dict):
+                mapping_names.update(_target_names(node.target))
+        if not mapping_names:
+            continue
+        returns_mapping = any(
+            isinstance(node, ast.Return)
+            and node.value is not None
+            and any(
+                isinstance(name_node, ast.Name) and name_node.id in mapping_names
+                for name_node in ast.walk(node.value)
+            )
+            for node in ast.walk(function_node)
+        )
+        if returns_mapping:
+            producers[function_node.name] = mapping_ids
+    return producers
+
+
+def _compiled_mapping_value_candidates(
+    compiled: dict[str, dict[str, Any]],
+    mapping_fact_ids: Sequence[str],
+) -> tuple[str, ...]:
+    """Extract finite mapping values from already bundled governed facts."""
+    values: set[str] = set()
+    for mapping_fact_id in mapping_fact_ids:
+        fact = compiled.get(mapping_fact_id)
+        if not isinstance(fact, dict) or fact.get("family") != "mapping":
+            return ()
+        variants = fact.get("variants")
+        if not isinstance(variants, list) or not variants:
+            return ()
+        for variant in variants:
+            payload = variant.get("payload") if isinstance(variant, dict) else None
+            entries = payload.get("entries") if isinstance(payload, dict) else None
+            if not isinstance(entries, list) or not entries:
+                return ()
+            for entry in entries:
+                value = entry.get("value") if isinstance(entry, dict) else None
+                if not isinstance(value, str) or not value.strip():
+                    return ()
+                values.add(value)
+    # A formula-spec mapping can contain prose, operands, and derived
+    # expressions alongside fact IDs.  Only values that are themselves
+    # governed declarations in the bundled catalogue are valid candidates;
+    # this keeps the inference finite without maintaining a name allowlist.
+    return tuple(sorted(value for value in values if value in compiled))
+
+
+def _generic_mapping_provenance_candidates(
+    tree: ast.AST,
+    *,
+    helper_name: str,
+    helper_node: ast.FunctionDef | ast.AsyncFunctionDef,
+    constants: dict[str, str],
+    compiled: dict[str, dict[str, Any]],
+) -> tuple[tuple[str, ...], dict[str, Any]]:
+    """Trace every private helper caller to a validated finite mapping."""
+    if not isinstance(tree, ast.Module) or not helper_name.startswith("_"):
+        return (), {}
+    producers = _generic_mapping_producers(tree, constants)
+    if not producers:
+        return (), {}
+    parameter_names = _function_parameter_names(helper_node)
+    fact_parameters = [name for name in parameter_names if name == "fact_id"]
+    if len(fact_parameters) != 1:
+        return (), {}
+    fact_parameter = fact_parameters[0]
+    call_count = 0
+    proven_call_count = 0
+    mapping_ids: set[str] = set()
+    for caller in tree.body:
+        if not isinstance(caller, (ast.FunctionDef, ast.AsyncFunctionDef)) or caller.name == helper_name:
+            continue
+        scope_writes = _ScopeWriteCollector()
+        for statement in caller.body:
+            scope_writes.visit(statement)
+        for call in ast.walk(caller):
+            if not isinstance(call, ast.Call) or _call_symbol(call.func) != helper_name:
+                continue
+            call_count += 1
+            fact_expression = _call_argument_for_parameter(call, parameter_names, fact_parameter)
+            if not isinstance(fact_expression, ast.Subscript) or not isinstance(fact_expression.value, ast.Name):
+                continue
+            mapping_name = fact_expression.value.id
+            if scope_writes.counts.get(mapping_name) != 1:
+                continue
+            producer_name: str | None = None
+            for statement in caller.body:
+                if isinstance(statement, ast.Assign):
+                    targets = statement.targets
+                    value = statement.value
+                elif isinstance(statement, ast.AnnAssign):
+                    targets = [statement.target]
+                    value = statement.value
+                else:
+                    continue
+                if not isinstance(value, ast.Call) or not isinstance(value.func, ast.Name):
+                    continue
+                if _target_contains_name(targets[0], mapping_name) and value.func.id in producers:
+                    producer_name = value.func.id
+                    break
+            if producer_name is None:
+                continue
+            mapping_ids.update(producers[producer_name])
+            proven_call_count += 1
+    if not call_count or proven_call_count != call_count or not mapping_ids:
+        return (), {}
+    candidates = _compiled_mapping_value_candidates(compiled, sorted(mapping_ids))
+    if not candidates:
+        return (), {}
+    return candidates, {
+        "mapping_fact_ids": sorted(mapping_ids),
+        "proven_call_count": proven_call_count,
+        "call_count": call_count,
+        "candidate_fact_ids": list(candidates),
+    }
+
+
+def _infer_dynamic_seam_spec(
+    *,
+    tree: ast.AST,
+    function_node: ast.AST | None,
+    query_node: ast.Call,
+    fact_expression: ast.AST | None,
+    query_family: str | None,
+    constants: dict[str, str],
+    compiled: dict[str, dict[str, Any]],
+) -> dict[str, Any] | None:
+    """Infer a generic seam only when its complete finite provenance is proven."""
+    if not isinstance(function_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        return None
+    if not function_node.name.startswith("_") or query_family is None:
+        return None
+    if not isinstance(fact_expression, ast.Name) or fact_expression.id != "fact_id":
+        return None
+    candidates, provenance = _generic_mapping_provenance_candidates(
+        tree,
+        helper_name=function_node.name,
+        helper_node=function_node,
+        constants=constants,
+        compiled=compiled,
+    )
+    if not candidates:
+        return None
+    axis_expression = next((keyword.value for keyword in query_node.keywords if keyword.arg == "date_axis"), None)
+    effective_date = next((keyword.value for keyword in query_node.keywords if keyword.arg == "effective_date"), None)
+    if _date_axis_name(axis_expression) is None or effective_date is None:
+        return None
+    if not _function_has_authority_query(function_node):
+        return None
+    if not _function_has_raise(function_node) or _function_has_fallback_return_in_except(function_node):
+        return None
+    return {
+        "query_family": query_family,
+        "fact_parameter": "fact_id",
+        "axis_mode": "direct",
+        "candidate_mode": "inferred_mapping_provenance",
+        "candidate_fact_ids": candidates,
+        "mapping_provenance": provenance,
+    }
+
+
+def _module_literal_mapping_keys(tree: ast.AST, name: str) -> tuple[str, ...] | None:
+    """Resolve keys of one immutable top-level literal mapping."""
+    if not isinstance(tree, ast.Module):
+        return None
+    assignments: list[ast.Dict] = []
+    for statement in tree.body:
+        if isinstance(statement, ast.Assign) and name in _simple_assignment_names(statement.targets):
+            if isinstance(statement.value, ast.Dict):
+                assignments.append(statement.value)
+        elif isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
+            if statement.target.id == name and isinstance(statement.value, ast.Dict):
+                assignments.append(statement.value)
+    writes = sum(
+        1
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store) and node.id == name
+    )
+    if writes != 1 or len(assignments) != 1:
+        return None
+    keys: list[str] = []
+    for key_node in assignments[0].keys:
+        key = _literal_string(key_node)
+        if key is None or key in keys:
+            return None
+        keys.append(key)
+    return tuple(keys) if keys else None
+
+
+def _typed_date_axis_mapping_proof(tree: ast.AST, name: str) -> tuple[bool, tuple[str, ...]]:
+    """Prove that a module mapping is a closed map of valid DateAxis members."""
+    if not isinstance(tree, ast.Module):
+        return False, ()
+    assignments: list[ast.Dict] = []
+    for statement in tree.body:
+        if isinstance(statement, ast.Assign) and name in _simple_assignment_names(statement.targets):
+            if isinstance(statement.value, ast.Dict):
+                assignments.append(statement.value)
+        elif isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
+            if statement.target.id == name and isinstance(statement.value, ast.Dict):
+                assignments.append(statement.value)
+    writes = sum(
+        1
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store) and node.id == name
+    )
+    if writes != 1 or len(assignments) != 1:
+        return False, ()
+    keys: list[str] = []
+    for key_node, value_node in zip(assignments[0].keys, assignments[0].values):
+        key = _literal_string(key_node)
+        axis = _date_axis_name(value_node)
+        if key is None or axis is None or key in keys:
+            return False, ()
+        keys.append(key)
+    return bool(keys), tuple(keys)
+
+
+def _helper_fact_expression(node: ast.Call, helper: str) -> ast.AST | None:
+    """Get the fact ID expression from a reviewed helper call shape."""
+    if _call_symbol(node.func) != helper:
+        return None
+    for keyword in node.keywords:
+        if keyword.arg == "fact_id":
+            return keyword.value
+    if helper in {"mapping_fact_entries", "resolve_tipo_actividad_selector"} and node.args:
+        return node.args[0]
+    return None
+
+
+def _collect_helper_call_candidates(source_paths: Sequence[str], helpers: set[str]) -> dict[str, tuple[str, ...]]:
+    """Collect only literal fact IDs supplied to generic helper callers."""
+    candidates: dict[str, set[str]] = {helper: set() for helper in helpers}
+    for relative in source_paths:
+        path = REPO_ROOT / Path(*PurePosixPath(relative).parts)
+        try:
+            tree = ast.parse(_decode_python_source(path.read_bytes()), filename=relative)
+        except (OSError, SyntaxError, LookupError, UnicodeDecodeError, ValueError, TypeError):
+            continue
+        constants = _module_string_constants(tree)
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            helper = _call_symbol(node.func)
+            if helper not in helpers:
+                continue
+            expression = _helper_fact_expression(node, helper)
+            value = _static_string(expression, constants)
+            if value:
+                candidates[helper].add(value)
+    return {helper: tuple(sorted(values)) for helper, values in candidates.items()}
+
+
+def _query_literal_candidates(tree: ast.AST, query_symbol: str, constants: dict[str, str]) -> tuple[str, ...]:
+    """Collect direct literal IDs from one bounded registry catalogue query."""
+    values: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or _call_symbol(node.func) != query_symbol:
+            continue
+        expression = next((keyword.value for keyword in node.keywords if keyword.arg == "fact_id"), None)
+        value = _static_string(expression, constants)
+        if value:
+            values.add(value)
+    return tuple(sorted(values))
+
+
+def _function_has_raise(node: ast.AST) -> bool:
+    return any(isinstance(item, ast.Raise) for item in ast.walk(node))
+
+
+def _function_has_fallback_return_in_except(node: ast.AST) -> bool:
+    for item in ast.walk(node):
+        if not isinstance(item, ast.ExceptHandler):
+            continue
+        if any(isinstance(child, ast.Return) for statement in item.body for child in ast.walk(statement)):
+            return True
+    return False
+
+
+def _function_has_fact_reassignment(node: ast.AST, parameter: str) -> bool:
+    return any(
+        isinstance(item, ast.Name) and isinstance(item.ctx, ast.Store) and item.id == parameter
+        for item in ast.walk(node)
+    )
+
+
+def _function_has_strip_normalization(node: ast.AST, parameter: str, normalized: str) -> bool:
+    for item in ast.walk(node):
+        if not isinstance(item, ast.Assign):
+            continue
+        targets = _simple_assignment_names(item.targets)
+        if targets != [normalized]:
+            continue
+        value = item.value
+        if (
+            isinstance(value, ast.Call)
+            and isinstance(value.func, ast.Attribute)
+            and value.func.attr == "strip"
+            and isinstance(value.func.value, ast.Name)
+            and value.func.value.id == parameter
+            and not value.args
+            and not value.keywords
+        ):
+            return True
+    return False
+
+
+def _function_has_catalogue_membership(node: ast.AST, normalized: str) -> bool:
+    for item in ast.walk(node):
+        if not isinstance(item, ast.Compare) or len(item.ops) != 1 or len(item.comparators) != 1:
+            continue
+        if not isinstance(item.left, ast.Name) or item.left.id != normalized:
+            continue
+        if not isinstance(item.ops[0], (ast.In, ast.NotIn)):
+            continue
+        right = item.comparators[0]
+        if isinstance(right, ast.Call) and _call_symbol(right.func) == "_registry_activity_selector_catalogue":
+            return True
+    return False
+
+
+def _function_has_typed_axis_map_use(node: ast.AST, mapping_name: str, fact_parameter: str) -> bool:
+    for item in ast.walk(node):
+        if not isinstance(item, ast.Assign):
+            continue
+        targets = _simple_assignment_names(item.targets)
+        if not targets or not isinstance(item.value, ast.Subscript):
+            continue
+        if not isinstance(item.value.value, ast.Name) or item.value.value.id != mapping_name:
+            continue
+        key = item.value.slice
+        if isinstance(key, ast.Name) and key.id == fact_parameter:
+            return True
+    return False
+
+
+def _function_has_registry_date_axis_helper(tree: ast.AST, node: ast.AST, fact_parameter: str) -> bool:
+    """Prove a deadline axis is validated by its registry mapping helper."""
+    called = any(
+        isinstance(item, ast.Call)
+        and _call_symbol(item.func) == "_date_axis"
+        and len(item.args) == 1
+        and isinstance(item.args[0], ast.Name)
+        and item.args[0].id == fact_parameter
+        for item in ast.walk(node)
+    )
+    if not called:
+        return False
+    has_mapping_query = any(
+        isinstance(item, ast.Call)
+        and _call_symbol(item.func) == "MappingFactQuery"
+        for item in ast.walk(tree)
+    )
+    has_axis_validation = any(
+        isinstance(item, ast.Call)
+        and _call_symbol(item.func) == "DateAxis"
+        for item in ast.walk(tree)
+    )
+    return has_mapping_query and has_axis_validation and _function_has_raise(tree)
+
+
+def _authority_receiver_proven(node: ast.Call) -> bool:
+    if not isinstance(node.func, ast.Attribute) or node.func.attr != "resolve_governed_fact":
+        return False
+    receiver = node.func.value
+    if isinstance(receiver, ast.Name):
+        return receiver.id in {"authority", "selected_authority"}
+    if isinstance(receiver, ast.Attribute):
+        return isinstance(receiver.value, ast.Name) and receiver.value.id == "self" and receiver.attr == "authority"
+    return isinstance(receiver, ast.Call) and _call_symbol(receiver.func) == "bundled_authority"
+
+
+def _function_has_authority_query(node: ast.AST | None) -> bool:
+    """Find the validated-authority call that consumes the query object."""
+    if node is None:
+        return False
+    return any(
+        isinstance(item, ast.Call) and _authority_receiver_proven(item)
+        for item in ast.walk(node)
+    )
+
+
+def _dynamic_seam_static_proof(
+    *,
+    spec: dict[str, Any],
+    tree: ast.AST,
+    function_node: ast.AST | None,
+    query_node: ast.Call,
+    fact_expression: ast.AST | None,
+) -> dict[str, Any]:
+    """Return an auditable AST proof for one generic resolver call."""
+    proof: list[str] = []
+    failures: list[str] = []
+    family = spec["query_family"]
+    if function_node is None:
+        failures.append("function_scope_unresolved")
+    else:
+        parameters = set(_function_parameter_names(function_node)) if isinstance(function_node, (ast.FunctionDef, ast.AsyncFunctionDef)) else set()
+        parameter = spec["fact_parameter"]
+        query_parameter = spec.get("query_fact_parameter", parameter)
+        if parameter not in parameters:
+            failures.append("fact_id_parameter_missing")
+        if not isinstance(fact_expression, ast.Name) or fact_expression.id != query_parameter:
+            failures.append("fact_id_not_formal_or_validated_binding")
+        elif query_parameter == parameter:
+            if _function_has_fact_reassignment(function_node, parameter):
+                failures.append("fact_id_reassigned")
+            else:
+                proof.append("fact_id_passed_unchanged_from_formal")
+        elif not _function_has_strip_normalization(function_node, parameter, query_parameter):
+            failures.append("fact_id_normalization_unproven")
+        elif not _function_has_catalogue_membership(function_node, query_parameter):
+            failures.append("registry_catalogue_membership_unproven")
+        else:
+            proof.append("fact_id_normalized_then_membership_checked_against_registry_catalogue")
+
+        if spec["axis_mode"] == "direct":
+            axis_expression = next((keyword.value for keyword in query_node.keywords if keyword.arg == "date_axis"), None)
+            axis_name = _date_axis_name(axis_expression)
+            if axis_name is None:
+                failures.append("typed_date_axis_unproven")
+            else:
+                proof.append(
+                    "typed_filing_period_axis"
+                    if axis_name == "filing_period"
+                    else f"typed_date_axis:{axis_name}"
+                )
+        elif spec["axis_mode"] == "typed_module_mapping":
+            axis_expression = next((keyword.value for keyword in query_node.keywords if keyword.arg == "date_axis"), None)
+            mapping_name = spec["axis_mapping"]
+            valid_mapping, _ = _typed_date_axis_mapping_proof(tree, mapping_name)
+            if not isinstance(axis_expression, ast.Name) or not valid_mapping or not _function_has_typed_axis_map_use(function_node, mapping_name, parameter):
+                failures.append("typed_date_axis_mapping_unproven")
+            else:
+                proof.append(f"typed_date_axis_mapping:{mapping_name}")
+        elif spec["axis_mode"] == "registry_mapping_helper":
+            if not _function_has_registry_date_axis_helper(tree, function_node, parameter):
+                failures.append("registry_date_axis_mapping_unproven")
+            else:
+                proof.append("registry_validated_date_axis_mapping")
+        else:
+            failures.append("unknown_axis_proof_rule")
+
+        effective_date = next((keyword.value for keyword in query_node.keywords if keyword.arg == "effective_date"), None)
+        if effective_date is None:
+            failures.append("effective_date_missing")
+        else:
+            proof.append("effective_date_supplied")
+        if not _function_has_raise(function_node):
+            failures.append("closed_failure_raise_unproven")
+        elif _function_has_fallback_return_in_except(function_node):
+            failures.append("exception_fallback_return_present")
+        else:
+            proof.append("failure_is_closed_without_payload_fallback")
+
+    if not _function_has_authority_query(function_node):
+        failures.append("validated_authority_query_receiver_unproven")
+    else:
+        proof.append("validated_authority_resolve_governed_fact")
+    if spec.get("requires_query_service"):
+        if function_node is None or not any(
+            isinstance(item, ast.Call) and _call_symbol(item.func) == "RegistryQueryService"
+            for item in ast.walk(function_node)
+        ):
+            failures.append("validated_registry_query_service_scope_unproven")
+        else:
+            proof.append("validated_registry_query_service_scope")
+    if spec.get("requires_catalogue_membership") and function_node is not None and _function_has_catalogue_membership(function_node, spec.get("query_fact_parameter", spec["fact_parameter"])):
+        proof.append("bounded_registry_catalogue_membership")
+    elif spec.get("requires_catalogue_membership"):
+        failures.append("bounded_registry_catalogue_membership_unproven")
+    return {
+        "static_proven": not failures,
+        "proof": proof,
+        "failures": failures,
+        "query_family": family,
+    }
+
+
 class _ConsumerQueryVisitor(ast.NodeVisitor):
     """Find statically named governed-fact query seams in one module."""
 
-    def __init__(self, *, file: str, constants: dict[str, str]) -> None:
+    def __init__(
+        self,
+        *,
+        file: str,
+        constants: dict[str, str],
+        tree: ast.AST,
+        helper_call_candidates: dict[str, tuple[str, ...]] | None = None,
+        compiled_fact_index: dict[str, dict[str, Any]] | None = None,
+    ) -> None:
         self.file = file
         self.constants = constants
+        self.tree = tree
         self.symbol_stack: list[str] = []
+        self.function_node_stack: list[ast.AST] = []
         self.observations: list[dict[str, Any]] = []
         self.malformed_observations: list[dict[str, Any]] = []
+        self.dynamic_observations: list[dict[str, Any]] = []
+        self.helper_call_candidates = helper_call_candidates or {}
+        self.compiled_fact_index = compiled_fact_index or {}
         self.query_symbols = set(CONSUMER_QUERY_SYMBOLS)
         self.query_family_by_symbol = dict(QUERY_FAMILY_BY_SYMBOL)
+        module_body = tree.body if isinstance(tree, ast.Module) else []
+        self.scope_stack: list[dict[str, Any]] = [_scope_bindings(module_body)]
+        self.loop_bindings: list[dict[str, tuple[str, ...] | None]] = []
+        self.function_scope_stack: list[str] = []
+        self.mapping_return_facts = _mapping_return_fact_ids(tree)
+        self.mapping_scope_stack: list[dict[str, str]] = [self._mapping_scope_bindings(module_body)]
+        self.immutable_module_values = _immutable_module_values(tree)
+        self.closed_world_values = _closed_world_parameter_values(tree)
+        self.closed_world_families = _function_query_families(tree)
+        self.import_bindings, self.invalid_import_bindings = self._import_bindings(tree)
+        self.module_tree_cache: dict[str, ast.Module | None] = {}
+
+    def _dynamic_candidate_ids(self, spec: dict[str, Any]) -> tuple[str, ...]:
+        mode = spec.get("candidate_mode")
+        if mode == "helper_calls":
+            helper = spec.get("candidate_helper")
+            candidates = self.helper_call_candidates.get(helper, ()) if isinstance(helper, str) else ()
+            names = spec.get("candidate_constant_names", ())
+            if names:
+                candidates = tuple(candidates) + tuple(
+                    self.constants[name]
+                    for name in names
+                    if name in self.constants
+                )
+            return tuple(sorted(set(candidates)))
+        if mode == "module_mapping_keys":
+            mapping_name = spec.get("candidate_mapping")
+            if isinstance(mapping_name, str):
+                return _module_literal_mapping_keys(self.tree, mapping_name) or ()
+            return ()
+        if mode == "module_constants":
+            names = spec.get("candidate_constant_names", ())
+            return tuple(sorted({self.constants[name] for name in names if name in self.constants}))
+        if mode == "query_literals":
+            query_symbol = spec.get("candidate_query")
+            if isinstance(query_symbol, str):
+                return _query_literal_candidates(self.tree, query_symbol, self.constants)
+        if mode == "inferred_mapping_provenance":
+            candidates = spec.get("candidate_fact_ids", ())
+            return tuple(sorted({value for value in candidates if isinstance(value, str) and value.strip()}))
+        return ()
+
+    def _dynamic_observation(
+        self,
+        *,
+        node: ast.Call,
+        observation: dict[str, Any],
+        fact_expression: ast.AST | None,
+        resolution: dict[str, Any],
+    ) -> dict[str, Any] | None:
+        symbol = "::".join(self.symbol_stack)
+        query_family = self.query_family_by_symbol.get(_call_symbol(node.func) or "")
+        function_node = self.function_node_stack[-1] if self.function_node_stack else None
+        # Structural inference supersedes the legacy reviewed specs whenever
+        # the source itself proves finite mapping provenance.  The bounded
+        # specs remain only for existing generic seams whose caller/catalogue
+        # shape is not expressible through this inference yet.
+        spec = _infer_dynamic_seam_spec(
+            tree=self.tree,
+            function_node=function_node,
+            query_node=node,
+            fact_expression=fact_expression,
+            query_family=query_family,
+            constants=self.constants,
+            compiled=self.compiled_fact_index,
+        )
+        if spec is None:
+            spec = _dynamic_seam_spec(self.file, symbol)
+        if spec is None:
+            return None
+        if query_family != spec.get("query_family"):
+            return {
+                **observation,
+                "dynamic_seam": True,
+                "candidate_fact_ids": [],
+                "dynamic_seam_proof": {
+                    "static_proven": False,
+                    "proof": [],
+                    "failures": ["query_family_mismatch"],
+                },
+                "blocking": True,
+                "blockers": ["dynamic_seam_proof_failed", "query_family_mismatch"],
+            }
+        proof = _dynamic_seam_static_proof(
+            spec=spec,
+            tree=self.tree,
+            function_node=function_node,
+            query_node=node,
+            fact_expression=fact_expression,
+        )
+        if spec.get("mapping_provenance"):
+            proof["mapping_provenance"] = spec["mapping_provenance"]
+            proof.setdefault("proof", []).append("finite_mapping_spec_provenance")
+        candidates = self._dynamic_candidate_ids(spec)
+        return {
+            **observation,
+            "dynamic_seam": True,
+            "candidate_fact_ids": list(candidates),
+            "fact_id_resolution": {
+                **observation.get("fact_id_resolution", {}),
+                "mode": "typed_dynamic_seam",
+                "candidate_fact_ids": list(candidates),
+            },
+            "dynamic_seam_proof": proof,
+            "blocking": not bool(proof.get("static_proven")) or not candidates,
+            "blockers": (
+                ["dynamic_seam_proof_failed", *proof.get("failures", [])]
+                if not proof.get("static_proven")
+                else (["dynamic_seam_coverage_missing"] if not candidates else [])
+            ),
+            "resolution_mode": resolution.get("mode"),
+        }
+
+    def _mapping_scope_bindings(self, body: Sequence[ast.stmt]) -> dict[str, str]:
+        collector = _ScopeWriteCollector()
+        for statement in body:
+            collector.visit(statement)
+        bindings: dict[str, str] = {}
+        for statement in body:
+            if isinstance(statement, ast.Assign):
+                targets = _simple_assignment_names(statement.targets)
+                value = statement.value
+            elif isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
+                targets = [statement.target.id]
+                value = statement.value
+            else:
+                continue
+            if not isinstance(value, ast.Call) or not isinstance(value.func, ast.Name):
+                continue
+            mapping_fact_id = self.mapping_return_facts.get(value.func.id)
+            if mapping_fact_id is None:
+                continue
+            for target in targets:
+                if collector.counts.get(target) == 1:
+                    bindings[target] = mapping_fact_id
+        return bindings
+
+    def _import_bindings(self, tree: ast.AST) -> tuple[dict[str, dict[str, Any]], set[str]]:
+        """Index only explicit, local-source imports; never execute imports."""
+        bindings: dict[str, dict[str, Any]] = {}
+        invalid: set[str] = set()
+        if not isinstance(tree, ast.Module):
+            return bindings, invalid
+        for statement in tree.body:
+            if isinstance(statement, ast.ImportFrom):
+                if any(alias.name == "*" for alias in statement.names):
+                    # A star import cannot contribute a statically attributable
+                    # fact ID.  It is deliberately not indexed as a binding.
+                    continue
+                module = _resolve_import_module(
+                    self.file,
+                    level=statement.level,
+                    module=statement.module,
+                )
+                if module is None:
+                    continue
+                for alias in statement.names:
+                    bound_name = alias.asname or alias.name
+                    binding = {
+                        "kind": "from",
+                        "module": module,
+                        "name": alias.name,
+                    }
+                    if bound_name in bindings:
+                        invalid.add(bound_name)
+                    else:
+                        bindings[bound_name] = binding
+            elif isinstance(statement, ast.Import):
+                for alias in statement.names:
+                    # An unaliased dotted import binds its first component,
+                    # whose attribute chain is ambiguous for this detector.
+                    if alias.asname is None and "." in alias.name:
+                        continue
+                    bound_name = alias.asname or alias.name
+                    module = alias.name
+                    if not module.startswith("cadrumo"):
+                        continue
+                    binding = {"kind": "module", "module": module}
+                    if bound_name in bindings:
+                        invalid.add(bound_name)
+                    else:
+                        bindings[bound_name] = binding
+        # Any assignment/argument/definition with the same name invalidates an
+        # imported alias.  This is conservative across local scopes, which is
+        # preferable to attributing a dynamic or shadowed value as a fact.
+        invalid.update(name for name in bindings if name in _all_binding_writes(tree))
+        return bindings, invalid
+
+    def _local_module_tree(self, module: str) -> ast.Module | None:
+        if module in self.module_tree_cache:
+            return self.module_tree_cache[module]
+        path = _local_module_path(module)
+        if path is None:
+            self.module_tree_cache[module] = None
+            return None
+        try:
+            source = _decode_python_source(path.read_bytes())
+            tree = ast.parse(source, filename=path.as_posix())
+        except (OSError, LookupError, UnicodeDecodeError, SyntaxError, ValueError, TypeError):
+            tree = None
+        self.module_tree_cache[module] = tree
+        return tree
+
+    def _resolve_imported_string(self, binding: dict[str, Any]) -> str | None:
+        module = binding.get("module")
+        name = binding.get("name")
+        if not isinstance(module, str) or not isinstance(name, str):
+            return None
+        tree = self._local_module_tree(module)
+        if tree is None:
+            return None
+        return _module_top_level_literal_string(tree, name)
+
+    def _resolve_imported_member(self, binding: dict[str, Any], member: str) -> str | None:
+        module = binding.get("module")
+        class_name = binding.get("name")
+        if not isinstance(module, str) or not isinstance(class_name, str):
+            return None
+        tree = self._local_module_tree(module)
+        if tree is None:
+            return None
+        return _module_enum_member_literal(tree, class_name, member)
+
+    def _scope_value(self, name: str) -> str | tuple[str, ...] | None:
+        for loop_scope in reversed(self.loop_bindings):
+            if name in loop_scope:
+                return loop_scope[name]
+        for function_name in reversed(self.function_scope_stack):
+            key = (function_name, name)
+            if key in self.closed_world_values:
+                return self.closed_world_values[key]
+        for scope in reversed(self.scope_stack):
+            if name in scope["sequences"]:
+                return scope["sequences"][name]
+            if name in scope["strings"]:
+                return scope["strings"][name]
+            if name in scope["blocked"]:
+                return None
+        if name in self.invalid_import_bindings:
+            return None
+        binding = self.import_bindings.get(name)
+        if binding is not None and binding.get("kind") == "from":
+            return self._resolve_imported_string(binding)
+        if name in self.immutable_module_values:
+            return self.immutable_module_values[name]
+        return self.constants.get(name)
+
+    def _scope_mapping(self, name: str) -> dict[str, str] | None:
+        for scope in reversed(self.scope_stack):
+            mapping = scope.get("mappings", {}).get(name)
+            if mapping is not None:
+                return mapping
+            if name in scope.get("blocked", set()):
+                return None
+        return None
+
+    def _registry_mapping_for_name(self, name: str) -> str | None:
+        for scope in reversed(self.mapping_scope_stack):
+            if name in scope:
+                return scope[name]
+        return None
+
+    def _resolve_attribute(self, node: ast.Attribute) -> str | None:
+        if not isinstance(node.value, ast.Name):
+            # In particular, reject unknown/nested module attributes rather
+            # than recursively evaluating arbitrary expression trees.
+            return None
+        binding_name = node.value.id
+        if binding_name in self.invalid_import_bindings:
+            return None
+        binding = self.import_bindings.get(binding_name)
+        if binding is None:
+            return None
+        kind = binding.get("kind")
+        if kind == "from":
+            return self._resolve_imported_member(binding, node.attr)
+        if kind == "module":
+            module = binding.get("module")
+            if not isinstance(module, str):
+                return None
+            tree = self._local_module_tree(module)
+            return _module_top_level_literal_string(tree, node.attr) if tree is not None else None
+        return None
+
+    def _resolve_string_expression(self, node: ast.AST | None) -> str | None:
+        if node is None:
+            return None
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            return node.value
+        if isinstance(node, ast.Name):
+            value = self._scope_value(node.id)
+            return value if isinstance(value, str) else None
+        if isinstance(node, ast.Attribute):
+            return self._resolve_attribute(node)
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+            left = self._resolve_string_expression(node.left)
+            right = self._resolve_string_expression(node.right)
+            if left is not None and right is not None:
+                return left + right
+        return None
+
+    def _fact_id_resolution(self, node: ast.AST | None) -> dict[str, Any]:
+        if node is None:
+            return {"ids": None, "mode": "unresolved"}
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            return {"ids": (node.value,), "mode": "exact_literal"}
+        if isinstance(node, ast.Name):
+            value = self._scope_value(node.id)
+            if isinstance(value, tuple):
+                return {
+                    "ids": value,
+                    "mode": "finite_candidates" if len(value) != 1 else "exact_binding",
+                }
+            if isinstance(value, str):
+                return {"ids": (value,), "mode": "exact_binding"}
+            return {"ids": None, "mode": "unresolved"}
+        if isinstance(node, ast.Attribute):
+            value = self._resolve_attribute(node)
+            return {
+                "ids": (value,) if value is not None else None,
+                "mode": "exact_imported_attribute" if value is not None else "unresolved",
+            }
+        if isinstance(node, ast.Subscript) and isinstance(node.value, ast.Name):
+            mapping_name = node.value.id
+            key = self._resolve_string_expression(node.slice)
+            local_mapping = self._scope_mapping(mapping_name)
+            if local_mapping is not None:
+                if key is None:
+                    values = tuple(dict.fromkeys(local_mapping.values()))
+                    return {
+                        "ids": values or None,
+                        "mode": "finite_mapping_candidates" if values else "typed_dynamic_mapping",
+                        "mapping_name": mapping_name,
+                    }
+                if key in local_mapping:
+                    return {
+                        "ids": (local_mapping[key],),
+                        "mode": "exact_mapping_key",
+                        "mapping_name": mapping_name,
+                        "mapping_key": key,
+                    }
+                return {
+                    "ids": None,
+                    "mode": "mapping_key_missing",
+                    "mapping_name": mapping_name,
+                    "mapping_key": key,
+                }
+            mapping_fact_id = self._registry_mapping_for_name(mapping_name)
+            if mapping_fact_id is not None:
+                if key is None:
+                    return {
+                        "ids": None,
+                        "mode": "typed_dynamic_mapping",
+                        "mapping_fact_id": mapping_fact_id,
+                        "mapping_name": mapping_name,
+                    }
+                values = _registry_mapping_candidates(mapping_fact_id, key)
+                if values:
+                    return {
+                        "ids": values,
+                        "mode": "finite_registry_mapping_candidates",
+                        "mapping_fact_id": mapping_fact_id,
+                        "mapping_name": mapping_name,
+                        "mapping_key": key,
+                    }
+                return {
+                    "ids": None,
+                    "mode": "typed_dynamic_mapping",
+                    "mapping_fact_id": mapping_fact_id,
+                    "mapping_name": mapping_name,
+                    "mapping_key": key,
+                }
+            return {"ids": None, "mode": "unresolved"}
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+            value = self._resolve_string_expression(node)
+            return {
+                "ids": (value,) if value is not None else None,
+                "mode": "exact_expression" if value is not None else "unresolved",
+            }
+        return {"ids": None, "mode": "unresolved"}
+
+    def _resolve_fact_ids(self, node: ast.AST | None) -> tuple[str, ...] | None:
+        return self._fact_id_resolution(node).get("ids")
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         """Recognize aliases of every governed-fact query family."""
@@ -1221,32 +3090,117 @@ class _ConsumerQueryVisitor(ast.NodeVisitor):
         """Retain module imports for attribute-shaped query calls."""
         self.generic_visit(node)
 
-    def _visit_symbol(self, node: ast.AST, name: str) -> None:
+    def _visit_symbol(
+        self,
+        node: ast.AST,
+        name: str,
+        *,
+        body: Sequence[ast.stmt] | None = None,
+        arguments: ast.arguments | None = None,
+    ) -> None:
         self.symbol_stack.append(name)
-        self.generic_visit(node)
-        self.symbol_stack.pop()
+        self.function_node_stack.append(node)
+        if body is not None:
+            self.scope_stack.append(_scope_bindings(body, arguments=arguments))
+            self.mapping_scope_stack.append(self._mapping_scope_bindings(body))
+        if arguments is not None:
+            self.function_scope_stack.append(name)
+        try:
+            self.generic_visit(node)
+        finally:
+            if arguments is not None:
+                self.function_scope_stack.pop()
+            if body is not None:
+                self.mapping_scope_stack.pop()
+                self.scope_stack.pop()
+            self.function_node_stack.pop()
+            self.symbol_stack.pop()
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-        self._visit_symbol(node, node.name)
+        self._visit_symbol(node, node.name, body=node.body, arguments=node.args)
 
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
-        self._visit_symbol(node, node.name)
+        self._visit_symbol(node, node.name, body=node.body, arguments=node.args)
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
-        self._visit_symbol(node, node.name)
+        self._visit_symbol(node, node.name, body=node.body)
+
+    def visit_Lambda(self, node: ast.Lambda) -> None:
+        self._visit_symbol(node, "<lambda>", body=[], arguments=node.args)
+
+    def _visit_comprehension_expression(
+        self,
+        node: ast.GeneratorExp | ast.ListComp | ast.SetComp | ast.DictComp,
+    ) -> None:
+        local_bindings: dict[str, tuple[str, ...] | None] = {}
+        self.loop_bindings.append(local_bindings)
+        try:
+            for generator in node.generators:
+                values = self._resolve_fact_ids(generator.iter)
+                self.visit(generator.iter)
+                target_names = _target_names(generator.target)
+                if isinstance(generator.target, ast.Name):
+                    target_names = [generator.target.id]
+                for target_name in target_names:
+                    local_bindings[target_name] = values
+                for condition in generator.ifs:
+                    self.visit(condition)
+            if isinstance(node, ast.DictComp):
+                self.visit(node.key)
+                self.visit(node.value)
+            else:
+                self.visit(node.elt)
+        finally:
+            self.loop_bindings.pop()
+
+    def visit_GeneratorExp(self, node: ast.GeneratorExp) -> None:
+        self._visit_comprehension_expression(node)
+
+    def visit_ListComp(self, node: ast.ListComp) -> None:
+        self._visit_comprehension_expression(node)
+
+    def visit_SetComp(self, node: ast.SetComp) -> None:
+        self._visit_comprehension_expression(node)
+
+    def visit_DictComp(self, node: ast.DictComp) -> None:
+        self._visit_comprehension_expression(node)
+
+    def _visit_loop(self, node: ast.For | ast.AsyncFor) -> None:
+        values = self._resolve_fact_ids(node.iter)
+        self.visit(node.iter)
+        local_bindings: dict[str, tuple[str, ...] | None] = {}
+        if not isinstance(node.target, ast.Name):
+            values = None
+        for target_name in _target_names(node.target):
+            local_bindings[target_name] = values
+        self.loop_bindings.append(local_bindings)
+        try:
+            for statement in node.body:
+                self.visit(statement)
+            for statement in node.orelse:
+                self.visit(statement)
+        finally:
+            self.loop_bindings.pop()
+
+    def visit_For(self, node: ast.For) -> None:
+        self._visit_loop(node)
+
+    def visit_AsyncFor(self, node: ast.AsyncFor) -> None:
+        self._visit_loop(node)
 
     def visit_Call(self, node: ast.Call) -> None:
         query_kind = _call_symbol(node.func)
         if query_kind in self.query_symbols:
             fact_expr = next((keyword.value for keyword in node.keywords if keyword.arg == "fact_id"), None)
-            fact_id = _static_string(fact_expr, self.constants)
+            resolution = self._fact_id_resolution(fact_expr)
+            fact_ids = resolution.get("ids")
             axis_expr = next((keyword.value for keyword in node.keywords if keyword.arg == "date_axis"), None)
             effective_expr = next(
                 (keyword.value for keyword in node.keywords if keyword.arg == "effective_date"),
                 None,
             )
             observation: dict[str, Any] = {
-                "fact_id": fact_id,
+                "fact_id": None,
                 "query_kind": query_kind,
                 "query_family": self.query_family_by_symbol.get(query_kind),
                 "file": self.file,
@@ -1257,12 +3211,30 @@ class _ConsumerQueryVisitor(ast.NodeVisitor):
                 "date_axis_expression": ast.unparse(axis_expr) if axis_expr is not None else None,
                 "effective_date_expression": ast.unparse(effective_expr) if effective_expr is not None else None,
                 "source_kind": "ast_query_call",
+                "fact_id_resolution": {key: value for key, value in resolution.items() if key != "ids"},
             }
-            if fact_id:
-                self.observations.append(observation)
+            if isinstance(fact_expr, ast.Name) and self.function_scope_stack:
+                function_name = self.function_scope_stack[-1]
+                family_key = (function_name, fact_expr.id)
+                if family_key in self.closed_world_values and (query_family := self.query_family_by_symbol.get(query_kind)):
+                    allowed_families = self.closed_world_families.get(family_key, set())
+                    if query_family not in allowed_families:
+                        fact_ids = None
+            if fact_ids and all(isinstance(fact_id, str) and fact_id for fact_id in fact_ids):
+                for fact_id in fact_ids:
+                    self.observations.append({**observation, "fact_id": fact_id})
             else:
-                observation["blockers"] = ["consumer_query_fact_id_unresolved"]
-                self.malformed_observations.append(observation)
+                dynamic = self._dynamic_observation(
+                    node=node,
+                    observation=observation,
+                    fact_expression=fact_expr,
+                    resolution=resolution,
+                )
+                if dynamic is not None:
+                    self.dynamic_observations.append(dynamic)
+                else:
+                    observation["blockers"] = ["consumer_query_fact_id_unresolved"]
+                    self.malformed_observations.append(observation)
         self.generic_visit(node)
 
 
@@ -1366,6 +3338,136 @@ def _compiled_fact_index(payload: Any) -> dict[str, dict[str, Any]]:
     return {}
 
 
+_UNORDERED_FACT_WIRE_ARRAY_KEYS = frozenset(
+    {
+        "variants",
+        "selectors",
+        "legal_refs",
+        "source_refs",
+        "source_citations",
+        "precedence_over",
+        "entries",
+        "entities",
+        "outputs",
+        "periods",
+        "period_overrides",
+        "required_text",
+    }
+)
+
+
+def _normalise_fact_wire_value(value: Any, *, key: str | None = None) -> Any:
+    """Normalize only schema collections whose order is not semantic."""
+    if isinstance(value, dict):
+        return {
+            str(item_key): _normalise_fact_wire_value(item_value, key=str(item_key))
+            for item_key, item_value in value.items()
+        }
+    if isinstance(value, list):
+        normalized = [_normalise_fact_wire_value(item) for item in value]
+        if key in _UNORDERED_FACT_WIRE_ARRAY_KEYS:
+            return sorted(
+                normalized,
+                key=lambda item: canonical_json_bytes(item),
+            )
+        return normalized
+    return value
+
+
+def _canonical_fact_wire_digest(fact: Any) -> str:
+    """Digest one fact through the existing facts compiler serialization."""
+    from dev.registry.compiler.fact_providers import serialize_fact_catalogue
+    from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
+
+    provider_neutral = fact.model_copy(update={"provider_id": None})
+    serialized = serialize_fact_catalogue(
+        GovernedFactCatalogue(facts={provider_neutral.fact_id: provider_neutral}),
+    )
+    normalized = _normalise_fact_wire_value(json.loads(serialized))
+    return sha256_hex(canonical_json_bytes(normalized))
+
+
+def _authored_bundled_payload_staleness(artifact_status: str) -> dict[str, Any]:
+    """Compare shared authored facts with the typed bundled authority payload."""
+    result: dict[str, Any] = {
+        "status": "ok",
+        "shared_fact_count": 0,
+        "compared_fact_count": 0,
+        "provider_only_compiled_count": 0,
+        "stale": [],
+        "errors": [],
+    }
+    if artifact_status != "ok":
+        result["status"] = "blocked:bundled_authority_unavailable"
+        result["errors"] = [f"bundled-authority-status:{artifact_status}"]
+        return result
+    try:
+        from dev.registry.compiler.fact_providers import (
+            AUTHORED_FACT_PROVIDER_ID,
+            compile_authored_fact_catalogue,
+        )
+
+        authored_catalogue = compile_authored_fact_catalogue(AUTHORED_DATA_ROOT / "registry" / "aeat")
+        bundled_artifact = read_authority_artifact(BUNDLED_AUTHORITY_ARTIFACT)
+        authored_facts = authored_catalogue.facts
+        bundled_facts = bundled_artifact.catalogues.facts.facts
+        shared_ids = sorted(set(authored_facts) & set(bundled_facts))
+        provider_only_ids = {
+            fact_id
+            for fact_id, fact in bundled_facts.items()
+            if (
+                fact_id not in authored_facts
+                and fact.provider_id is not None
+                and str(fact.provider_id) != AUTHORED_FACT_PROVIDER_ID
+                and all(variant.ownership.value == "generated" for variant in fact.variants)
+            )
+        }
+        result["shared_fact_count"] = len(shared_ids)
+        result["provider_only_compiled_count"] = len(provider_only_ids)
+        stale: list[dict[str, Any]] = []
+        for fact_id in shared_ids:
+            authored_digest = _canonical_fact_wire_digest(authored_facts[fact_id])
+            bundled_digest = _canonical_fact_wire_digest(bundled_facts[fact_id])
+            result["compared_fact_count"] += 1
+            if authored_digest == bundled_digest:
+                continue
+            stale.append(
+                {
+                    "fact_id": fact_id,
+                    "blocker": "published_fact_payload_stale",
+                    "authored_payload_sha256": authored_digest,
+                    "bundled_payload_sha256": bundled_digest,
+                },
+            )
+        result["stale"] = stale
+    except Exception as exc:  # noqa: BLE001 - facts-only signal must report a closed comparison failure
+        result["status"] = f"error:{type(exc).__name__}"
+        result["errors"] = [f"authored-bundled-payload-comparison:{type(exc).__name__}:{exc}"]
+    return result
+
+
+def _compiled_provider_id(compiled_fact: Any) -> str | None:
+    """Return provider provenance only for a wholly generated compiled fact.
+
+    Directly authored facts carry their own provider identity and authored
+    variants.  A compiled fact is provider-owned for accounting only when the
+    authority payload supplies a non-empty provider identity and every variant
+    is explicitly generated.  This keeps provider projections out of the
+    authored-file denominator without maintaining a fact-ID allowlist.
+    """
+    if not isinstance(compiled_fact, dict):
+        return None
+    provider_id = compiled_fact.get("provider_id")
+    variants = compiled_fact.get("variants")
+    if not isinstance(provider_id, str) or not provider_id.strip():
+        return None
+    if not isinstance(variants, list) or not variants:
+        return None
+    if any(not isinstance(variant, dict) or variant.get("ownership") != "generated" for variant in variants):
+        return None
+    return provider_id.strip()
+
+
 def _consumer_fact_scan(
     manifest: dict[str, Any],
     universe_scan: dict[str, Any] | None = None,
@@ -1376,9 +3478,34 @@ def _consumer_fact_scan(
     """Reconcile every named consumer fact through the authority proof chain."""
     callsites_by_fact: dict[str, list[dict[str, Any]]] = {}
     malformed_callsites: list[dict[str, Any]] = []
+    dynamic_callsites: list[dict[str, Any]] = []
     parse_errors: list[str] = []
     if source_paths is None:
         source_paths = list((universe_scan or {}).get("paths", []))
+    if authority_probe is None:
+        artifact_payload, artifact_status = _load_authority_artifact(BUNDLED_AUTHORITY_ARTIFACT)
+    else:
+        artifact_payload, artifact_status = authority_probe
+    compiled = _compiled_fact_index(artifact_payload) if artifact_status == "ok" else {}
+    helper_names = {
+        str(spec["candidate_helper"])
+        for spec in DYNAMIC_SEAM_SPECS
+        if spec.get("candidate_mode") == "helper_calls" and isinstance(spec.get("candidate_helper"), str)
+    }
+    helper_scan_paths = set(source_paths)
+    if helper_names:
+        # The facts-only query inventory intentionally narrows to modules that
+        # contain a query constructor.  A generic helper can have its concrete
+        # caller in a thin domain adapter which only invokes the helper, so
+        # include the non-test Python universe for this caller-coverage proof.
+        try:
+            for path in SOURCE_ROOT.rglob("*.py"):
+                relative = path.resolve().relative_to(REPO_ROOT).as_posix()
+                if not _fd_excluded(PurePosixPath(relative)):
+                    helper_scan_paths.add(relative)
+        except OSError:
+            pass
+    helper_call_candidates = _collect_helper_call_candidates(sorted(helper_scan_paths), helper_names)
     for relative in source_paths:
         path = REPO_ROOT / Path(*PurePosixPath(relative).parts)
         try:
@@ -1387,11 +3514,18 @@ def _consumer_fact_scan(
         except (OSError, SyntaxError, LookupError, UnicodeDecodeError, ValueError, TypeError) as exc:
             parse_errors.append(f"{relative}:{type(exc).__name__}")
             continue
-        visitor = _ConsumerQueryVisitor(file=relative, constants=_module_string_constants(tree))
+        visitor = _ConsumerQueryVisitor(
+            file=relative,
+            constants=_module_string_constants(tree),
+            tree=tree,
+            helper_call_candidates=helper_call_candidates,
+            compiled_fact_index=compiled,
+        )
         visitor.visit(tree)
         for observation in visitor.observations:
             callsites_by_fact.setdefault(observation["fact_id"], []).append(observation)
         malformed_callsites.extend(visitor.malformed_observations)
+        dynamic_callsites.extend(visitor.dynamic_observations)
 
     external_observations, external_errors = _consumer_requirement_file()
     for external in external_observations:
@@ -1410,11 +3544,66 @@ def _consumer_fact_scan(
             callsites_by_fact.setdefault(fact_id, []).append(observation)
 
     authored, authored_errors = _authored_fact_index()
-    if authority_probe is None:
-        artifact_payload, artifact_status = _load_authority_artifact(BUNDLED_AUTHORITY_ARTIFACT)
-    else:
-        artifact_payload, artifact_status = authority_probe
-    compiled = _compiled_fact_index(artifact_payload) if artifact_status == "ok" else {}
+    dynamic_seams: list[dict[str, Any]] = []
+    dynamic_blockers: list[dict[str, Any]] = []
+    for dynamic in dynamic_callsites:
+        candidate_ids = tuple(
+            fact_id
+            for fact_id in dynamic.get("candidate_fact_ids", ())
+            if isinstance(fact_id, str) and fact_id.strip()
+        )
+        authored_missing = sorted(set(candidate_ids) - set(authored))
+        compiled_missing = sorted(set(candidate_ids) - set(compiled))
+        dynamic["candidate_fact_ids"] = list(candidate_ids)
+        dynamic["candidate_authored_presence"] = {
+            fact_id: bool(authored.get(fact_id)) for fact_id in candidate_ids
+        }
+        dynamic["candidate_bundled_presence"] = {
+            fact_id: fact_id in compiled for fact_id in candidate_ids
+        }
+        dynamic["dynamic_seam_proof"] = {
+            **dict(dynamic.get("dynamic_seam_proof") or {}),
+            "candidate_authored_presence": not authored_missing,
+            "candidate_bundled_presence": not compiled_missing,
+            "candidate_coverage": bool(candidate_ids) and not authored_missing and not compiled_missing,
+            "missing_authored_fact_ids": authored_missing,
+            "missing_bundled_fact_ids": compiled_missing,
+        }
+        blockers = list(dynamic.get("blockers") or [])
+        if authored_missing:
+            blockers.append("dynamic_candidate_authored_fact_missing")
+        if compiled_missing:
+            blockers.append("dynamic_candidate_bundled_fact_missing")
+        dynamic["blockers"] = list(dict.fromkeys(blockers))
+        dynamic["blocking"] = bool(dynamic["blockers"])
+        dynamic["consumer_seam_loadability"] = (
+            "typed_dynamic_seam"
+            if not dynamic["blocking"]
+            else "blocked:" + ",".join(dynamic["blockers"])
+        )
+        dynamic["source_call_sites"] = [
+            {
+                key: value
+                for key, value in dynamic.items()
+                if key
+                in {
+                    "file",
+                    "line",
+                    "column",
+                    "enclosing_symbol",
+                    "query_kind",
+                    "query_family",
+                    "date_axis",
+                    "date_axis_expression",
+                    "effective_date_expression",
+                    "source_kind",
+                }
+            }
+        ]
+        dynamic["associated_row_ids"] = []
+        dynamic_seams.append(dynamic)
+        if dynamic["blocking"]:
+            dynamic_blockers.append(dynamic)
     row_files: dict[str, set[str]] = {}
     for row in manifest.get("candidates", []):
         paths: set[str] = set()
@@ -1451,6 +3640,8 @@ def _consumer_fact_scan(
                 deduped_callsites.append(callsite)
         authored_paths = sorted(authored.get(fact_id, []))
         compiled_fact = compiled.get(fact_id)
+        compiled_provider_id = _compiled_provider_id(compiled_fact)
+        provider_owned_compiled = compiled_provider_id is not None
         variants = compiled_fact.get("variants", []) if isinstance(compiled_fact, dict) else []
         compiled_axes = {
             str(variant.get("date_axis"))
@@ -1481,7 +3672,7 @@ def _consumer_fact_scan(
             if any(callsite.get("file") in paths for callsite in deduped_callsites)
         )
         blockers: list[str] = []
-        if not authored_paths:
+        if not authored_paths and not provider_owned_compiled:
             blockers.append("authored_fact_missing")
         if compiled_fact is None:
             blockers.append("bundled_authority_fact_missing")
@@ -1506,6 +3697,8 @@ def _consumer_fact_scan(
             "authored_presence": bool(authored_paths),
             "authored_paths": authored_paths,
             "bundled_authority_presence": compiled_fact is not None,
+            "compiled_provider_id": compiled_provider_id,
+            "provider_owned_compiled": provider_owned_compiled,
             "bundled_authority_artifact": _display_path(BUNDLED_AUTHORITY_ARTIFACT),
             "bundled_authority_artifact_status": artifact_status,
             "compiled_variant_date_axes": sorted(compiled_axes),
@@ -1518,6 +3711,7 @@ def _consumer_fact_scan(
             "proof_chain": {
                 "authored_presence": bool(authored_paths),
                 "bundled_authority_presence": compiled_fact is not None,
+                "provider_owned_compiled": provider_owned_compiled,
                 "query_date_axis_resolution": axis_resolved,
                 "consumer_seam_loadability": not blockers,
             },
@@ -1543,6 +3737,8 @@ def _consumer_fact_scan(
             "authored_presence": False,
             "authored_paths": [],
             "bundled_authority_presence": False,
+            "compiled_provider_id": None,
+            "provider_owned_compiled": False,
             "bundled_authority_artifact": _display_path(BUNDLED_AUTHORITY_ARTIFACT),
             "bundled_authority_artifact_status": artifact_status,
             "compiled_variant_date_axes": [],
@@ -1552,6 +3748,7 @@ def _consumer_fact_scan(
             "proof_chain": {
                 "authored_presence": False,
                 "bundled_authority_presence": False,
+                "provider_owned_compiled": False,
                 "query_date_axis_resolution": False,
                 "consumer_seam_loadability": False,
             },
@@ -1562,21 +3759,26 @@ def _consumer_fact_scan(
         }
         for item in malformed_observations
     ]
-    blockers = [item for item in observations if item["blocking"]] + malformed_blockers
+    blockers = [item for item in observations if item["blocking"]] + malformed_blockers + dynamic_blockers
     return {
         "observations": observations,
         "blockers": blockers,
         "malformed_callsites": malformed_observations,
+        "dynamic_seams": dynamic_seams,
         "errors": sorted(set(parse_errors + external_errors + authored_errors)),
         "counts": {
             "consumer_fact_required_count": len(observations),
             "consumer_fact_callsite_count": sum(len(item["source_call_sites"]) for item in observations),
             "consumer_fact_authored_present_count": sum(item["authored_presence"] for item in observations),
             "consumer_fact_compiled_present_count": sum(item["bundled_authority_presence"] for item in observations),
+            "consumer_fact_provider_owned_count": sum(item["provider_owned_compiled"] for item in observations),
             "consumer_fact_resolved_count": sum(not item["blocking"] for item in observations),
             "consumer_fact_blocker_count": len(blockers),
             "consumer_fact_error_count": len(consumer_errors := (parse_errors + external_errors + authored_errors)),
             "consumer_query_malformed_count": len(malformed_observations),
+            "consumer_dynamic_seam_count": len(dynamic_seams),
+            "consumer_dynamic_seam_proven_count": sum(not item["blocking"] for item in dynamic_seams),
+            "consumer_dynamic_seam_blocker_count": len(dynamic_blockers),
             "consumer_source_path_count": len(source_paths),
         },
         "associated_row_ids": sorted({row_id for item in blockers for row_id in item["associated_row_ids"]}),
@@ -1634,13 +3836,25 @@ def _facts_only_signal() -> dict[str, Any]:
 
     authored, authored_errors = _authored_fact_index()
     compiled = _compiled_fact_index(artifact_payload) if artifact_status == "ok" else {}
+    payload_staleness = _authored_bundled_payload_staleness(artifact_status)
     required_ids = sorted({item["fact_id"] for item in consumer_scan["observations"]})
     authored_ids = sorted(authored)
     compiled_ids = sorted(compiled)
+    provider_owned_compiled_by_provider: dict[str, list[str]] = {}
+    for fact_id in compiled_ids:
+        provider_id = _compiled_provider_id(compiled[fact_id])
+        if provider_id is not None:
+            provider_owned_compiled_by_provider.setdefault(provider_id, []).append(fact_id)
+    provider_owned_compiled_ids = sorted(
+        fact_id for fact_id in compiled_ids if _compiled_provider_id(compiled[fact_id]) is not None
+    )
+    provider_owned_required_ids = sorted(set(required_ids) & set(provider_owned_compiled_ids))
+    compiled_unaccounted_ids = sorted(set(compiled_ids) - set(authored_ids) - set(provider_owned_compiled_ids))
+    authored_uncompiled_ids = sorted(set(authored_ids) - set(compiled_ids))
     resolved_ids = sorted(
         item["fact_id"] for item in consumer_scan["observations"] if not item["blocking"]
     )
-    authored_missing = sorted(set(required_ids) - set(authored))
+    authored_missing = sorted(set(required_ids) - set(authored) - set(provider_owned_required_ids))
     compiled_missing = sorted(set(required_ids) - set(compiled))
     axis_blockers = [
         item
@@ -1650,8 +3864,29 @@ def _facts_only_signal() -> dict[str, Any]:
     authority_errors = sum(
         status != "ok"
         for status in (artifact_status, bundled_probe["status"])
-    ) + len(authored_errors)
+    ) + len(authored_errors) + len(payload_staleness["errors"])
     publication_blockers = list(consumer_scan["blockers"])
+    publication_blockers.extend(
+        {
+            "fact_id": item["fact_id"],
+            "source_call_sites": [],
+            "blockers": ["published_fact_payload_stale"],
+            "authored_payload_sha256": item["authored_payload_sha256"],
+            "bundled_payload_sha256": item["bundled_payload_sha256"],
+            "blocking": True,
+        }
+        for item in payload_staleness["stale"]
+    )
+    publication_blockers.extend(
+        {
+            "fact_id": None,
+            "source_call_sites": [],
+            "blockers": ["authored_bundled_payload_comparison_error"],
+            "errors": payload_staleness["errors"],
+            "blocking": True,
+        }
+        for _ in payload_staleness["errors"]
+    )
     publication_blockers.extend(
         {
             "fact_id": fact_id,
@@ -1670,12 +3905,35 @@ def _facts_only_signal() -> dict[str, Any]:
         for fact_id in compiled_missing
         if not any(item.get("fact_id") == fact_id for item in publication_blockers)
     )
+    if artifact_status == "ok":
+        publication_blockers.extend(
+            {
+                "fact_id": fact_id,
+                "source_call_sites": [],
+                "blockers": ["compiled_fact_without_authored_or_provider_provenance"],
+            }
+            for fact_id in compiled_unaccounted_ids
+            if not any(item.get("fact_id") == fact_id for item in publication_blockers)
+        )
+        publication_blockers.extend(
+            {
+                "fact_id": fact_id,
+                "source_call_sites": [],
+                "blockers": ["authored_fact_not_in_bundled_authority"],
+            }
+            for fact_id in authored_uncompiled_ids
+            if not any(item.get("fact_id") == fact_id for item in publication_blockers)
+        )
     counts = {
         "required_fact_count": len(required_ids),
         "authored_fact_count": len(authored_ids),
         "compiled_fact_count": len(compiled_ids),
         "resolved_fact_count": len(resolved_ids),
         "required_authored_present_count": len(set(required_ids) & set(authored)),
+        "required_provider_owned_present_count": len(provider_owned_required_ids),
+        "required_authored_or_provider_present_count": len(
+            set(required_ids) & (set(authored) | set(provider_owned_compiled_ids))
+        ),
         "required_compiled_present_count": len(set(required_ids) & set(compiled)),
         "required_resolved_count": len(resolved_ids),
         "authored_fact_missing_count": len(authored_missing),
@@ -1686,7 +3944,16 @@ def _facts_only_signal() -> dict[str, Any]:
         "consumer_query_malformed_count": consumer_scan["counts"]["consumer_query_malformed_count"],
         "authority_error_count": authority_errors,
         "facts_publication_blocker_count": len(publication_blockers) + authority_errors,
-        "fact_count_equality": len(required_ids) == len(authored_ids) == len(compiled_ids) == len(resolved_ids),
+        "published_fact_payload_stale_count": len(payload_staleness["stale"]),
+        "authored_bundled_payload_shared_count": payload_staleness["shared_fact_count"],
+        "authored_bundled_payload_compared_count": payload_staleness["compared_fact_count"],
+        "authored_bundled_payload_provider_only_count": payload_staleness["provider_only_compiled_count"],
+        "authored_bundled_payload_error_count": len(payload_staleness["errors"]),
+        "provider_owned_compiled_fact_count": len(provider_owned_compiled_ids),
+        "compiled_unaccounted_count": len(compiled_unaccounted_ids),
+        "authored_uncompiled_count": len(authored_uncompiled_ids),
+        "fact_accounting_error_count": len(compiled_unaccounted_ids) + len(authored_uncompiled_ids),
+        "fact_count_equality": not compiled_unaccounted_ids and not authored_uncompiled_ids,
     }
     return {
         "schema": "cadrumo.fact-relocation.facts-publication-signal",
@@ -1698,13 +3965,25 @@ def _facts_only_signal() -> dict[str, Any]:
             "required": required_ids,
             "authored": authored_ids,
             "compiled": compiled_ids,
+            "provider_owned_compiled": provider_owned_compiled_ids,
+            "compiled_unaccounted": compiled_unaccounted_ids,
+            "authored_uncompiled": authored_uncompiled_ids,
             "resolved": resolved_ids,
             "authored_missing": authored_missing,
             "compiled_missing": compiled_missing,
         },
         "consumer_fact_observations": consumer_scan["observations"],
+        "consumer_dynamic_seams": consumer_scan["dynamic_seams"],
         "consumer_fact_blockers": publication_blockers,
         "consumer_fact_scan_errors": sorted(set(consumer_scan["errors"] + authored_errors)),
+        "payload_staleness": payload_staleness,
+        "provider_ownership": {
+            "compiled_by_provider": {
+                provider_id: sorted(fact_ids)
+                for provider_id, fact_ids in sorted(provider_owned_compiled_by_provider.items())
+            },
+            "required_provider_owned_ids": provider_owned_required_ids,
+        },
         "counts": counts,
         "authority_digest_status": {
             "artifact_file_sha256": artifact_metadata["file_sha256"],
@@ -1737,12 +4016,26 @@ def _facts_only_human(signal: dict[str, Any]) -> str:
             f"compiled_missing={counts['compiled_fact_missing_count']}, "
             f"date_axis={counts['query_date_axis_unresolved_count']}, "
             f"authority_errors={counts['authority_error_count']}, "
+            f"payload_stale={counts['published_fact_payload_stale_count']}, "
             f"publication={counts['facts_publication_blocker_count']}"
+        ),
+        (
+            "fact ownership: "
+            f"provider_owned_compiled={counts['provider_owned_compiled_fact_count']}, "
+            f"compiled_unaccounted={counts['compiled_unaccounted_count']}, "
+            f"authored_uncompiled={counts['authored_uncompiled_count']}"
         ),
         f"artifact: {signal['artifact']['status']}",
         f"bundled loader: {signal['bundled_authority']['status']}",
         "consumer fact blockers:",
     ]
+    dynamic_seams = signal.get("consumer_dynamic_seams", [])
+    if dynamic_seams:
+        lines.append(
+            "dynamic seams: "
+            f"{sum(not item.get('blocking', True) for item in dynamic_seams)} proven / "
+            f"{len(dynamic_seams)} observed"
+        )
     blockers = signal["consumer_fact_blockers"]
     if not blockers:
         lines.append("(none)")
@@ -1774,6 +4067,266 @@ def _candidate_payload(candidate: GovernedLiteralCandidate) -> dict[str, Any]:
         + hashlib.sha256(json.dumps(identity, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
     )
     return {"candidate_id": candidate_id, "line": candidate.line, **identity}
+
+
+_ENUM_DIRECT_BASE_NAMES = frozenset({"Enum", "StrEnum"})
+_ENUM_NEGATIVE_CLASS_TOKENS = frozenset(
+    {
+        "availability",
+        "binding",
+        "cohort",
+        "confidence",
+        "diagnostic",
+        "disposition",
+        "error",
+        "evidence",
+        "failure",
+        "fact",
+        "field",
+        "grounding",
+        "health",
+        "issue",
+        "lifecycle",
+        "mismatch",
+        "module",
+        "outcome",
+        "phase",
+        "precondition",
+        "provenance",
+        "reason",
+        "readiness",
+        "review",
+        "severity",
+        "stage",
+        "state",
+        "status",
+        "surface",
+        "workflow",
+    }
+)
+_ENUM_NEGATIVE_CONTEXT_TOKENS = frozenset({"ledger", "manual", "provenance", "residual"})
+_ENUM_LEGAL_CONTEXT_TOKENS = frozenset({"article", "ley", "lis", "lirpf", "liva", "rd", "rdl"})
+_ENUM_MODEL_RE = re.compile(r"^m[0-9]{3}$", re.IGNORECASE)
+
+
+def _enum_identifier_tokens(value: str) -> frozenset[str]:
+    """Split snake/camel/model identifiers into conservative context tokens."""
+    expanded = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", value)
+    expanded = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", expanded)
+    expanded = re.sub(r"[^A-Za-z0-9]+", "_", expanded)
+    return frozenset(part.casefold() for part in expanded.split("_") if part)
+
+
+def _enum_base_aliases(tree: ast.Module) -> tuple[frozenset[str], frozenset[str]]:
+    """Return direct enum names and aliases for the :mod:`enum` module."""
+    direct = set(_ENUM_DIRECT_BASE_NAMES)
+    modules: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, ast.ImportFrom) and node.module == "enum":
+            for imported in node.names:
+                if imported.name in _ENUM_DIRECT_BASE_NAMES:
+                    direct.add(imported.asname or imported.name)
+        elif isinstance(node, ast.Import):
+            for imported in node.names:
+                if imported.name == "enum":
+                    modules.add(imported.asname or "enum")
+    return frozenset(direct), frozenset(modules)
+
+
+def _enum_members(node: ast.ClassDef) -> list[dict[str, str]]:
+    """Collect direct finite enum member declarations without evaluating code."""
+    members: list[dict[str, str]] = []
+    for child in node.body:
+        if isinstance(child, ast.Assign):
+            targets = child.targets
+            value = child.value
+        elif isinstance(child, ast.AnnAssign):
+            targets = [child.target]
+            value = child.value
+        else:
+            continue
+        if value is None:
+            continue
+        for target in targets:
+            if not isinstance(target, ast.Name) or target.id.startswith("_"):
+                continue
+            members.append(
+                {
+                    "name": target.id,
+                    "value": ast.unparse(value),
+                    "source_span": _node_span(child),
+                }
+            )
+    return members
+
+
+def _enum_is_direct_base(base: ast.expr, direct_names: frozenset[str], module_names: frozenset[str]) -> bool:
+    if isinstance(base, ast.Name):
+        return base.id in direct_names
+    return (
+        isinstance(base, ast.Attribute)
+        and isinstance(base.value, ast.Name)
+        and base.value.id in module_names
+        and base.attr in _ENUM_DIRECT_BASE_NAMES
+    )
+
+
+def _enum_is_tax_catalogue(
+    *,
+    relative: str,
+    node: ast.ClassDef,
+    members: Sequence[dict[str, str]],
+) -> tuple[bool, str | None, frozenset[str]]:
+    """Recognize tax vocabulary enums while excluding workflow/provenance types.
+
+    The rule requires a domain anchor in class/member names or values. A
+    directory or filename alone cannot promote a generic enum. Model-shaped
+    tokens are accepted only with an adjacent tax vocabulary token, while legal
+    article markers are accepted independently.
+    """
+    class_tokens = _enum_identifier_tokens(node.name)
+    member_text = " ".join(f"{member['name']} {member['value']}" for member in members)
+    member_tokens = _enum_identifier_tokens(member_text)
+    path_tokens = _enum_identifier_tokens(relative)
+    all_tokens = class_tokens | member_tokens | path_tokens
+    class_and_member_tokens = class_tokens | member_tokens
+
+    if class_tokens & _ENUM_NEGATIVE_CLASS_TOKENS:
+        return False, None, all_tokens
+    if class_and_member_tokens & _ENUM_NEGATIVE_CONTEXT_TOKENS:
+        return False, None, all_tokens
+    if "rate" in class_tokens and "verified" in class_and_member_tokens:
+        return False, None, all_tokens
+
+    def is_numbered_legal_marker(value: str) -> bool:
+        expanded = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", value)
+        expanded = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", expanded)
+        expanded = re.sub(r"[^A-Za-z0-9]+", "_", expanded).casefold()
+        return bool(re.search(r"(?:^|_)(?:art|article|articulo|ley|rdl?|liva|lirpf|lis)_?\d+", expanded))
+
+    class_has_numbered_legal_marker = is_numbered_legal_marker(node.name)
+    member_has_numbered_legal_marker = is_numbered_legal_marker(member_text)
+    has_iva_anchor = "iva" in class_tokens or "iva" in path_tokens
+    has_irnr_anchor = "irnr" in class_tokens or "irnr" in path_tokens
+    has_withholding_anchor = bool(class_tokens & {"withholding", "retencion", "retenciones"})
+    has_invoice_iva_anchor = "invoice" in class_tokens and bool(
+        class_and_member_tokens & {"cash", "charge", "exempt", "exemption", "regime", "regimen", "reverse"}
+    )
+    has_model_anchor = any(_ENUM_MODEL_RE.fullmatch(token) for token in class_tokens) or (
+        "modelo" in class_tokens and any(token.isdigit() for token in class_tokens)
+    )
+    has_legal_marker = bool(class_tokens & _ENUM_LEGAL_CONTEXT_TOKENS) or class_has_numbered_legal_marker or (
+        member_has_numbered_legal_marker and (has_iva_anchor or has_irnr_anchor or has_model_anchor)
+    )
+    has_iva_vocabulary = (
+        has_iva_anchor
+        and bool(
+            class_and_member_tokens
+            & {"cash", "category", "exempt", "exemption", "rate", "regime", "regimen", "scheme", "service"}
+        )
+    )
+    has_withholding_vocabulary = has_withholding_anchor and bool(
+        class_and_member_tokens
+        & {"category", "clave", "code", "income", "kind", "rate", "regime", "regimen", "scheme", "tipo"}
+    )
+    has_irnr_income_vocabulary = (
+        has_irnr_anchor
+        and bool(class_and_member_tokens & {"code", "income", "renta", "tipo"})
+    )
+    has_model_tax_vocabulary = (
+        has_model_anchor
+        and bool(
+            class_and_member_tokens
+            & {"category", "code", "income", "rate", "regime", "regimen", "scheme", "tipo", "territory"}
+        )
+    )
+
+    if has_legal_marker:
+        family = "legal_article_identifiers"
+    elif has_iva_vocabulary or has_invoice_iva_anchor or (
+        "iva" in path_tokens and "regime" in class_and_member_tokens
+    ):
+        family = "iva_tax_vocabulary"
+    elif has_withholding_vocabulary:
+        family = "withholding_scheme_vocabulary"
+    elif has_irnr_income_vocabulary:
+        family = "irnr_income_vocabulary"
+    elif has_model_tax_vocabulary:
+        family = "modelo_tax_vocabulary"
+    else:
+        return False, None, all_tokens
+    return True, family, all_tokens
+
+
+def _discover_tax_enum_catalogues(source_root: Path = SOURCE_ROOT) -> list[dict[str, Any]]:
+    """Return one stable discovery candidate per tax-vocabulary enum class."""
+    catalogues: list[dict[str, Any]] = []
+    for path in sorted(source_root.rglob("*.py")):
+        if any(part.casefold() in {"test", "tests", "__pycache__"} for part in path.parts):
+            continue
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=path.as_posix())
+        except (OSError, UnicodeDecodeError, SyntaxError, ValueError, TypeError):
+            continue
+        relative = path.relative_to(REPO_ROOT).as_posix() if path.is_relative_to(REPO_ROOT) else path.as_posix()
+        direct_names, module_names = _enum_base_aliases(tree)
+
+        def visit(node: ast.AST, scope: str) -> None:
+            if not isinstance(node, ast.ClassDef):
+                for child in ast.iter_child_nodes(node):
+                    visit(child, scope)
+                return
+            members = _enum_members(node)
+            if members and any(_enum_is_direct_base(base, direct_names, module_names) for base in node.bases):
+                is_tax, family, tokens = _enum_is_tax_catalogue(
+                    relative=relative,
+                    node=node,
+                    members=members,
+                )
+                if is_tax and family is not None:
+                    symbol = f"{scope}::{node.name}" if scope != "module" else node.name
+                    source_span = _node_span(node)
+                    anchor_scope = scope if scope == "module" else f"class:{scope}"
+                    source_anchor = "ast:" + "|".join(
+                        ("v1", relative, anchor_scope, node.name, "ClassDef", source_span)
+                    )
+                    identity = {
+                        "path": relative,
+                        "enclosing_symbol": symbol,
+                        "semantic_role": "tax_enum_catalogue",
+                        "kind": "mapping",
+                    }
+                    candidate_id = (
+                        "fact-discovery:enum-catalogue:"
+                        + hashlib.sha256(canonical_json_bytes(identity)).hexdigest()
+                    )
+                    catalogues.append(
+                        {
+                            "candidate_id": candidate_id,
+                            "line": node.lineno,
+                            "path": relative,
+                            "enclosing_symbol": symbol,
+                            "semantic_role": "tax_enum_catalogue",
+                            "kind": "mapping",
+                            "excerpt": f"{node.name} ({len(members)} enum members)",
+                            "confidence": "high",
+                            "enum_catalogue": True,
+                            "catalogue_family": family,
+                            "member_count": len(members),
+                            "members": members,
+                            "base_classes": [ast.unparse(base) for base in node.bases],
+                            "source_anchor": source_anchor,
+                            "context_tokens": sorted(tokens),
+                        }
+                    )
+            for child in node.body:
+                if isinstance(child, ast.ClassDef):
+                    visit(child, f"{scope}::{node.name}" if scope != "module" else node.name)
+
+        for child in tree.body:
+            if isinstance(child, ast.ClassDef):
+                visit(child, "module")
+    return sorted(catalogues, key=lambda item: (item["path"], item["line"], item["enclosing_symbol"]))
 
 
 def _discovery_scan(manifest: dict[str, Any]) -> dict[str, Any]:
@@ -1822,6 +4375,11 @@ def _discovery_scan(manifest: dict[str, Any]) -> dict[str, Any]:
         }
         for candidate in candidates
     ]
+    observations.extend(
+        catalogue | {"ledger_context": catalogue["path"] in ledger_paths}
+        for catalogue in _discover_tax_enum_catalogues(SOURCE_ROOT)
+    )
+    observations.sort(key=lambda item: (item["path"], item["line"], item["candidate_id"]))
     for item in observations:
         item["disposition"] = dispositions.get(item["candidate_id"], "untriaged")
     observed_ids = {item["candidate_id"] for item in observations}
@@ -2398,18 +4956,202 @@ def _load_verified_fact_authority_artifact(path: Path) -> tuple[Any, str, dict[s
         return None, metadata["status"], metadata
     metadata["file_sha256"] = "sha256:" + hashlib.sha256(data).hexdigest()
     try:
-        authority = read_authority_artifact(path)
+        read_authority_artifact(path)
         frame = json.loads(data)
     except (AuthorityArtifactError, ImportError, TypeError, UnicodeDecodeError, ValueError, json.JSONDecodeError) as exc:
         metadata["status"] = f"invalid-authority:{type(exc).__name__}"
         return None, metadata["status"], metadata
-    payload = authority.model_dump(mode="json", exclude_defaults=True)
+    payload = frame["payload"]
     recorded = frame["payload_sha256"]
     metadata["recorded_payload_sha256"] = recorded
     computed = sha256_hex(canonical_json_bytes(payload))
     metadata["computed_payload_sha256"] = computed
     metadata["status"] = "ok"
     return {"payload": payload, "payload_sha256": recorded}, "ok", metadata
+
+
+def _load_v4_authority_frame(path: Path) -> tuple[dict[str, Any] | None, str, dict[str, Any]]:
+    """Load one v4 frame through the production authority decoder.
+
+    The legacy campaign closure fields describe an authority publication, but
+    they are not the authority.  The only trusted proof comes from the typed
+    ``read_authority_artifact`` decoder, the frame's canonical payload digest,
+    its registry identity digest, and the typed fact catalogue reconstructed by
+    that decoder.  Keep the raw payload only to recompute the wire digest and
+    to make the exact fact declaration visible in the signal.
+    """
+    metadata: dict[str, Any] = {
+        "artifact": _display_path(path),
+        "file_sha256": None,
+        "recorded_payload_sha256": None,
+        "computed_payload_sha256": None,
+        "identity_digest": None,
+        "fact_count": 0,
+        "status": "missing",
+    }
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        metadata["status"] = f"read-error:{type(exc).__name__}"
+        return None, metadata["status"], metadata
+    metadata["file_sha256"] = "sha256:" + hashlib.sha256(data).hexdigest()
+    try:
+        artifact = read_authority_artifact(path)
+        frame = json.loads(data)
+        payload = frame["payload"]
+        recorded = frame["payload_sha256"]
+        computed = sha256_hex(canonical_json_bytes(payload))
+        facts = artifact.catalogues.facts.facts
+        raw_facts = (
+            payload.get("catalogues", {}).get("facts", {}).get("facts")
+            if isinstance(payload, dict) and isinstance(payload.get("catalogues"), dict)
+            else None
+        )
+        identity_digest = artifact.identity_digest
+    except (
+        AuthorityArtifactError,
+        ImportError,
+        AttributeError,
+        KeyError,
+        TypeError,
+        UnicodeDecodeError,
+        ValueError,
+        json.JSONDecodeError,
+    ) as exc:
+        metadata["status"] = f"invalid-authority:{type(exc).__name__}"
+        return None, metadata["status"], metadata
+    metadata["recorded_payload_sha256"] = recorded
+    metadata["computed_payload_sha256"] = computed
+    metadata["identity_digest"] = identity_digest
+    metadata["fact_count"] = len(facts)
+    if not isinstance(raw_facts, dict):
+        metadata["status"] = "invalid-authority:fact-catalogue"
+        return None, metadata["status"], metadata
+    if not isinstance(recorded, str) or recorded != computed:
+        metadata["status"] = "invalid-authority:payload-digest"
+        return None, metadata["status"], metadata
+    metadata["status"] = "ok"
+    return {
+        "artifact": artifact,
+        "payload": payload,
+        "payload_sha256": recorded,
+        "identity_digest": identity_digest,
+        "facts": facts,
+        "raw_facts": raw_facts,
+    }, "ok", metadata
+
+
+def _authoring_fact_proof(
+    path: Path,
+    *,
+    declaration_id: str,
+    family: str,
+) -> dict[str, Any]:
+    """Prove an authored fact path by parsing its exact ``[fact]`` table."""
+    result: dict[str, Any] = {
+        "file": _display_path(path),
+        "exists": path.is_file(),
+        "read_status": "missing",
+        "declaration_id": None,
+        "family": None,
+        "variant_ids": [],
+        "exact_fact_proof": False,
+    }
+    if not result["exists"]:
+        return result
+    try:
+        import tomllib
+
+        payload = tomllib.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, ValueError, TypeError) as exc:
+        result["read_status"] = f"parse-error:{type(exc).__name__}"
+        return result
+    result["read_status"] = "ok"
+    declaration = payload.get("fact") if isinstance(payload, dict) else None
+    if not isinstance(declaration, dict):
+        result["read_status"] = "fact-declaration-missing"
+        return result
+    declared_id = declaration.get("fact_id")
+    declared_family = declaration.get("family")
+    variants = declaration.get("variants")
+    variant_ids = [
+        variant.get("variant_id")
+        for variant in variants
+        if isinstance(variant, dict) and isinstance(variant.get("variant_id"), str)
+    ] if isinstance(variants, list) else []
+    result.update(
+        {
+            "declaration_id": declared_id,
+            "family": declared_family,
+            "variant_ids": variant_ids,
+        }
+    )
+    result["exact_fact_proof"] = bool(
+        declared_id == declaration_id
+        and declared_family == family
+        and isinstance(variants, list)
+        and bool(variants)
+        and len(variant_ids) == len(variants)
+        and all(
+            isinstance(variant, dict) and isinstance(variant.get("payload"), dict)
+            for variant in variants
+        )
+    )
+    return result
+
+
+def _governed_fact_proof(
+    frame: dict[str, Any] | None,
+    *,
+    declaration_id: str,
+    family: str,
+) -> dict[str, Any]:
+    """Prove the exact fact/family/variant tuple in a validated v4 frame."""
+    result: dict[str, Any] = {
+        "declaration_id": declaration_id,
+        "family": family,
+        "observed_declaration_id": None,
+        "observed_family": None,
+        "variant_ids": [],
+        "variant_proof": False,
+        "present": False,
+    }
+    if frame is None:
+        return result
+    facts = frame.get("raw_facts")
+    fact = facts.get(declaration_id) if hasattr(facts, "get") else None
+    if fact is None:
+        return result
+    observed_id = fact.get("fact_id") if isinstance(fact, dict) else None
+    observed_family = fact.get("family") if isinstance(fact, dict) else None
+    variants = fact.get("variants", ()) if isinstance(fact, dict) else ()
+    variant_ids = [
+        variant.get("variant_id")
+        for variant in variants
+        if isinstance(variant, dict) and isinstance(variant.get("variant_id"), str)
+    ]
+    result.update(
+        {
+            "observed_declaration_id": observed_id,
+            "observed_family": observed_family,
+            "variant_ids": variant_ids,
+        }
+    )
+    result["variant_proof"] = bool(
+        isinstance(variants, (list, tuple))
+        and bool(variants)
+        and len(variant_ids) == len(variants)
+        and all(
+            isinstance(variant, dict) and isinstance(variant.get("payload"), dict)
+            for variant in variants
+        )
+    )
+    result["present"] = bool(
+        observed_id == declaration_id
+        and observed_family == family
+        and result["variant_proof"]
+    )
+    return result
 
 
 def _fact_declaration(
@@ -2589,6 +5331,456 @@ def _validate_absorbed_relation_requirements(
     return missing
 
 
+def _typed_modelo_declarations(
+    destination_relative: str,
+    destination: dict[str, Any],
+    diagnostics: list[str] | None = None,
+) -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:
+    """Materialise one live Modelo family through the production typed loader.
+
+    Placement evidence must not trust a raw revision fragment for fields that
+    the live compiler supplies through defaults or predecessor inheritance.
+    A loader failure, malformed typed member, or missing typed identity returns
+    an empty index so the caller remains fail-closed; the raw TOML is never a
+    fallback for Modelo declarations.
+    """
+    parts = PurePosixPath(destination_relative).parts
+    modelos_index = next(
+        (index for index, part in enumerate(parts) if part.casefold() == "modelos"),
+        None,
+    )
+    if modelos_index is None or modelos_index + 1 >= len(parts):
+        return {}, {}
+    modelo_directory = REPO_ROOT / Path(*parts[: modelos_index + 2])
+    try:
+        from dev.registry.compiler.loader import load_modelo_directory
+
+        modelo = load_modelo_directory(modelo_directory)
+        revisions = getattr(modelo, "revisions", None)
+        revision = revisions.get(destination["revision"]) if isinstance(revisions, Mapping) else None
+        members = getattr(revision, destination["family"], None) if revision is not None else None
+    except Exception as exc:
+        # The typed loader owns schema, defaults, and predecessor resolution.
+        # Any import/compile/schema error must leave the evidence unresolved.
+        if diagnostics is not None:
+            diagnostics.append(f"typed-loader:{type(exc).__name__}: {exc}")
+        return {}, {}
+
+    if not isinstance(members, Sequence) or isinstance(members, (str, bytes, bytearray)):
+        return {}, {}
+
+    declarations: dict[str, dict[str, Any]] = {}
+    duplicate_ids: set[str] = set()
+    for member in members:
+        model_dump = getattr(member, "model_dump", None)
+        if not callable(model_dump):
+            continue
+        try:
+            declaration = model_dump(mode="json", exclude_defaults=False)
+        except Exception as exc:
+            if diagnostics is not None:
+                diagnostics.append(f"typed-member:{type(exc).__name__}: {exc}")
+            continue
+        if not isinstance(declaration, dict):
+            continue
+        declaration_id = declaration.get("id")
+        if not isinstance(declaration_id, str) or not declaration_id.strip():
+            continue
+        if declaration_id in declarations:
+            duplicate_ids.add(declaration_id)
+            continue
+        declarations[declaration_id] = declaration
+
+    missing_fields: dict[str, list[str]] = {}
+    for declaration_id in destination["declaration_ids"]:
+        declaration = declarations.get(declaration_id)
+        if declaration is None:
+            continue
+        missing: list[str] = [
+            field for field in destination["required_fields"] if field not in declaration
+        ]
+        if declaration_id in duplicate_ids:
+            missing.append("duplicate id")
+        for field in ("legal_refs", "source_refs"):
+            if field not in destination["required_fields"]:
+                continue
+            refs = declaration.get(field)
+            if (
+                not isinstance(refs, (list, tuple))
+                or not refs
+                or any(not isinstance(reference, str) or not reference.strip() for reference in refs)
+            ):
+                missing.append(field)
+        if missing:
+            missing_fields[declaration_id] = sorted(set(missing))
+    return declarations, missing_fields
+
+
+def _ast_registry_symbols(tree: ast.AST) -> set[str]:
+    """Return query/snapshot symbols, including aliases proven by imports."""
+    symbols = set(REGISTRY_QUERY_SYMBOLS)
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.Import, ast.ImportFrom)):
+            continue
+        for alias in node.names:
+            imported = alias.name.rsplit(".", 1)[-1]
+            if imported in REGISTRY_QUERY_SYMBOLS:
+                symbols.add(alias.asname or imported)
+    return symbols
+
+
+def _ast_registry_query_call(node: ast.AST, symbols: set[str]) -> bool:
+    """Require a real query-constructor call in an AST subtree."""
+    query_symbols = symbols - {"RegistrySnapshot"}
+    return any(
+        isinstance(item, ast.Call) and _call_symbol(item.func) in query_symbols
+        for item in ast.walk(node)
+    )
+
+
+def _ast_registry_snapshot_use(node: ast.AST, symbols: set[str]) -> bool:
+    """Recognise a snapshot type/value use, excluding comment-only mentions."""
+    return any(
+        (isinstance(item, ast.Name) and item.id in symbols)
+        or (isinstance(item, ast.Attribute) and item.attr in symbols)
+        for item in ast.walk(node)
+    )
+
+
+def _ast_direct_walk(node: ast.AST) -> list[ast.AST]:
+    """Walk a node without treating nested definitions as enclosing evidence."""
+    pending = list(ast.iter_child_nodes(node))
+    walked: list[ast.AST] = []
+    while pending:
+        item = pending.pop()
+        if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        walked.append(item)
+        pending.extend(ast.iter_child_nodes(item))
+    return walked
+
+
+def _ast_import_aliases(tree: ast.AST, canonical: str) -> set[str]:
+    """Return a canonical imported symbol and aliases proven by import syntax."""
+    aliases = {canonical}
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.Import, ast.ImportFrom)):
+            continue
+        for alias in node.names:
+            imported = alias.name.rsplit(".", 1)[-1]
+            if imported == canonical:
+                aliases.add(alias.asname or imported)
+    return aliases
+
+
+def _ast_registry_service_parameters(
+    node: ast.AST,
+    service_symbols: set[str],
+) -> set[str]:
+    """Return parameters whose annotations prove a registry query service."""
+    if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        return set()
+    arguments = [
+        *getattr(node.args, "posonlyargs", []),
+        *node.args.args,
+        *node.args.kwonlyargs,
+    ]
+    if node.args.vararg is not None:
+        arguments.append(node.args.vararg)
+    if node.args.kwarg is not None:
+        arguments.append(node.args.kwarg)
+    return {
+        argument.arg
+        for argument in arguments
+        if argument.annotation is not None
+        and any(
+            (isinstance(item, ast.Name) and item.id in service_symbols)
+            or (isinstance(item, ast.Attribute) and item.attr in service_symbols)
+            for item in ast.walk(argument.annotation)
+        )
+    }
+
+
+def _ast_registry_query_call_direct(
+    node: ast.AST,
+    symbols: set[str],
+    service_symbols: set[str],
+    service_parameters: set[str],
+) -> bool:
+    """Recognise query construction or calls on an annotated query service."""
+    query_symbols = symbols - {"RegistrySnapshot"}
+    for item in _ast_direct_walk(node):
+        if not isinstance(item, ast.Call):
+            continue
+        if _call_symbol(item.func) in query_symbols:
+            return True
+        if not isinstance(item.func, ast.Attribute):
+            continue
+        receiver = item.func.value
+        if isinstance(receiver, ast.Name) and receiver.id in service_parameters:
+            return True
+        if (
+            isinstance(receiver, ast.Attribute)
+            and receiver.attr in service_parameters
+        ):
+            return True
+    return False
+
+
+def _ast_registry_snapshot_use_direct(node: ast.AST, symbols: set[str]) -> bool:
+    """Recognise snapshot syntax in the current definition only."""
+    return any(
+        (isinstance(item, ast.Name) and item.id in symbols)
+        or (isinstance(item, ast.Attribute) and item.attr in symbols)
+        for item in _ast_direct_walk(node)
+    )
+
+
+def _ast_function_definitions(tree: ast.AST) -> dict[str, list[ast.AST]]:
+    """Index local function/class definitions by their declared name."""
+    definitions: dict[str, list[ast.AST]] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            definitions.setdefault(node.name, []).append(node)
+    return definitions
+
+
+def _ast_function_call_graph(
+    tree: ast.AST,
+    definitions: dict[str, list[ast.AST]],
+) -> tuple[dict[str, set[str]], set[str]]:
+    """Build local call edges and module-level function roots from real Calls."""
+    graph = {name: set() for name in definitions}
+    for name, nodes in definitions.items():
+        for node in nodes:
+            if isinstance(node, ast.ClassDef):
+                graph[name].update(
+                    child.name
+                    for child in node.body
+                    if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef))
+                    and child.name in definitions
+                )
+            for item in _ast_direct_walk(node):
+                if not isinstance(item, ast.Call):
+                    continue
+                target = _call_symbol(item.func)
+                if target in definitions:
+                    graph[name].add(target)
+
+    module_targets: set[str] = set()
+    for item in _ast_direct_walk(tree):
+        if not isinstance(item, ast.Call):
+            continue
+        target = _call_symbol(item.func)
+        if target in definitions:
+            module_targets.add(target)
+    return graph, module_targets
+
+
+def _ast_exported_names(tree: ast.AST) -> set[str]:
+    """Read literal names from a module's ``__all__`` declaration."""
+    exported: set[str] = set()
+    for node in getattr(tree, "body", []):
+        value: ast.AST | None = None
+        if isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets
+        ):
+            value = node.value
+        elif (
+            isinstance(node, ast.AnnAssign)
+            and isinstance(node.target, ast.Name)
+            and node.target.id == "__all__"
+        ):
+            value = node.value
+        if value is None:
+            continue
+        for item in ast.walk(value):
+            if isinstance(item, ast.Constant) and isinstance(item.value, str):
+                exported.add(item.value)
+    return exported
+
+
+def _ast_reachable_functions(
+    tree: ast.AST,
+    definitions: dict[str, list[ast.AST]],
+    graph: dict[str, set[str]],
+    module_targets: set[str],
+) -> set[str]:
+    """Return functions reachable from public/exported/module-level roots."""
+    roots = {
+        name for name in definitions if not name.startswith("_")
+    }
+    roots.update(_ast_exported_names(tree) & definitions.keys())
+    roots.update(module_targets)
+    reachable: set[str] = set()
+    pending = list(roots)
+    while pending:
+        name = pending.pop()
+        if name in reachable:
+            continue
+        reachable.add(name)
+        pending.extend(graph.get(name, ()))
+    return reachable
+
+
+def _ast_scoped_registry_evidence(
+    tree: ast.AST,
+    symbols: set[str],
+    *,
+    snapshot_kind: bool,
+) -> tuple[set[str], bool]:
+    """Resolve query evidence through live local call chains, not module text."""
+    definitions = _ast_function_definitions(tree)
+    graph, module_targets = _ast_function_call_graph(tree, definitions)
+    service_symbols = _ast_import_aliases(tree, "RegistryQueryService")
+    evidence_symbols = (
+        _ast_import_aliases(tree, "RegistrySnapshot") if snapshot_kind else symbols
+    )
+    direct_evidence: dict[str, bool] = {}
+    for name, nodes in definitions.items():
+        direct_evidence[name] = any(
+            _ast_registry_snapshot_use_direct(node, evidence_symbols)
+            if snapshot_kind
+            else _ast_registry_query_call_direct(
+                node,
+                symbols,
+                service_symbols,
+                _ast_registry_service_parameters(node, service_symbols),
+            )
+            for node in nodes
+        )
+
+    cache: dict[str, bool] = {}
+
+    def has_evidence(name: str, visiting: set[str] | None = None) -> bool:
+        if name in cache:
+            return cache[name]
+        active = set() if visiting is None else set(visiting)
+        if name in active:
+            return False
+        active.add(name)
+        result = direct_evidence.get(name, False) or any(
+            has_evidence(target, active) for target in graph.get(name, ())
+        )
+        cache[name] = result
+        return result
+
+    reachable = _ast_reachable_functions(tree, definitions, graph, module_targets)
+    module_evidence = (
+        _ast_registry_snapshot_use_direct(tree, evidence_symbols)
+        if snapshot_kind
+        else _ast_registry_query_call_direct(tree, symbols, service_symbols, set())
+    )
+    reachable_evidence = any(has_evidence(name) for name in reachable)
+    return reachable, module_evidence or reachable_evidence
+
+
+def _consumer_registry_resolution(
+    consumer_resolution: Any,
+) -> tuple[bool, bool, str | None]:
+    """Verify a declared consumer seam against its live AST.
+
+    The placement source and the consumer source may be different modules.
+    Named seams must contain the corresponding query/snapshot use in the seam
+    or a local call chain reachable from it.  Descriptive seams are accepted
+    only when a production-reachable function contains the same use.  Text or
+    comments alone never satisfy this check.
+    """
+    if not isinstance(consumer_resolution, dict) or consumer_resolution.get("resolved") is not True:
+        return False, False, None
+    consumer_source = consumer_resolution.get("source_file")
+    seam = consumer_resolution.get("seam")
+    kind = str(consumer_resolution.get("kind", "")).casefold().replace("-", "_")
+    if not isinstance(consumer_source, str) or not consumer_source.strip():
+        return False, False, None
+    if not isinstance(seam, str) or not seam.strip():
+        return False, False, None
+    try:
+        _, consumer_relative = _source_path(
+            consumer_source,
+            label="closure.placement.consumer_resolution.source_file",
+        )
+    except ManifestError:
+        return False, False, None
+    observation = _observe_source_file(consumer_relative)
+    if (
+        observation.get("exists") is not True
+        or observation.get("read_status") != "ok"
+        or observation.get("ast_parse_status") != "ok"
+    ):
+        return False, False, consumer_relative
+    source_text = observation.get("_text", "")
+    try:
+        tree = ast.parse(source_text, filename=consumer_relative)
+    except (SyntaxError, ValueError, TypeError):
+        return False, False, consumer_relative
+
+    symbols = _ast_registry_symbols(tree)
+    snapshot_kind = kind in {"registry_snapshot", "snapshot"}
+    definitions = _ast_function_definitions(tree)
+    graph, module_targets = _ast_function_call_graph(tree, definitions)
+    reachable, scoped_present = _ast_scoped_registry_evidence(
+        tree,
+        symbols,
+        snapshot_kind=snapshot_kind,
+    )
+    identifier_seam = re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", seam) is not None
+    if not identifier_seam:
+        return scoped_present, scoped_present, consumer_relative
+
+    if seam not in definitions:
+        return False, False, consumer_relative
+
+    # A proof-only private function is not a production seam.  Reachability is
+    # rooted in exported/public functions and module-level calls, then follows
+    # only real local Call nodes.  This still accepts public API seams whose
+    # caller is outside the consumer module.
+    seam_present = seam in reachable and _ast_scoped_registry_evidence(
+        tree,
+        symbols,
+        snapshot_kind=snapshot_kind,
+    )[1]
+    if seam_present:
+        # The scoped helper above proves that some reachable function contains
+        # evidence.  Re-evaluate the declared seam's own call chain so another
+        # unrelated consumer cannot satisfy this row.
+        service_symbols = _ast_import_aliases(tree, "RegistryQueryService")
+        evidence_symbols = (
+            _ast_import_aliases(tree, "RegistrySnapshot") if snapshot_kind else symbols
+        )
+        direct_evidence = {
+            name: any(
+                _ast_registry_snapshot_use_direct(node, evidence_symbols)
+                if snapshot_kind
+                else _ast_registry_query_call_direct(
+                    node,
+                    symbols,
+                    service_symbols,
+                    _ast_registry_service_parameters(node, service_symbols),
+                )
+                for node in nodes
+            )
+            for name, nodes in definitions.items()
+        }
+        cache: dict[str, bool] = {}
+
+        def has_seam_evidence(name: str, visiting: set[str] | None = None) -> bool:
+            if name in cache:
+                return cache[name]
+            active = set() if visiting is None else set(visiting)
+            if name in active:
+                return False
+            active.add(name)
+            result = direct_evidence.get(name, False) or any(
+                has_seam_evidence(target, active) for target in graph.get(name, ())
+            )
+            cache[name] = result
+            return result
+
+        seam_present = has_seam_evidence(seam)
+    return seam_present, seam_present, consumer_relative
+
+
 def _placement_scan(
     row: dict[str, Any],
     source_scan: dict[str, Any],
@@ -2620,19 +5812,14 @@ def _placement_scan(
     todo_text = placement.get("todo_text")
     todo_present = isinstance(todo_text, str) and bool(todo_text.strip()) and todo_text in source_text
     consumer_resolution = placement.get("consumer_resolution")
-    consumer_resolved = False
-    registry_query_present = bool(source_observation.get("_symbols", set()) & REGISTRY_QUERY_SYMBOLS)
-    if isinstance(consumer_resolution, dict) and consumer_resolution.get("resolved") is True:
-        seam = consumer_resolution.get("seam")
-        consumer_source = consumer_resolution.get("source_file")
-        consumer_resolved = (
-            isinstance(seam, str)
-            and bool(seam.strip())
-            and seam in source_text
-            and isinstance(consumer_source, str)
-            and consumer_source == source_relative
-            and registry_query_present
-        )
+    consumer_resolved, consumer_registry_query_present, consumer_source_relative = _consumer_registry_resolution(
+        consumer_resolution,
+    )
+    registry_query_present = (
+        consumer_registry_query_present
+        if isinstance(consumer_resolution, dict) and consumer_resolution.get("resolved") is True
+        else bool(source_observation.get("_symbols", set()) & REGISTRY_QUERY_SYMBOLS)
+    )
 
     destination_observations: list[dict[str, Any]] = []
     for index, destination in enumerate(placement["destinations"]):
@@ -2652,6 +5839,7 @@ def _placement_scan(
             "found_declaration_ids": [],
             "missing_declaration_ids": list(destination["declaration_ids"]),
             "missing_required_fields": {},
+            "typed_loader_diagnostics": [],
             "verified": False,
         }
         if not destination_path.is_file():
@@ -2676,24 +5864,20 @@ def _placement_scan(
                 destination,
             )
         elif "modelos" in path_parts:
-            revisions = payload.get("revisions") if isinstance(payload, dict) else None
-            revision_payload = revisions.get(destination["revision"]) if isinstance(revisions, dict) else None
-            declarations_payload = (
-                revision_payload.get(destination["family"]) if isinstance(revision_payload, dict) else None
+            typed_loader_diagnostics: list[str] = []
+            declaration_by_id, typed_missing_fields = _typed_modelo_declarations(
+                destination_relative,
+                destination,
+                diagnostics=typed_loader_diagnostics,
             )
-            declaration_by_id = (
-                {
-                    item.get("id"): item
-                    for item in declarations_payload
-                    if isinstance(item, dict) and isinstance(item.get("id"), str)
-                }
-                if isinstance(declarations_payload, list)
-                else {}
-            )
+            observation["typed_loader_diagnostics"] = typed_loader_diagnostics
             fact_missing_fields = {}
         else:
             declaration_by_id = {}
             fact_missing_fields = {}
+            typed_missing_fields = {}
+        if "facts" in path_parts:
+            typed_missing_fields = {}
         found_ids = [
             declaration_id for declaration_id in destination["declaration_ids"] if declaration_id in declaration_by_id
         ]
@@ -2708,6 +5892,7 @@ def _placement_scan(
                 field for field in destination["required_fields"] if field not in declaration_by_id[declaration_id]
             ]
             missing.extend(fact_missing_fields.get(declaration_id, []))
+            missing.extend(typed_missing_fields.get(declaration_id, []))
             if destination.get("family") == "bindings":
                 missing.extend(_missing_typed_binding_fields(declaration_by_id[declaration_id], destination))
             if missing:
@@ -2732,6 +5917,12 @@ def _placement_scan(
         failure_reasons.append("python_fact_literal_present")
     if not todo_present and not consumer_resolved:
         failure_reasons.append("todo_hole_missing")
+    if (
+        isinstance(consumer_resolution, dict)
+        and consumer_resolution.get("resolved") is True
+        and not consumer_resolved
+    ):
+        failure_reasons.append("consumer_resolution_unresolved")
     if (
         isinstance(consumer_resolution, dict)
         and consumer_resolution.get("resolved") is True
@@ -2760,6 +5951,7 @@ def _placement_scan(
         "forbidden_literals_absent": forbidden_literals_absent,
         "todo_present": todo_present,
         "consumer_resolved": consumer_resolved,
+        "consumer_source_file": consumer_source_relative,
         "registry_query_present": registry_query_present,
         "destinations": destination_observations,
         "destination_verified": destination_verified,
@@ -2774,15 +5966,17 @@ def _authority_scan(
 ) -> dict[str, Any]:
     """Verify claimed migrated/bridge destinations mechanically.
 
-    Authoring-path existence is intentionally reported separately from proof
-    that a compiled artifact is published and carries provenance.  Closure
-    metadata is a claim; only bytes read from the referenced artifact and data
-    read from referenced authoring files can satisfy the authority proof checks.
-    Placement closures use the same byte-level discipline while explicitly
-    recording that publication is false.
+    v4 authority is proven by the typed frame reader, its canonical payload
+    digest, its content identity, and the exact governed fact declaration in
+    ``payload.catalogues.facts.facts``. Legacy closure fields remain visible
+    as metadata, but compiled/published flags, prefixed manifest digests, and
+    flattened string matches cannot manufacture proof. Placement closures use
+    the same byte-level discipline while explicitly recording publication is
+    false.
     """
     observations: list[dict[str, Any]] = []
     placement_observations: list[dict[str, Any]] = []
+    frame_cache: dict[str, tuple[dict[str, Any] | None, str, dict[str, Any]]] = {}
     for row in manifest["candidates"]:
         if row["status"] not in {"migrated", "bridge"}:
             continue
@@ -2796,87 +5990,68 @@ def _authority_scan(
             label=f"{row['id']}: closure.authority.artifact",
         )
         authoring_observations: list[dict[str, Any]] = []
-        expected_identity = [
-            authority["declaration_id"],
-            authority["model"],
-            authority["revision"],
-            authority["family"],
-            authority["consumer"],
-        ]
         for index, raw_path in enumerate(authority["authoring_paths"]):
             authoring_path, authoring_relative = _authoring_path(
                 raw_path,
                 label=f"{row['id']}: closure.authority.authoring_paths[{index}]",
             )
-            try:
-                data = authoring_path.read_bytes()
-            except OSError as exc:
-                authoring_observations.append(
-                    {
-                        "file": authoring_relative,
-                        "exists": False,
-                        "read_status": f"read-error:{type(exc).__name__}",
-                        "identity_tokens_found": [],
-                    }
-                )
-                continue
-            text = data.decode("utf-8", errors="replace").casefold()
-            found = [value for value in expected_identity if value.casefold() in text]
-            authoring_observations.append(
-                {
-                    "file": authoring_relative,
-                    "exists": authoring_path.is_file(),
-                    "read_status": "ok",
-                    "identity_tokens_found": found,
-                }
+            proof = _authoring_fact_proof(
+                authoring_path,
+                declaration_id=authority["declaration_id"],
+                family=authority["family"],
             )
+            proof["file"] = authoring_relative
+            authoring_observations.append(proof)
 
+        cache_key = artifact_path.as_posix()
+        if cache_key not in frame_cache:
+            frame_cache[cache_key] = _load_v4_authority_frame(artifact_path)
+        frame, artifact_status, artifact_metadata = frame_cache[cache_key]
         artifact_exists = artifact_path.is_file()
-        artifact_actual_digest: str | None = None
-        artifact_payload: Any = None
-        artifact_status = "missing"
-        if artifact_exists:
-            try:
-                data = artifact_path.read_bytes()
-                artifact_actual_digest = "sha256:" + hashlib.sha256(data).hexdigest()
-                artifact_payload, artifact_status = _load_authority_artifact(artifact_path)
-                if artifact_status == "ok" and not isinstance(artifact_payload, dict):
-                    artifact_status = "invalid-shape"
-            except OSError as exc:
-                artifact_exists = False
-                artifact_status = f"read-error:{type(exc).__name__}"
-
-        artifact_strings = {value.casefold() for value in _flatten_strings(artifact_payload)}
-        declared_provenance = authority["provenance_digest"].casefold()
-        identity_proof = all(value.casefold() in artifact_strings for value in expected_identity)
-        digest_proof = artifact_actual_digest == authority["digest"]
-        compiled_proof = _payload_has_true(
-            artifact_payload,
-            frozenset({"compiled", "is_compiled"}),
+        artifact_actual_digest = artifact_metadata.get("file_sha256")
+        recorded_payload_sha256 = artifact_metadata.get("recorded_payload_sha256")
+        computed_payload_sha256 = artifact_metadata.get("computed_payload_sha256")
+        identity_digest = artifact_metadata.get("identity_digest")
+        payload_digest_proof = bool(
+            artifact_status == "ok"
+            and isinstance(recorded_payload_sha256, str)
+            and recorded_payload_sha256 == computed_payload_sha256
         )
-        published_proof = _payload_has_true(
-            artifact_payload,
-            frozenset({"published", "is_published"}),
-        ) or _payload_has_status(artifact_payload, frozenset({"published"}))
-        provenance_proof = declared_provenance in artifact_strings
+        identity_digest_proof = bool(
+            artifact_status == "ok"
+            and isinstance(identity_digest, str)
+            and re.fullmatch(r"[0-9a-f]{64}", identity_digest) is not None
+        )
+        governed_fact = _governed_fact_proof(
+            frame,
+            declaration_id=authority["declaration_id"],
+            family=authority["family"],
+        )
         authoring_presence = bool(authoring_observations) and all(
             item["exists"] and item["read_status"] == "ok" for item in authoring_observations
         )
-        authoring_identity_proof = authoring_presence and all(
-            item["identity_tokens_found"] for item in authoring_observations
+        authoring_fact_proof = authoring_presence and all(
+            item["exact_fact_proof"] for item in authoring_observations
         )
+        legacy_metadata_stale: list[str] = []
+        declared_digest = authority.get("digest")
+        if declared_digest is not None and declared_digest != artifact_actual_digest:
+            legacy_metadata_stale.append("digest")
+        declared_provenance = authority.get("provenance_digest")
+        if declared_provenance is not None:
+            normalized_provenance = declared_provenance.removeprefix("sha256:")
+            if normalized_provenance != identity_digest:
+                legacy_metadata_stale.append("provenance_digest")
         source_retirement_evidence = bool(closure.get("retirement_evidence"))
         verified = all(
             (
                 authoring_presence,
-                authoring_identity_proof,
+                authoring_fact_proof,
                 artifact_exists,
                 artifact_status == "ok",
-                digest_proof,
-                compiled_proof,
-                published_proof,
-                provenance_proof,
-                identity_proof,
+                payload_digest_proof,
+                identity_digest_proof,
+                governed_fact["present"],
                 authority["parity"] in {"exact", "semantic"},
                 authority["duplicate_retired"] is True,
                 source_retirement_evidence,
@@ -2888,17 +6063,20 @@ def _authority_scan(
                 "item_id": _item_id(row),
                 "status": row["status"],
                 "artifact": artifact_relative,
-                "declared_digest": authority["digest"],
+                "declared_digest": declared_digest,
                 "observed_digest": artifact_actual_digest,
                 "artifact_status": artifact_status,
+                "artifact_payload_sha256": recorded_payload_sha256,
+                "artifact_payload_sha256_recomputed": computed_payload_sha256,
+                "payload_digest_proof": payload_digest_proof,
+                "identity_digest": identity_digest,
+                "identity_digest_proof": identity_digest_proof,
                 "authoring": authoring_observations,
                 "authoring_presence": authoring_presence,
-                "authoring_identity_proof": authoring_identity_proof,
-                "compiled_proof": compiled_proof,
-                "published_proof": published_proof,
-                "provenance_proof": provenance_proof,
-                "identity_proof": identity_proof,
-                "digest_proof": digest_proof,
+                "authoring_fact_proof": authoring_fact_proof,
+                "governed_fact": governed_fact,
+                "governed_fact_presence": governed_fact["present"],
+                "legacy_metadata_stale": legacy_metadata_stale,
                 "parity_declared": authority["parity"],
                 "duplicate_retired_declared": authority["duplicate_retired"],
                 "source_retirement_evidence": source_retirement_evidence,
@@ -2918,10 +6096,11 @@ def _authority_scan(
             "authority_claim_count": len(observations),
             "authoring_presence_count": sum(item["authoring_presence"] for item in observations),
             "authoring_missing_count": sum(not item["authoring_presence"] for item in observations),
-            "authoring_identity_proof_count": sum(item["authoring_identity_proof"] for item in observations),
-            "compiled_proof_count": sum(item["compiled_proof"] for item in observations),
-            "published_proof_count": sum(item["published_proof"] for item in observations),
-            "provenance_proof_count": sum(item["provenance_proof"] for item in observations),
+            "authoring_fact_proof_count": sum(item["authoring_fact_proof"] for item in observations),
+            "payload_digest_proof_count": sum(item["payload_digest_proof"] for item in observations),
+            "identity_digest_proof_count": sum(item["identity_digest_proof"] for item in observations),
+            "governed_fact_presence_count": sum(item["governed_fact_presence"] for item in observations),
+            "legacy_metadata_stale_count": sum(bool(item["legacy_metadata_stale"]) for item in observations),
             "authority_verified_count": sum(item["verified"] for item in observations),
             "authority_integrity_error_count": failed,
             "placement_claim_count": len(placement_observations),
@@ -3108,15 +6287,19 @@ def _validate_authority(candidate_id: str, authority: Any) -> None:
     if not isinstance(authority.get("artifact"), str) or not authority["artifact"].strip():
         raise ManifestError(f"{label}.artifact is required")
     _authority_path(authority["artifact"], label=f"{label}.artifact")
-    _validate_hash(authority.get("digest"), label=f"{label}.digest")
-    _validate_hash(
-        authority.get("provenance_digest"),
-        label=f"{label}.provenance_digest",
-    )
-    if authority.get("compiled") is not True:
-        raise ManifestError(f"{label}.compiled must be true")
-    if authority.get("published") is not True:
-        raise ManifestError(f"{label}.published must be true")
+    # These fields belong to the pre-v4 manifest dialect.  Accept them as
+    # descriptive metadata when present, but never require or trust them as
+    # authority proof: v4 proves the frame through its typed decoder and
+    # payload digest below.
+    for field in AUTHORITY_LEGACY_FIELDS:
+        if field not in authority:
+            continue
+        value = authority[field]
+        if field in {"compiled", "published"}:
+            if type(value) is not bool:
+                raise ManifestError(f"{label}.{field} must be boolean when present")
+        elif not isinstance(value, str) or not value.strip():
+            raise ManifestError(f"{label}.{field} must be a non-empty string when present")
     for field in ("model", "revision", "family", "declaration_id", "consumer"):
         if not isinstance(authority.get(field), str) or not authority[field].strip():
             raise ManifestError(f"{label}.{field} is required")
@@ -3147,16 +6330,14 @@ def _validate_consumer_resolution(candidate_id: str, placement: dict[str, Any]) 
             raise ManifestError(f"{label}.{field} is required")
     if resolution.get("resolved") is not True:
         raise ManifestError(f"{label}.resolved must be true")
-    _, placement_source = _source_path(
+    _source_path(
         placement.get("source_file"),
         label=f"{candidate_id}: closure.placement.source_file",
     )
-    _, consumer_source = _source_path(
+    _source_path(
         resolution["source_file"],
         label=f"{label}.source_file",
     )
-    if consumer_source != placement_source:
-        raise ManifestError(f"{label}.source_file must equal closure.placement.source_file")
     _validate_evidence_records(resolution.get("evidence"), label=f"{label}.evidence")
 
 
@@ -3506,6 +6687,35 @@ def _validate_candidate(
             _validate_source_hashes(candidate_id, closure)
 
 
+def _consumer_publication_only_blocker(item: Any) -> bool:
+    """Identify the one authored-only blocker that is not row work."""
+    if not isinstance(item, dict):
+        return False
+    blockers = item.get("blockers")
+    return (
+        item.get("authored_presence") is True
+        and item.get("bundled_authority_presence") is False
+        and isinstance(blockers, list)
+        and blockers == ["bundled_authority_fact_missing"]
+    )
+
+
+def _consumer_tracked_row_ids(consumer_fact_scan: dict[str, Any]) -> set[str]:
+    """Keep every associated row except mechanically publication-only blockers."""
+    tracked: set[str] = set()
+    blockers = consumer_fact_scan.get("blockers", [])
+    if not isinstance(blockers, (list, tuple)):
+        return tracked
+    for item in blockers:
+        if not isinstance(item, dict) or _consumer_publication_only_blocker(item):
+            continue
+        row_ids = item.get("associated_row_ids", [])
+        if not isinstance(row_ids, (list, tuple, set, frozenset)):
+            continue
+        tracked.update(row_id for row_id in row_ids if isinstance(row_id, str))
+    return tracked
+
+
 def _counts(
     manifest: dict[str, Any],
     source_scan: dict[str, Any],
@@ -3525,7 +6735,7 @@ def _counts(
     todo_row_ids = {
         candidate_id for occurrence in todo_debt["occurrences"] for candidate_id in occurrence["candidate_ids"]
     }
-    consumer_row_ids = set(consumer_fact_scan.get("associated_row_ids", []))
+    consumer_row_ids = _consumer_tracked_row_ids(consumer_fact_scan)
     tracked_row_work_ids = sorted(
         {row["id"] for row in actionable} | failed_placement_ids | todo_row_ids | consumer_row_ids
     )

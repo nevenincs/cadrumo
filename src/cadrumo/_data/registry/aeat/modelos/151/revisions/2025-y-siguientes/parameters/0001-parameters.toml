@@ -22,30 +22,6 @@
 #     (tras la Ley 7/2024, que elevó también la escala general del 28 % al 30 %).
 
 [[revisions."2025-y-siguientes".parameters]]
-id = "modelo-151.escala-cuota-integra-general"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-35-2006:art-93"]
-
-[[revisions."2025-y-siguientes".parameters.source_citations]]
-source_ref = "aeat-modelo-151-procedure"
-required_text = ["Modelo 151"]
-
-[[revisions."2025-y-siguientes".parameters.brackets]]
-lower_bound = "0"
-upper_bound = "600000"
-fixed_addition = "0"
-marginal_rate = "0.24"
-valid_from = 2015-01-01
-
-[[revisions."2025-y-siguientes".parameters.brackets]]
-lower_bound = "600000"
-fixed_addition = "144000"
-marginal_rate = "0.47"
-valid_from = 2015-01-01
-
-[[revisions."2025-y-siguientes".parameters]]
 id = "modelo-151.escala-cuota-integra-ahorro"
 data_type = "bracket_table"
 unit = "EUR"

@@ -12,7 +12,6 @@ expression = { op = "lookup_bracket", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-modelo-151-procedure"]
 
 [[revisions."2015-2022".formulas.source_citations]]
 source_ref = "aeat-modelo-151-procedure"
@@ -29,7 +28,6 @@ expression = { op = "subtract", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-modelo-151-procedure"]
 
 [[revisions."2015-2022".formulas.source_citations]]
 source_ref = "aeat-modelo-151-procedure"

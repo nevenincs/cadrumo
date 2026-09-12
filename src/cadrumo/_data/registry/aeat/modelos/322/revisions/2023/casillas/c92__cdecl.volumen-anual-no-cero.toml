@@ -2,8 +2,11 @@
 
 [[revisions."2023".casillas]]
 id = "92"
+continuidad_id = "m322-informacion-tributacion-territorio-navarra"
+continuidad_origin = "seeded"
 number = "92"
 section = ["iva", "tributacion_territorio"]
+semantic_role = "m322_informacion_tributacion_territorio_navarra"
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -11,8 +14,11 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2023".casillas]]
 id = "93"
+continuidad_id = "m322-operaciones-ejercicio-entregas-intracomunitarias-bienes-servicios"
+continuidad_origin = "seeded"
 number = "93"
 section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_entregas_intracomunitarias_bienes_servicios"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -20,8 +26,11 @@ legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:
 
 [[revisions."2023".casillas]]
 id = "94"
+continuidad_id = "m322-operaciones-ejercicio-exportaciones-otras-operaciones-exentas-derecho-deduccion"
+continuidad_origin = "seeded"
 number = "94"
 section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_exportaciones_otras_operaciones_exentas_derecho_deduccion"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -29,8 +38,11 @@ legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:
 
 [[revisions."2023".casillas]]
 id = "95"
+continuidad_id = "m322-operaciones-ejercicio-regimen-especial-agricultura-ganaderia-pesca"
+continuidad_origin = "seeded"
 number = "95"
 section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_regimen_especial_agricultura_ganaderia_pesca"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -38,8 +50,11 @@ legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:
 
 [[revisions."2023".casillas]]
 id = "96"
+continuidad_id = "m322-operaciones-ejercicio-regimen-especial-recargo-equivalencia"
+continuidad_origin = "seeded"
 number = "96"
 section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_regimen_especial_recargo_equivalencia"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -47,8 +62,11 @@ legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:
 
 [[revisions."2023".casillas]]
 id = "97"
+continuidad_id = "m322-operaciones-ejercicio-regimen-especial-bienes-usados-objetos-arte-antiguedades-coleccion"
+continuidad_origin = "seeded"
 number = "97"
 section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_regimen_especial_bienes_usados_objetos_arte_antiguedades_coleccion"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -56,8 +74,11 @@ legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:
 
 [[revisions."2023".casillas]]
 id = "98"
+continuidad_id = "m322-operaciones-ejercicio-regimen-especial-agencias-viajes"
+continuidad_origin = "seeded"
 number = "98"
 section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_regimen_especial_agencias_viajes"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -65,8 +86,11 @@ legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:
 
 [[revisions."2023".casillas]]
 id = "99"
+continuidad_id = "m322-operaciones-ejercicio-entregas-bienes-inversion"
+continuidad_origin = "seeded"
 number = "99"
 section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_entregas_bienes_inversion"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -74,8 +98,11 @@ legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:
 
 [[revisions."2023".casillas]]
 id = "actividad.otras-1.codigo"
+continuidad_id = "m322-actividad-otras-1-codigo"
+continuidad_origin = "seeded"
 number = "otras-1.codigo"
 section = ["actividad"]
+semantic_role = "m322_actividad_otras_1_codigo"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -83,8 +110,11 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2023".casillas]]
 id = "actividad.otras-1.epigrafe-iae"
+continuidad_id = "m322-actividad-otras-1-epigrafe-iae"
+continuidad_origin = "seeded"
 number = "otras-1.epigrafe-iae"
 section = ["actividad"]
+semantic_role = "m322_actividad_otras_1_epigrafe_iae"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -92,8 +122,11 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2023".casillas]]
 id = "actividad.otras-2.codigo"
+continuidad_id = "m322-actividad-otras-2-codigo"
+continuidad_origin = "seeded"
 number = "otras-2.codigo"
 section = ["actividad"]
+semantic_role = "m322_actividad_otras_2_codigo"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -101,8 +134,11 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2023".casillas]]
 id = "actividad.otras-2.epigrafe-iae"
+continuidad_id = "m322-actividad-otras-2-epigrafe-iae"
+continuidad_origin = "seeded"
 number = "otras-2.epigrafe-iae"
 section = ["actividad"]
+semantic_role = "m322_actividad_otras_2_epigrafe_iae"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -110,8 +146,11 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2023".casillas]]
 id = "actividad.otras-3.codigo"
+continuidad_id = "m322-actividad-otras-3-codigo"
+continuidad_origin = "seeded"
 number = "otras-3.codigo"
 section = ["actividad"]
+semantic_role = "m322_actividad_otras_3_codigo"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -119,8 +158,11 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2023".casillas]]
 id = "actividad.otras-3.epigrafe-iae"
+continuidad_id = "m322-actividad-otras-3-epigrafe-iae"
+continuidad_origin = "seeded"
 number = "otras-3.epigrafe-iae"
 section = ["actividad"]
+semantic_role = "m322_actividad_otras_3_epigrafe_iae"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -128,8 +170,11 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2023".casillas]]
 id = "actividad.otras-4.codigo"
+continuidad_id = "m322-actividad-otras-4-codigo"
+continuidad_origin = "seeded"
 number = "otras-4.codigo"
 section = ["actividad"]
+semantic_role = "m322_actividad_otras_4_codigo"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -137,8 +182,11 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2023".casillas]]
 id = "actividad.otras-4.epigrafe-iae"
+continuidad_id = "m322-actividad-otras-4-epigrafe-iae"
+continuidad_origin = "seeded"
 number = "otras-4.epigrafe-iae"
 section = ["actividad"]
+semantic_role = "m322_actividad_otras_4_epigrafe_iae"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -146,8 +194,11 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2023".casillas]]
 id = "actividad.otras-5.codigo"
+continuidad_id = "m322-actividad-otras-5-codigo"
+continuidad_origin = "seeded"
 number = "otras-5.codigo"
 section = ["actividad"]
+semantic_role = "m322_actividad_otras_5_codigo"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -155,8 +206,11 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2023".casillas]]
 id = "actividad.otras-5.epigrafe-iae"
+continuidad_id = "m322-actividad-otras-5-epigrafe-iae"
+continuidad_origin = "seeded"
 number = "otras-5.epigrafe-iae"
 section = ["actividad"]
+semantic_role = "m322_actividad_otras_5_epigrafe_iae"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -164,8 +218,11 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2023".casillas]]
 id = "actividad.principal.codigo"
+continuidad_id = "m322-actividad-principal-codigo"
+continuidad_origin = "seeded"
 number = "principal.codigo"
 section = ["actividad"]
+semantic_role = "m322_actividad_principal_codigo"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -173,8 +230,11 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2023".casillas]]
 id = "actividad.principal.epigrafe-iae"
+continuidad_id = "m322-actividad-principal-epigrafe-iae"
+continuidad_origin = "seeded"
 number = "principal.epigrafe-iae"
 section = ["actividad"]
+semantic_role = "m322_actividad_principal_epigrafe_iae"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -182,8 +242,11 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2023".casillas]]
 id = "decl.destinatario-criterio-caja"
+continuidad_id = "m322-identificacion-destinatario-criterio-caja"
+continuidad_origin = "seeded"
 number = "destinatario-criterio-caja"
 section = ["identificacion"]
+semantic_role = "m322_identificacion_destinatario_criterio_caja"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -191,8 +254,11 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2023".casillas]]
 id = "decl.entidad-dominante-nif"
+continuidad_id = "m322-identificacion-nif-entidad-dominante"
+continuidad_origin = "seeded"
 number = "entidad-dominante-nif"
 section = ["identificacion", "grupo"]
+semantic_role = "m322_identificacion_nif_entidad_dominante"
 data_type = "nif"
 required = false
 input_kind = "manual"
@@ -200,6 +266,9 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:a
 
 [[revisions."2023".casillas]]
 id = "decl.exonerado-modelo-390"
+continuidad_id = "m322-identificacion-exonerado-declaracion-resumen-anual-modelo-390"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/04-322-ejercicio-2022-y-siguientes.xls.extracted.md:115 (sha256 be029175f11e) DR32201 campo 81 posicion 1115 len 1 An; corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:130 (sha256 540805f09ca3) DR32201 campo 96 posicion 1310 len 1 An; misma descripcion, longitud, tipo y contenido (Si=1, No=2); campo 81->96 y posicion 1115->1310."
 number = "exonerado-modelo-390"
 section = ["identificacion"]
 data_type = "text"
@@ -209,8 +278,11 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2023".casillas]]
 id = "decl.grupo-numero"
+continuidad_id = "m322-identificacion-numero-grupo"
+continuidad_origin = "seeded"
 number = "grupo-numero"
 section = ["identificacion", "grupo"]
+semantic_role = "m322_identificacion_numero_grupo"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -218,8 +290,11 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:a
 
 [[revisions."2023".casillas]]
 id = "decl.grupo-rol"
+continuidad_id = "m322-identificacion-grupo-rol"
+continuidad_origin = "seeded"
 number = "grupo-rol"
 section = ["identificacion", "grupo"]
+semantic_role = "m322_identificacion_grupo_rol"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -227,6 +302,9 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:a
 
 [[revisions."2023".casillas]]
 id = "decl.prorrata-especial"
+continuidad_id = "m322-identificacion-aplicacion-prorrata-especial-opcion-revocacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/04-322-ejercicio-2022-y-siguientes.xls.extracted.md:48 (sha256 be029175f11e) DR32201 campo 15 posicion 132 len 1 Num; corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls.extracted.md:48 (sha256 540805f09ca3) DR32201 campo 15 posicion 132 len 1 Num; misma descripcion, campo, posicion, longitud, tipo y contenido (Nota 3)."
 number = "prorrata-especial"
 section = ["identificacion"]
 data_type = "text"
@@ -236,8 +314,11 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:a
 
 [[revisions."2023".casillas]]
 id = "decl.redeme-inscrito"
+continuidad_id = "m322-identificacion-redeme-inscrito"
+continuidad_origin = "seeded"
 number = "redeme-inscrito"
 section = ["identificacion"]
+semantic_role = "m322_identificacion_redeme_inscrito"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -245,8 +326,11 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2023".casillas]]
 id = "decl.regimen-163-sexies-cinco"
+continuidad_id = "m322-identificacion-regimen-163-sexies-cinco"
+continuidad_origin = "seeded"
 number = "regimen-163-sexies-cinco"
 section = ["identificacion"]
+semantic_role = "m322_identificacion_regimen_163_sexies_cinco"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -254,8 +338,11 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:a
 
 [[revisions."2023".casillas]]
 id = "decl.tributacion-exclusivamente-foral"
+continuidad_id = "m322-identificacion-tributacion-exclusivamente-foral"
+continuidad_origin = "seeded"
 number = "tributacion-exclusivamente-foral"
 section = ["identificacion"]
+semantic_role = "m322_identificacion_tributacion_exclusivamente_foral"
 data_type = "text"
 required = false
 input_kind = "manual"
@@ -263,8 +350,11 @@ legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2023".casillas]]
 id = "decl.volumen-anual-no-cero"
+continuidad_id = "m322-identificacion-volumen-anual-no-cero"
+continuidad_origin = "seeded"
 number = "volumen-anual-no-cero"
 section = ["identificacion"]
+semantic_role = "m322_identificacion_volumen_anual_no_cero"
 data_type = "text"
 required = false
 input_kind = "manual"

@@ -4,7 +4,6 @@ target_casilla_id = "04"
 expression = { op = "subtract", args = [{ casilla_id = "02" }, { casilla_id = "03" }] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".formulas.source_citations]]
 source_ref = "boe-lirpf-lottery-prize-special-levy"
@@ -22,7 +21,6 @@ target_casilla_id = "05"
 expression = { op = "percent", args = [{ casilla_id = "04" }, { parameter = "irpf.lottery_prize_special_levy_rate" }] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
-source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-form-text"]
 
 [[revisions."2026".formulas.source_citations]]
 source_ref = "boe-lirpf-lottery-prize-special-levy"

@@ -51,6 +51,7 @@ source_refs = [
 ]
 
 [revisions."esquema-importacion".predecessor.none]
+cause = "parallel_scheme_variants"
 reason = """
 Revision 'esquema-importacion' is one of three parallel scheme variants of modelo 369, not a step in a \
 sequence. Orden HAC/610/2021 art 1 approves the single modelo 369 for the special OSS/IOSS regimes, and art 2 \

@@ -118,7 +118,10 @@ def validate_filing_schedule_section(
 ) -> list[str]:
     """Return filing-schedule reference and period-selector failures."""
     failures: list[str] = []
-    selector_periods = set(revision.period_selector.periods)
+    # A filing schedule is year-less, so a token the selector serves only in an
+    # override year is still declared by the revision and must not be reported
+    # as "outside the selector".
+    selector_periods = set(revision.period_selector.declared_periods)
     for schedule in revision.filing_schedules:
         owner = f"filing schedule {schedule.id}"
         failures.extend(missing_refs(prefix, owner, schedule.legal_refs, legal_refs, "legal"))

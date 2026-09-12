@@ -23,6 +23,21 @@ input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 additional_source_refs = ["aeat-modelo-151-procedure"]
 
+# AEAT campo: Devengo - Periodo
+[[revisions."2025-y-siguientes".casillas]]
+id = "p01.devengo-periodo"
+continuidad_id = "p01-devengo-periodo"
+continuidad_origin = "grounded"
+continuidad_evidence = "Official M15101000 designs retain Devengo - Periodo as the same 2-byte An field with content 0A: predecessor position 107-108 and successor position 107-108. The field role, span, length, and record type are identical across aeat-dr-151-2015 and aeat-dr-151-2023; it was absent from the successor registry declaration and is restored here. Sources: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) and corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935)."
+number = "107-108"
+segmento = "M15101000"
+section = ["p01", "devengo_periodo"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
+
 # AEAT campo: Contribuyente. Sexo [04]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p01.contribuyente-sexo-04"
@@ -349,6 +364,9 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Contribuyente. Código postal del domicilio [38]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p01.contribuyente-codigo-postal-del-domicilio-38"
+continuidad_id = "p01-contribuyente-56-codigo-postal"
+continuidad_origin = "grounded"
+continuidad_evidence = "Official M15101000 designs identify the same contributor domicile postal-code role in both revisions: predecessor Contribuyente. 56 - Código postal at position 270-274 (5 bytes, Num) and successor Contribuyente. Código postal del domicilio [38] at position 364-368 (5 bytes, Num). The position shift and printed-box renumbering do not change the field's legal role or encoding. Sources: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) and corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935)."
 number = "364-368"
 segmento = "M15101000"
 section = ["p01", "contribuyente_codigo_postal_del_domicilio"]
@@ -361,6 +379,9 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Contribuyente. Codigo de Provincia [40]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p01.contribuyente-codigo-de-provincia-40"
+continuidad_id = "p01-contribuyente-58-codigo-de-provincia"
+continuidad_origin = "grounded"
+continuidad_evidence = "Official M15101000 designs identify the same contributor province-code role in both revisions: predecessor Contribuyente. 58 - Código de Provincia at position 275-276 (2 bytes, Num) and successor Contribuyente. Codigo de Provincia [40] at position 369-370 (2 bytes, Num). The position shift and printed-box renumbering do not change the field's legal role or encoding. Sources: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) and corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935)."
 number = "369-370"
 segmento = "M15101000"
 section = ["p01", "contribuyente_codigo_de_provincia"]
@@ -373,6 +394,8 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Contribuyente. Nombre del Municipio [39]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p01.contribuyente-nombre-del-municipio-39"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The official M15101000 successor design introduces Contribuyente. Nombre del Municipio [39] at position 371-375 (5 bytes, Num). The predecessor instead declares Contribuyente. 57 - Código de Municipio at position 277-281 (5 bytes, Num); a municipality name is a different semantic role from the predecessor municipality code, so this field is a new root and is not linked many-to-one. Sources: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) and corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935)."
 number = "371-375"
 segmento = "M15101000"
 section = ["p01", "contribuyente_nombre_del_municipio"]
@@ -625,6 +648,8 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Representante. Apellidos y nombre o razón social o denominación [19]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p01.representante-apellidos-y-nombre-o-razon-social-o-denomin-19"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The official M15101000 successor design introduces one 80-byte An field, Representante. Apellidos y nombre o razón social o denominación [19], at byte position 722-801. The predecessor M15101000 design has no single [19] field: it declares two distinct An concepts, Representante. Apellidos at 652-711 (60 bytes) and Representante. Nombre at 712-731 (20 bytes). The successor also expands the printed role to include razón social/denominación, so it is a new representation rather than a many-to-one continuity claim. Sources: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) and corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935)."
 number = "722-801"
 segmento = "M15101000"
 section = ["p01", "representante_apellidos_y_nombre_o_razon_social_o_denominacion"]
@@ -802,6 +827,9 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Representante. Localidad/Poblacion (si es distinta del municipio) [37]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p01.representante-localidad-poblacion-si-es-distinta-del-muni-37"
+continuidad_id = "p01-representante-55-localidad-poblacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "Official M15101000 designs retain the representative locality/population role as a 30-byte An field: predecessor Representante. 55 - Localidad/Población at position 853-882 and successor Representante. Localidad/Poblacion (si es distinta del municipio) [37] at position 923-952. The successor adds the explicit distinct-from-municipality condition while retaining the same representative address locality role, length, and record type. Sources: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) and corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935)."
 number = "923-952"
 segmento = "M15101000"
 section = ["p01", "representante_localidad_poblacion_si_es_distinta_del_municipio"]
@@ -814,6 +842,9 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Representante. Código postal del domicilio [38]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p01.representante-codigo-postal-del-domicilio-38"
+continuidad_id = "p01-representante-56-codigo-postal"
+continuidad_origin = "grounded"
+continuidad_evidence = "Official M15101000 designs identify the same representative domicile postal-code role in both revisions: predecessor Representante. 56 - Código postal at position 883-887 (5 bytes, Num) and successor Representante. Código postal del domicilio [38] at position 953-957 (5 bytes, Num). The position shift and printed-box renumbering do not change the field's legal role or encoding. Sources: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) and corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935)."
 number = "953-957"
 segmento = "M15101000"
 section = ["p01", "representante_codigo_postal_del_domicilio"]
@@ -826,6 +857,8 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Representante. Nombre del Municipio [39]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p01.representante-nombre-del-municipio-39"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The official M15101000 successor design introduces Representante. Nombre del Municipio [39] at position 958-959 (2 bytes, Num). The predecessor instead declares Representante. 57 - Código de Municipio at position 890-894 (5 bytes, Num); a municipality name is a different semantic role from the predecessor municipality code, so this field is a new root and is not linked many-to-one. Sources: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) and corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935)."
 number = "958-959"
 segmento = "M15101000"
 section = ["p01", "representante_nombre_del_municipio"]
@@ -838,6 +871,9 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Representante. Codigo de Provincia [40]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p01.representante-codigo-de-provincia-40"
+continuidad_id = "p01-representante-58-codigo-de-provincia"
+continuidad_origin = "grounded"
+continuidad_evidence = "Official M15101000 designs identify the same representative province-code role in both revisions: predecessor Representante. 58 - Código de Provincia at position 888-889 (2 bytes, Num) and successor Representante. Codigo de Provincia [40] at position 960-964 (5 bytes, Num). The successor expands the numeric span from 2 to 5 bytes while preserving the province-code role and Num record type; this is an explicit representation-width change, not a municipality-code/name match. Sources: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230) and corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935)."
 number = "960-964"
 segmento = "M15101000"
 section = ["p01", "representante_codigo_de_provincia"]

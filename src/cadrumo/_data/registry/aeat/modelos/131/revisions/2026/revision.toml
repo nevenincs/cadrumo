@@ -67,3 +67,8 @@ source_refs = [
     "aeat-modelo-131-recuperacion-declaraciones",
     "boe-modelo-131-2007-form",
 ]
+
+[revisions."2026".source_default_dispositions.application_links]
+kind = "underivable"
+reason = """
+lift refuses: 1 source_refs statement(s) not textually rewritable: 0001-application-links.toml: source_refs = ["""

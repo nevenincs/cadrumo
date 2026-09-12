@@ -11,8 +11,8 @@ not model at all, is decided today in four places that do not have to agree:
   ``{informational, manual}``. It is therefore not a free label: a modelo that is
   informative in the AEAT sense but computes bound totals cannot carry the value
   without failing registry build.
-* :attr:`ModeloDefinition.tax_domain` — a TAXONOMY label.
-  :attr:`~cadrumo.core.TaxDomain.INFORMATIVE` groups a modelo into the
+* :attr:`ModeloDefinition.tax_domain` — a TAXONOMY label. The syntax-valid
+  value ``TaxDomain("informative")`` groups a modelo into the
   informative family and carries no invariant whatsoever.
 * The registry modelo-scope service
   (:data:`~cadrumo.domain.calculations.registry.modelo_obligation_scope.NON_REGISTRY_MODELOS` and the
@@ -100,7 +100,7 @@ _RENDERED_BLOCKER_SAMPLE: Final[int] = 1
 ClassificationFindingKind = Literal[
     "informative_axis_divergence",
     "non_registry_modelo_defined_in_tree",
-    "registry_modelo_absent_from_modelo_enum",
+    "registry_modelo_absent_from_known_codes",
     "dependency_conditional_activity_without_filing",
 ]
 """How the four classification homes can contradict one another."""
@@ -286,9 +286,9 @@ def build_classification_coherence_audit(
         non_registry_modelo_codes: Modelo codes declared to have no registry
             definition. A code here that nonetheless appears in ``modelos``
             contradicts the declaration.
-        known_modelo_codes: Every modelo code the core identifier enum knows. A
-            tree modelo absent from this set is unreachable through the typed
-            identifier surface.
+        known_modelo_codes: Every modelo code declared by the authority view
+            supplying ``modelos``. A tree modelo absent from this set is
+            unreachable through that authoritative identifier surface.
         registry_validated: Whether ``modelos`` came from the validating
             authority. Stamped onto the audit so a degraded read is never
             mistaken for validated authority.
@@ -340,7 +340,7 @@ def _build_row(
 ) -> ModeloClassificationRow:
     """Build one modelo's classification row and every finding it carries."""
     by_class = modelo.calculation_class == CalculationClass.INFORMATIVE
-    by_domain = modelo.tax_domain is TaxDomain.INFORMATIVE
+    by_domain = modelo.tax_domain == TaxDomain("informative")
     blockers = _informative_class_blockers(modelo)
     declared_non_registry = modelo.id in non_registry_modelo_codes
     known_code = modelo.id in known_modelo_codes
@@ -368,12 +368,12 @@ def _build_row(
     if not known_code:
         findings.append(
             ClassificationCoherenceFinding(
-                kind="registry_modelo_absent_from_modelo_enum",
+                kind="registry_modelo_absent_from_known_codes",
                 modelo=modelo.id,
                 subject=modelo.id,
                 detail=_bounded_detail(
-                    f"modelo {modelo.id} is defined in the registry tree but no core modelo identifier names "
-                    "it, so it is unreachable through the typed identifier surface",
+                    f"modelo {modelo.id} is defined in the registry tree but absent from the supplied "
+                    "authority code set, so it is unreachable through that authoritative identifier surface",
                 ),
                 registry_validated=registry_validated,
             ),

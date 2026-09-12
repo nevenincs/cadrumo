@@ -149,8 +149,8 @@ def test_the_dual_transposes_the_forward_primitive_across_the_whole_corpus() -> 
     checked_revisions = 0
     checked_pairs = 0
 
-    for modelo_id in sorted(_bundled_modelo_ids()):
-        definition = authority.modelo(modelo_id)
+    for definition in authority.modelos:
+        modelo_id = definition.id
         for revision in definition.revisions.values():
             expected: dict[str, list[str]] = {}
             for casilla in revision.casillas:
@@ -190,8 +190,8 @@ def test_no_ledger_iva_revision_declares_a_binding_on_a_non_bound_casilla() -> N
     offenders: list[str] = []
     ledger_iva_revisions = 0
 
-    for modelo_id in sorted(_bundled_modelo_ids()):
-        definition = authority.modelo(modelo_id)
+    for definition in authority.modelos:
+        modelo_id = definition.id
         for revision in definition.revisions.values():
             if not any(binding.source is _RATE_BOX_SOURCE for binding in revision.bindings):
                 continue
@@ -212,10 +212,3 @@ def test_no_ledger_iva_revision_declares_a_binding_on_a_non_bound_casilla() -> N
         "no revision carrying ledger-IVA bindings was found, so this gate asserted nothing; "
         "the source-kind filter is wrong, not the corpus"
     )
-
-
-def _bundled_modelo_ids() -> tuple[str, ...]:
-    from importlib.resources import files
-
-    root = files("cadrumo._data.registry.aeat.modelos")
-    return tuple(entry.name for entry in root.iterdir() if entry.is_dir())

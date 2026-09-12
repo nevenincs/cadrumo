@@ -29,7 +29,6 @@ from .schema import (
     FactOwnershipField,
     FactProviderId,
     FactSelector,
-    FactVariantId,
     GovernedFact,
     GovernedFactCatalogue,
     GovernedFactFamily,
@@ -141,7 +140,7 @@ class _ResolvedFact(RegistryModel):
     """Identity, matched context, and evidence retained by every resolution."""
 
     fact_id: FactId
-    variant_id: FactVariantId
+    variant_id: RegistryRevisionNodeId
     date_axis: DateAxisField
     effective_date: date
     valid_from: date
@@ -155,7 +154,7 @@ class _ResolvedFact(RegistryModel):
     review_status: RevisionReviewStatusField
     ownership: FactOwnershipField
     authority_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
-    source_variant_id: FactVariantId
+    source_variant_id: RegistryRevisionNodeId
     source_revision_ids: tuple[RegistryRevisionNodeId, ...] = Field(min_length=1)
     source_provider_id: FactProviderId | None = None
     projection_direction: TemporalProjectionDirection = TemporalProjectionDirection.AUTHORED
@@ -395,10 +394,13 @@ def _projection_candidates(
     return (), TemporalProjectionDirection.AUTHORED, None
 
 
-def _transitive_precedence(variant_id: FactVariantId, fact: GovernedFact) -> frozenset[FactVariantId]:
+def _transitive_precedence(
+    variant_id: RegistryRevisionNodeId,
+    fact: GovernedFact,
+) -> frozenset[RegistryRevisionNodeId]:
     edges = {variant.variant_id: variant.precedence_over for variant in fact.variants}
     pending = list(edges.get(variant_id, ()))
-    reached: set[FactVariantId] = set()
+    reached: set[RegistryRevisionNodeId] = set()
     while pending:
         current = pending.pop()
         if current in reached:

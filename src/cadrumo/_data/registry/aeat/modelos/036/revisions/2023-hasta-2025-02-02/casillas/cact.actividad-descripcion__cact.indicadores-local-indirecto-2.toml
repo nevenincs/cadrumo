@@ -1,0 +1,1008 @@
+# Modelo 036 RECORD Pag. 4 -- declaracion censal de alta, modificacion y baja.
+#
+# Emitted from aeat-dr-036-2023, whose window runs 2023-01-01 to 2025-02-02.
+#
+# ONE CASILLA PER PRINTED NUMBER, NOT PER DESIGN ROW. AEAT splits every date
+# into dia, mes and ano rows under a single number, and repeats whole blocks --
+# Pag. 8 prints 800, 801, 818 and 859 four times each, once per repetition of
+# the socio block. The 2025 edition settled this and says so in its own
+# comments; emitting per row instead would have written 263 casillas sharing 85
+# ids, which is valid TOML and wrong. Each comment states the group's whole span
+# and every component it covers.
+#
+# THE 037 ASTERISK IS TRANSCRIBED, NOT NORMALISED. A trailing ' *' marks a field
+# that could be informed on a modelo 037, which Orden HAC/1526/2024 suppressed
+# effective 2025-02-03. The design's own legend gives it that meaning, so it is
+# part of what AEAT printed for these years and it is not in the 2025 captions.
+#
+# NOT MODELLED: the identifier envelope, the reservado runs, the CRLF terminator
+# and the tipo-declaracion discriminant.
+#
+# NOT CLAIMED: these casillas DECLARE the censo; none computes anything. Modelo
+# 036 carries no formula family at all.
+
+# @11+60 An. Actividad. Descripción de la actividad.  *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.actividad-descripcion"
+continuidad_id = "act-actividad-descripcion"
+number = "400"
+section = ["declaracion", "actividades", "actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @71+5 An. Actividad. Sección I.A.E.   * [ONE casilla over 2 printed components: @71+1, @72+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.actividad-iae-seccion-grupo"
+number = "402"
+section = ["declaracion", "actividades", "actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @76+3 An. Actividad. Tipo de actividad.   * | Tabla
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.actividad-tipo-actividad"
+continuidad_id = "act-actividad-tipo-actividad"
+number = "403"
+section = ["declaracion", "actividades", "actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @79+1 An. La actividad se desarrolla fuera de un local determinado. Alta   * | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.sin-local-alta"
+continuidad_id = "act-sin-local-alta"
+number = "405"
+section = ["declaracion", "actividades", "sin_local"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @80+8 Num. La actividad se desarrolla fuera de un local determinado. Fecha. Dia.   * [ONE casilla over 3 printed components: @80+2, @82+2, @84+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.sin-local-alta-fecha"
+number = "406"
+section = ["declaracion", "actividades", "sin_local"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @88+1 An. La actividad se desarrolla fuera de un local determinado. Baja   * | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.sin-local-baja"
+continuidad_id = "act-sin-local-baja"
+number = "408"
+section = ["declaracion", "actividades", "sin_local"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @89+8 Num. La actividad se desarrolla fuera de un local determinado. Fecha. Dia.   * [ONE casilla over 3 printed components: @89+2, @91+2, @93+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.sin-local-baja-fecha"
+number = "409"
+section = ["declaracion", "actividades", "sin_local"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @97+13 An. La actividad se desarrolla fuera de un local determinado. Nº referencia.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.sin-local-numero-referencia"
+continuidad_id = "act-sin-local-numero-referencia"
+number = "410"
+section = ["declaracion", "actividades", "sin_local"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @110+25 An. La actividad se desarrolla fuera de un local determinado. Municipio.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.sin-local-municipio"
+continuidad_id = "act-sin-local-municipio"
+number = "411"
+section = ["declaracion", "actividades", "sin_local"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @143+20 An. La actividad se desarrolla en local determinado. Referencia catastral.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-1-referencia-catastral"
+continuidad_id = "act-local-directo-1-referencia-catastral"
+number = "412"
+section = ["declaracion", "actividades", "local_directo_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @163+17 An. La actividad se desarrolla en local determinado. S.G.   * | Tabla
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-1-seccion-grafica"
+continuidad_id = "act-local-directo-1-seccion-grafica"
+number = "413"
+section = ["declaracion", "actividades", "local_directo_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @180+25 An. La actividad se desarrolla en local determinado. Nombre de la vía pública   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-1-nombre-via"
+continuidad_id = "act-local-directo-1-nombre-via"
+number = "414"
+section = ["declaracion", "actividades", "local_directo_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @205+5 Num. La actividad se desarrolla en local determinado. Núm   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-1-numero"
+continuidad_id = "act-local-directo-1-numero"
+number = "415"
+section = ["declaracion", "actividades", "local_directo_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @210+2 An. La actividad se desarrolla en local determinado. Piso   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-1-piso"
+continuidad_id = "act-local-directo-1-piso"
+number = "416"
+section = ["declaracion", "actividades", "local_directo_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @212+2 An. La actividad se desarrolla en local determinado. Prta   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-1-puerta"
+continuidad_id = "act-local-directo-1-puerta"
+number = "417"
+section = ["declaracion", "actividades", "local_directo_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @214+5 Num. La actividad se desarrolla en local determinado. Código Postal   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-1-codigo-postal"
+continuidad_id = "act-local-directo-1-codigo-postal"
+number = "418"
+section = ["declaracion", "actividades", "local_directo_1"]
+data_type = "postal_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @219+25 An. La actividad se desarrolla en local determinado. Municipio   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-1-municipio"
+continuidad_id = "act-local-directo-1-municipio"
+number = "419"
+section = ["declaracion", "actividades", "local_directo_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @244+2 An. La actividad se desarrolla en local determinado. Código de Provincia   * | ('01', '02',...'52')
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-1-codigo-provincia"
+continuidad_id = "act-local-directo-1-codigo-provincia"
+number = "420"
+section = ["declaracion", "actividades", "local_directo_1"]
+data_type = "province_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @252+7 Num. La actividad se desarrolla en local determinado. Superficie (m2)   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-1-superficie"
+continuidad_id = "act-local-directo-1-superficie"
+number = "422"
+section = ["declaracion", "actividades", "local_directo_1"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @259+3 Num. La actividad se desarrolla en local determinado. Grado de afec.  *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-1-grado-afectacion"
+continuidad_id = "act-local-directo-1-grado-afectacion"
+number = "423"
+section = ["declaracion", "actividades", "local_directo_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @262+1 An. La actividad se desarrolla en local determinado. Alta   * | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-1-alta"
+continuidad_id = "act-local-directo-1-alta"
+number = "424"
+section = ["declaracion", "actividades", "local_directo_1"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @263+8 Num. La actividad se desarrolla en local determinado. Fecha. Dia.   * [ONE casilla over 3 printed components: @263+2, @265+2, @267+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-1-alta-fecha"
+number = "425"
+section = ["declaracion", "actividades", "local_directo_1"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @271+1 An. La actividad se desarrolla en local determinado. Baja   * | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-1-baja"
+continuidad_id = "act-local-directo-1-baja"
+number = "427"
+section = ["declaracion", "actividades", "local_directo_1"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @272+8 Num. La actividad se desarrolla en local determinado. Fecha. Dia.   * [ONE casilla over 3 printed components: @272+2, @274+2, @276+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-1-baja-fecha"
+number = "428"
+section = ["declaracion", "actividades", "local_directo_1"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @280+13 An. La actividad se desarrolla en local determinado. Nº referencia alta.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-1-numero-referencia-alta"
+continuidad_id = "act-local-directo-1-numero-referencia-alta"
+number = "429"
+section = ["declaracion", "actividades", "local_directo_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @293+1 An. La actividad se desarrolla en local determinado. Variación   * | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-1-variacion"
+continuidad_id = "act-local-directo-1-variacion"
+number = "430"
+section = ["declaracion", "actividades", "local_directo_1"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @294+8 Num. La actividad se desarrolla en local determinado. Fecha. Dia.   * [ONE casilla over 3 printed components: @294+2, @296+2, @298+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-1-variacion-fecha"
+number = "431"
+section = ["declaracion", "actividades", "local_directo_1"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @302+13 An. La actividad se desarrolla en local determinado. Nº referencia alta.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-1-variacion-numero-referencia"
+continuidad_id = "act-local-directo-1-variacion-numero-referencia"
+number = "432"
+section = ["declaracion", "actividades", "local_directo_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @315+20 An. La actividad se desarrolla en local determinado. Referencia catastral.
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-2-referencia-catastral"
+continuidad_id = "act-local-directo-2-referencia-catastral"
+number = "433"
+section = ["declaracion", "actividades", "local_directo_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @335+17 An. La actividad se desarrolla en local determinado. S.G. | Tabla
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-2-seccion-grafica"
+continuidad_id = "act-local-directo-2-seccion-grafica"
+number = "434"
+section = ["declaracion", "actividades", "local_directo_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @352+25 An. La actividad se desarrolla en local determinado. Nombre de la vía pública
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-2-nombre-via"
+continuidad_id = "act-local-directo-2-nombre-via"
+number = "435"
+section = ["declaracion", "actividades", "local_directo_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @377+5 Num. La actividad se desarrolla en local determinado. Núm
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-2-numero"
+continuidad_id = "act-local-directo-2-numero"
+number = "436"
+section = ["declaracion", "actividades", "local_directo_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @382+2 An. La actividad se desarrolla en local determinado. Piso
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-2-piso"
+continuidad_id = "act-local-directo-2-piso"
+number = "437"
+section = ["declaracion", "actividades", "local_directo_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @384+2 An. La actividad se desarrolla en local determinado. Prta
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-2-puerta"
+continuidad_id = "act-local-directo-2-puerta"
+number = "438"
+section = ["declaracion", "actividades", "local_directo_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @386+5 Num. La actividad se desarrolla en local determinado. Código Postal
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-2-codigo-postal"
+continuidad_id = "act-local-directo-2-codigo-postal"
+number = "439"
+section = ["declaracion", "actividades", "local_directo_2"]
+data_type = "postal_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @391+25 An. La actividad se desarrolla en local determinado. Municipio
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-2-municipio"
+continuidad_id = "act-local-directo-2-municipio"
+number = "440"
+section = ["declaracion", "actividades", "local_directo_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @416+2 An. La actividad se desarrolla en local determinado. Código de Provincia | ('01', '02',...'52')
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-2-codigo-provincia"
+continuidad_id = "act-local-directo-2-codigo-provincia"
+number = "441"
+section = ["declaracion", "actividades", "local_directo_2"]
+data_type = "province_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @424+7 Num. La actividad se desarrolla en local determinado. Superficie (m2)
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-2-superficie"
+continuidad_id = "act-local-directo-2-superficie"
+number = "443"
+section = ["declaracion", "actividades", "local_directo_2"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @431+3 Num. La actividad se desarrolla en local determinado. Grado de afec.
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-2-grado-afectacion"
+continuidad_id = "act-local-directo-2-grado-afectacion"
+number = "444"
+section = ["declaracion", "actividades", "local_directo_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @434+1 An. La actividad se desarrolla en local determinado. Alta | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-2-alta"
+continuidad_id = "act-local-directo-2-alta"
+number = "445"
+section = ["declaracion", "actividades", "local_directo_2"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @435+8 Num. La actividad se desarrolla en local determinado. Fecha. Dia. [ONE casilla over 3 printed components: @435+2, @437+2, @439+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-2-alta-fecha"
+number = "446"
+section = ["declaracion", "actividades", "local_directo_2"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @443+1 An. La actividad se desarrolla en local determinado. Baja | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-2-baja"
+continuidad_id = "act-local-directo-2-baja"
+number = "448"
+section = ["declaracion", "actividades", "local_directo_2"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @444+8 Num. La actividad se desarrolla en local determinado. Fecha. Dia. [ONE casilla over 3 printed components: @444+2, @446+2, @448+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-2-baja-fecha"
+number = "449"
+section = ["declaracion", "actividades", "local_directo_2"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @452+13 An. La actividad se desarrolla en local determinado. Nº referencia alta.
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-2-numero-referencia-alta"
+continuidad_id = "act-local-directo-2-numero-referencia-alta"
+number = "450"
+section = ["declaracion", "actividades", "local_directo_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @465+1 An. La actividad se desarrolla en local determinado. Variación | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-2-variacion"
+continuidad_id = "act-local-directo-2-variacion"
+number = "451"
+section = ["declaracion", "actividades", "local_directo_2"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @466+8 Num. La actividad se desarrolla en local determinado. Fecha. Dia. [ONE casilla over 3 printed components: @466+2, @468+2, @470+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-2-variacion-fecha"
+number = "452"
+section = ["declaracion", "actividades", "local_directo_2"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @474+13 An. La actividad se desarrolla en local determinado. Nº referencia alta.
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-directo-2-variacion-numero-referencia"
+continuidad_id = "act-local-directo-2-variacion-numero-referencia"
+number = "453"
+section = ["declaracion", "actividades", "local_directo_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @487+20 An. Locales indirectamente afectos a la actividad. Referencia catastral.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-1-referencia-catastral"
+continuidad_id = "act-local-indirecto-1-referencia-catastral"
+number = "454"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @507+17 An. Locales indirectamente afectos a la actividad. S.G.   * | Tabla
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-1-seccion-grafica"
+continuidad_id = "act-local-indirecto-1-seccion-grafica"
+number = "455"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @524+25 An. Locales indirectamente afectos a la actividad. Nombre de la vía pública   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-1-nombre-via"
+continuidad_id = "act-local-indirecto-1-nombre-via"
+number = "456"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @549+5 Num. Locales indirectamente afectos a la actividad. Núm   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-1-numero"
+continuidad_id = "act-local-indirecto-1-numero"
+number = "457"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @554+2 An. Locales indirectamente afectos a la actividad. Piso   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-1-piso"
+continuidad_id = "act-local-indirecto-1-piso"
+number = "458"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @556+2 An. Locales indirectamente afectos a la actividad. Prta   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-1-puerta"
+continuidad_id = "act-local-indirecto-1-puerta"
+number = "459"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @558+5 Num. Locales indirectamente afectos a la actividad. Código Postal   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-1-codigo-postal"
+continuidad_id = "act-local-indirecto-1-codigo-postal"
+number = "460"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "postal_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @563+25 An. Locales indirectamente afectos a la actividad. Municipio   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-1-municipio"
+continuidad_id = "act-local-indirecto-1-municipio"
+number = "461"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @588+2 An. Locales indirectamente afectos a la actividad. Código de Provincia   * | ('01', '02',...'52')
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-1-codigo-provincia"
+continuidad_id = "act-local-indirecto-1-codigo-provincia"
+number = "462"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "province_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @596+7 Num. Locales indirectamente afectos a la actividad. Superficie (m2)   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-1-superficie"
+continuidad_id = "act-local-indirecto-1-superficie"
+number = "464"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @603+3 Num. Locales indirectamente afectos a la actividad. Grado de afec.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-1-grado-afectacion"
+continuidad_id = "act-local-indirecto-1-grado-afectacion"
+number = "465"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @606+2 An. Locales indirectamente afectos a la actividad. Uso o destino.   * | Tabla
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-1-uso-destino"
+continuidad_id = "act-local-indirecto-1-uso-destino"
+number = "466"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @608+1 An. Locales indirectamente afectos a la actividad. Alta   * | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-1-alta"
+continuidad_id = "act-local-indirecto-1-alta"
+number = "468"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @609+8 Num. Locales indirectamente afectos a la actividad. Fecha. Dia.   * [ONE casilla over 3 printed components: @609+2, @611+2, @613+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-1-alta-fecha"
+number = "469"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @617+1 An. Locales indirectamente afectos a la actividad. Baja   * | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-1-baja"
+continuidad_id = "act-local-indirecto-1-baja"
+number = "471"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @618+8 Num. Locales indirectamente afectos a la actividad. Fecha. Dia.   * [ONE casilla over 3 printed components: @618+2, @620+2, @622+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-1-baja-fecha"
+number = "472"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @626+13 An. Locales indirectamente afectos a la actividad. Nº referencia alta.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-1-numero-referencia-alta"
+continuidad_id = "act-local-indirecto-1-numero-referencia-alta"
+number = "473"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @639+1 An. Locales indirectamente afectos a la actividad. Variación   * | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-1-variacion"
+continuidad_id = "act-local-indirecto-1-variacion"
+number = "474"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @640+8 Num. Locales indirectamente afectos a la actividad. Fecha. Dia.   * [ONE casilla over 3 printed components: @640+2, @642+2, @644+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-1-variacion-fecha"
+number = "475"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @648+13 An. Locales indirectamente afectos a la actividad. Nº referencia alta.   *
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-1-variacion-numero-referencia"
+continuidad_id = "act-local-indirecto-1-variacion-numero-referencia"
+number = "476"
+section = ["declaracion", "actividades", "local_indirecto_1"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @661+20 An. Locales indirectamente afectos a la actividad. Referencia catastral.
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-2-referencia-catastral"
+continuidad_id = "act-local-indirecto-2-referencia-catastral"
+number = "477"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @681+17 An. Locales indirectamente afectos a la actividad. S.G. | Tabla
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-2-seccion-grafica"
+continuidad_id = "act-local-indirecto-2-seccion-grafica"
+number = "478"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @698+25 An. Locales indirectamente afectos a la actividad. Nombre de la vía pública
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-2-nombre-via"
+continuidad_id = "act-local-indirecto-2-nombre-via"
+number = "479"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @723+5 Num. Locales indirectamente afectos a la actividad. Núm
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-2-numero"
+continuidad_id = "act-local-indirecto-2-numero"
+number = "480"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @728+2 An. Locales indirectamente afectos a la actividad. Piso
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-2-piso"
+continuidad_id = "act-local-indirecto-2-piso"
+number = "481"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @730+2 An. Locales indirectamente afectos a la actividad. Prta
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-2-puerta"
+continuidad_id = "act-local-indirecto-2-puerta"
+number = "482"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @732+5 Num. Locales indirectamente afectos a la actividad. Código Postal
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-2-codigo-postal"
+continuidad_id = "act-local-indirecto-2-codigo-postal"
+number = "483"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "postal_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @737+25 An. Locales indirectamente afectos a la actividad. Municipio
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-2-municipio"
+continuidad_id = "act-local-indirecto-2-municipio"
+number = "484"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @762+2 An. Locales indirectamente afectos a la actividad. Código de Provincia | ('01', '02',...'52')
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-2-codigo-provincia"
+continuidad_id = "act-local-indirecto-2-codigo-provincia"
+number = "485"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "province_code"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @770+7 Num. Locales indirectamente afectos a la actividad. Superficie (m2)
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-2-superficie"
+continuidad_id = "act-local-indirecto-2-superficie"
+number = "487"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @777+3 Num. Locales indirectamente afectos a la actividad. Grado de afec.
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-2-grado-afectacion"
+continuidad_id = "act-local-indirecto-2-grado-afectacion"
+number = "488"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @780+2 An. Locales indirectamente afectos a la actividad. Uso o destino. | Tabla
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-2-uso-destino"
+continuidad_id = "act-local-indirecto-2-uso-destino"
+number = "489"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @782+1 An. Locales indirectamente afectos a la actividad. Alta | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-2-alta"
+continuidad_id = "act-local-indirecto-2-alta"
+number = "491"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @783+8 Num. Locales indirectamente afectos a la actividad. Fecha. Dia. [ONE casilla over 3 printed components: @783+2, @785+2, @787+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-2-alta-fecha"
+number = "492"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @791+1 An. Locales indirectamente afectos a la actividad. Baja | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-2-baja"
+continuidad_id = "act-local-indirecto-2-baja"
+number = "494"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @792+8 Num. Locales indirectamente afectos a la actividad. Fecha. Dia. [ONE casilla over 3 printed components: @792+2, @794+2, @796+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-2-baja-fecha"
+number = "495"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @800+13 An. Locales indirectamente afectos a la actividad. Nº referencia alta.
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-2-numero-referencia-alta"
+continuidad_id = "act-local-indirecto-2-numero-referencia-alta"
+number = "496"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @813+1 An. Locales indirectamente afectos a la actividad. Variación | "S" o blanco
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-2-variacion"
+continuidad_id = "act-local-indirecto-2-variacion"
+number = "497"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @814+8 Num. Locales indirectamente afectos a la actividad. Fecha. Dia. [ONE casilla over 3 printed components: @814+2, @816+2, @818+4]
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-2-variacion-fecha"
+number = "498"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "date"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @822+13 An. Locales indirectamente afectos a la actividad. Nº referencia alta.
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.local-indirecto-2-variacion-numero-referencia"
+continuidad_id = "act-local-indirecto-2-variacion-numero-referencia"
+number = "499"
+section = ["declaracion", "actividades", "local_indirecto_2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @835+1 An. Locales directamente afectos a la actividad.Indicador referencia catastral
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.indicadores-local-directo-1"
+continuidad_id = "act-indicadores-local-directo-1"
+number = "412bis"
+section = ["declaracion", "actividades", "indicadores"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @836+1 An. Locales directamente afectos a la actividad.Indicador referencia catastral
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.indicadores-local-directo-2"
+continuidad_id = "act-indicadores-local-directo-2"
+number = "433bis"
+section = ["declaracion", "actividades", "indicadores"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @837+1 An. Locales indirectamente afectos a la actividad.Indicador referencia catastral
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.indicadores-local-indirecto-1"
+continuidad_id = "act-indicadores-local-indirecto-1"
+number = "454bis"
+section = ["declaracion", "actividades", "indicadores"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
+
+# @838+1 An. Locales indirectamente afectos a la actividad.Indicador referencia catastral
+[[revisions."2023-hasta-2025-02-02".casillas]]
+id = "act.indicadores-local-indirecto-2"
+continuidad_id = "act-indicadores-local-indirecto-2"
+number = "4774bis"
+section = ["declaracion", "actividades", "indicadores"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]

@@ -1,5 +1,6 @@
 [[revisions."2022".casillas]]
 id = "01"
+continuidad_id = "capitalizacion-seguros-resumen-perceptores-base-positiva"
 number = "01"
 section = ["resumen"]
 data_type = "integer"
@@ -12,6 +13,7 @@ legal_refs = ["ley-35-2006:art-99", "orden-1999-11-17:apartado-quinto"]
 
 [[revisions."2022".casillas]]
 id = "02"
+continuidad_id = "capitalizacion-seguros-resumen-base-positiva"
 number = "02"
 section = ["resumen"]
 data_type = "money"
@@ -22,6 +24,7 @@ legal_refs = ["ley-35-2006:art-99", "orden-1999-11-17:apartado-quinto"]
 
 [[revisions."2022".casillas]]
 id = "03"
+continuidad_id = "capitalizacion-seguros-resumen-retenciones"
 number = "03"
 section = ["resumen"]
 data_type = "money"
@@ -32,6 +35,7 @@ legal_refs = ["ley-35-2006:art-99", "orden-1999-11-17:apartado-quinto"]
 
 [[revisions."2022".casillas]]
 id = "04"
+continuidad_id = "capitalizacion-seguros-resumen-perceptores-base-negativa"
 number = "04"
 section = ["resumen"]
 data_type = "integer"
@@ -44,6 +48,7 @@ legal_refs = ["ley-35-2006:art-99", "orden-1999-11-17:apartado-quinto"]
 
 [[revisions."2022".casillas]]
 id = "05"
+continuidad_id = "capitalizacion-seguros-resumen-base-negativa"
 number = "05"
 section = ["resumen"]
 data_type = "money"

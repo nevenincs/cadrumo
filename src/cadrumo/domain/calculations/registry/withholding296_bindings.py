@@ -2,8 +2,8 @@
 
 Modelo 296 (IRNR retenciones, resumen anual) declares its own clave
 vocabulary -- numeric renta-type claves with D/E naturaleza -- which the shared
-:class:`~._withholding_bindings.WithholdingObservation` (claves A-L) cannot
-carry, so this family holds its own observation type and selector validation.
+:class:`~._withholding_bindings.WithholdingObservation` cannot carry, so this
+family holds its own observation type and selector validation.
 """
 
 from __future__ import annotations

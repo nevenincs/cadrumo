@@ -1,5 +1,5 @@
 [revisions."2023-2025"]
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (lower grade).", legal_refs = ["orden-hap-2455-2013:art-1"], source_refs = ["enrolled-modelo-165-procedure"] } }
+predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (lower grade).", cause = "lower_grade", legal_refs = ["orden-hap-2455-2013:art-1"], source_refs = ["enrolled-modelo-165-procedure"] } }
 casilla_source_refs = ["enrolled-modelo-165-procedure"]
 authority_grade = "applicability"
 # The next bundled positional artefact is headed Ejercicio 2026. Its filename

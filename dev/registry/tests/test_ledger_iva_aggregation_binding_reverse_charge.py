@@ -21,9 +21,9 @@ from cadrumo.domain.iva.classification import (
     TransactionKind,
     classify_iva,
 )
-from cadrumo.domain.iva.components import category_cuota_is_zero_by_law
+from cadrumo.domain.iva.components import category_cuota_is_zero_by_law, registry_category_projection
 from cadrumo.domain.iva.flow import IvaFlowDirection, derive_flow_for_classification
-from cadrumo.domain.iva.schema import CUOTA_LESS_M303_IVA_CATEGORIES, EUMemberState, IvaCategory, IvaRateKind
+from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 
 from .ledger_iva_aggregation_support import (
     _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA,
@@ -382,11 +382,11 @@ def test_64_advisory_residual_flagged_set_is_empty_for_all_declarable_categories
 
     flagged: list[tuple[str, str]] = []
     for category in IvaCategory:
-        if category in non_declarable or category in CUOTA_LESS_M303_IVA_CATEGORIES:
+        if category in non_declarable or category in registry_category_projection("cuota_less_m303"):
             continue
         invoice_direction = InvoiceKind.RECEIVED if category in received_categories else InvoiceKind.ISSUED
         # Cuota-less-by-law is a (category, SIDE) fact, while
-        # CUOTA_LESS_M303_IVA_CATEGORIES is keyed on the category alone, so the
+    # registry cuota-less projection is keyed on the category alone, so the
         # skip above cannot express it. Domestic reverse charge forces the
         # distinction: the recipient self-assesses a real cuota, while the
         # supplier repercutes nothing under LIVA art. 84.Uno.2. Synthesising a

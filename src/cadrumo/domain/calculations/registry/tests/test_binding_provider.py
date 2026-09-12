@@ -56,7 +56,7 @@ _PREVIOUS_FILING_PROVIDER = PreviousFilingProvider(
 )
 
 _INVENTORY_PROVIDER = InventoryProvider(
-    modelo=Modelo.M100,
+    modelo=Modelo("100"),
     projection_grain="taxpayer_year_activity",
     fact="row_field",
     record="inventory_activity",

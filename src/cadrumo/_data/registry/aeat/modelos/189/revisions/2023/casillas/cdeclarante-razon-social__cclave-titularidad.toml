@@ -6,6 +6,7 @@
 
 [[revisions."2023".casillas]]
 id = "declarante-razon-social"
+continuidad_id = "m189-declarante-razon-social"
 number = "tipo1.18-57"
 section = ["identificacion_declaracion"]
 data_type = "name"
@@ -17,6 +18,7 @@ additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2023".casillas]]
 id = "tipo-soporte"
+continuidad_id = "m189-tipo-soporte"
 number = "tipo1.58"
 section = ["identificacion_declaracion"]
 data_type = "text"
@@ -28,6 +30,7 @@ additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2023".casillas]]
 id = "persona-relacion"
+continuidad_id = "m189-persona-relacion"
 number = "tipo1.59-107"
 section = ["identificacion_declaracion"]
 data_type = "text"
@@ -39,6 +42,7 @@ additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2023".casillas]]
 id = "numero-justificante"
+continuidad_id = "m189-numero-justificante"
 number = "tipo1.108-120"
 section = ["identificacion_declaracion"]
 data_type = "integer"
@@ -50,6 +54,7 @@ additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2023".casillas]]
 id = "declaracion-complementaria-sustitutiva"
+continuidad_id = "m189-declaracion-complementaria-sustitutiva"
 number = "tipo1.121-122"
 section = ["identificacion_declaracion"]
 data_type = "text"
@@ -63,6 +68,7 @@ additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2023".casillas]]
 id = "numero-identificativo-anterior"
+continuidad_id = "m189-numero-identificativo-anterior"
 number = "tipo1.123-135"
 section = ["identificacion_declaracion"]
 data_type = "integer"
@@ -74,6 +80,7 @@ additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2023".casillas]]
 id = "numero-total-declarados"
+continuidad_id = "m189-numero-total-declarados"
 number = "tipo1.136-144"
 section = ["identificacion_declaracion"]
 data_type = "integer"
@@ -85,6 +92,7 @@ additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2023".casillas]]
 id = "valoracion-total"
+continuidad_id = "m189-valoracion-total"
 number = "tipo1.145-167"
 section = ["identificacion_declaracion", "valoracion"]
 data_type = "money"
@@ -101,6 +109,7 @@ additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1180", "aeat-dr-189
 
 [[revisions."2023".casillas]]
 id = "representante-legal-nif"
+continuidad_id = "m189-representante-legal-nif"
 number = "tipo2.27-35"
 section = ["declarado"]
 data_type = "nif"
@@ -112,6 +121,7 @@ additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2023".casillas]]
 id = "codigo-provincia"
+continuidad_id = "m189-codigo-provincia"
 number = "tipo2.76-77"
 section = ["declarado", "localizacion"]
 data_type = "province_code"
@@ -123,6 +133,7 @@ additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2023".casillas]]
 id = "clave-mercado"
+continuidad_id = "m189-clave-mercado"
 number = "tipo2.80"
 section = ["valores_seguros_rentas", "identificacion_valor"]
 data_type = "text"
@@ -134,6 +145,7 @@ additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2023".casillas]]
 id = "clave-identificacion"
+continuidad_id = "m189-clave-identificacion"
 number = "tipo2.82"
 section = ["valores_seguros_rentas", "identificacion_valor"]
 data_type = "text"
@@ -145,6 +157,7 @@ additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2023".casillas]]
 id = "identificacion-valores"
+continuidad_id = "m189-identificacion-valores"
 number = "tipo2.83-94"
 section = ["valores_seguros_rentas", "identificacion_valor"]
 data_type = "text"
@@ -156,6 +169,7 @@ additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2023".casillas]]
 id = "clave-representacion"
+continuidad_id = "m189-clave-representacion"
 number = "tipo2.95"
 section = ["valores_seguros_rentas", "identificacion_valor"]
 data_type = "text"
@@ -167,6 +181,7 @@ additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2023".casillas]]
 id = "porcentaje-participacion"
+continuidad_id = "m189-porcentaje-participacion"
 number = "tipo2.124-128"
 section = ["valores_seguros_rentas", "detalle_valor"]
 data_type = "decimal"
@@ -178,6 +193,7 @@ additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2023".casillas]]
 id = "clave-titularidad"
+continuidad_id = "m189-clave-titularidad"
 number = "tipo2.129"
 section = ["valores_seguros_rentas", "detalle_valor"]
 data_type = "text"

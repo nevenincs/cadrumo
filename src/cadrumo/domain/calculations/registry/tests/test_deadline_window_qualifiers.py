@@ -7,9 +7,9 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from .....core.irnr import M210_TIPO_RENTA_CODE_PROJECTION, TipoRentaIrnr
 from .....core.result_disposition import ResultDisposition
 from ..errors import RegistryValidationError
+from ..irnr_tipo_renta import m210_tipo_renta_code_projection
 from ..schema_deadlines import DeadlineWindowDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -48,15 +48,16 @@ def test_deadline_window_accepts_canonical_result_disposition_members(dispositio
 
 
 def test_deadline_window_preserves_official_codes_that_share_one_rate_concept() -> None:
-    assert M210_TIPO_RENTA_CODE_PROJECTION["01"] is TipoRentaIrnr.GENERAL
-    assert M210_TIPO_RENTA_CODE_PROJECTION["03"] is TipoRentaIrnr.GENERAL
+    projection = m210_tipo_renta_code_projection()
+    assert projection["01"].value == "general"
+    assert projection["03"].value == "general"
 
     qualified = _window(tipo_renta_scope=("01", "03"))
 
     assert qualified.tipo_renta_scope == ("01", "03")
 
 
-@pytest.mark.parametrize("conceptual_key", [TipoRentaIrnr.GENERAL, TipoRentaIrnr.GENERAL.value])
+@pytest.mark.parametrize("conceptual_key", ["general"])
 def test_deadline_window_rejects_lossy_conceptual_tipo_authoring(conceptual_key: object) -> None:
     with pytest.raises((RegistryValidationError, ValidationError), match="unknown official Modelo 210 codes"):
         _window(tipo_renta_scope=(conceptual_key,))

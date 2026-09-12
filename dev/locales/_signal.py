@@ -107,7 +107,7 @@ _VERSION_TOKEN_RE: Final[re.Pattern[str]] = re.compile(
     r"(?<![\w])v?(?:\d+|[xXyYzZ])(?:[._-](?:\d+|[xXyYzZ])){1,3}(?![\w])"
 )
 _PLATFORM_LABEL_RE: Final[re.Pattern[str]] = re.compile(
-    r"(?<![\w])(?P<label>[A-Z][A-Za-z0-9]*)\s*\((?P<details>[^()\r\n]*)\)"
+    r"(?<![\w])(?P<label>[A-Za-z][A-Za-z0-9]*)\s*\((?P<details>[^()\r\n]*)\)"
 )
 _ARCHITECTURE_TOKEN_RE: Final[re.Pattern[str]] = re.compile(
     r"(?<![\w])(?:[A-Za-z]{1,4}[-_]?\d{1,3}(?:[-_][A-Za-z0-9]{1,4})*|\d{1,3}[-_x]\d{1,3})(?![\w])"
@@ -1222,17 +1222,16 @@ def _translation_invariant_echo_reason(
     locale: str,
     *,
     dictionary: object | None,
+    source_dictionary: object | None = None,
+    platform_terms: Iterable[str] = (),
 ) -> str | None:
     """Classify an exact echo only when its invariance is independently provable."""
     from cadrumo.core.product_identity import PRODUCT_IDENTITY
 
     normalized = _translation_echo_normalize(source)
-    product_names = {
-        _translation_echo_normalize(value)
-        for value in PRODUCT_IDENTITY
-        if isinstance(value, str)
-    }
-    if normalized in product_names:
+    product_names = tuple(value for value in PRODUCT_IDENTITY if isinstance(value, str))
+    normalized_product_names = {_translation_echo_normalize(value) for value in product_names}
+    if normalized in normalized_product_names or _is_product_version_identity(source, product_names):
         return "canonical_product_identity"
     if _MODELO_FORM_RE.search(source):
         return "modelo_form"
@@ -1241,13 +1240,66 @@ def _translation_invariant_echo_reason(
         return "platform_format"
     if _PLATFORM_FORMAT_RE.search(source) and len(words) <= 2:
         return "platform_format"
+    if _PLATFORM_LABEL_RE.search(source) and any(
+        _ARCHITECTURE_TOKEN_RE.search(match.group("details")) for match in _PLATFORM_LABEL_RE.finditer(source)
+    ):
+        return "platform_format"
+    normalized_platform_terms = {_translation_echo_normalize(term) for term in platform_terms}
+    if normalized in normalized_platform_terms:
+        return "platform_format"
     filtered, excluded = _filtered_translation_text(source)
     if excluded and not any(character.isalpha() for character in filtered):
         return "inline_code"
+    dictionary_words = _translation_words(filtered)
     lookup = getattr(dictionary, "lookup", None)
-    if locale != "en" and len(words) == 1 and callable(lookup) and lookup(words[0]):
-        return "target_dictionary_shared_term"
+    if locale != "en" and callable(lookup) and dictionary_words and all(lookup(word) for word in dictionary_words):
+        source_lookup = getattr(source_dictionary, "lookup", None)
+        source_is_valid = callable(source_lookup) and all(source_lookup(word) for word in dictionary_words)
+        # A single shared loanword/name (for example ``Manual``) is not
+        # evidence of an untranslated sentence.  For multiple words, an
+        # English-dictionary hit on every word wins over the target hit so a
+        # genuine English phrase cannot be silenced by vocabulary overlap.
+        if len(dictionary_words) == 1 or not source_is_valid:
+            return "target_dictionary_shared_term"
     return None
+
+
+def _is_product_version_identity(source: str, product_names: Iterable[str]) -> bool:
+    """Return whether *source* is only a canonical product name and version."""
+    if _VERSION_TOKEN_RE.search(source) is None:
+        return False
+    remainder = _VERSION_TOKEN_RE.sub(" ", source)
+    for name in sorted(product_names, key=len, reverse=True):
+        remainder = re.sub(re.escape(name), " ", remainder, flags=re.IGNORECASE)
+    return not any(character.isalnum() for character in remainder)
+
+
+def _platform_identity_terms(repository: Path) -> frozenset[str]:
+    """Load platform identity spellings from the canonical download descriptor."""
+    descriptor = repository / "docs" / "_data" / "download_channels.toml"
+    try:
+        with descriptor.open("rb") as handle:
+            payload = tomllib.load(handle)
+    except (OSError, tomllib.TOMLDecodeError):
+        return frozenset()
+    channels = payload.get("channel") if isinstance(payload, dict) else None
+    if not isinstance(channels, list):
+        return frozenset()
+    terms: set[str] = set()
+    for channel in channels:
+        if not isinstance(channel, dict):
+            continue
+        platform = channel.get("platform")
+        if not isinstance(platform, str):
+            continue
+        normalized = _translation_echo_normalize(platform)
+        if normalized:
+            terms.add(normalized)
+        terms.update(
+            _translation_echo_normalize(match.group("label"))
+            for match in _PLATFORM_LABEL_RE.finditer(platform)
+        )
+    return frozenset(terms)
 
 
 def _ratio(value: int, total: int) -> float:

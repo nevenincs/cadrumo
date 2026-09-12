@@ -71,6 +71,12 @@ _PYTEST_OUTCOME_KEYS: Final[dict[str, str]] = {
     "warning": "warning",
     "warnings": "warning",
 }
+_LOCALE_EXCEPTION_RE: Final[re.Pattern[str]] = re.compile(
+    r"^(?:[|│]\s*)?(?:E\s+)?(?P<type>(?:[A-Za-z_][A-Za-z0-9_]*\.)*"
+    r"[A-Z][A-Za-z0-9_]*(?:Error|Exception|Failure|Group|Interrupt|Exit))"
+    r"(?::\s*(?P<message>.*))?$"
+)
+_LOCALE_ERROR_MESSAGE_LIMIT: Final[int] = 512
 _OPERATIONAL_CODES: Final[frozenset[str]] = frozenset(
     {"AUTHORITY_PREFLIGHT", "INTERNAL_CHECKER", "TOOL_BROKEN", "TOOL_MISSING"}
 )
@@ -1059,6 +1065,66 @@ class _DeadWeightSignalProcessor:
         }
 
 
+def _locale_failure_category(exception_type: str, message: str) -> str:
+    """Classify a locale child failure into one actionable operational bucket."""
+    haystack = f"{exception_type} {message}".casefold()
+    if "authorityartifact" in haystack or "authority artifact" in haystack:
+        return "authority_artifact"
+    if any(token in haystack for token in ("modulenotfound", "importerror", "no module named", "cannot import")):
+        return "import"
+    if "syntaxerror" in haystack or "indentationerror" in haystack:
+        return "source_syntax"
+    if any(token in haystack for token in ("spellingtool", "hunspell", "spylls", "dictionary")):
+        return "locale_dependency"
+    if any(token in haystack for token in ("filenotfound", "permissionerror", "notadirectory", "oserror", "ioerror")):
+        return "filesystem"
+    if any(token in haystack for token in ("jsondecode", "json payload", "payload")):
+        return "payload"
+    return "child_process"
+
+
+def _locale_traceback_error(lines: list[str], decode_error: str | None) -> dict[str, str]:
+    """Extract one bounded exception identity while leaving the full log intact."""
+    for index in range(len(lines) - 1, -1, -1):
+        candidate = lines[index].strip().lstrip("|│").strip()
+        match = _LOCALE_EXCEPTION_RE.fullmatch(candidate)
+        if match is None:
+            continue
+        exception_type = match.group("type")
+        message_parts = [match.group("message") or ""]
+        for continuation in lines[index + 1 :]:
+            text = continuation.strip().lstrip("|│").strip()
+            if not text:
+                continue
+            if (
+                text.startswith(("Traceback (", "File ", "During handling of", "The above exception"))
+                or _LOCALE_EXCEPTION_RE.fullmatch(text) is not None
+            ):
+                break
+            message_parts.append(text)
+        message = _normalize_root_cause(" ".join(part for part in message_parts if part))
+        if not message:
+            message = f"locale status child terminated with {exception_type}"
+        return {
+            "category": _locale_failure_category(exception_type, message),
+            "type": exception_type,
+            "message": message[:_LOCALE_ERROR_MESSAGE_LIMIT],
+        }
+
+    if decode_error:
+        message = _normalize_root_cause(decode_error)
+        return {
+            "category": "payload",
+            "type": "JSONDecodeError",
+            "message": message[:_LOCALE_ERROR_MESSAGE_LIMIT],
+        }
+    return {
+        "category": "child_process",
+        "type": "ChildProcessError",
+        "message": "locale status child produced no structured JSON payload",
+    }
+
+
 class _LocalesStatusSignalProcessor:
     """Reduce the complete locale audit payload to a stable advisory envelope."""
 
@@ -1084,7 +1150,28 @@ class _LocalesStatusSignalProcessor:
             if not isinstance(decoded.get("details"), dict):
                 raise ValueError("locale status payload has no details object")
         except (json.JSONDecodeError, ValueError) as exc:
+            # The child normally emits one compact JSON line.  A warning or
+            # progress line before it must not turn an otherwise valid report
+            # into an unavailable one, so retry each line after the strict
+            # whole-stream parse.  Every candidate still goes through the
+            # locale payload shape checks above.
             self._decode_error = str(exc)
+            for line in reversed(self.lines):
+                try:
+                    candidate = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if not isinstance(candidate, dict):
+                    continue
+                if candidate.get("outcome") not in {"backlog", "complete"}:
+                    continue
+                if not isinstance(candidate.get("summary"), dict):
+                    continue
+                if not isinstance(candidate.get("details"), dict):
+                    continue
+                self._decoded = candidate
+                self._decode_error = None
+                return candidate
             return None
         self._decoded = decoded
         return decoded
@@ -1106,18 +1193,23 @@ class _LocalesStatusSignalProcessor:
         finished: datetime,
     ) -> dict[str, object]:
         decoded = self._payload()
+        error: dict[str, str] | None = None
         if decoded is None:
+            error = _locale_traceback_error(self.lines, self._decode_error)
             summary = {
-                "inventory": {"closed": False, "processor_failures": 1},
+                "inventory": {"available": False, "closed": False, "processor_failures": 1},
                 "translation_backlog": {
                     "exact": False,
                     "unique_keys_to_translate": None,
                     "cells_to_translate": None,
                 },
             }
-            details = {"processor_error": self._decode_error or "unknown processor failure"}
+            details = {
+                "processor_error": self._decode_error or "unknown processor failure",
+                "root_cause": error,
+            }
             outcome = "unavailable"
-            headline = "Locale status could not produce a complete verdict; inspect the run log."
+            headline = f"Locale status unavailable: {error['category']} ({error['type']}); inspect the run log."
         else:
             summary = decoded["summary"]
             details = decoded["details"]
@@ -1176,6 +1268,7 @@ class _LocalesStatusSignalProcessor:
             },
             "schema_version": 1,
             "started_at": started.isoformat(),
+            **({"error": error} if error is not None else {}),
             **_compact_locale_summary(summary),
         }
 

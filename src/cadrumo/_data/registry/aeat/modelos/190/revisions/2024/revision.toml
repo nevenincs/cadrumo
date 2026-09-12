@@ -1,10 +1,46 @@
 [revisions."2024"]
 predecessor = "2023"
 reviewed_against = "2023"
-binding_source_refs = ["aeat-dr-190-2025"]
+binding_source_refs = ["aeat-dr-190-2024"]
 formula_source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
-casilla_source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+casilla_source_refs = ["aeat-dr-190-2024"]
 application_link_source_refs = ["boe-modelo-190-2025-form", "aeat-modelo-190-procedure"]
+# THIS EDITION RESTS ON aeat-dr-190-2024, NOT THE 2025 DESIGN. Every design
+# citation on this revision previously named aeat-dr-190-2025, which declares
+# applies_from 2025-01-01 and so covers NO day of this revision (2024-01-01 to
+# 2024-12-31). 95 citations across 9 files were repointed to aeat-dr-190-2024,
+# whose window is exactly 2024-01-01..2024-12-31 and whose corpus file is
+# present with its declared sha256 (20bc8086...).
+#
+# THE CLAVE-B SUBCLAVE TABLE WAS RESUBDIVIDED FOR 2025, AND B.01/B.03 BELOW IS
+# NOT A TYPO FOR THE 2025 SET. The 2024 design admits exactly three clave-B
+# subclaves -- 01 pensiones y haberes pasivos, 02 retenciones determined under
+# art. 89.A RIRPF, and 03 the RESIDUAL ("todas las percepciones de la clave B
+# distintas de las que deban relacionarse bajo las subclaves 01 y 02"). The 2025
+# design keeps 01 and 02, repurposes 03 to a SPECIFIC meaning (mutualidades
+# generales obligatorias de funcionarios), adds 04 (Planes de Pensiones,
+# art. 17.2.a) Ley 35/2006) and moves the residual to 99.
+#
+# So the two editions denote the SAME set by different enumerations: 2024 says
+# "claves A, B.01, B.03 y C" and 2025 says "claves A, B (subclaves 01, 03, 04 y
+# 99) y C", and both mean clave B except subclave 02. The extension is
+# unchanged, which is why no binding needed re-grounding -- but writing the 2025
+# enumeration on this edition names subclaves 04 and 99 that DO NOT EXIST in
+# 2024 and gives 03 a meaning it does not have. 18 prose sites asserting the
+# 2025 enumeration were re-authored to the 2024 design's own wording.
+#
+# THE 2024 DESIGN PDF CONTAINS CONTENT THAT IS NOT APPLICABLE TO 2024. Three
+# passages -- including the whole clave-C subclave table -- carry the marker
+# "(Esta modificación no será aplicable hasta la declaración informativa del
+# modelo 190 correspondiente al ejercicio 2025 a presentar en enero de 2026)".
+# Extracting a clave-C subclave list from this PDF without honouring that marker
+# would transcribe 2025 law onto a 2024 edition.
+#
+# NOT CLAIMED: the formula, application-link and legal refs on this revision
+# still name 2025 authorities (aeat-modelo-190-instructions-2025,
+# boe-modelo-190-2025-form, orden-hac-1431-2025:art-2). Those are a separate
+# question from the design ref and are NOT adjudicated here.
+#
 # Prepared and reviewed by an agent against the bundled diseño de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather
@@ -65,11 +101,10 @@ legal_refs = [
 ]
 source_refs = [
     "aeat-dr-190-2024",
-    "aeat-dr-190-2025",
     "aeat-modelo-190-instructions-2025",
     "aeat-modelo-190-procedure",
     "boe-modelo-190-2025-form",
-    "boe-modelo-190-2025-amendment",
+    "boe-modelo-190-2024-amendment",
 ]
 
 [revisions."2024".family_dispositions.parameters]

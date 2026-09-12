@@ -15,7 +15,6 @@ expression.args = [
 ]
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2016", "aeat-modelo-309-instructions", "aeat-modelo-309-procedure"]
 
 [[revisions."2016-2017".formulas.source_citations]]
 source_ref = "aeat-modelo-309-instructions"
@@ -31,7 +30,6 @@ expression.args = [
 ]
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2016", "aeat-modelo-309-instructions", "aeat-modelo-309-procedure"]
 
 [[revisions."2016-2017".formulas.source_citations]]
 source_ref = "aeat-modelo-309-instructions"
@@ -47,7 +45,6 @@ expression.args = [
 ]
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
-source_refs = ["aeat-dr-309-2016", "aeat-modelo-309-instructions", "aeat-modelo-309-procedure"]
 
 [[revisions."2016-2017".formulas.source_citations]]
 source_ref = "aeat-modelo-309-instructions"

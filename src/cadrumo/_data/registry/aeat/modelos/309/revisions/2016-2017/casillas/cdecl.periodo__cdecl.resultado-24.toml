@@ -18,6 +18,8 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 [[revisions."2016-2017".casillas]]
 id = "decl.tipo-declaracion"
 continuidad_id = "declaracion-tipo-309"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "THE PREDECESSOR DESIGN PRINTS IT; THE PREDECESSOR EDITION DOES NOT DECLARE IT. the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) prints campo 6, position 13, length 1, 'Tipo de declaracion' (nota 1: 'I (ingreso)'). the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) prints the same field as campo 3, position 5, length 1, 'tipo declaracion constante I a ingresar' - the one and only occurrence of the phrase 'tipo declaracion' in that design. The 2004-2015 revision declares no casilla for it: its rows cover positions 15, 25, 34, 74, 88-99 and 100-561 plus boxes [01]-[24], and none carries this field. The gap is in the corpus's predecessor declaration, not on the official form."
 # Modern chain starts here; no predecessor link is asserted to the 2004
 # combined-name, country-description or separate category-flag surfaces.
 number = "13"
@@ -32,6 +34,8 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 [[revisions."2016-2017".casillas]]
 id = "decl.nombre"
 continuidad_id = "declarante-nombre-309"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) prints campo 9, position 83, length 20, 'Identificacion - Nombre', beside campo 8 'Identificacion - Apellidos o Denominacion Social' at position 23. the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) identifies the declarante by campo 4 'identificacion - n.i.f.' at position 6 and campo 5 'letras etiqueta (persona fisica)' at position 15 only; its single occurrence of 'apellidos' and its single occurrence of 'nombre' both fall inside campo 9 'transmitente - apellidos y nombre o razon social', which is the TRANSMITENTE, not the declarante. The predecessor form carries no declarante name field at any position, so this box is new on this edition's official form."
 # Modern chain starts here; no predecessor link is asserted to the 2004
 # combined-name, country-description or separate category-flag surfaces.
 number = "83-102"
@@ -102,6 +106,8 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 [[revisions."2016-2017".casillas]]
 id = "decl.situacion-tributaria"
 continuidad_id = "situacion-tributaria"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "A COLLAPSED REPETITION, NOT A NEW BOX. the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) prints campo 16, position 200, length 1, numeric, 'Situacion tributaria:' enumerating six values 1-6. the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) prints those SAME six situations as six separate one-character X-or-blank boxes at positions 88, 89, 90, 91, 92 and 93 - the phrase 'situacion tributaria - ' occurs there exactly six times - and the 2004-2015 revision declares all six as rows of its own. The field existed on the predecessor form; the predecessor edition simply declares no row under this chain, because the six boxes were collapsed into one coded box."
 # Modern chain starts here; no predecessor link is asserted to the 2004
 # combined-name, country-description or separate category-flag surfaces.
 number = "200"
@@ -116,6 +122,8 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 [[revisions."2016-2017".casillas]]
 id = "decl.hecho-imponible"
 continuidad_id = "hecho-imponible"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "A COLLAPSED REPETITION, NOT A NEW BOX. the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) prints campo 17, position 201, length 1, numeric, 'Hecho imponible:' enumerating six values 1-6. the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) prints those SAME six hechos imponibles as six separate one-character X-or-blank boxes at positions 94, 95, 96, 97, 98 and 99 - the phrase 'hecho imponible - ' occurs there exactly six times - and the 2004-2015 revision declares all six as rows of its own. The field existed on the predecessor form; the predecessor edition simply declares no row under this chain, because the six boxes were collapsed into one coded box."
 # Modern chain starts here; no predecessor link is asserted to the 2004
 # combined-name, country-description or separate category-flag surfaces.
 number = "201"
@@ -325,6 +333,8 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2016-2017".casillas]]
 id = "decl.complementaria"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) prints campo 56, position 977, length 1, 'Declaracion complementaria', content 'blanco o X' - a marker box - separately from campo 57 at position 978, 'Numero de justificante de la declaracion anterior'. the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) has exactly one occurrence of 'declaracion complementaria': campo 61, position 818, length 13, 'declaracion complementaria - no de justificante', which is the justificante number and which the 2004-2015 revision already declares as decl.justificante-anterior. The predecessor form prints no one-character complementaria marker at any position, so this box is new on this edition's official form."
 number = "977"
 section = ["declarante", "liquidacion"]
 data_type = "text"
@@ -351,6 +361,8 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2016-2017".casillas]]
 id = "decl.iban"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) prints campo 58, position 991, length 34, 'IBAN (exclusivamente en Predeclaracion)'. the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) contains no occurrence of 'iban' at all, and its campo 3 fixes the tipo de declaracion to the constant 'I' (a ingresar), so the predecessor form carries no refund account field and no refund path whatever. The box did not exist on the predecessor form and is new on this edition's official form."
 number = "991-1024"
 section = ["declarante", "liquidacion"]
 data_type = "iban"

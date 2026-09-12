@@ -29,6 +29,8 @@ legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.clave"
 continuidad_id = "tipo-renta-atribuida-clave"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/03-184-orden-hap-2250-2015-boe-a-2015-11596.pdf (Orden HAP/2250/2015 anexo, BOE-A-2015-11596), registro de tipo 2, registro de entidad, pos. 77: 'CLAVE'. The campo is in the design operative for ejercicio 2022 (HAP/2250/2015 anexo as amended); registry edition 2022 is applicability-only and declares no casilla, so this is a declaration gap, not a new box."
 number = "77"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -41,6 +43,8 @@ additional_source_refs = ["boe-modelo-184-2015-form"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.subclave"
 continuidad_id = "tipo-renta-atribuida-subclave"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/03-184-orden-hap-2250-2015-boe-a-2015-11596.pdf (Orden HAP/2250/2015 anexo, BOE-A-2015-11596), registro de tipo 2, registro de entidad, pos. 78-79: 'SUBCLAVE'. The campo is in the design operative for ejercicio 2022 (HAP/2250/2015 anexo as amended); registry edition 2022 is applicability-only and declares no casilla, so this is a declaration gap, not a new box."
 number = "78-79"
 segmento = "184-2-entidad"
 section = ["declarado", "renta"]
@@ -62,6 +66,8 @@ additional_source_refs = ["boe-modelo-184-2015-form"]
 [[revisions."2023-2024".casillas]]
 id = "tipo2.renta-atribuible-importe"
 continuidad_id = "renta-atribuible-importe"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/04-184-orden-hfp-1923-2016-boe-a-2016-12114.pdf (Orden HFP/1923/2016 art. tercero, BOE-A-2016-12114), registro de tipo 2, registro de entidad, pos. 177-190: 'RENTA ATRIBUIBLE / RENDIMIENTO NETO ATRIBUIBLE / RENDIMIENTO NETO ATRIBUIBLE PREVIO (177 SIGNO, 178-190 IMPORTE)'. The campo is in the design operative for ejercicio 2022 (HAP/2250/2015 anexo as amended); registry edition 2022 is applicability-only and declares no casilla, so this is a declaration gap, not a new box."
 # AEAT prints this row as "177-190 Alfanumerico RENTA ATRIBUIBLE / RENDIMIENTO
 # NETO ATRIBUIBLE...", a 14-position field, and its sibling amount at 151-164
 # spans its full declared width the same way. The previous "178-190" was one

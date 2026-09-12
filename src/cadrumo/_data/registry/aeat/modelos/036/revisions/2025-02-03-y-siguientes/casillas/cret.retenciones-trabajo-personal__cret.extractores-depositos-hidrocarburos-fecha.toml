@@ -45,6 +45,9 @@
 # @11+1. Obligacion de retener o ingresar a cuenta. Obligacion de realizar retenciones o ingresos a cuenta sobre rendimientos del trabajo personal.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.retenciones-trabajo-personal"
+continuidad_id = "ret-retenciones-trabajo-personal"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:835 (sha256 3ecea6c06e3d) box [700] (3 11 1 An 9. Oblig. de realizar retenc. o ing. cta. sobre rend. de ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:895 (sha256 791479fbf9e9) box [700] (3 11 1 An 9. Oblig. de realizar retenc. o ing. cta. sobre rend. de ...)."
 number = "700"
 section = ["declaracion", "otras_obligaciones", "retenciones"]
 data_type = "boolean"
@@ -75,6 +78,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @20+1. Obligacion de retener o ingresar a cuenta. Obligacion de realizar retenciones o ingresos a cuenta sobre rendimientos de actividades profesionales.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.retenciones-actividades-profesionales"
+continuidad_id = "ret-retenciones-actividades-profesionales"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:839 (sha256 3ecea6c06e3d) box [701] (7 20 1 An 9. Oblig. de realizar retenc. o ing. cta. sobre rend. de ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:899 (sha256 791479fbf9e9) box [701] (7 20 1 An 9. Oblig. de realizar retenc. o ing. cta. sobre rend. de ...)."
 number = "701"
 section = ["declaracion", "otras_obligaciones", "retenciones"]
 data_type = "boolean"
@@ -105,6 +111,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @29+1. Obligacion de retener o ingresar a cuenta. Obligacion de realizar retenciones o ingresos a cuenta sobre rendimientos procedentes del arrendamiento o subarrendamiento.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.retenciones-arrendamiento"
+continuidad_id = "ret-retenciones-arrendamiento"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:843 (sha256 3ecea6c06e3d) box [702] (11 29 1 An 9. Oblig. de realizar retenc. o ing. cta. sobre rend. Pr...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:903 (sha256 791479fbf9e9) box [702] (11 29 1 An 9. Oblig. de realizar retenc. o ing. cta. sobre rend. Pr...)."
 number = "702"
 section = ["declaracion", "otras_obligaciones", "retenciones"]
 data_type = "boolean"
@@ -135,6 +144,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @38+1. Obligacion de retener o ingresar a cuenta. Obligacion de realizar retenciones o ingresos a cuenta sobre transmisiones o reembolsos de acciones o participaciones.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.retenciones-transmision-acciones"
+continuidad_id = "ret-retenciones-transmision-acciones"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:847 (sha256 3ecea6c06e3d) box [703] (15 38 1 An 9. Oblig. de realizar retenc. o ing. cta. sobre las tran...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:907 (sha256 791479fbf9e9) box [703] (15 38 1 An 9. Oblig. de realizar retenc. o ing. cta. sobre las tran...)."
 number = "703"
 section = ["declaracion", "otras_obligaciones", "retenciones"]
 data_type = "boolean"
@@ -165,6 +177,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @47+1. Obligacion de retener o ingresar a cuenta. Obligacion de realizar retenciones o ingresos a cuenta sobre rentas o rendimientos de capital mobiliario derivados de la transmision.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.retenciones-capital-mobiliario-transmision"
+continuidad_id = "ret-retenciones-capital-mobiliario-transmision"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:851 (sha256 3ecea6c06e3d) box [704] (19 47 1 An 9. Oblig. de realizar retenc. o ing. cta. sobre rentas o...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:911 (sha256 791479fbf9e9) box [704] (19 47 1 An 9. Oblig. de realizar retenc. o ing. cta. sobre rentas o...)."
 number = "704"
 section = ["declaracion", "otras_obligaciones", "retenciones"]
 data_type = "boolean"
@@ -195,6 +210,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @56+1. Obligacion de retener o ingresar a cuenta. Obligacion de realizar retenciones o ingresos a cuenta sobre rentas o rendimientos de capital mobiliario obtenidos por la contraprestacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.retenciones-capital-mobiliario-contraprestacion"
+continuidad_id = "ret-retenciones-capital-mobiliario-contraprestacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:855 (sha256 3ecea6c06e3d) box [705] (23 56 1 An 9. Oblig. de realizar retenc. o ing. cta. sobre rentas o...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:915 (sha256 791479fbf9e9) box [705] (23 56 1 An 9. Oblig. de realizar retenc. o ing. cta. sobre rentas o...)."
 number = "705"
 section = ["declaracion", "otras_obligaciones", "retenciones"]
 data_type = "boolean"
@@ -225,6 +243,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @65+1. Obligacion de retener o ingresar a cuenta. Obligacion de realizar retenciones o ingresos a cuenta sobre rentas o rendimientos de capital mobiliario procedentes de operaciones.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.retenciones-capital-mobiliario-operaciones"
+continuidad_id = "ret-retenciones-capital-mobiliario-operaciones"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:859 (sha256 3ecea6c06e3d) box [706] (27 65 1 An 9. Oblig. de realizar retenc. o ing. cta. sobre rentas o...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:919 (sha256 791479fbf9e9) box [706] (27 65 1 An 9. Oblig. de realizar retenc. o ing. cta. sobre rentas o...)."
 number = "706"
 section = ["declaracion", "otras_obligaciones", "retenciones"]
 data_type = "boolean"
@@ -255,6 +276,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @74+1. Obligacion de retener o ingresar a cuenta. Obligacion de realizar retenciones o ingresos a cuenta sobre otras rentas o rendimientos de capital mobiliario.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.retenciones-capital-mobiliario-otros"
+continuidad_id = "ret-retenciones-capital-mobiliario-otros"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:863 (sha256 3ecea6c06e3d) box [707] (31 74 1 An 9. Oblig. de realizar retenc. o ing. cta. sobre otras re...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:923 (sha256 791479fbf9e9) box [707] (31 74 1 An 9. Oblig. de realizar retenc. o ing. cta. sobre otras re...)."
 number = "707"
 section = ["declaracion", "otras_obligaciones", "retenciones"]
 data_type = "boolean"
@@ -285,6 +309,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @83+1. Impuestos especiales. Obligacion de inscribir sus establecimientos en el registro territorial de la oficina gestora.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.impuestos-especiales-inscripcion-registro-territorial"
+continuidad_id = "ret-impuestos-especiales-inscripcion-registro-territorial"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:867 (sha256 3ecea6c06e3d) box [710] (35 83 1 An 10. IIEE. Obligac. de inscribir sus establ. en el reg. t...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:927 (sha256 791479fbf9e9) box [710] (35 83 1 An 10. IIEE. Obligac. de inscribir sus establ. en el reg. t...)."
 number = "710"
 section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
 data_type = "boolean"
@@ -315,6 +342,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @92+1. Impuestos especiales. Obligado a presentar autoliquidacion por el Impuesto sobre la Electricidad.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.impuestos-especiales-impuesto-electricidad"
+continuidad_id = "ret-impuestos-especiales-impuesto-electricidad"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:871 (sha256 3ecea6c06e3d) box [711] (39 92 1 An 10. IIEE. Obligado a presentar autoliquidación por el Im...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:931 (sha256 791479fbf9e9) box [711] (39 92 1 An 10. IIEE. Obligado a presentar autoliquidación por el Im...)."
 number = "711"
 section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
 data_type = "boolean"
@@ -345,6 +375,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @101+1. Impuestos especiales. Obligado a presentar declaracion resumen anual de operaciones del Impuesto Especial sobre el Carbon.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.impuestos-especiales-resumen-anual-carbon"
+continuidad_id = "ret-impuestos-especiales-resumen-anual-carbon"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:875 (sha256 3ecea6c06e3d) box [712] (43 101 1 An 10. IIEE. Obligado a presentar decl. resumen anual de o...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:935 (sha256 791479fbf9e9) box [712] (43 101 1 An 10. IIEE. Obligado a presentar decl. resumen anual de o...)."
 number = "712"
 section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
 data_type = "boolean"
@@ -375,6 +408,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @110+1. Impuestos especiales. Obligacion de presentar declaracion por el Impuesto Especial sobre Primas de Seguros.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.impuestos-especiales-primas-seguros"
+continuidad_id = "ret-impuestos-especiales-primas-seguros"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:879 (sha256 3ecea6c06e3d) box [713] (47 110 1 An 10. B) Obligación de presentar declaración por el Impue...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:939 (sha256 791479fbf9e9) box [713] (47 110 1 An 10. B) Obligación de presentar declaración por el Impue...)."
 number = "713"
 section = ["declaracion", "otras_obligaciones", "impuestos_especiales"]
 data_type = "boolean"
@@ -408,6 +444,8 @@ id = "ret.iva-intracomunitario-opcion-regimen-general"
 number = "ret-iva-intracomunitario-opcion-regimen-general"
 section = ["declaracion", "otras_obligaciones", "iva_intracomunitario"]
 data_type = "text"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 7 @201+1 (line 884 of the extract): 11. B) Opcion por el regimen general del I.V.A. Sujecion o no sujecion [910,911]. The successor design prints the same field at the same page and byte position: 11. B) Opcion por el regimen general del I.V.A. Sujecion o no sujecion [910,911]. AEAT prints its number here as a list rather than a single box, and the predecessor edition revision note records 33 such comma-list groups declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -423,6 +461,8 @@ id = "ret.iva-intracomunitario-umbral-10000"
 number = "ret-iva-intracomunitario-umbral-10000"
 section = ["declaracion", "otras_obligaciones", "iva_intracomunitario"]
 data_type = "text"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 7 @202+1 (line 885 of the extract): 11. B) ¿Ha superado el umbral de 10.000 € en sus adquisiciones intracomunitarias? [912,913]. The successor design prints the same field at the same page and byte position: 11. B) ¿Ha superado el umbral de 10.000 € en sus adquisiciones intracomunitarias? [912,913]. AEAT prints its number here as a list rather than a single box, and the predecessor edition revision note records 33 such comma-list groups declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -435,6 +475,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @206+1. Impuestos medioambientales. Obligacion de presentar declaracion por impuestos medioambientales.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.medioambientales-obligacion-declarar"
+continuidad_id = "ret-medioambientales-obligacion-declarar"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:887 (sha256 3ecea6c06e3d) box [708] (55 206 1 An 10. C) Obligación de presentar declaración por Impuesto...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:947 (sha256 791479fbf9e9) box [708] (55 206 1 An 10. C) Obligación de presentar declaración por Impuesto...)."
 number = "708"
 section = ["declaracion", "otras_obligaciones", "medioambientales"]
 data_type = "boolean"
@@ -465,6 +508,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @215+1. Impuesto sobre determinados servicios digitales. Obligado a presentar autoliquidacion por el Impuesto sobre Determinados Servicios Digitales.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.servicios-digitales-obligacion-autoliquidar"
+continuidad_id = "ret-servicios-digitales-obligacion-autoliquidar"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:891 (sha256 3ecea6c06e3d) box [714] (59 215 1 An 10. D) Obligado a presentar autoliquidación por el Impu...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:951 (sha256 791479fbf9e9) box [714] (59 215 1 An 10. D) Obligado a presentar autoliquidación por el Impu...)."
 number = "714"
 section = ["declaracion", "otras_obligaciones", "servicios_digitales"]
 data_type = "boolean"
@@ -498,6 +544,8 @@ id = "ret.telecom-art-70-uno-4-umbral-10000"
 number = "ret-telecom-art-70-uno-4-umbral-10000"
 section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_4"]
 data_type = "text"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 7 @224+1 (line 895 of the extract): serv.telecom radiotv y via electronica prestados a particulares desde otros estados miembros(art.70. Uno.4.a) . Excede de 10.000 / No Excede [750,751]. The successor design prints the same field at the same page and byte position: serv.telecom radiotv y via electronica prestados a. AEAT prints its number here as a list rather than a single box, and the predecessor edition revision note records 33 such comma-list groups declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -510,6 +558,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @225+1. Servicios de telecomunicaciones, radiodifusion, television y via electronica (art. 70.Uno.4.a). Tributacion en destino.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.telecom-art-70-uno-4-destino"
+continuidad_id = "ret-telecom-art-70-uno-4-destino"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:897 (sha256 3ecea6c06e3d) box [752] (64 225 1 An serv.telecom radiotv y via electronica prestados a part...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:957 (sha256 791479fbf9e9) box [752] (64 225 1 An serv.telecom radiotv y via electronica prestados a part...)."
 number = "752"
 section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_4"]
 data_type = "boolean"
@@ -525,6 +576,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @226+1. Servicios de telecomunicaciones, radiodifusion, television y via electronica (art. 70.Uno.4.a). Revocacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.telecom-art-70-uno-4-revocacion"
+continuidad_id = "ret-telecom-art-70-uno-4-revocacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:898 (sha256 3ecea6c06e3d) box [753] (65 226 1 An serv.telecom radiotv y via electronica prestados a part...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:958 (sha256 791479fbf9e9) box [753] (65 226 1 An serv.telecom radiotv y via electronica prestados a part...)."
 number = "753"
 section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_4"]
 data_type = "boolean"
@@ -558,6 +612,8 @@ id = "ret.telecom-art-70-uno-8-umbral-10000"
 number = "ret-telecom-art-70-uno-8-umbral-10000"
 section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_8"]
 data_type = "text"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 7 @235+1 (line 902 of the extract): serv.telecom radiotv y via electronica prestados a particulares desde otros estados miembros(art.70. Uno.8) . Excede de 10.000 / No Excede [755,756]. The successor design prints the same field at the same page and byte position: serv.telecom radiotv y via electronica prestados a. AEAT prints its number here as a list rather than a single box, and the predecessor edition revision note records 33 such comma-list groups declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -570,6 +626,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @236+1. Servicios de telecomunicaciones, radiodifusion, television y via electronica (art. 70.Uno.8). Tributacion en destino.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.telecom-art-70-uno-8-destino"
+continuidad_id = "ret-telecom-art-70-uno-8-destino"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:904 (sha256 3ecea6c06e3d) box [757] (70 236 1 An serv.telecom radiotv y via electronica prestados a part...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:964 (sha256 791479fbf9e9) box [757] (70 236 1 An serv.telecom radiotv y via electronica prestados a part...)."
 number = "757"
 section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_8"]
 data_type = "boolean"
@@ -585,6 +644,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @237+1. Servicios de telecomunicaciones, radiodifusion, television y via electronica (art. 70.Uno.8). Revocacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.telecom-art-70-uno-8-revocacion"
+continuidad_id = "ret-telecom-art-70-uno-8-revocacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:905 (sha256 3ecea6c06e3d) box [758] (71 237 1 An serv.telecom radiotv y via electronica prestados a part...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:965 (sha256 791479fbf9e9) box [758] (71 237 1 An serv.telecom radiotv y via electronica prestados a part...)."
 number = "758"
 section = ["declaracion", "otras_obligaciones", "telecom_art_70_uno_8"]
 data_type = "boolean"
@@ -615,6 +677,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @246+1. Registro de extractores de depositos fiscales. Solicita alta o baja en el registro de extractores de depositos fiscales de productos incluidos en el ambito objetivo de los Impuestos sobre el alcohol y bebidas derivadas.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.extractores-depositos-alcohol"
+continuidad_id = "ret-extractores-depositos-alcohol"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:910 (sha256 3ecea6c06e3d) box [716.a] (ámbitos objetivos de los Impuestos sobre el alcohol y bebidas deriv...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:970 (sha256 791479fbf9e9) box [716.a] (ámbitos objetivos de los Impuestos sobre el alcohol y bebidas deriv...)."
 number = "716.a"
 section = ["declaracion", "otras_obligaciones", "extractores_depositos"]
 data_type = "boolean"
@@ -645,6 +710,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @255+1. Registro de extractores de depositos fiscales. Solicita alta o baja en el registro de extractores de depositos fiscales de productos incluidos en el ambito objetivo de los Impuestos sobre Hidrocarburos.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ret.extractores-depositos-hidrocarburos"
+continuidad_id = "ret-extractores-depositos-hidrocarburos"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:918 (sha256 3ecea6c06e3d) box [716.b] (ámbitos objetivos de los Impuestos sobre Hidrocarburos [716.b] A, B...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:978 (sha256 791479fbf9e9) box [716.b] (ámbitos objetivos de los Impuestos sobre Hidrocarburos [716.b] A, B...)."
 number = "716.b"
 section = ["declaracion", "otras_obligaciones", "extractores_depositos"]
 data_type = "boolean"

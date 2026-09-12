@@ -56,3 +56,8 @@ source_refs = [
     "boe-modelo-189-2023-amendment-hfp-1284",
     "boe-modelo-189-2025-values",
 ]
+
+[revisions."2025".source_default_dispositions.application_links]
+kind = "underivable"
+reason = """
+lift refuses: 1 source_refs statement(s) not textually rewritable: 0001-application-links.toml: source_refs = ["""

@@ -98,7 +98,6 @@ from cadrumo.core.modelo import Modelo
 from cadrumo.core.payment_election import PaymentElection
 from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
-from cadrumo.core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from cadrumo.core.prorrata_register import (
     ProrrataActivityRowType,
     ProrrataProvisionalProvenance,
@@ -113,6 +112,7 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.deadlines.models import ChargeAccount, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
+from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
 from cadrumo.domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
@@ -146,14 +146,19 @@ __all__ = [
     "M180_SCENARIO_PERIODS",
     "M184_SCENARIO_PERIODS",
     "M185_SCENARIO_PERIODS",
+    "M189_SCENARIO_PERIODS",
+    "M190_SCENARIO_PERIODS",
+    "M193_SCENARIO_PERIODS",
     "M202_SCENARIO_PERIODS",
     "M210_SCENARIO_PERIODS",
+    "M232_SCENARIO_PERIODS",
     "M270_SCENARIO_PERIODS",
     "M303_SCENARIO_PERIODS",
     "M308_SCENARIO_PERIODS",
     "M309_SCENARIO_PERIODS",
     "M322_SCENARIO_PERIODS",
     "M341_SCENARIO_PERIODS",
+    "M345_SCENARIO_PERIODS",
     "M353_SCENARIO_PERIODS",
     "M390_SCENARIO_PERIODS",
     "M490_SCENARIO_PERIODS",
@@ -174,6 +179,40 @@ M303_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
     "2024-desde-09-y-3t": Period.from_year_and_code(2024, "3T"),
     "2025": Period.from_year_and_code(2025, "1T"),
     "2026-y-siguientes": Period.from_year_and_code(2026, "1T"),
+}
+#: The annual period each Modelo 189 edition is rendered for.
+M189_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2025": Period.from_year_and_code(2025, "0A"),
+}
+#: The annual period each Modelo 190 edition is rendered for.
+M190_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2024": Period.from_year_and_code(2024, "0A"),
+    "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
+}
+#: The annual period each Modelo 193 edition is rendered for.
+M193_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2024": Period.from_year_and_code(2024, "0A"),
+    "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
+}
+#: The annual period each Modelo 232 edition is rendered for.
+M232_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    # 2016-2017 is deliberately absent. It was declared here and then withdrawn
+    # on evidence: 140 of that edition's generated export fields reference
+    # binding ids carrying an offset segment
+    # (``modelo-232.page_02.2968-2968.paraiso-valor-12-tipo``) while every
+    # binding it declares is offset-free. All 140 resolve once the segment is
+    # stripped, and every embedded span agrees exactly with the binding's own
+    # declared offset and length, so the segment is pure redundancy -- and the
+    # sibling edition settles which spelling is canonical, carrying the same 140
+    # fields with none of them. The edition therefore cannot compile, so it
+    # cannot render, and its export tree is not regenerated because the edition
+    # sits below the supported-filing-years floor. Declaring it would name a
+    # render that will not happen.
+    "2018-y-siguientes": Period.from_year_and_code(2018, "0A"),
+}
+#: The annual period each Modelo 345 edition is rendered for.
+M345_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2025": Period.from_year_and_code(2025, "0A"),
 }
 #: The annual period each Modelo 390 edition is rendered for; 390 files only ``0A``.
 M390_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
@@ -696,6 +735,16 @@ def _general_producer_snapshot(modelo_id: str) -> FilingProducerSnapshot:
 
 #: Per modelo, the scenario builder and the period each edition is rendered for.
 _DECLARED_SCENARIOS: Final[Mapping[str, tuple[Callable[[Period], EditionExportScenario], Mapping[str, Period]]]] = {
+    str(Modelo("189")): (partial(general_export_scenario, "189"), M189_SCENARIO_PERIODS),
+    str(Modelo("190")): (partial(general_export_scenario, "190"), M190_SCENARIO_PERIODS),
+    str(Modelo("193")): (partial(general_export_scenario, "193"), M193_SCENARIO_PERIODS),
+    str(Modelo("232")): (partial(general_export_scenario, "232"), M232_SCENARIO_PERIODS),
+    str(Modelo("345")): (partial(general_export_scenario, "345"), M345_SCENARIO_PERIODS),
+    # Modelo 347 is deliberately absent. Its m347-declarado record is a REQUIRED
+    # repeat over binding_rows in both editions, and the general scenario
+    # supplies no draft, so an empty render leaves a required occurrence
+    # unemitted. Declaring it here would produce a refusal rather than
+    # comparable bytes. It needs a builder with draft input, or an honest skip.
     str(Modelo("303")): (m303_export_scenario, M303_SCENARIO_PERIODS),
     str(Modelo("131")): (m131_export_scenario, M131_SCENARIO_PERIODS),
     str(Modelo("390")): (m390_export_scenario, M390_SCENARIO_PERIODS),

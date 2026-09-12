@@ -29,6 +29,7 @@
 
 [[revisions."2022-2025".casillas]]
 id = "declarante-nif"
+continuidad_id = "m136-declarante-nif"
 number = "declarante.nif"
 section = ["declarante", "datos_identificacion"]
 data_type = "nif"
@@ -41,6 +42,7 @@ legal_refs = ["orden-hap-70-2013:art-5", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2022-2025".casillas]]
 id = "declarante-nombre"
+continuidad_id = "m136-declarante-nombre"
 number = "declarante.nombre"
 section = ["declarante", "datos_identificacion"]
 data_type = "name"
@@ -51,6 +53,7 @@ legal_refs = ["orden-hap-70-2013:art-5", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2022-2025".casillas]]
 id = "fecha-cobro-premio"
+continuidad_id = "m136-fecha-cobro-premio"
 number = "devengo.fecha-cobro-premio"
 section = ["devengo"]
 data_type = "date"
@@ -61,6 +64,7 @@ legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2022-2025".casillas]]
 id = "ejercicio-declaracion"
+continuidad_id = "m136-ejercicio-declaracion"
 number = "devengo.ejercicio"
 section = ["devengo"]
 data_type = "year"
@@ -73,6 +77,7 @@ legal_refs = ["orden-hap-70-2013:art-11", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2022-2025".casillas]]
 id = "periodo-declaracion"
+continuidad_id = "m136-periodo-declaracion"
 number = "devengo.periodo"
 section = ["devengo"]
 data_type = "period_code"
@@ -86,6 +91,7 @@ source_refs = ["boe-modelo-136-base-order", "boe-modelo-136-current-form", "boe-
 
 [[revisions."2022-2025".casillas]]
 id = "provincia-residencia-irpf"
+continuidad_id = "m136-provincia-residencia-irpf"
 number = "declarante.provincia-residencia-irpf"
 section = ["declarante", "residencia"]
 data_type = "province_code"
@@ -96,6 +102,7 @@ legal_refs = ["orden-hac-763-2018:art-tercero"]
 
 [[revisions."2022-2025".casillas]]
 id = "organizador-denominacion"
+continuidad_id = "m136-organizador-denominacion"
 number = "loteria.organizador.denominacion"
 section = ["loteria_apuesta_premiada", "organizador"]
 data_type = "name"
@@ -106,6 +113,7 @@ legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2022-2025".casillas]]
 id = "organizador-pais"
+continuidad_id = "m136-organizador-pais"
 number = "loteria.organizador.pais"
 section = ["loteria_apuesta_premiada", "organizador"]
 data_type = "text"
@@ -116,6 +124,7 @@ legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2022-2025".casillas]]
 id = "organizador-codigo-pais"
+continuidad_id = "m136-organizador-codigo-pais"
 number = "loteria.organizador.codigo-pais"
 section = ["loteria_apuesta_premiada", "organizador"]
 data_type = "country_code"
@@ -126,6 +135,7 @@ legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2022-2025".casillas]]
 id = "loteria-apuesta-denominacion"
+continuidad_id = "m136-loteria-apuesta-denominacion"
 number = "loteria.denominacion"
 section = ["loteria_apuesta_premiada", "identificacion"]
 data_type = "text"
@@ -136,6 +146,7 @@ legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2022-2025".casillas]]
 id = "fecha-celebracion"
+continuidad_id = "m136-fecha-celebracion"
 number = "loteria.fecha-celebracion"
 section = ["loteria_apuesta_premiada", "identificacion"]
 data_type = "date"
@@ -146,6 +157,7 @@ legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2022-2025".casillas]]
 id = "precio-unitario"
+continuidad_id = "m136-precio-unitario"
 number = "loteria.precio-unitario"
 section = ["loteria_apuesta_premiada", "identificacion"]
 data_type = "money"
@@ -156,6 +168,7 @@ legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2022-2025".casillas]]
 id = "01"
+continuidad_id = "m136-importe-premio-total"
 number = "01"
 section = ["liquidacion", "premio"]
 data_type = "money"
@@ -166,6 +179,7 @@ legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2022-2025".casillas]]
 id = "02"
+continuidad_id = "m136-importe-premio-declarante"
 number = "02"
 section = ["liquidacion", "premio"]
 data_type = "money"
@@ -176,6 +190,7 @@ legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2022-2025".casillas]]
 id = "03"
+continuidad_id = "m136-cuantia-exenta-gravamen"
 number = "03"
 section = ["liquidacion", "exencion"]
 data_type = "money"
@@ -187,6 +202,7 @@ source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-f
 
 [[revisions."2022-2025".casillas]]
 id = "04"
+continuidad_id = "m136-base-imponible-gravamen"
 number = "04"
 section = ["liquidacion", "base"]
 data_type = "money"
@@ -199,6 +215,7 @@ source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-f
 
 [[revisions."2022-2025".casillas]]
 id = "05"
+continuidad_id = "m136-cuota-gravamen-especial"
 number = "05"
 section = ["liquidacion", "cuota"]
 data_type = "money"
@@ -211,6 +228,7 @@ source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-f
 
 [[revisions."2022-2025".casillas]]
 id = "06"
+continuidad_id = "m136-resultados-anteriores-mismo-premio"
 number = "06"
 section = ["liquidacion", "complementaria"]
 data_type = "money"
@@ -221,6 +239,7 @@ legal_refs = ["orden-hac-763-2018:art-tercero"]
 
 [[revisions."2022-2025".casillas]]
 id = "07"
+continuidad_id = "cuota-a-ingresar"
 number = "07"
 section = ["liquidacion", "resultado"]
 data_type = "money"
@@ -233,6 +252,7 @@ legal_refs = ["orden-hap-70-2013:art-11", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2022-2025".casillas]]
 id = "autoliquidacion-complementaria"
+continuidad_id = "m136-autoliquidacion-complementaria"
 number = "complementaria.marca"
 section = ["complementaria"]
 data_type = "boolean"
@@ -243,6 +263,7 @@ legal_refs = ["orden-hac-763-2018:art-tercero"]
 
 [[revisions."2022-2025".casillas]]
 id = "justificante-anterior"
+continuidad_id = "m136-justificante-anterior"
 number = "complementaria.justificante-anterior"
 section = ["complementaria"]
 data_type = "text"
@@ -253,6 +274,7 @@ legal_refs = ["orden-hac-763-2018:art-tercero"]
 
 [[revisions."2022-2025".casillas]]
 id = "09"
+continuidad_id = "m136-importe-ingresado"
 number = "09"
 section = ["ingreso"]
 data_type = "money"
@@ -264,6 +286,7 @@ legal_refs = ["orden-hap-70-2013:art-11", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2022-2025".casillas]]
 id = "forma-pago"
+continuidad_id = "m136-forma-pago"
 number = "ingreso.forma-pago"
 section = ["ingreso"]
 data_type = "text"
@@ -275,6 +298,7 @@ legal_refs = ["orden-hap-70-2013:art-12", "orden-hac-763-2018:art-tercero"]
 
 [[revisions."2022-2025".casillas]]
 id = "iban"
+continuidad_id = "m136-codigo-iban"
 number = "ingreso.iban"
 section = ["ingreso"]
 data_type = "iban"

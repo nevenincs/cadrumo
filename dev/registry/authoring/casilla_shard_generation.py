@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import dataclasses
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
@@ -78,7 +79,7 @@ class GenerationRefused(Exception):
 #: shape this pattern does not know about cannot quietly become a casilla.
 _STRUCTURAL = re.compile(
     r"^(inicio del identificador|fin de identificador|fin de registro|reservado"
-    r"|modelo\.?$|modelo declaraci|blancos$|tipo de registro$"
+    r"|modelo\.?$|modelo declaraci|blancos\.?$|tipo de registro\.?$"
     r"|p[aeiouáéíóú]*gina\.?$|letra$|hoja$"
     r"|indicador de p[aeiouáéíóú]*gina complementaria"
     r"|n[uú]mero de orden de la p[aeiouáéíóú]*gina"
@@ -136,6 +137,8 @@ _NON_ALNUM = re.compile(r"[^a-z0-9]+")
 _COMMENT_PREFIX = re.compile(r"^#\s*@\d+\+\d+(?:\.|\s+\S+)\s*")
 #: A line break inside a design cell, with whatever indentation wrapped
 #: around it. Folded to one space; runs of real spaces are left alone.
+_NL = chr(10)
+_KEY_LINE = re.compile(r"^([a-z_][a-z0-9_]*) = ")
 _LINE_BREAK = re.compile(r"[^\S\r\n]*[\r\n]+[^\S\r\n]*")
 
 
@@ -176,6 +179,125 @@ class WaveSpec:
     #: and a chosen concept name; no design states one, so no generator may
     #: invent one.
     id_scheme: str = "segmento_number"
+    #: Positional-id stem per record, where the sheet's own name will not do.
+    #:
+    #: An unnumbered slot takes its position range as its number, prefixed by a
+    #: stem. The record-oriented designs name their sheets ``T22007000`` and the
+    #: lowercased name is the stem. Modelo 280 names its sheets
+    #: ``Tipo 1 - Registro De Declarante`` while its corpus uses ``tipo1``, so
+    #: the derived number would carry spaces and a hyphen and match nothing in
+    #: the edition being carried forward.
+    record_stems: Mapping[str, str] = field(default_factory=dict)
+    #: Carry each row's ``legal_refs`` from the prior edition instead of applying
+    #: the wave-level list.
+    #:
+    #: Off by default, because a carried legal_ref can name an orden that does
+    #: not reach the new edition's period -- the exact defect being repaired on
+    #: modelo 190 right now. On by default would be silent; opt-in makes the wave
+    #: say it checked. Where a row has no prior counterpart the wave list applies
+    #: regardless, since there is nothing to carry.
+    carry_legal_refs: bool = False
+    #: Rows the design's reader hoisted out of a desglose group, declared per
+    #: record as ``{parent_offset: (child_offset, ...)}``.
+    #:
+    #: A record whose sub-rows surface beside their own parent does not tile, and
+    #: the generator refuses it. This is the ONLY way past that refusal, and it is
+    #: deliberately a declaration rather than a heuristic: a heuristic that nests
+    #: any contained span would also nest a genuine overlap defect, which is the
+    #: thing the tiling check exists to find.
+    #:
+    #: Declaring a group asserts the author read the design and confirmed the
+    #: nesting AEAT printed. Modelo 280's Tipo 2 needs one: AEAT writes "se
+    #: subdivide en dos" over 176-186, which is really three parts (176 SIGNO,
+    #: 177-184 ENTERO, 185-186 DECIMAL), so the reader's count clause declines the
+    #: repair and leaves the two grandchildren at the surface.
+    declared_desglose_parents: Mapping[str, Mapping[int, tuple[int, ...]]] = field(
+        default_factory=dict
+    )
+    #: How the prior edition's shards are found, as a glob with ``{segmento}``.
+    #:
+    #: The record-oriented default narrows by record because a box number is only
+    #: unique WITHIN a record -- modelo 220 prints ``00562`` on three different
+    #: ones -- so globbing the whole directory would collide. Modelo 280 names its
+    #: shards after their casillas rather than their record and prefixes every
+    #: number with its own record instead, so it globs everything and relies on
+    #: the number for uniqueness.
+    prior_glob: str = "c{segmento}+*.toml"
+    #: Derived-number to prior-number aliases, per record.
+    #:
+    #: Some editions name a slot for what it MEANS rather than where it sits --
+    #: modelo 280's declarante NIF is ``tipo1.nif-declarante``, not
+    #: ``tipo1.9-17``. No positional rule can produce that name, so matching it is
+    #: an author's assertion that the slot at these bytes is that concept, and it
+    #: is declared here rather than guessed by resemblance.
+    number_aliases: Mapping[str, Mapping[str, str]] = field(default_factory=dict)
+    #: Renumbered rows: the number to LOOK UP in the prior edition, per record.
+    #:
+    #: Distinct from ``number_aliases``, which rewrites the number a row is
+    #: EMITTED under. This one changes only where the prior edition's attributes
+    #: are fetched from, leaving the emitted number as this design prints it.
+    #:
+    #: The difference is the whole point on a renumbering. Modelo 036's 2023
+    #: design prints ``[A3A]`` and the 2025 edition declares the same concept as
+    #: ``A3B`` -- same offsets, same lengths, same type, byte-identical captions,
+    #: with the token changing between a PROVISIONAL and a FINAL file of that one
+    #: edition, which is a relabelling rather than a concept moving. Aliasing the
+    #: number outright would make this edition assert that its own design prints
+    #: A3B, which is false. The row must say A3A and carry A3B's attributes.
+    carry_number_aliases: Mapping[str, Mapping[str, str]] = field(default_factory=dict)
+    #: Offsets deliberately left undeclared, per record.
+    #:
+    #: ``scope_skip_unnumbered`` is useless on a design where NOTHING is numbered;
+    #: this names the individual slots instead. Modelo 280's Tipo 2 echoes the
+    #: declarante's ejercicio and NIF from Tipo 1 and its prior edition declares
+    #: no casilla for either, which is a scope line to hold, not a gap to fill.
+    scope_skip_positions: Mapping[str, frozenset[int]] = field(default_factory=dict)
+    #: The box-number grammar this design actually prints, as a regex with one
+    #: capturing group, applied to the bracket token's INNER text.
+    #:
+    #: Default is the record-oriented one: three to six digits. Modelo 036 prints
+    #: nine forms against that one -- ``[101]``, ``[65]``, ``[A31]``, ``[B3A]``,
+    #: ``[716.a]``, ``[4774bis]``, ``[300,301,302]``, ``[379, 380]``, ``[B1,B2]``
+    #: -- and a wave that does not declare them gets a REFUSAL on every row, not
+    #: a silent position range. Widening the default instead would loosen every
+    #: other modelo's grammar to admit whatever the loosest one needs.
+    number_grammar: str | None = None
+    #: Collapse design rows that share a box number into ONE casilla.
+    #:
+    #: A casilla is a CONCEPT, and some designs print one concept across several
+    #: fixed-width rows. Modelo 036 splits every date into día, mes and año rows
+    #: under a single number, and repeats whole blocks -- Pag. 8 prints numbers
+    #: 800, 801, 818 and 859 four times each at a regular stride, once per
+    #: repetition of the socio block. Its authored edition declares one casilla
+    #: per number and says so in its own comments ("ONE casilla over the dia, mes
+    #: and ano components, all printed under the single number 805").
+    #:
+    #: Off by default. Emitting per row on such a design does not fail loudly --
+    #: it writes several casillas carrying the SAME id, which is caught only when
+    #: the modelo is loaded, after the write.
+    collapse_rows_by_number: bool = False
+    #: Numbers the wave declines to declare, per record, listed one by one.
+    #:
+    #: An enumeration rather than a flag, deliberately. "Decline whatever has no
+    #: counterpart in the prior edition" would also swallow the rows that need
+    #: judgement -- a renumbered box looks exactly like an undeclared one from the
+    #: matcher's side. Listing them means a row that appears later, or one whose
+    #: number changes, REFUSES instead of joining the declined set unnoticed.
+    #:
+    #: Declining is a scope decision and belongs in the revision's own prose too;
+    #: this field only stops the generator refusing what the author already
+    #: judged.
+    scope_declined_numbers: Mapping[str, frozenset[str]] = field(default_factory=dict)
+    #: Numbers withheld because they need a judgement nobody has made yet.
+    #:
+    #: SEPARATE from ``scope_declined_numbers`` on purpose, and the distinction is
+    #: the point rather than bookkeeping: "excluded at parity with the prior
+    #: edition" and "awaiting adjudication" are different claims about the same
+    #: absence, and collapsing them is exactly the silent under-declaration this
+    #: corpus refuses everywhere else. A declined number is a decision; a deferred
+    #: one is an open question, and it is reported as such so it cannot quietly
+    #: become permanent.
+    deferred_numbers: Mapping[str, frozenset[str]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -198,7 +320,20 @@ class GenerationReport:
     """Everything the run decided, including what it declined to decide."""
 
     outcomes: list[RecordOutcome] = field(default_factory=list)
+    #: Shards in out_dir this run does not reproduce. Not refused: a wave may
+    #: legitimately share a directory with rows it does not own -- modelo 220's
+    #: two declaration headers sit in their own shard the money-closure wave
+    #: never writes. Reported because the other cause is a shard left stale by a
+    #: rename, and that one is a defect.
+    orphaned_shards: list[str] = field(default_factory=list)
+    #: Attested fields carried forward from rows already on disk -- fields this
+    #: generator does not emit and cannot re-derive. Reported so a re-run that
+    #: silently dropped them would show as a zero here rather than as nothing.
+    attestations_restored: int = 0
     drift: list[str] = field(default_factory=list)
+    #: Numbers withheld pending a judgement, reported so an open question cannot
+    #: quietly become a permanent absence.
+    deferred: list[str] = field(default_factory=list)
     #: Rows whose Contenido changed while the caption held. Reported apart from
     #: caption drift because they are different findings: a rewritten caption is
     #: a relabelling, a rewritten Contenido is usually a changed admissible
@@ -249,6 +384,14 @@ def cross_check_sidecar(design_path: Path, sheets: Mapping[str, RecordDesignShee
         raise GenerationRefused(
             f"the sidecar describes {declared} but the binary on disk is {actual}"
         )
+    # The sheet-name comparison only means something when the sidecar's units ARE
+    # sheets. A workbook sidecar splits by worksheet and its titles are the record
+    # names; a PDF sidecar splits by PAGE and titles them "Pag. 1"..."Pag. N",
+    # because a PDF has no sheets and the reader derives records from the text.
+    # Comparing the two would refuse every PDF-sourced design for a disagreement
+    # that is really a difference of unit.
+    if payload.get("source_kind") != "diseno_registro_workbook":
+        return
     titles = {unit["title"].strip() for unit in payload.get("units", ())}
     missing = set(sheets) - titles
     if missing:
@@ -262,7 +405,14 @@ def is_structural(description: str) -> bool:
     return bool(_STRUCTURAL.match(description.strip()))
 
 
-def derive_number(description: str, offset: int, length: int, segmento: str) -> tuple[str, str]:
+def derive_number(
+    description: str,
+    offset: int,
+    length: int,
+    segmento: str,
+    stem: str | None = None,
+    grammar: str | None = None,
+) -> tuple[str, str]:
     """Return the box number and the caption with its number token removed.
 
     The number is located anywhere in the description, never by position in the
@@ -280,15 +430,29 @@ def derive_number(description: str, offset: int, length: int, segmento: str) -> 
     # all carry a real double space -- and collapsing those would quietly edit
     # the transcription this corpus exists to preserve.
     flattened = _LINE_BREAK.sub(" ", description).strip()
-    numbers = _NUMBERED.findall(flattened)
+    pattern = re.compile(grammar) if grammar else _NUMBERED
+    numbers = pattern.findall(flattened)
     if numbers:
-        return numbers[-1], _NUMBERED.sub("", flattened).strip()
+        return numbers[-1], pattern.sub("", flattened).strip()
     lettered = _LETTERED.search(flattened)
     if lettered:
         return lettered.group(1), _LETTERED.sub("", flattened).strip()
-    stem = segmento.lower()
+    prefix = stem or segmento.lower()
     slot = f"{offset}" if length == 1 else f"{offset}-{offset + length - 1}"
-    return f"{stem}.{slot}", flattened
+    return f"{prefix}.{slot}", flattened
+
+
+def group_comment(members: Sequence[RecordDesignField], caption: str) -> str:
+    """Render the comment for one casilla, which may span several design rows."""
+    if len(members) == 1:
+        return comment_line(members[0], caption)
+    first, last = members[0], members[-1]
+    span = last.offset + last.length - first.offset
+    parts = ", ".join(f"@{m.offset}+{m.length}" for m in members)
+    return (
+        f"# @{first.offset}+{span} {first.type_code}. {caption} "
+        f"[ONE casilla over {len(members)} printed components: {parts}]"
+    )
 
 
 def comment_line(row: RecordDesignField, caption: str) -> str:
@@ -323,7 +487,11 @@ def normalise_for_drift(caption: str) -> str:
     return _NON_ALNUM.sub("", folded)
 
 
-def audit_sheet(sheet: RecordDesignSheet) -> list[str]:
+def audit_sheet(
+    sheet: RecordDesignSheet,
+    declared_desglose: Mapping[int, tuple[int, ...]] | None = None,
+    grammar: str | None = None,
+) -> list[str]:
     """Refusals that must stop a run rather than be skipped past."""
     problems: list[str] = []
     name = sheet.name.strip()
@@ -333,23 +501,59 @@ def audit_sheet(sheet: RecordDesignSheet) -> list[str]:
                 problems.append(f"{name} @{row.offset}: description contains {label}")
         if row.type_code.strip().lower() not in _TYPE_CODES:
             problems.append(f"{name} @{row.offset}: unknown type_code {row.type_code!r}")
-        if len(_NUMBERED.findall(row.description)) > 1:
+        if len(re.findall(grammar or _NUMBERED.pattern, row.description)) > 1:
             problems.append(
                 f"{name} @{row.offset}: more than one box token in one description; "
                 "the number rule has become ambiguous"
             )
-        recognised = set(_NUMBERED.findall(row.description)) | {
-            match.group(1) for match in _LETTERED.finditer(row.description)
-        }
+        pattern = re.compile(grammar) if grammar else _NUMBERED
+        recognised = {
+            match.group(1) if pattern.groups else match.group(0)
+            for match in pattern.finditer(row.description)
+        } | {match.group(1) for match in _LETTERED.finditer(row.description)}
         for token in _IDENTIFIER_BRACKET.findall(row.description):
-            if token not in recognised and not _NUMBERED.fullmatch(f"[{token}]"):
+            if token not in recognised:
                 problems.append(
                     f"{name} @{row.offset}: bracket token [{token}] is not a recognised "
                     "box number on this wave's grammar; it would silently become a "
                     "position range"
                 )
+    # A top-level row whose span sits inside another top-level row's span is a
+    # desglose sub-row the reader could not nest -- a grandchild hoisted to the
+    # surface. Summing it double-counts its bytes and the record appears not to
+    # tile. Modelo 280's Tipo 2 does exactly this: AEAT writes "se subdivide en
+    # dos" over a group that is really three parts, the nester's count clause
+    # correctly declines to repair it, and 177-184 and 185-186 surface beside
+    # their own grandparent at 176-186, making the record sum 510 against a
+    # declared 500. Refusing names the real defect; excluding them would paper
+    # over a reader limitation with a generator workaround.
+    hoisted = {
+        child
+        for children in (declared_desglose or {}).values()
+        for child in children
+    }
+    ordered = [row for row in sorted(sheet.fields, key=lambda item: item.offset)
+               if row.offset not in hoisted]
+    for outer in ordered:
+        outer_end = outer.offset + outer.length
+        contained = [
+            inner
+            for inner in ordered
+            if inner is not outer
+            and inner.offset >= outer.offset
+            and inner.offset + inner.length <= outer_end
+        ]
+        if contained:
+            spans = ", ".join(f"@{item.offset}+{item.length}" for item in contained)
+            problems.append(
+                f"{name}: @{outer.offset}+{outer.length} contains {spans} at the same "
+                "level; these are desglose sub-rows the reader did not nest, and "
+                "summing them double-counts the record"
+            )
+            break
+
     cursor = 1
-    for row in sorted(sheet.fields, key=lambda item: item.offset):
+    for row in ordered:
         if row.offset != cursor:
             problems.append(
                 f"{name}: tiling breaks at @{row.offset}, expected @{cursor}"
@@ -365,10 +569,12 @@ def audit_sheet(sheet: RecordDesignSheet) -> list[str]:
     return problems
 
 
-def load_prior_attributes(directory: Path, segmento: str) -> dict[str, dict[str, str]]:
+def load_prior_attributes(
+    directory: Path, segmento: str, glob: str = "c{segmento}+*.toml"
+) -> dict[str, dict[str, str]]:
     """Read adjudicated attributes and the transcribed caption from an edition."""
     attributes: dict[str, dict[str, str]] = {}
-    for path in sorted(directory.glob(f"c{segmento}+*.toml")):
+    for path in sorted(directory.glob(glob.format(segmento=segmento))):
         current: dict[str, str] = {}
         number: str | None = None
         pending = ""
@@ -385,6 +591,8 @@ def load_prior_attributes(directory: Path, segmento: str) -> dict[str, dict[str,
             elif line.startswith(("id = ", "segmento = ")):
                 key, value = line.split("=", 1)
                 current[key.strip()] = value.strip().strip('"')
+            elif line.startswith("legal_refs = ") and line.rstrip().endswith("]"):
+                current["legal_refs"] = line.split("=", 1)[1].strip()
             elif line.startswith(("section = ", "data_type = ")):
                 key, value = line.split("=", 1)
                 current[key.strip()] = value.strip()
@@ -395,6 +603,7 @@ def load_prior_attributes(directory: Path, segmento: str) -> dict[str, dict[str,
 
 def _render_row(
     *,
+    members: Sequence[RecordDesignField],
     revision_id: str,
     segmento: str | None,
     casilla_id: str,
@@ -407,7 +616,7 @@ def _render_row(
 ) -> str:
     segmento_line = f'segmento = "{segmento}"\n' if segmento else ""
     return (
-        f"{comment_line(row, caption)}\n"
+        f"{group_comment(members, caption)}\n"
         f'[[revisions."{revision_id}".casillas]]\n'
         f'id = "{casilla_id}"\n'
         f'number = "{number}"\n'
@@ -460,27 +669,68 @@ def emit_records(
         sheet = sheets.get(segmento)
         if sheet is None:
             raise GenerationRefused(f"{segmento}: no such sheet in the design")
-        problems = audit_sheet(sheet)
+        problems = audit_sheet(
+            sheet, spec.declared_desglose_parents.get(segmento), spec.number_grammar
+        )
         if problems:
             raise GenerationRefused("; ".join(problems))
 
-        prior = load_prior_attributes(spec.prior_casillas_dir, segmento)
+        prior = load_prior_attributes(
+            spec.prior_casillas_dir, segmento, spec.prior_glob
+        )
         emitted: list[str] = []
         carried = adjudicated = out_of_scope = 0
 
-        for row in sorted(sheet.fields, key=lambda item: item.offset):
-            if is_structural(row.description):
+        hoisted = {
+            child
+            for children in spec.declared_desglose_parents.get(segmento, {}).values()
+            for child in children
+        }
+        stem = spec.record_stems.get(segmento, segmento.lower())
+        grouped: dict[str, list[RecordDesignField]] = {}
+        captions: dict[str, str] = {}
+        for candidate in sorted(sheet.fields, key=lambda item: item.offset):
+            if candidate.offset in hoisted or is_structural(candidate.description):
                 continue
-            number, caption = derive_number(
-                row.description, row.offset, row.length, segmento
+            derived, derived_caption = derive_number(
+                candidate.description, candidate.offset, candidate.length,
+                segmento, stem, spec.number_grammar,
             )
-            positional = number.startswith(f"{segmento.lower()}.")
+            derived = spec.number_aliases.get(segmento, {}).get(derived, derived)
+            if spec.collapse_rows_by_number:
+                grouped.setdefault(derived, []).append(candidate)
+                captions.setdefault(derived, derived_caption)
+            else:
+                grouped[f"{derived}@{candidate.offset}"] = [candidate]
+                captions[f"{derived}@{candidate.offset}"] = derived_caption
+
+        for key, members in grouped.items():
+            row = members[0]
+            number = key.split("@")[0] if not spec.collapse_rows_by_number else key
+            caption = captions[key]
+            positional = number.startswith(f"{stem}.")
+            row_legal_refs = spec.legal_refs
+            if row.offset in spec.scope_skip_positions.get(segmento, frozenset()):
+                out_of_scope += 1
+                continue
             if positional and segmento in spec.scope_skip_unnumbered:
                 out_of_scope += 1
                 continue
+            if number in spec.scope_declined_numbers.get(segmento, frozenset()):
+                out_of_scope += 1
+                continue
+            if number in spec.deferred_numbers.get(segmento, frozenset()):
+                report.deferred.append(
+                    f"{segmento}:{number} @{row.offset}+{row.length} "
+                    f"({len(members)} printed row(s)) {caption[:64]}"
+                )
+                continue
 
-            if number in prior:
-                attributes = prior[number]
+            carry_key = spec.carry_number_aliases.get(segmento, {}).get(
+                number, number
+            )
+            if carry_key in prior:
+                attributes = prior[carry_key]
                 section = attributes["section"]
                 data_type = attributes["data_type"]
                 # The id is carried, never rebuilt. On the record-oriented
@@ -488,6 +738,8 @@ def emit_records(
                 # 036 names its casillas with editorial slugs and modelo 280
                 # with a per-record stem, and neither is derivable from a design.
                 casilla_id = attributes.get("id") or f"{segmento}:{number}"
+                if spec.carry_legal_refs and attributes.get("legal_refs"):
+                    row_legal_refs = attributes["legal_refs"]
                 row_segmento = attributes.get("segmento") or None
                 carried += 1
                 was = attributes.get("_caption", "")
@@ -535,6 +787,7 @@ def emit_records(
 
             emitted.append(
                 _render_row(
+                    members=members,
                     revision_id=spec.revision_id,
                     segmento=row_segmento,
                     casilla_id=casilla_id,
@@ -543,7 +796,7 @@ def emit_records(
                     caption=caption,
                     section=section,
                     data_type=data_type,
-                    legal_refs=spec.legal_refs,
+                    legal_refs=row_legal_refs,
                 )
             )
 
@@ -560,7 +813,7 @@ def emit_records(
             else f"c{first}__c{last}.toml"
         )
         body = spec.headers[segmento] + "\n\n" + "\n".join(emitted)
-        tiled = sum(row.length for row in sheet.fields)
+        tiled = sum(row.length for row in sheet.fields if row.offset not in hoisted)
         report.outcomes.append(
             RecordOutcome(
                 segmento=segmento,
@@ -575,21 +828,70 @@ def emit_records(
             )
         )
 
-        if write:
+    # NOTHING IS WRITTEN UNTIL EVERY RECORD HAS BEEN EMITTED AND CHECKED.
+    #
+    # An id must be unique across the whole EDITION, not merely within a record,
+    # and a duplicate does not refuse anywhere downstream of here -- it serialises
+    # into valid TOML and is caught only when somebody loads the modelo, after the
+    # files are on disk. Modelo 036 would have produced 263 casillas sharing 85
+    # ids, because AEAT prints one box number over several rows.
+    #
+    # Deferring the writes also means a refusal on the last record cannot leave
+    # the first ones written. Emission is all-or-nothing.
+    _refuse_duplicate_ids(report)
+
+    # ATTESTATIONS ON DISK OUTLIVE THE RUN THAT WROTE THE ROW.
+    #
+    # This generator emits eight fields. Everything else a row carries was put
+    # there afterwards by a seeder or a person -- continuidad and semantic_role --
+    # and re-emitting the eight would delete it with nothing to notice it by. The
+    # harvest runs against out_dir BEFORE anything is written, and a row that has
+    # been attested but would no longer be emitted refuses rather than losing it.
+    harvested = harvest_attestations(spec.out_dir, spec.revision_id)
+    if harvested:
+        refuse_dropped_attestations(
+            harvested,
+            set(emitted_ids(report)),
+            {outcome.filename for outcome in report.outcomes},
+        )
+        restored = 0
+        for index, outcome in enumerate(report.outcomes):
+            body, carried = reattach_attestations(
+                outcome.body, harvested, spec.revision_id
+            )
+            restored += carried
+            report.outcomes[index] = dataclasses.replace(outcome, body=body)
+        report.attestations_restored = restored
+        produced = {outcome.filename for outcome in report.outcomes}
+        report.orphaned_shards = sorted(
+            path.name
+            for path in spec.out_dir.glob("*.toml")
+            if path.name not in produced
+        )
+
+    if write:
+        for outcome in report.outcomes:
             spec.out_dir.mkdir(parents=True, exist_ok=True)
-            target = spec.out_dir / filename
-            target.write_text(body, encoding="utf-8")
+            target = spec.out_dir / outcome.filename
+            target.write_text(outcome.body, encoding="utf-8")
             back = target.read_text(encoding="utf-8")
-            if back != body:
-                raise GenerationRefused(f"{segmento}: read-back differs from the write")
+            if back != outcome.body:
+                raise GenerationRefused(
+                    f"{outcome.segmento}: read-back differs from the write"
+                )
             for number, line in enumerate(back.splitlines(), start=1):
-                if line and not line.startswith(("#", "[", "i", "n", "s", "d", "r", "l")):
+                if line and not (
+                    line.startswith(("#", "[")) or _KEY_LINE.match(line)
+                ):
                     raise GenerationRefused(
-                        f"{segmento}: line {number} is neither comment nor key: {line[:60]!r}"
+                        f"{outcome.segmento}: line {number} is neither comment nor key: "
+                        f"{line[:60]!r}"
                     )
             marker = f'[[revisions."{spec.revision_id}".casillas]]'
-            if back.count(marker) != len(emitted):
-                raise GenerationRefused(f"{segmento}: read-back casilla count is wrong")
+            if back.count(marker) != outcome.emitted:
+                raise GenerationRefused(
+                    f"{outcome.segmento}: read-back casilla count is wrong"
+                )
 
     if report.refusals:
         raise GenerationRefused(
@@ -597,6 +899,161 @@ def emit_records(
             + "; ".join(report.refusals[:5])
         )
     return report
+
+
+def _source_lines(data: bytes) -> list[str]:
+    """Decode a shard and split it, tolerating either line-ending style."""
+    return data.decode("utf-8").replace(chr(13) + _NL, _NL).split(_NL)
+
+
+def harvest_attestations(
+    out_dir: Path, revision_id: str
+) -> dict[str, tuple[str, list[str]]]:
+    """Every key line a later pass added to rows this generator already wrote.
+
+    The generator emits eight fields. Anything else on a row on disk was put there
+    by somebody else -- ``continuidad_id`` with its origin and evidence,
+    ``semantic_role`` with its cardinality. Those are attestations: a person or a
+    seeder asserting something this generator cannot re-derive. A re-run that
+    simply re-emits its own eight fields deletes them and reports nothing, because
+    from here the output looks exactly as it did the first time. On 2026-09-12 that
+    was 423 stamps on modelo 036, 54 on 280 and 6 on 220.
+
+    Harvest is keyed by casilla id and scans the WHOLE directory rather than the
+    file a row is expected in, because a shard is named for its first and last
+    casilla and a row that gains a neighbour moves file. The file a row was found
+    in is returned with it, because whether losing the row matters depends on
+    whether this run overwrites that file.
+    """
+    harvested: dict[str, tuple[str, list[str]]] = {}
+    marker = f'[[revisions."{revision_id}".casillas]]'
+    if not out_dir.is_dir():
+        return harvested
+    for path in sorted(out_dir.glob("*.toml")):
+        current: list[str] = []
+        casilla_id: str | None = None
+        for line in _source_lines(path.read_bytes()):
+            if line.strip() == marker:
+                if casilla_id:
+                    harvested[casilla_id] = (path.name, current)
+                current, casilla_id = [], None
+                continue
+            if line.startswith("id = "):
+                casilla_id = line.split("=", 1)[1].strip().strip('"')
+                continue
+            if _KEY_LINE.match(line):
+                current.append(line)
+        if casilla_id:
+            harvested[casilla_id] = (path.name, current)
+    return harvested
+
+
+def reattach_attestations(
+    body: str, harvested: dict[str, tuple[str, list[str]]], revision_id: str
+) -> tuple[str, int]:
+    """Carry every attested field forward onto the row it was made about.
+
+    A field the emission already produces is never overwritten: the generator is
+    the authority for its own eight, the attestation for everything else.
+    """
+    marker = f'[[revisions."{revision_id}".casillas]]'
+    out: list[str] = []
+    block: list[str] = []
+    casilla_id: str | None = None
+    carried = 0
+
+    def flush() -> None:
+        nonlocal carried, block, casilla_id
+        if casilla_id:
+            emitted = {
+                match.group(1) for line in block if (match := _KEY_LINE.match(line))
+            }
+            for line in harvested.get(casilla_id, ("", []))[1]:
+                key = _KEY_LINE.match(line).group(1)
+                if key not in emitted:
+                    block.append(line)
+                    carried += 1
+        out.extend(block)
+        block, casilla_id = [], None
+
+    for line in body.split(_NL):
+        if line.strip() == marker:
+            flush()
+            block = [line]
+            continue
+        if block:
+            if line.startswith("id = "):
+                casilla_id = line.split("=", 1)[1].strip().strip('"')
+                block.append(line)
+                continue
+            if _KEY_LINE.match(line):
+                block.append(line)
+                continue
+            flush()
+        out.append(line)
+    flush()
+    return _NL.join(out), carried
+
+
+def refuse_dropped_attestations(
+    harvested: dict[str, tuple[str, list[str]]],
+    emitted: set[str],
+    overwritten: set[str],
+) -> None:
+    """Refuse when a shard this run rewrites holds an attested row it will not re-emit.
+
+    Preservation only helps a row the emission still produces. A row that has been
+    attested, lives in a file this run overwrites, and is no longer emitted --
+    because the scope narrowed, the grammar changed, or a number moved into the
+    declined set -- would lose its attestation with nothing to carry it onto.
+
+    A row in a shard this run does not write is NOT at risk and must not refuse:
+    modelo 220's two declaration headers live in their own shard that the
+    money-closure wave never touches, and refusing on them would have blocked a
+    generator that was never going to harm them.
+    """
+    orphaned = sorted(
+        casilla_id
+        for casilla_id, (source, lines) in harvested.items()
+        if lines and casilla_id not in emitted and source in overwritten
+    )
+    if not orphaned:
+        return
+    raise GenerationRefused(
+        f"{len(orphaned)} attested row(s) sit in a shard this run rewrites and "
+        f"would not be re-emitted: {', '.join(orphaned[:5])}"
+        f"{' ...' if len(orphaned) > 5 else ''}. They carry fields this generator "
+        "does not produce (continuidad or semantic_role), so re-emitting without "
+        "them destroys work that cannot be re-derived here. Restore the rows to "
+        "scope, or move the attestations, before running again."
+    )
+
+def emitted_ids(report: GenerationReport) -> list[str]:
+    """Every casilla id this run would write, in emission order."""
+    return [
+        block.split('id = "')[1].split('"')[0]
+        for outcome in report.outcomes
+        for block in outcome.body.split("[[revisions.")[1:]
+    ]
+
+
+def _refuse_duplicate_ids(report: GenerationReport) -> None:
+    """Refuse before writing when two casillas would share an id."""
+    seen: dict[str, int] = {}
+    for casilla_id in emitted_ids(report):
+        seen[casilla_id] = seen.get(casilla_id, 0) + 1
+    duplicates = {key: count for key, count in seen.items() if count > 1}
+    if not duplicates:
+        return
+    worst = sorted(duplicates.items(), key=lambda kv: -kv[1])[:5]
+    detail = ", ".join(f"{key} x{count}" for key, count in worst)
+    raise GenerationRefused(
+        f"{len(duplicates)} casilla id(s) would be written more than once "
+        f"({sum(duplicates.values())} rows): {detail}. An id must be unique across the "
+        "whole edition. A duplicate serialises into valid TOML and is caught only when "
+        "the modelo is loaded, which is after the files are on disk -- so it is refused "
+        "here, before anything is written."
+    )
 
 
 def format_report(report: GenerationReport) -> str:
@@ -607,8 +1064,20 @@ def format_report(report: GenerationReport) -> str:
         f"tiled={outcome.tiled}=={outcome.declared_total} -> {outcome.filename}"
         for outcome in report.outcomes
     ]
+    lines.append(f"\nDEFERRED pending adjudication: {len(report.deferred)}")
+    lines.extend(f"  {entry}" for entry in report.deferred)
     lines.append(f"\nCAPTION DRIFT on position-stable rows: {len(report.drift)}")
     lines.extend(f"  {entry}" for entry in report.drift)
+    if report.orphaned_shards:
+        lines.append(
+            f"\nSHARDS IN out_dir THIS RUN DOES NOT PRODUCE: "
+            f"{len(report.orphaned_shards)}"
+        )
+        lines.extend(f"  {name}" for name in report.orphaned_shards)
+    lines.append(
+        f"\nATTESTATIONS carried forward from disk: "
+        f"{report.attestations_restored}"
+    )
     lines.append(f"\nTOTAL casillas: {report.total_emitted}")
     return "\n".join(lines)
 

@@ -37,7 +37,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.tax_domain import TaxDomain
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 from cadrumo.domain.calculations.registry.temporal import select_revision
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
@@ -51,7 +51,7 @@ _MODELOS = [
         "orden-hac-590-2021:art-1",
         "orden-hac-590-2021:art-3",
         "BOE-A-2021-9721",
-        TaxDomain.IDSD,
+        TaxDomain("idsd"),
         ("1T", "2T", "3T", "4T"),
     ),
     (
@@ -59,7 +59,7 @@ _MODELOS = [
         "orden-hac-510-2021:art-1",
         "orden-hac-510-2021:art-3",
         "BOE-A-2021-8878",
-        TaxDomain.ITF,
+        TaxDomain("itf"),
         ("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"),
     ),
     (
@@ -67,7 +67,7 @@ _MODELOS = [
         "orden-eha-1881-2011:art-1",
         "orden-eha-1881-2011:art-4",
         "BOE-A-2011-11704",
-        TaxDomain.JUEGO,
+        TaxDomain("juego"),
         ("1T", "2T", "3T", "4T"),
     ),
 ]
@@ -102,7 +102,7 @@ def test_committed_definition_legal_authority_and_deadline_windows(
     """
     modelo, catalogues = _committed_modelo(mid)
     assert modelo.id == mid
-    assert modelo.tax_domain is domain
+    assert modelo.tax_domain == domain
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
     for ref in (approval, plazo):

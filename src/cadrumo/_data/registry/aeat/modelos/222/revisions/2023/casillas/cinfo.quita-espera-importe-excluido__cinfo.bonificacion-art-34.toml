@@ -22,6 +22,7 @@
 
 [[revisions."2023".casillas]]
 id = "info.quita-espera-importe-excluido"
+continuidad_id = "is-pf-grupo-info-quita-espera-importe-excluido"
 number = "555-571"
 section = ["informacion_adicional"]
 data_type = "money"
@@ -32,6 +33,7 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
 id = "info.quita-espera-integrado-base"
+continuidad_id = "is-pf-grupo-info-quita-espera-integrado-base"
 number = "572-588"
 section = ["informacion_adicional"]
 data_type = "money"
@@ -44,6 +46,7 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
 id = "info.quita-espera-integrado-cuota"
+continuidad_id = "is-pf-grupo-info-quita-espera-integrado-cuota"
 number = "589-605"
 section = ["informacion_adicional"]
 data_type = "money"
@@ -56,6 +59,7 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
 id = "info.reversion-deterioros"
+continuidad_id = "is-pf-grupo-info-reversion-deterioros"
 number = "606-622"
 section = ["informacion_adicional"]
 data_type = "money"
@@ -66,6 +70,7 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
 id = "info.reserva-inversiones-canarias"
+continuidad_id = "is-pf-grupo-info-reserva-inversiones-canarias"
 number = "623-639"
 section = ["informacion_adicional"]
 data_type = "money"
@@ -76,6 +81,7 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
 id = "info.bonificacion-ley-19-1994"
+continuidad_id = "is-pf-grupo-info-bonificacion-ley-19-1994"
 number = "640-656"
 section = ["informacion_adicional"]
 data_type = "money"
@@ -86,6 +92,7 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
 id = "info.regimen-zec-no-computable"
+continuidad_id = "is-pf-grupo-info-regimen-zec-no-computable"
 number = "657-673"
 section = ["informacion_adicional"]
 data_type = "money"
@@ -96,6 +103,7 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
 id = "info.minoracion-bonificacion-art-33"
+continuidad_id = "is-pf-grupo-info-minoracion-bonificacion-art-33"
 number = "674-690"
 section = ["informacion_adicional"]
 data_type = "money"
@@ -106,6 +114,7 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
 id = "info.aumento-capital-compensacion-creditos"
+continuidad_id = "is-pf-grupo-info-aumento-capital-compensacion-creditos"
 number = "691-707"
 section = ["informacion_adicional"]
 data_type = "money"
@@ -116,6 +125,7 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
 id = "info.renta-exenta-cap-xiv-tit-vii"
+continuidad_id = "is-pf-grupo-info-renta-exenta-cap-xiv-tit-vii"
 number = "708-724"
 section = ["informacion_adicional"]
 data_type = "money"
@@ -126,6 +136,7 @@ legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
 id = "info.bonificacion-art-34"
+continuidad_id = "is-pf-grupo-info-bonificacion-art-34"
 number = "725-741"
 section = ["informacion_adicional"]
 data_type = "money"

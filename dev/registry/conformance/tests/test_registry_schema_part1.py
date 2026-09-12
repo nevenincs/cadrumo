@@ -15,7 +15,6 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.identity.documents import IdentityError
-from cadrumo.core.identity.tax_id import SPANISH_TAX_ID_WIDTH, validate_spanish_tax_id
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
@@ -37,7 +36,9 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,
 )
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tax_id_format import runtime_tax_id_format
+from cadrumo.domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ...compiler.loader import load_modelo_directory
 from ...compiler.validate_export_field_widths import (
@@ -776,19 +777,20 @@ def test_spanish_tax_id_width_is_the_width_the_identifier_validator_enforces() -
     """The declared identifier width must still be the one the validator refuses around.
 
     The export slot-width check asserts a ``profile_tax_id`` slot is exactly
-    ``SPANISH_TAX_ID_WIDTH`` characters. That assertion means nothing unless the
-    constant still describes the identifier contract, so pin it against the
+    the authority-declared number of characters. That assertion means nothing unless the
+    governed declaration describes the identifier contract, so pin it against the
     validator's actual behaviour rather than against a second copy of the number:
     a canonical identifier of that width validates, and padding or truncating it
     by one character is refused.
     """
-    canonical = validate_spanish_tax_id("B12345674")
+    canonical = validate_runtime_spanish_tax_id("B12345674")
 
-    assert len(canonical) == SPANISH_TAX_ID_WIDTH
-    with pytest.raises(IdentityError, match=rf"exactly {SPANISH_TAX_ID_WIDTH} characters"):
-        validate_spanish_tax_id(f"{canonical}0")
-    with pytest.raises(IdentityError, match=rf"exactly {SPANISH_TAX_ID_WIDTH} characters"):
-        validate_spanish_tax_id(canonical[:-1])
+    width = runtime_tax_id_format().width
+    assert len(canonical) == width
+    with pytest.raises(IdentityError, match=rf"exactly {width} characters"):
+        validate_runtime_spanish_tax_id(f"{canonical}0")
+    with pytest.raises(IdentityError, match=rf"exactly {width} characters"):
+        validate_runtime_spanish_tax_id(canonical[:-1])
 
 
 def test_draft_attribute_width_ruling_covers_every_declarable_attribute() -> None:
@@ -838,7 +840,7 @@ def test_validator_accepts_declarant_nif_draft_field_at_the_identifier_width() -
                 "kind": CasillaFieldKind.DRAFT,
                 "draft_attribute": "profile_tax_id",
                 "literal": None,
-                "length": SPANISH_TAX_ID_WIDTH,
+                "length": runtime_tax_id_format().width,
             },
         )
     )
@@ -964,7 +966,7 @@ def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_de
         for layout in revision.export_layouts
         for record in layout.records
         for field in record.fields
-        if field.kind is CasillaFieldKind.DRAFT and field.length == SPANISH_TAX_ID_WIDTH
+        if field.kind is CasillaFieldKind.DRAFT and field.length == runtime_tax_id_format().width
     )
     assert declarant_bound_slots == (), f"a draft field is bound at the Spanish tax id's width: {declarant_bound_slots}"
 
@@ -974,11 +976,12 @@ def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_de
             "draft_attribute": ExportDraftAttribute.FILING_YEAR,
             "casilla_id": None,
             "literal": None,
-            "length": SPANISH_TAX_ID_WIDTH,
+            "length": runtime_tax_id_format().width,
         },
     )
     failures = validate_draft_field_slot_width(prefix="modelo 200 revision 2024", field=misbound)
-    assert any(f"to a slot of length {SPANISH_TAX_ID_WIDTH}" in failure for failure in failures), failures
+    width = runtime_tax_id_format().width
+    assert any(f"to a slot of length {width}" in failure for failure in failures), failures
 
 
 def test_validator_rejects_parameter_without_official_source_guidance() -> None:

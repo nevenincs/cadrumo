@@ -51,9 +51,23 @@ function, called with a ``bindings`` family description built locally -- the
 merge semantics are the shipped ones, only the enrolment is simulated. Every
 report says so, and the live proof re-runs once enrolment lands.
 
+Scoping. ``--all`` and ``--modelo`` sweep whole modelos. ``--edge
+<modelo>/<successor-edition>`` and ``--edges-file`` name individual
+predecessor->successor edges instead, which is what an enrolment landing on a
+named set of edges needs: the strip must run on exactly the edges whose bindings
+now inherit and on no others. A named edge whose successor is not declared,
+declares an explicit no-predecessor root, or states no binding members is
+refused before anything is planned, and every named edge appears in the report.
+
 Writes nothing without ``--apply``, and ``--apply`` refuses while the merge is
 simulated unless ``--enrolment-simulated`` states that the operator accepts a
-simulated proof.
+simulated proof. That gate keeps its name: what the operator accepts is a
+simulated proof, not an enrolment. Renaming it ``--enrolled`` would turn an
+acknowledgement of the proof's standing into an assertion about the loader's
+``_KEYED_FAMILIES``, which the operator cannot make true by typing it and which
+would go stale silently the day enrolment lands. When bindings are enrolled the
+proof stops being simulated and the gate is deleted outright rather than
+renamed.
 """
 
 from __future__ import annotations
@@ -73,21 +87,29 @@ from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.reference_sections import FAMILY_SOURCE_DEFAULT_FIELDS
 from cadrumo.domain.calculations.registry.schema import BindingDefinition
 
-# `_inherit_keyed_family` is the loader's own keyed merge, called here with a
-# locally built family description. Enrolling `bindings` is the registry
+# `inherit_keyed_family` is the loader's supported keyed merge boundary.
+# Enrolling `bindings` is the registry
 # migration lane's change; simulating the enrolment is what lets the proof run
 # before it lands, against the shipped merge semantics rather than against a
 # reimplementation of them.
-from .compiler._loader_internals import _inherit_keyed_family, _KeyedFamily
+from .compiler.loader import inherit_keyed_family
+from .corpus_write import verify_written, write_preserving_newlines
 from .edition_round_trip import run_git
+from .run_exclusions import (
+    DEFAULT_EXCLUSION_REASON,
+    ExclusionSet,
+    MalformedExclusionError,
+    collect_exclusions,
+)
 
 __all__ = [
-    "BINDINGS_FAMILY",
     "EditionOutcome",
     "Equality",
     "ModeloOutcome",
     "StripReport",
     "main",
+    "parse_edge",
+    "parse_edges_file",
     "plan_modelo",
     "render_report",
     "strip_registry",
@@ -107,17 +129,6 @@ _BINDING_DEFAULT_FIELD: Final = dict(FAMILY_SOURCE_DEFAULT_FIELDS)[_BINDINGS]
 _REVISION_SEGMENT: Final = r'(?:"[^"\n]+"|[^".\]\n]+)'
 _MEMBER_HEADER: Final = re.compile(rf"^\[\[revisions\.{_REVISION_SEGMENT}\.bindings\]\]\s*$")
 
-#: The family description the loader would carry once ``bindings`` is enrolled.
-#: ``provider.kind`` and ``value.channel`` are the fields that carry a binding's
-#: identity: a member that changes either is a different binding under the same
-#: id, which the merge refuses as an undeclared repurpose rather than accepting
-#: as a supersession.
-BINDINGS_FAMILY: Final = _KeyedFamily(
-    section=_BINDINGS,
-    identity="id",
-    identity_fields=("provider.kind", "value.channel"),
-)
-
 #: The two equalities this tool can be asked for. ``materialised`` is provable
 #: today; ``lifted`` is the census population and waits on the predecessor lift.
 type Equality = str
@@ -127,6 +138,42 @@ LIFTED: Final[Equality] = "lifted"
 
 class StripRefusedError(RuntimeError):
     """The edition cannot be stripped as asked, and nothing was written."""
+
+
+# ── edge selection ──────────────────────────────────────────────────────────
+
+
+def parse_edge(text: str) -> tuple[str, str]:
+    """Parse one ``<modelo>/<successor-edition>`` edge.
+
+    The successor names the edge because the predecessor is the successor's own
+    declaration: naming it again would let an operator assert a chain the
+    registry does not carry.
+    """
+    modelo, separator, edition = text.strip().partition("/")
+    if not separator or not modelo.strip() or not edition.strip():
+        raise StripRefusedError(f"malformed edge {text!r}: expected '<modelo>/<successor-edition>'")
+    return modelo.strip(), edition.strip()
+
+
+def parse_edges_file(path: Path) -> tuple[tuple[str, str], ...]:
+    """Parse an edges file: one ``<modelo>/<edition>`` per line, ``#`` comments and blank lines ignored.
+
+    Duplicates collapse in first-seen order, so a list assembled from several
+    sources plans each edge once.
+    """
+    edges: dict[tuple[str, str], None] = {}
+    for number, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        line = raw.partition("#")[0].strip()
+        if not line:
+            continue
+        try:
+            edges[parse_edge(line)] = None
+        except StripRefusedError as exc:
+            raise StripRefusedError(f"{path}:{number}: {exc}") from exc
+    if not edges:
+        raise StripRefusedError(f"{path}: names no edge")
+    return tuple(edges)
 
 
 # ── raw tree reading ────────────────────────────────────────────────────────
@@ -286,8 +333,8 @@ def _materialised_bindings(
 ) -> tuple[object, ...]:
     """The raw binding members an edition holds once its declared chain is merged.
 
-    The merge is the loader's ``_inherit_keyed_family``, called with the family
-    description ``bindings`` would carry once enrolled. Defaults are NOT applied
+    The merge is the loader's :func:`inherit_keyed_family` boundary, configured
+    as ``bindings`` would be once enrolled. Defaults are NOT applied
     here: the loader applies them to the materialised edition, and applying them
     earlier is precisely the mistake that would make an inherited member carry
     its origin edition's grounding.
@@ -301,10 +348,12 @@ def _materialised_bindings(
     if predecessor_id in seen:
         raise StripRefusedError(f"modelo {modelo_id}: revision {revision_id!r} loops through {predecessor_id!r}")
     inherited = _materialised_bindings(modelo_id, predecessor_id, tables, seen | {revision_id})
-    return _inherit_keyed_family(
+    return inherit_keyed_family(
         f"{modelo_id}: revision {revision_id!r} inheriting from {predecessor_id!r}",
         revision_id=revision_id,
-        family=BINDINGS_FAMILY,
+        section=_BINDINGS,
+        identity="id",
+        identity_fields=("provider.kind", "value.channel"),
         inherited=inherited,
         successor=table,
     )
@@ -423,6 +472,12 @@ class StripReport:
     applied: bool
     enrolment: str
     modelos: list[ModeloOutcome] = field(default_factory=list)
+    #: The ``(modelo, successor-edition)`` pairs the run was restricted to, empty for a modelo sweep.
+    edges: tuple[tuple[str, str], ...] = ()
+    #: The modelos and editions withheld from the run, each with its reason. An
+    #: excluded target is never examined, so it plans nothing and refuses nothing;
+    #: it is reported so the run states what it declined to look at.
+    exclusions: ExclusionSet = field(default_factory=lambda: ExclusionSet(exclusions=()))
 
     def as_json(self) -> dict[str, Any]:
         """Return the run as report JSON."""
@@ -430,6 +485,8 @@ class StripReport:
             "equality": self.equality,
             "applied": self.applied,
             "enrolment": self.enrolment,
+            "edges": [f"{modelo}/{edition}" for modelo, edition in self.edges],
+            "exclusions": self.exclusions.as_json(),
             "proof_note": (
                 "bindings are not enrolled in the loader's _KEYED_FAMILIES, so the byte-identity proof ran against "
                 "the loader's own keyed-merge function called with a locally built bindings family; the live proof "
@@ -471,8 +528,23 @@ def _differing_fields(left: Mapping[str, Any], right: Mapping[str, Any]) -> tupl
     return tuple(sorted(key for key in set(left) | set(right) if left.get(key) != right.get(key)))
 
 
-def plan_modelo(modelo_dir: Path, *, equality: Equality = MATERIALISED) -> ModeloOutcome:
+def plan_modelo(
+    modelo_dir: Path,
+    *,
+    equality: Equality = MATERIALISED,
+    edition_ids: Sequence[str] = (),
+    excluded_edition_ids: Sequence[str] = (),
+) -> ModeloOutcome:
     """Decide, for every successor edition of one modelo, which binding members restate the inherited one.
+
+    ``edition_ids``, when given, restricts the plan to those successor editions;
+    every other edition of the modelo is left unexamined and unreported.
+
+    ``excluded_edition_ids`` names editions to withhold. An excluded edition is
+    left unexamined and unreported here even when ``edition_ids`` selects it:
+    the exclusion is the later and narrower decision. It is still read when
+    materialising another edition's inheritance chain, because an edge names the
+    edition to strip, never the editions the merge must walk.
 
     Writes nothing.
     """
@@ -482,7 +554,14 @@ def plan_modelo(modelo_dir: Path, *, equality: Equality = MATERIALISED) -> Model
     if not editions_root.is_dir():
         return outcome
     edition_dirs = {path.name: path for path in sorted(editions_root.iterdir()) if path.is_dir()}
+    # The chain a selected successor inherits along is read from the whole
+    # modelo: an edge names the edition to strip, never the editions the merge
+    # must walk to materialise it.
     tables = {name: _merged_revision_table(path, name) for name, path in edition_dirs.items()}
+    if edition_ids:
+        edition_dirs = {name: path for name, path in edition_dirs.items() if name in edition_ids}
+    if excluded_edition_ids:
+        edition_dirs = {name: path for name, path in edition_dirs.items() if name not in excluded_edition_ids}
     for edition_id, edition_dir in edition_dirs.items():
         table = tables[edition_id]
         if not _keyed_members(table):
@@ -622,12 +701,18 @@ def _preview(edition_dir: Path, removed: frozenset[str], result: EditionOutcome)
 
 
 def _write(planned: Mapping[Path, str | None]) -> None:
-    """Write the previewed strip."""
+    """Write the previewed strip, keeping each file's own line endings, and read every write back.
+
+    The read-back is on the raw bytes: a write that doubled a carriage return or
+    flipped the file's style raises rather than being accepted, because a
+    fragment corrupted here is otherwise only discovered by the next load.
+    """
     for path, text in sorted(planned.items()):
         if text is None:
             path.unlink()
         else:
-            path.write_text(text, encoding="utf-8", newline="")
+            style = write_preserving_newlines(path, text)
+            verify_written(path, style)
 
 
 def _members_from_texts(edition_dir: Path, planned: Mapping[Path, str | None]) -> tuple[object, ...]:
@@ -672,24 +757,91 @@ def _binding_state(
     return _typed(members, _binding_default(resolved[edition_id]))
 
 
+def _edge_refusal(modelo_dir: Path, edition_id: str) -> str:
+    """Why this edge cannot be planned, or the empty string when it can.
+
+    Checked before anything is planned, so an operator naming a set of edges
+    learns about every bad one at once rather than one run at a time.
+    """
+    if not modelo_dir.is_dir():
+        return "modelo is not in the registry"
+    edition_dir = modelo_dir / _REVISIONS / edition_id
+    if not edition_dir.is_dir():
+        return "successor edition is not declared"
+    table = _merged_revision_table(edition_dir, edition_id)
+    if not table:
+        return "successor edition is not declared"
+    if _declares_none_root(table):
+        return "successor declares [predecessor.none]: it inherits nothing and states itself in full"
+    if _declared_predecessor(table) is None:
+        return "successor declares no predecessor"
+    if not _keyed_members(table):
+        return "successor states no binding members"
+    return ""
+
+
+def _validate_edges(registry_root: Path, edges: Sequence[tuple[str, str]]) -> None:
+    refused = [
+        f"{modelo}/{edition}: {reason}"
+        for modelo, edition in edges
+        if (reason := _edge_refusal(registry_root / _MODELOS / modelo, edition))
+    ]
+    if refused:
+        raise StripRefusedError("unplannable edge(s): " + "; ".join(refused))
+
+
 def strip_registry(
     registry_root: Path,
     *,
     modelo_ids: Sequence[str] = (),
+    edges: Sequence[tuple[str, str]] = (),
+    exclusions: ExclusionSet | None = None,
     equality: Equality = MATERIALISED,
     apply: bool = False,
 ) -> StripReport:
-    """Plan, prove and optionally write the strip for every requested modelo."""
+    """Plan, prove and optionally write the strip for every requested modelo or edge.
+
+    ``edges`` names individual ``(modelo, successor-edition)`` pairs and, when
+    given, is the whole selection: no other edition of a named modelo is
+    examined. Every named edge is validated first and the run refuses as a whole
+    if any is unplannable.
+
+    ``exclusions`` names the modelos and editions to withhold, each with its
+    reason, and defaults to the frozen modelos alone. An exclusion outranks a
+    selection: an excluded edge is dropped before validation, so naming it is
+    not a refusal, and an excluded target is never planned, proved or written.
+    """
     report = StripReport(
         equality=equality,
         applied=apply,
         enrolment="simulated: bindings are not in the loader's _KEYED_FAMILIES",
+        edges=tuple(edges),
+        exclusions=exclusions if exclusions is not None else collect_exclusions(),
     )
+    withheld = report.exclusions
+    selected: dict[str, tuple[str, ...]] = {}
+    if edges:
+        remaining = [(modelo, edition) for modelo, edition in edges if not withheld.excludes(modelo, edition)]
+        if not remaining:
+            # Every named edge was excluded. An empty selection must not read as
+            # "no selection": that would widen an edge run into a corpus sweep.
+            return report
+        _validate_edges(registry_root, remaining)
+        for modelo, edition in remaining:
+            selected[modelo] = (*selected.get(modelo, ()), edition)
+        modelo_ids = tuple(selected)
     modelos_root = registry_root / _MODELOS
     for modelo_dir in sorted(path for path in modelos_root.iterdir() if path.is_dir()):
         if modelo_ids and modelo_dir.name not in modelo_ids:
             continue
-        outcome = plan_modelo(modelo_dir, equality=equality)
+        if withheld.excludes_modelo(modelo_dir.name):
+            continue
+        outcome = plan_modelo(
+            modelo_dir,
+            equality=equality,
+            edition_ids=selected.get(modelo_dir.name, ()),
+            excluded_edition_ids=withheld.editions_of(modelo_dir.name),
+        )
         tables = _edition_tables(modelo_dir) if any(edition.removed for edition in outcome.editions) else {}
         for edition in outcome.editions:
             if edition.refusal or not edition.removed:
@@ -732,6 +884,9 @@ def render_report(report: StripReport) -> str:
         f"strip-restated-bindings equality={report.equality} applied={report.applied}",
         f"enrolment: {report.enrolment}",
     ]
+    if report.edges:
+        lines.append(f"edges: {len(report.edges)} selected: " + " ".join(f"{m}/{e}" for m, e in report.edges))
+    lines.extend(report.exclusions.render_lines())
     for modelo in report.modelos:
         if not modelo.editions:
             continue
@@ -770,8 +925,53 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--modelo", action="append", default=[], help="a modelo id; repeatable")
     parser.add_argument("--all", action="store_true", help="every modelo in the registry")
+    parser.add_argument(
+        "--edge",
+        action="append",
+        default=[],
+        metavar="MODELO/EDITION",
+        help="one predecessor->successor edge, named by its successor; repeatable",
+    )
+    parser.add_argument(
+        "--edges-file",
+        type=Path,
+        default=None,
+        help="a file of 'modelo/edition' edges, one per line, '#' comments and blank lines ignored",
+    )
     parser.add_argument("--dry-run", action="store_true", default=True, help="plan and prove only (the default)")
     parser.add_argument("--apply", action="store_true", help="write the strip after the proof passes")
+    parser.add_argument(
+        "--exclude",
+        action="append",
+        default=[],
+        metavar="MODELO",
+        help="withhold a whole modelo from the run; repeatable",
+    )
+    parser.add_argument(
+        "--exclusions-file",
+        type=Path,
+        default=None,
+        help=(
+            "a file of exclusions, one '<modelo>' or '<modelo>/<edition>' per line; a '#' "
+            "comment states the reason for the entries that follow it"
+        ),
+    )
+    parser.add_argument(
+        "--exclude-edition",
+        action="append",
+        default=[],
+        metavar="MODELO/EDITION",
+        help=(
+            "withhold one edition from the run; repeatable. An excluded edition is never "
+            "planned, proved or written, and is listed in the report with its reason"
+        ),
+    )
+    parser.add_argument(
+        "--exclude-reason",
+        default=DEFAULT_EXCLUSION_REASON,
+        metavar="TEXT",
+        help="the reason reported for every exclusion of this run",
+    )
     parser.add_argument("--report", type=Path, default=None, help="write the run as JSON to this path")
     parser.add_argument("--registry-root", type=Path, default=None, help="a registry tree other than the shipped one")
     parser.add_argument(
@@ -786,8 +986,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="accept a proof run against the simulated bindings enrolment when applying",
     )
     args = parser.parse_args(argv)
-    if not args.modelo and not args.all:
-        parser.error("name at least one --modelo, or pass --all")
+    edge_mode = bool(args.edge or args.edges_file is not None)
+    if edge_mode and (args.modelo or args.all):
+        parser.error("--edge/--edges-file select edges; do not combine them with --modelo or --all")
+    if not edge_mode and not args.modelo and not args.all:
+        parser.error("name at least one --modelo or --edge, pass --edges-file, or pass --all")
     if args.apply and args.equality != MATERIALISED:
         parser.error("--apply removes only members provable under the 'materialised' equality")
     if args.apply and not args.enrolment_simulated:
@@ -797,12 +1000,28 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
     root = args.registry_root.resolve() if args.registry_root is not None else _default_registry_root()
     try:
+        edges = dict.fromkeys(
+            (
+                *(parse_edge(text) for text in args.edge),
+                *(parse_edges_file(args.edges_file) if args.edges_file is not None else ()),
+            )
+        )
         report = strip_registry(
             root,
             modelo_ids=tuple(args.modelo),
+            edges=tuple(edges),
+            exclusions=collect_exclusions(
+                modelos=args.exclude,
+                editions=args.exclude_edition,
+                reason=args.exclude_reason,
+                path=args.exclusions_file,
+            ),
             equality=args.equality,
             apply=bool(args.apply),
         )
+    except MalformedExclusionError as exc:
+        print(f"refused: {exc}", file=sys.stderr)
+        return 2
     except StripRefusedError as exc:
         print(f"refused: {exc}", file=sys.stderr)
         return 1

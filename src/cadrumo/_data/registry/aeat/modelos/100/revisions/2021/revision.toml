@@ -74,3 +74,13 @@ source_refs = [
     "aeat-renta-2021-manual-parte1",
     "boe-modelo-100-2021-form",
 ]
+
+[revisions."2021".source_default_dispositions.application_links]
+kind = "underivable"
+reason = """
+lift refuses: 2 source_refs statement(s) not textually rewritable: 0001-modelo-100-export.toml: source_refs = [; 0003-modelo-100-filing.toml: source_refs = ["""
+
+[revisions."2021".source_default_dispositions.constructs]
+kind = "underivable"
+reason = """
+lift refuses: 10 source_refs statement(s) not textually rewritable: 0001-renta-cuota-chain.toml: source_refs = [; 0002-renta-2021-mini-model-actividades-economicas-directa.toml: source_refs = [; 0003-renta-2021-mini-model-actividades-economicas-objetiva.toml: source_refs = [; 0004-renta-2021-mini-model-base-y-cuota.toml: source_refs = [; 0005-renta-2021-mini-model-capital-inmobiliario.toml: source_refs = [; 0006-renta-2021-mini-model-capital-mobiliario.toml: source_refs = [; 0007-renta-2021-mini-model-ganancias-patrimoniales.toml: source_refs = [; 0008-renta-2021-mini-model-regimenes-especiales.toml: source_refs = [; 0009-renta-2021-mini-model-trabajo.toml: source_refs = [; 0010-renta-2021-dependent-modelos.toml: source_refs = ["""

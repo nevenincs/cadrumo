@@ -20,13 +20,18 @@ from pathlib import Path
 
 import pytest
 
-from ..record_design_labels import edition_record_designs
+from ..record_design_labels import (
+    RecordDesignUnavailableError,
+    edition_record_designs,
+    record_design_source_ref,
+)
 from ..rename_formula_binding_identifiers import (
     REGISTRY_MODELOS_ROOT,
     binding_identifier_limit,
     plan_span_strip,
-    render_repurposed_evolutions,
+    render_retired_evolutions,
     repurposed_addresses,
+    revision_binding_source_refs,
     revision_legal_refs,
 )
 
@@ -35,7 +40,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 MODELO = "714"
 FIXTURES = Path(__file__).parent / "fixtures"
 EXPECTED_RENAMES = FIXTURES / "modelo-714-residual-binding-renames.json"
-EXPECTED_EVOLUTIONS = FIXTURES / "modelo-714-expected-identifier-evolutions.toml"
 
 
 def _expected() -> dict[tuple[str, str], str]:
@@ -140,32 +144,101 @@ def test_every_expected_name_fits_the_identifier_the_loader_accepts() -> None:
     assert not over, f"{len(over)} expected names exceed the {limit}-character BindingId limit"
 
 
-def test_the_rendered_evolutions_match_the_committed_fragment() -> None:
-    """The emitted fragment is compared byte-for-byte with the one the corpus carries.
+def test_no_address_repurpose_is_declared_while_both_names_survive() -> None:
+    """An identifier evolution is about an IDENTIFIER, not about an address.
 
-    The generator reads the corpus and the designs as they stand, so this holds
-    before and after the rename: a repurposed address is a fact about the two
-    designs, and the two ids naming it are whatever the corpus currently spells.
-    A drift in either the designs, the corpus, or the renderer shows up here.
+    Modelo 714's 2022 design inserts a 3-byte "Codigo pais" at 714-04 offset 927
+    and pushes "Descripcion 1" to 930. The address carries a different field,
+    but both names still exist, so nothing is withdrawn. Declaring one replaced
+    would assert a retirement the successor edition contradicts by still
+    declaring the id -- which is what the enrolment check refuses.
     """
-    rendered = render_repurposed_evolutions(MODELO, "2021", "2022", revision_legal_refs(MODELO, "2022"))
+    declared = {}
+    for edition in ("2021", "2022"):
+        revision_dir = REGISTRY_MODELOS_ROOT / MODELO / "revisions" / edition
+        names = set()
+        for path in revision_dir.rglob("*.toml"):
+            if "export" in path.parts:
+                continue
+            table = tomllib.loads(path.read_text(encoding="utf-8")).get("revisions", {}).get(edition, {})
+            names.update(
+                member["id"] for member in table.get("bindings", []) or [] if isinstance(member.get("id"), str)
+            )
+        declared[edition] = names
 
-    assert rendered == EXPECTED_EVOLUTIONS.read_text(encoding="utf-8")
+    for _address, (old_id, new_id) in repurposed_addresses(MODELO, "2021", "2022").items():
+        assert old_id not in declared["2022"], f"{old_id} is still declared in 2022, so it is not retired"
+        assert new_id in declared["2022"]
 
 
-def test_every_declared_evolution_names_an_address_both_designs_disagree_about() -> None:
-    """Detector teeth: a row here must be a real repurpose, not a moved or renamed field.
+def test_a_moved_field_is_not_reported_as_a_repurpose() -> None:
+    """Detector teeth for the rule above, on the real pair that produced the refusal."""
+    moved = (
+        "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-descripcion-1"
+    )
 
-    An address whose two designs declare the same width and the same field is
-    the same slot, and declaring it replaced would assert a discontinuity the
-    designs deny.
+    pairs = {old_id for old_id, _new_id in repurposed_addresses(MODELO, "2021", "2022").values()}
+
+    assert moved not in pairs
+
+
+def test_the_committed_131_retired_fragment_matches_what_the_generator_emits() -> None:
+    """The CORPUS artefact is the thing gated, not a copy of it beside the test.
+
+    Comparing the generator against a fixture leaves the committed fragment
+    ungated: a hand-edit to the file the registry actually loads would pass. So
+    the assertion is against the corpus path, which is what a hand-edit would
+    have to survive.
     """
-    from ..record_design_labels import design_field_component
+    committed = (
+        REGISTRY_MODELOS_ROOT
+        / "131"
+        / "revisions"
+        / "2025"
+        / "identifier_evolutions"
+        / "0001-retired-record-design-withdrawn-fields.toml"
+    )
+    assert committed.is_file(), "the retired fragment is missing from the corpus"
 
-    designs = edition_record_designs(MODELO)
-    addresses = repurposed_addresses(MODELO, "2021", "2022")
+    rendered = render_retired_evolutions(
+        "131",
+        "2024",
+        "2025",
+        revision_legal_refs("131", "2025"),
+        revision_binding_source_refs("131", "2025"),
+    )
 
-    assert addresses, "no repurposed address found, so this case proves nothing"
-    for address in addresses:
-        was, now = designs["2021"][address], designs["2022"][address]
-        assert was.length != now.length or design_field_component(was.label) != design_field_component(now.label)
+    assert rendered == committed.read_text(encoding="utf-8")
+
+
+def test_an_evolution_cites_the_design_source_the_edition_declares() -> None:
+    """Provenance is read off the registry, never spelled from a naming pattern.
+
+    The corpus does not name design sources to one shape -- ``aeat-dr-714-2021``
+    sits beside ``aeat-dr-111-2019-v18`` -- so a constructed citation is right by
+    luck. This asserts the id comes from the edition's own ``source_refs``.
+    """
+    assert record_design_source_ref("714", "2021") == "aeat-dr-714-2021"
+    assert record_design_source_ref("131", "2025") == "aeat-dr-131-2025"
+
+    declared = set()
+    for edition in ("2021", "2022"):
+        manifest = REGISTRY_MODELOS_ROOT / "714" / "revisions" / edition / "revision.toml"
+        table = tomllib.loads(manifest.read_text(encoding="utf-8"))["revisions"][edition]
+        declared.update(table.get("source_refs", ()))
+        assert record_design_source_ref("714", edition) in declared
+
+
+def test_an_edition_citing_no_record_design_refuses_rather_than_naming_one(tmp_path: Path) -> None:
+    """Detector teeth: a statement that cites nothing is not written at all."""
+    revision_dir = tmp_path / "999" / "revisions" / "2025"
+    revision_dir.mkdir(parents=True)
+    (revision_dir / "revision.toml").write_text(
+        '[revisions."2025"]\nvalid_from = 2025-01-01\nsource_refs = ["aeat-modelo-999-instructions"]\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RecordDesignUnavailableError) as refusal:
+        record_design_source_ref("999", "2025", modelos_root=tmp_path)
+
+    assert "cites no record_design source" in str(refusal.value)

@@ -76,3 +76,8 @@ A projection endpoint declares a typed coordinate inside a REPEATED row, so the 
 draft and 29 casilla entries with zero projection entries. Modelo 210 declares one renta per autoliquidacion -- a taxpayer with several rentas files several 210s, and AEAT provides the agrupacion mechanism rather than repeated rows on one record -- so there is no repeated row for an endpoint to address."""
 legal_refs = ["orden-eha-3316-2010:art-1", "orden-eha-3316-2010:art-2"]
 source_refs = ["aeat-dr-210-2026", "aeat-modelo-210-procedure"]
+
+[revisions."2026-y-siguientes".source_default_dispositions.parameters]
+kind = "underivable"
+reason = """
+lift refuses: 2 source_refs statement(s) not textually rewritable: 0004-m210-tipo-renta-code.toml: source_refs = [; 0005-m210-tipo-renta-multiple-payers.toml: source_refs = ["""

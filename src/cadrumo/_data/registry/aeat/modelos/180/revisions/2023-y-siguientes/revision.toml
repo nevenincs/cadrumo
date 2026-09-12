@@ -86,3 +86,13 @@ A parameter holds a regulatory value a formula of this revision applies -- a rat
 quarterly modelo 115, whose casilla 03 is computed as percent(02, irpf.urban_rental_withholding_rate) -- that is where this registry holds the rate, and modelo 180 receives the already-withheld annual totals. Empty by the shape of this modelo's calculation rather than by omission."""
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hfp-1284-2023:art-7", "ley-35-2006:art-101"]
 source_refs = ["aeat-modelo-180-procedure", "boe-modelo-180-2023-form"]
+
+[revisions."2023-y-siguientes".source_default_dispositions.application_links]
+kind = "underivable"
+reason = """
+lift refuses: 1 source_refs statement(s) not textually rewritable: 0011-modelo-180-deadline.toml: source_refs = ["""
+
+[revisions."2023-y-siguientes".source_default_dispositions.extraction_profiles]
+kind = "underivable"
+reason = """
+lift refuses: 1 source_refs statement(s) not textually rewritable: 0002-modelo-180-declaracion-pdf.toml: source_refs = ["""

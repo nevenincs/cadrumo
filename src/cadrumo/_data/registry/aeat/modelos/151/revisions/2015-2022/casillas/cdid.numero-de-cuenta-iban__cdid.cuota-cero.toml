@@ -15,6 +15,7 @@
 # AEAT campo: Número de Cuenta (IBAN)
 [[revisions."2015-2022".casillas]]
 id = "did.numero-de-cuenta-iban"
+continuidad_id = "did-numero-de-cuenta-iban"
 number = "13-46"
 segmento = "M151DID00"
 section = ["did", "numero_de_cuenta_iban"]
@@ -38,6 +39,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Renuncia a la devolución a favor del Tesoro Público
 [[revisions."2015-2022".casillas]]
 id = "did.renuncia-a-la-devoluci-avor-del-tesoro-publico"
+continuidad_id = "did-renuncia-devolucion-tesoro-publico"
 number = "58"
 segmento = "M151DID00"
 section = ["did", "renuncia_a_la_devol_r_del_tesoro_publico"]
@@ -49,6 +51,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Solicita la devolución por transferencia
 [[revisions."2015-2022".casillas]]
 id = "did.solicita-la-devolucion-por-transferencia"
+continuidad_id = "did-solicita-devolucion-transferencia"
 number = "59"
 segmento = "M151DID00"
 section = ["did", "solicita_la_devolucion_por_transferencia"]

@@ -7,6 +7,8 @@
 [[revisions."2023-2024".casillas]]
 id = "decl.tipo-soporte"
 continuidad_id = "tipo-soporte"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/03-184-orden-hap-2250-2015-boe-a-2015-11596.pdf (Orden HAP/2250/2015 anexo, BOE-A-2015-11596), registro de tipo 1, registro del declarante, pos. 58: 'TIPO DE SOPORTE'. The campo is in the design operative for ejercicio 2022 (HAP/2250/2015 anexo as amended); registry edition 2022 is applicability-only and declares no casilla, so this is a declaration gap, not a new box."
 number = "58"
 section = ["declarante"]
 data_type = "text"
@@ -17,6 +19,8 @@ legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
 [[revisions."2023-2024".casillas]]
 id = "decl.persona-relacion"
 continuidad_id = "persona-relacion"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/03-184-orden-hap-2250-2015-boe-a-2015-11596.pdf (Orden HAP/2250/2015 anexo, BOE-A-2015-11596), registro de tipo 1, registro del declarante, pos. 59-107: 'PERSONA CON QUIEN RELACIONARSE'. The campo is in the design operative for ejercicio 2022 (HAP/2250/2015 anexo as amended); registry edition 2022 is applicability-only and declares no casilla, so this is a declaration gap, not a new box."
 number = "59-107"
 section = ["declarante"]
 data_type = "text"
@@ -28,6 +32,8 @@ export_exemption_reason = "not_in_record_design"
 [[revisions."2023-2024".casillas]]
 id = "decl.numero-justificante"
 continuidad_id = "numero-justificante"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/03-184-orden-hap-2250-2015-boe-a-2015-11596.pdf (Orden HAP/2250/2015 anexo, BOE-A-2015-11596), registro de tipo 1, registro del declarante, pos. 108-120: 'NUMERO IDENTIFICATIVO DE LA DECLARACION'. The campo is in the design operative for ejercicio 2022 (HAP/2250/2015 anexo as amended); registry edition 2022 is applicability-only and declares no casilla, so this is a declaration gap, not a new box."
 number = "108-120"
 section = ["declarante"]
 data_type = "text"
@@ -38,6 +44,8 @@ legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
 [[revisions."2023-2024".casillas]]
 id = "decl.complementaria-sustitutiva"
 continuidad_id = "declaracion-complementaria-sustitutiva"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/03-184-orden-hap-2250-2015-boe-a-2015-11596.pdf (Orden HAP/2250/2015 anexo, BOE-A-2015-11596), registro de tipo 1, registro del declarante, pos. 121-122: 'DECLARACION COMPLEMENTARIA O SUSTITUTIVA'. The campo is in the design operative for ejercicio 2022 (HAP/2250/2015 anexo as amended); registry edition 2022 is applicability-only and declares no casilla, so this is a declaration gap, not a new box."
 number = "121-122"
 section = ["declarante"]
 data_type = "text"
@@ -50,6 +58,8 @@ legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
 [[revisions."2023-2024".casillas]]
 id = "decl.total-socios"
 continuidad_id = "total-registros-socios"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/03-184-orden-hap-2250-2015-boe-a-2015-11596.pdf (Orden HAP/2250/2015 anexo, BOE-A-2015-11596), registro de tipo 1, registro del declarante, pos. 136-144: 'NUMERO TOTAL DE REGISTROS DE SOCIOS, HEREDEROS, COMUNEROS O PARTICIPES'. The campo is in the design operative for ejercicio 2022 (HAP/2250/2015 anexo as amended); registry edition 2022 is applicability-only and declares no casilla, so this is a declaration gap, not a new box."
 number = "136-144"
 section = ["declarante", "totales"]
 data_type = "integer"
@@ -64,6 +74,8 @@ legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-58-
 [[revisions."2023-2024".casillas]]
 id = "decl.entidad-espanola.tipo-entidad"
 continuidad_id = "tipo-entidad-espanola"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/03-184-orden-hap-2250-2015-boe-a-2015-11596.pdf (Orden HAP/2250/2015 anexo, BOE-A-2015-11596), registro de tipo 1, registro del declarante, pos. 145: 'TIPO DE ENTIDAD, within 145-146 ENTIDADES EN REGIMEN DE ATRIBUCION DE RENTAS CONSTITUIDAS EN ESPANA'. The campo is in the design operative for ejercicio 2022 (HAP/2250/2015 anexo as amended); registry edition 2022 is applicability-only and declares no casilla, so this is a declaration gap, not a new box."
 number = "145"
 section = ["declarante", "entidad"]
 data_type = "text"
@@ -74,6 +86,8 @@ legal_refs = ["orden-hap-2250-2015:art-1", "ley-35-2006:art-87", "ley-58-2003:ar
 [[revisions."2023-2024".casillas]]
 id = "decl.entidad-espanola.actividad-principal"
 continuidad_id = "actividad-principal-espanola"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/03-184-orden-hap-2250-2015-boe-a-2015-11596.pdf (Orden HAP/2250/2015 anexo, BOE-A-2015-11596), registro de tipo 1, registro del declarante, pos. 146: 'ACTIVIDAD PRINCIPAL, within 145-146 ENTIDADES ... CONSTITUIDAS EN ESPANA'. The campo is in the design operative for ejercicio 2022 (HAP/2250/2015 anexo as amended); registry edition 2022 is applicability-only and declares no casilla, so this is a declaration gap, not a new box."
 number = "146"
 section = ["declarante", "entidad"]
 data_type = "text"
@@ -87,6 +101,8 @@ legal_refs = ["orden-hap-2250-2015:art-1", "ley-35-2006:art-87", "ley-58-2003:ar
 [[revisions."2023-2024".casillas]]
 id = "decl.entidad-extranjera.tipo-entidad"
 continuidad_id = "tipo-entidad-extranjera"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/03-184-orden-hap-2250-2015-boe-a-2015-11596.pdf (Orden HAP/2250/2015 anexo, BOE-A-2015-11596), registro de tipo 1, registro del declarante, pos. 147: 'TIPO DE ENTIDAD, within 147-155 ENTIDADES ... CONSTITUIDAS EN EL EXTRANJERO'. The campo is in the design operative for ejercicio 2022 (HAP/2250/2015 anexo as amended); registry edition 2022 is applicability-only and declares no casilla, so this is a declaration gap, not a new box."
 number = "147"
 section = ["declarante", "entidad_extranjera"]
 data_type = "text"
@@ -97,6 +113,8 @@ legal_refs = ["orden-hap-2250-2015:art-1", "ley-35-2006:art-87", "ley-58-2003:ar
 [[revisions."2023-2024".casillas]]
 id = "decl.entidad-extranjera.objeto"
 continuidad_id = "objeto-entidad-extranjera"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/03-184-orden-hap-2250-2015-boe-a-2015-11596.pdf (Orden HAP/2250/2015 anexo, BOE-A-2015-11596), registro de tipo 1, registro del declarante, pos. 148: 'OBJETO'. The campo is in the design operative for ejercicio 2022 (HAP/2250/2015 anexo as amended); registry edition 2022 is applicability-only and declares no casilla, so this is a declaration gap, not a new box."
 number = "148"
 section = ["declarante", "entidad_extranjera"]
 data_type = "text"
@@ -107,6 +125,8 @@ legal_refs = ["orden-hap-2250-2015:art-1", "ley-35-2006:art-87", "ley-58-2003:ar
 [[revisions."2023-2024".casillas]]
 id = "decl.entidad-extranjera.clave-pais"
 continuidad_id = "clave-pais-entidad-extranjera"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/03-184-orden-hap-2250-2015-boe-a-2015-11596.pdf (Orden HAP/2250/2015 anexo, BOE-A-2015-11596), registro de tipo 1, registro del declarante, pos. 149-150: 'CLAVE PAIS'. The campo is in the design operative for ejercicio 2022 (HAP/2250/2015 anexo as amended); registry edition 2022 is applicability-only and declares no casilla, so this is a declaration gap, not a new box."
 number = "149-150"
 section = ["declarante", "entidad_extranjera"]
 data_type = "country_code"
@@ -117,6 +137,8 @@ legal_refs = ["orden-hap-2250-2015:art-1", "ley-35-2006:art-87", "ley-58-2003:ar
 [[revisions."2023-2024".casillas]]
 id = "decl.entidad-extranjera.porcentaje-renta-residentes"
 continuidad_id = "porcentaje-renta-atribuible-residentes"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/03-184-orden-hap-2250-2015-boe-a-2015-11596.pdf (Orden HAP/2250/2015 anexo, BOE-A-2015-11596), registro de tipo 1, registro del declarante, pos. 151-155: 'porcentaje de renta atribuible a residentes, subdivided 151-153 ENTERO and 154-155 DECIMAL'. The campo is in the design operative for ejercicio 2022 (HAP/2250/2015 anexo as amended); registry edition 2022 is applicability-only and declares no casilla, so this is a declaration gap, not a new box."
 number = "151-155"
 section = ["declarante", "entidad_extranjera"]
 data_type = "ratio"
@@ -127,6 +149,8 @@ legal_refs = ["orden-hap-2250-2015:art-1", "ley-35-2006:art-87", "ley-35-2006:ar
 [[revisions."2023-2024".casillas]]
 id = "decl.tributacion-impuesto-sociedades"
 continuidad_id = "tributacion-impuesto-sociedades"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/03-184-orden-hap-2250-2015-boe-a-2015-11596.pdf (Orden HAP/2250/2015 anexo, BOE-A-2015-11596), registro de tipo 1, registro del declarante, pos. 156: 'TRIBUTACION EN REGIMEN DEL IMPUESTO SOBRE SOCIEDADES'. The campo is in the design operative for ejercicio 2022 (HAP/2250/2015 anexo as amended); registry edition 2022 is applicability-only and declares no casilla, so this is a declaration gap, not a new box."
 number = "156"
 section = ["declarante"]
 data_type = "text"
@@ -137,6 +161,8 @@ legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
 [[revisions."2023-2024".casillas]]
 id = "decl.importe-neto-cifra-negocios"
 continuidad_id = "importe-neto-cifra-negocios"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/03-184-orden-hap-2250-2015-boe-a-2015-11596.pdf (Orden HAP/2250/2015 anexo, BOE-A-2015-11596), registro de tipo 1, registro del declarante, pos. 157-171: 'IMPORTE NETO DE LA CIFRA DE NEGOCIOS'. The campo is in the design operative for ejercicio 2022 (HAP/2250/2015 anexo as amended); registry edition 2022 is applicability-only and declares no casilla, so this is a declaration gap, not a new box."
 number = "157-171"
 section = ["declarante"]
 data_type = "money"
@@ -147,6 +173,8 @@ legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
 [[revisions."2023-2024".casillas]]
 id = "decl.representante-nif"
 continuidad_id = "representante-nif"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/03-184-orden-hap-2250-2015-boe-a-2015-11596.pdf (Orden HAP/2250/2015 anexo, BOE-A-2015-11596), registro de tipo 1, registro del declarante, pos. 172-180: 'N.I.F. DEL REPRESENTANTE'. The campo is in the design operative for ejercicio 2022 (HAP/2250/2015 anexo as amended); registry edition 2022 is applicability-only and declares no casilla, so this is a declaration gap, not a new box."
 number = "172-180"
 section = ["declarante", "representante"]
 data_type = "nif"
@@ -157,6 +185,8 @@ legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
 [[revisions."2023-2024".casillas]]
 id = "decl.representante-nombre"
 continuidad_id = "representante-nombre"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/03-184-orden-hap-2250-2015-boe-a-2015-11596.pdf (Orden HAP/2250/2015 anexo, BOE-A-2015-11596), registro de tipo 1, registro del declarante, pos. 181-220: 'APELLIDOS Y NOMBRE O RAZON SOCIAL DEL REPRESENTANTE'. The campo is in the design operative for ejercicio 2022 (HAP/2250/2015 anexo as amended); registry edition 2022 is applicability-only and declares no casilla, so this is a declaration gap, not a new box."
 number = "181-220"
 section = ["declarante", "representante"]
 data_type = "text"

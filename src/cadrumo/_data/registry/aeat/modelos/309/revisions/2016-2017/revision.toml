@@ -1,7 +1,7 @@
 [revisions."2016-2017"]
 binding_source_refs = ["aeat-dr-309-2016", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
 formula_source_refs = ["aeat-dr-309-2016", "aeat-modelo-309-instructions", "aeat-modelo-309-procedure"]
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["orden-hac-3625-2003:apartado-1"], source_refs = ["aeat-dr-309-2016"] } }
+predecessor = { none = { cause = "official_structure_differs", reason = "Stated in full: the official record structure is reordered against the edition before it, so supersede-in-place would not reproduce it. Measured against '2004-2015': casillas differ from index 1 ('decl.tipo-trigger' -> 'decl.periodo'), application_links from index 0 ('modelo-309-portal' -> 'modelo-309-historical-filing'), constructs from index 0 ('modelo-309-iva-no-periodica' -> 'modelo-309-historical-no-periodica'). Inheriting would also ADD three members this edition never declares: application_links 'modelo-309-historical-filing' and 'modelo-309-historical-export', and construct 'modelo-309-historical-no-periodica' -- a capability change, not a refactor. Migrating this edge later requires restated_families on application_links and constructs.", legal_refs = ["orden-hac-3625-2003:apartado-1"], source_refs = ["aeat-dr-309-2016"] } }
 casilla_source_refs = ["aeat-dr-309-2016"]
 live_cross_reference_source_refs = ["aeat-modelo-309-procedure"]
 application_link_source_refs = ["aeat-modelo-309-procedure"]

@@ -52,6 +52,7 @@ legal_refs = [
     "orden-hap-2118-2015:art-2",
     "orden-hap-2118-2015:art-4",
     "orden-hap-2118-2015:art-5",
+    "ley-35-2006:da-26",
     "orden-hfp-1822-2016:art-sexto",
     "orden-hac-1276-2019:art-quinto",
     "orden-hfp-1192-2022:art-cuarto",
@@ -102,3 +103,8 @@ source_refs = [
     "boe-modelo-280-2019-amendment-hac-1276",
     "boe-modelo-280-2022-amendment-hfp-1192",
 ]
+
+[revisions."2025".source_default_dispositions.application_links]
+kind = "underivable"
+reason = """
+lift refuses: 1 source_refs statement(s) not textually rewritable: 0001-application-links.toml: source_refs = ["""

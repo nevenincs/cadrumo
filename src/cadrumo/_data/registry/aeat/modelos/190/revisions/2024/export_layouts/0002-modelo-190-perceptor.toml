@@ -214,7 +214,7 @@ length = 2
 kind = "binding"
 binding = "modelo-190-perceptor-row-subclave"
 # Design campo 10 is Numerico, but the subclave is a two-digit token from
-# a closed per-clave table (01, 03, 04, 99...), not a zero-fillable
+# a closed per-clave table (01, 02, 03...), not a zero-fillable
 # quantity: left_zero never pads a present value and its parse side would
 # strip the genuine leading zero of "01".
 data_type = "text"
@@ -400,7 +400,7 @@ offset = 153
 length = 4
 kind = "binding"
 binding = "modelo-190-perceptor-row-ano-nacimiento"
-# Design campo 15, 153-156 ANO DE NACIMIENTO, declared by the design only for claves A, B (subclaves 01, 03, 04, 99) and C; the resolver writes the design's own no-content for every other row and refuses only when an eligible row's observation carries no birth year.
+# Design campo 15, 153-156 ANO DE NACIMIENTO, declared by the design only for claves A, B.01, B.03 and C; the resolver writes the design's own no-content for every other row and refuses only when an eligible row's observation carries no birth year.
 data_type = "text"
 required = false
 padding = "left_zero"
@@ -416,7 +416,7 @@ offset = 157
 length = 1
 kind = "binding"
 binding = "modelo-190-perceptor-row-situacion-familiar"
-# Design campo 16, 157 SITUACION FAMILIAR (claves 1-3), declared by the design only for claves A, B (subclaves 01, 03, 04, 99) and C; same resolver rule as the birth year.
+# Design campo 16, 157 SITUACION FAMILIAR (claves 1-3), declared by the design only for claves A, B.01, B.03 and C; same resolver rule as the birth year.
 data_type = "text"
 required = false
 padding = "left_zero"
@@ -450,7 +450,7 @@ length = 1
 kind = "binding"
 binding = "modelo-190-perceptor-row-discapacidad"
 # Design campo 18, 167 DISCAPACIDAD (claves 0-3), always recorded for claves
-# A, B (01, 03, 04, 99) and C -- clave 0 is the recorded "no disability" fact;
+# A, B.01, B.03 and C -- clave 0 is the recorded "no disability" fact;
 # the resolver refuses an eligible row whose observation carries no clave and
 # writes spaces for claves the design does not declare.
 data_type = "text"
@@ -523,7 +523,7 @@ kind = "binding"
 binding = "modelo-190-perceptor-row-reducciones"
 # Design campo 22, 171-183 REDUCCIONES APLICABLES (art. 18.2/18.3, DT 11/12,
 # art. 32.1): the reductions the payer actually considered; the design's own
-# zeros when none. Declared for claves A, B (01, 03, 04, 99), C, E, F (01-06),
+# zeros when none. Declared for claves A, B.01, B.03, C, E, F (01-06),
 # G (01-06, 08), H and I.
 data_type = "money"
 required = false
@@ -541,7 +541,7 @@ kind = "binding"
 binding = "modelo-190-perceptor-row-gastos-deducibles"
 # Design campo 23, 184-196 GASTOS DEDUCIBLES (art. 19.2 a)-c)): the expenses
 # the payer considered to determine the retention rate; the design's own zeros
-# when none. Declared for claves A, B (01, 03, 04, 99), C, E (01, 02) and
+# when none. Declared for claves A, B.01, B.03, C, E (01, 02) and
 # exceptionally L.05, L.10, L.27.
 data_type = "money"
 required = false
@@ -559,7 +559,7 @@ kind = "binding"
 binding = "modelo-190-perceptor-row-pension-compensatoria"
 # Design campo 24, 197-209 PENSIONES COMPENSATORIAS: the annual compensatory
 # pension to the spouse by judicial resolution; the design's own zeros when
-# none. Declared for claves A, B (01, 03, 04, 99) and C.
+# none. Declared for claves A, B.01, B.03 and C.
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -576,7 +576,7 @@ kind = "binding"
 binding = "modelo-190-perceptor-row-anualidades-alimentos"
 # Design campo 25, 210-222 ANUALIDADES POR ALIMENTOS: the annual food annuities
 # to children by judicial decision; the design's own zeros when none. Declared
-# for claves A, B (01, 03, 04, 99) and C.
+# for claves A, B.01, B.03 and C.
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -937,7 +937,7 @@ offset = 254
 length = 1
 kind = "binding"
 binding = "modelo-190-perceptor-row-prestamos-vivienda"
-# Design campo 31, 254: whether the art. 86.1 RIRPF last-paragraph loan communication applied at some point in the exercise; clave 0/1, always recorded for claves A, B (01, 03, 04, 99) and C -- both claves are recorded facts, never defaults.
+# Design campo 31, 254: whether the art. 86.1 RIRPF last-paragraph loan communication applied at some point in the exercise; clave 0/1, always recorded for claves A, B.01, B.03 and C -- both claves are recorded facts, never defaults.
 data_type = "integer"
 required = false
 padding = "left_zero"

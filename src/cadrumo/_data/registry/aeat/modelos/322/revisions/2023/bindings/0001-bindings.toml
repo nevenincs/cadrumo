@@ -4,7 +4,6 @@ provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general"],
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
 
 [[revisions."2023".bindings.source_citations]]
 source_ref = "aeat-modelo-322-procedure"
@@ -16,7 +15,6 @@ provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reduced"],
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
 
 [[revisions."2023".bindings.source_citations]]
 source_ref = "aeat-modelo-322-procedure"
@@ -28,7 +26,6 @@ provider = { kind = "ledger_iva_aggregation", categories = ["domestic_super_redu
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
 
 [[revisions."2023".bindings.source_citations]]
 source_ref = "aeat-modelo-322-procedure"
@@ -40,7 +37,6 @@ provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", 
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
 
 [[revisions."2023".bindings.source_citations]]
 source_ref = "aeat-modelo-322-procedure"
@@ -56,7 +52,6 @@ provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acq
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
 
 [[revisions."2023".bindings.source_citations]]
 source_ref = "aeat-modelo-322-procedure"

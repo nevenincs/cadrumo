@@ -5,21 +5,18 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal, Self
 
-from pydantic import BaseModel, BeforeValidator, Field, field_validator
+from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
 from ....core.aggregation import (
     BindingAggregationOp,
     BindingSourceKind,
 )
 from ....core.models import STRICT_FROZEN_CONFIG
-from ...iva.classification import InvoiceKind, TransactionKind
-from ...iva.oss import OssIossRegime
-from ...iva.schema import (
-    EUMemberState,
-    IvaRateKind,
-)
+from ...iva.classification import InvoiceKind, TransactionKind, require_transaction_kind
+from ...iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
+from ...iva.schema import EUMemberState, IvaRateKind
 from ._ledger_binding_resolution import (
     resolve_ledger_family_binding_values,
     unsupported_ledger_family_observations,
@@ -29,6 +26,7 @@ from .binding_selector_utils import invariant_diagnostics, selector_against_mode
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
+from .iva_rate_kind_catalogue import require_iva_rate_kind, require_registry_declared_iva_rate_kind
 from .ledger_binding_selector_support import LedgerIvaFact, OssIossLedgerFact
 from .schema_base import coerce_enum_member, coerce_enum_tuple
 
@@ -74,6 +72,19 @@ class OssIossLedgerObservation(BaseModel):
     base_amount: Decimal
     iva_amount: Decimal
 
+    @model_validator(mode="after")
+    def _validate_registry_regime(self) -> Self:
+        """Refuse an observation whose regime is absent from facts authority."""
+        regime = require_oss_ioss_regime(self.regime, effective_date=self.transaction_date)
+        require_iva_rate_kind(self.rate_kind, effective_date=self.transaction_date)
+        transaction_kind = require_transaction_kind(self.transaction_kind, effective_date=self.transaction_date)
+        catalogue = resolve_oss_ioss_regime_catalogue(effective_date=self.transaction_date)
+        if transaction_kind.value not in catalogue.transaction_kinds_for(regime):
+            raise RegistryValidationError(
+                "transaction kind is not admitted by the supplied OSS/IOSS regime",
+            )
+        return self
+
 
 class LedgerOssProvider(BaseModel):
     """Validated form of a ledger_oss_aggregation binding selector.
@@ -88,7 +99,7 @@ class LedgerOssProvider(BaseModel):
 
     kind: Literal[BindingSourceKind.LEDGER_OSS_AGGREGATION] = BindingSourceKind.LEDGER_OSS_AGGREGATION
 
-    regime: Annotated[OssIossRegime, BeforeValidator(coerce_enum_member(OssIossRegime))]
+    regime: OssIossRegime
     destination_member_state: Annotated[EUMemberState, BeforeValidator(coerce_enum_member(EUMemberState))]
     rate_kind: Annotated[IvaRateKind, BeforeValidator(coerce_enum_member(IvaRateKind))]
     invoice_direction: Annotated[InvoiceKind, BeforeValidator(coerce_enum_member(InvoiceKind))]
@@ -97,6 +108,24 @@ class LedgerOssProvider(BaseModel):
         BeforeValidator(coerce_enum_tuple(TransactionKind)),
     ] = Field(min_length=1)
     fact: OssIossLedgerFact = LedgerIvaFact.IVA_AMOUNT_SUM
+
+    @field_validator("regime", mode="after")
+    @classmethod
+    def _validate_registry_regime(cls, value: OssIossRegime) -> OssIossRegime:
+        """Refuse a binding selector whose regime is absent from facts authority."""
+        return require_oss_ioss_regime(value)
+
+    @field_validator("rate_kind", mode="after")
+    @classmethod
+    def _validate_registry_rate_kind(cls, value: IvaRateKind) -> IvaRateKind:
+        """Refuse a binding rate tier absent from the IVA facts being validated."""
+        return require_registry_declared_iva_rate_kind(value, effective_date=date.today())
+
+    @field_validator("transaction_kinds", mode="after")
+    @classmethod
+    def _validate_registry_transaction_kinds(cls, value: tuple[TransactionKind, ...]) -> tuple[TransactionKind, ...]:
+        """Refuse binding transaction kinds absent from the classification fact."""
+        return tuple(require_transaction_kind(kind, effective_date=date.today()) for kind in value)
 
     @field_validator("transaction_kinds", mode="after")
     @classmethod
@@ -160,9 +189,9 @@ def _oss_build_matcher(
 
     def matcher(observation: OssIossLedgerObservation) -> bool:
         return (
-            observation.regime is regime
+            observation.regime == regime
             and observation.destination_member_state is destination
-            and observation.rate_kind is rate_kind
+            and observation.rate_kind == rate_kind
             and observation.invoice_direction is direction
             and observation.transaction_kind in kinds
         )

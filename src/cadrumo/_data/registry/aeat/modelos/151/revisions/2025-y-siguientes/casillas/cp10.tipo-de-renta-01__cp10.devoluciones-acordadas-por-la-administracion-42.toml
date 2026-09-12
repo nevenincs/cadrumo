@@ -518,6 +518,36 @@ input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
 additional_source_refs = ["aeat-modelo-151-procedure"]
 
+# AEAT campo: Base liquidable del ahorro [18]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p10.base-liquidable-del-ahorro-18"
+continuidad_id = "p08-base-liquidable-del-ahorro-18"
+continuidad_origin = "grounded"
+continuidad_evidence = "The official tax-calculation table in both designs identifies Base liquidable del ahorro [18] as a 17-byte Num field: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230), record M15108000, byte position 808-824, continues at the identical labeled field in corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935), record M15100000, byte position 808-824."
+number = "808-824"
+segmento = "M15100000"
+section = ["p10", "base_liquidable_del_ahorro_18"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
+
+# AEAT campo: Cuota correspondiente a la base liquidable general del ahorro [20]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p10.cuota-correspondiente-e-general-del-ahorro-20"
+continuidad_id = "p08-cuota-correspondiente-e-general-del-ahorro-20"
+continuidad_origin = "grounded"
+continuidad_evidence = "The official tax-calculation table in both designs identifies Cuota correspondiente a la base liquidable general del ahorro [20] as a 17-byte Num field: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230), record M15108000, byte position 842-858, continues at the identical labeled field in corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935), record M15100000, byte position 842-858."
+number = "842-858"
+segmento = "M15100000"
+section = ["p10", "cuota_correspondiente_a_la_base_liquidable_general_del_ahorro_20"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
+
 # AEAT campo: Cuota íntegra total [21]
 [[revisions."2025-y-siguientes".casillas]]
 id = "p10.cuota-integra-total-21"
@@ -527,6 +557,21 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_151/files/0
 number = "859-875"
 segmento = "M15100000"
 section = ["p10", "cuota_integra_total"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
+
+# AEAT campo: Resultado de la declaración [43]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p10.resultado-de-la-declaracion-43"
+continuidad_id = "p08-resultado-de-la-declaracion-43"
+continuidad_origin = "grounded"
+continuidad_evidence = "The official tax-calculation table in both designs identifies Resultado de la declaración [43] as a 17-byte signed N field: corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls.extracted.md (sha256 997dc9cf5230), record M15108000, byte position 1233-1249, continues at the identical labeled field in corpus/aeat_official/disenos_registro/modelo_151/files/01-151-ejercicio-2023-y-siguientes.xls.extracted.md (sha256 7680e5a21935), record M15100000, byte position 1233-1249."
+number = "1233-1249"
+segmento = "M15100000"
+section = ["p10", "resultado_de_la_declaracion_43"]
 data_type = "money"
 required = false
 input_kind = "manual"

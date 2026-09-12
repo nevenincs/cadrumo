@@ -27,7 +27,7 @@ from cadrumo.domain.calculations.registry.orden_applicability import RevisionLeg
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
 from cadrumo.domain.calculations.registry.snapshot import SUBSTANTIVE_LAW_KINDS, collect_snapshot_ref_ids
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import (
     committed_modelo as _committed_modelo,

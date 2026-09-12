@@ -14,7 +14,7 @@ from cadrumo.domain.calculations.registry.binding_provider_registration import p
 from cadrumo.domain.calculations.registry.profile_bindings import ProfileProvider
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.fact_providers import compile_registered_fact_providers
 from ..compiler.loader import load_shared_catalogues

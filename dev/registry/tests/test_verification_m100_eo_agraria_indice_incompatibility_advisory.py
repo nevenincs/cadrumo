@@ -41,7 +41,7 @@ from functools import cache
 
 import pytest
 
-from cadrumo.application.modelo.tests.verification_substance_support import workflow_profile
+from cadrumo.application.modelo.tests.verification_substance_fixtures import workflow_profile
 from cadrumo.application.modelo.verification_predicates import evaluate_verification_predicates
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path

@@ -230,6 +230,39 @@ applies_from = 2025-02-03
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G322.shtml"
 review_status = "pending_review"
 
+[sources."aeat-nif-personas-fisicas"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/identity/aeat-nif-personas-fisicas.html"
+sha256 = "8b549313b4e556cd894f62825932dc74952091facd08210e055652bfc55f4371"
+bytes = 50822
+retrieved_at = 2026-09-12
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/guia-practica-cumplimentacion-modelo-censal-036/anexos/anexo-01-solicitud-nif-documentacion-aportar/informacion-sobre-numero-identificacion-fiscal/composicion-nif/personas-fisicas.html"
+review_status = "agent_reviewed"
+
+[sources."aeat-nif-personas-juridicas"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/identity/aeat-nif-personas-juridicas.html"
+sha256 = "95baa7af5bd9d796f15f6d3a9aca7f0170e212d43465dc1b17836811905d75b2"
+bytes = 24107
+retrieved_at = 2026-09-12
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/guia-practica-cumplimentacion-modelo-censal-036/anexos/anexo-01-solicitud-nif-documentacion-aportar/informacion-sobre-numero-identificacion-fiscal/composicion-nif/personas-juridicas-entidades.html"
+review_status = "agent_reviewed"
+
+[sources."dgoj-nif-nie-control"]
+evidence_tier = "official_source_guidance"
+authority = "other"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/identity/dgoj-nif-nie-control.html"
+sha256 = "29746b2205a646aa14d057cf61763d983a22953af9914931273c5854fbb6828b"
+bytes = 47647
+retrieved_at = 2026-09-12
+source_url = "https://www.ordenacionjuego.es/ca/node/2988"
+review_status = "agent_reviewed"
+
 [sources."boe-modelo-037-historical-suppression"]
 evidence_tier = "official_source_guidance"
 authority = "boe"

@@ -16,8 +16,10 @@ from .._signal import (
     _headline,
     _human_translation_text,
     _parallel_localization_inventory,
+    _platform_identity_terms,
     _source_inventory,
     _spellcheck_catalogues,
+    _translation_invariant_echo_reason,
     _translation_matrix,
     _visible_document_prose,
 )
@@ -213,7 +215,7 @@ def test_domain_summary_enumerates_every_domain_and_unassigned_inventory() -> No
         required,
         matrix,
         leaves,
-        [{"kind": "naked_presentation_text"}],
+        [{"classification": "blocking", "kind": "naked_presentation_text"}],
     )
 
     assert {row["domain"] for row in domains} == {"cli", "modelo", "tui", "unassigned"}
@@ -620,6 +622,71 @@ def test_documentation_inventory_classifies_only_provable_invariant_echoes(tmp_p
         "target_dictionary_shared_term",
     }
     assert all(finding["classification"] == "advisory" for finding in invariant)
+
+
+def test_translation_echo_invariants_use_identity_syntax_and_language_evidence() -> None:
+    class _Dictionary:
+        def __init__(self, words: set[str] | None = None, *, accept_all: bool = False) -> None:
+            self.words = words or set()
+            self.accept_all = accept_all
+
+        def lookup(self, word: str) -> bool:
+            return self.accept_all or word.casefold() in self.words
+
+    target = _Dictionary(accept_all=True)
+    english = _Dictionary({"download", "the", "current", "return"})
+
+    assert (
+        _translation_invariant_echo_reason(
+            "Cadrumo vX.Y.Z",
+            "es",
+            dictionary=target,
+            source_dictionary=english,
+        )
+        == "canonical_product_identity"
+    )
+    assert (
+        _translation_invariant_echo_reason(
+            "Windows (x86-64)",
+            "es",
+            dictionary=target,
+            source_dictionary=english,
+        )
+        == "platform_format"
+    )
+    assert (
+        _translation_invariant_echo_reason(
+            "Régimen de atribución de rentas (socios)",
+            "es",
+            dictionary=target,
+            source_dictionary=english,
+        )
+        == "target_dictionary_shared_term"
+    )
+    assert (
+        _translation_invariant_echo_reason(
+            "Download the current return",
+            "es",
+            dictionary=target,
+            source_dictionary=english,
+        )
+        is None
+    )
+
+
+def test_platform_identity_terms_follow_the_download_descriptor(tmp_path) -> None:
+    descriptor = tmp_path / "docs" / "_data" / "download_channels.toml"
+    descriptor.parent.mkdir(parents=True)
+    descriptor.write_text(
+        '[[channel]]\nplatform = "macOS (Apple silicon), Linux (x86-64 and arm64)"\n\n'
+        '[[channel]]\nplatform = "Windows (x86-64)"\n',
+        encoding="utf-8",
+    )
+
+    terms = _platform_identity_terms(tmp_path)
+
+    assert {"macos", "linux", "windows"}.issubset(terms)
+    assert "any" not in terms
 
 
 def test_documentation_inventory_fails_closed_when_source_manifest_is_absent(tmp_path) -> None:

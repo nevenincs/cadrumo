@@ -12,7 +12,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final, Literal
 
-from pydantic import BaseModel, Field, NonNegativeInt, field_validator
+from pydantic import BaseModel, Field, NonNegativeInt, ValidationInfo, field_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionClave
 from ....core.country_code import CountryCodeAlpha2
@@ -36,6 +36,7 @@ __all__ = [
     "WithholdingObservation",
     "WithholdingProvider",
     "aggregate_withholding_by_clave",
+    "resolve_retencion_clave",
     "resolve_withholding_binding_values",
     "validate_withholding_binding_selector_shape",
 ]
@@ -75,6 +76,81 @@ _WITHHOLDING_FACTS: Final[frozenset[_WithholdingFactKind]] = frozenset(_Withhold
 The selector field's comment below says this set and that type mirror each other. They
 did, by hand, as two lists of six tokens on adjacent lines -- so the mirror held only
 while someone maintained both. It is now one declaration and two views of it."""
+
+
+_RETENCION_CLAVE_FACT_ID: Final[str] = "m111-m115-m123-withholding-scheme-catalogue"
+
+
+def _retencion_clave_declarations(effective_date: date) -> dict[str, str]:
+    """Resolve the complete clave vocabulary and projections from the catalogue."""
+    from .authority import bundled_authority
+    from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+    from .schema_base import DateAxis
+
+    resolved = bundled_authority().resolve_governed_fact(
+        MappingFactQuery(
+            fact_id=_RETENCION_CLAVE_FACT_ID,
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise RegistryValidationError("retencion clave catalogue must resolve as a mapping fact")
+    declarations: dict[str, str] = {}
+    for entry in resolved.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            raise RegistryValidationError("retencion clave catalogue entries must be string mappings")
+        if entry.key in declarations:
+            raise RegistryValidationError(f"duplicate retencion clave declaration {entry.key!r}")
+        declarations[entry.key] = entry.value
+    return declarations
+
+
+def resolve_retencion_clave(
+    value: str,
+    effective_date: date,
+    *,
+    modelo: str | None = None,
+) -> RetencionClave:
+    """Project one raw clave through the selected registry vocabulary.
+
+    Membership, canonical value, and model applicability are all authored in
+    the withholding catalogue.  The projection intentionally fails closed when
+    any declaration is missing or inconsistent; it never turns an unknown raw
+    token into a core value.
+    """
+    if not isinstance(value, str) or not value:
+        raise RegistryValidationError("retencion clave must be a non-empty string")
+    if not isinstance(effective_date, date):
+        raise RegistryValidationError("retencion clave requires a filing-period date")
+
+    declarations = _retencion_clave_declarations(effective_date)
+    order_text = declarations.get("clave_order")
+    if order_text is None:
+        raise RegistryValidationError("retencion clave catalogue is missing clave_order")
+    order = tuple(token.strip() for token in order_text.split(",") if token.strip())
+    if not order or len(order) != len(set(order)):
+        raise RegistryValidationError("retencion clave catalogue has an invalid clave_order")
+    if value not in order:
+        raise RegistryValidationError(f"retencion clave {value!r} is not declared by the selected catalogue")
+
+    applicable_models: tuple[str, ...] = ()
+    for token in order:
+        declared_value = declarations.get(f"clave.{token}.value")
+        if declared_value != token:
+            raise RegistryValidationError(f"retencion clave {token!r} has no matching canonical value declaration")
+        model_text = declarations.get(f"clave.{token}.modelos")
+        models = tuple(item.strip() for item in (model_text or "").split(",") if item.strip())
+        if not models or len(models) != len(set(models)):
+            raise RegistryValidationError(f"retencion clave {token!r} has invalid model applicability")
+        if token == value:
+            applicable_models = models
+    if modelo is not None:
+        if modelo not in applicable_models:
+            raise RegistryValidationError(
+                f"retencion clave {value!r} is not applicable to Modelo {modelo!r}",
+            )
+    return RetencionClave._from_registry(value)
 
 
 class WithholdingObservation(BaseModel):
@@ -340,17 +416,18 @@ class WithholdingObservation(BaseModel):
 
     @field_validator("clave", mode="before")
     @classmethod
-    def _coerce_clave(cls, value: object) -> object:
-        """Hydrate the raw clave token to its :class:`RetencionClave` member.
+    def _coerce_clave(cls, value: object, info: ValidationInfo) -> object:
+        """Project a raw clave token through the selected registry catalogue.
 
-        The strict model config does not coerce ``str`` -> ``StrEnum``; the parser /
-        loader supplies the raw uppercase token (``"A"``), lifted here to
-        ``RetencionClave.A``. An unknown token (outside A-L, lowercase, or
-        multi-char) raises -- the closed-set hardening that replaces the former
-        uppercase-only check.
+        The transaction date precedes ``clave`` in this model, so the mapping
+        query uses the observation's filing-period coordinate.  A raw token is
+        never accepted without a registry projection.
         """
         if isinstance(value, str) and not isinstance(value, RetencionClave):
-            return RetencionClave(value)
+            effective_date = info.data.get("transaction_date")
+            if not isinstance(effective_date, date):
+                raise RegistryValidationError("retencion clave requires a validated transaction date")
+            return resolve_retencion_clave(value, effective_date)
         return value
 
     @field_validator(

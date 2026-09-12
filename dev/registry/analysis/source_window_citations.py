@@ -57,6 +57,42 @@ def source_windows(legal_dir: Path | None = None) -> dict[str, tuple[date | None
     return windows
 
 
+def legal_windows(legal_dir: Path | None = None) -> dict[str, tuple[date | None, date | None, str]]:
+    """Every [legal.*] reference's period window.
+
+    A legal reference states its reach two ways. ``governs_periods_from`` /
+    ``governs_periods_to`` name the PERIODS the provision governs and are the
+    right axis; ``effective_from`` / ``effective_to`` name when the text was in
+    force, which for an orden published after the ejercicio it governs is a
+    different thing entirely. Prefer the period axis and fall back to
+    effectiveness, because most entries declare only the latter.
+    """
+    windows: dict[str, tuple[date | None, date | None, str]] = {}
+    for path in sorted((legal_dir or LEGAL).rglob("*.toml")):
+        payload = tomllib.loads(path.read_text(encoding="utf-8"))
+        for ref_id, entry in (payload.get("legal") or {}).items():
+            # ONLY the period axis is admissible. ``effective_from`` says when
+            # the text came into force, which for an orden published after the
+            # ejercicio it governs is a different date entirely -- Orden
+            # HAC/657/2025 is effective 1 July 2025 and governs periods in 2024.
+            # Reading effectiveness as a period window is the same category error
+            # as reading a source's publication date as its applicability window,
+            # and it produced 59 findings of which none was a defect.
+            #
+            # An entry declaring only effectiveness makes NO claim about periods,
+            # so there is nothing for a citation to contradict. That is a real
+            # gap in the corpus -- 719 of 724 legal entries are in that state --
+            # but it is a missing declaration, not a wrong one.
+            if entry.get("governs_periods_from") is None:
+                continue
+            windows[ref_id] = (
+                entry.get("governs_periods_from"),
+                entry.get("governs_periods_to"),
+                path.name,
+            )
+    return windows
+
+
 def revision_spans(revision_dir: Path) -> tuple[date, date | None] | None:
     manifest = revision_dir / "revision.toml"
     if not manifest.exists():
@@ -71,15 +107,30 @@ def revision_spans(revision_dir: Path) -> tuple[date, date | None] | None:
 
 
 def cited_sources(revision_dir: Path, known: set[str]) -> dict[str, list[str]]:
-    """Source ids named anywhere under one revision, and where."""
+    """Source ids named anywhere under one revision, and where.
+
+    "Where" is the file path plus the TOML key the id sits under, because the key
+    decides the role as much as the directory does. An id inside
+    ``additional_source_refs`` or ``continuidad_evidence`` on a casilla shard is a
+    comparison against an earlier generation, not a claim that the earlier design
+    governs this revision.
+    """
     found: dict[str, list[str]] = {}
     for path in sorted(revision_dir.rglob("*.toml")):
-        text = path.read_text(encoding="utf-8")
-        for source_id in known:
-            if f'"{source_id}"' in text:
-                found.setdefault(source_id, []).append(
-                    str(path.relative_to(revision_dir)).replace("\\", "/")
-                )
+        relative = str(path.relative_to(revision_dir)).replace("\\", "/")
+        open_key = ""
+        for raw in path.read_text(encoding="utf-8").splitlines():
+            line = raw.strip()
+            if line.startswith("#"):
+                continue
+            key, separator, remainder = line.partition("=")
+            if separator and not key.strip().startswith("["):
+                open_key = key.strip()
+            for source_id in known:
+                if f'"{source_id}"' in line:
+                    found.setdefault(source_id, []).append(f"{relative}#{open_key}")
+            if line.endswith("]") and "[" not in line:
+                open_key = ""
     return found
 
 
@@ -96,22 +147,91 @@ def cited_sources(revision_dir: Path, known: set[str]) -> dict[str, list[str]]:
 #: GOVERNING -- the revision's own approving orden, form spec or record design,
 #: cited by revision.toml, a casilla shard or an export layout. Here a window
 #: that excludes the revision IS the presentation-date defect.
-def classify(cited_in: list[str]) -> str:
+def family_stem(source_id: str) -> str:
+    """The part of a source id that survives a generation change.
+
+    ``aeat-dr-190-2024`` and ``aeat-dr-190-2025`` are the same artefact family in
+    consecutive editions; the stem is everything before the trailing year.
+    """
+    parts = source_id.split("-")
+    # Strip exactly ONE trailing year, never every trailing number. Stripping
+    # all of them collapsed "aeat-dr-190-2024" and "aeat-dr-193-2024" to the
+    # same "aeat-dr", which would have called two different modelos the same
+    # family and reclassified a real defect as a deliberate hand-off.
+    if len(parts) > 1 and len(parts[-1]) == 4 and parts[-1].isdigit():
+        parts.pop()
+    return "-".join(parts)
+
+
+def has_current_sibling(source_id: str, covering: set[str]) -> bool:
+    """Whether a same-family source that DOES cover this revision is cited too.
+
+    An earlier design cited beside the current one is a deliberate generational
+    hand-off, not a revision resting on a stale artefact for want of a fresh one.
+    Widening the earlier window to silence it would erase the hand-off.
+    """
+    stem = family_stem(source_id)
+    mine = trailing_year(source_id)
+    # Only an EARLIER source beside a covering one is superseded. A LATER source
+    # beside covering earlier ones is a forward citation, and the citing file's
+    # role decides whether that is correct -- modelo 280's deadline windows name
+    # the calendario of each filing year's PRESENTATION year, so the newest of
+    # the three sits outside the revision's span on purpose.
+    return any(
+        other != source_id
+        and family_stem(other) == stem
+        and (mine is None or (trailing_year(other) or 0) > mine)
+        for other in covering
+    )
+
+
+def trailing_year(source_id: str) -> int | None:
+    """The four-digit year a source id ends with, if it ends with one."""
+    tail = source_id.split("-")[-1]
+    return int(tail) if len(tail) == 4 and tail.isdigit() else None
+
+
+def classify(
+    cited_in: list[str], *, superseded: bool = False, calendar_evidence: bool = False
+) -> str:
+    if superseded:
+        return "superseded_alongside_current"
     roles = set()
     for where in cited_in:
-        head = where.split("/")[0]
+        location, _, key = where.partition("#")
+        head = location.split("/")[0]
         if head in {"casilla_continuidad_evolutions", "identifier_evolutions"}:
+            roles.add("evolution_origin")
+        elif key in {"additional_source_refs", "continuidad_evidence"}:
+            # A shard comparing two generations cites the earlier one on purpose.
             roles.add("evolution_origin")
         elif head in {"deadline_windows", "filing_schedules"}:
             roles.add("presentation_calendar")
-        elif head == "constructs":
+        elif head == "constructs" and calendar_evidence:
+            # A construct citing the SAME source a deadline window on this
+            # revision cites is referencing that deadline evidence, not making an
+            # independent claim. A construct citing a source NO deadline window
+            # cites is governing: modelo 131's editions name a Sede help page
+            # only from constructs, and reading that as a filing calendar let the
+            # same source be classified two different ways on two editions
+            # depending on which other files happened to cite it.
+            roles.add("presentation_calendar")
+        elif head == "application_links" and key in {"source_refs", "source_ref"}:
+            # An application link whose surface is filing or deadline points at
+            # the Sede page for the year the return is PRESENTED.
             roles.add("presentation_calendar")
         else:
             roles.add("governing_non_overlap")
     return "governing_non_overlap" if "governing_non_overlap" in roles else sorted(roles)[0]
 
 
-ROLES = ("governing_non_overlap", "evolution_origin", "presentation_calendar")
+ROLES = (
+    "governing_non_overlap",
+    "legal_window_non_overlap",
+    "superseded_alongside_current",
+    "evolution_origin",
+    "presentation_calendar",
+)
 
 
 def tally(findings: list[dict[str, object]]) -> dict[str, int]:
@@ -146,7 +266,11 @@ def scan(
     corpus cannot be given a defect to catch.
     """
     windows = source_windows(legal_dir)
-    known = set(windows)
+    legal = legal_windows(legal_dir)
+    # A ref id could in principle be declared in both families; the source
+    # catalogue wins so an id is never counted twice under two roles.
+    legal = {k: v for k, v in legal.items() if k not in windows}
+    known = set(windows) | set(legal)
     findings: list[dict[str, object]] = []
     revisions_checked = citations_checked = 0
 
@@ -163,8 +287,22 @@ def scan(
                 continue
             revisions_checked += 1
             span_from, span_to = span
-            for source_id, where in cited_sources(revision_dir, known).items():
-                applies_from, applies_to, catalogue = windows[source_id]
+            cited = cited_sources(revision_dir, known)
+            covering = {
+                source_id
+                for source_id in cited
+                if applies_across(
+                    applies_from=(legal.get(source_id) or windows[source_id])[0],
+                    applies_to=(legal.get(source_id) or windows[source_id])[1],
+                    span_from=span_from,
+                    span_to=span_to,
+                )
+            }
+            for source_id, where in cited.items():
+                is_legal = source_id in legal
+                applies_from, applies_to, catalogue = (
+                    legal[source_id] if is_legal else windows[source_id]
+                )
                 if applies_from is None and applies_to is None:
                     continue  # an undeclared window makes no claim to contradict
                 citations_checked += 1
@@ -189,7 +327,19 @@ def scan(
                     ],
                     "catalogue": catalogue,
                     "cited_in": where,
-                    "role": classify(where),
+                    "role": (
+                        "legal_window_non_overlap"
+                        if is_legal
+                        else classify(
+                            where,
+                            superseded=has_current_sibling(source_id, covering),
+                            calendar_evidence=any(
+                                entry.split("#")[0].split("/")[0]
+                                in {"deadline_windows", "filing_schedules"}
+                                for entry in where
+                            ),
+                        )
+                    ),
                 })
     return findings, revisions_checked, citations_checked
 

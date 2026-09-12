@@ -40,7 +40,7 @@ from cadrumo.domain.calculations.registry.ledger_renta_income_bindings import (
     validate_ledger_renta_income_aggregation_binding_definition,
 )
 from cadrumo.domain.calculations.registry.schema import BindingDefinition
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 

@@ -25,7 +25,6 @@ from datetime import date
 import pytest
 
 from cadrumo.core.export_layout_format import ExportLayoutFormat
-from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
@@ -110,7 +109,7 @@ def _compose(
     classification = build_classification_coherence_audit(
         modelos,
         non_registry_modelo_codes=frozenset(item.value for item in NON_REGISTRY_MODELOS),
-        known_modelo_codes=frozenset(item.value for item in Modelo),
+        known_modelo_codes=frozenset(item.id for item in modelos),
         registry_validated=False,
     )
     return build_registry_conformance_profile(
@@ -605,7 +604,7 @@ def test_a_modelo_absent_from_the_classification_audit_is_refused(
     classification = build_classification_coherence_audit(
         modelos,
         non_registry_modelo_codes=frozenset(item.value for item in NON_REGISTRY_MODELOS),
-        known_modelo_codes=frozenset(item.value for item in Modelo),
+        known_modelo_codes=frozenset(item.id for item in modelos),
         registry_validated=False,
     )
     assert classification.rows, "the classification fold must produce a row to drop"

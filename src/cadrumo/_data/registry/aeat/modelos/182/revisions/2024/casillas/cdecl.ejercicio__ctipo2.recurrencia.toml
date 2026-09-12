@@ -12,6 +12,7 @@
 
 [[revisions."2024".casillas]]
 id = "decl.ejercicio"
+continuidad_id = "filing-year"
 number = "ejercicio"
 section = ["declarante"]
 data_type = "year"
@@ -22,6 +23,7 @@ legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2024".casillas]]
 id = "decl.tipo-declaracion"
+continuidad_id = "tipo-declaracion"
 number = "tipo-declaracion"
 section = ["declarante"]
 data_type = "text"
@@ -32,6 +34,7 @@ legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2024".casillas]]
 id = "tipo2.donante-nif"
+continuidad_id = "donante-nif"
 number = "nif-donante"
 section = ["declarado", "donante"]
 data_type = "nif"
@@ -42,6 +45,7 @@ legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:
 
 [[revisions."2024".casillas]]
 id = "tipo2.donante-nombre"
+continuidad_id = "donante-nombre"
 number = "nombre-donante"
 section = ["declarado", "donante"]
 data_type = "name"
@@ -52,6 +56,7 @@ legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
 
 [[revisions."2024".casillas]]
 id = "tipo2.importe-donado"
+continuidad_id = "importe-donativo"
 number = "importe-donativo"
 section = ["declarado", "donativo"]
 data_type = "money"
@@ -62,6 +67,7 @@ legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:
 
 [[revisions."2024".casillas]]
 id = "tipo2.porcentaje-deduccion"
+continuidad_id = "porcentaje-deduccion"
 number = "porcentaje-deduccion"
 section = ["declarado", "donativo"]
 data_type = "ratio"
@@ -78,6 +84,7 @@ legal_refs = ["ley-35-2006:art-68.3", "orden-eha-3021-2007:art-1", "ley-58-2003:
 # the 2024 test and cites no 2025 orden.
 [[revisions."2024".casillas]]
 id = "tipo2.recurrencia"
+continuidad_id = "donativo-recurrente"
 number = "recurrencia"
 section = ["declarado", "donativo"]
 data_type = "boolean"

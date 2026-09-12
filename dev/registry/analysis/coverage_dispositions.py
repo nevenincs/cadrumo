@@ -84,6 +84,27 @@ _REQUIRED: Final = ("modelo", "period", "kind", "classification", "reason", "aut
 #: The conditions a disposition may classify. Kept as a literal set rather than
 #: imported from the screen, so a condition renamed there fails loudly here
 #: instead of silently accepting an entry that now disposes of nothing.
+#:
+#: Three of the screen's coverage conditions are deliberately NOT here, and the
+#: omission is a ruling rather than an oversight:
+#:
+#: ``promised_year_projected``
+#:     The year would be answered by carrying the newest revision below it
+#:     forward -- IF projection shipped. It has not. Disposing such a year would
+#:     close a promised year on the strength of a capability that does not
+#:     exist, which is the same error as reading a silence from an instrument
+#:     that cannot speak. It is also not the same gap as ``promised_year_unserved``
+#:     and must not be pooled with it: the remedy differs, since an unserved year
+#:     needs an edition authored and a projected year is closed by EITHER an
+#:     edition or projection shipping.
+#: ``awaiting_ejercicio_orden`` and ``pending_orden_declaration_stale``
+#:     Both already say precisely why the year is unserved -- AEAT has not
+#:     published the ejercicio's orden, or the declaration that it had not has
+#:     gone stale. A disposition would add a signature to a sentence the screen
+#:     already writes, and the stale variant is a defect to fix rather than a
+#:     gap to excuse.
+#:
+#: Adding any of the three here would make those gaps disposable. Do not.
 _KINDS: Final = frozenset({"promised_year_unserved", "promised_coordinate_unserved", "coordinate_served_twice"})
 
 #: What a classified coordinate IS. ``inception`` is terminal and closes the

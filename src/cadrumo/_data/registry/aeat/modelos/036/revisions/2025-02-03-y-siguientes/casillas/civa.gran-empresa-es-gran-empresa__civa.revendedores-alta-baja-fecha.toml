@@ -42,6 +42,9 @@
 # @11+1. Sujeto pasivo gran empresa y administraciones publicas. Tiene la condicion de gran empresa.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.gran-empresa-es-gran-empresa"
+continuidad_id = "iva-gran-empresa-es-gran-empresa"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:612 (sha256 3ecea6c06e3d) box [541] (3 11 1 An Suj. Pasivo Gran Empresa y Admones. Publicas. ¿Tiene la c...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:672 (sha256 791479fbf9e9) box [541] (3 11 1 An Suj. Pasivo Gran Empresa y Admones. Publicas. ¿Tiene la c...)."
 number = "541"
 section = ["declaracion", "iva", "gran_empresa"]
 data_type = "boolean"
@@ -72,6 +75,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @20+1. Sujeto pasivo gran empresa y administraciones publicas. Es administracion publica cuyo ultimo presupuesto anual aprobado supera 6 millones de euros.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.gran-empresa-es-admon-publica-presupuesto"
+continuidad_id = "iva-gran-empresa-es-admon-publica-presupuesto"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:616 (sha256 3ecea6c06e3d) box [577] (7 20 1 An Suj. Pasivo G.E. y Admones. Publicas. ¿Es A.Publ. cuyo úl...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:676 (sha256 791479fbf9e9) box [577] (7 20 1 An Suj. Pasivo G.E. y Admones. Publicas. ¿Es A.Publ. cuyo úl...)."
 number = "577"
 section = ["declaracion", "iva", "gran_empresa"]
 data_type = "boolean"
@@ -102,6 +108,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @29+1. IVA. Informacion de obligaciones. Esta establecido en el territorio de aplicacion del impuesto o tiene en el un establecimiento permanente.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.obligaciones-establecido-en-tai"
+continuidad_id = "iva-obligaciones-establecido-en-tai"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:620 (sha256 3ecea6c06e3d) box [500] (11 29 1 An I.V.A. Informac. obligaciones. ¿Está establ. en el terri...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:680 (sha256 791479fbf9e9) box [500] (11 29 1 An I.V.A. Informac. obligaciones. ¿Está establ. en el terri...)."
 number = "500"
 section = ["declaracion", "iva", "obligaciones"]
 data_type = "boolean"
@@ -117,6 +126,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @30+1. IVA. Informacion de obligaciones. Realiza exclusivamente operaciones no sujetas o exentas que no obligan a presentar autoliquidacion periodica.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.obligaciones-solo-operaciones-sin-autoliquidacion"
+continuidad_id = "iva-obligaciones-solo-operaciones-sin-autoliquidacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:621 (sha256 3ecea6c06e3d) box [501] (12 30 1 An I.V.A. Informac. oblig. ¿Realiza excl. oper. no suj. o e...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:681 (sha256 791479fbf9e9) box [501] (12 30 1 An I.V.A. Informac. oblig. ¿Realiza excl. oper. no suj. o e...)."
 number = "501"
 section = ["declaracion", "iva", "obligaciones"]
 data_type = "boolean"
@@ -132,6 +144,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @31+1. IVA. Comunicacion de inicio de actividad. Inicio de actividad. Entregas de bienes o prestaciones de servicios previa o simultanea a la adquisicion de bienes o servicios.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.inicio-actividad-entregas-previa-o-simultanea"
+continuidad_id = "iva-inicio-actividad-entregas-previa-o-simultanea"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:622 (sha256 3ecea6c06e3d) box [502] (13 31 1 An I.V.A. B) Comunicac. Inicio de activ. Entregas de bienes...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:682 (sha256 791479fbf9e9) box [502] (13 31 1 An I.V.A. B) Comunicac. Inicio de activ. Entregas de bienes...)."
 number = "502"
 section = ["declaracion", "iva", "inicio_actividad"]
 data_type = "boolean"
@@ -162,6 +177,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @40+1. IVA. Comunicacion de inicio de actividad. Inicio de actividad. Entregas de bienes o prestaciones de servicios posterior a la adquisicion de bienes o servicios.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.inicio-actividad-entregas-posterior"
+continuidad_id = "iva-inicio-actividad-entregas-posterior"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:626 (sha256 3ecea6c06e3d) box [504] (17 40 1 An I.V.A. B) Comunicac. Inicio de activ. Entregas de bienes...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:686 (sha256 791479fbf9e9) box [504] (17 40 1 An I.V.A. B) Comunicac. Inicio de activ. Entregas de bienes...)."
 number = "504"
 section = ["declaracion", "iva", "inicio_actividad"]
 data_type = "boolean"
@@ -192,6 +210,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @49+1. IVA. Comunicacion de inicio de actividad. Inicio de nueva actividad que constituya un sector diferenciado.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.inicio-actividad-sector-diferenciado"
+continuidad_id = "iva-inicio-actividad-sector-diferenciado"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:630 (sha256 3ecea6c06e3d) box [506] (21 49 1 An I.V.A. B) Comunic. Inicio de nueva activ. q constituya s...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:690 (sha256 791479fbf9e9) box [506] (21 49 1 An I.V.A. B) Comunic. Inicio de nueva activ. q constituya s...)."
 number = "506"
 section = ["declaracion", "iva", "inicio_actividad"]
 data_type = "boolean"
@@ -222,6 +243,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @58+1. IVA. Comunicacion de inicio de actividad. Comunicacion del comienzo habitual de entregas de bienes o prestaciones de servicios.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.inicio-actividad-comienzo-habitual"
+continuidad_id = "iva-inicio-actividad-comienzo-habitual"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:634 (sha256 3ecea6c06e3d) box [508] (25 58 1 An I.V.A. B) Comuinic. de comienzo habitual de entregas de ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:694 (sha256 791479fbf9e9) box [508] (25 58 1 An I.V.A. B) Comuinic. de comienzo habitual de entregas de ...)."
 number = "508"
 section = ["declaracion", "iva", "inicio_actividad"]
 data_type = "boolean"
@@ -252,6 +276,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @67+1. IVA. Regimenes. Regimen general.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.regimenes-general"
+continuidad_id = "iva-regimenes-general"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:638 (sha256 3ecea6c06e3d) box [510] (29 67 1 An I.V.A. C) General [510] * A, B o blanco) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:698 (sha256 791479fbf9e9) box [510] (29 67 1 An I.V.A. C) General [510] A, B o blanco)."
 number = "510"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "boolean"
@@ -267,6 +294,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @68+6. IVA. Regimenes. Regimen general. Grupo o epigrafe de la seccion I del I.A.E. o codigo de actividad.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.regimenes-general-iae"
+continuidad_id = "iva-regimenes-general-iae"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:639 (sha256 3ecea6c06e3d) box [511] (30 68 6 An I.V.A. C) General. Grupo o epígr./sec. I.A.E. o cód. act...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:699 (sha256 791479fbf9e9) box [511] (30 68 6 An I.V.A. C) General. Grupo o epígr./sec. I.A.E. o cód. act...)."
 number = "511"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "text"
@@ -297,6 +327,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @82+1. IVA. Regimenes. Regimen especial del recargo de equivalencia.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.regimenes-recargo-equivalencia"
+continuidad_id = "iva-regimenes-recargo-equivalencia"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:643 (sha256 3ecea6c06e3d) box [514] (34 82 1 An I.V.A. C) Reg. Esp. Recargo de equivalencia. [514] * A, ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:703 (sha256 791479fbf9e9) box [514] (34 82 1 An I.V.A. C) Reg. Esp. Recargo de equivalencia. [514] A, B ...)."
 number = "514"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "boolean"
@@ -312,6 +345,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @83+6. IVA. Regimenes. Regimen especial del recargo de equivalencia. Grupo o epigrafe de la seccion I del I.A.E. o codigo de actividad.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.regimenes-recargo-equivalencia-iae"
+continuidad_id = "iva-regimenes-recargo-equivalencia-iae"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:644 (sha256 3ecea6c06e3d) box [515] (35 83 6 An I.V.A. C) Reg. Esp. Recargo de equivalencia. G. o epígr....) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:704 (sha256 791479fbf9e9) box [515] (35 83 6 An I.V.A. C) Reg. Esp. Recargo de equivalencia. G. o epígr....)."
 number = "515"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "text"
@@ -342,6 +378,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @97+1. IVA. Regimenes. Regimen especial de bienes usados, determinacion operacion por operacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.regimenes-bienes-usados-operacion"
+continuidad_id = "iva-regimenes-bienes-usados-operacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:648 (sha256 3ecea6c06e3d) box [518] (39 97 1 An I.V.A. C) Reg. Esp. Bienes usados operación por operació...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:708 (sha256 791479fbf9e9) box [518] (39 97 1 An I.V.A. C) Reg. Esp. Bienes usados operación por operació...)."
 number = "518"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "boolean"
@@ -357,6 +396,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @98+6. IVA. Regimenes. Regimen especial de bienes usados operacion por operacion. Grupo o epigrafe de la seccion I del I.A.E. o codigo de actividad.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.regimenes-bienes-usados-operacion-iae"
+continuidad_id = "iva-regimenes-bienes-usados-operacion-iae"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:649 (sha256 3ecea6c06e3d) box [519] (40 98 6 An I.V.A. C) Reg. Esp. Bienes usados operación por operació...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:709 (sha256 791479fbf9e9) box [519] (40 98 6 An I.V.A. C) Reg. Esp. Bienes usados operación por operació...)."
 number = "519"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "text"
@@ -387,6 +429,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @112+1. IVA. Regimenes. Regimen especial de bienes usados, margen de beneficio global.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.regimenes-bienes-usados-margen-global"
+continuidad_id = "iva-regimenes-bienes-usados-margen-global"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:653 (sha256 3ecea6c06e3d) box [522] (44 112 1 An I.V.A. C) Reg. Esp. Bienes usados margen de beneficio g...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:713 (sha256 791479fbf9e9) box [522] (44 112 1 An I.V.A. C) Reg. Esp. Bienes usados margen de beneficio g...)."
 number = "522"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "boolean"
@@ -402,6 +447,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @113+6. IVA. Regimenes. Regimen especial de bienes usados margen de beneficio global. Grupo o epigrafe de la seccion I del I.A.E. o codigo de actividad.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.regimenes-bienes-usados-margen-global-iae"
+continuidad_id = "iva-regimenes-bienes-usados-margen-global-iae"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:654 (sha256 3ecea6c06e3d) box [523] (45 113 6 An I.V.A. C) Reg. Esp. Bienes usados margen de beneficio g...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:714 (sha256 791479fbf9e9) box [523] (45 113 6 An I.V.A. C) Reg. Esp. Bienes usados margen de beneficio g...)."
 number = "523"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "text"
@@ -432,6 +480,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @127+1. IVA. Regimenes. Regimen especial de agencias de viajes, determinacion operacion por operacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.regimenes-agencias-viajes"
+continuidad_id = "iva-regimenes-agencias-viajes"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:658 (sha256 3ecea6c06e3d) box [526] (49 127 1 An I.V.A.C) Reg. Esp. Agencias de viajes, determinación op...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:718 (sha256 791479fbf9e9) box [526] (49 127 1 An I.V.A.C) Reg. Esp. Agencias de viajes, determinación op...)."
 number = "526"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "boolean"
@@ -447,6 +498,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @128+6. IVA. Regimenes. Regimen especial de agencias de viajes. Grupo o epigrafe de la seccion I del I.A.E. o codigo de actividad.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.regimenes-agencias-viajes-iae"
+continuidad_id = "iva-regimenes-agencias-viajes-iae"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:659 (sha256 3ecea6c06e3d) box [527] (50 128 6 An I.V.A.C) Reg. Esp. Agencias de viajes, determ. operació...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:719 (sha256 791479fbf9e9) box [527] (50 128 6 An I.V.A.C) Reg. Esp. Agencias de viajes, determ. operació...)."
 number = "527"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "text"
@@ -480,6 +534,8 @@ id = "iva.regimenes-agricultura-ganaderia-pesca"
 number = "iva-regimenes-agricultura-ganaderia-pesca"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "text"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 5 @157+1 (line 664 of the extract): I.V.A. C) Reg. Esp. Agricultura, ganaderia y pesca. [534,538,542,546,570] *. The successor design prints the same field at the same page and byte position: I.V.A. C) Reg. Esp. Agricultura, ganaderia y pesca. [534,538,542,546,570]. AEAT prints its number here as a list rather than a single box, and the predecessor edition revision note records 33 such comma-list groups declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -495,6 +551,8 @@ id = "iva.regimenes-agricultura-ganaderia-pesca-iae"
 number = "iva-regimenes-agricultura-ganaderia-pesca-iae"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "text"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 5 @158+6 (line 665 of the extract): I.V.A. C) Reg. Esp. Agricultura, ganaderia y pesca. epigrafe./sec. I.A.E. o cod. activ. [535,539,543,547,571] *. The successor design prints the same field at the same page and byte position: I.V.A. C) Reg. Esp. Agricultura, ganaderia y pesca. epigrafe./sec. I.A.E. o cod. activ. [5. AEAT prints its number here as a list rather than a single box, and the predecessor edition revision note records 33 such comma-list groups declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -510,6 +568,8 @@ id = "iva.regimenes-agricultura-ganaderia-pesca-fecha"
 number = "iva-regimenes-agricultura-ganaderia-pesca-fecha"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "date"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 5 @164+2 (line 666 of the extract): I.V.A. C) Reg. Esp. Agricultura, ganaderia y pesca. Fecha. Dia [536,540,544,548,572] *. The successor design prints the same field at the same page and byte position: I.V.A. C) Reg. Esp. Agricultura, ganaderia y pesca. Fecha. Dia [536,540,544,548,572]. AEAT prints its number here as a list rather than a single box, and the predecessor edition revision note records 33 such comma-list groups declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -525,6 +585,8 @@ id = "iva.regimenes-simplificado"
 number = "iva-regimenes-simplificado"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "text"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 5 @172+1 (line 669 of the extract): I.V.A. C) Reg. Esp. Simplificado. [550,554,558,562,566] *. The successor design prints the same field at the same page and byte position: I.V.A. C) Reg. Esp. Simplificado. [550,554,558,562,566]. AEAT prints its number here as a list rather than a single box, and the predecessor edition revision note records 33 such comma-list groups declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -540,6 +602,8 @@ id = "iva.regimenes-simplificado-iae"
 number = "iva-regimenes-simplificado-iae"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "text"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 5 @173+6 (line 670 of the extract): I.V.A. C) Reg. Esp. Simplificado. Incluido. G. o epigr./sec. I.A.E. o cod. activ. [551,555,559,563,567] *. The successor design prints the same field at the same page and byte position: I.V.A. C) Reg. Esp. Simplificado. Incluido. G. o epigr./sec. I.A.E. o cod. activ. [551,555,559,. AEAT prints its number here as a list rather than a single box, and the predecessor edition revision note records 33 such comma-list groups declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -555,6 +619,8 @@ id = "iva.regimenes-simplificado-fecha"
 number = "iva-regimenes-simplificado-fecha"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "date"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 5 @179+2 (line 671 of the extract): I.V.A. C) Reg. Esp. Simplificado. Fecha. Dia [552,556,560,564,568] *. The successor design prints the same field at the same page and byte position: I.V.A. C) Reg. Esp. Simplificado. Fecha. Dia [552,556,560,564,568]. AEAT prints its number here as a list rather than a single box, and the predecessor edition revision note records 33 such comma-list groups declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -567,6 +633,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @187+1. IVA. Regimenes. Regimen especial del oro de inversion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.regimenes-oro-inversion"
+continuidad_id = "iva-regimenes-oro-inversion"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:674 (sha256 3ecea6c06e3d) box [574] (65 187 1 An I.V.A. C) Reg. Esp. Oro de inversión. [574] A, B o blanco) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:734 (sha256 791479fbf9e9) box [574] (65 187 1 An I.V.A. C) Reg. Esp. Oro de inversión. [574] A, B o blanco)."
 number = "574"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "boolean"
@@ -582,6 +651,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @188+6. IVA. Regimenes. Regimen especial del oro de inversion. Grupo o epigrafe de la seccion I del I.A.E. o codigo de actividad.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.regimenes-oro-inversion-iae"
+continuidad_id = "iva-regimenes-oro-inversion-iae"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:675 (sha256 3ecea6c06e3d) box [575] (66 188 6 An I.V.A. C) Reg. Esp. Oro de inversión. G. o epígr./sec. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:735 (sha256 791479fbf9e9) box [575] (66 188 6 An I.V.A. C) Reg. Esp. Oro de inversión. G. o epígr./sec. ...)."
 number = "575"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "text"
@@ -615,6 +687,8 @@ id = "iva.registros-devolucion-mensual"
 number = "iva-registros-devolucion-mensual"
 section = ["declaracion", "iva", "registros"]
 data_type = "text"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 5 @202+1 (line 679 of the extract): I.V.A. D) Solicita alta/baja en el Reg. de devolucion mensual [579, 580]. The successor design prints the same field at the same page and byte position: I.V.A. D) Solicita alta/baja en el Reg. de devolucion mensual [579, 580]. AEAT prints its number here as a list rather than a single box, and the predecessor edition revision note records 33 such comma-list groups declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -630,6 +704,8 @@ id = "iva.registros-operadores-intracomunitarios"
 number = "iva-registros-operadores-intracomunitarios"
 section = ["declaracion", "iva", "registros"]
 data_type = "text"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 5 @203+1 (line 680 of the extract): I.V.A. D) Solicita alta/baja en el Reg. de operadores intracomunitarios [582,583]. The successor design prints the same field at the same page and byte position: I.V.A. D) Solicita alta/baja en el Reg. de operadores intracomunitarios [582,583]. AEAT prints its number here as a list rather than a single box, and the predecessor edition revision note records 33 such comma-list groups declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -657,6 +733,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @212+5. IVA. Porcentaje de deduccion y sectores diferenciados. Propone porcentaje provisional de deduccion, 3 enteros y 2 decimales.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.prorrata-porcentaje-provisional"
+continuidad_id = "iva-prorrata-porcentaje-provisional"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:684 (sha256 3ecea6c06e3d) box [586] (75 212 5 Num I.V.A. E) Propone porcentaje provisional de deducción ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:744 (sha256 791479fbf9e9) box [586] (75 212 5 Num I.V.A. E) Propone porcentaje provisional de deducción ...)."
 number = "586"
 section = ["declaracion", "iva", "prorrata"]
 data_type = "decimal"
@@ -672,6 +751,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @217+1. IVA. Porcentaje de deduccion y sectores diferenciados. No tiene sectores diferenciados.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.prorrata-sin-sectores-diferenciados"
+continuidad_id = "iva-prorrata-sin-sectores-diferenciados"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:685 (sha256 3ecea6c06e3d) box [587] (76 217 1 An I.V.A. E) No tiene sectores diferenciados [587] * S, N ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:745 (sha256 791479fbf9e9) box [587] (76 217 1 An I.V.A. E) No tiene sectores diferenciados [587] S, N o ...)."
 number = "587"
 section = ["declaracion", "iva", "prorrata"]
 data_type = "boolean"
@@ -687,6 +769,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @218+3. IVA. Porcentaje de deduccion y sectores diferenciados. Sector I. Codigo C.N.A.E.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.prorrata-sector-1-cnae-1"
+continuidad_id = "iva-prorrata-sector-1-cnae-1"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:686 (sha256 3ecea6c06e3d) box [588] (77 218 3 Num I.V.A. E) Sector I. Código C.N.A.E. [588] *) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:746 (sha256 791479fbf9e9) box [588] (77 218 3 Num I.V.A. E) Sector I. Código C.N.A.E. [588])."
 number = "588"
 section = ["declaracion", "iva", "prorrata"]
 data_type = "text"
@@ -702,6 +787,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @221+3. IVA. Porcentaje de deduccion y sectores diferenciados. Sector I. Codigo C.N.A.E.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.prorrata-sector-1-cnae-2"
+continuidad_id = "iva-prorrata-sector-1-cnae-2"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:687 (sha256 3ecea6c06e3d) box [589] (78 221 3 Num I.V.A. E) Sector I. Código C.N.A.E. [589] *) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:747 (sha256 791479fbf9e9) box [589] (78 221 3 Num I.V.A. E) Sector I. Código C.N.A.E. [589])."
 number = "589"
 section = ["declaracion", "iva", "prorrata"]
 data_type = "text"
@@ -717,6 +805,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @224+3. IVA. Porcentaje de deduccion y sectores diferenciados. Sector I. Codigo C.N.A.E.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.prorrata-sector-1-cnae-3"
+continuidad_id = "iva-prorrata-sector-1-cnae-3"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:688 (sha256 3ecea6c06e3d) box [590] (79 224 3 Num I.V.A. E) Sector I. Código C.N.A.E. [590] *) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:748 (sha256 791479fbf9e9) box [590] (79 224 3 Num I.V.A. E) Sector I. Código C.N.A.E. [590])."
 number = "590"
 section = ["declaracion", "iva", "prorrata"]
 data_type = "text"
@@ -732,6 +823,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @227+1. IVA. Porcentaje de deduccion y sectores diferenciados. Sector I. Opcion por la prorrata especial.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.prorrata-sector-1-prorrata-especial"
+continuidad_id = "iva-prorrata-sector-1-prorrata-especial"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:689 (sha256 3ecea6c06e3d) box [591] (80 227 1 An I.V.A. E) Sector I. Código C.N.A.E. Opción prorrata esp...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:749 (sha256 791479fbf9e9) box [591] (80 227 1 An I.V.A. E) Sector I. Código C.N.A.E. Opción prorrata esp...)."
 number = "591"
 section = ["declaracion", "iva", "prorrata"]
 data_type = "boolean"
@@ -747,6 +841,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @228+3. IVA. Porcentaje de deduccion y sectores diferenciados. Sector II. Codigo C.N.A.E.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.prorrata-sector-2-cnae-1"
+continuidad_id = "iva-prorrata-sector-2-cnae-1"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:690 (sha256 3ecea6c06e3d) box [592] (81 228 3 Num I.V.A. E) Sector II. Código C.N.A.E. [592] *) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:750 (sha256 791479fbf9e9) box [592] (81 228 3 Num I.V.A. E) Sector II. Código C.N.A.E. [592])."
 number = "592"
 section = ["declaracion", "iva", "prorrata"]
 data_type = "text"
@@ -762,6 +859,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @231+3. IVA. Porcentaje de deduccion y sectores diferenciados. Sector II. Codigo C.N.A.E.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.prorrata-sector-2-cnae-2"
+continuidad_id = "iva-prorrata-sector-2-cnae-2"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:691 (sha256 3ecea6c06e3d) box [593] (82 231 3 Num I.V.A. E) Sector II. Código C.N.A.E. [593] *) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:751 (sha256 791479fbf9e9) box [593] (82 231 3 Num I.V.A. E) Sector II. Código C.N.A.E. [593])."
 number = "593"
 section = ["declaracion", "iva", "prorrata"]
 data_type = "text"
@@ -777,6 +877,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @234+3. IVA. Porcentaje de deduccion y sectores diferenciados. Sector II. Codigo C.N.A.E.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.prorrata-sector-2-cnae-3"
+continuidad_id = "iva-prorrata-sector-2-cnae-3"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:692 (sha256 3ecea6c06e3d) box [594] (83 234 3 Num I.V.A. E) Sector II. Código C.N.A.E. [594] *) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:752 (sha256 791479fbf9e9) box [594] (83 234 3 Num I.V.A. E) Sector II. Código C.N.A.E. [594])."
 number = "594"
 section = ["declaracion", "iva", "prorrata"]
 data_type = "text"
@@ -792,6 +895,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @237+1. IVA. Porcentaje de deduccion y sectores diferenciados. Sector II. Opcion por la prorrata especial.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.prorrata-sector-2-prorrata-especial"
+continuidad_id = "iva-prorrata-sector-2-prorrata-especial"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:693 (sha256 3ecea6c06e3d) box [595] (84 237 1 An I.V.A. E) Sector II. Código C.N.A.E. Opción prorrata es...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:753 (sha256 791479fbf9e9) box [595] (84 237 1 An I.V.A. E) Sector II. Código C.N.A.E. Opción prorrata es...)."
 number = "595"
 section = ["declaracion", "iva", "prorrata"]
 data_type = "boolean"
@@ -807,6 +913,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @238+3. IVA. Porcentaje de deduccion y sectores diferenciados. Sector III. Codigo C.N.A.E.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.prorrata-sector-3-cnae-1"
+continuidad_id = "iva-prorrata-sector-3-cnae-1"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:694 (sha256 3ecea6c06e3d) box [596] (85 238 3 Num I.V.A. E) Sector III. Código C.N.A.E. [596] *) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:754 (sha256 791479fbf9e9) box [596] (85 238 3 Num I.V.A. E) Sector III. Código C.N.A.E. [596])."
 number = "596"
 section = ["declaracion", "iva", "prorrata"]
 data_type = "text"
@@ -822,6 +931,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @241+3. IVA. Porcentaje de deduccion y sectores diferenciados. Sector III. Codigo C.N.A.E.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.prorrata-sector-3-cnae-2"
+continuidad_id = "iva-prorrata-sector-3-cnae-2"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:695 (sha256 3ecea6c06e3d) box [597] (86 241 3 Num I.V.A. E) Sector III. Código C.N.A.E. [597] *) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:755 (sha256 791479fbf9e9) box [597] (86 241 3 Num I.V.A. E) Sector III. Código C.N.A.E. [597])."
 number = "597"
 section = ["declaracion", "iva", "prorrata"]
 data_type = "text"
@@ -837,6 +949,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @244+3. IVA. Porcentaje de deduccion y sectores diferenciados. Sector III. Codigo C.N.A.E.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.prorrata-sector-3-cnae-3"
+continuidad_id = "iva-prorrata-sector-3-cnae-3"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:696 (sha256 3ecea6c06e3d) box [598] (87 244 3 Num I.V.A. E) Sector III. Código C.N.A.E. [598] *) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:756 (sha256 791479fbf9e9) box [598] (87 244 3 Num I.V.A. E) Sector III. Código C.N.A.E. [598])."
 number = "598"
 section = ["declaracion", "iva", "prorrata"]
 data_type = "text"
@@ -852,6 +967,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @247+1. IVA. Porcentaje de deduccion y sectores diferenciados. Sector III. Opcion por la prorrata especial.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.prorrata-sector-3-prorrata-especial"
+continuidad_id = "iva-prorrata-sector-3-prorrata-especial"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:697 (sha256 3ecea6c06e3d) box [599] (88 247 1 An I.V.A. E) Sector III. Código C.N.A.E. Opción prorrata e...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:757 (sha256 791479fbf9e9) box [599] (88 247 1 An I.V.A. E) Sector III. Código C.N.A.E. Opción prorrata e...)."
 number = "599"
 section = ["declaracion", "iva", "prorrata"]
 data_type = "boolean"
@@ -870,6 +988,8 @@ id = "iva.regimenes-criterio-caja"
 number = "iva-regimenes-criterio-caja"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "text"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 5 @248+1 (line 698 of the extract): I.V.A. C) Regimen especial del criterio de Caja. [517,529,549,573,561] *. The successor design prints the same field at the same page and byte position: I.V.A. C) Regimen especial del criterio de Caja. [517,529,549,573,561]. AEAT prints its number here as a list rather than a single box, and the predecessor edition revision note records 33 such comma-list groups declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -885,6 +1005,8 @@ id = "iva.regimenes-criterio-caja-iae"
 number = "iva-regimenes-criterio-caja-iae"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "text"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 5 @249+6 (line 699 of the extract): I.V.A. C) Regimen especial del criterio de Caja. G. o epigr./sec. I.A.E. o cod. activ. [521,533,553,581,565] *. The successor design prints the same field at the same page and byte position: I.V.A. C) Regimen especial del criterio de Caja. G. o epigr./sec. I.A.E. o cod. activ. [52. AEAT prints its number here as a list rather than a single box, and the predecessor edition revision note records 33 such comma-list groups declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -900,6 +1022,8 @@ id = "iva.regimenes-criterio-caja-fecha"
 number = "iva-regimenes-criterio-caja-fecha"
 section = ["declaracion", "iva", "regimenes"]
 data_type = "date"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 5 @255+2 (line 700 of the extract): I.V.A. C) Regimen especial del criterio de Caja. Fecha. Dia [525,537,557,585,569] *. The successor design prints the same field at the same page and byte position: I.V.A. C) Regimen especial del criterio de Caja. Fecha. Dia [525,537,557,585,569]. AEAT prints its number here as a list rather than a single box, and the predecessor edition revision note records 33 such comma-list groups declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -912,6 +1036,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @263+1. IVA. Informacion de obligaciones. Tiene la condicion de revendedor de telefonos moviles, consolas de videojuegos, ordenadores portatiles y tabletas digitales de acuerdo con el art. 84 Uno 2 LIVA.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.obligaciones-revendedor-dispositivos"
+continuidad_id = "iva-obligaciones-revendedor-dispositivos"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:705 (sha256 3ecea6c06e3d) box [513] (de acuerdo co el art. 84 Uno 2º)LIVA? [513] S, N o blanco) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:765 (sha256 791479fbf9e9) box [513] (de acuerdo co el art. 84 Uno 2º)LIVA? [513] S, N o blanco)."
 number = "513"
 section = ["declaracion", "iva", "obligaciones"]
 data_type = "boolean"
@@ -930,6 +1057,8 @@ id = "iva.importacion-ingreso-iva-importacion"
 number = "iva-importacion-ingreso-iva-importacion"
 section = ["declaracion", "iva", "importacion"]
 data_type = "text"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 5 @264+1 (line 706 of the extract): I.V.A. F) Ingreso IVA Importacion. Opcion/Renuncia/Revocacion/Baja [530,531]. The successor design prints the same field at the same page and byte position: I.V.A. F) Ingreso IVA Importacion. Opcion/Renuncia/Revocacion/Baja [530,531]. AEAT prints its number here as a list rather than a single box, and the predecessor edition revision note records 33 such comma-list groups declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -960,6 +1089,8 @@ id = "iva.libros-registro-llevanza-sede-electronica"
 number = "iva-libros-registro-llevanza-sede-electronica"
 section = ["declaracion", "iva", "libros_registro"]
 data_type = "text"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 5 @273+1 (line 710 of the extract): I.V.A.F) llevanza Libros de Registro del Iva a traves de la sede electronica de la AEAT .(532,737). The successor design prints the same field at the same page and byte position: I.V.A.F) llevanza Libros de Registro del Iva a traves de la sede electronica de la AEAT .(532,737). AEAT prints its number here as a list rather than a single box, and the predecessor edition revision note records 33 such comma-list groups declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [
@@ -987,6 +1118,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @282+1. IVA. Facturacion por destinatarios o terceros. Comunicacion de que el cumplimiento de la obligacion de expedir factura se realiza por los destinatarios o por terceros.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "iva.facturacion-factura-por-destinatarios"
+continuidad_id = "iva-facturacion-factura-por-destinatarios"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:714 (sha256 3ecea6c06e3d) box [740] (103 282 1 An I.V.A.A) comunicación cumplimiento de obligacion exped...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:774 (sha256 791479fbf9e9) box [740] (103 282 1 An I.V.A.A) comunicación cumplimiento de obligacion exped...)."
 number = "740"
 section = ["declaracion", "iva", "facturacion"]
 data_type = "boolean"
@@ -1020,6 +1154,8 @@ id = "iva.importacion-forales-iva-importacion"
 number = "iva-importacion-forales-iva-importacion"
 section = ["declaracion", "iva", "importacion"]
 data_type = "text"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "PRINTED ON THE PREDECESSOR FORM, NOT DECLARED BY THE PREDECESSOR EDITION. The predecessor design prints this field at Pag. 5 @291+1 (line 718 of the extract): I.V.A. G) Forales IVA Importacion. Opcion/Renuncia [741,742]. The successor design prints the same field at the same page and byte position: I.V.A. G) Forales IVA Importacion. Opcion/Renuncia [741,742]. AEAT prints its number here as a list rather than a single box, and the predecessor edition revision note records 33 such comma-list groups declined at parity. The predecessor edition 2023-hasta-2025-02-02 emits no casilla for it, so this absence is a gap in the corpus declaration and not a change to the official form. Sources: disenos_registro/modelo_036/files/03-036-...-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md (sha256 6c0660f7850f) and disenos_registro/modelo_036/files/01-036-...-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md (sha256 44f36e521804)."
 required = false
 input_kind = "manual"
 legal_refs = [

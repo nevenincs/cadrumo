@@ -64,7 +64,7 @@ from cadrumo.domain.prorrata_register.register import (
     ProrrataRegisterEntry,
     SectorDefinition,
 )
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_modelo_directory, load_registry_tree

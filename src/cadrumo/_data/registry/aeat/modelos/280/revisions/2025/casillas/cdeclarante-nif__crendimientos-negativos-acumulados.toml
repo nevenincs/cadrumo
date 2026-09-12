@@ -1,5 +1,7 @@
 [[revisions."2025".casillas]]
 id = "declarante-nif"
+continuidad_id = "irpf-declarante-nif"
+continuidad_origin = "seeded"
 number = "tipo1.nif-declarante"
 section = ["identificacion_declaracion"]
 data_type = "nif"
@@ -11,6 +13,8 @@ additional_source_refs = ["aeat-dr-280-2022"]
 
 [[revisions."2025".casillas]]
 id = "ejercicio-declaracion"
+continuidad_id = "filing-year"
+continuidad_origin = "seeded"
 number = "tipo1.ejercicio"
 section = ["identificacion_declaracion"]
 data_type = "year"
@@ -22,6 +26,8 @@ additional_source_refs = ["aeat-modelo-280-procedure", "aeat-dr-280-2022"]
 
 [[revisions."2025".casillas]]
 id = "declarado-nif"
+continuidad_id = "m280-declarado-nif"
+continuidad_origin = "seeded"
 number = "tipo2.nif-declarado"
 section = ["declarado"]
 data_type = "nif"
@@ -33,6 +39,8 @@ additional_source_refs = ["aeat-dr-280-2022"]
 
 [[revisions."2025".casillas]]
 id = "declarado-nombre"
+continuidad_id = "m280-declarado-nombre"
+continuidad_origin = "seeded"
 number = "tipo2.apellidos-nombre-declarado"
 section = ["declarado"]
 data_type = "name"
@@ -44,6 +52,8 @@ additional_source_refs = ["aeat-dr-280-2022"]
 
 [[revisions."2025".casillas]]
 id = "clave-alta"
+continuidad_id = "m280-clave-alta"
+continuidad_origin = "seeded"
 number = "tipo2.110"
 section = ["plan_ahorro_largo_plazo", "estado"]
 data_type = "text"
@@ -55,6 +65,8 @@ additional_source_refs = ["aeat-dr-280-2022"]
 
 [[revisions."2025".casillas]]
 id = "aportaciones-ejercicio"
+continuidad_id = "m280-aportaciones-ejercicio"
+continuidad_origin = "seeded"
 number = "tipo2.111-116"
 section = ["plan_ahorro_largo_plazo", "aportaciones"]
 data_type = "money"
@@ -66,6 +78,8 @@ additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280
 
 [[revisions."2025".casillas]]
 id = "rendimientos-positivos-ejercicio"
+continuidad_id = "m280-rendimientos-positivos-ejercicio"
+continuidad_origin = "seeded"
 number = "tipo2.117-126"
 section = ["plan_ahorro_largo_plazo", "rendimientos"]
 data_type = "money"
@@ -77,6 +91,8 @@ additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280
 
 [[revisions."2025".casillas]]
 id = "rendimientos-negativos-ejercicio"
+continuidad_id = "m280-rendimientos-negativos-ejercicio"
+continuidad_origin = "seeded"
 number = "tipo2.127-136"
 section = ["plan_ahorro_largo_plazo", "rendimientos"]
 data_type = "money"
@@ -88,6 +104,8 @@ additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280
 
 [[revisions."2025".casillas]]
 id = "extincion-plan"
+continuidad_id = "m280-extincion-plan"
+continuidad_origin = "seeded"
 number = "tipo2.137"
 section = ["plan_ahorro_largo_plazo", "extincion"]
 data_type = "text"
@@ -99,6 +117,8 @@ additional_source_refs = ["boe-modelo-280-2022-amendment-hfp-1192", "aeat-dr-280
 
 [[revisions."2025".casillas]]
 id = "fecha-extincion"
+continuidad_id = "m280-fecha-extincion"
+continuidad_origin = "seeded"
 number = "tipo2.138-145"
 section = ["plan_ahorro_largo_plazo", "extincion"]
 data_type = "text"
@@ -110,6 +130,8 @@ additional_source_refs = ["boe-modelo-280-2022-amendment-hfp-1192", "aeat-dr-280
 
 [[revisions."2025".casillas]]
 id = "rendimientos-positivos-acumulados"
+continuidad_id = "m280-rendimientos-positivos-acumulados"
+continuidad_origin = "seeded"
 number = "tipo2.146-155"
 section = ["plan_ahorro_largo_plazo", "rendimientos_acumulados"]
 data_type = "money"
@@ -121,6 +143,8 @@ additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280
 
 [[revisions."2025".casillas]]
 id = "rendimientos-negativos-acumulados"
+continuidad_id = "m280-rendimientos-negativos-acumulados"
+continuidad_origin = "seeded"
 number = "tipo2.156-165"
 section = ["plan_ahorro_largo_plazo", "rendimientos_acumulados"]
 data_type = "money"

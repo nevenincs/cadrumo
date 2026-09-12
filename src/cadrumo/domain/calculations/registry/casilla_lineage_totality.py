@@ -3,8 +3,20 @@
 A successor-edition row is a casilla of an edition that has a predecessor
 edition. An edition naming a :class:`~.revision_contracts.DeclaredPredecessor` has the
 edition it names, wherever that sits in validity order. An edition declaring
-:class:`~.revision_contracts.NoPredecessor` has none. An edition omitting the key has the
-adjacent earlier edition in validity order, and the first edition has none.
+:class:`~.revision_contracts.NoPredecessor`, and an edition omitting the key, both have the
+adjacent earlier edition in validity order. The first edition has none, and so
+does a none-rooted edition whose validity overlaps the edition before it: those
+are concurrent scheme variants of one modelo, siblings rather than a
+succession, and neither continues the other.
+
+A none is an EDITION-level statement -- this edition cannot be produced from
+the one before it by the merge -- and casilla continuity is a separate per-row
+axis that the corpus declares independently. Rows in none-rooted editions do
+carry ``continuidad_id`` values the adjacent earlier edition carries, and do
+declare continuation origins, so a none cannot stand as a blanket exemption
+for every row of the edition: that would put exactly those rows beyond
+judgement and let lineage vanish unreported.
+
 Such a row is RESOLVED when it either
 
 - carries lineage: its ``continuidad_id`` is also carried by a row of its
@@ -63,6 +75,7 @@ from .schema import ModeloDefinition, ModeloRevision
 __all__ = (
     "CasillaRowKey",
     "LineageTotalityReport",
+    "judging_predecessor",
     "lineage_totality",
     "unresolved_successor_rows",
 )
@@ -95,7 +108,7 @@ def unresolved_successor_rows(modelo: ModeloDefinition) -> tuple[CasillaRowKey, 
     unresolved: list[CasillaRowKey] = []
     ordered = ordered_revisions(modelo)
     for index, revision in enumerate(ordered):
-        predecessor = _judging_predecessor(modelo, ordered, index)
+        predecessor = judging_predecessor(modelo, ordered, index)
         if predecessor is None:
             continue
         carried = _carried_chains(predecessor)
@@ -121,20 +134,48 @@ def lineage_totality(
     )
 
 
-def _judging_predecessor(
+def judging_predecessor(
     modelo: ModeloDefinition,
     ordered: tuple[ModeloRevision, ...],
     index: int,
 ) -> ModeloRevision | None:
     """Return the edition a revision's rows are judged against, or ``None`` when it is not judged.
 
+    Public because pairing editions is one rule, not two. Anything that
+    disposes of successor-edition rows -- this gate, and the seeder that writes
+    the ledger it reads -- pairs them here, so the two cannot disagree about
+    which edition a row continues from and re-refuse a row the other resolves.
+
     A named predecessor is resolved by id; the modelo's forest validation has
     already refused a name that is not one of its editions.
+
+    A ``NoPredecessor`` edition is still judged, against the adjacent earlier
+    edition. Declaring a none says this EDITION cannot be produced from the one
+    before it by the merge; it says nothing about whether an individual casilla
+    continues. The corpus states the two axes separately and they disagree in
+    practice: rows in none-rooted editions carry ``continuidad_id`` values that
+    the adjacent earlier edition also carries, and carry continuation origins
+    outright. Treating the edition-level declaration as an exemption for every
+    row in it puts those rows beyond judgement, which is how a row can lose its
+    lineage without anything reporting it.
+
+    Two cases still return ``None``. A first edition has no earlier edition to
+    be judged against at all. And a none-rooted edition whose validity OVERLAPS
+    the edition before it is a concurrent sibling rather than a successor: the
+    parallel scheme variants of one modelo all take effect on the same day and
+    none of them ever closes, so the earlier one is not a predecessor in any
+    sense and pairing them would invent a lineage relationship the corpus never
+    declared. Only a closed earlier edition -- one whose validity ends before
+    this edition begins -- can be the edition these rows continue from.
     """
     revision = ordered[index]
     match revision.predecessor:
         case NoPredecessor():
-            return None
+            if index == 0:
+                return None
+            earlier = ordered[index - 1]
+            closed_before = earlier.valid_to is not None and earlier.valid_to < revision.valid_from
+            return earlier if closed_before else None
         case DeclaredPredecessor(revision_id=predecessor_id):
             return modelo.revisions[predecessor_id]
         case None:

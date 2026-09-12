@@ -348,6 +348,8 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2018-2022".casillas]]
 id = "decl.transmitente-nif-iva"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "the 2018 record design (aeat-dr-309-2018, corpus/.../modelo_309/files/04-309-...-2018-y-posteriores.xls.extracted.md, sha256 aa91e5c5b957) prints campo 59, position 1025, length 15, 'Transmitente (3) - NIF-IVA'. CARVED OUT OF A RESERVED RUN. The predecessor edition 2016-2017 is grounded on aeat-dr-309-2016, whose campo 59 at position 1025 is 'Reservado para la Administracion | En blanco', length 451, running to position 1475; that design contains zero occurrences of 'Adjudicatario' and zero of 'NIF-IVA' at any position. The box did not exist on the predecessor form and is new on this edition's official form."
 number = "1025-1039"
 section = ["declarante", "liquidacion"]
 data_type = "nif_iva"
@@ -360,6 +362,8 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2018-2022".casillas]]
 id = "decl.adjudicatario-nif"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "the 2018 record design (aeat-dr-309-2018, corpus/.../modelo_309/files/04-309-...-2018-y-posteriores.xls.extracted.md, sha256 aa91e5c5b957) prints campo 60, position 1040, length 9, 'Adjudicatario (4) - NIF'. CARVED OUT OF A RESERVED RUN. The predecessor edition 2016-2017 is grounded on aeat-dr-309-2016, whose campo 59 at position 1025 is 'Reservado para la Administracion | En blanco', length 451, running to position 1475; that design contains zero occurrences of 'Adjudicatario' and zero of 'NIF-IVA' at any position. The box did not exist on the predecessor form and is new on this edition's official form."
 number = "1040-1048"
 section = ["declarante", "liquidacion"]
 data_type = "nif"
@@ -372,6 +376,8 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2018-2022".casillas]]
 id = "decl.adjudicatario-apellidos"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "the 2018 record design (aeat-dr-309-2018, corpus/.../modelo_309/files/04-309-...-2018-y-posteriores.xls.extracted.md, sha256 aa91e5c5b957) prints campo 61, position 1049, length 60, 'Adjudicatario (4) - Apellidos o Denominacion Social'. CARVED OUT OF A RESERVED RUN. The predecessor edition 2016-2017 is grounded on aeat-dr-309-2016, whose campo 59 at position 1025 is 'Reservado para la Administracion | En blanco', length 451, running to position 1475; that design contains zero occurrences of 'Adjudicatario' and zero of 'NIF-IVA' at any position. The box did not exist on the predecessor form and is new on this edition's official form."
 number = "1049-1108"
 section = ["declarante", "liquidacion"]
 data_type = "name"
@@ -384,6 +390,8 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2018-2022".casillas]]
 id = "decl.adjudicatario-nombre"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "the 2018 record design (aeat-dr-309-2018, corpus/.../modelo_309/files/04-309-...-2018-y-posteriores.xls.extracted.md, sha256 aa91e5c5b957) prints campo 62, position 1109, length 20, 'Adjudicatario (4) - Nombre'. CARVED OUT OF A RESERVED RUN. The predecessor edition 2016-2017 is grounded on aeat-dr-309-2016, whose campo 59 at position 1025 is 'Reservado para la Administracion | En blanco', length 451, running to position 1475; that design contains zero occurrences of 'Adjudicatario' and zero of 'NIF-IVA' at any position. The box did not exist on the predecessor form and is new on this edition's official form."
 number = "1109-1128"
 section = ["declarante", "liquidacion"]
 data_type = "name"

@@ -18,14 +18,17 @@ from __future__ import annotations
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
+from .....core.identity.documents import TAX_ID_FORMAT_CONTEXT
+from .....core.identity.tests.tax_id_format_support import SPANISH_TAX_ID_FORMAT
 from ..errors import RegistryValidationError
-from ..schema_scalars import NifString, _validate_nif_string
+from ..schema_scalars import NifString, validate_registry_text_scalar
 from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 _NIF_ADAPTER: TypeAdapter[str] = TypeAdapter(NifString)
+_NIF_CONTEXT = {TAX_ID_FORMAT_CONTEXT: SPANISH_TAX_ID_FORMAT}
 
 
 def _casilla_with(data_type: str) -> CasillaDefinition:
@@ -63,7 +66,7 @@ class TestNifStringAccepts:
         )
 
         for raw, canonical in cases:
-            assert _NIF_ADAPTER.validate_python(raw) == canonical, raw
+            assert _NIF_ADAPTER.validate_python(raw, context=_NIF_CONTEXT) == canonical, raw
 
 
 class TestNifStringRejects:
@@ -90,21 +93,16 @@ class TestNifStringRejects:
 
         for raw in cases:
             with pytest.raises(ValidationError):
-                _NIF_ADAPTER.validate_python(raw)
+                _NIF_ADAPTER.validate_python(raw, context=_NIF_CONTEXT)
 
-    def test_invalid_inputs_raise_registry_validation_error_at_validator(self) -> None:
-        cases: tuple[object, ...] = (
-            "",
-            "12345678",
-            "12345678A",
-            "X0000000A",
-            "A58818500",
-            12345678,
-        )
+    def test_missing_explicit_format_fails_closed(self) -> None:
+        with pytest.raises(ValidationError, match="explicit Spanish tax-ID format"):
+            _NIF_ADAPTER.validate_python("00000000T")
 
-        for raw in cases:
-            with pytest.raises(RegistryValidationError):
-                _validate_nif_string(raw)
+    def test_direct_scalar_validation_requires_and_obeys_the_explicit_format(self) -> None:
+        assert validate_registry_text_scalar("nif", "ES00000000T", tax_id_format=SPANISH_TAX_ID_FORMAT) == "00000000T"
+        with pytest.raises(RegistryValidationError, match="explicit Spanish tax-ID format"):
+            validate_registry_text_scalar("nif", "00000000T")
 
 
 class TestCasillaDefinitionDataType:

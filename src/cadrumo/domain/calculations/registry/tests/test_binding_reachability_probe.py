@@ -189,7 +189,7 @@ def test_a_casilla_keyed_selector_probe_is_structurally_unable_to_fail() -> None
     """
     for casilla_id in ("02", "9999", "definitely-not-a-real-casilla"):
         selector = LedgerRentaGastosPagoFraccionadoProvider(
-            modelo=Modelo.M130,
+            modelo=Modelo("130"),
             target_casilla_id=casilla_id,
             fact="deductible_amount_sum",
         )

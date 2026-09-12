@@ -88,6 +88,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Rendimientos Negativos. Retención o ingreso a cuenta [6]
 [[revisions."2015-2022".casillas]]
 id = "p05.rendimientos-negativos-on-o-ingreso-a-cuenta-6"
+continuidad_id = "p05-rendimientos-negativos-rentencion-o-ingreso-a-cuenta-6"
 number = "100-116"
 segmento = "M15105000"
 section = ["p05", "rendimientos_negativos"]
@@ -500,6 +501,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
 id = "p05.tipo-de-renta-1-09"
+continuidad_id = "p05-tipo-de-renta-1-09"
 number = "483-484"
 segmento = "M15105000"
 section = ["p05", "tipo_de_renta_1"]
@@ -538,6 +540,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Rentención o ingreso a cuenta [3]
 [[revisions."2015-2022".casillas]]
 id = "p05.rentencion-o-ingreso-a-cuenta-3-08"
+continuidad_id = "p05-rentencion-o-ingreso-a-cuenta-3-08"
 number = "511-527"
 segmento = "M15105000"
 section = ["p05", "rentencion_o_ingreso_a_cuenta_3"]
@@ -586,6 +589,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Total retenciones o ingresos a cuenta [5]
 [[revisions."2015-2022".casillas]]
 id = "p05.total-retenciones-o-ingresos-a-cuenta-5"
+continuidad_id = "p05-total-retenciones-o-ingresos-a-cuenta-5"
 number = "579-595"
 segmento = "M15105000"
 section = ["p05", "total_retenciones_o_ingresos_a_cuenta_5"]

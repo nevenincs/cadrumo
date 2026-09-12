@@ -56,7 +56,7 @@ number = "167"
 section = ["perceptor", "identificacion"]
 data_type = "text"
 semantic_role = "payee_disability_clave"
-# Design clave 0-3, always recorded for claves A, B (01, 03, 04, 99) and C;
+# Design clave 0-3, always recorded for claves A, B.01, B.03 and C;
 # clave 0 is the recorded "no disability" fact, never a default.
 required = true
 input_kind = "manual"

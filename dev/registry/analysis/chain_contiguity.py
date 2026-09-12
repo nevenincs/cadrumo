@@ -133,6 +133,11 @@ _CHAIN_ROOT_KINDS: Final[dict[str, tuple[str, str]]] = {
 #: so it excuses a hole the way a retirement does.
 _REPURPOSED: Final = "repurposed"
 
+#: The measurement's version, bumped on any change to what the conditions
+#: COUNT, so a lane diffing two runs can tell instrument movement from corpus
+#: movement instead of having to remember which changed.
+_SIGNAL_SCHEMA: Final = 1
+
 #: Every condition this screen can report, declared once so the set cannot be
 #: misread off the source.
 CONDITIONS: Final[tuple[str, ...]] = (
@@ -147,7 +152,22 @@ CONDITIONS: Final[tuple[str, ...]] = (
     "evolution_restates_ancestor",
     "evolution_without_chain_members",
     "chain_partially_grounded",
+    "ruling_reference_unknown",
 )
+
+#: The adjudicated-rulings file, which is the seeder's canonical input for a
+#: modelo it will not seed mechanically. Read raw: its entries are TOML before
+#: they are anything else, and this screen must keep reporting when the domain
+#: does not import.
+_RULINGS_FILE: Final = Path(__file__).with_name("casilla_lineage_rulings.toml")
+
+#: Ruling fields whose entries are `predecessor>successor` pairs spanning two
+#: editions, versus those naming a SUCCESSOR row alone. Getting this wrong is
+#: how a check reports 167 breakages where there are 2: the single-id lists name
+#: successor rows only, and `merged` entries are compound `A + B` expressions
+#: rather than ids at all.
+_RULING_PAIR_FIELDS: Final = ("grounded", "held", "withheld")
+_RULING_SUCCESSOR_FIELDS: Final = ("new_on_form", "not_on_form")
 
 #: The origin marking a link as established from cited evidence rather than
 #: inferred from a predicate.
@@ -237,6 +257,71 @@ def _ordered(statuses: Iterable[EditionStatus]) -> tuple[EditionStatus, ...]:
 def _chains_of(status: EditionStatus) -> Counter[str]:
     """Every lineage the edition's rows state, with how many rows state it."""
     return Counter(lineage for _, lineage in status.stated_keys if lineage is not None)
+
+
+def ruling_reference_findings(
+    statuses: tuple[EditionStatus, ...], path: Path = _RULINGS_FILE
+) -> tuple[ChainFinding, ...]:
+    """Name every adjudicated ruling that references a row its edition does not carry.
+
+    A ruling is the seeder's only path for a modelo it will not seed
+    mechanically, so a broken reference there is not a refused row: it raises
+    out of the ruling application and takes the WHOLE modelo. Worse, it stays
+    invisible while the modelo sits on the exclusion list, which is exactly
+    where adjudication-only modelos live — so the corpus can accrue these and
+    meet them all at once, at the moment a campaign finishes and the exclusion
+    lifts.
+
+    `merged` is deliberately not checked: its entries are compound `A + B`
+    expressions naming two rows that fold into one, not identifiers, and
+    treating them as ids reports every one of them as broken.
+    """
+    if not path.is_file():
+        return ()
+    try:
+        document = tomllib.loads(path.read_text(encoding="utf-8"))
+    except tomllib.TOMLDecodeError as exc:
+        _note_ruling_limitation(f"rulings_unreadable: {type(exc).__name__}")
+        return ()
+    rows: dict[tuple[str, str], set[str]] = defaultdict(set)
+    for status in statuses:
+        rows[(status.modelo, status.edition)].update(status.rows_by_id)
+    findings: list[ChainFinding] = []
+    for ruling in document.get("ruling", ()):
+        modelo = str(ruling.get("modelo", ""))
+        predecessor, successor = str(ruling.get("predecessor", "")), str(ruling.get("successor", ""))
+        checks: list[tuple[str, str, str]] = []
+        for field in _RULING_PAIR_FIELDS:
+            for entry in ruling.get(field, ()) or ():
+                left, separator, right = str(entry).partition(">")
+                if separator:
+                    checks += [(predecessor, left, field), (successor, right, field)]
+                else:
+                    checks.append((predecessor, left, field))
+        for field in _RULING_SUCCESSOR_FIELDS:
+            checks += [(successor, str(entry), field) for entry in ruling.get(field, ()) or ()]
+        for edition, casilla, field in checks:
+            known = rows.get((modelo, edition))
+            if known is None or not casilla or casilla in known:
+                continue
+            findings.append(
+                ChainFinding(
+                    modelo=modelo,
+                    edition=edition,
+                    kind="ruling_reference_unknown",
+                    chain=casilla,
+                    detail=f"ruling `{field}` names a row this edition does not carry",
+                )
+            )
+    return tuple(findings)
+
+
+def _note_ruling_limitation(text: str) -> None:
+    if text not in _RULING_LIMITATIONS:
+        _RULING_LIMITATIONS.append(text)
+
+
+_RULING_LIMITATIONS: list[str] = []
 
 
 def grounding_by_chain(
@@ -451,6 +536,7 @@ def screen(statuses: tuple[EditionStatus, ...], evolutions: tuple[Evolution, ...
     findings: list[ChainFinding] = []
     for modelo, editions in sorted(by_modelo.items()):
         findings.extend(modelo_findings(modelo, tuple(editions), evolutions))
+    findings.extend(ruling_reference_findings(statuses))
     # A chain part-way through grounding is the trap: it looks like progress and
     # discharges nothing, because its middle occurrences are exempt only once
     # every link touching them is grounded.
@@ -547,7 +633,7 @@ def _signal_lines(findings: tuple[ChainFinding, ...], counts: Mapping[str, int])
     tally = Counter(finding.kind for finding in findings)
     per_modelo: Counter[str] = Counter(finding.modelo for finding in findings)
     lines = [
-        "# chain_contiguity schema=1",
+        f"# chain_contiguity schema={_SIGNAL_SCHEMA} conditions={len(CONDITIONS)} measurements={len(MEASUREMENTS)}",
         "census " + " ".join(f"{key}={value}" for key, value in sorted(counts.items())),
         " ".join(["condition", *(f"{kind}={tally.get(kind, 0)}" for kind in CONDITIONS)]),
         " ".join(["clean", *(kind for kind in CONDITIONS if not tally.get(kind))]) or "clean none",

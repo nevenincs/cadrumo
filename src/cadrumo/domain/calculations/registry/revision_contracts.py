@@ -382,13 +382,13 @@ def _describe(window: RevisionWindow) -> str:
         periods = "any period"
     elif selector.years:
         years = ", ".join(str(year) for year in selector.years)
-        periods = ", ".join(str(period) for period in selector.periods)
+        periods = ", ".join(str(period) for period in selector.declared_periods)
     elif selector.year_from is None:  # type: ignore[union-attr]
         years = "any year"
-        periods = ", ".join(str(period) for period in selector.periods)
+        periods = ", ".join(str(period) for period in selector.declared_periods)
     else:
         years = f"{selector.year_from} to {selector.year_to if selector.year_to is not None else 'open'}"
-        periods = ", ".join(str(period) for period in selector.periods)
+        periods = ", ".join(str(period) for period in selector.declared_periods)
     return f"(valid {valid_from.isoformat()} to {end}; years {years}; periods {periods})"  # type: ignore[union-attr]
 
 

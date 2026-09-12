@@ -33,10 +33,12 @@ Refusals, each one an edition the tool declines rather than guesses at:
   stands, and the member-side rule applies to it unchanged. An edition whose
   members all state something irreducible has nothing left to rewrite and is
   reported as done;
-- a member states ``source_refs`` the textual pass cannot reproduce exactly. The
-  rewrite is textual, so a multi-line array or a spelling this module's line
-  pattern does not match is refused for the WHOLE edition rather than partially
-  applied. Four such members ship today, all in modelo 347's bindings.
+- a member states ``source_refs`` the textual pass cannot reproduce exactly. Both
+  the one-line and the multi-line array spellings are read and rewritten, so what
+  remains unreproducible is a statement carrying something the tool would have to
+  drop to rewrite it -- an authored comment inside the array, a non-quoted value,
+  or no closing bracket. Such a statement refuses the WHOLE edition rather than
+  being partially applied.
 
 Which families are liftable is read from the domain's own
 ``FAMILY_SOURCE_DEFAULT_FIELDS`` pairing rather than restated here, so the
@@ -56,6 +58,14 @@ reported as a refusal, so a failed lift never leaves a half-written tree.
 Modes. Without ``--apply`` the tool reports what it would do and writes nothing.
 ``--modelo`` scopes to one modelo, ``--all`` to every modelo in the corpus, and
 ``--report`` writes the findings to a file as well as to stdout.
+``--exclude`` withholds a whole modelo, ``--exclude-edition <modelo>/<edition>``
+withholds one edition, and ``--exclusions-file`` reads either from a campaign
+file. The frozen modelos of :data:`dev.registry.run_exclusions.FROZEN_MODELOS`
+are withheld from every run whether or not a flag names them.
+``--exclude-reason`` states once why this run's flag-named exclusions were made.
+An excluded target is never examined -- it plans nothing, refuses nothing and
+carries no declaration forward -- and is listed in the report with its reason,
+so a run states what it declined to look at as plainly as what it did.
 """
 
 from __future__ import annotations
@@ -63,12 +73,25 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+import time
 import tomllib
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Final, cast
+from types import MappingProxyType
+from typing import Any, Final, cast, get_args
 
+from cadrumo.domain.calculations.registry.reference_sections import FAMILY_SOURCE_DEFAULT_FIELDS
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
+from .corpus_write import verify_written, write_preserving_newlines
+from .run_exclusions import (
+    DEFAULT_EXCLUSION_REASON,
+    Exclusion,
+    MalformedExclusionError,
+    collect_exclusions,
+    excluded_editions,
+)
 from .source_default_rule import edition_source_default
 
 REPO_ROOT: Final = Path(__file__).resolve().parents[2]
@@ -115,9 +138,6 @@ def _enroll_domain_family_keys() -> None:
     one it removes stops being an option, without this tool being edited: a
     hardcoded list could only ever disagree with the loader that consumes it.
     """
-    sys.path.insert(0, str(REPO_ROOT / "src"))
-    from cadrumo.domain.calculations.registry.reference_sections import FAMILY_SOURCE_DEFAULT_FIELDS
-
     FAMILY_DEFAULT_KEY.update(dict(FAMILY_SOURCE_DEFAULT_FIELDS))
     paired = [family for family, _ in FAMILY_SOURCE_DEFAULT_FIELDS]
     _MEMBER_REWRITE_FAMILIES.update(paired)
@@ -142,17 +162,69 @@ def _quoted_items(text: str) -> tuple[str, ...]:
     return tuple(str(item) for item in _QUOTED_ITEM.findall(text))
 
 
-def _write(path: Path, text: str) -> None:
-    r"""Write a corpus file, keeping its line endings.
+@dataclass(frozen=True, slots=True)
+class _RefsSpan:
+    """One member's own ``source_refs`` statement, however many lines it occupies.
 
-    ``newline`` is explicit rather than defaulted because the default
+    ``last`` is the index of the final line of the statement, equal to ``first``
+    for the one-line spelling. ``items`` is what the statement says, read the
+    same way from either spelling, so the member-side rule is applied once
+    rather than once per layout.
+    """
+
+    first: int
+    last: int
+    indent: str
+    items: tuple[str, ...]
+
+
+def _refs_span(lines: Sequence[str], start: int) -> _RefsSpan | None:
+    """Read the ``source_refs`` statement opening at ``lines[start]``, or ``None`` if it is unreproducible.
+
+    A statement is reproducible when the tool can read every reference out of it
+    and put the remainder back in its own one-line spelling without losing
+    anything a reader authored. A span carrying a comment, a trailing key on the
+    closing line, a non-quoted value, or no closing bracket at all is not
+    reproducible, and is reported rather than guessed at: a rewrite that dropped
+    an authored comment would be a silent edit to grounding nobody asked for.
+    """
+    single = _SOURCE_REFS_LINE.match(lines[start])
+    if single is not None:
+        return _RefsSpan(start, start, single.group("indent"), _quoted_items(single.group("items")))
+    opening = lines[start]
+    indent = opening[: len(opening) - len(opening.lstrip())]
+    body = opening.partition("=")[2]
+    if body.strip() != "[":
+        return None
+    collected = [body.strip()]
+    for index in range(start + 1, len(lines)):
+        line = lines[index]
+        if _ARRAY_TABLE_HEADER.match(line) or line.startswith("["):
+            return None
+        collected.append(line.strip())
+        if line.strip().endswith("]"):
+            joined = " ".join(collected)
+            inner = joined[joined.index("[") + 1 : joined.rindex("]")]
+            items = _quoted_items(inner)
+            residue = _QUOTED_ITEM.sub("", inner).replace(",", "").strip()
+            if residue:
+                return None
+            return _RefsSpan(start, index, indent, items)
+    return None
+
+
+def _write(path: Path, text: str) -> str:
+    r"""Write a corpus file in the line-ending style it already had, and return that style.
+
+    The style is detected from the file's own raw bytes rather than assumed,
+    because the text layer's default
     translates every ``\\n`` to the platform separator, which on Windows
     rewrites a whole LF-authored fragment to CRLF and reports a change on every
     line of a file the run meant to touch on one. The corpus is LF throughout,
     and the rollback path below restores through this same function, so a
     translated write would make even a rolled-back run dirty the tree.
     """
-    path.write_text(text, encoding="utf-8", newline="\n")
+    return write_preserving_newlines(path, text)
 
 
 def _render_refs(key: str, refs: Sequence[str]) -> str:
@@ -192,6 +264,13 @@ class ModeloPlan:
 
     modelo: str
     lifts: list[EditionLift] = field(default_factory=list)
+    #: Lifts withheld because a file they would write is under a live edit,
+    #: each with the paths that were too recent and their ages in minutes.
+    skipped: list[tuple[EditionLift, tuple[tuple[Path, float], ...]]] = field(default_factory=list)
+    #: Editions the operator excluded, each with the reason given for the exclusion.
+    #: An excluded edition is never examined, so it plans nothing and refuses nothing;
+    #: it is reported so the run states what it declined to look at and why.
+    exclusions: list[tuple[str, str]] = field(default_factory=list)
 
     @property
     def liftable(self) -> list[EditionLift]:
@@ -256,12 +335,13 @@ def _unreproducible_statements(fragments: Sequence[Path], edition_id: str, famil
     found: list[str] = []
     for path in fragments:
         in_member = False
-        for line in path.read_text(encoding="utf-8").splitlines():
+        lines = path.read_text(encoding="utf-8").splitlines()
+        for index, line in enumerate(lines):
             header = _ARRAY_TABLE_HEADER.match(line)
             if line.startswith("["):
                 in_member = header is not None and header.group("family") == family and _header_id(header) == edition_id
                 continue
-            if in_member and _SOURCE_REFS_OPENING.match(line) and not _SOURCE_REFS_LINE.match(line):
+            if in_member and _SOURCE_REFS_OPENING.match(line) and _refs_span(lines, index) is None:
                 found.append(f"{path.name}: {line.strip()}")
     return tuple(found)
 
@@ -331,6 +411,127 @@ def _live_inherited_ids(
     members = getattr(revision, family, ())
     materialised = frozenset(str(member.id) for member in members if getattr(member, "id", None) is not None)
     return materialised - _member_ids(modelo_dir / _REVISIONS / edition, family)
+
+
+def _lift_write_targets(modelo_dir: Path, lift: EditionLift) -> tuple[Path, ...]:
+    """Every file this lift would write: its family fragments and the edition manifest."""
+    targets = list(lift.fragments) if lift.family in _MEMBER_REWRITE_FAMILIES else []
+    if not lift.manifest_declared:
+        targets.append(modelo_dir / _REVISIONS / lift.edition / _MANIFEST)
+    return tuple(targets)
+
+
+def _recently_modified(
+    paths: Sequence[Path], minutes: float, now: float | None = None
+) -> tuple[tuple[Path, float], ...]:
+    """Return the paths modified within ``minutes``, with each one's age in minutes.
+
+    A file another writer touched moments ago is that writer's in-flight work.
+    Writing over it would destroy an edit this tool never saw, and the age is
+    reported so a skip can be read as "too recent" rather than as a refusal.
+    """
+    if minutes <= 0:
+        return ()
+    moment = time.time() if now is None else now
+    recent: list[tuple[Path, float]] = []
+    for path in paths:
+        if not path.is_file():
+            continue
+        age = (moment - path.stat().st_mtime) / 60
+        if age < minutes:
+            recent.append((path, age))
+    return tuple(recent)
+
+
+def _revision_model() -> Any:
+    """The typed revision model whose fields declare the caps this tool must respect."""
+    return ModeloRevision
+
+
+def _materialised_refs(stated: object, default: tuple[str, ...]) -> tuple[str, ...] | None:
+    """The references a member will carry once the lift has rewritten it.
+
+    Mirrors what the loader fills in, so the value validated here is the value
+    that will exist: a member stating the default exactly carries the default, a
+    member opening with it carries the default followed by its tail, and an
+    irreducible member is untouched and carries what it states.
+    """
+    if not isinstance(stated, list):
+        return default
+    refs = tuple(str(item) for item in stated)
+    if refs[: len(default)] == default:
+        return refs
+    return None
+
+
+def _cap_refusal(edition_dir: Path, lift: EditionLift) -> str:
+    """Return a reason this lift's values fail the schema, or an empty string.
+
+    Every value the lift writes is put through the typed field that owns it
+    BEFORE anything is written: the manifest declaration through the
+    ``ModeloRevision`` field it lands on, and each rewritten member's references
+    through that family's own member-model field, carrying what it will
+    materialise with. Each cap -- item count, id length, id pattern -- is
+    therefore enforced by the schema that declares it, and no limit is restated
+    here to drift from it.
+
+    Only the fields this tool writes are checked. Validating a whole member
+    standalone would refuse valid corpus rows, because the loader normalises
+    parts of a row -- ``legal_refs`` among them -- before typed construction,
+    and a gate that rejects what the corpus legitimately contains is worse than
+    no gate.
+
+    A write that produced an over-cap value would otherwise be caught only by
+    the post-write load, after the tree had been touched and on the rollback
+    path rather than the refusal path.
+    """
+    from pydantic import TypeAdapter, ValidationError
+
+    revision = _revision_model()
+    key = FAMILY_DEFAULT_KEY[lift.family]
+    manifest_field = revision.model_fields.get(key)
+    if manifest_field is not None:
+        try:
+            TypeAdapter(manifest_field.annotation).validate_python(list(lift.default))
+        except ValidationError as error:
+            return f"{key} would not validate against {revision.__name__}: {error.errors()[0]['msg']}"
+
+    family_field = revision.model_fields.get(lift.family)
+    member_models = get_args(family_field.annotation) if family_field is not None else ()
+    if not member_models:
+        return ""
+    member_model = member_models[0]
+    written_fields = {
+        name: TypeAdapter(field.annotation)
+        for name in ("source_refs", "additional_source_refs")
+        if (field := member_model.model_fields.get(name)) is not None
+    }
+    try:
+        members, _fragments = _members(edition_dir, lift.family)
+    except tomllib.TOMLDecodeError:
+        # An unparseable fragment is the re-parse gate's finding, not this
+        # one's; reporting it here would relabel a malformed tree as a cap
+        # violation and rob that gate of its own refusal.
+        return ""
+    for row in members:
+        refs = _materialised_refs(row.get("source_refs"), lift.default)
+        if refs is None:
+            continue
+        checked = {"source_refs": list(refs)}
+        tail = refs[len(lift.default) :]
+        if tail and "additional_source_refs" in written_fields:
+            checked["additional_source_refs"] = list(tail)
+        for name, adapter in written_fields.items():
+            if name not in checked:
+                continue
+            try:
+                adapter.validate_python(checked[name])
+            except ValidationError as error:
+                return (
+                    f"member {row.get('id', '<no id>')!r} {name} would not validate against "
+                    f"{member_model.__name__}: {error.errors()[0]['msg']}"
+                )
+    return ""
 
 
 def _rewritable_members(members: Sequence[Mapping[str, Any]], default: tuple[str, ...]) -> int:
@@ -482,10 +683,24 @@ def _forward_closure(
     return carried, ""
 
 
-def plan_modelo(modelo_dir: Path, families: Sequence[str] = FAMILIES) -> ModeloPlan:
-    """Decide every edition and family of one modelo, and the declarations its successors carry."""
+def plan_modelo(
+    modelo_dir: Path,
+    families: Sequence[str] = FAMILIES,
+    *,
+    excluded: Mapping[str, str] = MappingProxyType({}),
+) -> ModeloPlan:
+    """Decide every edition and family of one modelo, and the declarations its successors carry.
+
+    ``excluded`` maps an edition id of this modelo to the reason it is excluded.
+    An excluded edition is not examined and carries no declaration forward: the
+    exclusion is a decision about the edition itself, so a lift that would only
+    have been reachable through it is not planned either.
+    """
     plan = ModeloPlan(modelo=modelo_dir.name)
     for edition_dir in _edition_dirs(modelo_dir):
+        if edition_dir.name in excluded:
+            plan.exclusions.append((edition_dir.name, excluded[edition_dir.name]))
+            continue
         for family in families:
             decision = plan_edition(modelo_dir.name, edition_dir, family)
             if decision is not None:
@@ -518,7 +733,7 @@ def plan_modelo(modelo_dir: Path, families: Sequence[str] = FAMILIES) -> ModeloP
     plan.lifts.extend(
         declaration
         for identity, declaration in sorted(carried.items())
-        if identity not in stated and declaration.family not in refused_families
+        if identity not in stated and declaration.family not in refused_families and declaration.edition not in excluded
     )
     return plan
 
@@ -526,33 +741,40 @@ def plan_modelo(modelo_dir: Path, families: Sequence[str] = FAMILIES) -> ModeloP
 def lifted_fragment_text(text: str, edition_id: str, family: str, default: tuple[str, ...]) -> str:
     """Return one fragment's text with ``default`` lifted out of this family's member statements.
 
-    Only a member's OWN top-level ``source_refs`` is touched: the rewrite starts
+    Both the one-line and the multi-line array spellings are read through the
+    same span reader and rewritten by the same rule, and a rewritten statement is
+    written back in this module's one-line spelling at the opening line's own
+    indentation. Only a member's OWN top-level ``source_refs`` is touched: the rewrite starts
     at an ``[[revisions.<edition>.<family>]]`` header and stops at the next
     table header, so a nested provider table stating its own references, and
     every other family sharing the file, are left exactly as authored.
     """
     if not default:
         return text
+    lines = text.splitlines()
     rendered: list[str] = []
     in_member = False
-    for line in text.splitlines():
+    index = 0
+    while index < len(lines):
+        line = lines[index]
         header = _ARRAY_TABLE_HEADER.match(line)
         if line.startswith("["):
             in_member = header is not None and header.group("family") == family and _header_id(header) == edition_id
             rendered.append(line)
+            index += 1
             continue
-        match = _SOURCE_REFS_LINE.match(line) if in_member else None
-        if match is None:
+        span = _refs_span(lines, index) if in_member and _SOURCE_REFS_OPENING.match(line) else None
+        if span is None:
             rendered.append(line)
+            index += 1
             continue
-        items = _quoted_items(match.group("items"))
-        if items == default:
+        index = span.last + 1
+        if span.items == default:
             continue
-        if items[: len(default)] == default:
-            indent = match.group("indent")
-            rendered.append(indent + _render_refs("additional_source_refs", items[len(default) :]))
+        if span.items[: len(default)] == default:
+            rendered.append(span.indent + _render_refs("additional_source_refs", span.items[len(default) :]))
             continue
-        rendered.append(line)
+        rendered.extend(lines[span.first : span.last + 1])
     return "\n".join(rendered) + ("\n" if text.endswith("\n") else "")
 
 
@@ -597,6 +819,16 @@ def _manifest_with_default(
     return "\n".join(lines) + "\n"
 
 
+class CapViolationError(Exception):
+    """A value the lift would write does not satisfy the schema's own cap."""
+
+    def __init__(self, edition: str, family: str, reason: str) -> None:
+        self.edition = edition
+        self.family = family
+        self.reason = reason
+        super().__init__(f"{edition}/{family}: {reason}")
+
+
 class ModeloLiftFailedError(Exception):
     """A modelo's lift did not survive its own validation and was rolled back."""
 
@@ -607,7 +839,12 @@ class ModeloLiftFailedError(Exception):
         self.reason = reason
 
 
-def apply_plan(plan: ModeloPlan, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> list[Path]:
+def apply_plan(
+    plan: ModeloPlan,
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+    *,
+    skip_recent_minutes: float = 0,
+) -> list[Path]:
     """Write one modelo's lift, validating before the change is kept.
 
     Every edited file is re-parsed and the modelo is compiled through the
@@ -629,10 +866,20 @@ def apply_plan(plan: ModeloPlan, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
             modelo's load outcome is worse than it was before the write. The
             tree is restored first.
     """
-    liftable = plan.liftable
+    modelo_dir = modelos_root / plan.modelo
+    liftable = []
+    for lift in plan.liftable:
+        # A lift is withheld WHOLE when any file it would write is under a live
+        # edit. Skipping one file of a lift and writing the rest is the one
+        # outcome that must not happen: members stripped without their manifest
+        # declaration materialise with no grounding at all.
+        recent = _recently_modified(_lift_write_targets(modelo_dir, lift), skip_recent_minutes)
+        if recent:
+            plan.skipped.append((lift, recent))
+            continue
+        liftable.append(lift)
     if not liftable:
         return []
-    modelo_dir = modelos_root / plan.modelo
     baseline = load_outcome(modelo_dir)
     original: dict[Path, str] = {}
     touched: list[Path] = []
@@ -643,6 +890,19 @@ def apply_plan(plan: ModeloPlan, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
         return text
 
     try:
+        # Every capped value goes through its owning typed field before the
+        # first byte is written, so an over-cap value refuses rather than
+        # surviving a write and being undone by the rollback path. It sits
+        # inside the guarded region so that it answers to the same error
+        # contract as every other failure here: a caller sees
+        # ModeloLiftFailedError and a tree restored to the bytes it had,
+        # never a raw parse error escaping from a half-checked plan.
+        styles: dict[Path, str] = {}
+        for lift in liftable:
+            refusal = _cap_refusal(modelo_dir / _REVISIONS / lift.edition, lift)
+            if refusal:
+                raise CapViolationError(lift.edition, lift.family, refusal)
+
         for lift in liftable:
             edition_dir = modelo_dir / _REVISIONS / lift.edition
             if lift.family in _MEMBER_REWRITE_FAMILIES:
@@ -650,7 +910,7 @@ def apply_plan(plan: ModeloPlan, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
                     text = remember(fragment)
                     rewritten = lifted_fragment_text(text, lift.edition, lift.family, lift.default)
                     if rewritten != text:
-                        _write(fragment, rewritten)
+                        styles[fragment] = _write(fragment, rewritten)
                         touched.append(fragment)
             if lift.manifest_declared:
                 continue
@@ -662,11 +922,11 @@ def apply_plan(plan: ModeloPlan, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
                 lift.default,
                 carried_from=lift.inherited_from,
             )
-            _write(manifest, declared)
+            styles[manifest] = _write(manifest, declared)
             if manifest not in touched:
                 touched.append(manifest)
         for path in touched:
-            tomllib.loads(path.read_text(encoding="utf-8"))
+            verify_written(path, styles[path])
         after = load_outcome(modelo_dir)
         if after != baseline:
             raise RegistryLoadRegressionError(baseline, after)
@@ -720,6 +980,7 @@ def render_plan(
     *,
     applied: bool,
     written: Mapping[str, Sequence[Path]] | None = None,
+    withheld_modelos: Sequence[Exclusion] = (),
 ) -> str:
     """Render every plan as diffable lines.
 
@@ -732,8 +993,13 @@ def render_plan(
     """
     lines: list[str] = []
     liftable = 0
+    excluded = len(withheld_modelos)
+    lines.extend(item.render() for item in withheld_modelos)
     per_family: dict[str, int] = {}
     for plan in plans:
+        for edition, reason in plan.exclusions:
+            excluded += 1
+            lines.append(f"excluded: {plan.modelo}/{edition} reason={reason}")
         for lift in plan.lifts:
             if lift.liftable:
                 liftable += 1
@@ -752,17 +1018,26 @@ def render_plan(
         for edition, (keys, inherited_from) in plan.manifests.items():
             carried = f" inherited_from={inherited_from}" if inherited_from else ""
             lines.append(f"manifest {plan.modelo}/{edition} fields={','.join(keys)}{carried}")
+        for lift, recent in plan.skipped:
+            for path, age in recent:
+                lines.append(
+                    f"skip modelo={plan.modelo} edition={lift.edition} family={lift.family} "
+                    f"path={path.as_posix()} age_minutes={age:.1f}"
+                )
         if written is not None:
             for edition, count in _written_editions(written.get(plan.modelo, ())).items():
                 lines.append(f"wrote modelo={plan.modelo} edition={edition} files={count}")
     refusals = sum(len(plan.refusals) for plan in plans)
     breakdown = " ".join(f"{family}={per_family[family]}" for family in FAMILIES if per_family.get(family))
+    excluded_total = f" excluded={excluded}" if excluded else ""
     if written is not None:
         total = sum(len(paths) for paths in written.values())
-        lines.append(f"total applied={total} {breakdown} refusals={refusals}".replace("  ", " "))
+        lines.append(f"total applied={total} {breakdown} refusals={refusals}{excluded_total}".replace("  ", " "))
         return "\n".join(lines)
     lines.append(
-        f"total {'applied' if applied else 'planned'}={liftable} {breakdown} refusals={refusals}".replace("  ", " ")
+        (
+            f"total {'applied' if applied else 'planned'}={liftable} {breakdown} refusals={refusals}{excluded_total}"
+        ).replace("  ", " ")
     )
     return "\n".join(lines)
 
@@ -782,6 +1057,49 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser.add_argument("--apply", action="store_true", help="Write the lift.")
     parser.add_argument("--report", type=Path, help="Write the rendered report to this path as well as to stdout.")
     parser.add_argument(
+        "--skip-recent-minutes",
+        type=float,
+        default=0,
+        metavar="N",
+        help=(
+            "Withhold any lift whose files were modified within N minutes, so a live edit by "
+            "another writer is never written over. 0, the default, is off."
+        ),
+    )
+    parser.add_argument(
+        "--exclude",
+        action="append",
+        default=[],
+        metavar="MODELO",
+        help="Withhold a whole modelo from the run; repeatable.",
+    )
+    parser.add_argument(
+        "--exclusions-file",
+        type=Path,
+        default=None,
+        help=(
+            "A file of exclusions, one '<modelo>' or '<modelo>/<edition>' per line. A '#' "
+            "comment states the reason for the entries that follow it."
+        ),
+    )
+    parser.add_argument(
+        "--exclude-edition",
+        action="append",
+        default=[],
+        metavar="MODELO/EDITION",
+        help=(
+            "Withhold one edition from the run, named as '<modelo>/<edition>'; repeatable. "
+            "An excluded edition is never examined: it plans nothing, refuses nothing and "
+            "carries no declaration forward, and is listed in the report with its reason."
+        ),
+    )
+    parser.add_argument(
+        "--exclude-reason",
+        default=DEFAULT_EXCLUSION_REASON,
+        metavar="TEXT",
+        help="The reason reported for every exclusion of this run.",
+    )
+    parser.add_argument(
         "--modelos-root", type=Path, default=REGISTRY_MODELOS_ROOT, help="The corpus root to read and write."
     )
     return parser.parse_args(argv)
@@ -800,13 +1118,28 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"no such modelo directory: {directories[0]}", file=sys.stderr)
         return 2
 
-    plans = [plan_modelo(directory, families) for directory in directories]
+    try:
+        exclusions = collect_exclusions(
+            modelos=args.exclude,
+            editions=args.exclude_edition,
+            reason=args.exclude_reason,
+            path=args.exclusions_file,
+        )
+    except MalformedExclusionError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+    plans = [
+        plan_modelo(directory, families, excluded=excluded_editions(exclusions, directory.name))
+        for directory in directories
+        if not exclusions.excludes_modelo(directory.name)
+    ]
+    withheld = [item for item in exclusions.exclusions if not item.edition]
     failures: list[str] = []
     written: dict[str, Sequence[Path]] = {}
     if args.apply:
         for plan in plans:
             try:
-                written[plan.modelo] = apply_plan(plan, root)
+                written[plan.modelo] = apply_plan(plan, root, skip_recent_minutes=args.skip_recent_minutes)
             except ModeloLiftFailedError as exc:
                 written[plan.modelo] = ()
                 failures.append(str(exc))
@@ -820,7 +1153,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                     )
                     for lift in plan.lifts
                 ]
-    rendered = render_plan(plans, applied=args.apply, written=written if args.apply else None)
+    rendered = render_plan(
+        plans, applied=args.apply, written=written if args.apply else None, withheld_modelos=tuple(withheld)
+    )
     print(rendered)
     for failure in failures:
         print(failure, file=sys.stderr)

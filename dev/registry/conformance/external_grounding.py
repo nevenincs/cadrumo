@@ -185,7 +185,10 @@ def _select_revision_for_filing_year(
         revision
         for revision in revisions
         if revision.period_selector.includes_year(filing_year)
-        and (period is None or selector_token_for_request(revision.period_selector.periods, period) is not None)
+        and (
+            period is None
+            or selector_token_for_request(revision.period_selector.periods_for_year(filing_year), period) is not None
+        )
     ]
     if len(matches) == 1:
         return matches[0]

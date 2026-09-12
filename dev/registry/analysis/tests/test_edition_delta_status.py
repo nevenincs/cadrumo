@@ -318,11 +318,21 @@ class TestEdges:
 
     def _two_editions(self, root: Path, *, successor_manifest: str, predecessor_lineage: bool) -> None:
         lineage = 'continuidad_id = "c1"\n' if predecessor_lineage else ""
+        # The first edition declares an explicit root so the modelo has claimed a
+        # chain. Without that these fixtures describe an UNDECLARED modelo, where
+        # the forest rule makes a single edge unauthorable on its own and every
+        # edge carries `whole_modelo_declaration_required` -- true, and not the
+        # subject of any test below. Declaring it here keeps each case on the
+        # per-edge cause it exists to plant.
         _write_edition(
             root,
             "999",
             "2024",
-            manifest='valid_from = 2024-01-01\nauthority_grade = "filing"\ncasilla_source_refs = ["src-a"]',
+            manifest=(
+                'valid_from = 2024-01-01\nauthority_grade = "filing"\n'
+                'predecessor = { none = { reason = "first edition of the form" } }\n'
+                'casilla_source_refs = ["src-a"]'
+            ),
             casillas=f'[[revisions."2024".casillas]]\nid = "01"\n{lineage}',
         )
         _write_edition(
@@ -390,7 +400,15 @@ class TestEdges:
         assert found[0].blockers == ("successor_withholds_by_design",)
 
     _READY_SUCCESSOR = 'valid_from = 2025-01-01\nauthority_grade = "filing"\ncasilla_source_refs = ["src-a"]'
-    _READY_PREDECESSOR = 'valid_from = 2024-01-01\nauthority_grade = "filing"\ncasilla_source_refs = ["src-a"]'
+    # Declares an explicit root for the same reason `_two_editions` does: without
+    # it the modelo has claimed no chain at all, and the forest rule then blocks
+    # every edge with `whole_modelo_declaration_required` -- correct, and not the
+    # subject of the cases below, which each plant one per-edge cause.
+    _READY_PREDECESSOR = (
+        'valid_from = 2024-01-01\nauthority_grade = "filing"\n'
+        'predecessor = { none = { reason = "first edition of the form" } }\n'
+        'casilla_source_refs = ["src-a"]'
+    )
 
     def test_a_predecessor_lineage_the_successor_drops_without_retiring_blocks(self, tmp_path: Path) -> None:
         """The tool refuses an absence that is not an authored retirement."""
@@ -523,7 +541,14 @@ class TestEdges:
             tmp_path,
             "999",
             "2024",
-            manifest=self._READY_PREDECESSOR + '\npredecessor = "2023"',
+            # Not `_READY_PREDECESSOR`: that constant now carries an explicit
+            # root, and this edition names a real predecessor, so reusing it
+            # would declare `predecessor` twice in one table. The modelo has
+            # claimed a chain either way, which is all the forest rule needs.
+            manifest=(
+                'valid_from = 2024-01-01\nauthority_grade = "filing"\n'
+                'casilla_source_refs = ["src-a"]\npredecessor = "2023"'
+            ),
             casillas='[[revisions."2024".casillas]]\nid = "02"\ncontinuidad_id = "c2"\nrequired = true\n',
         )
         _write_edition(
@@ -860,6 +885,8 @@ class TestSignal:
             "rooted",
             "rooted_recoverable",
             "ledger",
+            "ledger_totality",
+            "root_demotion",
             "family",
             "limitation",
         }
@@ -1666,7 +1693,7 @@ class TestLedgerScope:
         self._pair(tmp_path, chained_successor=True)
         scope = self._scope(tmp_path, "")
         assert (
-            scope.named + scope.unclaimed_predecessor + scope.outside_ledger_scope + scope.unnamed_successor
+            scope.named + scope.unclaimed_predecessor + scope.declared_root_not_first_edition + scope.unnamed_successor
             == scope.unchained_on_edge
         )
 

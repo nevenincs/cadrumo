@@ -278,8 +278,11 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2024-2025".casillas]]
 id = "714"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-rectificacion-de-deducciones-base-imponible"
+continuidad_origin = "seeded"
 number = "714"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_rectificacion_de_deducciones_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -287,8 +290,11 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2024-2025".casillas]]
 id = "715"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-rectificacion-de-deducciones-cuota-deducible"
+continuidad_origin = "seeded"
 number = "715"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_rectificacion_de_deducciones_cuota_deducible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -296,8 +302,11 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2024-2025".casillas]]
 id = "716"
+continuidad_id = "m322-actividades-deduccion-diferenciadas-grupo-1-regularizacion-bienes-inversion-cuota"
+continuidad_origin = "seeded"
 number = "716"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_deduccion_diferenciadas_grupo_1_regularizacion_bienes_inversion_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -305,8 +314,11 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2024-2025".casillas]]
 id = "717"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-suma-de-deducciones-cuota-deducible"
+continuidad_origin = "seeded"
 number = "717"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_suma_de_deducciones_cuota_deducible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -494,8 +506,11 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2024-2025".casillas]]
 id = "732"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-rectificacion-de-deducciones-base-imponible"
+continuidad_origin = "seeded"
 number = "732"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_rectificacion_de_deducciones_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -503,8 +518,11 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2024-2025".casillas]]
 id = "733"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-rectificacion-de-deducciones-cuota-deducible"
+continuidad_origin = "seeded"
 number = "733"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_rectificacion_de_deducciones_cuota_deducible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -512,8 +530,11 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2024-2025".casillas]]
 id = "734"
+continuidad_id = "m322-actividades-deduccion-diferenciadas-grupo-2-regularizacion-bienes-inversion-cuota"
+continuidad_origin = "seeded"
 number = "734"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_deduccion_diferenciadas_grupo_2_regularizacion_bienes_inversion_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -521,8 +542,11 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:a
 
 [[revisions."2024-2025".casillas]]
 id = "735"
+continuidad_id = "m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-suma-de-deducciones-cuota-deducible"
+continuidad_origin = "seeded"
 number = "735"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
+semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_suma_de_deducciones_cuota_deducible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -578,8 +602,11 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2024-2025".casillas]]
 id = "79"
+continuidad_id = "m322-operaciones-ejercicio-entregas-inmuebles-financieras-no-habituales"
+continuidad_origin = "seeded"
 number = "79"
 section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_entregas_inmuebles_financieras_no_habituales"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -587,8 +614,11 @@ legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:
 
 [[revisions."2024-2025".casillas]]
 id = "80"
+continuidad_id = "m322-operaciones-ejercicio-regimen-general"
+continuidad_origin = "seeded"
 number = "80"
 section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_regimen_general"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -596,8 +626,11 @@ legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:
 
 [[revisions."2024-2025".casillas]]
 id = "81"
+continuidad_id = "m322-operaciones-ejercicio-criterio-caja-regla-general-art-75-liva"
+continuidad_origin = "seeded"
 number = "81"
 section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_criterio_caja_regla_general_art_75_liva"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -605,8 +638,11 @@ legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:
 
 [[revisions."2024-2025".casillas]]
 id = "83"
+continuidad_id = "m322-operaciones-ejercicio-exentas-sin-derecho-deduccion"
+continuidad_origin = "seeded"
 number = "83"
 section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_exentas_sin_derecho_deduccion"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -614,11 +650,11 @@ legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:
 
 [[revisions."2024-2025".casillas]]
 id = "84"
-continuidad_id = "84"
+continuidad_id = "m322-operaciones-ejercicio-no-sujetas-reglas-localizacion-excepto-casilla-126"
 continuidad_origin = "seeded"
 number = "84"
-section = ["iva", "regimen_general", "devengado"]
-semantic_role = "m322_operaciones_no_sujetas_por_reglas_de_localizacion"
+section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_no_sujetas_reglas_localizacion_excepto_casilla_126"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -626,8 +662,11 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2024-2025".casillas]]
 id = "86"
+continuidad_id = "m322-operaciones-ejercicio-regimen-simplificado"
+continuidad_origin = "seeded"
 number = "86"
 section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_regimen_simplificado"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -635,8 +674,11 @@ legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:
 
 [[revisions."2024-2025".casillas]]
 id = "88"
+continuidad_id = "m322-operaciones-ejercicio-total-volumen-operaciones"
+continuidad_origin = "seeded"
 number = "88"
 section = ["iva", "resumen_anual", "operaciones"]
+semantic_role = "m322_operaciones_ejercicio_total_volumen_operaciones"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -644,8 +686,11 @@ legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:
 
 [[revisions."2024-2025".casillas]]
 id = "89"
+continuidad_id = "m322-informacion-tributacion-territorio-alava"
+continuidad_origin = "seeded"
 number = "89"
 section = ["iva", "tributacion_territorio"]
+semantic_role = "m322_informacion_tributacion_territorio_alava"
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -653,8 +698,11 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2024-2025".casillas]]
 id = "90"
+continuidad_id = "m322-informacion-tributacion-territorio-guipuzcoa"
+continuidad_origin = "seeded"
 number = "90"
 section = ["iva", "tributacion_territorio"]
+semantic_role = "m322_informacion_tributacion_territorio_guipuzcoa"
 data_type = "ratio"
 required = false
 input_kind = "manual"
@@ -662,8 +710,11 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2024-2025".casillas]]
 id = "91"
+continuidad_id = "m322-informacion-tributacion-territorio-vizcaya"
+continuidad_origin = "seeded"
 number = "91"
 section = ["iva", "tributacion_territorio"]
+semantic_role = "m322_informacion_tributacion_territorio_vizcaya"
 data_type = "ratio"
 required = false
 input_kind = "manual"

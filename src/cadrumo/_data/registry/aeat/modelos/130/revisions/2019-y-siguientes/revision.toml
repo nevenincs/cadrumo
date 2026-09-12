@@ -36,3 +36,8 @@ source_refs = [
     "aeat-dr-130-2019-v12",
     "aeat-modelo-130-instructions",
 ]
+
+[revisions."2019-y-siguientes".source_default_dispositions.dependency_classifications]
+kind = "underivable"
+reason = """
+lift refuses: 2 source_refs statement(s) not textually rewritable: 0001-modelo-130-dep-130.toml: source_refs = [; 0002-modelo-130-dep-100.toml: source_refs = ["""

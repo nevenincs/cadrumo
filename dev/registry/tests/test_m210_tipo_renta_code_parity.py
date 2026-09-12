@@ -15,8 +15,8 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
 from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 
 from ..compiler import validate_revision_rules as rules
 
@@ -38,7 +38,7 @@ def test_registry_and_core_projection_are_in_parity() -> None:
 def test_declared_code_without_core_projection_fails_build() -> None:
     # Drop code "01" from the core projection: it stays declared in the registry
     # but no longer projects, so the gate must refuse (declared-not-projected).
-    reduced = set(M210_TIPO_RENTA_CODE_PROJECTION) - {"01"}
+    reduced = set(m210_tipo_renta_code_projection()) - {"01"}
 
     failures = rules.validate_m210_tipo_renta_code_projection_parity(
         _m210_definition(),
@@ -51,7 +51,7 @@ def test_declared_code_without_core_projection_fails_build() -> None:
 def test_core_projected_code_not_declared_fails_build() -> None:
     # Add a code "99" to the core projection that the registry never declares,
     # so the gate must refuse (projected-not-declared).
-    augmented = set(M210_TIPO_RENTA_CODE_PROJECTION) | {"99"}
+    augmented = set(m210_tipo_renta_code_projection()) | {"99"}
 
     failures = rules.validate_m210_tipo_renta_code_projection_parity(
         _m210_definition(),

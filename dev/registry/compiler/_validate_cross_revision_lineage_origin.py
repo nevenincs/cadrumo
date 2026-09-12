@@ -16,7 +16,14 @@ policy keeps them apart:
   link it grounds needs no ``semantic_role`` to be accepted as a link.
 
 Both must resolve their predecessor: exactly one row carrying the chain in the
-adjacent, non-overlapping predecessor edition.
+edition this one is judged against. Which edition that is comes from the
+lineage totality rule's
+:func:`~cadrumo.domain.calculations.registry.casilla_lineage_totality.judging_predecessor`
+and is not decided again here -- a predecessor is a closed earlier edition, or
+the edition a row names, and never a concurrent sibling sharing this one's
+validity window. Two editions whose declared period selectors overlap while the
+earlier one closes before the later one opens ARE a succession, and a
+continuation across them holds.
 
 Where this policy stops:
 
@@ -28,7 +35,7 @@ Where this policy stops:
   unmarked rows;
 - the absence origins (``new_on_form``, ``predecessor_edition_silent``,
   ``not_on_form``) are not read here;
-- only the adjacent predecessor link is checked. A seeded row two editions on
+- only the one predecessor link is checked. A seeded row two editions on
   is judged against its own predecessor, never against the chain's start.
 """
 
@@ -38,8 +45,9 @@ from dataclasses import dataclass
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
+from cadrumo.domain.calculations.registry.casilla_lineage_totality import judging_predecessor
 from cadrumo.domain.calculations.registry.ids import RevisionId
-from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
+from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
@@ -62,7 +70,7 @@ def lineage_origin_continuity_failures(modelo: ModeloDefinition) -> tuple[str, .
     revisions = ordered_revisions(modelo)
     failures: list[str] = []
     for index, revision in enumerate(revisions):
-        predecessor_revision = revisions[index - 1] if index > 0 else None
+        predecessor_revision = judging_predecessor(modelo, revisions, index)
         for casilla in revision.casillas:
             origin = casilla.continuidad_origin
             if origin is None or not origin.continues_a_chain:
@@ -111,7 +119,7 @@ def role_exempt_occurrences(modelo: ModeloDefinition) -> frozenset[_OccurrenceKe
     grounded_successors: set[_OccurrenceKey] = set()
     ungrounded_successors: set[_OccurrenceKey] = set()
     for index, revision in enumerate(revisions):
-        predecessor_revision = revisions[index - 1] if index > 0 else None
+        predecessor_revision = judging_predecessor(modelo, revisions, index)
         for casilla in revision.casillas:
             if casilla.continuidad_id is None:
                 continue
@@ -155,11 +163,10 @@ def _resolve_predecessor(
 ) -> _ResolvedPredecessor | str:
     """Return the row ``casilla`` continues, or the reason no single row qualifies."""
     if predecessor_revision is None:
-        return "the first edition has no predecessor edition to continue"
-    if revisions_overlap(predecessor_revision, revision):
         return (
-            f"predecessor edition {predecessor_revision.id!r} shares a validity window with this edition, "
-            "so neither precedes the other"
+            f"edition {revision.id!r} has no predecessor edition to continue: it is either the first edition of "
+            "the modelo, or a none-rooted edition whose validity overlaps the edition before it, which makes the "
+            "two concurrent scheme variants rather than a succession"
         )
     carriers = tuple(
         candidate

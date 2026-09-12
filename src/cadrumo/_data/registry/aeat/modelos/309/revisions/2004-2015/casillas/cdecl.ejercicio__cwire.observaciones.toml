@@ -43,22 +43,29 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 [[revisions."2004-2015".casillas]]
-id = "decl.transmitente-apellidos"
+id = "wire.transmitente-apellidos-nombre-razon-social"
 number = "34"
 section = ["declarante","liquidacion"]
 data_type = "name"
+# The official 2004 design has one 40-character campo 9 at position 34,
+# labelled "Apellidos y nombre ó razón social". It is a combined identity
+# surface, not the surname/company member of the split 2016 design; keep its
+# historical wire concept distinct so the old surface can be retired without
+# fabricating a one-to-one chain.
+continuidad_id = "transmitente-apellidos-nombre-razon-social"
 semantic_role = "transmitente_apellidos"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 [[revisions."2004-2015".casillas]]
-id = "decl.transmitente-pais"
+id = "wire.transmitente-pais-texto"
 number = "74"
 section = ["declarante","liquidacion"]
 data_type = "text"
 # The 2004 source gives this as a fourteen-character country description.
 # Later designs carry a two-character country code, so it is not the same
 # typed semantic role despite the shared display label.
+continuidad_id = "transmitente-pais-texto-historico"
 semantic_role = "transmitente_pais_texto_historico"
 required = false
 input_kind = "manual"
@@ -69,6 +76,10 @@ id = "decl.situacion-tributaria-agricola"
 number = "88"
 section = ["declarante","liquidacion"]
 data_type = "text"
+# The 2004 taxpayer-status flags are six independent X-or-blank fields. The
+# 2016 design replaces this block with one coded field, so each historical
+# surface is retired rather than linked to the aggregate category selector.
+continuidad_id = "situacion-tributaria-agricola"
 semantic_role = "situacion_tributaria_agricola"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
@@ -81,6 +92,7 @@ id = "decl.situacion-tributaria-recargo-equivalencia"
 number = "89"
 section = ["declarante","liquidacion"]
 data_type = "text"
+continuidad_id = "situacion-tributaria-recargo-equivalencia"
 semantic_role = "situacion_tributaria_recargo_equivalencia"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
@@ -93,6 +105,7 @@ id = "decl.situacion-tributaria-sin-derecho-deduccion"
 number = "90"
 section = ["declarante","liquidacion"]
 data_type = "text"
+continuidad_id = "situacion-tributaria-sin-derecho-deduccion"
 semantic_role = "situacion_tributaria_sin_derecho_deduccion"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
@@ -105,6 +118,7 @@ id = "decl.situacion-tributaria-persona-juridica-no-empresario"
 number = "91"
 section = ["declarante","liquidacion"]
 data_type = "text"
+continuidad_id = "situacion-tributaria-persona-juridica-no-empresario"
 semantic_role = "situacion_tributaria_persona_juridica_no_empresario"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
@@ -117,6 +131,7 @@ id = "decl.situacion-tributaria-persona-fisica-no-empresario"
 number = "92"
 section = ["declarante","liquidacion"]
 data_type = "text"
+continuidad_id = "situacion-tributaria-persona-fisica-no-empresario"
 semantic_role = "situacion_tributaria_persona_fisica_no_empresario"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
@@ -129,6 +144,7 @@ id = "decl.situacion-tributaria-otras"
 number = "93"
 section = ["declarante","liquidacion"]
 data_type = "text"
+continuidad_id = "situacion-tributaria-otras"
 semantic_role = "situacion_tributaria_otras"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
@@ -141,6 +157,10 @@ id = "decl.hecho-imponible-adquisicion-intracomunitaria"
 number = "94"
 section = ["declarante","liquidacion"]
 data_type = "text"
+# The 2004 taxable-event flags are six independent X-or-blank fields. The
+# 2016 design replaces this block with one coded field, so each historical
+# surface is retired rather than linked to the aggregate event selector.
+continuidad_id = "hecho-imponible-adquisicion-intracomunitaria"
 semantic_role = "hecho_imponible_adquisicion_intracomunitaria"
 required = false
 input_kind = "manual"
@@ -150,6 +170,7 @@ id = "decl.hecho-imponible-medios-transporte-nuevos"
 number = "95"
 section = ["declarante","liquidacion"]
 data_type = "text"
+continuidad_id = "hecho-imponible-medios-transporte-nuevos"
 semantic_role = "hecho_imponible_medios_transporte_nuevos"
 required = false
 input_kind = "manual"
@@ -159,6 +180,7 @@ id = "decl.hecho-imponible-inversion-sujeto-pasivo"
 number = "96"
 section = ["declarante","liquidacion"]
 data_type = "text"
+continuidad_id = "hecho-imponible-inversion-sujeto-pasivo"
 semantic_role = "hecho_imponible_inversion_sujeto_pasivo"
 required = false
 input_kind = "manual"
@@ -168,6 +190,7 @@ id = "decl.hecho-imponible-entrega-inversion-inmobiliaria"
 number = "97"
 section = ["declarante","liquidacion"]
 data_type = "text"
+continuidad_id = "hecho-imponible-entrega-inversion-inmobiliaria"
 semantic_role = "hecho_imponible_entrega_inversion_inmobiliaria"
 required = false
 input_kind = "manual"
@@ -177,6 +200,7 @@ id = "decl.hecho-imponible-procedimiento-administrativo-judicial"
 number = "98"
 section = ["declarante","liquidacion"]
 data_type = "text"
+continuidad_id = "hecho-imponible-procedimiento-administrativo-judicial"
 semantic_role = "hecho_imponible_procedimiento_administrativo_judicial"
 required = false
 input_kind = "manual"
@@ -186,6 +210,7 @@ id = "decl.hecho-imponible-otros"
 number = "99"
 section = ["declarante","liquidacion"]
 data_type = "text"
+continuidad_id = "hecho-imponible-otros"
 semantic_role = "hecho_imponible_otros"
 required = false
 input_kind = "manual"

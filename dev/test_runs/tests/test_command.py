@@ -165,6 +165,91 @@ def test_locale_signal_normalizes_nonzero_child_without_payload_to_tool_failure(
     assert metadata["exit_status"] == 7
 
 
+def test_locale_signal_normalizes_rich_traceback_without_leaking_it_to_stdout(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    traceback = "\n".join(
+        (
+            "┌──────────────── Traceback (most recent call last) ────────────────┐",
+            "│ dev/locales/cli.py:123 in status                                      │",
+            "└─────────────────────────────────────────────────────────────────────┘",
+            "AuthorityArtifactFormatError: published authority artifact uses superseded ",
+            "format 'cadrumo-authority-artifact-v3'; republish it as ",
+            "'cadrumo-authority-artifact-v4'",
+        )
+    )
+    script = f"import sys; sys.stdout.buffer.write({traceback!r}.encode()); raise SystemExit(1)"
+
+    status = run(
+        (sys.executable, "-c", script),
+        repository=tmp_path,
+        family="test-runs",
+        label="check-locales",
+        signal="locales-status",
+    )
+
+    assert status == 7
+    output = capsys.readouterr().out
+    envelopes = [json.loads(line) for line in output.splitlines()]
+    assert [item["event"] for item in envelopes] == ["run_started", "run_finished"]
+    assert "Traceback" not in output
+    finished = envelopes[-1]
+    assert finished["classification"] == "tool_failure"
+    assert finished["result"] == "unavailable"
+    assert finished["error"] == {
+        "category": "authority_artifact",
+        "type": "AuthorityArtifactFormatError",
+        "message": (
+            "published authority artifact uses superseded format "
+            "'cadrumo-authority-artifact-v3'; republish it as 'cadrumo-authority-artifact-v4'"
+        ),
+    }
+    assert finished["translation_backlog"] == {
+        "cells_to_translate": None,
+        "exact": False,
+        "unique_keys_to_translate": None,
+    }
+    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    log = (run_dir / "run.log").read_text(encoding="utf-8")
+    assert "AuthorityArtifactFormatError" in log
+    report = json.loads((run_dir / "artifacts" / "locale-status.json").read_text(encoding="utf-8"))
+    assert report["details"]["root_cause"] == finished["error"]
+    assert report["summary"]["translation_backlog"]["cells_to_translate"] is None
+
+
+def test_locale_signal_normalizes_import_traceback_generically(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    traceback = "\n".join(
+        (
+            "Traceback (most recent call last):",
+            '  File "dev/locales/__main__.py", line 5, in <module>',
+            "    from .cli import app",
+            "ModuleNotFoundError: No module named 'cadrumo.core.setup_answers'",
+        )
+    )
+    script = f"print({traceback!r}); raise SystemExit(1)"
+
+    status = run(
+        (sys.executable, "-c", script),
+        repository=tmp_path,
+        family="test-runs",
+        label="locales-status",
+        signal="locales-status",
+    )
+
+    assert status == 7
+    finished = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert finished["error"]["category"] == "import"
+    assert finished["error"]["type"] == "ModuleNotFoundError"
+    assert finished["error"]["message"] == "No module named 'cadrumo.core.setup_answers'"
+    assert "locales" not in finished
+    assert "domains" not in finished
+    assert "cells" not in finished
+
+
 def test_command_run_confines_child_temp_and_cache_paths(tmp_path: Path) -> None:
     probe = (
         "import json, os, pathlib, tempfile; "

@@ -19,6 +19,7 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactFamily
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 
+from ..compiler.fact_loader import load_governed_facts
 from ..compiler.fact_providers import compile_registered_fact_providers
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -59,6 +60,13 @@ _STATUTORY_FACT_IDS = frozenset(
         "lirpf-work-income-multiple-pagadores-reduced-limit",
     },
 )
+
+_SPANISH_TAX_ID_PERSON_CHECKS = {
+    "tax_id.check.nif_letters": "TRWAGMYFPDXBNJZSQVHLCKE",
+    "tax_id.check.nie_prefix.X": "0",
+    "tax_id.check.nie_prefix.Y": "1",
+    "tax_id.check.nie_prefix.Z": "2",
+}
 
 
 def _catalogue():
@@ -139,3 +147,25 @@ def test_authored_reduced_multiple_payer_limit_fails_closed_after_last_grounded_
             ),
             authority_digest="c" * 64,
         )
+
+
+def test_spanish_tax_id_person_checks_remain_bound_to_official_algorithm_evidence() -> None:
+    facts = load_governed_facts(bundled_path("registry", "aeat", "facts"))
+    variant = next(fact for fact in facts if fact.fact_id == "spanish-tax-identifier-format").variants[0]
+    entries = {entry.key: entry.value for entry in variant.payload.entries}
+    citations = {citation.source_ref: citation.required_text for citation in variant.source_citations}
+
+    assert {key: entries[key] for key in _SPANISH_TAX_ID_PERSON_CHECKS} == _SPANISH_TAX_ID_PERSON_CHECKS
+    assert variant.source_refs == (
+        "aeat-modelo-036-procedure",
+        "aeat-nif-personas-fisicas",
+        "aeat-nif-personas-juridicas",
+        "dgoj-nif-nie-control",
+    )
+    assert citations["dgoj-nif-nie-control"] == (
+        "Se divide el número entre 23 y el resto se sustituye por una letra",
+        "RESTO 0 1 2 3 4 5 6 7 8 9 10 11 LETRA T R W A G M Y F P D X B",
+        "RESTO 12 13 14 15 16 17 18 19 20 21 22 LETRA N J Z S Q V H L C K E",
+        "X → 0 Y → 1 Z → 2",
+        "se aplica el mismo algoritmo que para el NIF",
+    )

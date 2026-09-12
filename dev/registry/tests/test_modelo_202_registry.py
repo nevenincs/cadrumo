@@ -14,7 +14,7 @@ from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expres
 from cadrumo.domain.calculations.registry.relations import relation_source_requirements
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
-from cadrumo.tests.registry_snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.legal_grounding import verify_legal_catalogue
 from ..compiler.validator import RegistryValidator

@@ -77,7 +77,7 @@ def validate_draft_field_slot_width(
     When the attribute's source is a typed value of fixed width, a slot of some
     other width is holding a different value than the attribute yields. That is
     the shape of a real defect: Modelo 200 bound the declarant's own
-    :data:`~core.identity.tax_id.SubjectTaxId` into a 15-wide slot the diseño reserves
+    :data:`~domain.calculations.registry.tax_id_format.SubjectTaxId` into a 15-wide slot the diseño reserves
     for a group parent's foreign tax identification number, and every export
     right-padded the filer's identifier into another entity's field.
 

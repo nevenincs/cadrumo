@@ -22,6 +22,7 @@ from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPred
 
 from ..compiler.edition_materialisation import MaterialisedEdition, materialise_edition
 from ..compiler.loader import load_modelo_directory
+from ..compiler.loader_grammar import REVISION_SECTION_FIELDS
 from ._export_tree import _render_toml_bytes
 
 __all__ = [
@@ -40,7 +41,9 @@ _BOOTSTRAP_TARGETS_PATH: Final[Path] = Path(__file__).with_name("generated_expor
 _CONTINUITY_SECTIONS: Final[tuple[str, ...]] = ("casillas", "casilla_continuidad_evolutions")
 _PREDECESSOR_DECLARATION: Final = "predecessor"
 _CASILLA_SECTION: Final = "casillas"
-_COMPLETE_CASILLA_FRAGMENT: Final = "complete-edition.toml"
+_COMPLETE_EDITION_FRAGMENT: Final = "complete-edition.toml"
+_EXPORT_AUTHORITY_MEMBERS: Final[frozenset[str]] = frozenset({"export", "export_layouts"})
+_SOURCE_NATIVE_SECTIONS: Final[frozenset[str]] = frozenset({"casillas", "casilla_continuidad_evolutions"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -296,6 +299,15 @@ def _write_complete_candidate_edition(revision_root: Path, edition: Materialised
     drops the predecessor and any review claim the full copy does not carry, and
     the casilla section becomes one fragment holding every resolved row in the
     loader's order.
+
+    A section the target inherited rather than restated is staged too, because
+    the candidate names no predecessor and the chain those rows came from is
+    pruned with its siblings. Modelo 390's later editions restate three of their
+    ten application links and none of their filing schedules, so the candidate
+    loaded a revision whose constructs referenced ids it no longer carried and
+    validation refused them as unknown. A section already staged with exactly
+    the rows the loader resolved is left untouched, so a target that restates
+    its whole edition still stages as the plain copy it always was.
     """
     manifest = tomllib.loads((revision_root / "revision.toml").read_text("utf-8"))
     manifest_members = frozenset(manifest.get("revisions", {}).get(edition.revision_id, {}))
@@ -307,13 +319,57 @@ def _write_complete_candidate_edition(revision_root: Path, edition: Materialised
     (revision_root / "revision.toml").write_bytes(
         _render_toml_bytes("revision.toml", {"revisions": {edition.revision_id: revision_table}}),
     )
-    casillas_root = revision_root / _CASILLA_SECTION
-    shutil.rmtree(casillas_root)
-    casillas_root.mkdir()
-    (casillas_root / _COMPLETE_CASILLA_FRAGMENT).write_bytes(
+    _write_complete_edition_section(revision_root, edition, _CASILLA_SECTION, staged_rows)
+    for member, value in edition.table.items():
+        if member in _EXPORT_AUTHORITY_MEMBERS or member == _CASILLA_SECTION:
+            continue
+        if member not in REVISION_SECTION_FIELDS:
+            continue
+        if _staged_section_rows(revision_root / member, edition.revision_id, member) == value:
+            continue
+        _write_complete_edition_section(revision_root, edition, member, value)
+
+
+def _staged_section_rows(section_root: Path, revision_id: str, member: str) -> object:
+    """Return what the staged fragments already declare for one section.
+
+    ``None`` for an absent section, so a member present nowhere in the candidate
+    can never compare equal to the rows the loader resolved for it.
+    """
+    if not section_root.is_dir():
+        return None
+    staged: list[object] = []
+    for fragment in sorted(section_root.glob("*.toml")):
+        payload = tomllib.loads(fragment.read_text("utf-8"))
+        declared = payload.get("revisions", {}).get(revision_id, {}).get(member)
+        if isinstance(declared, list):
+            staged.extend(declared)
+        elif declared is not None:
+            return None
+    return staged
+
+
+def _write_complete_edition_section(
+    revision_root: Path,
+    edition: MaterialisedEdition,
+    member: str,
+    value: object,
+) -> None:
+    """Replace one staged section with the single fragment its edition resolves to."""
+    member_root = revision_root / member
+    if member_root.exists():
+        shutil.rmtree(member_root)
+    member_root.mkdir()
+    # The loader names source-native and administrative sections by different
+    # conventions and refuses a fragment spelled the other way, so the complete
+    # fragment is spelled the way its own section requires.
+    fragment_name = (
+        _COMPLETE_EDITION_FRAGMENT if member in _SOURCE_NATIVE_SECTIONS else f"0001-{_COMPLETE_EDITION_FRAGMENT}"
+    )
+    (member_root / fragment_name).write_bytes(
         _render_toml_bytes(
-            f"{_CASILLA_SECTION}/{_COMPLETE_CASILLA_FRAGMENT}",
-            {"revisions": {edition.revision_id: {_CASILLA_SECTION: staged_rows}}},
+            f"{member}/{fragment_name}",
+            {"revisions": {edition.revision_id: {member: value}}},
         ),
     )
 

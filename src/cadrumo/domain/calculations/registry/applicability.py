@@ -101,7 +101,13 @@ if TYPE_CHECKING:
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.time.clock import today_madrid
-from ...contribuyente.entity_type import EntityType
+from ...contribuyente.entity_type import (
+    EntityType,
+    entity_type_attribution_entity_token,
+    entity_type_natural_person_token,
+    entity_type_tokens,
+    require_entity_type,
+)
 from ...contribuyente.renta_codes import FiscalResidency
 from ...deadlines.models import (
     IrpfEstimationRegime,
@@ -111,11 +117,12 @@ from ...deadlines.models import (
 )
 from ._applicability_labels import PAYER_FACT_INCOMPLETE_LABELS as _PAYER_FACT_INCOMPLETE_LABELS
 from .applicability_payer_facts import PayerFact, payer_fact_holds
-from .applicability_routes import TAX_ROUTE_FOR_ENTITY_TYPE as _TAX_ROUTE_FOR_ENTITY_TYPE
-from .applicability_routes import TaxRoute
+from .applicability_routes import TaxRoute, tax_route_for_entity_type
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
 from .ids import LegalRefId, ModeloId
+from .iva_schema_vocabulary import iva_regime_self_assessment_tokens, require_iva_regime
+from .irpf_regimes import irpf_estimation_regime_directa_normal_token, require_irpf_estimation_regime
 from .schema_base import DateAxis
 from .schema_revision_members import ApplicabilityRuleDefinition
 
@@ -286,7 +293,7 @@ class ModeloApplicabilityRule(BaseModel):
     def _entity_type_result(self, profile: TaxpayerProfile) -> ModeloApplicability | None:
         if profile.entity_type in self.applicable_entity_types:
             return None
-        if self.cuota_bearing and profile.entity_type is EntityType.ATTRIBUTION_ENTITY:
+        if self.cuota_bearing and profile.entity_type == entity_type_attribution_entity_token():
             return ModeloApplicability(
                 modelo=self.modelo,
                 verdict=ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH,
@@ -296,7 +303,7 @@ class ModeloApplicabilityRule(BaseModel):
         return self._not_applicable()
 
     def _natural_person_axes_result(self, profile: TaxpayerProfile) -> ModeloApplicability | None:
-        if profile.entity_type is not EntityType.NATURAL_PERSON:
+        if profile.entity_type != entity_type_natural_person_token():
             return None
         if self.required_income_categories:
             if not profile.irpf_income_categories:
@@ -310,7 +317,7 @@ class ModeloApplicabilityRule(BaseModel):
             if profile.irpf_income_categories.isdisjoint(self.required_income_categories):
                 return self._not_applicable()
         if self.required_estimation_regimes:
-            regime = profile.irpf_estimation_regime or IrpfEstimationRegime.DIRECTA_NORMAL
+            regime = profile.irpf_estimation_regime or irpf_estimation_regime_directa_normal_token()
             if regime not in self.required_estimation_regimes:
                 return self._not_applicable()
         return None
@@ -386,7 +393,7 @@ def hydrate_applicability_rule(modelo: Modelo, fragment: ApplicabilityRuleDefini
 
     The loader boundary for the ``applicability`` schema family: every
     free-form TOML string on ``fragment`` is resolved
-    here to its ``domain.deadlines`` enum member (or :class:`PayerFact`),
+    here to its typed registry token (or :class:`PayerFact`),
     never left as a raw string for a downstream branch to compare against.
     An unknown token raises :class:`RegistryValidationError` naming the
     offending rule and the underlying enum-coercion error, mirroring the
@@ -403,23 +410,23 @@ def hydrate_applicability_rule(modelo: Modelo, fragment: ApplicabilityRuleDefini
         The equivalent :class:`ModeloApplicabilityRule`.
 
     Raises:
-        RegistryValidationError: A field names a token with no matching enum
-            member.
+        RegistryValidationError: A field names a token not declared by the
+            selected facts registry.
     """
     try:
         return ModeloApplicabilityRule(
             modelo=modelo.value,
-            applicable_entity_types=frozenset(EntityType(value) for value in fragment.applicable_entity_types),
+            applicable_entity_types=frozenset(require_entity_type(value) for value in fragment.applicable_entity_types),
             required_income_categories=frozenset(
                 IrpfIncomeCategory(value) for value in fragment.required_income_categories
             ),
             required_estimation_regimes=frozenset(
-                IrpfEstimationRegime(value) for value in fragment.required_estimation_regimes
+                require_irpf_estimation_regime(value) for value in fragment.required_estimation_regimes
             ),
             applicable_fiscal_residencies=frozenset(
-                FiscalResidency(value) for value in fragment.applicable_fiscal_residencies
+                FiscalResidency._from_registry(value) for value in fragment.applicable_fiscal_residencies
             ),
-            applicable_iva_regimes=frozenset(IVARegime(value) for value in fragment.applicable_iva_regimes),
+            applicable_iva_regimes=frozenset(require_iva_regime(value) for value in fragment.applicable_iva_regimes),
             required_payer_fact=PayerFact(fragment.required_payer_fact)
             if fragment.required_payer_fact is not None
             else None,
@@ -428,7 +435,7 @@ def hydrate_applicability_rule(modelo: Modelo, fragment: ApplicabilityRuleDefini
             cuota_bearing=fragment.cuota_bearing,
             legal_refs=fragment.legal_refs,
         )
-    except ValueError as exc:
+    except (ValueError, RegistryValidationError) as exc:
         raise RegistryValidationError(
             f"applicability rule {fragment.id!r} for modelo {modelo.value!r} does not hydrate: {exc}",
         ) from exc
@@ -673,12 +680,8 @@ def _undetermined_applicability(
 # invented slugs. Full per-entity / per-regime coverage of every
 # registered modelo is a deferred expansion.
 
-_IVA_OBLIGED_ENTITY_TYPES: frozenset[EntityType] = frozenset(
-    {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY, EntityType.ATTRIBUTION_ENTITY},
-)
-_IVA_SELF_ASSESSMENT_REGIMES: frozenset[IVARegime] = frozenset(
-    {IVARegime.GENERAL, IVARegime.SIMPLIFICADO},
-)
+_IVA_OBLIGED_ENTITY_TYPES: frozenset[EntityType] = frozenset(entity_type_tokens())
+_IVA_SELF_ASSESSMENT_REGIMES: frozenset[IVARegime] = iva_regime_self_assessment_tokens()
 
 MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # Modelo 390 — declaración-resumen anual del IVA. The annual companion
@@ -953,7 +956,7 @@ def taxpayer_model_is_declared(profile: TaxpayerProfile) -> bool:
     """
     if profile.entity_type is None:
         return False
-    if profile.entity_type is EntityType.NATURAL_PERSON:
+    if profile.entity_type == entity_type_natural_person_token():
         return bool(profile.irpf_income_categories)
     return True
 
@@ -981,7 +984,7 @@ def derive_tax_route(profile: TaxpayerProfile) -> TaxRoute:
     """
     if profile.entity_type is None:
         return TaxRoute.INCOMPLETE
-    return _TAX_ROUTE_FOR_ENTITY_TYPE[profile.entity_type]
+    return tax_route_for_entity_type(profile.entity_type)
 
 
 def derive_modelo_applicability(
