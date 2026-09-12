@@ -9,22 +9,7 @@ personal local state needed to parameterize RENTA verification.
 :class:`DescendantInfo` carry the Modelo 100 personal/family facts, and
 :class:`ProfileKey` exposes the wizard-registered editable profile schema.
 
-Consumers import from the owning module -- :mod:`tax_residence`, :mod:`keys`,
-:mod:`renta_codes`, :mod:`family_types`, :mod:`marriage_facts`,
-:mod:`descendant_facts`, :mod:`constants`, :mod:`guarderia_mensual`,
-:mod:`meses_trabajo`, :mod:`ccaa`, :mod:`errors` -- rather than from this
-package root, which is inert.
-
-The root previously DEFINED the tax-residence models and the region parser as
-well as re-exporting fifty-odd names, which is why deleting an export map could
-not make it inert. Those now live in :mod:`tax_residence`.
-
-The registry in :mod:`keys` raises until the wizard catalogue registers the
-compiled keys -- a deliberate ordering contract, not an export map. It is read
-through :func:`keys.profile_keys`, which resolves at call time; the module
-attribute that once offered the same tuple through a lazy ``__getattr__`` hook
-resolved at the IMPORTER's import time and so raced that registration, and no
-shipped module ever used it.
+The initializer is inert; import contracts from their defining modules.
 """
 
 from __future__ import annotations

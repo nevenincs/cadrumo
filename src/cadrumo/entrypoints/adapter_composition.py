@@ -20,7 +20,7 @@ __all__ = ["profile_adapter_composition"]
 
 
 @contextmanager
-def profile_adapter_composition() -> Generator[None]:
+def profile_adapter_composition() -> Generator[object]:
     """Bind every adapter port a frontend session resolves, and unbind after.
 
     The imports are function-local because entering this scope is what pulls the
@@ -41,6 +41,7 @@ def profile_adapter_composition() -> Generator[None]:
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ..adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
+    from ..adapters.persistence.profile.state_projection import StateProjectionPersistenceAdapter
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.profile.usage_ratios import (
         load_usage_ratios,
@@ -69,10 +70,17 @@ def profile_adapter_composition() -> Generator[None]:
     from ..application.modelo.reconciliation_parsing import bind_reconciliation_evidence_parser
     from ..application.modelo.reconciliation_records import bind_modelo_reconciliation_persistence_factory
     from ..application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
+    from ..application.state_projection_ports import StateProjectionReadPorts
     from ..application.user_profile.custody_ports import bind_profile_custody_port
     from ..application.user_profile.language_resolver import register_language_resolver
     from ..application.user_profile.login_session_port import bind_profile_login_session_port
     from ..application.workflow.persistence import bind_workflow_persistence_port
+
+    projection_adapter = StateProjectionPersistenceAdapter()
+    projection_ports = StateProjectionReadPorts(
+        workspace=projection_adapter,
+        profile=projection_adapter,
+    )
 
     with ExitStack() as composition:
         composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
@@ -106,4 +114,4 @@ def profile_adapter_composition() -> Generator[None]:
         composition.enter_context(bind_auth_provider_selector(select_outbound_auth_provider))
         composition.enter_context(bind_session_store(build_session_store()))
         register_language_resolver()
-        yield
+        yield projection_ports
