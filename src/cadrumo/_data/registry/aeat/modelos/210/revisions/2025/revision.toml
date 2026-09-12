@@ -1,4 +1,6 @@
 [revisions."2025"]
+binding_source_refs = ["aeat-modelo-210-procedure"]
+formula_source_refs = ["aeat-modelo-210-procedure"]
 casilla_source_refs = ["aeat-modelo-210-procedure"]
 # Prepared and reviewed by an agent against the bundled diseno de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and

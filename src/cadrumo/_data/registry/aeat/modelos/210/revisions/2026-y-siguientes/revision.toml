@@ -1,4 +1,6 @@
 [revisions."2026-y-siguientes"]
+binding_source_refs = ["aeat-modelo-210-procedure"]
+formula_source_refs = ["aeat-modelo-210-procedure"]
 predecessor = "2025"
 casilla_source_refs = ["aeat-modelo-210-procedure"]
 reviewed_against = "2025"

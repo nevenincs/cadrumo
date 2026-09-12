@@ -1,4 +1,6 @@
 [revisions."2024"]
+binding_source_refs = ["aeat-dr-190-2025"]
+formula_source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
 casilla_source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 # Prepared and reviewed by an agent against the bundled diseño de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and

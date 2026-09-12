@@ -1,9 +1,22 @@
 [revisions."2025"]
+binding_source_refs = ["enrolled-modelo-182-procedure"]
 casilla_source_refs = ["enrolled-modelo-182-procedure"]
 authority_grade = "applicability"
+# valid_to is open. Orden HAC/1430/2025 disposicion final unica reads, verbatim
+# in the bundled corpus, "sera aplicable, POR PRIMERA VEZ, a las declaraciones
+# informativas correspondientes al ejercicio 2025 para los modelos 199, 182,
+# 193, 184, 282, 289 y 345 [...] que se deban presentar a partir del 1 de enero
+# de 2026" -- "por primera vez" opens a window that runs until an orden amends
+# it, not one that shuts at the ejercicio it names. The approving Orden
+# EHA/3021/2007 art. 1 carries no ejercicio bound, and its art. 5 sets the plazo
+# "en el mes de enero de cada ano". AEAT's current disenos-de-registro page for
+# modelos 100-199 (read 2026-09-12) still lists "182 - Orden EHA/3021/2007
+# (actualizado por Orden HAC/1430/2025, de 3 de diciembre)" and publishes NO
+# ejercicio 2026 design. A closed 2025-12-31 with no successor therefore refused
+# ejercicio 2026 under an authority no orden has withdrawn; that was an
+# authoring defect, not a scope declaration.
 valid_from = 2025-01-01
-valid_to = 2025-12-31
-period_selector = { years = [2025], periods = ["0A"] }
+period_selector = { year_from = 2025, periods = ["0A"] }
 legal_refs = [
     "orden-eha-3021-2007:art-1",
     "orden-eha-3021-2007:art-5",
@@ -12,7 +25,11 @@ legal_refs = [
     "orden-hac-1430-2025:art-2",
     "orden-hac-1430-2025:df-unica",
 ]
+# The open-ended claim rests on both: art. 1 approves modelo 182 with no
+# ejercicio bound, and the HAC/1430/2025 disposicion final unica is the
+# "por primera vez" provision that starts this era at ejercicio 2025.
 orden_aplicabilidad = [
+    "orden-eha-3021-2007:art-1",
     "orden-hac-1430-2025:df-unica",
 ]
 source_refs = [
@@ -27,17 +44,25 @@ donation, not by the donor claiming the deduction, so this application's taxpaye
 declaration's subject rather than its filer; the revision's own prose states this and the grade \
 follows from it. VERIFIED: 7 casillas whose slug `number` values are correct for an informativa \
 tipo-2 record layout, which prints no box numbers (contrast m604, where printed liquidacion boxes \
-were nonetheless slugged); one deadline window for filing year 2025, the NOMINAL 1-31 enero and \
-never pre-shifted, grounded in orden-eha-3021-2007:art-5 and owned by the law-selected 2025 revision; completeness \
+were nonetheless slugged); two deadline windows, filing years 2025 and 2026, each the NOMINAL 1-31 \
+enero and never pre-shifted, grounded in orden-eha-3021-2007:art-5 ("se realizara en el mes de \
+enero de cada ano") and owned by the law-selected revision; completeness \
 manifest equals the calculation closure, with the optional free-text donor name deliberately \
 excluded and the reasoning recorded in the manifest itself; one verification expectation covering \
 the 6 required casillas at min_coverage 1.0. NOT CLAIMED -- independent_check_coverage is 0.0000 \
-meaning NO CLAIM, not zero: no value here was checked against an independent AEAT oracle. NOT \
-CLAIMED -- SPAN: this revision selects only exercise 2025, whose exact AEAT design and the \
-Orden HAC/1430/2025 amendment/application provisions are cited. The catalogue-only 2024 design \
-does not establish a legal era, and 2007-2023 and 2026 onward remain refused pending exact \
-authority. NOT CLAIMED -- no production calculation resolver owns the 5 donativo_donor bindings, so \
+meaning NO CLAIM, not zero: no value here was checked against an independent AEAT oracle. SPAN: \
+this era is OPEN-ENDED from ejercicio 2025, re-cut 2026-09-12 from the closed 2025-only selector \
+it previously carried. Orden HAC/1430/2025 disposicion final unica applies its modelo 182 \
+amendment "por primera vez" to ejercicio 2025; the approving Orden EHA/3021/2007 art. 1 carries no \
+ejercicio bound and its art. 5 sets the plazo "en el mes de enero de cada ano"; and AEAT's current \
+disenos-de-registro page for modelos 100-199, read 2026-09-12, still lists the EHA/3021/2007 \
+design as updated by HAC/1430/2025 and publishes no ejercicio 2026 edition. Closing at 2025 \
+refused ejercicio 2026 under an authority no orden has withdrawn. The catalogue-only 2024 design \
+does not establish a legal era, and 2007-2024 remain refused pending exact authority. NOT CLAIMED \
+-- the ejercicio 2026 design is not published: this era CARRIES ejercicio 2026 forward under an \
+unwithdrawn authority rather than proving a 2026 design, and must be re-cut when AEAT amends it. \
+NOT CLAIMED -- no production calculation resolver owns the 5 donativo_donor bindings, so \
 calculation refuses them rather than resolving a silent blank. NOT CLAIMED -- no export layout is declared and the tipo-2 \
 per-donor detail rows are not modelled. NOT CLAIMED -- all 3 locales are complete for the 7 labels, \
 but the translated strings were not audited for accuracy."""
-reviewed_at = 2026-08-21
+reviewed_at = 2026-09-12

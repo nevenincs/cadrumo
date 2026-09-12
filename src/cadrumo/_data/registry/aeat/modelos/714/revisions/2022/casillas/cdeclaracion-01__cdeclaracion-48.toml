@@ -11,6 +11,9 @@
 
 [[revisions."2022".casillas]]
 id = "declaracion-01"
+continuidad_id = "patrimonio-inmuebles-urbanos-no-exentos"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-02 Patrimonio, campo 87, filas 92/92: (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Total bienes inmuebles naturaleza urbana  ( [62] + [63] ) [01]. Descripcion, tipo, validacion y contenido coinciden."
 number = "01"
 segmento = "714-02"
 section = ["bienes_y_derechos"]
@@ -21,6 +24,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-02"
+continuidad_id = "patrimonio-inmuebles-rusticos"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-02 Patrimonio, campo 130, filas 135/135: (1) Bienes y derechos - B. Bienes inmuebles naturaleza rústica - Total [02]. Descripcion, tipo, validacion y contenido coinciden."
 number = "02"
 segmento = "714-02"
 section = ["bienes_y_derechos"]
@@ -31,6 +37,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-03"
+continuidad_id = "patrimonio-bienes-afectos-no-exentos"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-03 Patrimonio, campo 116, filas 122/122: (1) Bienes y derechos - C. Bienes y derechos no exentos afectos activ. empres. y profes. - Total ( [a] + [b] ]    [03]. Descripcion, tipo, validacion y contenido coinciden."
 number = "03"
 segmento = "714-03"
 section = ["bienes_y_derechos"]
@@ -41,6 +50,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-04"
+continuidad_id = "patrimonio-bienes-afectos-exentos"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-03 Patrimonio, campo 198, filas 204/204: (1) Bienes y derechos - D. Bienes y derechos exentos afectos activ. empres. y profes. - Total (neto de deudas)    [04]. Descripcion, tipo, validacion y contenido coinciden."
 number = "04"
 segmento = "714-03"
 section = ["bienes_y_derechos"]
@@ -51,6 +63,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-05"
+continuidad_id = "patrimonio-depositos-cuentas"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-04 Patrimonio, campo 57, filas 62/62: (1) Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones... - Total [05]. Descripcion, tipo, validacion y contenido coinciden."
 number = "05"
 segmento = "714-04"
 section = ["bienes_y_derechos"]
@@ -61,6 +76,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-06"
+continuidad_id = "patrimonio-valores-cesion-capitales-negociados"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-04 Patrimonio, campo 148, filas 143/153: (1) Bienes y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones, bonos... - Total [06]. Descripcion, tipo, validacion y contenido coinciden."
 number = "06"
 segmento = "714-04"
 section = ["bienes_y_derechos"]
@@ -71,6 +89,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-07"
+continuidad_id = "patrimonio-valores-cesion-capitales-no-negociados"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-04 Patrimonio, campo 191, filas 186/196: (1) Bienes y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados, pagarés...- Total [07]. Descripcion, tipo, validacion y contenido coinciden."
 number = "07"
 segmento = "714-04"
 section = ["bienes_y_derechos"]
@@ -81,6 +102,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-08"
+continuidad_id = "patrimonio-inversion-colectiva-negociada-no-exenta"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-05 Patrimonio, campo 70, filas 76/75: (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Total [08]. Descripcion, tipo, validacion y contenido coinciden."
 number = "08"
 segmento = "714-05"
 section = ["bienes_y_derechos"]
@@ -91,6 +115,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-09"
+continuidad_id = "patrimonio-otras-entidades-negociadas-no-exentas"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-05 Patrimonio, campo 134, filas 141/139: (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades - Total [09]. Descripcion, tipo, validacion y contenido coinciden."
 number = "09"
 segmento = "714-05"
 section = ["bienes_y_derechos"]
@@ -101,6 +128,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-10"
+continuidad_id = "patrimonio-inversion-colectiva-no-negociada-no-exenta"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-05 Patrimonio, campo 163, filas 170/168: (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas.- Total [10]. Descripcion, tipo, validacion y contenido coinciden."
 number = "10"
 segmento = "714-05"
 section = ["bienes_y_derechos"]
@@ -111,6 +141,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-11"
+continuidad_id = "patrimonio-otras-entidades-no-negociadas-no-exentas"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-05 Patrimonio, campo 192, filas 199/197: (1) Bienes y derechos - G4.Valores no exentos - Acciones y particip. otras entidades jurídicas no negociadas - Total [11]. Descripcion, tipo, validacion y contenido coinciden."
 number = "11"
 segmento = "714-05"
 section = ["bienes_y_derechos"]
@@ -121,6 +154,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-12"
+continuidad_id = "patrimonio-participaciones-negociadas-exentas"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-06 Patrimonio, campo 37, filas 39/42: (1) Bienes y derechos - H1. Valores exentos - Acciones y particip. entidades jurídicas negociadas - Total (neto deudas) [12]. Descripcion, tipo, validacion y contenido coinciden."
 number = "12"
 segmento = "714-06"
 section = ["bienes_y_derechos"]
@@ -131,6 +167,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-13"
+continuidad_id = "patrimonio-participaciones-no-negociadas-exentas"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-06 Patrimonio, campo 62, filas 64/67: (1) Bienes y derechos - H2. Valores exentos - Acciones y particip. exentas entidades jurídicas no negociadas - Total (neto deudas) [13]. Descripcion, tipo, validacion y contenido coinciden."
 number = "13"
 segmento = "714-06"
 section = ["bienes_y_derechos"]
@@ -141,6 +180,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-14"
+continuidad_id = "patrimonio-seguros-vida"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-06 Patrimonio, campo 75, filas 77/80: (1) Bienes y derechos - I. Seguros de vida - Total [14]. Descripcion, tipo, validacion y contenido coinciden."
 number = "14"
 segmento = "714-06"
 section = ["bienes_y_derechos"]
@@ -151,6 +193,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-15"
+continuidad_id = "patrimonio-rentas-temporales-vitalicias"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-06 Patrimonio, campo 96, filas 98/101: (1) Bienes y derechos - J. Rentas temporales y vitalicias - Total [15]. Descripcion, tipo, validacion y contenido coinciden."
 number = "15"
 segmento = "714-06"
 section = ["bienes_y_derechos"]
@@ -161,6 +206,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-16"
+continuidad_id = "patrimonio-vehiculos-joyas-pieles-embarcaciones-aeronaves"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-07 Patrimonio, campo 42, filas 47/47: (1) Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones y aeronaves - Total [16]. Descripcion, tipo, validacion y contenido coinciden."
 number = "16"
 segmento = "714-07"
 section = ["bienes_y_derechos"]
@@ -171,6 +219,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-17"
+continuidad_id = "patrimonio-arte-antiguedades"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-07 Patrimonio, campo 67, filas 72/72: (1) Bienes y derechos - L. Objetos de arte y antigüedades - Total [17]. Descripcion, tipo, validacion y contenido coinciden."
 number = "17"
 segmento = "714-07"
 section = ["bienes_y_derechos"]
@@ -181,6 +232,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-18"
+continuidad_id = "patrimonio-derechos-reales-uso-disfrute"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-07 Patrimonio, campo 116, filas 121/121: (1) Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda habitual) - Total [18]. Descripcion, tipo, validacion y contenido coinciden."
 number = "18"
 segmento = "714-07"
 section = ["bienes_y_derechos"]
@@ -191,6 +245,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-19"
+continuidad_id = "patrimonio-concesiones-administrativas"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-07 Patrimonio, campo 123, filas 128/128: (1) Bienes y derechos - N. Concesiones administrativas - Total [19]. Descripcion, tipo, validacion y contenido coinciden."
 number = "19"
 segmento = "714-07"
 section = ["bienes_y_derechos"]
@@ -201,6 +258,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-20"
+continuidad_id = "patrimonio-propiedad-intelectual-industrial"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-08 Patrimonio, campo 16, filas 21/21: (1) Bienes y derechos - O. Derechos derivados de la propiedad intelectual o industrial - Total [20]. Descripcion, tipo, validacion y contenido coinciden."
 number = "20"
 segmento = "714-08"
 section = ["bienes_y_derechos"]
@@ -211,6 +271,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-21"
+continuidad_id = "patrimonio-opciones-contractuales"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-08 Patrimonio, campo 26, filas 31/31: (1) Bienes y derechos - P. Opciones contractuales - Total [21]. Descripcion, tipo, validacion y contenido coinciden."
 number = "21"
 segmento = "714-08"
 section = ["bienes_y_derechos"]
@@ -221,6 +284,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-22"
+continuidad_id = "patrimonio-demas-bienes-derechos"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-08 Patrimonio, campo 63, filas 68/68: (1) Bienes y derechos - R. Demás bienes y derechos de contenido económico - Total [22]. Descripcion, tipo, validacion y contenido coinciden."
 number = "22"
 segmento = "714-08"
 section = ["bienes_y_derechos"]
@@ -231,6 +297,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-23"
+continuidad_id = "patrimonio-total-bienes-derechos-no-exentos"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-09 Patrimonio, campo 26, filas 31/31: (3) Resumen patrimonio neto: base liquidable - Total bienes y derechos no exentos [23]. Descripcion, tipo, validacion y contenido coinciden."
 number = "23"
 segmento = "714-09"
 section = ["resumen_patrimonio_neto"]
@@ -241,6 +310,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-24"
+continuidad_id = "patrimonio-deudas-deducibles"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-08 Patrimonio, campo 104, filas 109/109: (2) Deudas deducibles - Total [24]. Descripcion, tipo, validacion y contenido coinciden."
 number = "24"
 segmento = "714-08"
 section = ["deudas_deducibles"]
@@ -267,6 +339,9 @@ additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2022".casillas]]
 id = "declaracion-26"
+continuidad_id = "patrimonio-minimo-exento"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-09 Patrimonio, campo 29, filas 34/34: (3) Resumen patrimonio neto: base liquidable - Reducción en concepto de mínimo exento [26]. Descripcion, tipo, validacion y contenido coinciden."
 number = "26"
 segmento = "714-09"
 section = ["resumen_patrimonio_neto"]
@@ -293,6 +368,9 @@ additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2022".casillas]]
 id = "declaracion-28"
+continuidad_id = "patrimonio-exento-progresividad"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-09 Patrimonio, campo 36, filas 41/41: (5) Patrimonio exento con progresividad - Bienes y derechos exentos, excepto determinar tipo gravamen aplicable resto [28]. Descripcion, tipo, validacion y contenido coinciden."
 number = "28"
 segmento = "714-09"
 section = ["patrimonio_exento_con_progresividad"]
@@ -491,6 +569,9 @@ additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2022".casillas]]
 id = "declaracion-41"
+continuidad_id = "patrimonio-deduccion-impuestos-extranjero"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-10 Patrimonio, campo 21, filas 26/26: (6) Liquidación - Deducción impuestos extranjero - Importe de la deducción [41]. Descripcion, tipo, validacion y contenido coinciden."
 number = "41"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -500,6 +581,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-42"
+continuidad_id = "patrimonio-valor-neto-bienes-ceuta-melilla"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-10 Patrimonio, campo 22, filas 27/27: (6) Liquidación - Bonificación cuota en Ceuta y Melilla - Valor neto de los bienes y derechos en Ceuta y Melilla [42]. Descripcion, tipo, validacion y contenido coinciden."
 number = "42"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -509,6 +593,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-43"
+continuidad_id = "patrimonio-cuota-proporcional-bienes-ceuta-melilla"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-10 Patrimonio, campo 23, filas 28/28: (6) Liquidación - Bonificación cuota en Ceuta y Melilla - Parte cuota proporcional. corresponde dichos bienes y derechos [43]. Descripcion, tipo, validacion y contenido coinciden."
 number = "43"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -518,6 +605,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-44"
+continuidad_id = "patrimonio-bonificacion-ceuta-melilla"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-10 Patrimonio, campo 24, filas 29/29: (6) Liquidación - Bonificación cuota en Ceuta y Melilla - Importe de la bonificación: \"75 % casilla [43]\"    [44]. Descripcion, tipo, validacion y contenido coinciden."
 number = "44"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -542,6 +632,9 @@ additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2022".casillas]]
 id = "declaracion-46"
+continuidad_id = "patrimonio-monedas-virtuales"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-08 Patrimonio, campo 42, filas 47/47: (1) Bienes y derechos - Q. Saldos en monedas virtuales - Total [46]. Descripcion, tipo, validacion y contenido coinciden."
 number = "46"
 segmento = "714-08"
 section = ["bienes_y_derechos"]
@@ -552,6 +645,9 @@ input_kind = "manual"
 
 [[revisions."2022".casillas]]
 id = "declaracion-48"
+continuidad_id = "patrimonio-deducciones-autonomicas-derecho"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2021 y aeat-dr-714-2022, hoja 714-10 Patrimonio, campo 26, filas 31/31: (6) Liquidación - Deducciones y bonificaciones autonómicas - Deducciones autonómicas - Importe total con derecho a deducción [48]. Descripcion, tipo, validacion y contenido coinciden."
 number = "48"
 segmento = "714-10"
 section = ["liquidacion"]

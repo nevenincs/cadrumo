@@ -1,4 +1,6 @@
 [revisions.2023]
+binding_source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+formula_source_refs = ["aeat-dr-303-2023"]
 predecessor = "2022"
 casilla_source_refs = ["aeat-dr-303-2023"]
 reviewed_against = "2022"

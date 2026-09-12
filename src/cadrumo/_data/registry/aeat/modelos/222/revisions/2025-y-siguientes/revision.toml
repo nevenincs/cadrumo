@@ -1,4 +1,5 @@
 [revisions."2025-y-siguientes"]
+formula_source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
 casilla_source_refs = ["aeat-dr-222-2025"]
 authority_grade = "calculation"
 # Modelo 222 pago fraccionado del Impuesto sobre Sociedades en régimen de

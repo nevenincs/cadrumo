@@ -11,6 +11,7 @@
 
 [[revisions."2021".casillas]]
 id = "declaracion-01"
+continuidad_id = "patrimonio-inmuebles-urbanos-no-exentos"
 number = "01"
 segmento = "714-02"
 section = ["bienes_y_derechos"]
@@ -21,6 +22,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-02"
+continuidad_id = "patrimonio-inmuebles-rusticos"
 number = "02"
 segmento = "714-02"
 section = ["bienes_y_derechos"]
@@ -31,6 +33,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-03"
+continuidad_id = "patrimonio-bienes-afectos-no-exentos"
 number = "03"
 segmento = "714-03"
 section = ["bienes_y_derechos"]
@@ -41,6 +44,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-04"
+continuidad_id = "patrimonio-bienes-afectos-exentos"
 number = "04"
 segmento = "714-03"
 section = ["bienes_y_derechos"]
@@ -51,6 +55,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-05"
+continuidad_id = "patrimonio-depositos-cuentas"
 number = "05"
 segmento = "714-04"
 section = ["bienes_y_derechos"]
@@ -61,6 +66,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-06"
+continuidad_id = "patrimonio-valores-cesion-capitales-negociados"
 number = "06"
 segmento = "714-04"
 section = ["bienes_y_derechos"]
@@ -71,6 +77,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-07"
+continuidad_id = "patrimonio-valores-cesion-capitales-no-negociados"
 number = "07"
 segmento = "714-04"
 section = ["bienes_y_derechos"]
@@ -81,6 +88,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-08"
+continuidad_id = "patrimonio-inversion-colectiva-negociada-no-exenta"
 number = "08"
 segmento = "714-05"
 section = ["bienes_y_derechos"]
@@ -91,6 +99,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-09"
+continuidad_id = "patrimonio-otras-entidades-negociadas-no-exentas"
 number = "09"
 segmento = "714-05"
 section = ["bienes_y_derechos"]
@@ -101,6 +110,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-10"
+continuidad_id = "patrimonio-inversion-colectiva-no-negociada-no-exenta"
 number = "10"
 segmento = "714-05"
 section = ["bienes_y_derechos"]
@@ -111,6 +121,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-11"
+continuidad_id = "patrimonio-otras-entidades-no-negociadas-no-exentas"
 number = "11"
 segmento = "714-05"
 section = ["bienes_y_derechos"]
@@ -121,6 +132,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-12"
+continuidad_id = "patrimonio-participaciones-negociadas-exentas"
 number = "12"
 segmento = "714-06"
 section = ["bienes_y_derechos"]
@@ -131,6 +143,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-13"
+continuidad_id = "patrimonio-participaciones-no-negociadas-exentas"
 number = "13"
 segmento = "714-06"
 section = ["bienes_y_derechos"]
@@ -141,6 +154,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-14"
+continuidad_id = "patrimonio-seguros-vida"
 number = "14"
 segmento = "714-06"
 section = ["bienes_y_derechos"]
@@ -151,6 +165,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-15"
+continuidad_id = "patrimonio-rentas-temporales-vitalicias"
 number = "15"
 segmento = "714-06"
 section = ["bienes_y_derechos"]
@@ -161,6 +176,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-16"
+continuidad_id = "patrimonio-vehiculos-joyas-pieles-embarcaciones-aeronaves"
 number = "16"
 segmento = "714-07"
 section = ["bienes_y_derechos"]
@@ -171,6 +187,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-17"
+continuidad_id = "patrimonio-arte-antiguedades"
 number = "17"
 segmento = "714-07"
 section = ["bienes_y_derechos"]
@@ -181,6 +198,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-18"
+continuidad_id = "patrimonio-derechos-reales-uso-disfrute"
 number = "18"
 segmento = "714-07"
 section = ["bienes_y_derechos"]
@@ -191,6 +209,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-19"
+continuidad_id = "patrimonio-concesiones-administrativas"
 number = "19"
 segmento = "714-07"
 section = ["bienes_y_derechos"]
@@ -201,6 +220,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-20"
+continuidad_id = "patrimonio-propiedad-intelectual-industrial"
 number = "20"
 segmento = "714-08"
 section = ["bienes_y_derechos"]
@@ -211,6 +231,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-21"
+continuidad_id = "patrimonio-opciones-contractuales"
 number = "21"
 segmento = "714-08"
 section = ["bienes_y_derechos"]
@@ -221,6 +242,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-22"
+continuidad_id = "patrimonio-demas-bienes-derechos"
 number = "22"
 segmento = "714-08"
 section = ["bienes_y_derechos"]
@@ -231,6 +253,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-23"
+continuidad_id = "patrimonio-total-bienes-derechos-no-exentos"
 number = "23"
 segmento = "714-09"
 section = ["resumen_patrimonio_neto"]
@@ -241,6 +264,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-24"
+continuidad_id = "patrimonio-deudas-deducibles"
 number = "24"
 segmento = "714-08"
 section = ["deudas_deducibles"]
@@ -266,6 +290,7 @@ additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2021".casillas]]
 id = "declaracion-26"
+continuidad_id = "patrimonio-minimo-exento"
 number = "26"
 segmento = "714-09"
 section = ["resumen_patrimonio_neto"]
@@ -291,6 +316,7 @@ additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2021".casillas]]
 id = "declaracion-28"
+continuidad_id = "patrimonio-exento-progresividad"
 number = "28"
 segmento = "714-09"
 section = ["patrimonio_exento_con_progresividad"]
@@ -477,6 +503,7 @@ additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2021".casillas]]
 id = "declaracion-41"
+continuidad_id = "patrimonio-deduccion-impuestos-extranjero"
 number = "41"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -486,6 +513,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-42"
+continuidad_id = "patrimonio-valor-neto-bienes-ceuta-melilla"
 number = "42"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -495,6 +523,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-43"
+continuidad_id = "patrimonio-cuota-proporcional-bienes-ceuta-melilla"
 number = "43"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -504,6 +533,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-44"
+continuidad_id = "patrimonio-bonificacion-ceuta-melilla"
 number = "44"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -527,6 +557,7 @@ additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2021".casillas]]
 id = "declaracion-46"
+continuidad_id = "patrimonio-monedas-virtuales"
 number = "46"
 segmento = "714-08"
 section = ["bienes_y_derechos"]
@@ -537,6 +568,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-48"
+continuidad_id = "patrimonio-deducciones-autonomicas-derecho"
 number = "48"
 segmento = "714-10"
 section = ["liquidacion"]

@@ -1,4 +1,5 @@
 [revisions."2011-2024"]
+binding_source_refs = ["aeat-dr-347-2011", "aeat-modelo-347-procedure"]
 casilla_source_refs = ["aeat-dr-347-2011"]
 authority_grade = "filing"
 # valid_from is canonicalised to the ejercicio-start convention (January 1 of

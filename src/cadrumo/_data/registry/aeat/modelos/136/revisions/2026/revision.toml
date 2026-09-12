@@ -1,4 +1,5 @@
 [revisions."2026"]
+formula_source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-form-text"]
 casilla_source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
 # Calculation grade is agent-attested for the construct-owned base, levy and result
 # formulas. No filing/export authority is claimed: this revision declares no export layout.

@@ -1,4 +1,5 @@
 [revisions."esquema-importacion"]
+binding_source_refs = ["aeat-dr-369-2021"]
 casilla_source_refs = ["aeat-dr-369-2021"]
 # Prepared and reviewed by an agent against the bundled diseño de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and

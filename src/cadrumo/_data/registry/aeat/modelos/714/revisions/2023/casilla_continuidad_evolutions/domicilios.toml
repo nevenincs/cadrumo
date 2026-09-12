@@ -1,0 +1,200 @@
+# Los conceptos de domicilio mantienen su significado; cambia la orden anual que aprueba el modelo.
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-habitual-tipo-via-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-habitual-tipo-via"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-habitual-nombre-via-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-habitual-nombre-via"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-habitual-tipo-numeracion-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-habitual-tipo-numeracion"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-habitual-numero-casa-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-habitual-numero-casa"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-habitual-calificador-numero-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-habitual-calificador-numero"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-habitual-bloque-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-habitual-bloque"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-habitual-portal-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-habitual-portal"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-habitual-escalera-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-habitual-escalera"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-habitual-planta-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-habitual-planta"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-habitual-puerta-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-habitual-puerta"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-habitual-datos-complementarios-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-habitual-datos-complementarios"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-habitual-localidad-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-habitual-localidad"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-habitual-codigo-postal-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-habitual-codigo-postal"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-habitual-municipio-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-habitual-municipio"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-habitual-provincia-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-habitual-provincia"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-extranjero-direccion-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-extranjero-direccion"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-extranjero-datos-complementarios-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-extranjero-datos-complementarios"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-extranjero-poblacion-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-extranjero-poblacion"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-extranjero-codigo-postal-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-extranjero-codigo-postal"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-extranjero-provincia-region-estado-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-extranjero-provincia-region-estado"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-extranjero-pais-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-extranjero-pais"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "patrimonio-domicilio-extranjero-codigo-pais-orden-aprobacion"
+continuidad_id = "patrimonio-domicilio-extranjero-codigo-pais"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hfp-310-2023:art-4", "orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2022", "aeat-dr-714-2023"]
+

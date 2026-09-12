@@ -1,4 +1,5 @@
 [revisions."2019-y-siguientes"]
+binding_source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 casilla_source_refs = ["aeat-dr-115-2019-v13"]
 authority_grade = "filing"
 valid_from = 2019-01-01
