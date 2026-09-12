@@ -34,7 +34,7 @@ from ..calculations.cross_period_models import (
     CrossPeriodDependencyEvidence,
     CrossPeriodExpectedMemberSet,
 )
-from ..calculations.observations_repository import CalculationObservationRepository
+from .verification_repository_ports import CalculationObservationRepositoryProtocol
 
 
 def cross_period_expected_member_sets_from_profile(
@@ -99,7 +99,7 @@ def cross_period_verification_declarations(
 def cross_period_clean_state_verdict_for_work_unit(
     work_unit: WorkUnit,
     *,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
@@ -200,7 +200,7 @@ def cross_period_clean_state_findings(
 def require_cross_period_clean_state(
     work_unit: WorkUnit,
     *,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,

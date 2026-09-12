@@ -23,6 +23,7 @@ from ...application.modelo.export import (
     ModeloExportResult,
     export_modelo_revision,
 )
+from ...application.modelo.export_ports import ModeloExportPorts
 from ...application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ...application.modelo.operator_inputs import ModeloExportOperatorInput
 from ...application.workflow.persistence import workflow_state_repository
@@ -36,9 +37,11 @@ from ._modelo_behavior_support import resolve_exportable_revision_for_cli
 from ._modelo_cli_support import (
     bad_parameter_from_error,
     resolve_default_actor,
+    resolve_explicit_or_active_bucket_id,
 )
 from ._modelo_payloads import ModeloExportPayload
 from .common import emit_envelope, filing_taxpayer_or_refuse
+from .state_projection_support import calculation_action_ports_factory, modelo_export_ports_factory
 
 
 def _local_export_evidence_notice(result: ModeloExportResult) -> Notice:
@@ -104,6 +107,7 @@ def export_modelo_revision_for_cli(
     payment_election: PaymentElection,
     prior_domiciliation_election: PriorDomiciliationElection,
     workflow_profile: TaxpayerProfile,
+    export_ports: ModeloExportPorts,
 ) -> ModeloExportResult:
     """Run the canonical export service and translate its CLI-owned refusals.
 
@@ -111,8 +115,6 @@ def export_modelo_revision_for_cli(
     draft through this boundary. Their output contracts remain separate.
     """
     try:
-        from ...adapters.persistence.profile.justificante import JustificanteRepository
-
         return export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=calculation_revision_id,
@@ -123,7 +125,7 @@ def export_modelo_revision_for_cli(
                 prior_domiciliation_election=prior_domiciliation_election,
             ),
             workflow_profile=workflow_profile,
-            justificante_repository=JustificanteRepository(),
+            export_ports=export_ports,
         )
     except (
         CalculationRevisionNotFoundError,
@@ -152,6 +154,7 @@ def modelo_export_verb(
     operator_input = ModeloExportOperatorInput.model_validate(input_values)
     workflow_state = workflow_state_repository().load()
     workflow_profile = filing_taxpayer_or_refuse(workflow_state)
+    resolved_bucket_id = resolve_explicit_or_active_bucket_id(operator_input.bucket_id)
     if (
         operator_input.output is None
         or not str(operator_input.output).strip()
@@ -171,6 +174,7 @@ def modelo_export_verb(
         registry_revision=operator_input.registry_revision,
         bucket_id=operator_input.bucket_id,
         select=operator_input.select,
+        calculation_ports=calculation_action_ports_factory(ctx)(bucket_id=resolved_bucket_id),
     )
     target_revision_id = selected_revision.calculation_revision_id
     result = export_modelo_revision_for_cli(
@@ -181,6 +185,10 @@ def modelo_export_verb(
         payment_election=operator_input.payment_election,
         prior_domiciliation_election=operator_input.prior_domiciliation_election,
         workflow_profile=workflow_profile,
+        export_ports=modelo_export_ports_factory(ctx)(
+            bucket_id=resolved_bucket_id,
+            m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
+        ),
     )
     export_result = ModeloExportPayload.from_result(result)
     emit_envelope(

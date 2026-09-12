@@ -39,7 +39,7 @@ def test_parse_typed_cli_observations_round_trips_valid_json() -> None:
     assert obs.source_object_id == "txn-001"
     assert obs.perceptor_nif == "A12345678"
     assert obs.perceptor_name == "Empresa SL"
-    assert obs.scheme == RetencionScheme.WORK_INCOME
+    assert obs.scheme == RetencionScheme("rendimientos_trabajo")
     assert obs.accrued_on == "2024-01-15"
     _ = _typer  # ensure import is referenced
 

@@ -17,7 +17,7 @@ from .....domain.calculations.registry.relations import (
 )
 from .....domain.calculations.registry.schema import FormulaDefinition, RegistrySnapshot
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from .....tests.registry_snapshot import build_snapshot
+from .....domain.calculations.registry.tests.snapshot_support import build_snapshot
 from ..engine import _rounding_rule_for, build_export_plan
 from ..errors import CalcSheetsEngineError
 from ..records import RelationValues

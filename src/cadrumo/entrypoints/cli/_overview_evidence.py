@@ -46,6 +46,7 @@ if TYPE_CHECKING:
         FiledDeclaracionObservationStore,
     )
     from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
+    from ...application.live.expedientes_ports import ExpedientesPorts
     from ...domain.calculations.registry.applicability_routes import TaxRoute
     from ...domain.user_profile.values import UserProfileRecord
 
@@ -71,6 +72,7 @@ def local_live_calendar_events(
     *,
     as_of: date,
     expected_tax_id: str | None = None,
+    expedientes_ports: ExpedientesPorts,
 ) -> tuple[tuple[OverviewCalendarEvent, ...], Notice | None]:
     """Return ``(persisted-live event rows, degradation-notice-or-None)``.
 
@@ -88,13 +90,17 @@ def local_live_calendar_events(
         expected_tax_id: Taxpayer identity rows must match, when known.
     """
     from ...adapters.persistence.profile.justificante import JustificanteRepository
-    from ...application.live.expedientes import ExpedientesService
     from ...application.live.notifications import NotificationsService
+    from ...core.config import load_settings
+    from ..live_state_composition import compose_notifications_ports
     from ._app_live_justificante_composition import build_justificante_capture_service
 
     try:
-        expedientes = ExpedientesService().list_snapshots(bucket_id=bucket_id)
-        notifications = NotificationsService().list_snapshots(bucket_id=bucket_id)
+        from ...application.live.expedientes import ExpedientesService
+
+        expedientes = ExpedientesService(ports=expedientes_ports).list_snapshots(bucket_id=bucket_id)
+        notifications_ports = compose_notifications_ports(settings=load_settings())
+        notifications = NotificationsService(ports=notifications_ports).list_snapshots(bucket_id=bucket_id)
         justificante_captures = build_justificante_capture_service(bucket_id).list_snapshots()
         justificantes = tuple(JustificanteRepository().iter_justificantes())
     except Exception:
@@ -219,12 +225,13 @@ def overview_no_aeat_history_notice(*, tax_route: TaxRoute | None) -> Notice | N
     this module: this is an overview ENRICHMENT, never something the whole
     command should fail over.
     """
-    from ...application.calculations.observations_repository import CalculationObservationRepository
+    from ...adapters.persistence.profile.calculation_observations import CalculationObservationRepository
     from ...application.operator_actions.models import ActionReference
+    from ...core.bucket_pointer import require_active_bucket_id
     from ...core.json_contract import ResolvedNoticeAction
 
     try:
-        observations = tuple(CalculationObservationRepository().iter_records())
+        observations = tuple(CalculationObservationRepository(bucket_id=require_active_bucket_id()).iter_records())
     except Exception:
         logger.warning(
             "overview: AEAT-history evidence unavailable; no-history advisory skipped",
@@ -277,7 +284,7 @@ def local_calendar_filing_evidence(
         from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
         from ...adapters.persistence.profile.justificante import JustificanteRepository
         from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-        from ...application.calculations.observations_repository import CalculationObservationRepository
+        from ...adapters.persistence.profile.calculation_observations import CalculationObservationRepository
         from ._app_live_justificante_composition import build_justificante_capture_service
 
         filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())
@@ -297,7 +304,7 @@ def local_calendar_filing_evidence(
                 expected_tax_id=expected_tax_id,
             )
         )
-        calculation_observations = tuple(CalculationObservationRepository().iter_records())
+        calculation_observations = tuple(CalculationObservationRepository(bucket_id=bucket_id).iter_records())
     except Exception:
         logger.warning(
             "overview calendar: filing evidence unavailable for bucket %s; deriving from schedule only",

@@ -28,6 +28,8 @@ from ...domain.iva.schema import (
     IvaExemptionArticle,
     IvaLedgerObservationRole,
     IvaRateKind,
+    default_iva_cash_accounting_treatment,
+    is_iva_cash_accounting_none,
 )
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.models import Transaction
@@ -133,7 +135,7 @@ def _substrate_admission_issue(
     refusal itself.
     """
     transaction_id = transaction.transaction_id
-    if cash_treatment is IvaCashAccountingTreatment.NONE and not resolved_period.contains(operation_date):
+    if is_iva_cash_accounting_none(cash_treatment) and not resolved_period.contains(operation_date):
         return IvaLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
@@ -365,7 +367,7 @@ def _project_iva_transaction(
         base_amount=amounts.base_amount,
         iva_amount=amounts.iva_amount,
     )
-    if context.cash_treatment is not IvaCashAccountingTreatment.NONE:
+    if not is_iva_cash_accounting_none(context.cash_treatment):
         observations = _cash_accounting_observations(
             transaction,
             resolved_period=resolved_period,
@@ -440,7 +442,7 @@ def _iva_observation(
     iva_amount: Decimal,
     recargo_amount: Decimal = Decimal("0"),
     prorrata_reference_id: str | None = None,
-    cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE,
+    cash_accounting_treatment: IvaCashAccountingTreatment | None = None,
     observation_role: IvaLedgerObservationRole,
     input_classification: InputClassification | None = None,
     prorrata_sector_id: str | None = None,
@@ -450,6 +452,8 @@ def _iva_observation(
     investment_asset_id: str | None = None,
     rectifies_ledger_id: str | None = None,
 ) -> IvaLedgerObservation:
+    if cash_accounting_treatment is None:
+        cash_accounting_treatment = default_iva_cash_accounting_treatment()
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=transaction_date,

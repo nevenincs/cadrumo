@@ -52,6 +52,7 @@ from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
+from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from .schema import IvaCategory
 
 __all__ = [
@@ -129,7 +130,7 @@ def _registry_regime_legends() -> tuple[RegimeLegend, ...]:
         prefix = f"legend.{ordinal}"
         declared_value = _required_legend_declaration(declarations, f"{prefix}.declares")
         try:
-            category = None if declared_value == "none" else IvaCategory(declared_value)
+            category = None if declared_value == "none" else require_iva_category(declared_value)
         except ValueError as exc:
             raise ValueError(f"unknown IVA regime legend category: {declared_value}") from exc
         expects_value = _required_legend_declaration(declarations, f"{prefix}.expects_repercutido_line")

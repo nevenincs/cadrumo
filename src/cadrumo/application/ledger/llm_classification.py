@@ -180,7 +180,7 @@ def _bounded_transport_label(label: str) -> str:
     return label[:keep] + _PROVENANCE_ELISION
 
 
-def _resolve_evidence(
+def resolve_llm_evidence(
     transaction: Transaction,
     *,
     bucket_id: str,
@@ -393,7 +393,7 @@ def _resolve_requested_llm_evidence(
     """Resolve linked evidence only when the caller opted into reading it."""
     if not read_evidence:
         return None
-    return _resolve_evidence(transaction, bucket_id=bucket_id, settings=settings, ports=ports)
+    return resolve_llm_evidence(transaction, bucket_id=bucket_id, settings=settings, ports=ports)
 
 
 def _evidence_text_and_reference(evidence: ResolvedEvidence | None) -> tuple[str | None, str | None]:
@@ -1524,6 +1524,7 @@ def reject_llm_suggestion(
 
 
 __all__ = [
+    "resolve_llm_evidence",
     "ResolvedEvidence",
     "apply_evidence_classification",
     "apply_evidence_split",

@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.prorrata_register import ProrrataEspecialTransitionKind
-from ...domain.deadlines.models import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
+from ...domain.deadlines.models import M303RegimeComposition, ModeloIVAProfile
+from ...domain.calculations.registry.iva_schema_vocabulary import (
+    m303_tax_territory_exclusively_foral_mark,
+    m303_tax_territory_is_foral,
+)
 from ...domain.filing.errors import FilingExportValidationError
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
@@ -1013,7 +1018,7 @@ def _apply_foral_m303_overrides(
     values.update(
         {
             FilingProducerKey.M303_REDEME_ENROLLED: "2",
-            FilingProducerKey.M303_EXCLUSIVELY_FORAL: "1",
+            FilingProducerKey.M303_EXCLUSIVELY_FORAL: m303_profile.exclusively_foral,
             FilingProducerKey.M303_REGIME_COMPOSITION_CODE: "3",
             FilingProducerKey.M303_JOINT_RETURN_ELECTED: "2",
             FilingProducerKey.M303_CASH_ACCOUNTING_REGIME_ENROLLED: "2",
@@ -1114,9 +1119,18 @@ def m303_profile_lexicals(
         if period is not None
         else None
     )
+    territory_date = date(period.filing_year, 1, 1) if period is not None else None
+    is_foral = m303_tax_territory_is_foral(
+        iva_profile.tax_territory,
+        effective_date=territory_date,
+    )
+    exclusively_foral = m303_tax_territory_exclusively_foral_mark(
+        iva_profile.tax_territory,
+        effective_date=territory_date,
+    )
     return M303ProfileLexicals(
         redeme_enrolled=yes_no(iva_profile.redeme_enrolled),
-        exclusively_foral="1" if iva_profile.tax_territory is M303TaxTerritory.FORAL else "2",
+        exclusively_foral=exclusively_foral,
         regime_composition_code={
             M303RegimeComposition.SIMPLIFIED: "1",
             M303RegimeComposition.MIXED: "2",
@@ -1125,7 +1139,7 @@ def m303_profile_lexicals(
         cash_accounting_regime_enrolled=yes_no(iva_profile.cash_accounting_regime_enrolled),
         voluntary_sii_enrolled=yes_no(iva_profile.voluntary_sii_enrolled),
         hydrocarbon_deposit_advance_payment_deduction_entitled=a30,
-        is_foral=iva_profile.tax_territory is M303TaxTerritory.FORAL,
+        is_foral=is_foral,
     )
 
 

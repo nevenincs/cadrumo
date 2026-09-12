@@ -79,24 +79,22 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
     from ...domain.modelos.calculation_revision import CalculationRevision
     from ...domain.modelos.work_unit import WorkUnit
-    from ..calculations.observations_repository import CalculationObservationRepository
+    from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 
 
 def _pulled_filed_values(
     *,
     work_unit: WorkUnit,
-    repository: CalculationObservationRepository | None,
+    repository: CalculationObservationRepositoryProtocol,
 ) -> dict[CasillaId, Decimal] | None:
     """Return the pulled filing's casilla values for this work unit, or ``None``.
 
     ``None`` covers both "no sweep has run" and "this modelo and period were
     never pulled"; neither is an error and neither should produce a finding.
     """
-    from ..calculations.observations_repository import CalculationObservationRepository as _Repository
     from ..calculations.observations_repository import require_observation_envelope_coordinates_current
 
-    repo = repository if repository is not None else _Repository()
-    stored = repo.load_observation(str(work_unit.modelo), work_unit.period)
+    stored = repository.load_observation(str(work_unit.modelo), work_unit.period)
     if stored is None:
         return None
     require_observation_envelope_coordinates_current(stored)
@@ -128,7 +126,7 @@ def pulled_filing_divergence_findings(
     *,
     work_unit: WorkUnit,
     target: CalculationRevision,
-    observation_repository: CalculationObservationRepository | None = None,
+    observation_repository: CalculationObservationRepositoryProtocol,
 ) -> list[ModeloVerificationFinding]:
     """Compare the local calculation against this taxpayer's pulled filing.
 

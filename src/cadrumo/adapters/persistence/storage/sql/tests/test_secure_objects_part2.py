@@ -15,7 +15,7 @@ from sqlalchemy import event
 
 from ......core.classification.policies import SensitivityClass
 from ......core.secure_object_write import SecureObjectWrite
-from ......tests.master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ...errors import SecureObjectRevisionConflictError, StorageValidationError
 from ...namespace_taxonomy import StorageCustodyDisposition, StorageNamespaceScope
 from ...secure_object_namespaces import (

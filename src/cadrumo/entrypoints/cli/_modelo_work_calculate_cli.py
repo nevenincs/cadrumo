@@ -126,12 +126,16 @@ def _run_work_calculate(
     unit = deps.resolve_work_unit_for_cli(
         work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
     )
+    from .state_projection_support import calculation_action_ports_factory
+
+    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=unit.bucket_id)
     resolved_work_unit_id = unit.work_unit_id
     filing_instance_evidence = m303_filing_instance_evidence_from_cli(
         modelo=str(unit.modelo), period=unit.period, evidence_file=m303_filing_evidence
     )
     calculation_inputs = deps.calculate_input_bundle_from_cli(
         work_unit_id=resolved_work_unit_id,
+        ports=calculation_ports,
         casilla=casilla,
         binding=binding,
         relation=relation,
@@ -154,7 +158,10 @@ def _run_work_calculate(
     resolved_actor = deps.resolve_actor_option(actor)
     try:
         calculation_result = calculate_modelo_work_revision(
-            work_unit_id=resolved_work_unit_id, actor=resolved_actor, inputs=calculation_inputs
+            work_unit_id=resolved_work_unit_id,
+            actor=resolved_actor,
+            inputs=calculation_inputs,
+            ports=calculation_ports,
         )
     except RegistryValidationError as exc:
         raise deps.bad_parameter_from_error(exc) from exc

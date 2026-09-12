@@ -44,7 +44,7 @@ def _capture_fields(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "bucket_id": _BUCKET_ID,
         "snapshot_id": _SNAPSHOT_ID,
-        "modelo": Modelo.M130,
+        "modelo": Modelo("130"),
         "filing_year": 2026,
         "period": "1T",
         "expediente_id": "202613000000001Z",
@@ -81,7 +81,7 @@ def _view_fields(**overrides: object) -> dict[str, object]:
 def _summary_fields(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "snapshot_id": _SNAPSHOT_ID,
-        "modelo": Modelo.M130,
+        "modelo": Modelo("130"),
         "filing_year": 2026,
         "period": "1T",
         "pdf_sha256": _PDF_SHA256,
@@ -98,7 +98,7 @@ def test_a_valid_capture_projects_onto_all_three_transports() -> None:
     view = JustificanteViewResult.model_validate(_view_fields())
     summary = JustificanteSnapshotSummaryPayload.model_validate(_summary_fields())
 
-    assert capture.modelo is Modelo.M130
+    assert capture.modelo == Modelo("130")
     assert capture.period == "1T"
     assert capture.state is SnapshotLifecycleState.ACTIVE
     assert view.source_kind is ObservationSourceKind.AEAT_SEDE_LIVE_CAPTURE

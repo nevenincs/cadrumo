@@ -19,7 +19,7 @@ from ....domain.calculations.registry.applicability import ApplicabilityVerdict
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ....domain.deadlines.recargo import twelve_month_anniversary
-from ....domain.retention.floor import TAX_RECORD_RETENTION_FLOOR_YEARS
+from ....domain.retention.floor import retention_floor_years
 from ..errors import OverviewExplainError
 from ..explain import OverviewExplain, _out_of_plazo_warning, build_overview_explain
 from .calendar_test_support import profile as _autonomo_profile
@@ -174,7 +174,8 @@ def test_explain_historical_warning_uses_the_recargo_anniversary_with_its_inclus
 
 def test_explain_historical_warning_uses_the_retention_prescription_boundary() -> None:
     closes_on = date(2023, 6, 30)
-    prescription_boundary = shift_by_calendar_years(closes_on, TAX_RECORD_RETENTION_FLOOR_YEARS)
+    floor_years = retention_floor_years(effective_date=today)
+    prescription_boundary = shift_by_calendar_years(closes_on, floor_years)
 
     on_boundary = build_overview_explain(_autonomo_profile(), modelo="100", year=2022, today=prescription_boundary)
     after_boundary = build_overview_explain(
@@ -264,7 +265,7 @@ def test_out_of_plazo_warning_delegates_its_date_arithmetic() -> None:
         "the prescription boundary must come from core.calendar_shift."
         f"shift_by_calendar_years; referenced names were {referenced}"
     )
-    assert "TAX_RECORD_RETENTION_FLOOR_YEARS" in referenced, (
+    assert "retention_floor_years" in referenced, (
         "the four-year horizon must be read from the grounded retention "
         f"constant, not written as a literal; referenced names were {referenced}"
     )

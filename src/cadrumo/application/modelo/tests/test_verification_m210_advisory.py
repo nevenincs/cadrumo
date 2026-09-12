@@ -36,7 +36,7 @@ from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_verification_predicates
-from .verification_substance_support import workflow_profile
+from cadrumo.application.modelo.tests.verification_substance_fixtures import workflow_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

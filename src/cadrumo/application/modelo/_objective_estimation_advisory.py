@@ -35,7 +35,8 @@ from ...domain.calculations.registry.facts.resolution import (
     ScalarFactQuery,
 )
 from ...domain.calculations.registry.schema_base import DateAxis
-from ...domain.deadlines.models import IrpfEstimationRegime, TaxpayerProfile
+from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_objetiva_token
+from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -165,7 +166,7 @@ def _objective_estimation_exclusion_advisory_findings(
 
 
 def _uses_objective_estimation(profile: TaxpayerProfile) -> bool:
-    return profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
+    return profile.irpf_estimation_regime == irpf_estimation_regime_objetiva_token()
 
 
 def _resolve_objective_estimation_model_scope(

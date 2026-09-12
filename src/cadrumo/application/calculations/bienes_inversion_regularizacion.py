@@ -60,7 +60,7 @@ from ..aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
-from .observations_repository import CalculationObservationRepository
+from .observations_repository import CalculationObservationRepositoryProtocol
 from .revision_carry_gate import revision_carry_outcome
 
 #: Distinct advisory source-kind label for the art-110 disposal path, so an
@@ -227,7 +227,7 @@ def _resolve_binding_values(
 
 
 def _current_year_prorrata_from_m303_observation(
-    repository: CalculationObservationRepository,
+    repository: CalculationObservationRepositoryProtocol,
     *,
     filing_year: int,
     revision: ModeloRevision,
@@ -309,7 +309,7 @@ def _load_register(
 
 def _current_year_values_for_context(
     current_year_values: Mapping[CasillaId, Decimal],
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
     *,
     filing_year: int,
     modelo: str,
@@ -616,7 +616,7 @@ class BienesInversionRegularizacionSourceResolver:
         missing_current_year_casilla_ids: tuple[CasillaId, ...] = (),
         unresolved_current_year_casilla_ids: tuple[CasillaId, ...] = (),
         register_repository: BienesInversionIvaRegisterRepository | None = None,
-        observation_repository: CalculationObservationRepository,
+        observation_repository: CalculationObservationRepositoryProtocol,
     ) -> None:
         """Initialize the resolver with the current-year values and repositories it draws on."""
         self._current_year_values = dict(current_year_values or {})

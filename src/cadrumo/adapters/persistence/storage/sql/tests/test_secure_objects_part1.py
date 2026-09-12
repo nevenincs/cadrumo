@@ -12,7 +12,7 @@ import pytest
 from ......core.classification.policies import SensitivityClass
 from ......core.errors.hierarchy import CoreValidationError
 from ......core.secure_object_write import SecureObjectWrite
-from ......tests.master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ...errors import (
     ClassificationError,
     DecryptionError,

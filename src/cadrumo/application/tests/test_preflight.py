@@ -20,7 +20,9 @@ from pydantic import SecretStr
 from ...adapters.outbound.storage.path_budget import windows_worst_case_object_path_suffix_length
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import override_settings
+from ..auth.operator_probe_ports import ClaveIdentityFailure
 from ..auth.probes import ProviderProbeResult
+from ._operator_probe_fakes import fake_operator_probe_ports
 from ..preflight import (
     _ERROR_PROBE_RESULTS,
     _OK_PROBE_RESULTS,
@@ -41,6 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 #: composition root supplies in production. Reaching for it here keeps these
 #: probes exercising the true margin rather than a hand-picked sample.
 _SUFFIX_LENGTH = windows_worst_case_object_path_suffix_length()
+_OPERATOR_PROBE_PORTS = fake_operator_probe_ports()
 
 
 def _row(rows: tuple[PreflightCheck, ...], check_id: str) -> PreflightCheck:
@@ -55,7 +58,7 @@ def _row(rows: tuple[PreflightCheck, ...], check_id: str) -> PreflightCheck:
 def test_auth_provider_rows_are_ok_when_no_provider_configured() -> None:
     """An unconfigured optional provider is OK — not-configured is not a fault."""
     with override_settings(cadrumo_certificate_path=None, cadrumo_clave_movil_dni_nie=None):
-        rows = probe_auth_providers()
+        rows = probe_auth_providers(operator_probe_ports=_OPERATOR_PROBE_PORTS)
     cert = _row(rows, "auth-provider:certificate")
     assert cert.healthy is True
     assert cert.severity is HealthSeverity.OK
@@ -70,7 +73,7 @@ def test_auth_provider_certificate_missing_file_is_error_with_remediation(tmp_pa
     """A configured certificate path pointing at a missing file is a red row."""
     missing = tmp_path / "does-not-exist.p12"
     with override_settings(cadrumo_certificate_path=missing):
-        rows = probe_auth_providers()
+        rows = probe_auth_providers(operator_probe_ports=_OPERATOR_PROBE_PORTS)
     cert = _row(rows, "auth-provider:certificate")
     assert cert.healthy is False
     assert cert.severity is HealthSeverity.ERROR
@@ -83,7 +86,13 @@ def test_auth_provider_certificate_missing_file_is_error_with_remediation(tmp_pa
 def test_auth_provider_clave_invalid_identity_is_error() -> None:
     """A malformed Cl@ve Móvil DNI/NIE is classified as an error row."""
     with override_settings(cadrumo_clave_movil_dni_nie=SecretStr("NOT-A-VALID-ID")):
-        rows = probe_auth_providers()
+        rows = probe_auth_providers(
+            operator_probe_ports=fake_operator_probe_ports(
+                clave_identity_results={
+                    "NOT-A-VALID-ID": ClaveIdentityFailure(detail="invalid test identity"),
+                },
+            ),
+        )
     clave = _row(rows, "auth-provider:clave_movil")
     assert clave.healthy is False
     assert clave.severity is HealthSeverity.ERROR
@@ -192,7 +201,10 @@ def test_env_configuration_ok_with_passphrase() -> None:
 
 def test_run_preflight_checks_never_raises_and_covers_every_dimension() -> None:
     """The aggregate returns typed rows for every dimension and never raises."""
-    rows = run_preflight_checks(object_path_suffix_length=_SUFFIX_LENGTH)
+    rows = run_preflight_checks(
+        object_path_suffix_length=_SUFFIX_LENGTH,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
+    )
     ids = {row.check for row in rows}
     assert {
         "auth-provider:certificate",

@@ -40,6 +40,7 @@ from ...core.time.clock import now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.transactions.errors import LLMClassifierError, TransactionValidationError
 from ...domain.transactions.models import Transaction
+from ..adapter_composition import build_ledger_evidence_ports
 
 
 class _VisionReader:
@@ -87,6 +88,7 @@ class LedgerLlmComposition:
 
 def compose_ledger_llm(*, bucket_id: str, settings: Settings) -> LedgerLlmComposition:
     """Bind storage, local readers, and telemetry for one CLI ledger invocation."""
+    evidence_ports = build_ledger_evidence_ports(bucket_id=bucket_id)
 
     def resolve_evidence_input(
         resolved_bucket_id: str, evidence_id: str | None, attachment_ids: tuple[str, ...]
@@ -95,7 +97,7 @@ def compose_ledger_llm(*, bucket_id: str, settings: Settings) -> LedgerLlmCompos
         record = (
             find_bytes_bearing_evidence_record(
                 evidence_id,
-                evidence_records=PurchaseInvoiceEvidenceService(settings=settings).list_all(
+                evidence_records=PurchaseInvoiceEvidenceService(ports=evidence_ports).list_all(
                     bucket_id=resolved_bucket_id
                 ),
             )

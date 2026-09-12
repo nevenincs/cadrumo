@@ -13,7 +13,7 @@ See Also:
     :class:`~core.ProrrataProvisionalProvenance`
         Closed provenance axis whose ``CARRIED_PRIOR_DEFINITIVA`` member marks
         the normal LIVA art. 105.Uno seed path.
-    :class:`~application.calculations.CalculationObservationRepository`
+    :class:`~application.calculations.CalculationObservationRepositoryProtocol`
         Local observation catalogue scanned for prior Modelo 303 settlement
         observations.
     :func:`~application.calculations.revision_carry_outcome`
@@ -39,7 +39,7 @@ from ...domain.calculations.registry.schema_references import RegistrySnapshotRe
 from ...domain.iva.m303_settlement import m303_annual_settlement_order_key
 from ...domain.prorrata_register.register import ProrrataRegisterEntry
 from ..calculations.cross_period_models import CrossPeriodCleanStateBlocker
-from ..calculations.observations_repository import CalculationObservationRepository
+from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 from ..calculations.revision_carry_gate import revision_carry_outcome
 
 _PRORRATA_PORCENTAJE_CASILLA: Final[CasillaId] = validated_casilla_id(
@@ -105,7 +105,7 @@ class _PriorSettlementObservation:
 def evaluate_carried_prior_definitiva_seed(
     *,
     ejercicio: int,
-    observation_repository: CalculationObservationRepository | None = None,
+    observation_repository: CalculationObservationRepositoryProtocol,
     sector_id: str | None = None,
 ) -> ProrrataPriorDefinitivaSeedEvaluation:
     """Evaluate the carried-prior-definitive seed and surface findings.
@@ -113,7 +113,7 @@ def evaluate_carried_prior_definitiva_seed(
     Divergent or unreconfirmable revision stamps produce a blocking
     ``registry_revision_divergence`` finding and no seed.
     """
-    repository = observation_repository if observation_repository is not None else CalculationObservationRepository()
+    repository = observation_repository
     prior_year = ejercicio - 1
     for source in _prior_settlement_observations(repository, prior_year=prior_year):
         revision_outcome = revision_carry_outcome(
@@ -145,7 +145,7 @@ def evaluate_carried_prior_definitiva_seed(
 def cross_check_prorrata_entry_against_prior_observation(
     entry: ProrrataRegisterEntry,
     *,
-    observation_repository: CalculationObservationRepository | None = None,
+    observation_repository: CalculationObservationRepositoryProtocol,
 ) -> tuple[ProrrataSeedFinding, ...]:
     """Cross-check a register entry against the prior definitive observation.
 
@@ -336,7 +336,7 @@ def _source_observation_ref(source: _PriorSettlementObservation) -> str:
 
 
 def _prior_settlement_observations(
-    repository: CalculationObservationRepository,
+    repository: CalculationObservationRepositoryProtocol,
     *,
     prior_year: int,
 ) -> tuple[_PriorSettlementObservation, ...]:

@@ -25,10 +25,14 @@ test, giving the safeguard contract two-layer enforcement.
 
 from __future__ import annotations
 
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+
 import pytest
 
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 from .cli_runner import invoke_cached_cli
+
+_OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["active_profile_isolated_backend"]
@@ -125,7 +129,7 @@ def test_auth_logout_does_not_require_yes() -> None:
     """Anti-tautology: session logout executes without the destructive reset guard."""
     from ....application.auth.operator import configure_operator_auth
 
-    configure_operator_auth("certificate")
+    configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
     result = invoke_cached_cli(["config", "auth", "logout", "--provider", "certificate"])
 
     assert result.exit_code == 0, result.output
@@ -153,7 +157,7 @@ def test_auth_test_is_non_destructive_and_needs_no_yes() -> None:
     """
     from ....application.auth.operator import configure_operator_auth
 
-    configure_operator_auth("certificate")
+    configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
     result = invoke_cached_cli(["config", "auth", "test"])
 
     assert "Traceback" not in result.output, result.output

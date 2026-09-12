@@ -47,7 +47,6 @@ from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.documents import IdentityError
-from ...core.identity.tax_id import validate_spanish_tax_id
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -66,6 +65,7 @@ from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnaps
 from ...domain.calculations.registry.schema_exports import ExportRecordDefinition
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ...domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ...domain.modelos.errors import ModeloError, ModeloExportError
 from ..calculations.revision_carry_gate import revision_carry_outcome
 from ._ports import FicheroBoeRecordRenderer
@@ -604,7 +604,7 @@ def _issue(
 
 def _nif_value_shape_issue(value: str) -> str | None:
     try:
-        validate_spanish_tax_id(value)
+        validate_runtime_spanish_tax_id(value)
     except IdentityError as exc:
         return resolve_error_message(exc)
     return None

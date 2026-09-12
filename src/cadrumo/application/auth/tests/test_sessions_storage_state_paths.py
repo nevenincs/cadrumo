@@ -22,6 +22,8 @@ tautologies.
 
 from __future__ import annotations
 
+from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 import hashlib
 from collections.abc import Iterator
 from pathlib import Path
@@ -30,7 +32,6 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.auth import session_store
-from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import override_settings
@@ -39,6 +40,8 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
 from ..operator import configure_operator_auth, logout_operator_auth, reset_operator_auth
 from ..sessions import storage_state_paths
+
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -142,7 +145,7 @@ def test_storage_state_paths_returns_strict_frozen_model(tmp_path: Path) -> None
 
 def _hash_bucket_tree(storage_root: Path, bucket_id: str) -> str:
     """Return a stable fingerprint of every on-disk byte under one bucket's directory."""
-    bucket_dir = bucket_paths(storage_root, bucket_id).bucket_dir
+    bucket_dir = storage_root / "buckets" / bucket_id
     digest = hashlib.sha256()
     for file in scan_directory(bucket_dir, recursive=True, select=DirectoryEntryKind.FILES):
         digest.update(file.relative_to(bucket_dir).as_posix().encode("utf-8"))
@@ -156,7 +159,7 @@ def _create_profile_with_certificate_session(bucket_id: str) -> None:
     """Register a bucket, configure the certificate provider, and persist a real session."""
     with open_test_profile_session(bucket_id):
         register_minimal_profile(profile_id=bucket_id)
-        configure_operator_auth("certificate")
+        configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
         session_path = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
         session_store.save(
             session_path,
@@ -179,7 +182,7 @@ def test_provider_logout_leaves_unrelated_bucket_session_bytes_identical(tmp_pat
         with open_test_profile_session(_PROFILE_A):
             session_a = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
             assert session_store.exists(session_a)
-            result = logout_operator_auth(provider="certificate")
+            result = logout_operator_auth(provider="certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
             assert session_store.exists(session_a) is False
 
         unrelated_after = _hash_bucket_tree(storage_root, _PROFILE_B)
@@ -204,7 +207,7 @@ def test_all_provider_reset_leaves_unrelated_bucket_session_bytes_identical(tmp_
         with open_test_profile_session(_PROFILE_A):
             session_a = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
             assert session_store.exists(session_a)
-            result = reset_operator_auth(all_providers=True)
+            result = reset_operator_auth(all_providers=True, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
             assert session_store.exists(session_a) is False
 
         unrelated_after = _hash_bucket_tree(storage_root, _PROFILE_B)

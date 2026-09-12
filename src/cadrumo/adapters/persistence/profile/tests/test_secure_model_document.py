@@ -13,10 +13,9 @@ from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
-from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from .....domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument, ValuationMethod
+from ..inventory import InventoryLedgerRepository
 from ...storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
-from .._secure_model_document import ProfileBareModelSecurePersistence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -65,58 +64,45 @@ def _document(identifier: str) -> InventoryLedgerDocument:
     )
 
 
-def test_kernel_roundtrips_a_strict_document_as_encrypted_registry_governed_bytes(tmp_path: Path) -> None:
-    """The shared kernel never creates a plaintext model or an ungoverned row."""
+def test_inventory_repository_roundtrips_a_strict_document_as_encrypted_registry_governed_bytes(
+    tmp_path: Path,
+) -> None:
+    """The public inventory repository never creates plaintext or an ungoverned row."""
     document = _document("kernel-canary")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="a0e10fc6-03c5-4290-832a-fcb4c7654fe4") as profile:
-        persistence = ProfileBareModelSecurePersistence(
+        repository = InventoryLedgerRepository(
             objects=profile.repository,
-            definition=PROFILE_INVENTORY_LEDGER_NAMESPACE,
-            model_type=InventoryLedgerDocument,
-            empty_document=InventoryLedgerDocument,
         )
 
-        write = persistence.to_secure_object_write(document)
-        persistence.save(document)
+        repository.save(document)
 
         at_rest = read_db_at_rest_bytes(profile.paths.database_file)
-        assert persistence.load() == document
+        assert repository.load() == document
+        record = profile.repository.load(
+            PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace,
+            PROFILE_INVENTORY_LEDGER_NAMESPACE.require_default_object_key(),
+            expected_class=PROFILE_INVENTORY_LEDGER_NAMESPACE.sensitivity,
+            max_supported_version=PROFILE_INVENTORY_LEDGER_NAMESPACE.schema_version,
+        )
+        assert record is not None
 
-    assert write.namespace == PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace
-    assert write.classification is PROFILE_INVENTORY_LEDGER_NAMESPACE.sensitivity
-    assert write.schema_version == PROFILE_INVENTORY_LEDGER_NAMESPACE.schema_version
+    assert record.namespace == PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace
+    assert record.classification is PROFILE_INVENTORY_LEDGER_NAMESPACE.sensitivity
+    assert record.schema_version == PROFILE_INVENTORY_LEDGER_NAMESPACE.schema_version
     assert b"KERNEL-SECRET-ASSET" not in at_rest
     assert b"kernel-canary" not in at_rest
 
 
-def test_load_revisioned_returns_one_bare_secure_object_record_across_an_interleaving(
+def test_inventory_repository_load_returns_one_document_across_an_interleaving(
     tmp_path: Path,
 ) -> None:
     """One live SQL SELECT cannot pair a first payload with a later revision."""
     first = _document("first")
     second = _document("second")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="ae1c1f6a-dde4-4dda-a3d5-4ef005b70129") as profile:
-        persistence = ProfileBareModelSecurePersistence(
-            objects=profile.repository,
-            definition=PROFILE_INVENTORY_LEDGER_NAMESPACE,
-            model_type=InventoryLedgerDocument,
-            empty_document=InventoryLedgerDocument,
-        )
-        persistence.save(first)
-        expected_revision_id = profile.repository.load(
-            PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace,
-            PROFILE_INVENTORY_LEDGER_NAMESPACE.require_default_object_key(),
-            expected_class=PROFILE_INVENTORY_LEDGER_NAMESPACE.sensitivity,
-            max_supported_version=PROFILE_INVENTORY_LEDGER_NAMESPACE.schema_version,
-        )
-        assert expected_revision_id is not None
-
-        writer = ProfileBareModelSecurePersistence(
-            objects=profile.repository,
-            definition=PROFILE_INVENTORY_LEDGER_NAMESPACE,
-            model_type=InventoryLedgerDocument,
-            empty_document=InventoryLedgerDocument,
-        )
+        repository = InventoryLedgerRepository(objects=profile.repository)
+        repository.save(first)
+        writer = InventoryLedgerRepository(objects=profile.repository)
         selects: list[str] = []
         fired = False
         writing = False
@@ -145,30 +131,23 @@ def test_load_revisioned_returns_one_bare_secure_object_record_across_an_interle
         engine = profile.repository.engine
         event.listen(engine, "after_cursor_execute", _interleave_after_singleton_select)
         try:
-            observed, revision_id = persistence.load_revisioned()
+            observed = repository.load()
         finally:
             event.remove(engine, "after_cursor_execute", _interleave_after_singleton_select)
 
     assert fired
     assert len(selects) == 1
     assert observed == first
-    assert revision_id == expected_revision_id.revision_id
 
 
-def test_load_revisioned_observes_an_absent_bare_singleton_with_one_select(
+def test_inventory_repository_load_observes_an_absent_singleton_with_one_select(
     tmp_path: Path,
 ) -> None:
     """The absent singleton outcome also comes from exactly one encrypted-SQL read."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="04ff919d-3023-4ea3-b177-1b4e9fca0f40") as profile:
-        persistence = ProfileBareModelSecurePersistence(
-            objects=profile.repository,
-            definition=PROFILE_INVENTORY_LEDGER_NAMESPACE,
-            model_type=InventoryLedgerDocument,
-            empty_document=InventoryLedgerDocument,
-        )
+        repository = InventoryLedgerRepository(objects=profile.repository)
         with _secure_object_select_log(profile.repository.engine) as selects:
-            observed, revision_id = persistence.load_revisioned()
+            observed = repository.load()
 
     assert len(selects) == 1
     assert observed == InventoryLedgerDocument()
-    assert revision_id == ABSENT_SECURE_OBJECT_REVISION_ID

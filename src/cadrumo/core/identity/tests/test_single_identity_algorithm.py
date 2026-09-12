@@ -17,8 +17,10 @@ leader policy may not.
 
 This gate is structural rather than a behavioural sample, because a sample
 cannot see a validator that no test calls yet. It asserts that the checksum
-tables and the kind partition are each DECLARED exactly once in the package,
-and that no module outside their home reimplements the arithmetic.
+tables and control-kind partitions are each DECLARED exactly once in the
+package, and that no module outside their home reimplements the arithmetic.
+Shape-leader membership is registry-owned and is tested through the resolved
+declaration rather than duplicated here.
 """
 
 from __future__ import annotations
@@ -41,7 +43,6 @@ _AUTHORITY = "documents.py"
 _POLICY_LITERALS: dict[str, str] = {
     "TRWAGMYFPDXBNJZSQVHLCKE": "the NIF/NIE check-letter table",
     "JABCDEFGHI": "the CIF letter-control table",
-    "ABCDEFGHJNPQRSUVW": "the CIF kind-letter catalogue",
     "ABEH": "the digit-control CIF kinds",
     "PQRSNW": "the letter-control CIF kinds",
 }

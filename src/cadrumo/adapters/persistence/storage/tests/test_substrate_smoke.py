@@ -21,7 +21,7 @@ from .....core.classification.policies import SensitivityClass
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.locks import exclusive_file_lock
 from .....core.redaction.rules import default_rules_for_class, redact
-from .....tests.master_key import EphemeralMasterKeyProvider
+from .ephemeral_master_key import EphemeralMasterKeyProvider
 from ..blob_store.blob_store import EncryptedBlobStore
 from ..envelope.contract import Envelope, load_envelope, save_envelope
 from ..path_safety import safe_repository_id

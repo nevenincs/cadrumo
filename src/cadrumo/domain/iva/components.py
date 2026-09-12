@@ -9,15 +9,19 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 from functools import lru_cache
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, ValidationInfo, model_validator
 
-from ..calculations.registry.authority import bundled_authority
+from ..calculations.registry.iva_category_catalogue import (
+    IvaCategoryCatalogue,
+    resolve_iva_category_catalogue,
+)
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.schema_base import DateAxis
 from .classification import InvoiceKind
@@ -114,7 +118,7 @@ class IvaKindApplicability(StrEnum):
     Several categories are directional by law: an entrega intracomunitaria
     exenta (LIVA art. 25) is something the taxpayer *supplies*, and its
     received-side counterpart is a different category entirely
-    (:attr:`~domain.iva.IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE`).
+    (the registry-declared intra-community acquisition reverse-charge category).
 
     A pair that cannot occur is declared here rather than omitted from the
     table. Omission would make the completeness gate satisfiable by narrowing
@@ -132,33 +136,65 @@ class IvaKindApplicability(StrEnum):
     note names the category that *is* this kind's counterpart."""
 
 
-class IvaCuotaSettlement(StrEnum):
-    """Who settles the IVA cuota, and where.
+class IvaCuotaSettlement(str):
+    """Opaque registry-projected IVA cuota-settlement token.
 
-    Two categories can both carry a cuota and still route to entirely different
-    casillas depending on who is liable, so settlement is a separate column
-    from presence.
+    Membership and legal semantics are selected from fact 0084.  This type
+    carries only the token shape; production rows are accepted through the
+    typed 0084 projection below.
     """
 
-    NONE = "none"
-    """No cuota arises."""
+    __slots__ = ()
 
-    REPERCUTIDA = "repercutida"
-    """The counterparty charges the cuota on the invoice (LIVA art. 88)."""
+    @classmethod
+    def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
+        """Expose the opaque token as a non-empty string to Pydantic."""
+        from pydantic_core import core_schema
 
-    INVERSION_SUJETO_PASIVO = "inversion_sujeto_pasivo"
-    """The recipient self-assesses the cuota (LIVA art. 84.uno.2), declaring it
-    as devengada and, where deducible, as soportada."""
+        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema(min_length=1))
 
-    ADUANA = "aduana"
-    """The cuota is settled at customs on importación (LIVA art. 17)."""
+    @property
+    def value(self) -> str:
+        """Return the opaque token for string-oriented serialization."""
+        return str(self)
 
-    REGIMEN_ESPECIAL = "regimen_especial"
-    """The cuota is settled through a special regime rather than the general
-    Modelo 303 cuota bindings."""
 
-    UNKNOWN = "unknown"
-    """Not determinable from the category alone."""
+@dataclass(frozen=True, slots=True)
+class IvaCuotaSettlementDefinition:
+    """One registry-declared cuota-settlement token and its semantics."""
+
+    token: IvaCuotaSettlement
+    description: str
+    legal_ref: str
+
+
+@dataclass(frozen=True, slots=True)
+class IvaCuotaSettlementCatalogue:
+    """Typed projection of the dated 0084 cuota-settlement vocabulary."""
+
+    definitions: tuple[IvaCuotaSettlementDefinition, ...]
+    no_settlement_token: IvaCuotaSettlement
+
+    @property
+    def all_settlements(self) -> frozenset[IvaCuotaSettlement]:
+        """Return every settlement token declared by the selected authority."""
+        return frozenset(definition.token for definition in self.definitions)
+
+    def require(self, value: object) -> IvaCuotaSettlement:
+        """Validate one opaque settlement token against the selected authority."""
+        if isinstance(value, IvaCuotaSettlement):
+            token = value
+        elif isinstance(value, str):
+            token = IvaCuotaSettlement(value.strip())
+        else:
+            raise IvaValidationError("IVA cuota settlement must be a string token")
+        if not str(token):
+            raise IvaValidationError("IVA cuota settlement token must not be blank")
+        if token not in self.all_settlements:
+            raise IvaValidationError(
+                f"IVA cuota settlement {str(token)!r} is not declared by the facts registry",
+            )
+        return token
 
 
 class IvaGroundingConfidence(StrEnum):
@@ -241,13 +277,20 @@ class IvaCategoryComponents(IvaStrictFrozen):
     pending_legal_refs: tuple[_RegistryLegalRef, ...] = Field(default=())
 
     @model_validator(mode="after")
-    def _validate_row(self) -> IvaCategoryComponents:
+    def _validate_row(self, info: ValidationInfo) -> IvaCategoryComponents:
         """Enforce the internal coherence the table's readers rely on."""
         label = f"IvaCategoryComponents[{self.category.value}/{self.kind.value}]"
         self._validate_retencion_role(label)
         self._validate_applicability(label)
         self._validate_reference_integrity(label)
-        self._validate_cuota_settlement(label)
+        no_settlement_token: IvaCuotaSettlement | None = None
+        if isinstance(info.context, Mapping):
+            context_token = info.context.get("cuota_settlement_no_token")
+            if isinstance(context_token, IvaCuotaSettlement):
+                no_settlement_token = context_token
+            elif isinstance(context_token, str):
+                no_settlement_token = IvaCuotaSettlement(context_token)
+        self._validate_cuota_settlement(label, no_settlement_token=no_settlement_token)
         self._validate_retencion_notes(label)
         self._validate_grounding_references(label)
         return self
@@ -263,11 +306,21 @@ class IvaCategoryComponents(IvaStrictFrozen):
                 f"{label}: a legal ref cannot be both bundled and pending",
             )
 
-    def _validate_cuota_settlement(self, label: str) -> None:
+    def _validate_cuota_settlement(
+        self,
+        label: str,
+        *,
+        no_settlement_token: IvaCuotaSettlement | None = None,
+    ) -> None:
         """Refuse a cuota whose declared settlement disagrees with its presence."""
-        if (self.cuota is IvaComponentPresence.ZERO_BY_LAW) != (self.cuota_settlement is IvaCuotaSettlement.NONE):
+        no_settlement = (
+            no_settlement_token
+            if no_settlement_token is not None
+            else registry_cuota_settlement_catalogue().no_settlement_token
+        )
+        if (self.cuota is IvaComponentPresence.ZERO_BY_LAW) != (self.cuota_settlement == no_settlement):
             raise IvaValidationError(
-                f"{label}: a zero-by-law cuota must declare settlement NONE, and vice versa",
+                f"{label}: a zero-by-law cuota must declare the registry's no-settlement token, and vice versa",
             )
 
     def _validate_retencion_notes(self, label: str) -> None:
@@ -373,13 +426,33 @@ class IvaCategoryComponents(IvaStrictFrozen):
 
 ComponentCatalogue = Mapping[tuple[IvaCategory, InvoiceKind], IvaCategoryComponents]
 
+CategoryProjectionName = Literal[
+    "cuota_less_m303",
+    "m303_base_out_of_scope",
+    "evidence_exempt",
+    "no_printed_tax",
+]
 
-def _project_component_catalogue(
+_CATEGORY_PROJECTION_NAMES = frozenset(
+    {
+        "cuota_less_m303",
+        "m303_base_out_of_scope",
+        "evidence_exempt",
+        "no_printed_tax",
+    },
+)
+
+_CUOTA_SETTLEMENT_ORDER_KEY = "cuota_settlement.order"
+_CUOTA_SETTLEMENT_NO_TOKEN_KEY = "cuota_settlement.no_settlement"
+_CUOTA_SETTLEMENT_PREFIX = "cuota_settlement."
+
+
+def _resolve_component_catalogue_entries(
     *,
     effective_date: date,
     authority: ValidatedRegistryAuthority,
-) -> ComponentCatalogue:
-    """Project the selected registry mapping fact into typed component rows."""
+) -> dict[str, str]:
+    """Resolve and type-check the raw 0084 mapping entries once."""
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="iva-category-component-catalogue",
@@ -397,13 +470,196 @@ def _project_component_catalogue(
         if entry.key in entries:
             raise IvaValidationError(f"duplicate IVA component mapping key {entry.key!r}")
         entries[entry.key] = entry.value
+    return entries
 
+
+def _cuota_settlement_catalogue_from_entries(
+    entries: Mapping[str, str],
+) -> IvaCuotaSettlementCatalogue:
+    """Project the explicit cuota-settlement membership in fact 0084."""
+    order_text = entries.get(_CUOTA_SETTLEMENT_ORDER_KEY)
+    if order_text is None or not order_text.strip():
+        raise IvaValidationError(
+            f"IVA component mapping is missing {_CUOTA_SETTLEMENT_ORDER_KEY!r}",
+        )
+    raw_tokens = tuple(token.strip() for token in order_text.split(",") if token.strip())
+    if not raw_tokens or len(set(raw_tokens)) != len(raw_tokens):
+        raise IvaValidationError("IVA cuota-settlement membership must contain unique non-empty tokens")
+
+    no_settlement_value = entries.get(_CUOTA_SETTLEMENT_NO_TOKEN_KEY)
+    if no_settlement_value is None or not no_settlement_value.strip():
+        raise IvaValidationError(
+            f"IVA component mapping is missing {_CUOTA_SETTLEMENT_NO_TOKEN_KEY!r}",
+        )
+    no_settlement_token = IvaCuotaSettlement(no_settlement_value.strip())
+
+    definitions: list[IvaCuotaSettlementDefinition] = []
+    for raw_token in raw_tokens:
+        token = IvaCuotaSettlement(raw_token)
+        prefix = f"{_CUOTA_SETTLEMENT_PREFIX}{raw_token}"
+        declared_value = entries.get(f"{prefix}.value")
+        if declared_value is None or not declared_value.strip():
+            raise IvaValidationError(f"IVA component mapping is missing {prefix + '.value'!r}")
+        if declared_value.strip() != raw_token:
+            raise IvaValidationError(
+                f"IVA cuota-settlement token {raw_token!r} declares mismatched value {declared_value!r}",
+            )
+        description = entries.get(f"{prefix}.description")
+        legal_ref = entries.get(f"{prefix}.legal_ref")
+        if description is None or not description.strip() or legal_ref is None or not legal_ref.strip():
+            raise IvaValidationError(f"IVA component mapping is missing semantics for {raw_token!r}")
+        definitions.append(
+            IvaCuotaSettlementDefinition(
+                token=token,
+                description=description.strip(),
+                legal_ref=legal_ref.strip(),
+            ),
+        )
+
+    catalogue = IvaCuotaSettlementCatalogue(
+        definitions=tuple(definitions),
+        no_settlement_token=no_settlement_token,
+    )
+    if no_settlement_token not in catalogue.all_settlements:
+        raise IvaValidationError(
+            "IVA component mapping no-settlement token is not declared in cuota-settlement order",
+        )
+    return catalogue
+
+
+@lru_cache(maxsize=64)
+def _bundled_cuota_settlement_catalogue(effective_date: date) -> IvaCuotaSettlementCatalogue:
+    """Cache the immutable 0084 cuota-settlement projection."""
+    from ..calculations.registry.authority import bundled_authority
+
+    entries = _resolve_component_catalogue_entries(
+        effective_date=effective_date,
+        authority=bundled_authority(),
+    )
+    return _cuota_settlement_catalogue_from_entries(entries)
+
+
+def registry_cuota_settlement_catalogue(
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> IvaCuotaSettlementCatalogue:
+    """Resolve the explicit cuota-settlement vocabulary from published 0084."""
+    selected_date = date.today() if effective_date is None else effective_date
+    if authority is None:
+        return _bundled_cuota_settlement_catalogue(selected_date)
+    entries = _resolve_component_catalogue_entries(
+        effective_date=selected_date,
+        authority=authority,
+    )
+    return _cuota_settlement_catalogue_from_entries(entries)
+
+
+def _ordered_component_rows(entries: Mapping[str, str]) -> tuple[str, ...]:
+    """Return the validated row-key order declared by fact 0084."""
     order_text = entries.get("catalogue_order")
     if order_text is None or not order_text.strip():
         raise IvaValidationError("IVA component mapping is missing 'catalogue_order'")
     ordered_keys = tuple(token.strip() for token in order_text.split(",") if token.strip())
     if len(set(ordered_keys)) != len(ordered_keys):
         raise IvaValidationError("IVA component catalogue order contains duplicate rows")
+    return ordered_keys
+
+
+def _category_projection_from_entries(
+    entries: Mapping[str, str],
+    projection: CategoryProjectionName,
+    category_catalogue: IvaCategoryCatalogue,
+) -> frozenset[IvaCategory]:
+    """Project one explicit category membership mapping from fact 0084."""
+    if projection not in _CATEGORY_PROJECTION_NAMES:
+        raise IvaValidationError(f"unknown IVA category projection {projection!r}")
+    raw_members = entries.get(f"category_projection.{projection}")
+    if raw_members is None or not raw_members.strip():
+        raise IvaValidationError(
+            f"IVA component catalogue is missing category projection {projection!r}",
+        )
+    member_values = tuple(token.strip() for token in raw_members.split(","))
+    if any(not token for token in member_values):
+        raise IvaValidationError(f"IVA category projection {projection!r} contains an empty member")
+    if len(set(member_values)) != len(member_values):
+        raise IvaValidationError(f"IVA category projection {projection!r} contains duplicate members")
+    try:
+        members = frozenset(category_catalogue.require(token) for token in member_values)
+    except ValueError as exc:
+        raise IvaValidationError(
+            f"IVA category projection {projection!r} contains an unknown category",
+        ) from exc
+
+    declared_categories: set[str] = set()
+    for row_key in _ordered_component_rows(entries):
+        category_text, separator, kind_text = row_key.partition("|")
+        if not separator or not category_text or not kind_text:
+            raise IvaValidationError(f"invalid IVA component catalogue row key {row_key!r}")
+        declared_categories.add(category_text)
+    undeclared = sorted(member.value for member in members if member.value not in declared_categories)
+    if undeclared:
+        raise IvaValidationError(
+            f"IVA category projection {projection!r} names categories without component rows: {undeclared!r}",
+        )
+    return members
+
+
+@lru_cache(maxsize=64)
+def _bundled_category_projection(
+    effective_date: date,
+    projection: CategoryProjectionName,
+) -> frozenset[IvaCategory]:
+    """Cache one immutable category projection from the bundled authority."""
+    from ..calculations.registry.authority import bundled_authority
+
+    entries = _resolve_component_catalogue_entries(
+        effective_date=effective_date,
+        authority=bundled_authority(),
+    )
+    return _category_projection_from_entries(
+        entries,
+        projection,
+        resolve_iva_category_catalogue(effective_date=effective_date, authority=bundled_authority()),
+    )
+
+
+def registry_category_projection(
+    projection: CategoryProjectionName,
+    *,
+    effective_date: date | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> frozenset[IvaCategory]:
+    """Resolve an explicit category membership projection from published 0084.
+
+    There is intentionally no derived or Python-owned fallback. Missing,
+    malformed, duplicate, or stale projection entries fail through
+    :class:`IvaValidationError`.
+    """
+    selected_date = date.today() if effective_date is None else effective_date
+    if authority is None:
+        return _bundled_category_projection(selected_date, projection)
+    entries = _resolve_component_catalogue_entries(
+        effective_date=selected_date,
+        authority=authority,
+    )
+    return _category_projection_from_entries(
+        entries,
+        projection,
+        resolve_iva_category_catalogue(effective_date=selected_date, authority=authority),
+    )
+
+
+def _project_component_catalogue(
+    *,
+    effective_date: date,
+    authority: ValidatedRegistryAuthority,
+) -> ComponentCatalogue:
+    """Project the selected registry mapping fact into typed component rows."""
+    entries = _resolve_component_catalogue_entries(effective_date=effective_date, authority=authority)
+    category_catalogue = resolve_iva_category_catalogue(effective_date=effective_date, authority=authority)
+    ordered_keys = _ordered_component_rows(entries)
+    cuota_settlement_catalogue = _cuota_settlement_catalogue_from_entries(entries)
 
     # Keep the conversion helper as the narrow mechanical boundary. The helper
     # is imported lazily because it imports this module for the row model.
@@ -415,7 +671,7 @@ def _project_component_catalogue(
         if not separator or not category_text or not kind_text:
             raise IvaValidationError(f"invalid IVA component catalogue row key {row_key!r}")
         try:
-            category = IvaCategory(category_text)
+            category = category_catalogue.require(category_text)
             kind = InvoiceKind(kind_text)
         except ValueError as exc:
             raise IvaValidationError(f"unknown IVA component catalogue row key {row_key!r}") from exc
@@ -428,8 +684,15 @@ def _project_component_catalogue(
             raise IvaValidationError(f"IVA component row {row_key!r} is not valid JSON") from exc
         if not isinstance(decoded, Mapping):
             raise IvaValidationError(f"IVA component row {row_key!r} must decode as an object")
-        row = component_row_from_registry(decoded)
-        if row.category is not category or row.kind is not kind:
+        if "cuota_settlement" not in decoded:
+            raise IvaValidationError(f"IVA component row {row_key!r} is missing cuota settlement")
+        decoded = dict(decoded)
+        decoded["cuota_settlement"] = cuota_settlement_catalogue.require(decoded["cuota_settlement"])
+        row = component_row_from_registry(
+            decoded,
+            cuota_settlement_no_token=cuota_settlement_catalogue.no_settlement_token,
+        )
+        if row.category != category or row.kind is not kind:
             raise IvaValidationError(
                 f"IVA component row {row_key!r} disagrees with its catalogue key",
             )
@@ -440,6 +703,8 @@ def _project_component_catalogue(
 @lru_cache(maxsize=16)
 def _bundled_component_catalogue(effective_date: date) -> ComponentCatalogue:
     """Cache the immutable bundled projection by its legal effective date."""
+    from ..calculations.registry.authority import bundled_authority
+
     return _project_component_catalogue(effective_date=effective_date, authority=bundled_authority())
 
 
@@ -503,37 +768,15 @@ def category_components(
 def cuota_less_m303_categories_from_table(
     component_catalogue: ComponentCatalogue | None = None,
 ) -> frozenset[IvaCategory]:
-    """Derive the cuota-less category set from a registry component catalogue.
+    """Return the explicit cuota-less projection declared by fact 0084.
 
-    A category bears no Modelo 303 general cuota when either its cuota is zero
-    by law or its cuota is settled through a special regime rather than the
-    general 303 bindings.
-
-    A category is cuota-less when NO arising kind of it produces a general-303
-    cuota. The quantifier is load-bearing: ``DOMESTIC_REVERSE_CHARGE`` carries
-    no cuota on the issued side (the recipient self-assesses) but a real
-    self-assessed one on the received side, so an "any kind" reading would
-    wrongly declare the whole category cuota-less and silence the advisory on
-    the side that does bear one. Non-arising pairs are skipped: they describe
-    no operation, so they cannot witness the absence of a cuota.
-
-    Returns:
-        The categories that legitimately match no Modelo 303 cuota binding.
+    ``component_catalogue`` remains an accepted argument for callers that
+    already hold a projected catalogue, but the membership itself is never
+    inferred from row semantics: the canonical ``category_projection`` entry
+    is resolved from the published authority and missing data fails closed.
     """
-    if component_catalogue is None:
-        component_catalogue = registry_component_catalogue()
-    arising: dict[IvaCategory, list[IvaCategoryComponents]] = {}
-    for (category, _kind), row in component_catalogue.items():
-        if row.applicability is IvaKindApplicability.ARISES:
-            arising.setdefault(category, []).append(row)
-    return frozenset(
-        category
-        for category, rows in arising.items()
-        if all(
-            row.cuota is IvaComponentPresence.ZERO_BY_LAW or row.cuota_settlement is IvaCuotaSettlement.REGIMEN_ESPECIAL
-            for row in rows
-        )
-    )
+    del component_catalogue
+    return registry_category_projection("cuota_less_m303")
 
 
 def category_bears_taxable_base(
@@ -605,10 +848,13 @@ def category_cuota_is_zero_by_law(
 
 
 __all__ = [
+    "CategoryProjectionName",
     "ComponentCatalogue",
     "IvaCategoryComponents",
     "IvaComponentPresence",
     "IvaCuotaSettlement",
+    "IvaCuotaSettlementCatalogue",
+    "IvaCuotaSettlementDefinition",
     "IvaGroundingConfidence",
     "IvaKindApplicability",
     "IvaRetencionExpectation",
@@ -617,5 +863,7 @@ __all__ = [
     "category_components",
     "category_cuota_is_zero_by_law",
     "cuota_less_m303_categories_from_table",
+    "registry_category_projection",
+    "registry_cuota_settlement_catalogue",
     "registry_component_catalogue",
 ]

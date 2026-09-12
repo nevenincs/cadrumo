@@ -23,6 +23,8 @@ witnessed active-profile storage span to read that state.
 
 from __future__ import annotations
 
+from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 import pytest
 
 from ....core.auth_provider import AuthProviderKind
@@ -32,6 +34,8 @@ from ....tests.user_profile import register_minimal_profile
 from ...workflow.persistence import workflow_state_repository
 from ..actions import update_auth
 from ..sessions import _resolve_provider_kind
+
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -65,7 +69,7 @@ def test_the_persisted_selection_is_resolved_when_settings_name_no_provider() ->
 
     with override_settings(cadrumo_auth_provider=None) as settings:
         assert settings.cadrumo_auth_provider is None
-        assert _resolve_provider_kind(settings, None) is AuthProviderKind.CLAVE_MOVIL
+        assert _resolve_provider_kind(settings, None, operator_scope_ports=_OPERATOR_SCOPE_PORTS) is AuthProviderKind.CLAVE_MOVIL
 
 
 def test_the_persisted_selection_beats_a_divergent_settings_default() -> None:
@@ -78,7 +82,7 @@ def test_the_persisted_selection_beats_a_divergent_settings_default() -> None:
     _register_profile_selecting(AuthProviderKind.CLAVE_MOVIL)
 
     with override_settings(cadrumo_auth_provider=AuthProviderKind.CERTIFICATE) as settings:
-        assert _resolve_provider_kind(settings, None) is AuthProviderKind.CLAVE_MOVIL
+        assert _resolve_provider_kind(settings, None, operator_scope_ports=_OPERATOR_SCOPE_PORTS) is AuthProviderKind.CLAVE_MOVIL
 
 
 def test_an_explicit_kind_still_wins_over_the_persisted_selection() -> None:
@@ -91,7 +95,7 @@ def test_an_explicit_kind_still_wins_over_the_persisted_selection() -> None:
     _register_profile_selecting(AuthProviderKind.CLAVE_MOVIL)
 
     with override_settings(cadrumo_auth_provider=None) as settings:
-        resolved = _resolve_provider_kind(settings, AuthProviderKind.CERTIFICATE)
+        resolved = _resolve_provider_kind(settings, AuthProviderKind.CERTIFICATE, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert resolved is AuthProviderKind.CERTIFICATE
 
@@ -106,7 +110,7 @@ def test_the_settings_fallback_applies_only_with_nothing_persisted() -> None:
     _register_profile_selecting(None)
 
     with override_settings(cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL) as settings:
-        assert _resolve_provider_kind(settings, None) is AuthProviderKind.CLAVE_MOVIL
+        assert _resolve_provider_kind(settings, None, operator_scope_ports=_OPERATOR_SCOPE_PORTS) is AuthProviderKind.CLAVE_MOVIL
 
 
 def test_nothing_configured_anywhere_resolves_the_certificate_default() -> None:
@@ -114,4 +118,4 @@ def test_nothing_configured_anywhere_resolves_the_certificate_default() -> None:
     _register_profile_selecting(None)
 
     with override_settings(cadrumo_auth_provider=None) as settings:
-        assert _resolve_provider_kind(settings, None) is AuthProviderKind.CERTIFICATE
+        assert _resolve_provider_kind(settings, None, operator_scope_ports=_OPERATOR_SCOPE_PORTS) is AuthProviderKind.CERTIFICATE

@@ -445,7 +445,7 @@ def _modelo_130_revision() -> ModeloRevision:
     return (
         bundled_authority()
         .snapshot(
-            Modelo.M130.value,
+            Modelo("130").value,
             filing_year=2024,
             period="1T",
         )
@@ -508,7 +508,7 @@ def _modelo_303_revision() -> ModeloRevision:
     return (
         bundled_authority()
         .snapshot(
-            Modelo.M303.value,
+            Modelo("303").value,
             filing_year=2024,
             period="1T",
         )

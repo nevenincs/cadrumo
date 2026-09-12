@@ -19,6 +19,7 @@ from uuid import UUID
 
 if TYPE_CHECKING:
     from ...core.profile_session import ProfileSessionRefusalReason
+    from .login_handover import ProfileLoginHandoverJournal
 
 
 class ProfileBucketSessionPort(Protocol):
@@ -151,6 +152,28 @@ class ProfileLoginSessionPort(Protocol):
     protocols.  The boundary never copies them: live-session identity is part
     of rollback and the exact receipt instance anchors idle-deadline renewal.
     """
+
+    def load_handover_journal(self, *, storage_root: Path) -> ProfileLoginHandoverJournal | None:
+        """Load the durable profile-switch witness, if present."""
+        ...
+
+    def save_handover_journal(
+        self,
+        *,
+        storage_root: Path,
+        journal: ProfileLoginHandoverJournal,
+    ) -> None:
+        """Persist one monotonic profile-switch witness."""
+        ...
+
+    def clear_handover_journal(
+        self,
+        *,
+        storage_root: Path,
+        journal: ProfileLoginHandoverJournal,
+    ) -> None:
+        """Compare and clear the completed profile-switch witness."""
+        ...
 
     def current_session(self) -> ProfileBucketSessionPort | None:
         """Return the process-bound live session, if one exists."""

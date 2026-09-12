@@ -89,6 +89,22 @@ _TRANSLATION_IDENTIFIER_RE: Final[re.Pattern[str]] = re.compile(
 _TRANSLATION_ROLE_MARKER_RE: Final[re.Pattern[str]] = re.compile(
     r":[A-Za-z][A-Za-z0-9_-]*:|\{[A-Za-z][A-Za-z0-9_-]*\}"
 )
+_TRANSLATION_HTML_TAG_RE: Final[re.Pattern[str]] = re.compile(
+    r"</?[A-Za-z][A-Za-z0-9:-]*(?:\s+[^<>]*?)?/?>"
+)
+_TRANSLATION_HTML_LANGUAGE_RE: Final[re.Pattern[str]] = re.compile(
+    r"<(?P<tag>[A-Za-z][A-Za-z0-9:-]*)\b"
+    r"(?=[^<>]*?\blang\s*=\s*[\"'](?P<locale>[A-Za-z]{2})(?:-[^\"']*)?[\"'])"
+    r"[^<>]*>(?P<body>.*?)</(?P=tag)\s*>",
+    re.IGNORECASE | re.DOTALL,
+)
+_TRANSLATION_MARKDOWN_LINK_CONTEXT_RE: Final[re.Pattern[str]] = re.compile(
+    r"\[(?P<label>[^\]\r\n]+)\]\(\s*(?:<(?P<angle_target>[^>\r\n]*)>|(?P<target>[^)\r\n]*))\)"
+)
+_TRANSLATION_LEGAL_TITLE_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?P<title>\b(?:[A-ZÁÉÍÓÚÜÑ][\wÁÉÍÓÚÜÑáéíóúüñ]*\s+){1,3})"
+    r"(?P<identifier>[A-Z]{0,5}/?\d{1,4}/\d{4})\b"
+)
 _SPELLING_SURFACES: Final[tuple[str, ...]] = ("docs_po", "generated_docs", "runtime", "toml")
 _NEAR_ECHO_THRESHOLD: Final[float] = 0.90
 _ECHO_SAMPLE_LIMIT: Final[int] = 20
@@ -148,11 +164,24 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
         required_keys, locale_leaves, repository, additional_values=parallel_values
     )
     matrix = _translation_matrix(required_keys, locale_leaves, spelling)
-    source_inventory, source_findings = _source_inventory(manager)
+    finite_dynamic_keys = {key for values in finite_families.values() for key in values}
+    source_inventory, source_findings = _source_inventory(
+        manager,
+        dynamic_resolved_keys=finite_dynamic_keys,
+    )
     inventory_findings = [*discovery_findings, *source_findings, *parallel_findings, *spelling_findings]
+    matrix_findings = cast(list[dict[str, object]], matrix["findings"])
+    placeholder_mismatches = sum(
+        finding.get("kind") == "translation_placeholder_mismatch" for finding in matrix_findings
+    )
+    invalid_placeholders = sum(
+        finding.get("kind") in {"reserved_placeholder", "translation_invalid_placeholder"}
+        for finding in matrix_findings
+    )
     inventory_open = bool(
         discovery_findings
         or source_inventory["invalid_tr_calls"]
+        or source_inventory["conflicting_duplicate_declarations"]
         or source_inventory["naked_presentation_sites"]
         or source_inventory["unread_or_invalid_sources"]
         or parallel_inventory["parallel_localization_declarations"]
@@ -196,6 +225,7 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
     }
     inventory_items = (
         source_inventory["invalid_tr_calls"]
+        + source_inventory["conflicting_duplicate_declarations"]
         + source_inventory["naked_presentation_sites"]
         + source_inventory["unread_or_invalid_sources"]
         + parallel_inventory["parallel_localization_declarations"]
@@ -227,7 +257,6 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
         }
         for key in sorted(catalogue_only_keys)
     ]
-    finite_dynamic_keys = {key for values in finite_families.values() for key in values}
     summary = {
         "inventory": {
             "closed": not inventory_open,
@@ -235,7 +264,10 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
             "catalogue_key_declarations": catalogue_key_cells,
             "catalogue_keys_unique": catalogue_keys_unique,
             "catalogue_cross_locale_repetitions": catalogue_key_cells - catalogue_keys_unique,
-            "catalogue_duplicate_declarations": 0,
+            "catalogue_duplicate_declarations": source_inventory["conflicting_duplicate_declarations"],
+            "tr_syntax_invalid": source_inventory["invalid_tr_calls"],
+            "placeholder_mismatches": placeholder_mismatches,
+            "invalid_placeholders": invalid_placeholders,
             **source_inventory,
             **parallel_inventory,
             **spelling_inventory,
@@ -265,19 +297,6 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
         *inventory_findings,
         *(finding for finding in catalogue_findings if finding.get("key") not in required_keys),
         *matrix["findings"],
-        *(
-            {
-                "classification": "blocking",
-                "kind": "translation_spelling_unknown",
-                "domain": "docs" if key.startswith("parallel:docs/") else "structured_data",
-                "locale": locale,
-                "location": key.removeprefix("parallel:"),
-                "unknown_words": list(words),
-                "next_action": "correct the localized prose in its authoritative data source",
-            }
-            for (locale, key), words in sorted(spelling.items())
-            if key.startswith("parallel:")
-        ),
         *catalogue_only_findings,
         *(
             {
@@ -390,62 +409,84 @@ def _spellcheck_catalogues(
 ) -> tuple[dict[tuple[str, str], tuple[str, ...]], dict[str, object], list[dict[str, object]]]:
     """Check authored prose with pinned Hunspell dictionaries through spylls."""
     unknown_by_cell: dict[tuple[str, str], set[str]] = defaultdict(set)
-    keys_by_word: dict[str, dict[str, set[str]]] = {}
+    keys_by_word: dict[str, dict[str, set[tuple[str, str]]]] = {}
     cell_words: dict[tuple[str, str], frozenset[str]] = {}
+    cell_words_by_language: dict[tuple[str, str], dict[str, frozenset[str]]] = {}
     cell_excluded_structural_tokens: dict[tuple[str, str], int] = {}
     cell_text: dict[tuple[str, str], str] = {}
     excluded_by_surface_locale: Counter[tuple[str, str]] = Counter()
-    checked_cells = 0
+    # Keep enrollment and dictionary coverage separate.  A cell containing only
+    # links, identifiers, placeholders, or numbers is still an enrolled cell;
+    # it simply has no prose words to pass through Hunspell.  The report joins
+    # these counters with the parallel-surface collector, so counting only
+    # non-empty prose here makes the reconciliation appear to lose cells.
+    enrolled_cells_by_locale: Counter[str] = Counter()
+    prose_cells_by_locale: Counter[str] = Counter()
+    structural_only_cells_by_locale: Counter[str] = Counter()
     locales = set(locale_leaves) | set(additional_values or {})
     for locale in sorted(locales):
         leaves = locale_leaves.get(locale, {})
-        locale_words: dict[str, set[str]] = defaultdict(set)
         values = {key: leaves.get(key) for key in required_keys}
         values.update((additional_values or {}).get(locale, {}))
         for key, value in sorted(values.items()):
             if not isinstance(value, str):
                 continue
+            enrolled_cells_by_locale[locale] += 1
             cell = (locale, value)
             if cell not in cell_words:
-                filtered_text, excluded_tokens = _filtered_translation_text(value)
-                cell_words[cell] = frozenset(
-                    word for word in _translation_words(filtered_text) if len(word) > 1
-                )
+                language_segments = _translation_spelling_segments(value, key, locale)
+                language_words_mutable: dict[str, set[str]] = defaultdict(set)
+                for language, words, _excluded in language_segments:
+                    language_words_mutable[language].update(word for word in words if len(word) > 1)
+                language_words = {
+                    language: frozenset(words) for language, words in language_words_mutable.items()
+                }
+                cell_words_by_language[cell] = language_words
+                cell_words[cell] = frozenset(word for words in language_words.values() for word in words)
+                excluded_tokens = sum(excluded for _language, _words, excluded in language_segments)
                 cell_excluded_structural_tokens[cell] = excluded_tokens
             words = cell_words[cell]
             excluded_by_surface_locale[(_spelling_surface(key), locale)] += cell_excluded_structural_tokens[cell]
             cell_text[(locale, key)] = value
             if words:
-                checked_cells += 1
-            for word in words:
-                locale_words[word].add(key)
-        keys_by_word[locale] = locale_words
+                prose_cells_by_locale[locale] += 1
+            else:
+                structural_only_cells_by_locale[locale] += 1
+            for dictionary_locale, language_words in cell_words_by_language[cell].items():
+                locale_words = keys_by_word.setdefault(dictionary_locale, defaultdict(set))
+                for word in language_words:
+                    locale_words[word].add((locale, key))
     unknown_words: set[tuple[str, str]] = set()
-    unknown_word_cells: set[tuple[str, str]] = set()
     try:
         dictionaries = load_dictionaries(repository)
-        for locale, words in keys_by_word.items():
-            dictionary = dictionaries[locale]
+        for dictionary_locale, words in keys_by_word.items():
+            dictionary = dictionaries[dictionary_locale]
             for word in words:
                 if dictionary.lookup(word):
                     continue
-                unknown_words.add((locale, word.casefold()))
-                unknown_word_cells.add((locale, word))
-
-        # Keep the complete unknown-word result for each exact authored value.  This
-        # covers catalogue cells and parallel/doc values, which share this helper,
-        # while retaining one finding per source cell below.
-        unknown_by_text = {
-            cell: tuple(sorted((word for word in words if (cell[0], word) in unknown_word_cells), key=str.casefold))
-            for cell, words in cell_words.items()
-        }
-        for locale, words in keys_by_word.items():
-            for word, keys in words.items():
-                if (locale, word) not in unknown_word_cells:
-                    continue
-                for key in keys:
-                    cell = (locale, key)
-                    unknown_by_cell[cell].update(unknown_by_text[(locale, cell_text[cell])])
+                for owner_locale, key in words[word]:
+                    owner_cell = (owner_locale, key)
+                    value = cell_text[owner_cell]
+                    foreign_context = _spanish_word_context(
+                        value,
+                        key,
+                        word,
+                        owner_locale=owner_locale,
+                        dictionary=dictionaries.get(owner_locale),
+                        spanish_dictionary=dictionaries.get("es"),
+                    )
+                    if foreign_context and dictionary_locale == owner_locale:
+                        # A Spanish legal title or authority name embedded in an
+                        # English/Hungarian/Catalan cell is checked by Spanish.
+                        # Unknown words remain findings, but are attributed to the
+                        # language of the embedded phrase rather than to the page.
+                        if dictionaries["es"].lookup(word):
+                            continue
+                        unknown_words.add(("es", word.casefold()))
+                        unknown_by_cell[owner_cell].add(word)
+                        continue
+                    unknown_words.add((dictionary_locale, word.casefold()))
+                    unknown_by_cell[owner_cell].add(word)
     except SpellingToolError as exc:
         failure = {
             "classification": "blocking",
@@ -454,10 +495,20 @@ def _spellcheck_catalogues(
             "detail": exc.detail,
             "next_action": exc.next_action,
         }
+        enrolled_cells = sum(enrolled_cells_by_locale.values())
+        prose_cells = sum(prose_cells_by_locale.values())
         return (
             {},
             {
-                "spellchecked_cells": checked_cells,
+                "spellchecked_cells": enrolled_cells,
+                "spelling_cells": enrolled_cells,
+                "spelling_cells_by_locale": dict(sorted(enrolled_cells_by_locale.items())),
+                "spelling_prose_cells": prose_cells,
+                "spelling_prose_cells_by_locale": dict(sorted(prose_cells_by_locale.items())),
+                "spelling_structural_only_cells": sum(structural_only_cells_by_locale.values()),
+                "spelling_structural_only_cells_by_locale": dict(
+                    sorted(structural_only_cells_by_locale.items())
+                ),
                 "spelling_unknown_cells": 0,
                 "spelling_unknown_words": 0,
                 "spelling_tool_failures": 1,
@@ -465,16 +516,44 @@ def _spellcheck_catalogues(
             },
             [failure],
         )
-    return (
-        {cell: tuple(sorted(words, key=str.casefold)) for cell, words in unknown_by_cell.items()},
+    spelling = {cell: tuple(sorted(words, key=str.casefold)) for cell, words in unknown_by_cell.items()}
+    unknown_findings = [
         {
-            "spellchecked_cells": checked_cells,
+            "classification": "blocking",
+            "kind": "translation_spelling_unknown",
+            "domain": (
+                "docs"
+                if key.startswith("parallel:docs/")
+                else "structured_data"
+                if key.startswith("parallel:")
+                else _domain(key)
+            ),
+            "locale": locale,
+            "location": key.removeprefix("parallel:"),
+            "unknown_words": list(words),
+            "next_action": "correct the localized prose in its authoritative data source",
+        }
+        for (locale, key), words in sorted(spelling.items())
+        if words
+    ]
+    enrolled_cells = sum(enrolled_cells_by_locale.values())
+    prose_cells = sum(prose_cells_by_locale.values())
+    return (
+        spelling,
+        {
+            "spellchecked_cells": enrolled_cells,
+            "spelling_cells": enrolled_cells,
+            "spelling_cells_by_locale": dict(sorted(enrolled_cells_by_locale.items())),
+            "spelling_prose_cells": prose_cells,
+            "spelling_prose_cells_by_locale": dict(sorted(prose_cells_by_locale.items())),
+            "spelling_structural_only_cells": sum(structural_only_cells_by_locale.values()),
+            "spelling_structural_only_cells_by_locale": dict(sorted(structural_only_cells_by_locale.items())),
             "spelling_unknown_cells": len(unknown_by_cell),
             "spelling_unknown_words": len(unknown_words),
             "spelling_tool_failures": 0,
             **_excluded_structural_inventory(excluded_by_surface_locale),
         },
-        [],
+        unknown_findings,
     )
 
 
@@ -612,6 +691,137 @@ def _human_translation_text(value: str) -> str:
     return _filtered_translation_text(value)[0]
 
 
+def _translation_spelling_segments(
+    value: str,
+    key: str,
+    default_locale: str,
+) -> tuple[tuple[str, tuple[str, ...], int], ...]:
+    """Split prose by explicit language-bearing markup and legal identifiers.
+
+    The returned text is already filtered for transport syntax.  A legal link
+    label, a ``lang``-annotated HTML element, or a numbered form/legal title is
+    therefore checked with the dictionary that owns that rendered text rather
+    than with the language of the surrounding catalogue cell.
+    """
+    foreign: list[tuple[int, int, str, str, int]] = []
+    for match in _TRANSLATION_HTML_LANGUAGE_RE.finditer(value):
+        language = match.group("locale").casefold()
+        if language in _LOCALES:
+            foreign.append(
+                (
+                    match.start(),
+                    match.end(),
+                    language,
+                    match.group("body"),
+                    _filtered_translation_text(match.group(0))[1],
+                )
+            )
+    for match in _TRANSLATION_MARKDOWN_LINK_CONTEXT_RE.finditer(value):
+        target = match.group("angle_target") or match.group("target") or ""
+        if _is_legal_authority_target(target):
+            foreign.append(
+                (
+                    match.start(),
+                    match.end(),
+                    "es",
+                    match.group("label"),
+                    _filtered_translation_text(match.group(0))[1],
+                )
+            )
+    for match in _TRANSLATION_RST_LINK_RE.finditer(value):
+        if _is_legal_authority_target(match.group("target")):
+            foreign.append(
+                (
+                    match.start(),
+                    match.end(),
+                    "es",
+                    match.group("label"),
+                    _filtered_translation_text(match.group(0))[1],
+                )
+            )
+    if default_locale != "es":
+        literal_ranges = tuple((match.start(), match.end()) for match in _TRANSLATION_LITERAL_RE.finditer(value))
+        for pattern in (_MODELO_FORM_RE, _TRANSLATION_LEGAL_TITLE_RE):
+            for match in pattern.finditer(value):
+                if any(start <= match.start() and match.end() <= end for start, end in literal_ranges):
+                    continue
+                text = match.group(0)
+                foreign.append(
+                    (
+                        match.start(),
+                        match.end(),
+                        "es",
+                        text,
+                        _filtered_translation_text(text)[1],
+                    )
+                )
+
+    # Keep the first structured span when two recognizers describe the same
+    # source range (for example a legal title inside a marked link).
+    accepted: list[tuple[int, int, str, str, int]] = []
+    for candidate in sorted(foreign, key=lambda item: (item[0], -(item[1] - item[0]))):
+        if any(candidate[0] < previous[1] and previous[0] < candidate[1] for previous in accepted):
+            continue
+        accepted.append(candidate)
+    masked = list(value)
+    for start, end, _language, _text, _excluded in accepted:
+        masked[start:end] = [" "] * (end - start)
+    filtered, excluded = _filtered_translation_text("".join(masked))
+    segments: list[tuple[str, tuple[str, ...], int]] = [
+        (default_locale, _translation_words(filtered), excluded)
+    ]
+    for _start, _end, language, text, structural_excluded in accepted:
+        segments.append((language, _translation_words(_filtered_translation_text(text)[0]), structural_excluded))
+    return tuple(segments)
+
+
+def _is_legal_authority_target(target: str) -> bool:
+    """Recognize legal authority links from their structured destination."""
+    normalized = target.casefold()
+    return (
+        "_generated/legal/" in normalized
+        or ".boe.es/" in normalized
+        or ".aeat.es/" in normalized
+        or "agenciatributaria.gob.es/" in normalized
+    )
+
+
+def _spanish_word_context(
+    value: str,
+    key: str,
+    word: str,
+    *,
+    owner_locale: str,
+    dictionary: object | None,
+    spanish_dictionary: object | None,
+) -> bool:
+    """Whether an unknown word sits in structured Spanish legal/name prose."""
+    if owner_locale == "es" or not callable(getattr(spanish_dictionary, "lookup", None)):
+        return False
+    legal_context = (
+        "/legal/" in key.casefold()
+        or _TRANSLATION_LEGAL_TITLE_RE.search(value) is not None
+        or _MODELO_FORM_RE.search(value) is not None
+        or any(
+            _is_legal_authority_target(match.group("target"))
+            for match in _TRANSLATION_RST_LINK_RE.finditer(value)
+        )
+        or any(
+            _is_legal_authority_target(match.group("angle_target") or match.group("target") or "")
+            for match in _TRANSLATION_MARKDOWN_LINK_CONTEXT_RE.finditer(value)
+        )
+    )
+    words = list(_translation_words(value))
+    try:
+        index = next(index for index, candidate in enumerate(words) if candidate.casefold() == word.casefold())
+    except StopIteration:
+        return legal_context
+    for neighbour in words[max(0, index - 1) : index] + words[index + 1 : index + 2]:
+        if spanish_dictionary.lookup(neighbour) and neighbour[:1].isupper():
+            return True
+    return legal_context and bool(_TRANSLATION_LEGAL_TITLE_RE.search(value) or _MODELO_FORM_RE.search(value))
+
+
 def _filtered_translation_text(value: str) -> tuple[str, int]:
     """Return prose and the number of syntax spans excluded from spelling.
 
@@ -622,6 +832,7 @@ def _filtered_translation_text(value: str) -> tuple[str, int]:
     text = value
     excluded = 0
     for pattern, replacement in (
+        (_TRANSLATION_HTML_TAG_RE, " "),
         (_TRANSLATION_MARKDOWN_LINK_RE, _visible_link_label),
         (_TRANSLATION_RST_LINK_RE, _visible_link_label),
         (_TRANSLATION_RST_ROLE_RE, _visible_role_label),
@@ -693,9 +904,21 @@ def _translation_words(value: str) -> tuple[str, ...]:
 
 def _source_inventory(
     manager: LocaleManager,
+    *,
+    dynamic_resolved_keys: Iterable[str] = (),
 ) -> tuple[dict[str, int], list[dict[str, object]]]:
+    """Inventory production translation calls and their concrete key values.
+
+    Literal calls are observed directly from the source tree.  Bounded dynamic
+    calls are supplied by the f-string registry as concrete values, because the
+    AST scanner can only see their namespace marker.  The occurrence counters
+    intentionally retain reuse while the unique counter is computed from a set;
+    their difference is therefore an auditable duplicate-occurrence delta.
+    """
     counts = Counter[str]()
     literal_keys = Counter[str]()
+    key_occurrences: list[str] = []
+    declarations: dict[str, list[dict[str, object]]] = defaultdict(list)
     findings: list[dict[str, object]] = []
     for root in (manager.src_dir, *manager.extra_src_dirs):
         for path in sorted(root.rglob("*.py")) if root.is_dir() else ():
@@ -717,7 +940,24 @@ def _source_inventory(
                     elif isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str):
                         if _DOTTED_KEY_RE.fullmatch(node.args[0].value):
                             counts["literal_tr_calls"] += 1
-                            literal_keys[node.args[0].value] += 1
+                            key = node.args[0].value
+                            literal_keys[key] += 1
+                            key_occurrences.append(key)
+                            placeholders = tuple(
+                                sorted(
+                                    keyword.arg
+                                    for keyword in node.keywords
+                                    if keyword.arg not in {"locale", "default"} and keyword.arg is not None
+                                )
+                            )
+                            declarations[key].append(
+                                {
+                                    "kind": "literal",
+                                    "location": f"{path}:{node.lineno}",
+                                    "placeholders": list(placeholders),
+                                    "semantic_signature": placeholders,
+                                }
+                            )
                         else:
                             counts["invalid_tr_calls"] += 1
                             findings.append(_source_finding("invalid_tr_call", path, node.lineno, "invalid dotted key"))
@@ -730,14 +970,63 @@ def _source_inventory(
                         if isinstance(value, ast.Constant) and isinstance(value.value, str):
                             counts["naked_presentation_sites"] += 1
                             findings.append(_source_finding("naked_presentation_text", path, node.lineno, value.value))
+    resolved_dynamic_keys = tuple(
+        key for key in dynamic_resolved_keys if isinstance(key, str) and _DOTTED_KEY_RE.fullmatch(key)
+    )
+    key_occurrences.extend(resolved_dynamic_keys)
+    for key in resolved_dynamic_keys:
+        if _DOTTED_KEY_RE.fullmatch(key):
+            declarations[key].append(
+                {
+                    "kind": "dynamic_resolved",
+                    "location": "f-string-registry",
+                    "placeholders": [],
+                    "semantic_signature": None,
+                }
+            )
+    conflicting_duplicates: list[dict[str, object]] = []
+    for key, key_declarations in sorted(declarations.items()):
+        signatures = {
+            cast(tuple[str, ...], declaration["semantic_signature"])
+            for declaration in key_declarations
+            if declaration["semantic_signature"] is not None
+        }
+        if len(signatures) < 2:
+            continue
+        conflicting_duplicates.append(
+            {
+                "classification": "blocking",
+                "kind": "conflicting_duplicate_translation_key",
+                "key": key,
+                "declarations": [
+                    {
+                        name: value
+                        for name, value in declaration.items()
+                        if name != "semantic_signature"
+                    }
+                    for declaration in key_declarations
+                ],
+                "next_action": "align duplicate translation-key placeholder declarations",
+            }
+        )
+    findings.extend(conflicting_duplicates)
+    unique_keys = set(key_occurrences)
+    duplicate_occurrences = len(key_occurrences) - len(unique_keys)
     return {
         "production_occurrences": counts["tr_calls"],
         "tr_calls": counts["tr_calls"],
         "literal_tr_calls": counts["literal_tr_calls"],
+        "raw_literal_key_occurrences": counts["literal_tr_calls"],
         "literal_tr_keys_unique": len(literal_keys),
         "literal_tr_reuse_occurrences": sum(count - 1 for count in literal_keys.values()),
         "literal_tr_keys_reused": sum(1 for count in literal_keys.values() if count > 1),
         "dynamic_tr_calls": counts["dynamic_tr_calls"],
+        "dynamic_resolved_key_occurrences": len(resolved_dynamic_keys),
+        "dynamic_resolved_localization_key_occurrences": len(resolved_dynamic_keys),
+        "raw_localization_key_occurrences": len(key_occurrences),
+        "unique_dot_keys": len(unique_keys),
+        "duplicate_key_occurrence_delta": duplicate_occurrences,
+        "conflicting_duplicate_declarations": len(conflicting_duplicates),
         "invalid_tr_calls": counts["invalid_tr_calls"],
         "naked_presentation_sites": counts["naked_presentation_sites"],
         "unread_or_invalid_sources": counts["unread_or_invalid_sources"],
@@ -967,11 +1256,16 @@ def _documentation_source_inventory(
             )
             continue
         counts["docs_generated_spellchecked_pages"] += 1
-        counts["docs_generated_prose_cells"] += len(prose)
+        embedded = _embedded_document_language_prose(path)
+        counts["docs_generated_prose_cells"] += len(prose) + len(embedded)
         if spelling_values is not None:
             relative = path.relative_to(repository).as_posix()
             for line, text in prose:
                 spelling_values.setdefault("en", {})[f"parallel:{relative}:line[{line}]"] = text
+            for line, language, text in embedded:
+                spelling_values.setdefault(language, {})[
+                    f"parallel:{relative}:line[{line}]:lang[{language}]"
+                ] = text
     extracted = pot_root(docs_root)
     for locale in TARGET_LANGUAGES:
         counts[f"docs_catalogue_files_expected_{locale}"] = len(pages)
@@ -1269,9 +1563,11 @@ def _is_product_version_identity(source: str, product_names: Iterable[str]) -> b
     if _VERSION_TOKEN_RE.search(source) is None:
         return False
     remainder = _VERSION_TOKEN_RE.sub(" ", source)
+    product_found = False
     for name in sorted(product_names, key=len, reverse=True):
-        remainder = re.sub(re.escape(name), " ", remainder, flags=re.IGNORECASE)
-    return not any(character.isalnum() for character in remainder)
+        remainder, substitutions = re.subn(re.escape(name), " ", remainder, flags=re.IGNORECASE)
+        product_found = product_found or substitutions > 0
+    return product_found and not any(character.isalnum() for character in remainder)
 
 
 def _platform_identity_terms(repository: Path) -> frozenset[str]:
@@ -1292,13 +1588,9 @@ def _platform_identity_terms(repository: Path) -> frozenset[str]:
         platform = channel.get("platform")
         if not isinstance(platform, str):
             continue
-        normalized = _translation_echo_normalize(platform)
-        if normalized:
-            terms.add(normalized)
-        terms.update(
-            _translation_echo_normalize(match.group("label"))
-            for match in _PLATFORM_LABEL_RE.finditer(platform)
-        )
+        for match in _PLATFORM_LABEL_RE.finditer(platform):
+            terms.add(_translation_echo_normalize(match.group(0)))
+            terms.add(_translation_echo_normalize(match.group("label")))
     return frozenset(terms)
 
 
@@ -1442,6 +1734,20 @@ def _visible_document_prose(path: Path) -> tuple[tuple[int, str], ...]:
         if token.type == "inline"
         if any(child.type == "text" and child.content.strip() for child in (token.children or ()))
     )
+
+
+def _embedded_document_language_prose(path: Path) -> tuple[tuple[int, str, str], ...]:
+    """Extract visible HTML fragments whose markup declares another language."""
+    source = path.read_text(encoding=UTF_8)
+    blocks: list[tuple[int, str, str]] = []
+    for match in _TRANSLATION_HTML_LANGUAGE_RE.finditer(source):
+        language = match.group("locale").casefold()
+        if language not in _LOCALES:
+            continue
+        text = _filtered_translation_text(match.group("body"))[0]
+        if text:
+            blocks.append((source.count("\n", 0, match.start()) + 1, language, text))
+    return tuple(blocks)
 
 
 def _node_has_ancestor(node: object, node_types: tuple[type[object], ...]) -> bool:

@@ -57,7 +57,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _MODELO = "111"
-_SCHEME = RetencionScheme.PROFESSIONAL
+_SCHEME = RetencionScheme("actividades_profesionales")
 
 # The supplier's invoice, stated once. Retencion sits outside the grand total.
 _BASE = Decimal("1000.00")

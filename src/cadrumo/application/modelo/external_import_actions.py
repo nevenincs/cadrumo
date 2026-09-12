@@ -89,7 +89,7 @@ from ...domain.modelos.repository import upsert_work_unit
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..calculations.observations_repository import (
-    CalculationObservationRepository,
+    CalculationObservationRepositoryProtocol,
     ObservationEnvelopePayload,
     ObservationSourceKind,
 )
@@ -350,7 +350,7 @@ def import_external_filing_source(
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     justificante_repository: JustificanteRepositoryProtocol | None = None,
-    observation_repository: CalculationObservationRepository | None = None,
+    observation_repository: CalculationObservationRepositoryProtocol,
     clock: datetime | None = None,
 ) -> ModeloRecord:
     """Resolve or create the target work unit and persist an amendable baseline.
@@ -692,7 +692,7 @@ def _build_external_import_event(
 def _build_external_import_observation_payload(
     *,
     evidence_kind: ExternalEvidenceKind,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
     work_unit: WorkUnit,
     revision: CalculationRevision,
     occurred_at: datetime,
@@ -730,7 +730,7 @@ def _external_import_secure_writes(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     bucket_event: BucketEvent,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
     observation_payload: ObservationEnvelopePayload | None,
 ):
     """Collect the co-committed writes, including CSV observations when present."""
@@ -755,7 +755,7 @@ def _persist_external_import(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     bucket_event: BucketEvent,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
     observation_payload: ObservationEnvelopePayload | None,
 ) -> None:
     """Commit the filing, revision, work-unit, event, and observation together."""
@@ -788,7 +788,7 @@ def import_external_filing_evidence[CasillaKey](
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     justificante_repository: JustificanteRepositoryProtocol | None = None,
-    observation_repository: CalculationObservationRepository | None = None,
+    observation_repository: CalculationObservationRepositoryProtocol,
     expected_tax_id: str | None = None,
     clock: datetime | None = None,
 ) -> ModeloRecord:
@@ -821,7 +821,7 @@ def import_external_filing_evidence[CasillaKey](
     wu_repo = work_unit_repository
     if wu_repo is None:
         wu_repo = work_unit_catalogue_repository(bucket_id=require_active_profile_bucket_id())
-    observation_repo = observation_repository or CalculationObservationRepository()
+    observation_repo = observation_repository
     work_units, work_unit, snapshot, canonical_values, cleaned_reference = _load_external_import_target(
         work_unit_id=work_unit_id,
         casilla_values=casilla_values,

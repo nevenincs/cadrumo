@@ -41,7 +41,7 @@ def _professional_observation() -> RetencionObservation:
         source_object_id="professional-payment-001",
         perceptor_nif="12345678Z",
         perceptor_name="Profesional Ejemplo",
-        scheme=RetencionScheme.PROFESSIONAL,
+        scheme=RetencionScheme("actividades_profesionales"),
         taxable_base=Decimal("1000.00"),
         retencion_amount=Decimal("150.00"),
         accrued_on="2026-03-15",
@@ -55,7 +55,7 @@ def _administrador_observation() -> RetencionObservation:
         source_object_id="administrador-payment-001",
         perceptor_nif="87654321X",
         perceptor_name="Administrador Ejemplo",
-        scheme=RetencionScheme.WORK_INCOME_DIRECTOR,
+        scheme=RetencionScheme("rendimientos_trabajo_administrador"),
         taxable_base=Decimal("2000.00"),
         retencion_amount=Decimal("700.00"),  # 2000.00 * 0.35 (art. 101.2 general rate)
         accrued_on="2026-03-15",
@@ -69,7 +69,7 @@ def _administrador_wrong_rate_observation() -> RetencionObservation:
         source_object_id="administrador-payment-002",
         perceptor_nif="87654321X",
         perceptor_name="Administrador Ejemplo",
-        scheme=RetencionScheme.WORK_INCOME_DIRECTOR,
+        scheme=RetencionScheme("rendimientos_trabajo_administrador"),
         taxable_base=Decimal("2000.00"),
         retencion_amount=Decimal("500.00"),  # 25 % — matches no art. 101.2 fixed rate
         accrued_on="2026-03-15",

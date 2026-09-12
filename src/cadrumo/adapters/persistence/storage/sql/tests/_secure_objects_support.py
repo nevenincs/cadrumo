@@ -9,7 +9,7 @@ from typing import Any
 
 import pytest
 
-from ......tests.master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from ..secure_objects import SecureObjectRepository
 

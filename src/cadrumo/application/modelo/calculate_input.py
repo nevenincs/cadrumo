@@ -35,15 +35,10 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal
 
-from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.decimal.grammar import try_parse_canonical_decimal
-from ...core.irnr import (
-    FETCH_GATED_M210_TIPO_RENTA_CODES,
-    M210_TIPO_RENTA_CODE_PROJECTION,
-    M210GrossIncomeSourceMode,
-)
+from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.rescate_type import RescateType
 from ...domain.calculations.registry.authority import bundled_authority
@@ -59,6 +54,10 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
+from ...domain.calculations.registry.irnr_tipo_renta import (
+    m210_fetch_gated_tipo_renta_codes,
+    m210_tipo_renta_code_projection,
+)
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ...domain.calculations.registry.runtime_graph import (
@@ -72,6 +71,7 @@ from ...domain.calculations.registry.schema_scalars import (
     validate_registry_text_scalar,
 )
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
 from ...domain.contribuyente.descendant_maternity import relacion_is_ambiguous_for_maternidad
@@ -94,8 +94,10 @@ from ...domain.modelos.row_models import (
     validate_m347_threshold,
 )
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
+from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ._registry_helpers import validate_casilla_input_ids
+from .calculation_action_ports import CalculationActionPorts
 
 # Intra-package reuse of a sibling module's cap, permitted by the architecture
 # rule; only cross-package private reaches are barred, and that gate is separate.
@@ -317,6 +319,7 @@ def calculate_modelo_work_revision(
     work_unit_id: str,
     actor: str,
     inputs: WorkCalculateInputBundle,
+    ports: CalculationActionPorts,
 ) -> ModeloWorkCalculationServiceResult:
     """Persist a draft calculation revision as a :class:`ModeloWorkCalculationServiceResult`.
 
@@ -336,6 +339,7 @@ def calculate_modelo_work_revision(
 
     calculation = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit_id,
+        ports=ports,
         actor=actor,
         casilla_inputs=inputs.casilla_inputs,
         text_casilla_inputs=inputs.optional_text_casilla_inputs(),
@@ -349,7 +353,10 @@ def calculate_modelo_work_revision(
         filing_instance_evidence=inputs.filing_instance_evidence,
     )
     revision = calculation.revision
-    catalogue, bucket_id = _capture_work_catalogue(revision.work_unit_id)
+    catalogue, bucket_id = _capture_work_catalogue(
+        revision.work_unit_id,
+        repository=ports.work_unit_repository,
+    )
     work_unit = _selected_work_unit(
         work_unit_id=revision.work_unit_id,
         catalogue=catalogue,
@@ -464,6 +471,7 @@ def _resolve_relation_overrides(
 def build_work_calculate_input_bundle(
     *,
     work_unit_id: str,
+    ports: CalculationActionPorts,
     casilla_overrides: Mapping[str, str],
     binding_overrides: Mapping[BindingId, str],
     relation_overrides: Mapping[RelationId, str],
@@ -509,7 +517,7 @@ def build_work_calculate_input_bundle(
     translated into semantic-role casilla values or backend-owned bindings by
     :func:`cadrumo.application.modelo.apply_calculation_shortcut_inputs`.
     """
-    catalogue, bucket_id = _capture_work_catalogue(work_unit_id)
+    catalogue, bucket_id = _capture_work_catalogue(work_unit_id, repository=ports.work_unit_repository)
     work_unit = _selected_work_unit(work_unit_id=work_unit_id, catalogue=catalogue, bucket_id=bucket_id)
     _validate_detail_rows(detail_rows, effective_date=date(work_unit.filing_year, 12, 31))
     revision = _revision_for_work_unit(work_unit)
@@ -653,7 +661,11 @@ def _typed_text_value(raw_value: str, *, key: str, casilla_def: CasillaDefinitio
     """
     value = _text_value(raw_value, key=key)
     try:
-        return validate_registry_text_scalar(casilla_def.data_type, value)
+        return validate_registry_text_scalar(
+            casilla_def.data_type,
+            value,
+            tax_id_format=runtime_tax_id_format() if casilla_def.data_type == "nif" else None,
+        )
     except RegistryValidationError as exc:
         raise ModeloCalculateTextInputError(
             context={"key": key, "value": raw_value, "data_type": casilla_def.data_type},
@@ -689,12 +701,12 @@ def _projected_m210_tipo_renta_code(official_code: str) -> str:
     architecture-boundaries fallback: a registry-driven refusal that LISTS the
     accepted declared codes and names a fetch-gated code as fetch-gated rather
     than "invalid". The fetch-gated codes
-    (:data:`~cadrumo.core.FETCH_GATED_M210_TIPO_RENTA_CODES`) are real AEAT
+    (the registry-declared fetch-gated code set) are real AEAT
     HOJA-INFORMATIVA-210 codes whose rate is not yet grounded, so an operator
     entering code ``08`` is told it is not yet fileable, never that it is
     invalid. The accepted set is the declared code axis
-    (:data:`~cadrumo.core.M210_TIPO_RENTA_CODE_PROJECTION`), kept in parity with the
-    registry ``m210-tipo-renta-code-2025`` parameter by the registry-build gate.
+    (the registry-projected code map), kept in parity with the selected
+    detail catalogue by the governed-fact resolver.
 
     On acceptance the operator-entered official code is PROJECTED to its
     :class:`~cadrumo.core.TipoRentaIrnr` rate-concept token — the value the engine
@@ -705,7 +717,7 @@ def _projected_m210_tipo_renta_code(official_code: str) -> str:
     per-code form-fidelity display belongs to the fetch-gated full-casilla
     schema.)
     """
-    return M210_TIPO_RENTA_CODE_PROJECTION[official_code].value
+    return m210_tipo_renta_code_projection()[official_code].value
 
 
 def _validated_m210_official_tipo_renta_code(raw_value: str, *, key: str) -> str:
@@ -718,15 +730,17 @@ def _validated_m210_official_tipo_renta_code(raw_value: str, *, key: str) -> str
     same ledger-selection key.
     """
     value = _text_value(raw_value, key=key)
-    if value in M210_TIPO_RENTA_CODE_PROJECTION:
+    projection = m210_tipo_renta_code_projection()
+    fetch_gated_codes = m210_fetch_gated_tipo_renta_codes()
+    if value in projection:
         return value
-    accepted = ", ".join(sorted(M210_TIPO_RENTA_CODE_PROJECTION))
-    if value in FETCH_GATED_M210_TIPO_RENTA_CODES:
+    accepted = ", ".join(sorted(projection))
+    if value in fetch_gated_codes:
         raise ModeloCalculateTextInputError(
             context={"key": key, "value": value, "accepted": accepted},
             translated_message="application.modelo.errors.calculate_m210_tipo_renta_fetch_gated",
         )
-    fetch_gated = ", ".join(sorted(FETCH_GATED_M210_TIPO_RENTA_CODES))
+    fetch_gated = ", ".join(sorted(fetch_gated_codes))
     raise ModeloCalculateTextInputError(
         context={"key": key, "value": value, "accepted": accepted, "fetch_gated": fetch_gated},
         translated_message="application.modelo.errors.calculate_m210_tipo_renta_unknown",
@@ -750,11 +764,15 @@ def is_detail_casilla_override_key(key: str) -> bool:
     raise NotImplementedError("registry-selected detail override declarations are unresolved")
 
 
-def _capture_work_catalogue(work_unit_id: str) -> tuple[WorkUnitCatalogue, str]:
+def _capture_work_catalogue(
+    work_unit_id: str,
+    *,
+    repository: WorkUnitCatalogueRepositoryProtocol,
+) -> tuple[WorkUnitCatalogue, str]:
     """Capture the active work catalogue before a caller invokes the pure selector."""
     request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id)
     bucket_id = resolve_modelo_work_bucket(request)
-    return WorkUnitCatalogueRepository(bucket_id=bucket_id).load(), bucket_id
+    return repository.load(), bucket_id
 
 
 def _selected_work_unit(*, work_unit_id: str, catalogue: WorkUnitCatalogue, bucket_id: str) -> WorkUnit:

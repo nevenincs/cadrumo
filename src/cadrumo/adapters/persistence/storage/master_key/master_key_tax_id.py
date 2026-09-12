@@ -20,10 +20,10 @@ _SYNTHETIC_TAX_IDS: Final[frozenset[str]] = frozenset(
 def looks_like_real_tax_id(value: str) -> bool:
     """Return ``True`` when ``value`` parses as a real Spanish tax id."""
     from .....core.identity.documents import IdentityError
-    from .....core.identity.tax_id import validate_spanish_tax_id
+    from .....domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 
     try:
-        canonical = validate_spanish_tax_id(value)
+        canonical = validate_runtime_spanish_tax_id(value)
     except (ValueError, IdentityError):
         return False
     return canonical not in _SYNTHETIC_TAX_IDS

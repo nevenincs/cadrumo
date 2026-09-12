@@ -10,8 +10,6 @@ import pytest
 from .. import product_identity as identity_module
 from ..product_identity import (
     PRODUCT_IDENTITY,
-    AeatProductSoftwareEvidence,
-    AeatProductSoftwareIdentity,
     ProductIdentity,
     normalise_product_identity_references,
 )
@@ -89,42 +87,6 @@ def test_product_identity_is_immutable() -> None:
     assert PRODUCT_IDENTITY.display_name == "CADRUMO"
 
 
-def test_aeat_product_software_identity_requires_exact_values_and_evidence() -> None:
-    """An export header cannot reuse a filing participant or an implicit product default."""
-    identity = AeatProductSoftwareIdentity(
-        program_identifier="C303",
-        developer_tax_id="Y0000001S",
-        evidence=(
-            AeatProductSoftwareEvidence(
-                reference="aeat-software-registration:c303",
-                digest="a" * 64,
-            ),
-        ),
-    )
-
-    assert identity.program_identifier == "C303"
-    assert identity.developer_tax_id == "Y0000001S"
-    assert identity.evidence[0].reference == "aeat-software-registration:c303"
-    assert not {
-        name
-        for name in vars(identity_module)
-        if name.startswith("M303ProductSoftware") or name == "M303ProgramIdentifier"
-    }
-
-    with pytest.raises(ValueError, match="program_identifier"):
-        AeatProductSoftwareIdentity(
-            program_identifier="303",
-            developer_tax_id="Y0000001S",
-            evidence=identity.evidence,
-        )
-    with pytest.raises(ValueError, match="at least 1 item"):
-        AeatProductSoftwareIdentity(
-            program_identifier="C303",
-            developer_tax_id="Y0000001S",
-            evidence=(),
-        )
-
-
 def test_identity_api_exposes_no_former_product_aliases() -> None:
     """AEAT-prefixed exports name genuine AEAT-format contracts."""
     # AEAT_CSV_* names the shape contract for AEAT's own Codigo Seguro de
@@ -138,13 +100,6 @@ def test_identity_api_exposes_no_former_product_aliases() -> None:
         "AeatProductSoftwareEvidence",
         "AeatProductSoftwareIdentity",
     }
-    # The defining module's legitimate AEAT referents are its own:
-    #   AeatProductSoftware*       the AEAT-format software identity contract
-    #   AeatProgramIdentifier      AEAT's identifier for submitting software
-    identity_aeat_names = {
-        "AeatProductSoftwareEvidence",
-        "AeatProductSoftwareIdentity",
-        "AeatProgramIdentifier",
-    }
+    identity_aeat_names = {"AEAT_AUTHORITY_SHORT_NAME"}
     assert {name for name in identity_module.__all__ if name.casefold().startswith("aeat")} == identity_aeat_names
     assert allowed_aeat_names  # the wider cross-module set stays documented above

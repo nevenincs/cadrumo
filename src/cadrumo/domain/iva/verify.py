@@ -16,12 +16,14 @@ already performs:
 
 from __future__ import annotations
 
+from datetime import date
 from typing import TYPE_CHECKING
 
 from ...core.citation_grounding import CitationGrounding
 from ...core.corpus_text import normalise_corpus_text
 from ...core.errors.severity import BaseSeverity
 from ...core.logging import get_logger
+from ..calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from .schema import (
     IvaCatalogue,
     IvaCategory,
@@ -45,13 +47,17 @@ def verify_catalogue_against_legal(
     authority = bundled_authority()
     issues: list[IvaVerificationIssue] = []
     present = set(catalogue.regulations.keys())
-    missing = [member for member in IvaCategory if member not in present]
+    declared_categories = resolve_iva_category_catalogue(
+        effective_date=date.today(),
+        authority=authority,
+    ).all_categories
+    missing = [member for member in declared_categories if member not in present]
     for member in missing:
         issues.append(
             IvaVerificationIssue(
                 level=BaseSeverity.ERROR,
                 code="missing_category",
-                message=f"catalogue does not cover IvaCategory.{member.name}",
+                message=f"catalogue does not cover IVA category {member.value}",
                 category_id=member.value,
             ),
         )

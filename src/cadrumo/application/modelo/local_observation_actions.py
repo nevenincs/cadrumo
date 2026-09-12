@@ -54,7 +54,7 @@ from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.temporal import select_revision
 from ..calculations.observations_repository import (
-    CalculationObservationRepository,
+    CalculationObservationRepositoryProtocol,
     ObservationSourceKind,
     observation_key,
 )
@@ -91,7 +91,7 @@ def record_operator_local_observation[CasillaKey](
     period: Period,
     casilla_values: Mapping[CasillaKey, object],
     actor: str = "operator-manual",
-    repository: CalculationObservationRepository | None = None,
+    repository: CalculationObservationRepositoryProtocol,
     clock: datetime | None = None,
     replace_official_evidence: bool = False,
 ) -> ModeloLocalObservationResult:
@@ -129,7 +129,7 @@ def record_operator_local_observation[CasillaKey](
     captured_at = clock or _utc_now()
     captured_by = actor.strip() or "operator-manual"
     key = observation_key(modelo, period)
-    repo = repository or CalculationObservationRepository()
+    repo = repository
     repo.save(
         repo.prepare_observation_envelope(
             observation,

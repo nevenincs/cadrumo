@@ -13,10 +13,23 @@ from dev._paths import REPO_ROOT
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SHIPPED_ROOT = REPO_ROOT / "src" / "cadrumo"
+_SHIPPED_REGISTRY_TESTS = _SHIPPED_ROOT / "domain" / "calculations" / "registry" / "tests"
 _YEAR_SELECTION_MODULES = (
     _SHIPPED_ROOT / "domain" / "calculations" / "registry" / "authority.py",
     _SHIPPED_ROOT / "domain" / "calculations" / "registry" / "snapshot.py",
     _SHIPPED_ROOT / "domain" / "calculations" / "registry" / "temporal.py",
+)
+_KNOWN_SHIPPED_REGISTRY_AUTHORING_TESTS = frozenset(
+    {
+        "_registry_scenarios_support.py",
+        "test_continuidad_completeness_ratchet.py",
+        "test_deduccion_madrid_nacimiento_adopcion.py",
+        "test_legal_anchor_verification_ratchet.py",
+        "test_m100_2024_final_settlement_chain_wiring.py",
+        "test_modelo_200_registry.py",
+        "test_reduccion_art_84_conjunta.py",
+        "test_renta_chain_behaviour.py",
+    }
 )
 
 
@@ -136,6 +149,32 @@ def test_shipped_runtime_has_no_operative_authored_registry_reader() -> None:
     assert toml_readers == {}, f"operative authored-registry readers import TOML parsers: {toml_readers}"
     assert operative_accesses == {}, (
         f"shipped modules access the development-only registry/aeat tree: {operative_accesses}"
+    )
+
+
+def test_shipped_registry_authoring_test_backlog_only_shrinks() -> None:
+    """No new mutable-source test enters the runtime package during relocation."""
+
+    offenders: dict[str, list[str]] = {}
+    paths = tuple(scan_directory(_SHIPPED_REGISTRY_TESTS, pattern="*.py", recursive=True))
+    for path in paths:
+        source = path.read_text(encoding="utf-8")
+        tree = ast.parse(source, filename=str(path))
+        accesses = tuple(
+            call
+            for call in _authored_registry_accesses(tree)
+            if not (isinstance(call.func, ast.Name) and call.func.id == "SourceReference")
+        )
+        if accesses:
+            offenders[path.relative_to(_SHIPPED_REGISTRY_TESTS).as_posix()] = [
+                f"line {call.lineno}: {ast.get_source_segment(source, call) or '<call>'}" for call in accesses
+            ]
+
+    assert len(paths) > 200, "the registry-test relocation census is not covering the package test tree"
+    unexpected = sorted(set(offenders) - _KNOWN_SHIPPED_REGISTRY_AUTHORING_TESTS)
+    assert not unexpected, (
+        "new registry authoring tests entered the shipped package; relocate them under dev/registry/tests: "
+        f"{unexpected!r}"
     )
 
 

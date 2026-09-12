@@ -33,7 +33,6 @@ from ....core.casilla_id import CasillaId
 from ....core.decimal.grammar import european_thousands_reading_is_ambiguous
 from ....core.hashing import sha256_hex
 from ....core.identity.documents import IdentityError
-from ....core.identity.tax_id import validate_spanish_tax_id
 from ....core.logging import get_logger
 from ....core.period import Period, PeriodError, is_administrative_period_token
 from ....core.text_fold import fold_diacritics
@@ -48,6 +47,7 @@ from ....domain.calculations.registry.schema_extraction import (
     ExtractionTargetDefinition,
 )
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ..pdf.extracted_casilla import ExtractedCasilla
 from ..pdf.label_regex import PRESENTADOR_NIF_LABEL, SPANISH_AMOUNT_GROUP, TEXT_VALUE_GROUP, parse_spanish_decimal
 from ..pdf.redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
@@ -491,7 +491,7 @@ def _extract_tax_id(text: str) -> str:
 def _validated_tax_id(candidate: str) -> str:
     """Return only a checksum-valid filing identity from a matched PDF label."""
     try:
-        return validate_spanish_tax_id(candidate)
+        return validate_runtime_spanish_tax_id(candidate)
     except IdentityError as exc:
         raise DeclaracionParseError(
             translated_message="adapters.inbound.declaracion.errors.tax_id_unresolved",

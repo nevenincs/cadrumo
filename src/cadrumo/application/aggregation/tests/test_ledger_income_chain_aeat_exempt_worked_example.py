@@ -89,7 +89,7 @@ from ....domain.calculations.registry.ledger_renta_income_bindings import (
 )
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
-from ....domain.calculations.registry.tests._published_authority import artifact_components
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.tests.scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -227,7 +227,8 @@ def _modelo_100_revision() -> ModeloRevision:
     matches is the one a production calculate would load. A hand-assembled
     revision could agree with this module and disagree with the filing.
     """
-    modelo, catalogues = artifact_components("100")
+    authority = bundled_authority()
+    modelo, catalogues = authority.modelo("100"), authority.catalogues
     return build_snapshot(
         modelo,
         catalogues,

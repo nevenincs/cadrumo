@@ -90,7 +90,7 @@ class ProfileCustodyDisplacedSessionRetirementError(ProfileCustodyTransactionCon
     """
 
 
-class _ProfileCustodyTransactionCapability:
+class ProfileCustodyTransactionService:
     """Internal physical-custody capability owned by ``ProfileCapsuleLifecycle``.
 
     No application caller may use this capability directly.  The lifecycle is
@@ -1026,4 +1026,4 @@ class _ProfileCustodyTransactionCapability:
             raise ProfileCustodyTransactionRefusalError("delete confirmation is not bound to the prepared local target")
 
 
-__all__ = ["ProfileCustodyDisplacedSessionRetirementError", "_ProfileCustodyTransactionCapability"]
+__all__ = ["ProfileCustodyDisplacedSessionRetirementError", "ProfileCustodyTransactionService"]

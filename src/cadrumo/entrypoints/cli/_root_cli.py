@@ -59,6 +59,17 @@ def root_command(
     composed = ctx.with_resource(profile_adapter_composition())
     state["state_projection_read_ports"] = composed.state_projection_read_ports
     state["certificate_secret_backend_factory"] = composed.certificate_secret_backend_factory
+    state["operator_probe_ports"] = composed.operator_probe_ports
+    state["operator_scope_ports"] = composed.operator_scope_ports
+    state["verification_repository_bundle_factory"] = composed.verification_repository_bundle_factory
+    state["calculation_action_ports_factory"] = composed.calculation_action_ports_factory
+    state["amendment_action_ports_factory"] = composed.amendment_action_ports_factory
+    state["expedientes_ports_factory"] = composed.expedientes_ports_factory
+    state["ledger_evidence_ports_factory"] = composed.ledger_evidence_ports_factory
+    state["filing_action_ports_factory"] = composed.filing_action_ports_factory
+    state["modelo_export_ports_factory"] = composed.modelo_export_ports_factory
+    state["modelo_history_ports_factory"] = composed.modelo_history_ports_factory
+    state["recipient_encryption_capability_factory"] = composed.recipient_encryption_capability_factory
     state["apoderado_config_repository_factory"] = composed.apoderado_config_repository_factory
     preserve_requested_cli_leaf(ctx)
     state["profile_override"] = profile

@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
-from .....application.ledger.llm_classification import ResolvedEvidence, _resolve_evidence, classify_with_evidence
+from .....application.ledger.llm_classification import ResolvedEvidence, classify_with_evidence, resolve_llm_evidence
 from .....application.ledger.preconditions import LedgerPreconditionCondition
 from .....application.provisioning_contracts import ProvisioningPreconditionCondition
 from .....core.config import Settings
@@ -56,7 +56,7 @@ def test_scan_only_pdf_resolves_to_images_gestor_allowed_no_consent(
     gestor: Settings = profile.settings.model_copy(
         update={"cadrumo_evidence_gestor_mode": True, "cadrumo_evidence_cloud_upload_permitted": False},
     )
-    resolved = _resolve_evidence(
+    resolved = resolve_llm_evidence(
         vision_transaction(evidence_id),
         bucket_id=_BUCKET_ID,
         settings=gestor,
@@ -82,7 +82,7 @@ def test_image_evidence_resolves_to_images(profile: TestRuntimeProfile, tmp_path
     labelled as something else.
     """
     evidence_id = add_evidence(profile, tmp_path, name="receipt.png", data=png_image())
-    resolved = _resolve_evidence(
+    resolved = resolve_llm_evidence(
         vision_transaction(evidence_id),
         bucket_id=_BUCKET_ID,
         settings=profile.settings,
@@ -111,8 +111,8 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
     attachment (direct-bytes path). Both reach the gate and must refuse with an
     instructive, non-silent error naming the opt-in command.
     """
-    from ....domain.user_profile.values import UserProfileFact, UserProfileRecord
-    from ....tests.profile_capsule import seed_test_profile_record
+    from .....domain.user_profile.values import UserProfileFact, UserProfileRecord
+    from .....tests.profile_capsule import seed_test_profile_record
 
     clock = datetime(2026, 1, 1, tzinfo=UTC)
     seed_test_profile_record(
@@ -130,7 +130,7 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
 
     evidence_id = add_evidence(profile, tmp_path, name=name, data=data_factory())
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-        _resolve_evidence(
+        resolve_llm_evidence(
             _transaction(evidence_id),
             bucket_id=_BUCKET_ID,
             settings=profile.settings,

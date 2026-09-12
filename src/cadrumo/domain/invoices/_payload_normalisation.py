@@ -20,18 +20,21 @@ enum rejects, which is the refusal the caller wants.
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
+from datetime import date
 from enum import StrEnum
 from typing import Final, NamedTuple
 
 from ...core.aggregation import IntracomOperationType
-from ..iva.classification import InvoiceKind, TransactionKind
-from ..iva.oss import OssIossRegime
+from ..calculations.registry.errors import RegistryValidationError
+from ..iva.classification import InvoiceKind, TransactionKind, require_transaction_kind
+from ..iva.oss import OssIossRegime, require_oss_ioss_regime
 from ..iva.schema import EUMemberState, IvaCategory
 from .enums import (
     InvoiceClass,
     InvoiceLegalMention,
     InvoiceOperationDateRole,
     PaymentStatus,
+    resolve_invoice_legal_mention,
 )
 from .errors import InvoiceValidationError
 
@@ -137,7 +140,13 @@ def _coerce_enum_field(payload: dict[str, object], rule: _EnumFieldRule) -> None
         payload[rule.field] = None
         return
     try:
-        payload[rule.field] = rule.enum(text)
+        payload[rule.field] = (
+            require_oss_ioss_regime(text)
+            if rule.enum is OssIossRegime
+            else require_transaction_kind(text, effective_date=date.today())
+            if rule.enum is TransactionKind
+            else rule.enum(text)
+        )
     except ValueError as exc:
         raise InvoiceValidationError(rule.message) from exc
 
@@ -154,20 +163,21 @@ def _coerce_legal_mentions(payload: dict[str, object]) -> None:
     raw_mentions = payload["legal_mentions"]
     if not isinstance(raw_mentions, Sequence) or isinstance(raw_mentions, str | bytes):
         return
+    effective_date = payload.get("issued_at")
+    if not isinstance(effective_date, date):
+        raise InvoiceValidationError("legal_mentions requires a normalized issued_at date")
     coerced: list[InvoiceLegalMention] = []
     # Deserialisation boundary: the payload is a raw mapping, so the narrowed
     # sequence carries no element type. Each entry is inspected by isinstance
     # below before anything is read off it.
     entries: Sequence[object] = raw_mentions  # pyright: ignore[reportUnknownVariableType]  # reason: deserialisation boundary, the payload sequence carries no element type and every entry is isinstance-checked below
     for entry in entries:
-        if isinstance(entry, InvoiceLegalMention):
-            coerced.append(entry)
-            continue
-        if not isinstance(entry, str):
+        value = str(entry) if isinstance(entry, InvoiceLegalMention) else entry
+        if not isinstance(value, str):
             raise InvoiceValidationError("legal_mentions entries must be an InvoiceLegalMention or its value")
         try:
-            coerced.append(InvoiceLegalMention(entry))
-        except ValueError as exc:
+            coerced.append(resolve_invoice_legal_mention(value, effective_date))
+        except (RegistryValidationError, TypeError, ValueError) as exc:
             raise InvoiceValidationError("legal_mentions entries must be an InvoiceLegalMention") from exc
     payload["legal_mentions"] = tuple(coerced)
 

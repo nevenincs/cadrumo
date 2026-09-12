@@ -1,6 +1,6 @@
 """A cuota-less row with no base is refused at verify, and nothing else is.
 
-A category in ``CUOTA_LESS_M303_IVA_CATEGORIES`` carries no cuota by law, so the
+A category in the registry's ``cuota_less_m303`` projection carries no cuota by law, so the
 taxable base is the row's ONLY possible contribution to the return. A row
 declaring such a category with no base contributes nothing while representing a
 declared operation, and the base casilla is understated by exactly that amount.
@@ -19,7 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.iva.schema import CUOTA_LESS_M303_IVA_CATEGORIES, IvaCategory
+from ....domain.iva.components import registry_category_projection
+from ....domain.iva.schema import IvaCategory
 from ....domain.modelos.verification_report import ModeloVerificationFindingSeverity
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
@@ -178,7 +179,7 @@ def test_every_cuota_less_category_is_covered_rather_than_a_sampled_few() -> Non
     """
     unrefused = [
         category.value
-        for category in sorted(CUOTA_LESS_M303_IVA_CATEGORIES, key=lambda member: member.value)
+        for category in sorted(registry_category_projection("cuota_less_m303"), key=lambda member: member.value)
         if not _findings({"tx-1": _transaction("tx-1", iva_category=category, taxable_base=None)})
     ]
 

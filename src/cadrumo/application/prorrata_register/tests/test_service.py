@@ -37,7 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _prior_registry_snapshot_ref() -> RegistrySnapshotRef:
-    return bundled_authority().snapshot(Modelo.M303.value, filing_year=2025, period="4T").snapshot_ref
+    return bundled_authority().snapshot(Modelo("303").value, filing_year=2025, period="4T").snapshot_ref
 
 
 def test_declare_especial_transition_persists_typed_option(tmp_path: Path) -> None:

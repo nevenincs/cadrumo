@@ -27,7 +27,8 @@ and an arbitrary ``ES``-prefixed run is overwhelmingly unlikely to satisfy
 mod-97.
 
 Both checksums are the project's existing authorities, imported rather than
-restated: :func:`~cadrumo.core.identity.documents.validate_identity` for NIF/NIE/CIF and
+restated: :func:`~cadrumo.domain.calculations.registry.tax_id_runtime.validate_runtime_identity`
+for NIF/NIE/CIF and
 :func:`~cadrumo.core.iban.iban_mod_97` with :data:`~cadrumo.core.iban.IBAN_SHAPE_RE` for
 IBAN. Re-deriving either here would be a second authority for the same rule.
 
@@ -52,7 +53,8 @@ import pikepdf
 
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.iban import IBAN_SHAPE_RE, iban_mod_97
-from cadrumo.core.identity.documents import IdentityDocument, IdentityError, validate_identity
+from cadrumo.core.identity.documents import IdentityDocument, IdentityError
+from cadrumo.domain.calculations.registry.tax_id_runtime import validate_runtime_identity
 
 
 class ResidualKind(StrEnum):
@@ -140,7 +142,8 @@ _NIF_NIE_CANDIDATE = re.compile(
 # prose and lives private to another package, and admitting a separator here
 # would swallow neighbouring columns of a CSV row. What must not be duplicated
 # is the DECISION, and it is not -- the control character is checked by the same
-# :func:`~cadrumo.core.identity.documents.validate_identity` authority as every other
+# :func:`~cadrumo.domain.calculations.registry.tax_id_runtime.validate_runtime_identity`
+# authority as every other
 # class, never by arithmetic restated here.
 #
 # The leader set is why the personal pattern was not simply widened: a company
@@ -184,7 +187,7 @@ def _identity_document(candidate: str) -> IdentityDocument | None:
     class's shape would otherwise report the wrong kind with full confidence.
     """
     try:
-        return validate_identity(candidate)
+        return validate_runtime_identity(candidate)
     except IdentityError:
         return None
 

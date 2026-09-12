@@ -17,14 +17,22 @@ from uuid import uuid4
 
 from pydantic import SecretStr
 
+from .....application.auth.operator_probe_ports import (
+    ClaveIdentityFailure,
+    ClaveIdentityObservation,
+    ClaveIdentityProbePort,
+    ClaveIdentityProbeResult,
+)
+from .....application.live.errors import LiveIvaAcquisitionFailureMode
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import AuthError
 from .....core.hashing import sha256_hex
-from .....core.identity.documents import IdentityDocument, IdentityError, validate_identity
+from .....core.identity.documents import IdentityDocument, IdentityError
 from .....core.logging import get_logger
 from .....core.operator_progress import OperatorProgress
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from .....domain.calculations.registry.schema_base import EvidenceTier
+from .....domain.calculations.registry.tax_id_runtime import validate_runtime_identity
 from ..operator_progress import emit_operator_progress
 from .errors import AuthConfigurationError
 
@@ -78,6 +86,11 @@ class ClaveMovilConfigurationError(AuthConfigurationError):
     treat it as a local configuration error rather than a live AEAT timeout.
     """
 
+    @property
+    def live_iva_failure_mode(self) -> LiveIvaAcquisitionFailureMode:
+        """Expose the application-level mode at the outbound boundary."""
+        return LiveIvaAcquisitionFailureMode.WRONG_IDENTITY
+
 
 class ClaveMovilApprovalTimeoutError(AuthError):
     """Live Cl@ve Movil timeout carrying provider failure diagnostics.
@@ -114,6 +127,29 @@ class ClaveMovilApprovalTimeoutError(AuthError):
             translated_message=translated_message,
         )
 
+    @property
+    def live_iva_failure_mode(self) -> LiveIvaAcquisitionFailureMode:
+        """Translate the provider taxonomy into the live application contract."""
+        context = self.context if isinstance(self.context, dict) else {}
+        phone_state = str(context.get("phone_state") or "")
+        auth_mode = str(context.get("auth_mode") or "")
+        if phone_state == "app_did_not_prompt":
+            return LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT
+        if self.failure_mode == ClaveMovilFailureMode.PENDING_PETITION_BLOCKED.value:
+            return LiveIvaAcquisitionFailureMode.PENDING_CLAVE_REQUEST
+        if self.failure_mode == ClaveMovilFailureMode.INITIAL_NAVIGATION_TIMEOUT.value:
+            return LiveIvaAcquisitionFailureMode.LIVE_NAVIGATION_FAILED
+        if self.failure_mode in {
+            ClaveMovilFailureMode.AUTH_COMPLETION_TIMEOUT.value,
+            ClaveMovilFailureMode.APPROVAL_TIMEOUT.value,
+        }:
+            return LiveIvaAcquisitionFailureMode.OPERATOR_TIMEOUT
+        if auth_mode == "qr":
+            return LiveIvaAcquisitionFailureMode.QR_REQUIRED
+        if self.failure_mode == ClaveMovilFailureMode.PUSH_WAIT_STATE_NOT_REACHED.value:
+            return LiveIvaAcquisitionFailureMode.DOM_DRIFT
+        return LiveIvaAcquisitionFailureMode.UNKNOWN
+
 
 class ClaveMovilFailureMode(StrEnum):
     """Closed failure taxonomy for :class:`ClaveMovilApprovalTimeoutError`."""
@@ -143,7 +179,8 @@ def classify_identity(raw: str) -> str:
     """Return the configured Cl@ve identity kind as ``DNI`` or ``NIE``.
 
     Classification is the domain's, through
-    :func:`~core.identity.documents.validate_identity`, which settles the shape and the
+    :func:`~cadrumo.domain.calculations.registry.tax_id_runtime.validate_runtime_identity`,
+    which settles the shape and the
     checksum together. This function only maps the resulting document to the
     name Cl@ve uses and refuses what the flow does not serve: a CIF-style
     organization identifier is intentionally rejected, because Cl@ve Movil
@@ -167,7 +204,7 @@ def classify_identity(raw: str) -> str:
     """
     value = (raw or "").strip().upper()
     try:
-        document = validate_identity(value)
+        document = validate_runtime_identity(value)
     except IdentityError as exc:
         raise ClaveMovilConfigurationError(
             translated_message="errors.auth.clave_movil_identity_checksum",
@@ -181,6 +218,17 @@ def classify_identity(raw: str) -> str:
             "person who holds the certificate instead.",
         )
     return kind
+
+
+class ClaveIdentityProbeAdapter(ClaveIdentityProbePort):
+    """Translate the concrete Cl@ve classifier for application probes."""
+
+    def classify(self, raw: str) -> ClaveIdentityProbeResult:
+        """Return an application DTO instead of leaking provider exceptions."""
+        try:
+            return ClaveIdentityObservation(kind=classify_identity(raw))
+        except ClaveMovilConfigurationError as exc:
+            return ClaveIdentityFailure(detail=str(exc))
 
 
 def extract_verification_code_from_html(html: str) -> str | None:
@@ -257,6 +305,7 @@ def render_progress_banner(
 
 __all__ = [
     "DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS",
+    "ClaveIdentityProbeAdapter",
     "ClaveMovilApprovalTimeoutError",
     "ClaveMovilConfigurationError",
     "ClaveMovilFailureMode",

@@ -43,6 +43,7 @@ from ...domain.buckets.event_repository import emit_bucket_event
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.currency.service import ExchangeRateProvider, resolve_fx_conversion_stamp
@@ -180,7 +181,7 @@ def _registry_m349_operation_type_requirement(
         return value.strip()
 
     try:
-        category = IvaCategory(required("modelo.349.operation_type_required_category"))
+        category = require_iva_category(required("modelo.349.operation_type_required_category"))
     except ValueError as exc:
         raise ValueError("counterpart registry declares an unknown operation-type category") from exc
     tokens = tuple(
@@ -224,7 +225,7 @@ def _require_operation_type_where_the_category_cannot_settle_it(
             something is missing.
     """
     required_category, candidates = _registry_m349_operation_type_requirement(effective_date)
-    if iva_category is not required_category or operation_type is not None:
+    if iva_category != required_category or operation_type is not None:
         return
     candidate_labels = ", ".join(f"clave {candidate.value}" for candidate in candidates)
     raise InvoiceValidationError(
@@ -238,9 +239,10 @@ def _require_operation_type_where_the_category_cannot_settle_it(
 def resolve_iva_rate_slot(iva_rate: Decimal | None, on_date: date) -> IvaRate:
     """Map a printed percentage to its dated authority-backed persisted slot.
 
-    ``None`` resolves to :attr:`IvaRate.EXEMPT` so a base-only invoice with no
-    cuota is accepted. A percentage outside the closed slot taxonomy is refused
-    with the accepted set named, never a bare "value invalid".
+    ``None`` resolves to the registry-declared exempt slot so a base-only
+    invoice with no cuota is accepted. A percentage outside the governed slot
+    vocabulary is refused with the accepted set named, never a bare "value
+    invalid".
 
     Public because the percentage does not only come from an operator: the
     ledger's evidence-confirm path reads it off the document itself and needs

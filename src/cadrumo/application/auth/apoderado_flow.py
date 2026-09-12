@@ -11,7 +11,8 @@ profile fact for this flow, and there is no create-mode checkpoint that
 could write one.
 
 Two pages compose the flow: the represented party's tax identifier
-(validated through the canonical :func:`cadrumo.core.identity.documents.validate_identity`
+(validated through the authority-aware
+:func:`cadrumo.domain.calculations.registry.tax_id_runtime.validate_runtime_identity`
 authority, the same authority every identity page binds -- never a second
 identifier implementation) and the granted scope set (a CHECKBOX over the
 live :class:`~cadrumo.domain.auth.apoderamientos.ApoderamientosCatalogue`).
@@ -37,9 +38,10 @@ from ...core.flows import (
     FlowMode,
     FlowWidgetKind,
 )
-from ...core.identity.documents import IdentityError, validate_identity
+from ...core.identity.documents import IdentityError
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.auth.apoderamientos.catalogue import ApoderamientosCatalogue
+from ...domain.calculations.registry.tax_id_runtime import validate_runtime_identity
 from ..flows.definition import FlowChoice, FlowDefinition, FlowPage, FlowSection
 from ..flows.engine import FlowState
 from ..flows.validators import ValidationVerdict, register_answer_validator
@@ -95,7 +97,8 @@ def _validate_represented_nif(page: FlowPage, canonical: str) -> ValidationVerdi
 
     This is an early-refusal courtesy over the SAME law
     ``ApoderadoService.configure`` enforces at commit
-    (:func:`cadrumo.core.identity.documents.validate_identity`): the represented party
+    (:func:`cadrumo.domain.calculations.registry.tax_id_runtime.validate_runtime_identity`):
+    the represented party
     may be a natural person (NIF / NIE) or a legal entity (CIF), so the check
     is the full authority -- the same one the wizard identity pages bind,
     never a second implementation. The service is the single guaranteed gate;
@@ -107,7 +110,7 @@ def _validate_represented_nif(page: FlowPage, canonical: str) -> ValidationVerdi
     if not canonical:
         return ValidationVerdict.passed()
     try:
-        validate_identity(canonical)
+        validate_runtime_identity(canonical)
     except IdentityError:
         return ValidationVerdict.failed(_NIF_INVALID_LOCALE_KEY, page_id=page.id)
     return ValidationVerdict.passed()

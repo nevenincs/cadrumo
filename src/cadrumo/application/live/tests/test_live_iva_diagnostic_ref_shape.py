@@ -8,8 +8,9 @@ unprefixed value would therefore be accepting something no producer emits, and
 the one shape that must never appear — an untruncated digest of a private
 value — is exactly the shape a bare ``str`` would let through.
 
-Nothing here is mocked. The reference under test comes from the real
-``auth_outcome`` producer over a real error carrying a real diagnostic id.
+The reference under test comes from the real ``auth_outcome`` producer over an
+inward test error carrying a real diagnostic id; the application test does not
+need to know which adapter raised that error.
 """
 
 from __future__ import annotations
@@ -19,7 +20,6 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilApprovalTimeoutError
 from ..errors import LiveIvaAcquisitionFailureMode
 from ..remote_state_models import LiveIvaAuthOutcome, LiveIvaReadStatus
 from ..remote_state_outcomes import auth_outcome, evidence_ref
@@ -27,6 +27,15 @@ from ..remote_state_outcomes import auth_outcome, evidence_ref
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _DIAGNOSTIC_ID = "clave-diagnostic-private-object-key"
+
+
+class _DiagnosticFailureError(Exception):
+    """Inward test fake carrying only the context read by the app projection."""
+
+    def __init__(self, context: dict[str, object]) -> None:
+        """Retain structured diagnostic context without an adapter class."""
+        super().__init__("operator reported no prompt")
+        self.context = context
 
 
 class _OutcomeFields(TypedDict):
@@ -52,16 +61,12 @@ def _outcome_fields() -> _OutcomeFields:
 def test_the_real_producer_emits_a_reference_the_model_accepts() -> None:
     """Anti-vacuity: the refusals below reject values the producer never emits.
 
-    The outcome is built by the production ``auth_outcome`` function over a
-    real error, so this is the shape that actually reaches the operator.
+    The outcome is built by the production ``auth_outcome`` function over an
+    inward error, so this is the shape that actually reaches the operator.
     """
     outcome = auth_outcome(
         auth_result=None,
-        error=ClaveMovilApprovalTimeoutError(
-            "operator reported no prompt",
-            failure_mode="auth_completion_timeout",
-            context={"diagnostic_id": _DIAGNOSTIC_ID},
-        ),
+        error=_DiagnosticFailureError(context={"diagnostic_id": _DIAGNOSTIC_ID}),
     )
 
     assert outcome.diagnostic_ref == evidence_ref(_DIAGNOSTIC_ID)

@@ -121,31 +121,33 @@ class TestGeneratedAtIsUtc:
         assert _schedule(generated_at=stamp).generated_at == _UTC_STAMP
 
 
-class TestModeloIdentityIsClosed:
-    """Deadline modelo identifiers resolve through the canonical closed set.
+class TestModeloIdentitySyntax:
+    """Deadline modelo identifiers enforce syntax without owning membership.
 
     ``ModeloDeadline.modelo`` and ``CrossPeriodGroupMemberRoster.source_modelo``
-    were plain strings, so an unknown identifier or a whitespace-divergent
-    spelling of a real one could enter persisted or imported schedules. Both
-    then reach registry matching and downstream projections, which resolve
-    them differently from every other surface that uses the canonical enum.
+    reject whitespace-divergent or otherwise malformed spellings. Whether a
+    well-formed identifier is a published member belongs to the registry
+    authority at the consuming boundary.
 
     These are behaviour changes: values that previously constructed now refuse.
     """
 
-    @pytest.mark.parametrize("raw", ["BOGUS", "999", " 303 ", "303 ", "", "M303"])
-    def test_an_unsupported_or_divergent_identifier_is_refused(self, raw: str) -> None:
+    @pytest.mark.parametrize("raw", ["BOGUS", " 303 ", "303 ", "", "M303"])
+    def test_a_malformed_identifier_is_refused(self, raw: str) -> None:
         with pytest.raises(ValidationError):
             _obligation_with_modelo(raw)
 
-    def test_a_canonical_token_resolves_to_the_enum_member(self) -> None:
-        assert _obligation_with_modelo("303").modelo is Modelo.M303
+    def test_a_syntax_valid_identifier_does_not_require_registry_membership(self) -> None:
+        assert _obligation_with_modelo("999").modelo == Modelo("999")
 
-    def test_an_enum_member_is_accepted_directly(self) -> None:
-        assert _obligation_with_modelo(Modelo.M130).modelo is Modelo.M130
+    def test_a_canonical_token_resolves_to_the_modelo_value(self) -> None:
+        assert _obligation_with_modelo("303").modelo == Modelo("303")
+
+    def test_a_modelo_value_is_accepted_directly(self) -> None:
+        assert _obligation_with_modelo(Modelo("130")).modelo == Modelo("130")
 
     def test_the_roster_shares_the_same_contract(self) -> None:
-        assert _roster("322").source_modelo is Modelo.M322
+        assert _roster("322").source_modelo == Modelo("322")
 
     @pytest.mark.parametrize("raw", ["BOGUS", " 322 "])
     def test_the_roster_refuses_the_same_values(self, raw: str) -> None:
@@ -155,7 +157,7 @@ class TestModeloIdentityIsClosed:
     def test_a_schedule_json_round_trip_preserves_the_identity(self) -> None:
         restored = Schedule.model_validate_json(_schedule().model_dump_json())
 
-        assert restored.obligations[0].modelo is Modelo.M303
+        assert restored.obligations[0].modelo == Modelo("303")
 
 
 def _obligation_with_modelo(raw: object) -> ModeloDeadline:

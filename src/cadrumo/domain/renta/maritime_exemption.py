@@ -47,10 +47,8 @@ from enum import StrEnum
 from ..calculations.registry.authority import ValidatedRegistryAuthority
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.errors import RegistryValidationError
-from ..calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
 from ..calculations.registry.queries import RegistryQueryService
 from ..calculations.registry.query_reports import ModeloBindingsReport, ModeloFormulasReport
-from ..calculations.registry.schema_base import DateAxis
 from ..user_profile.loader import load_user_profile_schema
 from .errors import RentaError, RentaValidationError
 
@@ -223,26 +221,6 @@ def da41_eligible(facts: MaritimeWorkerFacts) -> bool:
 # ---------------------------------------------------------------------------
 # Exemption calculations
 # ---------------------------------------------------------------------------
-
-
-def _resolve_decimal_fact(
-    *,
-    authority: ValidatedRegistryAuthority,
-    fact_id: str,
-    date_axis: DateAxis,
-    effective_date: date,
-) -> ResolvedScalarFact:
-    """Resolve one decimal scalar fact through the validated authority."""
-    resolved = authority.resolve_governed_fact(
-        ScalarFactQuery(
-            fact_id=fact_id,
-            date_axis=date_axis,
-            effective_date=effective_date,
-        )
-    )
-    if not isinstance(resolved, ResolvedScalarFact) or not isinstance(resolved.payload.value, Decimal):
-        raise RegistryValidationError(f"governed fact {fact_id!r} must resolve to a Decimal scalar")
-    return resolved
 
 
 def calculate_art_7p_exemption(

@@ -189,7 +189,7 @@ class PrintedTotalDiscrepancy(BaseModel):
     - A **recargo de equivalencia** invoice (LIVA art. 161) prints
       ``base + cuota + recargo``. The recargo has nowhere to go on this path,
       so the record silently understates the document by exactly that surcharge.
-    - An **unread rate** resolves to :attr:`~domain.invoices.IvaRate.EXEMPT`
+    - An **unread rate** resolves to the registry-declared exempt slot
       (``iva_rate=None`` is the base-only slot), minting a zero-cuota invoice
       whose printed total still shows the cuota that was charged.
     - A **misread base** propagates into the derived total and diverges from the

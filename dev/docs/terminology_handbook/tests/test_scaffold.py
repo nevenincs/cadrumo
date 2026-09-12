@@ -411,29 +411,19 @@ def test_real_enrolment_candidates_are_concept_grade_and_bounded() -> None:
     candidates = collect_enrolment_candidates()
     # Bounded concept-grade set, not per-casilla (18,885) nor per-legal (262).
     assert 0 < len(candidates) < 1000
-    # Every REGISTRY-BACKED modelo enrols exactly one concept, and no
-    # non-registry one does. This loop previously ran over the whole ``Modelo``
-    # enum, which is a typing device rather than a glossary: it necessarily
-    # carries every code the codebase mentions, including the 76 members the
-    # codebase itself declares in NON_REGISTRY_MODELOS as having no registry
-    # definition. Enrolling those made the Handbook report 118 unenrolled
-    # concepts instead of the registry-backed set, entirely as a side effect of
-    # a typing change made elsewhere.
+    # Every modelo published by the validated authority enrols exactly one
+    # concept, and no syntax-valid but unpublished identifier does. Membership
+    # comes from the same authority the enrolment walker consumes.
     #
     # The assertion this replaces was about GRANULARITY -- modelos are the
     # concept-grade axis, unlike casillas -- and that intent is unchanged here.
-    # What narrowed is which modelos, not the axis.
-    from cadrumo.core.modelo import Modelo
-    from cadrumo.domain.calculations.registry.modelo_obligation_scope import NON_REGISTRY_MODELOS
+    # What is bounded is which modelos, not the concept-grade axis.
+    from cadrumo.domain.calculations.registry.authority import bundled_authority
 
-    for modelo in Modelo:
-        concept_id = f"modelo-{modelo.value}"
-        if modelo in NON_REGISTRY_MODELOS:
-            assert concept_id not in candidates, (
-                f"{concept_id} has no registry definition, so it is an identifier the code "
-                "references rather than a concept a taxpayer looks up"
-            )
-        else:
-            assert concept_id in candidates
+    expected_modelo_concepts = {f"modelo-{definition.id}" for definition in bundled_authority().modelos}
+    actual_modelo_concepts = {
+        concept_id for concept_id, candidate in candidates.items() if candidate.domain is ConceptDomain.MODELO
+    }
+    assert actual_modelo_concepts == expected_modelo_concepts
     # No legal-provision concepts are scaffolded (projected at compile time).
     assert not any(c.domain is ConceptDomain.LEGAL for c in candidates.values())

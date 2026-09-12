@@ -8,13 +8,13 @@ defence against silently building an un-fileable declaration is to validate the
 *structure* (not live VIES existence) at the boundary where the number is
 accepted.
 
-This module is the single typed authority for that closed, regulatory-shaped
-table, per the central-config discipline: the country -> pattern set lives here
-in :mod:`core`, not inlined as a literal in a feature module. Consumers
-(the ledger invoice counterparty boundary today; the Modelo 349 manual-entry row
-in future) resolve a Member State's expected shape through
-:func:`nif_iva_format_for_country` and refuse a malformed number with an
-instructive, format-naming diagnostic.
+This module is the typed kernel for that regulatory-shaped value. The country,
+prefix, and pattern records live in the non-Modelo facts registry; this module
+keeps only the opaque projected token, compiled-pattern value object, and
+normalisation mechanics. Consumers (the ledger invoice counterparty boundary
+today; the Modelo 349 manual-entry row in future) resolve a Member State's
+expected shape through :func:`nif_iva_format_for_country` and refuse a malformed
+number with an instructive, format-naming diagnostic.
 
 Authority: the European Commission VIES national IVA-number structure rules
 (``https://ec.europa.eu/taxation_customs/vies/``), grounded in Council Directive
@@ -28,13 +28,15 @@ intra-community contexts.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
 from dataclasses import dataclass
-from enum import StrEnum
-from typing import Final
+from typing import Self
+
+from pydantic import GetCoreSchemaHandler
+from pydantic_core import CoreSchema, core_schema
+
+from ..errors.hierarchy import CoreValidationError
 
 __all__ = [
-    "NIF_IVA_FORMATS",
     "NifIvaFormatSpec",
     "NifIvaPrefix",
     "iso_country_for_nif_iva_prefix",
@@ -44,45 +46,52 @@ __all__ = [
 ]
 
 
-class NifIvaPrefix(StrEnum):
-    """Closed set of EU VIES IVA-number country prefixes (plus Northern Ireland).
+class NifIvaPrefix(str):
+    """Opaque NIF-IVA prefix projected from the facts registry.
 
-    The values are the two-character prefix that *leads the IVA number*, which
-    for every Member State equals its ISO 3166-1 alpha-2 code except Greece,
-    whose IVA prefix is ``EL`` while its ISO code is ``GR``. Spain (``ES``) is
-    excluded: Spanish identifiers route through
-    :func:`core.identity.tax_id.validate_spanish_tax_id`. ``XI`` is the
-    post-Brexit Northern Ireland goods prefix accepted in intra-community
-    contexts.
+    Membership is deliberately not represented by a Python enum. The registry
+    owns the 27 prefixes, including the ``GR`` -> ``EL`` country divergence and
+    ``XI``. A token can only be constructed by the typed registry projection.
     """
 
-    AT = "AT"
-    BE = "BE"
-    BG = "BG"
-    CY = "CY"
-    CZ = "CZ"
-    DE = "DE"
-    DK = "DK"
-    EE = "EE"
-    EL = "EL"
-    FI = "FI"
-    FR = "FR"
-    HR = "HR"
-    HU = "HU"
-    IE = "IE"
-    IT = "IT"
-    LT = "LT"
-    LU = "LU"
-    LV = "LV"
-    MT = "MT"
-    NL = "NL"
-    PL = "PL"
-    PT = "PT"
-    RO = "RO"
-    SE = "SE"
-    SI = "SI"
-    SK = "SK"
-    XI = "XI"
+    __slots__ = ()
+
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("NifIvaPrefix tokens must be projected from the facts registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("NIF-IVA prefix must be a non-empty string")
+        return str.__new__(cls, value)
+
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("NifIvaPrefix must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: object,
+        _handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        return str(self)
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,88 +115,6 @@ class NifIvaFormatSpec:
     example: str
 
 
-def _spec(prefix: NifIvaPrefix, country_name: str, pattern: str, description: str, example: str) -> NifIvaFormatSpec:
-    return NifIvaFormatSpec(
-        prefix=prefix,
-        country_name=country_name,
-        pattern=re.compile(pattern),
-        description=description,
-        example=example,
-    )
-
-
-# Per-Member-State NIF-IVA structures, sourced from the European Commission VIES
-# national IVA-number format rules (Council Directive 2006/112/EC). Patterns are
-# anchored and applied to the uppercased, separator-stripped IVA number with its
-# two-character prefix.
-NIF_IVA_FORMATS: Final[Mapping[NifIvaPrefix, NifIvaFormatSpec]] = {
-    NifIvaPrefix.AT: _spec(NifIvaPrefix.AT, "Austria", r"^ATU\d{8}$", "ATU + 8 digits", "ATU12345678"),
-    NifIvaPrefix.BE: _spec(
-        NifIvaPrefix.BE, "Belgium", r"^BE[01]\d{9}$", "BE + 10 digits (first digit 0 or 1)", "BE0123456789"
-    ),
-    NifIvaPrefix.BG: _spec(NifIvaPrefix.BG, "Bulgaria", r"^BG\d{9,10}$", "BG + 9 or 10 digits", "BG123456789"),
-    NifIvaPrefix.CY: _spec(NifIvaPrefix.CY, "Cyprus", r"^CY\d{8}[A-Z]$", "CY + 8 digits + 1 letter", "CY12345678L"),
-    NifIvaPrefix.CZ: _spec(NifIvaPrefix.CZ, "Czechia", r"^CZ\d{8,10}$", "CZ + 8, 9 or 10 digits", "CZ12345678"),
-    NifIvaPrefix.DE: _spec(NifIvaPrefix.DE, "Germany", r"^DE\d{9}$", "DE + 9 digits", "DE123456789"),
-    NifIvaPrefix.DK: _spec(NifIvaPrefix.DK, "Denmark", r"^DK\d{8}$", "DK + 8 digits", "DK12345678"),
-    NifIvaPrefix.EE: _spec(NifIvaPrefix.EE, "Estonia", r"^EE\d{9}$", "EE + 9 digits", "EE123456789"),
-    NifIvaPrefix.EL: _spec(NifIvaPrefix.EL, "Greece", r"^EL\d{9}$", "EL + 9 digits", "EL123456789"),
-    NifIvaPrefix.FI: _spec(NifIvaPrefix.FI, "Finland", r"^FI\d{8}$", "FI + 8 digits", "FI12345678"),
-    NifIvaPrefix.FR: _spec(
-        NifIvaPrefix.FR, "France", r"^FR[A-Z0-9]{2}\d{9}$", "FR + 2 letters/digits + 9 digits", "FR12345678901"
-    ),
-    NifIvaPrefix.HR: _spec(NifIvaPrefix.HR, "Croatia", r"^HR\d{11}$", "HR + 11 digits", "HR12345678901"),
-    NifIvaPrefix.HU: _spec(NifIvaPrefix.HU, "Hungary", r"^HU\d{8}$", "HU + 8 digits", "HU12345678"),
-    NifIvaPrefix.IE: _spec(
-        NifIvaPrefix.IE,
-        "Ireland",
-        r"^IE(\d{7}[A-W]|\d[A-Z0-9+*]\d{5}[A-W]|\d{7}[A-W][A-W])$",
-        "IE + 7 digits + 1-2 letters",
-        "IE1234567T",
-    ),
-    NifIvaPrefix.IT: _spec(NifIvaPrefix.IT, "Italy", r"^IT\d{11}$", "IT + 11 digits", "IT12345678901"),
-    NifIvaPrefix.LT: _spec(NifIvaPrefix.LT, "Lithuania", r"^LT(\d{9}|\d{12})$", "LT + 9 or 12 digits", "LT123456789"),
-    NifIvaPrefix.LU: _spec(NifIvaPrefix.LU, "Luxembourg", r"^LU\d{8}$", "LU + 8 digits", "LU12345678"),
-    NifIvaPrefix.LV: _spec(NifIvaPrefix.LV, "Latvia", r"^LV\d{11}$", "LV + 11 digits", "LV12345678901"),
-    NifIvaPrefix.MT: _spec(NifIvaPrefix.MT, "Malta", r"^MT\d{8}$", "MT + 8 digits", "MT12345678"),
-    NifIvaPrefix.NL: _spec(
-        NifIvaPrefix.NL, "Netherlands", r"^NL\d{9}B\d{2}$", "NL + 9 digits + 'B' + 2 digits", "NL123456789B01"
-    ),
-    NifIvaPrefix.PL: _spec(NifIvaPrefix.PL, "Poland", r"^PL\d{10}$", "PL + 10 digits", "PL1234567890"),
-    NifIvaPrefix.PT: _spec(NifIvaPrefix.PT, "Portugal", r"^PT\d{9}$", "PT + 9 digits", "PT123456789"),
-    NifIvaPrefix.RO: _spec(NifIvaPrefix.RO, "Romania", r"^RO\d{2,10}$", "RO + 2 to 10 digits", "RO1234567890"),
-    NifIvaPrefix.SE: _spec(NifIvaPrefix.SE, "Sweden", r"^SE\d{12}$", "SE + 12 digits", "SE123456789012"),
-    NifIvaPrefix.SI: _spec(NifIvaPrefix.SI, "Slovenia", r"^SI\d{8}$", "SI + 8 digits", "SI12345678"),
-    NifIvaPrefix.SK: _spec(NifIvaPrefix.SK, "Slovakia", r"^SK\d{10}$", "SK + 10 digits", "SK1234567890"),
-    NifIvaPrefix.XI: _spec(
-        NifIvaPrefix.XI,
-        "Northern Ireland",
-        r"^XI(\d{9}|\d{12}|GD\d{3}|HA\d{3})$",
-        "XI + 9 or 12 digits (or GD/HA + 3 digits)",
-        "XI123456789",
-    ),
-}
-
-
-# ISO 3166-1 alpha-2 country code -> IVA prefix. Identity for every Member State
-# except Greece (ISO ``GR`` -> IVA prefix ``EL``); ``EL`` and ``XI`` are accepted
-# directly as already being prefixes.
-_ISO_COUNTRY_TO_PREFIX: Final[Mapping[str, NifIvaPrefix]] = {
-    **{prefix.value: prefix for prefix in NifIvaPrefix},
-    "GR": NifIvaPrefix.EL,
-}
-
-
-# IVA prefix -> ISO 3166-1 alpha-2 country code, the inverse direction of
-# ``_ISO_COUNTRY_TO_PREFIX``. Written rather than derived by inversion because
-# that map is not injective: both ``EL`` and ``GR`` key the Greek prefix, so an
-# inversion would resolve Greece to whichever key was read last.
-_PREFIX_TO_ISO_COUNTRY: Final[Mapping[NifIvaPrefix, str]] = {
-    **{prefix: prefix.value for prefix in NifIvaPrefix},
-    NifIvaPrefix.EL: "GR",
-}
-
-
 def iso_country_for_nif_iva_prefix(prefix: NifIvaPrefix) -> str:
     """Return the ISO 3166-1 alpha-2 code the IVA *prefix* names.
 
@@ -202,7 +129,11 @@ def iso_country_for_nif_iva_prefix(prefix: NifIvaPrefix) -> str:
     interchangeable for IVA, and the catalogues that consume this carry ``XI``
     as its own member.
     """
-    return _PREFIX_TO_ISO_COUNTRY[prefix]
+    from ...domain.calculations.registry.nif_iva_catalogue import (
+        resolve_nif_iva_catalogue,
+    )
+
+    return resolve_nif_iva_catalogue().iso_country_for_prefix(prefix)
 
 
 def normalise_nif_iva(value: str) -> str:
@@ -221,7 +152,11 @@ def nif_iva_prefix_for_country(iso_country: str) -> NifIvaPrefix | None:
     Returns ``None`` for a country that has no NIF-IVA pattern (a non-EU
     counterparty, or Spain which uses the checksum validator).
     """
-    return _ISO_COUNTRY_TO_PREFIX.get(iso_country.strip().upper())
+    from ...domain.calculations.registry.nif_iva_catalogue import (
+        resolve_nif_iva_catalogue,
+    )
+
+    return resolve_nif_iva_catalogue().prefix_for_country(iso_country)
 
 
 def nif_iva_format_for_country(iso_country: str) -> NifIvaFormatSpec | None:
@@ -231,7 +166,8 @@ def nif_iva_format_for_country(iso_country: str) -> NifIvaFormatSpec | None:
     structural NIF-IVA pattern; the caller applies its generic prefix/body check
     instead of refusing the counterparty outright.
     """
-    prefix = nif_iva_prefix_for_country(iso_country)
-    if prefix is None:
-        return None
-    return NIF_IVA_FORMATS.get(prefix)
+    from ...domain.calculations.registry.nif_iva_catalogue import (
+        resolve_nif_iva_catalogue,
+    )
+
+    return resolve_nif_iva_catalogue().format_for_country(iso_country)

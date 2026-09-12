@@ -94,6 +94,11 @@ from ._modelo_cli_support import bad_parameter_from_error, resolve_default_actor
 from ._modelo_rendering import filing_record_lines
 from ._modelo_work_wizard_cli import resolve_modelo_work_unit_for_wizard
 from .common import activate_subcommand_output_language, emit_envelope
+from .state_projection_support import (
+    amendment_action_ports_factory,
+    calculation_action_ports_factory,
+    filing_action_ports_factory,
+)
 
 if TYPE_CHECKING:
     from ...domain.modelos.calculation_revision import CalculationRevision
@@ -196,7 +201,10 @@ def run_modelo_work_amend_wizard(
             )
         )
     try:
-        baseline = get_filing_record(unit.current_filing_record_id)
+        baseline = get_filing_record(
+            unit.current_filing_record_id,
+            ports=filing_action_ports_factory(ctx)(bucket_id=unit.bucket_id),
+        )
     except ModeloRecordNotFoundError as exc:
         raise deps.bad_parameter_from_error(exc) from exc
     if baseline.external_evidence is None:
@@ -215,7 +223,10 @@ def run_modelo_work_amend_wizard(
         casilla_rows = _baseline_casilla_rows(unit)
     except RegistrySnapshotError as exc:
         raise deps.bad_parameter_from_error(exc) from exc
-    baseline_revision: CalculationRevision = get_calculation_revision(baseline.calculation_revision_id)
+    baseline_revision: CalculationRevision = get_calculation_revision(
+        baseline.calculation_revision_id,
+        ports=calculation_action_ports_factory(ctx)(bucket_id=unit.bucket_id),
+    )
     amendable = _amendable_rows(casilla_rows, baseline_revision)
     if not amendable:
         raise typer.BadParameter(
@@ -246,8 +257,6 @@ def run_modelo_work_amend_wizard(
         _ACTIVE_RUNS.pop(run_token, None)
     overrides = {row.casilla_id: value for row, _previous, value in corrections}
     try:
-        from ...adapters.persistence.profile.justificante import JustificanteRepository
-
         record = amend_modelo_revision(
             from_filing_record_id=baseline.filing_record_id,
             overrides=overrides,
@@ -255,7 +264,7 @@ def run_modelo_work_amend_wizard(
             m303_rectificativa_motive=motive,
             reason=reason,
             actor=actor or deps.resolve_default_actor(),
-            justificante_repository=JustificanteRepository(),
+            ports=amendment_action_ports_factory(ctx)(bucket_id=unit.bucket_id),
         )
     except (
         ModeloRecordNotFoundError,

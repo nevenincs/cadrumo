@@ -169,7 +169,7 @@ def _readable_secure_state_repair_checks() -> tuple[list[_DiagnosticCheck], Wiza
         build_wizard_status(state),
         active_profile_label=profile_health.active_profile_label,
     )
-    checks.append(_profile_check(setup_report, profile_health=profile_health, state=state))
+    checks.append(build_profile_check(setup_report, profile_health=profile_health, state=state))
     checks.append(_auth_check(setup_report))
     return checks, setup_report
 
@@ -211,7 +211,7 @@ def _unreadable_secure_state_repair_checks(exc: Exception) -> list[_DiagnosticCh
 
     _log.debug("config repair secure state probe failed", exc_info=True)
     profile_health = assess_active_profile_health()
-    missing_active_bucket_session = _is_missing_active_bucket_session(exc)
+    missing_active_bucket_session = is_missing_active_bucket_session_failure(exc)
     return [
         _secure_state_failure_check(
             exc,
@@ -535,7 +535,7 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[_Diagnosti
     return tuple(findings)
 
 
-def _profile_check(
+def build_profile_check(
     report: WizardStatusReport,
     *,
     profile_health: ActiveProfileHealth | None = None,
@@ -768,7 +768,7 @@ def _auth_check(report: WizardStatusReport) -> _DiagnosticCheck:
     )
 
 
-def _is_missing_active_bucket_session(exc: BaseException) -> bool:
+def is_missing_active_bucket_session_failure(exc: BaseException) -> bool:
     """Classify a secure-state probe failure as a missing active bucket session.
 
     This verdict decides whether ``secure_state.load`` warns (an expected cold
@@ -896,6 +896,8 @@ def quarantine_unreadable_secure_objects() -> _SecureObjectIntegrityReport:
 
 
 __all__ = [
+    "is_missing_active_bucket_session_failure",
+    "build_profile_check",
     "build_cli_version_report",
     "build_config_repair_report",
     "preview_quarantine_unreadable_secure_objects",

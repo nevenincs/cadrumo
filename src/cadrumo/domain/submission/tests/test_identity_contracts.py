@@ -1,11 +1,10 @@
-"""Persisted submission records carry canonical identities, not shape-only strings.
+"""Persisted submission records carry syntax-valid Modelo identities.
 
 ``ModeloPresentado`` is a durable filing identity that the listing engine
 filters by raw equality, and its ``submission_id`` / ``attempt_id`` fields are
 documented coordinates (a content-derived digest, and a parent-plus-ordinal
-pair). All three were length-only strings, so an unknown modelo code, a
-whitespace-spelled known one, and an arbitrary identifier all became historical
-filing records that no canonical lookup would ever match.
+pair). Modelo membership belongs to the published registry authority; this
+record validates only the stable three-digit identifier syntax.
 
 Real model construction with strict identity and aggregate validation.
 """
@@ -35,7 +34,7 @@ _DRAFT_ID = "d" * 64
 
 def _filing(
     *,
-    modelo: object = Modelo.M303,
+    modelo: object = Modelo("303"),
     submission_id: str | None = None,
     attempt_id: str | None = None,
 ) -> ModeloPresentado:
@@ -62,20 +61,27 @@ def _filing(
 
 @pytest.mark.parametrize(
     "malformed_modelo",
-    ("999", " 303 ", "303 ", "", "3030"),
-    ids=("unknown-code", "padded-both", "trailing-space", "empty", "four-digit"),
+    (" 303 ", "303 ", "", "3030"),
+    ids=("padded-both", "trailing-space", "empty", "four-digit"),
 )
-def test_persisted_filing_refuses_non_canonical_modelo_identities(malformed_modelo: str) -> None:
-    """A filing identity must name a modelo the rest of the system can look up."""
+def test_persisted_filing_refuses_malformed_modelo_identities(malformed_modelo: str) -> None:
+    """A filing identity must use the canonical three-digit syntax."""
     with pytest.raises(ValidationError):
         _filing(modelo=malformed_modelo)
 
 
-def test_canonical_modelo_identity_is_stored_as_the_enum_member() -> None:
-    """The record carries the closed identity, so equality holds against Modelo."""
+def test_syntax_valid_modelo_identity_does_not_require_registry_membership() -> None:
+    """Membership is resolved by the authority at the consuming boundary."""
+    filing = _filing(modelo="999")
+
+    assert filing.modelo == Modelo("999")
+
+
+def test_canonical_modelo_identity_is_stored_as_a_modelo_value() -> None:
+    """The record carries the typed value and preserves string equality."""
     filing = _filing(modelo="303")
 
-    assert filing.modelo is Modelo.M303
+    assert filing.modelo == Modelo("303")
     assert filing.modelo == "303"
 
 
@@ -117,7 +123,7 @@ def test_attempt_ordinals_must_follow_their_tuple_position() -> None:
         ModeloPresentado(
             submission_id=submission_id,
             draft_id=_DRAFT_ID,
-            modelo=Modelo.M303,
+            modelo=Modelo("303"),
             period=_PERIOD,
             profile_tax_id="12345678Z",
             status=SubmissionStatus.FALLIDA,
@@ -156,7 +162,7 @@ def _aggregate(
     return ModeloPresentado(
         submission_id=submission_id,
         draft_id=_DRAFT_ID,
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         period=_PERIOD,
         profile_tax_id="12345678Z",
         status=status,

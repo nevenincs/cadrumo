@@ -13,8 +13,9 @@ from types import MappingProxyType
 
 from ..calculations.registry.facts.resolution import ResolvedMappingFact
 from ..calculations.registry.facts.schema import MappingFactPayload
+from ..calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
 from .errors import IvaCatalogueError
-from .schema import EUMemberState, IvaRateKind, IvaRateRecord
+from .schema import EUMemberState, IvaRateRecord
 
 IVA_RATE_FACT_ID = "iva-rate-schedule"
 """Jurisdictions that must carry rate rows.
@@ -46,7 +47,7 @@ def load_iva_rate_table() -> Mapping[EUMemberState, tuple[IvaRateRecord, ...]]:
         table.setdefault(member_state, []).append(
             IvaRateRecord(
                 member_state=member_state,
-                kind=IvaRateKind(str(selectors["kind"])),
+                kind=require_iva_rate_kind(str(selectors["kind"]), effective_date=variant.valid_from),
                 pct=Decimal(str(payload["pct"])),
                 effective_from=variant.valid_from,
                 effective_until=variant.valid_to,
@@ -64,7 +65,7 @@ def iva_rate_record_from_fact(resolved: ResolvedMappingFact) -> IvaRateRecord:
     payload = {str(entry.key): entry.value for entry in resolved.payload.entries}
     return IvaRateRecord(
         member_state=EUMemberState(str(selectors["member_state"])),
-        kind=IvaRateKind(str(selectors["kind"])),
+        kind=require_iva_rate_kind(str(selectors["kind"]), effective_date=resolved.valid_from),
         pct=Decimal(str(payload["pct"])),
         effective_from=resolved.valid_from,
         effective_until=resolved.valid_to,

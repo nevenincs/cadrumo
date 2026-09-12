@@ -13,7 +13,6 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.errors import ClassificationError, SecureObjectRowIdentityError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -60,11 +59,11 @@ def repo() -> ModeloHistoryRepository:
 def _database_bytes(storage_root: Path) -> bytes:
     from ....adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 
-    return read_db_at_rest_bytes(bucket_paths(storage_root, _BUCKET_ID).database_file)
+    return read_db_at_rest_bytes(storage_root / "buckets" / _BUCKET_ID / "db" / "workflow.sqlite3")
 
 
 def _database_payloads(storage_root: Path) -> tuple[bytes, ...]:
-    db_path = bucket_paths(storage_root, _BUCKET_ID).database_file
+    db_path = storage_root / "buckets" / _BUCKET_ID / "db" / "workflow.sqlite3"
     with sqlite3.connect(db_path) as connection:
         return tuple(bytes(row[0]) for row in connection.execute("SELECT payload FROM secure_objects"))
 

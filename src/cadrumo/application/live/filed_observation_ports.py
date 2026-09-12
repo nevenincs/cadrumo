@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from ...domain.justificante.schema import Justificante
     from ...domain.modelos.filing_record import ModeloRecord
     from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
-    from ..calculations.iva_compensation_history import IvaCompensationPeriodState
+    from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
     from ..calculations.observations_repository import ObservationEnvelopePayload, ObservationSourceKind
     from ..modelo.external_import_actions import ExternalFilingBaselineSource
 
@@ -252,6 +252,10 @@ class FiledObservationPersistencePort(Protocol):
 
 class FiledCalculationObservationRepositoryPort(Protocol):
     """Calculation-observation repository operations used by this capability."""
+
+    def load_observation(self, modelo: str, period: Period) -> ObservationEnvelopePayload | None:
+        """Load one existing calculation-observation envelope before replacement."""
+        ...
 
     def prepare_observation_envelope(
         self,

@@ -10,7 +10,8 @@ the failure back to a localised prompt.
 
 Tax-ID-shaped questions (any question whose id matches ``tax-id`` or
 ends with ``-tax-id``) route through
-:func:`cadrumo.core.identity.documents.validate_identity` so the Spanish NIF / NIE
+:func:`cadrumo.domain.calculations.registry.tax_id_runtime.validate_runtime_identity`
+so the Spanish NIF / NIE
 / CIF checksum is enforced at every write surface: interactive,
 ``--quiet`` flag, and profile wizard mutations.
 """
@@ -22,10 +23,11 @@ from typing import Final
 
 from ...core.errors.error_codes import resolve_error_message
 from ...core.i18n.render import tr
-from ...core.identity.documents import IdentityError, validate_identity
+from ...core.identity.documents import IdentityError
 from ...core.parsing.utils import parse_bool
 from ...core.redaction.rules import redact_validation_context as _redact_validation_context
 from ...core.spanish_postcode import is_spanish_postcode
+from ...domain.calculations.registry.tax_id_runtime import validate_runtime_identity
 from .errors import WizardValidationError
 from .models import WizardQuestion, WizardWidget
 
@@ -98,7 +100,7 @@ def _validate_text_tax_id(value: str, raw: str, question: WizardQuestion) -> Non
     if not value or question.id not in _TAX_ID_QUESTION_IDS:
         return
     try:
-        validate_identity(value)
+        validate_runtime_identity(value)
     except IdentityError as exc:
         raise _fail(
             question,

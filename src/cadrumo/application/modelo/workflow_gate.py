@@ -45,6 +45,7 @@ import asyncio
 from datetime import date, datetime
 from functools import lru_cache
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ...adapters.persistence.profile.submission import SubmissionRepository
@@ -62,6 +63,7 @@ from ...domain.modelos.work_unit import WorkUnit
 from ...domain.submission.engine import SubmissionEngine
 from ...domain.submission.models import ModeloDraftStatus
 from ...domain.submission.protocols import DeadlineWindowChecker
+from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 from ..filing.draft_construction import build_draft
 from ..filing.draft_review import approve_draft
 from ..filing.runtime import build_runtime_schema_provider, filing_profile_from_taxpayer
@@ -74,6 +76,9 @@ from ..workflow.run_models import WorkflowPurpose, WorkflowResult, WorkflowStage
 from ._revision_replay_inputs import revision_filing_replay_inputs
 from ._row_source_identity_replay import attach_revision_row_source_identities
 from .action_errors import ModeloWorkflowGateError
+
+if TYPE_CHECKING:
+    from ..auth.operator_scope_ports import OperatorScopePorts
 
 
 @lru_cache(maxsize=512)
@@ -166,12 +171,14 @@ class _RevisionDraftBuilder:
         work_unit: WorkUnit,
         actor: str,
         clock: datetime,
+        observation_repository: CalculationObservationRepositoryProtocol,
         draft_repository: ModeloDraftRepository | None = None,
     ) -> None:
         self._revision = revision
         self._work_unit = work_unit
         self._actor = actor
         self._clock = clock
+        self._observation_repository = observation_repository
         self._draft_repository = draft_repository
         self._schema_provider = build_runtime_schema_provider(
             filing_year=work_unit.filing_year,
@@ -238,6 +245,7 @@ class _RevisionDraftBuilder:
             bucket_id=self._work_unit.bucket_id,
             approved_by=self._actor,
             schema_provider=self._schema_provider,
+            observation_repository=self._observation_repository,
             approved_at=self._clock,
         )
         self._drafts().save(approved)
@@ -295,12 +303,14 @@ def build_revision_deadline_window_checker(
 def build_revision_workflow_engine(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_scope_ports: OperatorScopePorts,
     revision: CalculationRevision,
     work_unit: WorkUnit,
     profile: TaxpayerProfile,
     actor: str,
     clock: datetime,
     settings: Settings | None,
+    observation_repository: CalculationObservationRepositoryProtocol,
 ) -> WorkflowEngine:
     """Build and return a :class:`WorkflowEngine` configured for one calculation revision.
 
@@ -335,6 +345,7 @@ def build_revision_workflow_engine(
             provider_kind,
             settings=cfg,
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_scope_ports=operator_scope_ports,
         ),
         deadline_checker=build_revision_deadline_window_checker(profile=profile, engine=deadline_engine),
         settings=cfg,
@@ -342,7 +353,13 @@ def build_revision_workflow_engine(
     )
     return WorkflowEngine(
         deadline_engine=DeadlineEngineAdapter(deadline_engine),
-        filing_draft_builder=_RevisionDraftBuilder(revision=revision, work_unit=work_unit, actor=actor, clock=clock),
+        filing_draft_builder=_RevisionDraftBuilder(
+            revision=revision,
+            work_unit=work_unit,
+            actor=actor,
+            clock=clock,
+            observation_repository=observation_repository,
+        ),
         submission_engine=submission_engine,
         session=None,
         certificate_bundle=None,

@@ -74,7 +74,7 @@ def _capture(
     """Persist one real capture on its own work-unit axis and return it."""
     payload = _pdf_bytes(marker)
     return service.capture(
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         filing_year=2026,
         period=Period.from_year_and_code(2026, period_code),
         expediente_id="202613000522456T",

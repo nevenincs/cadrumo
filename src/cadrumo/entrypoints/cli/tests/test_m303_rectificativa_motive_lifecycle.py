@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from functools import lru_cache
 from pathlib import Path
@@ -14,6 +15,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence_from_regimen_snapshot
 from ....application.filing.export_producer import m303_rectificativa_motive_producer_values
 from ....application.filing.producer_snapshot import (
     AmendmentEvidence,
@@ -69,8 +71,8 @@ from ....domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ....entrypoints.adapter_composition import build_modelo_export_ports
 from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
-from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence_from_regimen_snapshot
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -84,7 +86,7 @@ _NOW = datetime(2026, 8, 14, 8, 0, 0, tzinfo=UTC)
 
 @lru_cache(maxsize=1)
 def _snapshot() -> RegistrySnapshot:
-    return bundled_authority().snapshot(Modelo.M303.value, filing_year=2025, period="1T")
+    return bundled_authority().snapshot(Modelo("303").value, filing_year=2025, period="1T")
 
 
 @lru_cache(maxsize=1)
@@ -92,7 +94,7 @@ def _filing_evidence():
     snapshot = _snapshot()
     record_design = m303_rectificativa_record_design_from_snapshot(snapshot)
     assert record_design is not None
-    projection = snapshot.supplementary_ordenes[Modelo.M303].require_projection(
+    projection = snapshot.supplementary_ordenes[Modelo("303")].require_projection(
         ejercicio=2025,
         registry_revision_id=snapshot.revision.id,
     )
@@ -118,7 +120,7 @@ def _authorities(*, motive: M303RectificativaMotive = M303RectificativaMotive.RE
     snapshot = _snapshot()
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
-        modelo=Modelo.M303.value,
+        modelo=Modelo("303").value,
         filing_year=2025,
         period=period,
         revision_id=snapshot.revision.id,
@@ -126,7 +128,7 @@ def _authorities(*, motive: M303RectificativaMotive = M303RectificativaMotive.RE
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=_BUCKET_ID,
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         filing_year=2025,
         period=period,
         revision_id=snapshot.revision.id,
@@ -171,7 +173,7 @@ def _authorities(*, motive: M303RectificativaMotive = M303RectificativaMotive.RE
         work_unit_id=work_unit_id,
         calculation_revision_id=baseline_revision_id,
         bucket_id=_BUCKET_ID,
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         filing_year=2025,
         period=period,
         filed_at=_NOW,
@@ -185,7 +187,7 @@ def _authorities(*, motive: M303RectificativaMotive = M303RectificativaMotive.RE
     )
     receipt = Justificante(
         csv=_CSV,
-        modelo=Modelo.M303.value,
+        modelo=Modelo("303").value,
         ejercicio="2025",
         period=period,
         presentation_id=_RECEIPT,
@@ -252,7 +254,7 @@ def _profile() -> TaxpayerProfile:
     )
 
 
-def test_closed_enum_refuses_free_text_and_every_identity_axis_diverges() -> None:
+def test_identifier_refuses_invalid_syntax_and_every_identity_axis_diverges() -> None:
     _, _, target, _, _, revision = _authorities()
     with pytest.raises(ValidationError):
         CalculationRevisionAmendmentIdentity(
@@ -381,7 +383,7 @@ def test_every_persisted_target_and_justificante_join_refusal_is_biting() -> Non
             "requires the original AEAT receipt number",
         ),
     )
-    assert work_unit.modelo == Modelo.M303.value
+    assert work_unit.modelo == Modelo("303").value
     for variant, message in variants:
         with pytest.raises(ValidationError, match=message):
             CalculationRevision.model_validate(
@@ -392,8 +394,8 @@ def test_every_persisted_target_and_justificante_join_refusal_is_biting() -> Non
 
 def test_encrypted_persistence_reloads_and_revalidates_joined_authority(tmp_path: Path) -> None:
     work_unit, baseline_revision, target, receipt, context, revision = _authorities()
-    assert work_unit.modelo == Modelo.M303.value
-    assert work_unit.modelo is not Modelo.M303
+    assert work_unit.modelo == Modelo("303").value
+    assert work_unit.modelo == Modelo("303")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="S92") as runtime:
         objects = runtime.repository
         work_repo = WorkUnitCatalogueRepository(objects=objects)
@@ -481,7 +483,7 @@ def test_motive_capability_is_selected_only_from_exact_registry_evidence(
     period: str,
     expected_revision_id: str | None,
 ) -> None:
-    snapshot = bundled_authority().snapshot(Modelo.M303.value, filing_year=filing_year, period=period)
+    snapshot = bundled_authority().snapshot(Modelo("303").value, filing_year=filing_year, period=period)
     record_design = m303_rectificativa_record_design_from_snapshot(snapshot)
     if expected_revision_id is None:
         assert record_design is None
@@ -675,9 +677,13 @@ def test_public_export_requires_injected_persisted_justificante_authority(tmp_pa
                     actor="operator",
                 ),
                 workflow_profile=_profile(),
-                work_unit_repository=work_repo,
-                calculation_repository=calculation_repo,
-                filing_repository=filing_repo,
+                export_ports=replace(
+                    build_modelo_export_ports(
+                        bucket_id=_BUCKET_ID,
+                        m303_rectificativa_taxpayer_tax_id=_TAX_ID,
+                    ),
+                    justificante=None,
+                ),
             )
 
         assert raised.value.context is not None
@@ -687,7 +693,7 @@ def test_public_export_requires_injected_persisted_justificante_authority(tmp_pa
 def test_m303_motive_is_refused_for_another_modelo_snapshot() -> None:
     with pytest.raises(FilingProducerSnapshotError, match="valid only for modelo 303"):
         build_filing_producer_snapshot(
-            modelo=Modelo.M111,
+            modelo=Modelo("111"),
             taxpayer_tax_id="12345678Z",
             taxpayer_identity=TaxpayerIdentityFacts(
                 legal_name=None,

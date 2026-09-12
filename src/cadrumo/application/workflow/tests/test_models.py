@@ -91,14 +91,14 @@ class TestWorkflowStepValidation:
             summary_locale_key="application.workflow.steps.deadline_open",
             details=WorkflowDeadlineContextDetails(
                 kind="deadline_context",
-                modelo=Modelo.M303,
+                modelo=Modelo("303"),
                 period=_period(),
                 opens_on=datetime(2026, 4, 1, tzinfo=UTC).date(),
                 closes_on=datetime(2026, 4, 20, tzinfo=UTC).date(),
             ),
         )
         assert isinstance(step.details, WorkflowDeadlineContextDetails)
-        assert step.details.modelo is Modelo.M303
+        assert step.details.modelo == Modelo("303")
         assert step.details.period == _period()
         assert step.details.kind == "deadline_context"
 
@@ -133,7 +133,7 @@ class TestWorkflowStepValidation:
                     "summary_locale_key": "application.workflow.steps.deadline_open",
                     "details": {
                         "kind": "deadline_context",
-                        "modelo": Modelo.M303,
+                        "modelo": Modelo("303"),
                         "period": _period(),
                         "deadline_role": DeadlineRole.BINDING,
                     },
@@ -374,7 +374,7 @@ class TestWorkflowResultTerminal:
 def test_workflow_obligation_projection_excludes_source_language_and_raw_recovery_command() -> None:
     """The real domain deadline projects to stable persisted facts only."""
     deadline = ModeloDeadline(
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         period=_period(2025),
         opens_on=date(2025, 4, 1),
         closes_on=date(2025, 4, 20),
@@ -398,7 +398,7 @@ def test_workflow_obligation_projection_excludes_source_language_and_raw_recover
     projected = WorkflowObligationFacts.from_deadline(deadline)
     payload = projected.model_dump(mode="json")
 
-    assert projected.modelo is Modelo.M303
+    assert projected.modelo == Modelo("303")
     assert projected.period == _period(2025)
     assert projected.recovery is not None
     assert projected.recovery.still_filable is True

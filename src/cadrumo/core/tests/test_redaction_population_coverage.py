@@ -38,7 +38,11 @@ import pytest
 from ..classification.policies import RedactionRule, SensitivityClass
 from ..hashing import sha256_hex
 from ..iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
-from ..identity.documents import IdentityError, validate_identity
+from ..identity.documents import (
+    SPANISH_TAX_ID_BOOTSTRAP_FORMAT,
+    IdentityError,
+    validate_identity,
+)
 from ..identity.nif_iva import nif_iva_format_for_country, normalise_nif_iva
 from ..redaction.rules import (
     NIF_PATTERN,
@@ -201,7 +205,7 @@ def _admitting_authority(span: str) -> str | None:
         candidates.append(normalised[2:])
     for candidate in candidates:
         try:
-            validate_identity(candidate)
+            validate_identity(candidate, SPANISH_TAX_ID_BOOTSTRAP_FORMAT)
         except IdentityError:
             continue
         return "identity"

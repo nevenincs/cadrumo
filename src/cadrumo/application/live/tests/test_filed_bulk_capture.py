@@ -8,10 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
-from ....adapters.outbound.aeat.sede.errors import SedeParseError
 from ....core.period import Period
-from ..errors import LiveIvaSurfaceTimeoutError
+from ..errors import LiveApplicationError, LiveIvaSurfaceTimeoutError
+from ..filed_data_ports import FiledRegisterDeclarationProtocol
 from ..filed_data_capture import (
     _await_filed_register_walk,
     _walk_or_failure_row,
@@ -28,18 +27,30 @@ from .filed_observation_test_support import in_memory_filed_observation_test_bun
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _declaration() -> Declaracion:
-    return Declaracion(
-        modelo="303",
-        ejercicio=2025,
-        period=Period.from_year_and_code(2025, "1T"),
-        expediente_id="12345678901234567890",
-        estado="ALTA",
-        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
-    )
+class _Declaration:
+    """Minimal inward register-row fake for application tests."""
+
+    modelo = "303"
+    ejercicio = 2025
+    period = Period.from_year_and_code(2025, "1T")
+    expediente_id = "12345678901234567890"
+    estado = "ALTA"
+    tipo_solicitud = None
+    observaciones = None
+    justificante_link_text = None
+    archive_link_text = None
+    declaration_copy_link_text = None
+    justificante_cell_index = 7
+    archive_cell_index = 8
+    declaration_copy_cell_index = None
+    presented_at = datetime(2025, 4, 15, 9, 30, tzinfo=UTC)
 
 
-async def _slow_empty_declarations() -> tuple[Declaracion, ...]:
+def _declaration() -> FiledRegisterDeclarationProtocol:
+    return _Declaration()
+
+
+async def _slow_empty_declarations() -> tuple[FiledRegisterDeclarationProtocol, ...]:
     await asyncio.sleep(0.05)
     return ()
 
@@ -113,7 +124,8 @@ def test_bulk_capture_reports_registry_unsupported_modelos_as_local_boundaries(t
             year_from=2024,
             year_to=2024,
             output_root=tmp_path,
-            ports=in_memory_filed_observation_test_bundle().ports,
+            ports=(bundle := in_memory_filed_observation_test_bundle()).ports,
+            filed_data_port=bundle.filed_data_port,
             modelos=("151", "721"),
         ),
     )
@@ -150,7 +162,8 @@ def test_bulk_capture_report_exposes_its_evidence_notices_channel(tmp_path: Path
             year_from=2024,
             year_to=2024,
             output_root=tmp_path,
-            ports=in_memory_filed_observation_test_bundle().ports,
+            ports=(bundle := in_memory_filed_observation_test_bundle()).ports,
+            filed_data_port=bundle.filed_data_port,
             modelos=("151",),
         ),
     )
@@ -164,7 +177,8 @@ def test_bulk_capture_accepts_limit_for_locally_bounded_unsupported_modelos(tmp_
             year_from=2024,
             year_to=2024,
             output_root=tmp_path,
-            ports=in_memory_filed_observation_test_bundle().ports,
+            ports=(bundle := in_memory_filed_observation_test_bundle()).ports,
+            filed_data_port=bundle.filed_data_port,
             modelos=("151",),
             limit=10,
         ),
@@ -180,6 +194,7 @@ def test_bulk_capture_accepts_limit_for_locally_bounded_unsupported_modelos(tmp_
 def test_bulk_listing_reports_registry_unsupported_modelos_as_local_boundaries() -> None:
     report = asyncio.run(
         list_filed_data_bulk(
+            filed_data_port=in_memory_filed_observation_test_bundle().filed_data_port,
             year_from=2024,
             year_to=2024,
             modelos=("151", "721"),
@@ -213,9 +228,9 @@ def test_truncated_register_read_reuses_the_per_pair_failure_taxonomy() -> None:
     refusal wording that pushed its counts past the bound would arrive with the
     only actionable part cut off.
     """
-    assert issubclass(SedeParseError, Exception), "the bulk walk arm catches Exception; a refusal outside it escapes"
+    assert issubclass(LiveApplicationError, Exception), "the bulk walk arm catches Exception; a refusal outside it escapes"
 
-    refusal = SedeParseError(
+    refusal = LiveApplicationError(
         "declaraciones register modelo 100 ejercicio 2026 rendered 3 row(s) but its pager "
         "declares 8 in total; refusing an under-reported filing history",
         context={"modelo": "100", "ejercicio": 2026, "rendered_count": 3, "declared_total": 8},
@@ -227,23 +242,23 @@ def test_truncated_register_read_reuses_the_per_pair_failure_taxonomy() -> None:
     assert row.year == 2026
     assert row.period is None
     assert row.expediente_id is None
-    assert row.error_type == "SedeParseError"
+    assert row.error_type == "LiveApplicationError"
     assert "rendered 3 row(s)" in row.message
     assert "declares 8 in total" in row.message
     assert "under-reported filing history" in row.message
     assert not row.message.endswith("…"), "the refusal wording overran the row's message bound and lost its tail"
 
 
-async def _refusing_walk() -> tuple[Declaracion, ...]:
+async def _refusing_walk() -> tuple[FiledRegisterDeclarationProtocol, ...]:
     """A real walk coroutine that refuses the way a truncated register read does."""
-    raise SedeParseError(
+    raise LiveApplicationError(
         "declaraciones register modelo 100 ejercicio 2026 rendered 3 row(s) but its pager "
         "declares 8 in total; refusing an under-reported filing history",
         context={"modelo": "100", "ejercicio": 2026, "rendered_count": 3, "declared_total": 8},
     )
 
 
-async def _one_declaration_walk() -> tuple[Declaracion, ...]:
+async def _one_declaration_walk() -> tuple[FiledRegisterDeclarationProtocol, ...]:
     """A real walk coroutine that succeeds, standing for a healthy pair."""
     return (_declaration(),)
 
@@ -257,7 +272,7 @@ def test_walk_failure_is_absorbed_into_a_row_and_signals_the_pair_be_skipped() -
     the live-session gate and is NOT proven here.
 
     Both coroutines are real: one raises the genuine refusal a truncated register
-    read produces, the other returns a real `Declaracion`. Nothing is stubbed and
+    read produces, the other returns a real inward register-row fake. Nothing is stubbed and
     no production path is patched.
     """
     failures: list[FiledDataCaptureFailureRow] = []
@@ -274,7 +289,7 @@ def test_walk_failure_is_absorbed_into_a_row_and_signals_the_pair_be_skipped() -
 
     assert refused is None, "an absorbed failure must signal the pair be skipped rather than yield rows"
     assert len(failures) == 1
-    assert failures[0].error_type == "SedeParseError"
+    assert failures[0].error_type == "LiveApplicationError"
     assert "declares 8 in total" in failures[0].message
 
     healthy = asyncio.run(

@@ -68,7 +68,10 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
-from ...domain.calculations.registry.prorrata_regularizacion_bindings import ProrrataRegularizacionProvider
+from ...domain.calculations.registry.prorrata_regularizacion_bindings import (
+    ProrrataRegularizacionProvider,
+    prorrata_source_casilla_ids,
+)
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.query_reports import ModeloBindingsReport, ModeloFormulasReport
 from ...domain.calculations.registry.schema import (
@@ -101,7 +104,7 @@ from ..aggregation.source_mesh import (
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
-from .observations_repository import CalculationObservationRepository
+from .observations_repository import CalculationObservationRepositoryProtocol
 from .revision_carry_gate import revision_carry_outcome
 
 # Registry-owned prorrata declarations are read from the selected Modelo 303/390
@@ -173,22 +176,9 @@ def prorrata_registry_declarations(
 #
 #
 #
-def _prorrata_source_casilla_ids(revision: ModeloRevision) -> tuple[CasillaId, ...]:
-    """Return the ordered source casillas declared by selected bindings."""
-    ids: list[CasillaId] = []
-    for binding in revision.bindings:
-        if not isinstance(binding.provider, ProrrataRegularizacionProvider):
-            continue
-        for casilla_id in binding.provider.source_casilla_ids:
-            value = validated_casilla_id(casilla_id, surface="selected prorrata source casilla")
-            if value not in ids:
-                ids.append(value)
-    return tuple(ids)
-
-
 def _prorrata_source_id(revision: ModeloRevision, position: int) -> CasillaId:
     """Read one role by the registry selector's reviewed source order."""
-    ids = _prorrata_source_casilla_ids(revision)
+    ids = prorrata_source_casilla_ids(revision.bindings)
     try:
         return ids[position]
     except IndexError as exc:
@@ -572,7 +562,7 @@ def _missing_current_year_casillas(
     revision: ModeloRevision,
 ) -> tuple[CasillaId, ...]:
     return tuple(
-        casilla_id for casilla_id in _prorrata_source_casilla_ids(revision) if casilla_id not in current_year_values
+        casilla_id for casilla_id in prorrata_source_casilla_ids(revision.bindings) if casilla_id not in current_year_values
     )
 
 
@@ -614,7 +604,7 @@ def _current_year_values_provenance(
         source_modelo=context.modelo,
         source_filing_year=context.filing_year,
         source_periods=periods,
-        source_casilla_ids=_prorrata_source_casilla_ids(revision),
+        source_casilla_ids=prorrata_source_casilla_ids(revision.bindings),
         legal_refs=_binding_legal_refs(revision),
         source_refs=_binding_source_refs(revision),
     )
@@ -688,7 +678,7 @@ def _prior_definitiva_provenance(
 
 
 def _stamped_prior_year_definitiva(
-    repository: CalculationObservationRepository,
+    repository: CalculationObservationRepositoryProtocol,
     *,
     filing_year: int,
     modelo: str,
@@ -722,7 +712,7 @@ def _stamped_prior_year_definitiva(
 
 
 def _observed_source_period_values(
-    repository: CalculationObservationRepository,
+    repository: CalculationObservationRepositoryProtocol,
     *,
     modelo: str,
     periods: tuple[str, ...],
@@ -790,7 +780,7 @@ def _project_source_period_values(
 
 
 def _source_period_feed_from_observations(
-    repository: CalculationObservationRepository,
+    repository: CalculationObservationRepositoryProtocol,
     *,
     modelo: str,
     revision: ModeloRevision,
@@ -809,7 +799,7 @@ def _source_period_feed_from_observations(
     values = _project_source_period_values(
         observed_by_period,
         periods,
-        source_ids=_prorrata_source_casilla_ids(revision),
+        source_ids=prorrata_source_casilla_ids(revision.bindings),
     )
 
     return _CurrentYearSourcePeriodFeed(
@@ -829,7 +819,7 @@ def _resolve_prorrata_regularizacion_binding_values(
     if not binding_by_output:
         return {}
 
-    source_ids = _prorrata_source_casilla_ids(revision)
+    source_ids = prorrata_source_casilla_ids(revision.bindings)
     volumen_total = current_year_values[source_ids[2]]
     volumen_con_derecho = current_year_values[source_ids[1]]
     projection = project_prorrata_regularizacion_feed(
@@ -1078,7 +1068,7 @@ class ProrrataRegularizacionSourceResolver:
         missing_current_year_casilla_ids: Iterable[CasillaId] = (),
         unresolved_current_year_casilla_ids: Iterable[CasillaId] = (),
         prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
-        observation_repository: CalculationObservationRepository,
+        observation_repository: CalculationObservationRepositoryProtocol,
         registry_snapshot: RegistrySnapshot | None = None,
     ) -> None:
         """Bind the current-year prorrata inputs and repositories used to resolve carries.

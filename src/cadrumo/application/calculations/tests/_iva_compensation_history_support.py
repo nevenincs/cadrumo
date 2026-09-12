@@ -32,7 +32,7 @@ from ....domain.calculations.registry.tests.registry_tree import bundled_registr
 _EXTERNAL = load_external_constants()
 WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
-from ....tests.registry_snapshot import build_snapshot
+from ....domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 #: A checksum-valid synthetic NIF. ``IvaCompensationPeriodState.taxpayer_nif``
 #: is a ``SubjectTaxId``, so a placeholder label is refused at the boundary
@@ -46,7 +46,7 @@ def m303_registry_snapshot_ref(filing_year: int, period: str) -> RegistrySnapsho
     return (
         bundled_authority()
         .snapshot(
-            Modelo.M303.value,
+            Modelo("303").value,
             filing_year=filing_year,
             period=period,
         )

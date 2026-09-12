@@ -57,7 +57,6 @@ from ...core.filing_producer_key import FilingProducerKey
 from ...core.hashing import sha256_hex
 from ...core.modelo import Modelo
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...core.product_identity import AeatProductSoftwareIdentity
 from ...core.time.clock import now
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -68,6 +67,7 @@ from ...domain.calculations.registry.schema_exports import (
 )
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
+from ...domain.filing.software_identity import AeatProductSoftwareIdentity
 from ...domain.submission.models import ModeloDraftStatus
 from ._envelope_modelo_policy import filing_envelope_modelo_policy
 from ._export_parity import (

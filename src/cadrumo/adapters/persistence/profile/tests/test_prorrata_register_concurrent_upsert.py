@@ -40,7 +40,7 @@ _runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 
 
 def _m303_snapshot_ref(ejercicio: int) -> RegistrySnapshotRef:
-    return bundled_authority().snapshot(Modelo.M303.value, filing_year=ejercicio, period="4T").snapshot_ref
+    return bundled_authority().snapshot(Modelo("303").value, filing_year=ejercicio, period="4T").snapshot_ref
 
 
 def _entry(ejercicio: int, *, percentage: str) -> ProrrataRegisterEntry:

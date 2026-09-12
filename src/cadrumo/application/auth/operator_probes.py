@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage.master_key.active_session import has_active_bucket_session
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import Settings, load_settings
 from ...core.errors.hierarchy import CadrumoError
@@ -24,7 +23,16 @@ from ..auth_credentials import (
     ActiveCertificateCredentials,
     unnamed_certificate_credentials,
 )
+from .operator_probe_ports import (
+    CertificateHealthBand,
+    CertificateHealthFailure,
+    CertificateHealthObservation,
+    CertificateHealthProbeRequest,
+    ClaveIdentityFailure,
+    OperatorProbePorts,
+)
 from .operator_scope import active_profile_storage_span
+from .operator_scope_ports import OperatorScopePorts
 from .probes import ProviderProbeResult
 from .sessions import (
     ClaveCredentials,
@@ -37,7 +45,6 @@ from .sessions import (
 _log = get_logger(__name__)
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.auth.certificate import CertificateHealth
     from ..workflow.state_models import WorkflowState
 
 
@@ -59,7 +66,11 @@ def classify_identity_alignment(profile_tax_id: str, provider_identity: str) -> 
     return "mismatch"
 
 
-def _active_profile_path_values(state: WorkflowState | None = None) -> dict[str, str]:
+def _active_profile_path_values(
+    state: WorkflowState | None = None,
+    *,
+    operator_probe_ports: OperatorProbePorts,
+) -> dict[str, str]:
     """Return the active profile's schema-path values, empty when unreadable.
 
     A readiness probe answers questions like "is auth configured" and the
@@ -70,7 +81,7 @@ def _active_profile_path_values(state: WorkflowState | None = None) -> dict[str,
     in a driver exception that no domain-level except clause would catch,
     so declining the doomed read is what keeps the probe answerable.
     """
-    if state is None and not has_active_bucket_session():
+    if state is None and not operator_probe_ports.active_profile_session.is_bound():
         return {}
     try:
         from ..user_profile.projections import record_to_path_values
@@ -89,6 +100,7 @@ def probe_clave_credentials(
     *,
     settings: Settings,
     state: WorkflowState | None = None,
+    operator_probe_ports: OperatorProbePorts,
 ) -> ClaveCredentials | None:
     """Resolve the credentials a readiness probe should report on.
 
@@ -103,7 +115,9 @@ def probe_clave_credentials(
     return resolve_clave_credentials(
         provider_kind,
         settings=settings,
-        facts=clave_auth_facts_from_profile_values(_active_profile_path_values(state)),
+        facts=clave_auth_facts_from_profile_values(
+            _active_profile_path_values(state, operator_probe_ports=operator_probe_ports),
+        ),
     )
 
 
@@ -112,6 +126,7 @@ def bind_profile_auth_settings(
     *,
     settings: Settings,
     state: WorkflowState | None = None,
+    operator_probe_ports: OperatorProbePorts,
 ) -> Settings:
     """Bind the profile credentials that the selected backend will actually use.
 
@@ -124,7 +139,9 @@ def bind_profile_auth_settings(
         AuthProviderKind.CLAVE_PERMANENTE,
     ):
         return settings
-    facts = clave_auth_facts_from_profile_values(_active_profile_path_values(state))
+    facts = clave_auth_facts_from_profile_values(
+        _active_profile_path_values(state, operator_probe_ports=operator_probe_ports),
+    )
     credentials = resolve_clave_credentials(provider_kind, settings=settings, facts=facts)
     if credentials is None:
         return settings
@@ -140,11 +157,12 @@ def live_auth_identity_state(
     *,
     settings: Settings,
     state: WorkflowState | None = None,
+    operator_probe_ports: OperatorProbePorts,
 ) -> tuple[bool, bool, str]:
     """Project whether the configured live-auth identity is usable."""
     if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return False, provider_kind is AuthProviderKind.CERTIFICATE, "not_applicable"
-    values = _active_profile_path_values(state)
+    values = _active_profile_path_values(state, operator_probe_ports=operator_probe_ports)
     facts = clave_auth_facts_from_profile_values(values)
     credentials = resolve_clave_credentials(provider_kind, settings=settings, facts=facts)
     provider_identity = credentials.dni_nie if credentials is not None else ""
@@ -157,18 +175,22 @@ def live_auth_identity_kind(
     *,
     settings: Settings,
     state: WorkflowState | None = None,
+    operator_probe_ports: OperatorProbePorts,
 ) -> str:
     """Return the safe identity-kind label for the configured provider."""
     if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return ""
-    from ...adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilConfigurationError, classify_identity
-
-    credentials = probe_clave_credentials(provider_kind, settings=settings, state=state)
+    credentials = probe_clave_credentials(
+        provider_kind,
+        settings=settings,
+        state=state,
+        operator_probe_ports=operator_probe_ports,
+    )
     identity = credentials.dni_nie if credentials is not None else ""
-    try:
-        return classify_identity(identity)
-    except ClaveMovilConfigurationError:
+    classification = operator_probe_ports.clave_identity.classify(identity)
+    if isinstance(classification, ClaveIdentityFailure):
         return "invalid_or_missing"
+    return classification.kind
 
 
 def live_auth_mode(provider_kind: AuthProviderKind | None, *, settings: Settings) -> str:
@@ -191,7 +213,12 @@ class _LocalSessionProbe(BaseModel):
     summary: str = ""
 
 
-def probe_local_session(provider: str, *, settings: Settings | None = None) -> _LocalSessionProbe:
+def probe_local_session(
+    provider: str,
+    *,
+    settings: Settings | None = None,
+    operator_scope_ports: OperatorScopePorts,
+) -> _LocalSessionProbe:
     """Inspect the persisted AEAT session token for ``provider`` on disk.
 
     A pure local read — it never opens a browser or contacts AEAT. It
@@ -217,7 +244,7 @@ def probe_local_session(provider: str, *, settings: Settings | None = None) -> _
 
     resolved_settings = settings or load_settings()
     try:
-        with active_profile_storage_span(resolved_settings):
+        with active_profile_storage_span(resolved_settings, operator_scope_ports=operator_scope_ports):
             session = load_persisted_session(resolved_settings, kind)
     except (CadrumoError, OSError):
         _log.debug("local auth session probe failed; treating persisted session as absent", exc_info=True)
@@ -277,6 +304,7 @@ def probe_provider_configuration(
     provider: str,
     *,
     settings: Settings | None = None,
+    operator_probe_ports: OperatorProbePorts,
 ) -> ProviderConfigurationProbe:
     """Run the pure-local per-provider configuration probe for ``provider``.
 
@@ -298,6 +326,7 @@ def probe_provider_configuration(
         "",
         settings=resolved_settings,
         certificate_credentials=credentials,
+        operator_probe_ports=operator_probe_ports,
     )
 
 
@@ -307,6 +336,7 @@ def probe_provider_credentials(
     *,
     settings: Settings | None = None,
     certificate_credentials: ActiveCertificateCredentials | None = None,
+    operator_probe_ports: OperatorProbePorts,
 ) -> ProviderConfigurationProbe:
     """Probe one provider using the caller's already-resolved credential snapshot."""
     outcome = _probe_configured_provider(
@@ -314,6 +344,7 @@ def probe_provider_credentials(
         certificate_path,
         settings=settings,
         certificate_credentials=certificate_credentials,
+        operator_probe_ports=operator_probe_ports,
     )
     return ProviderConfigurationProbe(
         provider=provider,
@@ -328,6 +359,7 @@ def _probe_configured_provider(
     *,
     settings: Settings | None = None,
     certificate_credentials: ActiveCertificateCredentials | None = None,
+    operator_probe_ports: OperatorProbePorts,
 ) -> _ProviderProbeOutcome:
     """Run a real per-provider local probe and return a typed verdict.
 
@@ -355,9 +387,13 @@ def _probe_configured_provider(
             certificate_path,
             settings=settings,
             certificate_credentials=certificate_credentials,
+            operator_probe_ports=operator_probe_ports,
         )
     if kind is AuthProviderKind.CLAVE_MOVIL:
-        return _probe_clave_movil_identity(settings=settings)
+        return _probe_clave_movil_identity(
+            settings=settings,
+            operator_probe_ports=operator_probe_ports,
+        )
     return _ProviderProbeOutcome(
         result=ProviderProbeResult.NO_PROVIDER,
         summary=tr("application.auth.operator.probe.no_provider"),
@@ -375,16 +411,14 @@ def _resolved_probe_certificate_path(
     )
 
 
-def _classify_bundle_health(bundle_health: CertificateHealth) -> _ProviderProbeOutcome:
+def _classify_bundle_health(bundle_health: CertificateHealthObservation) -> _ProviderProbeOutcome:
     """Map a certificate-bundle health verdict to its probe outcome.
 
     ``EXPIRED`` classifies an already-lapsed bundle distinctly from a
     ``CRITICAL``/``WARN`` expiring one; every other severity is ``ok``.
     """
-    from ...adapters.outbound.aeat.auth.certificate import CertificateHealthSeverity
-
     severity = bundle_health.severity
-    if severity is CertificateHealthSeverity.EXPIRED:
+    if severity is CertificateHealthBand.EXPIRED:
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.EXPIRED,
             summary=tr(
@@ -393,7 +427,7 @@ def _classify_bundle_health(bundle_health: CertificateHealth) -> _ProviderProbeO
             ),
             days_until_expiry=bundle_health.days_until_expiry,
         )
-    if severity is CertificateHealthSeverity.CRITICAL or severity is CertificateHealthSeverity.WARN:
+    if severity in {CertificateHealthBand.CRITICAL, CertificateHealthBand.WARN}:
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.EXPIRING,
             summary=tr(
@@ -417,6 +451,7 @@ def probe_certificate_bundle(
     *,
     settings: Settings | None = None,
     certificate_credentials: ActiveCertificateCredentials | None = None,
+    operator_probe_ports: OperatorProbePorts,
 ) -> _ProviderProbeOutcome:
     """Open the configured ``.p12`` and classify the certificate's health.
 
@@ -429,11 +464,6 @@ def probe_certificate_bundle(
     but otherwise well-formed bundle must classify as ``expired``, never
     ``corrupt``.
     """
-    from ...adapters.outbound.aeat.auth.certificate import CertificateError
-    from ...adapters.outbound.aeat.auth.certificate import (
-        health as evaluate_certificate_health,
-    )
-
     resolved_settings = settings or load_settings()
     credentials = certificate_credentials or unnamed_certificate_credentials(resolved_settings)
     raw = _resolved_probe_certificate_path(
@@ -471,14 +501,19 @@ def probe_certificate_bundle(
             summary=tr("application.auth.operator.probe.certificate_corrupt"),
         )
     try:
-        bundle_health = evaluate_certificate_health(
-            path,
-            password=password,
-            warn_days=resolved_settings.cadrumo_cert_warn_days,
-            critical_days=resolved_settings.cadrumo_cert_critical_days,
-            friendly_name=credentials.friendly_name,
+        bundle_health = operator_probe_ports.certificate_health.evaluate(
+            CertificateHealthProbeRequest(
+                path=path,
+                password=password,
+                warn_days=resolved_settings.cadrumo_cert_warn_days,
+                critical_days=resolved_settings.cadrumo_cert_critical_days,
+                friendly_name=credentials.friendly_name,
+            ),
         )
-    except CertificateError as exc:
+    except (OSError, ValueError) as exc:
+        # The inward port is expected to translate adapter failures into a
+        # ``CertificateHealthFailure``. Keep this narrow guard for malformed
+        # inward implementations without restoring a concrete adapter edge.
         _log.warning("certificate load failed; treating bundle as unparseable", exc_info=True)
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.CORRUPT,
@@ -487,34 +522,48 @@ def probe_certificate_bundle(
                 error=str(exc),
             ),
         )
+    if isinstance(bundle_health, CertificateHealthFailure):
+        _log.warning("certificate load failed; treating bundle as unparseable")
+        return _ProviderProbeOutcome(
+            result=ProviderProbeResult.CORRUPT,
+            summary=tr(
+                "application.auth.operator.probe.certificate_corrupt_detail",
+                error=bundle_health.detail,
+            ),
+        )
     return _classify_bundle_health(bundle_health)
 
 
-def _probe_clave_movil_identity(*, settings: Settings | None = None) -> _ProviderProbeOutcome:
+def _probe_clave_movil_identity(
+    *,
+    settings: Settings | None = None,
+    operator_probe_ports: OperatorProbePorts,
+) -> _ProviderProbeOutcome:
     """Classify the configured Cl@ve Móvil DNI/NIE through the real classifier.
 
     A well-formed identity surfaces as ``ok``; a malformed identity as
     ``invalid_identity``; an unset identity as ``identity_unset``. The
     probe never contacts AEAT — it validates the local configuration.
     """
-    from ...adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilConfigurationError, classify_identity
-
     resolved_settings = settings or load_settings()
-    credentials = probe_clave_credentials(AuthProviderKind.CLAVE_MOVIL, settings=resolved_settings)
+    credentials = probe_clave_credentials(
+        AuthProviderKind.CLAVE_MOVIL,
+        settings=resolved_settings,
+        operator_probe_ports=operator_probe_ports,
+    )
     raw = credentials.dni_nie if credentials is not None else ""
     if not raw:
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.IDENTITY_UNSET,
             summary=tr("application.auth.operator.probe.clave_movil_identity_unset"),
         )
-    try:
-        classify_identity(raw)
-    except ClaveMovilConfigurationError as exc:
+    classification = operator_probe_ports.clave_identity.classify(raw)
+    if isinstance(classification, ClaveIdentityFailure):
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.INVALID_IDENTITY,
             summary=tr(
                 "application.auth.operator.probe.clave_movil_identity_invalid",
-                error=str(exc),
+                error=classification.detail,
             ),
         )
     return _ProviderProbeOutcome(

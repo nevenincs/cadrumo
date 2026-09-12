@@ -31,6 +31,7 @@ from ...application.modelo.projection import (
     compare_modelo_years,
     project_modelo_100_from_m130,
 )
+from ...core.bucket_pointer import require_active_bucket_id
 from ...core.modelo import Modelo
 from ...core.output_rendering import jsonable_output_payload
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
@@ -51,6 +52,7 @@ from ._modelo_payloads import (
     ModeloProjectResult,
 )
 from .common import emit_envelope
+from .state_projection_support import calculation_action_ports_factory
 
 
 def _delta_row_payload(row: ModeloCompareDeltaRow) -> DeltaRowPayload:
@@ -166,10 +168,10 @@ def modelo_project(
     emit_envelope(ctx, command="modelo.project", result=project_result, lines=lines)
 
 
-def _load_compare_service_result(*, modelo: str, years: list[int]) -> ModeloCompareServiceResult:
+def _load_compare_service_result(*, modelo: str, years: list[int], ports) -> ModeloCompareServiceResult:
     """Read the backend comparison result and translate its typed refusals."""
     try:
-        return compare_modelo_years(modelo=modelo, years=years)
+        return compare_modelo_years(modelo=modelo, years=years, ports=ports)
     except (
         ModeloCompareNeedTwoYearsError,
         ModeloCompareNoWorkUnitsError,
@@ -231,7 +233,11 @@ def modelo_compare(ctx: typer.Context, year: list[int] | None = None, modelo: st
     every compared :class:`CasillaId`.
     """
     require_active_profile()
-    service_result = _load_compare_service_result(modelo=modelo, years=list(year or ()))
+    service_result = _load_compare_service_result(
+        modelo=modelo,
+        years=list(year or ()),
+        ports=calculation_action_ports_factory(ctx)(bucket_id=require_active_bucket_id()),
+    )
     compare_result = _compare_result_payload(service_result)
     lines = _compare_lines(service_result)
     emit_envelope(ctx, command="modelo.compare", result=compare_result, lines=lines)

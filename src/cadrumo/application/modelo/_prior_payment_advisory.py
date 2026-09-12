@@ -18,7 +18,7 @@ from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
-from ..calculations.observations_repository import CalculationObservationRepository
+from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 
 __all__ = [
     "collect_prior_payment_minoracion_not_captured_diagnostics",
@@ -54,7 +54,7 @@ def collect_prior_payment_not_deducted_diagnostics(
     modelo: str,
     period_token: str,
     filing_year: int,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Resolve the selected declaration before the generic diagnostic seam."""
     del casilla_values, modelo, period_token, filing_year, observation_repository
@@ -68,7 +68,7 @@ def collect_prior_payment_minoracion_not_captured_diagnostics(
     modelo: str,
     period_token: str,
     filing_year: int,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Resolve the selected declaration before the generic diagnostic seam."""
     del modelo, period_token, filing_year, observation_repository

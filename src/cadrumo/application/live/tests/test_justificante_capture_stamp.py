@@ -38,7 +38,7 @@ def test_stamp_registers_justificante_and_marks_filing_live_captured() -> None:
     _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
     snapshot = _persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         filing_year=2026,
         period="1T",
     )
@@ -86,7 +86,7 @@ def test_stamp_keeps_existing_matching_aeat_evidence_without_rewriting_event() -
     )
     snapshot = _persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         filing_year=2026,
         period="1T",
     )
@@ -125,7 +125,7 @@ def test_stamp_refuses_to_overwrite_existing_different_aeat_evidence() -> None:
     )
     snapshot = _persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         filing_year=2026,
         period="1T",
     )
@@ -161,7 +161,7 @@ def test_stamp_refuses_when_snapshot_csv_disagrees_with_parsed_receipt() -> None
     _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
     snapshot = _persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         filing_year=2026,
         period="1T",
     ).model_copy(update={"csv": "DIFFERENTCSV12345"})
@@ -208,7 +208,7 @@ def test_stamp_accepts_a_capture_whose_expediente_is_not_the_receipt_presentatio
     _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
     captured = _persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         filing_year=2026,
         period="1T",
     )
@@ -268,7 +268,7 @@ def test_stamp_refuses_non_active_live_capture_snapshot() -> None:
     _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
     active_snapshot = _persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         filing_year=2026,
         period="1T",
     )
@@ -309,7 +309,7 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_year() -> None:
     _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2025, period="1T")
     snapshot = _persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         filing_year=2025,
         period="1T",
     )
@@ -344,7 +344,7 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_period() -> Non
     _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="2T")
     snapshot = _persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         filing_year=2026,
         period="2T",
     )
@@ -382,7 +382,7 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_profile_tax_id() -> No
     _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
     snapshot = _persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         filing_year=2026,
         period="1T",
     )
@@ -416,7 +416,7 @@ def test_stamp_refuses_when_no_current_filing_exists() -> None:
     _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     snapshot = _persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         filing_year=2026,
         period="1T",
     )

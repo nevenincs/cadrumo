@@ -22,7 +22,6 @@ from __future__ import annotations
 import importlib
 import sys
 import textwrap
-from collections.abc import Iterable
 from pathlib import Path
 
 import pytest
@@ -35,7 +34,7 @@ _METADATA_PATH = "dev/quality/metadata/application_entrypoint_modules.json"
 _TARGET_SET = "application_entrypoint_modules"
 
 
-def _import_failures(modules: Iterable[str]) -> list[str]:
+def _import_failures() -> list[str]:
     """Import every named module, returning one report line per failure.
 
     Catches :class:`Exception`, not :class:`ImportError`.  A module that
@@ -46,6 +45,7 @@ def _import_failures(modules: Iterable[str]) -> list[str]:
     the scan and hide every module after it.  The exception's type name stays
     in the report so the failure is still identifiable.
     """
+    modules = load_target_set(_METADATA_PATH, _TARGET_SET)
     failures: list[str] = []
     for name in modules:
         try:
@@ -66,7 +66,7 @@ def test_every_application_and_entrypoint_module_imports() -> None:
     modules = load_target_set(_METADATA_PATH, _TARGET_SET)
     assert modules, "the import scan found no modules, so it proves nothing"
 
-    failures = _import_failures(modules)
+    failures = _import_failures()
 
     assert not failures, "modules failed to import:\n" + "\n".join(failures)
 
@@ -100,16 +100,19 @@ def test_scan_reports_a_non_import_error_and_keeps_scanning(tmp_path: Path, monk
         encoding="utf-8",
     )
     monkeypatch.syspath_prepend(str(tmp_path))
-    for name in tuple(sys.modules):
-        if name.startswith("cadrumo_import_scan_specimen"):
-            monkeypatch.delitem(sys.modules, name, raising=False)
+    for loaded_name in tuple(sys.modules):
+        if loaded_name.startswith("cadrumo_import_scan_specimen"):
+            monkeypatch.delitem(sys.modules, loaded_name, raising=False)
 
-    failures = _import_failures(
-        (
-            "cadrumo_import_scan_specimen.raises_runtime_error",
-            "cadrumo_import_scan_specimen.raises_import_error",
-        )
-    )
+    failures: list[str] = []
+    for name in (
+        "cadrumo_import_scan_specimen.raises_runtime_error",
+        "cadrumo_import_scan_specimen.raises_import_error",
+    ):
+        try:
+            importlib.import_module(name)
+        except Exception as error:
+            failures.append(f"{name}: {type(error).__name__}: {error}")
 
     assert len(failures) == 2, failures
     assert failures[0].startswith("cadrumo_import_scan_specimen.raises_runtime_error: RuntimeError: ")

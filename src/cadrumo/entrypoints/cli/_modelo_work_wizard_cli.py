@@ -56,6 +56,7 @@ from ...application.modelo.action_errors import (
 )
 from ...application.modelo.borrador_binding import Modelo100BorradorBindingError
 from ...application.modelo.calculate_input import calculate_modelo_work_revision
+from ...application.modelo.calculation_action_ports import CalculationActionPorts
 from ...application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ...application.modelo.work_wizard import (
     ModeloWorkWizardRun,
@@ -175,6 +176,9 @@ def _drive_wizard_calculation(
     actor: str | None,
 ) -> None:
     resolved_actor = deps.resolve_actor_option(actor)
+    from .state_projection_support import calculation_action_ports_factory
+
+    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=wizard.unit.bucket_id)
     prompted = list(_run_wizard_steps(wizard, wizard.steps))
     for _attempt in range(_MAX_MISSING_INPUT_RETRIES):
         calculation_result = _run_wizard_calculation_attempt(
@@ -182,6 +186,7 @@ def _drive_wizard_calculation(
             wizard=wizard,
             actor=resolved_actor,
             prompted=prompted,
+            ports=calculation_ports,
         )
         if calculation_result is None:
             continue
@@ -202,12 +207,18 @@ def _drive_wizard_calculation(
     )
 
 
-def _wizard_calculation_inputs(unit: WorkUnit, prompted: list[tuple[ModeloWorkWizardStep, str]]) -> Any:
+def _wizard_calculation_inputs(
+    unit: WorkUnit,
+    prompted: list[tuple[ModeloWorkWizardStep, str]],
+    *,
+    ports: CalculationActionPorts,
+) -> Any:
     casilla_overrides = [f"{step.key}={value}" for step, value in prompted if step.channel == "casilla"]
     binding_overrides = [f"{step.key}={value}" for step, value in prompted if step.channel == "binding"]
     relation_overrides = [f"{step.key}={value}" for step, value in prompted if step.channel == "relation"]
     return work_calculate_input_bundle_from_cli(
         work_unit_id=unit.work_unit_id,
+        ports=ports,
         casilla=casilla_overrides or None,
         binding=binding_overrides or None,
         relation=relation_overrides or None,
@@ -230,11 +241,15 @@ def _run_wizard_calculation_attempt(
     wizard: ModeloWorkWizardRun,
     actor: str,
     prompted: list[tuple[ModeloWorkWizardStep, str]],
+    ports: CalculationActionPorts,
 ) -> ModeloWorkCalculationServiceResult | None:
-    calculation_inputs = _wizard_calculation_inputs(wizard.unit, prompted)
+    calculation_inputs = _wizard_calculation_inputs(wizard.unit, prompted, ports=ports)
     try:
         return calculate_modelo_work_revision(
-            work_unit_id=wizard.unit.work_unit_id, actor=actor, inputs=calculation_inputs
+            work_unit_id=wizard.unit.work_unit_id,
+            actor=actor,
+            inputs=calculation_inputs,
+            ports=ports,
         )
     except RegistryValidationError as exc:
         follow_up = modelo_work_wizard_follow_up_step(exc, unit=wizard.unit)

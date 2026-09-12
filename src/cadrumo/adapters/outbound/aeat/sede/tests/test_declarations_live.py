@@ -20,6 +20,8 @@ holds the read-only boundary and what the residual is.
 
 from __future__ import annotations
 
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+
 import pytest
 
 from ......core.aeat_csv import is_aeat_csv
@@ -29,6 +31,8 @@ from ..declarations_remote import extract_csv_from_url
 from ..declarations_schema import Declaracion
 from ..errors import SedeError
 from ..schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
+
+_OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 
@@ -52,6 +56,7 @@ async def _load_active_clave_session():
             settings,
             kind=AuthProviderKind.CLAVE_MOVIL,
             operation="sede-declarations-live-test",
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
         return result.session
     except CadrumoError as exc:

@@ -18,7 +18,12 @@ import typer
 from ...application.live.expedientes import capture_expedientes_bulk
 from ._app_live_auth_preflight import emit_live_auth_preflight, metric_line
 from .common import active_bucket_id_or_refuse, emit_envelope, resolve_pull_year_range
-from .state_projection_support import certificate_secret_backend_factory
+from .state_projection_support import (
+    certificate_secret_backend_factory,
+    expedientes_ports_factory,
+    operator_probe_ports,
+    operator_scope_ports,
+)
 
 
 class _ExpedientesRowDict(TypedDict):
@@ -64,7 +69,8 @@ def expedientes_pull(
     from ._app_live_expedientes_payloads import ExpedientesCaptureFailurePayload, ExpedientesCaptureResult
 
     bucket_id = active_bucket_id_or_refuse()
-    emit_live_auth_preflight(certificate_secret_backend_factory(ctx))
+    emit_live_auth_preflight(certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx))
+    ports = expedientes_ports_factory(ctx)(bucket_id=bucket_id)
     selected_modelos = tuple(modelos or ())
     if len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None:
         persisted = asyncio.run(
@@ -72,7 +78,9 @@ def expedientes_pull(
                 bucket_id=bucket_id,
                 modelo=selected_modelos[0],
                 year=year,
+                ports=ports,
                 certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+                operator_scope_ports=operator_scope_ports(ctx),
             )
         )
         result = ExpedientesCaptureResult(
@@ -100,7 +108,9 @@ def expedientes_pull(
             year_from=resolved_from,
             year_to=resolved_to,
             modelos=selected_modelos or None,
+            ports=ports,
             certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+            operator_scope_ports=operator_scope_ports(ctx),
         ),
     )
     lines = [
@@ -154,7 +164,9 @@ def expedientes_list(ctx: typer.Context) -> None:
     from ._app_live_expedientes_payloads import ExpedientesListResult, ExpedienteSnapshotSummaryPayload
 
     bucket_id = active_bucket_id_or_refuse()
-    rows = ExpedientesService().list_snapshots(bucket_id=bucket_id)
+    rows = ExpedientesService(ports=expedientes_ports_factory(ctx)(bucket_id=bucket_id)).list_snapshots(
+        bucket_id=bucket_id,
+    )
     result = ExpedientesListResult(
         bucket_id=bucket_id,
         count=len(rows),
@@ -181,7 +193,10 @@ def expedientes_show(
     from ._app_live_expedientes_payloads import ExpedienteDeclarationPayload, ExpedientesViewResult
 
     bucket_id = active_bucket_id_or_refuse()
-    record = ExpedientesService().show(bucket_id=bucket_id, snapshot_id=snapshot_id)
+    record = ExpedientesService(ports=expedientes_ports_factory(ctx)(bucket_id=bucket_id)).show(
+        bucket_id=bucket_id,
+        snapshot_id=snapshot_id,
+    )
     result = ExpedientesViewResult(
         bucket_id=bucket_id,
         snapshot_id=record.snapshot_id,
@@ -235,7 +250,9 @@ def expedientes_latest(ctx: typer.Context) -> None:
     from ._app_live_expedientes_payloads import ExpedientesLatestResult
 
     bucket_id = active_bucket_id_or_refuse()
-    record = ExpedientesService().latest(bucket_id=bucket_id)
+    record = ExpedientesService(ports=expedientes_ports_factory(ctx)(bucket_id=bucket_id)).latest(
+        bucket_id=bucket_id,
+    )
     if record is None:
         empty = ExpedientesLatestResult(bucket_id=bucket_id, snapshot_id=None)
         emit_envelope(

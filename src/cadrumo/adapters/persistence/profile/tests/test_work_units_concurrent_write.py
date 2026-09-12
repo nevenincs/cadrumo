@@ -51,13 +51,13 @@ def _work_unit(label: str) -> WorkUnit:
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
-            modelo=Modelo.M303.value,
+            modelo=Modelo("303").value,
             filing_year=2026,
             period=period,
             revision_id="2026",
         ),
         bucket_id=_BUCKET_ID,
-        modelo=Modelo.M303.value,
+        modelo=Modelo("303").value,
         filing_year=2026,
         period=period,
         revision_id="2026",

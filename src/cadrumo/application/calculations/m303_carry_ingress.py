@@ -58,6 +58,16 @@ def _required_registry_value(entries: Mapping[str, str], key: str) -> str:
     return value
 
 
+def m303_declaration_type_header_key(*, filing_year: int, period: str) -> str:
+    """Resolve the declaration-type header key for one governed M303 filing scope."""
+    entries = _selected_registry_mapping(
+        modelo="303",
+        filing_year=filing_year,
+        period=period,
+    )
+    return _required_registry_value(entries, "disposition.header_key")
+
+
 def _selected_registry_mapping(*, modelo: str, filing_year: int, period: str) -> dict[str, str]:
     """Resolve the dated carry declaration through the validated registry."""
     normalized_modelo = modelo.strip() if isinstance(modelo, str) else ""
@@ -100,6 +110,12 @@ def _selected_registry_mapping(*, modelo: str, filing_year: int, period: str) ->
         )
         if not isinstance(resolved, ResolvedMappingFact):
             raise TypeError("M303 carry declarations must resolve as a mapping fact")
+        if (
+            str(resolved.fact_id) != "modelo-303-carry-disposition-verification-mapping"
+            or resolved.date_axis is not DateAxis.FILING_PERIOD
+            or resolved.effective_date != effective_date
+        ):
+            raise ValueError("M303 carry fact resolution does not match the selected query coordinate")
         entries: dict[str, str] = {}
         for entry in resolved.payload.entries:
             if not isinstance(entry.key, str) or not isinstance(entry.value, str):
@@ -717,6 +733,7 @@ def _spliced_carry_observations(
 
 __all__ = [
     "M303CarryIngressError",
+    "m303_declaration_type_header_key",
     "normalize_m303_carry_observation_envelope",
     "resolve_available_compensation_formula_id",
     "validate_normalized_m303_carry_observation_envelope",

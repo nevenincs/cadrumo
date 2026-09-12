@@ -8,6 +8,8 @@ reader spends all three rather than collapsing the first two.
 
 from __future__ import annotations
 
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 from datetime import UTC, datetime
 
 import pytest
@@ -36,6 +38,8 @@ from ..workspace import (
 )
 from ..workspace_reader import read_local_aeat_sync_workspace_projection
 
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "00000000-0000-4000-8000-000000000001"
@@ -56,6 +60,7 @@ def _unrelated_contracts() -> OperationPublicContractSetV1:
             build_censal_operation_registration(
                 build_censal_operation_definition(
                     certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 )
             ).contract,
         )

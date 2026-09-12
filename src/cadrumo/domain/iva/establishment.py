@@ -81,9 +81,9 @@ from enum import StrEnum
 from typing import Final, NamedTuple
 
 from ...core.identity.nif_iva import (
-    NifIvaPrefix,
     iso_country_for_nif_iva_prefix,
     nif_iva_format_for_country,
+    nif_iva_prefix_for_country,
     normalise_nif_iva,
 )
 from ...core.parsing.codes import normalise_iso_3166_alpha2_jurisdiction
@@ -488,9 +488,8 @@ def country_code_for_printed_tax_identifier(printed_identifier: str | None) -> s
     if len(normalised) < _ALPHA2_LENGTH:
         return None
     candidate = normalised[:_ALPHA2_LENGTH]
-    try:
-        prefix = NifIvaPrefix(candidate)
-    except ValueError:
+    prefix = nif_iva_prefix_for_country(candidate)
+    if prefix is None:
         return None
     spec = nif_iva_format_for_country(prefix.value)
     if spec is None or not spec.pattern.match(normalised):

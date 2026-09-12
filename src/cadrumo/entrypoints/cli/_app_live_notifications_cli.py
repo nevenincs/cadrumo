@@ -48,6 +48,7 @@ from ...application.live.notifications import (
 from ...core.config import Settings, load_settings
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ..live_state_composition import compose_notifications_ports
 from ._app_live_auth_preflight import emit_live_auth_preflight
 from ._app_live_notifications_payloads import (
     NotificationDocumentHistoryEntry,
@@ -63,7 +64,7 @@ from ._app_live_notifications_payloads import (
     SancionReadingPayload,
 )
 from .common import active_bucket_id_or_refuse, emit_envelope, notice_lines
-from .state_projection_support import certificate_secret_backend_factory
+from .state_projection_support import certificate_secret_backend_factory, operator_probe_ports, operator_scope_ports
 
 if TYPE_CHECKING:
     from ...domain.notifications.sancion import SancionLiquidacion
@@ -93,11 +94,14 @@ def notifications_pull(ctx: typer.Context) -> None:
     :class:`NotificationsCaptureResult`.
     """
     bucket_id = active_bucket_id_or_refuse()
-    emit_live_auth_preflight(certificate_secret_backend_factory(ctx))
+    notifications_ports = compose_notifications_ports(settings=load_settings())
+    emit_live_auth_preflight(certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx))
     persisted = asyncio.run(
         capture_notifications(
             bucket_id=bucket_id,
             certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+            operator_scope_ports=operator_scope_ports(ctx),
+            ports=notifications_ports,
         )
     )
     result = NotificationsCaptureResult(
@@ -126,7 +130,8 @@ def notifications_list(ctx: typer.Context) -> None:
     expanding notification rows.
     """
     bucket_id = active_bucket_id_or_refuse()
-    rows = NotificationsService().list_snapshots(bucket_id=bucket_id)
+    notifications_ports = compose_notifications_ports(settings=load_settings())
+    rows = NotificationsService(ports=notifications_ports).list_snapshots(bucket_id=bucket_id)
     result = NotificationsListResult(
         bucket_id=bucket_id,
         count=len(rows),
@@ -156,7 +161,8 @@ def notifications_show(
     acknowledge, submit, or mark notifications remotely.
     """
     bucket_id = active_bucket_id_or_refuse()
-    record = NotificationsService().show(bucket_id=bucket_id, snapshot_id=snapshot_id)
+    notifications_ports = compose_notifications_ports(settings=load_settings())
+    record = NotificationsService(ports=notifications_ports).show(bucket_id=bucket_id, snapshot_id=snapshot_id)
     result = NotificationsViewResult(
         bucket_id=bucket_id,
         snapshot_id=record.snapshot_id,
@@ -202,7 +208,8 @@ def notifications_latest(ctx: typer.Context) -> None:
     can distinguish no local capture from a live-read failure.
     """
     bucket_id = active_bucket_id_or_refuse()
-    record = NotificationsService().latest(bucket_id=bucket_id)
+    notifications_ports = compose_notifications_ports(settings=load_settings())
+    record = NotificationsService(ports=notifications_ports).latest(bucket_id=bucket_id)
     if record is None:
         empty = NotificationsLatestResult(bucket_id=bucket_id, snapshot_id=None)
         emit_envelope(
@@ -388,14 +395,18 @@ def notifications_document_pull(
     refused before any request crosses the wire.
     """
     bucket_id = active_bucket_id_or_refuse()
-    emit_live_auth_preflight(certificate_secret_backend_factory(ctx))
-    service = _notification_document_service(load_settings())
+    emit_live_auth_preflight(certificate_secret_backend_factory(ctx), operator_probe_ports(ctx), operator_scope_ports(ctx))
+    settings = load_settings()
+    service = _notification_document_service(settings)
+    notifications_ports = compose_notifications_ports(settings=settings)
     custody = asyncio.run(
         pull_notification_document(
             bucket_id=bucket_id,
             certificado_id=certificado_id,
             service=service,
             certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+            operator_scope_ports=operator_scope_ports(ctx),
+            ports=notifications_ports,
         )
     )
     record = custody.record

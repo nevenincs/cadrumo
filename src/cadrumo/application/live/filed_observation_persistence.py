@@ -14,7 +14,7 @@ See Also:
     :class:`~ExternalEvidenceKind`
         Closed evidence-kind catalogue; live captures stamp
         ``AEAT_LIVE_CAPTURE``.
-    :class:`cadrumo.application.calculations.CalculationObservationRepository`
+    :class:`cadrumo.application.calculations.CalculationObservationRepositoryProtocol`
         Repository that receives the registry-grounded filed-declaration
         observations consumed by cross-period resolvers.
 """

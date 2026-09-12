@@ -20,7 +20,7 @@ from ....domain.modelos.calculation_revision_amendment import CalculationRevisio
 from ...modelo.action_errors import ExternalModeloImportError
 from ...modelo.amendment_actions import amend_modelo_revision
 from ...modelo.calculation_actions import get_calculation_revision
-from ...modelo.tests.import_flow_support import seed_ready_profile
+from ....adapters.persistence.profile.tests.import_flow_support import seed_ready_profile
 from ..filed_data_capture import _CaptureAccumulator
 from ._filed_capture_history_support import (
     _CAPTURED_AT,

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+
 import ast
 import asyncio
 import importlib
@@ -12,7 +14,6 @@ from pathlib import Path
 
 import pytest
 
-from ..declarations import DeclaracionesRegisterSession
 from ..schema import FiledDeclarationAvailability, FiledDeclarationAvailabilityReport
 from .....persistence.operations.journal import OperationJournalRepository
 from .....persistence.operations.lease import OperationLeaseFilesystemRepository
@@ -31,7 +32,11 @@ from ......core.operations import (
 )
 from ......core.register_scoping_signal import RegisterScopingSignal
 from ......domain.deadlines.models import IVARegime, TaxpayerProfile
-from .declarations_register_test_support import aeat_sede_fixture, open_routed_declarations_register
+from .declarations_register_test_support import (
+    RoutedFiledDataCapturePort,
+    aeat_sede_fixture,
+    open_routed_declarations_register,
+)
 from ......application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
@@ -66,11 +71,13 @@ from ......application.live.filed_history_operation import (
     FILED_HISTORY_PHASE_RESULT,
     FILED_HISTORY_PHASE_SETTLEMENT,
     FiledHistoryOperationRequest,
-    _settled_effect,
+    settled_filed_history_effect,
     build_filed_history_operation_definition,
     build_filed_history_operation_registration,
 )
 from ......application.live.tests.filed_observation_test_support import in_memory_filed_observation_test_bundle
+
+_OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -97,9 +104,11 @@ class _DeterministicFiledHistoryDiscovery:
     async def __call__(
         self,
         *,
+        filed_data_port,
         profile: TaxpayerProfile | None = None,
         today: date | None = None,
     ) -> FiledHistoryDiscoveryReport:
+        del filed_data_port
         self.profile = profile
         del today
         if self._entered is not None:
@@ -122,24 +131,23 @@ class _DeterministicFiledHistoryDiscovery:
 
 def _local_pull(
     discover: FiledHistoryDiscoveryPort,
-    *,
-    register: DeclaracionesRegisterSession | None = None,
 ):
     """Bind the canonical composition to deterministic discovery/register inputs."""
 
-    async def pull(payload, profile, repository, events, ports, iva_remote_state_port):
+    async def pull(payload, profile, repository, events, ports, filed_data_port, iva_remote_state_port):
         return await pull_filed_history(
             iva_remote_state_port=iva_remote_state_port,
             ports=ports,
+            filed_data_port=filed_data_port,
             output_root=payload.output_root,
             profile=profile,
             today=payload.today,
             limit=payload.limit,
             dry_run=payload.dry_run,
             discover=discover,
-            register=register,
             sync_run_repository=repository,
             events=events,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
 
     return pull
@@ -157,20 +165,21 @@ def _routed_pull(discover: FiledHistoryDiscoveryPort):
     """Run canonical composition through the real locally routed register adapter."""
     document = aeat_sede_fixture("declaraciones-register-form-complete-synthetic")
 
-    async def pull(payload, profile, repository, events, ports, iva_remote_state_port):
+    async def pull(payload, profile, repository, events, ports, filed_data_port, iva_remote_state_port):
         async with open_routed_declarations_register((document,), ver_click_timeout_ms=1500) as (register, routed):
             run = await pull_filed_history(
                 iva_remote_state_port=iva_remote_state_port,
                 ports=ports,
+                filed_data_port=RoutedFiledDataCapturePort(register),
                 output_root=payload.output_root,
                 profile=profile,
                 today=payload.today,
                 limit=payload.limit,
                 dry_run=payload.dry_run,
                 discover=discover,
-                register=register,
                 sync_run_repository=repository,
                 events=events,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             )
             assert not routed.pending
             return run
@@ -186,10 +195,11 @@ def _composition_discovery(
 
     async def discover(
         *,
+        filed_data_port,
         profile: TaxpayerProfile | None = None,
         today: date | None = None,
     ) -> FiledHistoryDiscoveryReport:
-        del profile, today
+        del filed_data_port, profile, today
         return FiledHistoryDiscoveryReport(
             pairs=pairs,
             register_options_read=True,
@@ -214,10 +224,12 @@ def _run_composition(*pairs: FiledHistoryDiscoveryPair, tmp_path: Path, dry_run:
         pull_filed_history(
             iva_remote_state_port=bundle.iva_remote_state_port,
             ports=bundle.ports,
+            filed_data_port=bundle.filed_data_port,
             output_root=tmp_path,
             today=date(2026, 3, 15),
             dry_run=dry_run,
             discover=_composition_discovery(*pairs),
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         ),
     )
 
@@ -242,8 +254,10 @@ def test_canonical_composition_preserves_the_discovery_scoping_signal(tmp_path: 
         pull_filed_history(
             iva_remote_state_port=bundle.iva_remote_state_port,
             ports=bundle.ports,
+            filed_data_port=bundle.filed_data_port,
             output_root=tmp_path,
             discover=discovery,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
     )
 
@@ -271,8 +285,10 @@ def test_canonical_composition_empty_discovery_short_circuits_truthfully(tmp_pat
         pull_filed_history(
             iva_remote_state_port=bundle.iva_remote_state_port,
             ports=bundle.ports,
+            filed_data_port=bundle.filed_data_port,
             output_root=tmp_path,
             discover=discovery,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
     )
 
@@ -657,7 +673,7 @@ def test_settled_effect_classifies_only_committed_units(
     expected: OperationEffect,
 ) -> None:
     """A completed canonical result never leaves normal zero writes unknown."""
-    assert _settled_effect(run) is expected
+    assert settled_filed_history_effect(run) is expected
 
 
 def test_filed_history_operation_contract_has_one_public_defining_module() -> None:

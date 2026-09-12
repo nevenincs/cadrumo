@@ -42,7 +42,7 @@ from ...domain.calculations.registry.profile_grounding import (
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.contribuyente.entity_type import EntityType
+from ...domain.contribuyente.entity_type import entity_type_natural_person_token
 from ...domain.deadlines.models import IrpfIncomeCategory
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError
@@ -126,7 +126,7 @@ def _modelo_work_baseline_paths(record: UserProfileRecord, *, modelo: str | None
     declares_economic_activity = IrpfIncomeCategory.ACTIVIDAD_ECONOMICA.value in income_categories
     if modelo is None:
         if (
-            values.get("taxpayer_type.entity_type") != EntityType.NATURAL_PERSON.value
+            values.get("taxpayer_type.entity_type") != entity_type_natural_person_token().value
             or not income_categories
             or declares_economic_activity
         ):

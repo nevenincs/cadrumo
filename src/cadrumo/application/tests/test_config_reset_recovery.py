@@ -13,6 +13,8 @@ handoff between the two processes.
 
 from __future__ import annotations
 
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 import json
 import os
 import subprocess
@@ -32,6 +34,13 @@ from .test_config_reset import (
     _isolated_reset_root,
     _persist_filing,
 )
+
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
+
+def _bucket_dir(root: Path, bucket_id: str) -> Path:
+    """Return a test bucket directory through the application test seam."""
+    return root / "buckets" / bucket_id
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -320,7 +329,6 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
     tmp_path: Path,
     boundary: str,
 ) -> None:
-    from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
     from ...adapters.persistence.storage.sql.engine import dispose_engine
     from ...core.bucket_pointer import read_pointer
     from .._config_reset_repository import ConfigResetJournalRepository
@@ -334,7 +342,7 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
         with open_test_profile_session(_PROFILE_A_ID):
-            configure_operator_auth("certificate")
+            configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
         if boundary == "snapshotted":
             _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="7")
         dispose_engine()
@@ -354,7 +362,7 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
         if boundary == "pointer_reconciling_after_effect":
             assert read_pointer(root).bucket_id is None
         if boundary == "deleting_after_effect":
-            assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.exists() is False
+            assert _bucket_dir(root, _PROFILE_A_ID).exists() is False
 
         resumed_process = _run_fresh_resume(root, interrupted.operation_id)
         resumed = ConfigResetOperation.model_validate_json(resumed_process.stdout)
@@ -363,7 +371,7 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
         assert resumed.summary.target_count == 1
         assert resumed.summary.deleted_count == 1
         assert resumed.targets[0].phase is ConfigResetTargetPhase.DELETED
-        assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.exists() is False
+        assert _bucket_dir(root, _PROFILE_A_ID).exists() is False
         assert read_pointer(root).bucket_id is None
         assert repository.load(interrupted.operation_id) == resumed
 
@@ -395,6 +403,7 @@ def test_pointer_reconciling_resume_refuses_a_later_absent_tombstone(tmp_path: P
             confirmed=True,
             acknowledge_retention_override=True,
             retention_override_reason=_OVERRIDE_REASON,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
         assert resumed.status is ConfigResetOperationStatus.PAUSED
         assert resumed.pause_reason is ConfigResetPauseReason.POINTER_CHANGED
@@ -405,7 +414,6 @@ def test_fresh_resume_canonicalizes_journal_bucket_identity_before_target_lock(
     tmp_path: Path,
 ) -> None:
     """A whitespace-bearing durable identity resumes under its canonical lock key."""
-    from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
     from .._config_reset_repository import ConfigResetJournalRepository
     from ..config_reset_models import ConfigResetOperation, ConfigResetOperationStatus
 
@@ -427,14 +435,13 @@ def test_fresh_resume_canonicalizes_journal_bucket_identity_before_target_lock(
 
         assert resumed.status is ConfigResetOperationStatus.COMPLETE
         assert resumed.targets[0].bucket_id == _PROFILE_A_ID
-        assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.exists() is False
+        assert _bucket_dir(root, _PROFILE_A_ID).exists() is False
 
 
 def test_resume_refuses_malformed_journal_identity_before_target_lock(
     tmp_path: Path,
 ) -> None:
     """An invalid journal target is an application error before deletion can start."""
-    from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
     from .._config_reset_repository import ConfigResetJournalRepository
     from ..config_reset import ConfigResetError, resume_config_reset
 
@@ -452,10 +459,10 @@ def test_resume_refuses_malformed_journal_identity_before_target_lock(
         journal_path.write_text(json.dumps(document), encoding="utf-8")
 
         with pytest.raises(ConfigResetError) as raised:
-            resume_config_reset(interrupted.operation_id, confirmed=True)
+            resume_config_reset(interrupted.operation_id, confirmed=True, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
         assert raised.value.context == {"operation_id": interrupted.operation_id, "journal_corrupt": True}
-        assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.is_dir()
+        assert _bucket_dir(root, _PROFILE_A_ID).is_dir()
 
 
 def test_a_deletion_marker_cannot_attest_an_erase_that_is_not_its_own(tmp_path: Path) -> None:
@@ -474,7 +481,6 @@ def test_a_deletion_marker_cannot_attest_an_erase_that_is_not_its_own(tmp_path: 
     """
     from pydantic import ValidationError
 
-    from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
     from ...adapters.persistence.storage.sql.engine import dispose_engine
     from .._config_reset_repository import ConfigResetJournalRepository
     from ..config_reset_models import ConfigResetOperation
@@ -491,7 +497,7 @@ def test_a_deletion_marker_cannot_attest_an_erase_that_is_not_its_own(tmp_path: 
         assert interrupted is not None
         target = interrupted.targets[0]
         assert target.deletion_marker is not None
-        assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.exists() is False
+        assert _bucket_dir(root, _PROFILE_A_ID).exists() is False
 
         def _rebuilt_with(marker_update: dict[str, str]) -> None:
             deletion_marker = target.deletion_marker

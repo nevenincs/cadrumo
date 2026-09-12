@@ -43,6 +43,7 @@ from ..core.paths import (
     windows_long_paths_enabled,
     windows_storage_root_long_path_margin,
 )
+from .auth.operator_probe_ports import OperatorProbePorts
 from .auth.probes import ProviderProbeResult
 from .operator_actions.models import ActionReference, ConditionEvidence, PreconditionVerdict
 
@@ -218,7 +219,11 @@ def grade_provider_probe_result(
     return HealthSeverity.ERROR, False
 
 
-def probe_auth_providers(*, settings: Settings | None = None) -> tuple[PreflightCheck, ...]:
+def probe_auth_providers(
+    *,
+    operator_probe_ports: OperatorProbePorts,
+    settings: Settings | None = None,
+) -> tuple[PreflightCheck, ...]:
     """Probe each auth provider's local certificate / Cl@ve Móvil configuration.
 
     Runs the pure-local per-provider probe for every
@@ -239,7 +244,11 @@ def probe_auth_providers(*, settings: Settings | None = None) -> tuple[Preflight
     for kind in AuthProviderKind:
         check_id = f"auth-provider:{kind.value}"
         try:
-            probe = probe_provider_configuration(kind.value, settings=settings)
+            probe = probe_provider_configuration(
+                kind.value,
+                settings=settings,
+                operator_probe_ports=operator_probe_ports,
+            )
         except CadrumoError as exc:  # never crash the doctor on a probe failure
             facts = {"provider": kind.value, "probe_error_type": type(exc).__name__}
             rows.append(
@@ -529,6 +538,7 @@ def probe_portal_registry_health() -> PreflightCheck:
 def run_preflight_checks(
     *,
     object_path_suffix_length: int,
+    operator_probe_ports: OperatorProbePorts,
     settings: Settings | None = None,
 ) -> tuple[PreflightCheck, ...]:
     """Run every workstation-preflight probe and return the typed :class:`PreflightCheck` rows.
@@ -542,7 +552,7 @@ def run_preflight_checks(
     """
     resolved = settings if settings is not None else load_settings()
     return (
-        *probe_auth_providers(settings=resolved),
+        *probe_auth_providers(settings=resolved, operator_probe_ports=operator_probe_ports),
         *probe_storage_corpus_env(settings=resolved, object_path_suffix_length=object_path_suffix_length),
         probe_portal_registry_health(),
     )

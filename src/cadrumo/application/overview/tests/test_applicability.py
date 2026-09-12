@@ -32,7 +32,6 @@ from collections.abc import Callable
 
 import pytest
 
-from ....core.modelo import Modelo
 from ....domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
@@ -223,7 +222,7 @@ def _an_unruled_modelo() -> str:
     the engine actually reports and cannot go stale the same way.
     """
     ruled = {rule.modelo for rule in iter_modelo_applicability_rules()}
-    unruled = sorted(modelo.value for modelo in Modelo if modelo.value not in ruled)
+    unruled = sorted(definition.id for definition in bundled_authority().modelos if definition.id not in ruled)
     assert unruled, (
         "every modelo now carries an applicability rule, so the un-ruled rationale is "
         "unreachable and these two tests should be retired along with it"

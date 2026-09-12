@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+
 from datetime import UTC, datetime
 from functools import cache
 
@@ -21,6 +23,8 @@ from ......domain.submission.protocols import DeadlineWindowChecker
 
 _DRAFT_TIME = datetime(2026, 4, 10, 12, 0, tzinfo=UTC)
 
+
+_OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 def modelo_draft(
     *,
@@ -69,4 +73,4 @@ def clave_movil_provider(*, identity: str | None) -> AuthProvider:
         cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
         cadrumo_clave_movil_dni_nie=SecretStr(identity or ""),
     )
-    return select_provider(AuthProviderKind.CLAVE_MOVIL, settings=settings)
+    return select_provider(AuthProviderKind.CLAVE_MOVIL, settings=settings, operator_scope_ports=_OPERATOR_SCOPE_PORTS)

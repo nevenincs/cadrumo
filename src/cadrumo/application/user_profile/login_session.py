@@ -44,42 +44,31 @@ See Also:
 
 from __future__ import annotations
 
-import json
 import os
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, NoReturn, cast
+from typing import TYPE_CHECKING, NoReturn
 from uuid import UUID
 
-from pydantic import BaseModel, ValidationError, model_validator
+from pydantic import BaseModel
 
 from ...core.bucket_pointer import BucketPointer, resolve_active_bucket_id
 from ...core.config import load_settings
-from ...core.hashing import (
-    bounded_canonical_json_bytes,
-    reject_duplicate_json_members,
-    reject_json_constant,
-)
 from ...core.identity.bucket import BucketId
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.paths import effective_storage_root
 from ...core.profile_session import ProfileSessionRefusalReason
-from ...core.storage_taxonomy import StorageCategory
-from ...core.storage_taxonomy_locations import storage_location
 from ...core.time.clock import now as _now
-from ...core.time.utc import validate_utc_aware
 from ...domain.user_profile.errors import ProfileNotFoundError, UserProfileError
 from .authentication import ProfilePasswordProofOperation
 from .capsule_record import ProfileRecordSession
 from .custody_ports import (
-    ProfileCustodyLocalRecordStore,
     ProfileCustodyPasswordMaterialPort,
     default_profile_bucket_event_history_repository,
-    default_profile_custody_local_record_store,
     load_profile_custody_password_material,
     map_profile_authentication_proof_failure,
     profile_is_keyring_unavailable,
@@ -93,6 +82,7 @@ from .login_session_port import (
     ProfileSessionResumeOutcomePort,
     profile_login_session_port,
 )
+from .login_handover import HandoverPhase, ProfileLoginHandoverJournal
 from .profile_pointer import (
     ActiveProfilePointerTransaction,
     ActiveProfilePointerTransactionError,
@@ -110,105 +100,18 @@ if TYPE_CHECKING:
 
 _log = get_logger(__name__)
 
-_HANDOVER_JOURNAL_FILENAME = "profile-login-handover.v2.json"
-_HANDOVER_JOURNAL_MAX_BYTES = 4 * 1024
-
 
 def _profile_login_sessions() -> ProfileLoginSessionPort:
     """Resolve the login-session aggregate composed for this host context."""
     return profile_login_session_port()
 
 
-class _HandoverPhase(StrEnum):
-    """Durable boundaries of one password-authenticated profile handover."""
-
-    PREPARED = "prepared"
-    POINTER_PUBLISHED = "pointer_published"
-    B_BOUND = "b_bound"
-    ACCELERATED = "accelerated"
-    ACTIVATED = "activated"
-    A_RETIRED = "a_retired"
-
-
-_HANDOVER_PREDECESSOR: dict[_HandoverPhase, _HandoverPhase] = {
-    _HandoverPhase.POINTER_PUBLISHED: _HandoverPhase.PREPARED,
-    _HandoverPhase.B_BOUND: _HandoverPhase.POINTER_PUBLISHED,
-    _HandoverPhase.ACCELERATED: _HandoverPhase.B_BOUND,
-    _HandoverPhase.ACTIVATED: _HandoverPhase.ACCELERATED,
-    _HandoverPhase.A_RETIRED: _HandoverPhase.ACTIVATED,
-}
-_HANDOVER_PHASE_INDEX: dict[_HandoverPhase, int] = {
-    _HandoverPhase.PREPARED: 0,
-    _HandoverPhase.POINTER_PUBLISHED: 1,
-    _HandoverPhase.B_BOUND: 2,
-    _HandoverPhase.ACCELERATED: 3,
-    _HandoverPhase.ACTIVATED: 4,
-    _HandoverPhase.A_RETIRED: 5,
-}
-
-
-class _ProfileLoginHandoverJournal(BaseModel):
-    """Non-secret recovery witness for the short A-to-B handover window."""
-
-    model_config = _STRICT_FROZEN
-
-    schema_version: Literal[2] = 2
-    phase: _HandoverPhase
-    profile_a: BucketId | None
-    profile_b: BucketId
-    pointer_before: BucketPointer
-    pointer_after: BucketPointer
-    activation_at: datetime
-
-    @model_validator(mode="after")
-    def _validate_journal(self) -> _ProfileLoginHandoverJournal:
-        """Keep recovery time deterministic and safe to replay as an event key."""
-        validate_utc_aware(self.activation_at)
-        if self.pointer_after.bucket_id != self.profile_b:
-            raise ValueError("handover pointer-after selection must name profile B")
-        if self.pointer_after != self.pointer_before and (
-            self.pointer_after.transition_revision != self.pointer_before.transition_revision + 1
-        ):
-            raise ValueError("handover pointer transition revision must advance exactly once when selection changes")
-        return self
-
-    @classmethod
-    def prepare(
-        cls,
-        *,
-        profile_a: str | None,
-        profile_b: str,
-        pointer_before: BucketPointer,
-        pointer_after: BucketPointer,
-        activation_at: datetime,
-    ) -> _ProfileLoginHandoverJournal:
-        """Capture the one non-secret transition before pointer publication."""
-        return cls(
-            phase=_HandoverPhase.PREPARED,
-            profile_a=profile_a,
-            profile_b=profile_b,
-            pointer_before=pointer_before,
-            pointer_after=pointer_after,
-            activation_at=activation_at,
-        )
-
-    def at_phase(self, phase: _HandoverPhase) -> _ProfileLoginHandoverJournal:
-        """Return this exact handover witnessed at its next durable phase."""
-        return self.model_copy(update={"phase": phase})
-
-    def at_least_phase(self, phase: _HandoverPhase) -> _ProfileLoginHandoverJournal:
-        """Advance a recovery receipt without ever regressing its durable phase."""
-        if _HANDOVER_PHASE_INDEX[self.phase] >= _HANDOVER_PHASE_INDEX[phase]:
-            return self
-        return self.at_phase(phase)
-
-    def canonical_json_bytes(self) -> bytes:
-        """Return the journal's one bounded, byte-exact persistence form."""
-        return bounded_canonical_json_bytes(
-            self.model_dump(mode="json"),
-            maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES,
-            subject="profile login handover journal",
-        )
+def _refuse_handover(reason: str) -> NoReturn:
+    """Fail closed when the active pointer diverges from a witnessed handover."""
+    raise ActiveProfilePointerTransactionError(
+        translated_message="errors.integrity.integrity_storage_profile_custody_record",
+        context={"owner": "profile-login-handover", "reason": reason},
+    )
 
 
 class ProfileLoginThrottledError(UserProfileError):
@@ -306,7 +209,7 @@ class _HandoverRecovery:
     is moving away from once that happened in an earlier process.
     """
 
-    interrupted: _ProfileLoginHandoverJournal | None = None
+    interrupted: ProfileLoginHandoverJournal | None = None
     completed_selection: str | None = None
 
 
@@ -319,7 +222,7 @@ class _LoginAttempt:
     prior_pointer: BucketPointer
     pointer_transaction: ActiveProfilePointerTransaction
     storage_root: Path
-    interrupted_handover: _ProfileLoginHandoverJournal | None
+    interrupted_handover: ProfileLoginHandoverJournal | None
     completed_selection: str | None = None
 
 
@@ -327,7 +230,7 @@ class _LoginAttempt:
 class _HandoverPublication:
     """Durable pointer publication returned before candidate binding."""
 
-    journal: _ProfileLoginHandoverJournal
+    journal: ProfileLoginHandoverJournal
     published_pointer: BucketPointer
 
 
@@ -335,7 +238,7 @@ class _HandoverPublication:
 class _CandidatePromotionResult:
     """Candidate state that is safe to retire A against."""
 
-    journal: _ProfileLoginHandoverJournal
+    journal: ProfileLoginHandoverJournal
     previous_record: ProfileRecordSession | None
     persisted: bool
 
@@ -352,141 +255,6 @@ def _bucket_session_windows() -> tuple[int, int]:
         settings.cadrumo_bucket_default_idle_lock_minutes,
         settings.cadrumo_bucket_default_session_absolute_minutes,
     )
-
-
-def _handover_journal_path(storage_root: Path) -> Path:
-    """Return the one root-local journal for an in-flight profile switch."""
-    return (
-        storage_root / storage_location(StorageCategory.OPERATION_JOURNAL).relative_path() / _HANDOVER_JOURNAL_FILENAME
-    )
-
-
-def _handover_journal_directory(storage_root: Path) -> Path:
-    """Return the one anchored local-record parent for the handover witness."""
-    return storage_root / storage_location(StorageCategory.OPERATION_JOURNAL).relative_path()
-
-
-def _parse_handover_journal(payload: bytes) -> _ProfileLoginHandoverJournal:
-    """Decode only the journal's exact bounded canonical JSON form."""
-    if len(payload) > _HANDOVER_JOURNAL_MAX_BYTES:
-        _refuse_handover_journal("journal exceeds its byte limit")
-    try:
-        document = json.loads(
-            payload.decode("utf-8", errors="strict"),
-            object_pairs_hook=reject_duplicate_json_members,
-            parse_constant=reject_json_constant,
-        )
-        if not isinstance(document, dict):
-            raise ValueError("handover journal must be a JSON object")
-        canonical = bounded_canonical_json_bytes(
-            cast(dict[str, object], document),
-            maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES,
-            subject="profile login handover journal",
-        )
-        journal = _ProfileLoginHandoverJournal.model_validate_json(canonical)
-        if journal.canonical_json_bytes() != payload:
-            raise ValueError("handover journal bytes are not canonical")
-        return journal
-    except (UnicodeDecodeError, json.JSONDecodeError, ValidationError, ValueError, TypeError):
-        _refuse_handover_journal("journal is malformed or noncanonical")
-
-
-def _handover_journal_store() -> ProfileCustodyLocalRecordStore:
-    """Resolve the one application port for root-local custody records."""
-    return default_profile_custody_local_record_store()
-
-
-def _ensure_handover_journal_directory(*, storage_root: Path, store: ProfileCustodyLocalRecordStore) -> Path:
-    """Anchor the journal parent before any local record operation."""
-    directory = _handover_journal_directory(storage_root)
-    try:
-        store.ensure_directory(directory)
-    except Exception:
-        _refuse_handover_journal("journal directory cannot be anchored")
-    return directory
-
-
-def _refuse_handover_journal(reason: str) -> NoReturn:
-    """Fail closed when a durable handover witness cannot be trusted."""
-    raise ActiveProfilePointerTransactionError(
-        translated_message="errors.integrity.integrity_storage_profile_custody_record",
-        context={"owner": "profile-login-handover", "reason": reason},
-    )
-
-
-def _save_handover_journal(*, storage_root: Path, journal: _ProfileLoginHandoverJournal) -> None:
-    """Durably publish one complete non-secret handover phase under root lock."""
-    try:
-        store = _handover_journal_store()
-        _ensure_handover_journal_directory(storage_root=storage_root, store=store)
-        if journal.phase is _HandoverPhase.PREPARED:
-            predecessor = None
-        else:
-            predecessor = journal.at_phase(_HANDOVER_PREDECESSOR[journal.phase]).canonical_json_bytes()
-        path = _handover_journal_path(storage_root)
-        current = journal.canonical_json_bytes()
-        store.compare_and_replace_same_or_predecessor(
-            path,
-            current=current,
-            predecessor=predecessor,
-            maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES,
-        )
-        # The first receipt atomically publishes its target and retains only
-        # its exact predecessor as a recoverable cleanup sidecar. Repeating
-        # the same canonical receipt has no target write; it removes that
-        # verified sidecar or fails closed so a future retry can converge.
-        store.compare_and_replace_same_or_predecessor(
-            path,
-            current=current,
-            predecessor=predecessor,
-            maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES,
-        )
-    except Exception:
-        _refuse_handover_journal("journal compare-and-replace differs from the exact transition")
-
-
-def _load_handover_journal(*, storage_root: Path) -> _ProfileLoginHandoverJournal | None:
-    """Load the sole bounded in-flight witness, refusing malformed replacement."""
-    try:
-        store = _handover_journal_store()
-        _ensure_handover_journal_directory(storage_root=storage_root, store=store)
-        payload = store.read_optional(_handover_journal_path(storage_root), maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES)
-    except Exception:
-        _refuse_handover_journal("journal cannot be anchored and read")
-    if payload is None:
-        return None
-    return _parse_handover_journal(payload)
-
-
-def _clear_handover_journal(*, storage_root: Path, journal: _ProfileLoginHandoverJournal) -> None:
-    """Remove the completed or fully rolled-back witness under root lock."""
-    try:
-        store = _handover_journal_store()
-        _ensure_handover_journal_directory(storage_root=storage_root, store=store)
-        current = journal.canonical_json_bytes()
-        predecessor = (
-            None
-            if journal.phase is _HandoverPhase.PREPARED
-            else journal.at_phase(_HANDOVER_PREDECESSOR[journal.phase]).canonical_json_bytes()
-        )
-        path = _handover_journal_path(storage_root)
-        # A crash can leave the publication target plus only its exact
-        # predecessor sidecar. Re-submit the same receipt first: this is a
-        # target no-op that clears that verified sidecar before the terminal
-        # compare-and-clear removes the journal itself.
-        store.compare_and_replace_same_or_predecessor(
-            path,
-            current=current,
-            predecessor=predecessor,
-            maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES,
-        )
-        store.compare_and_clear(
-            path,
-            expected=current,
-            maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES,
-        )
-    except Exception:
-        _refuse_handover_journal("journal compare-and-clear differs from the exact transition")
 
 
 def _recover_interrupted_handover(
@@ -521,12 +289,12 @@ def _recover_interrupted_handover(
     still judged against the pointer and still fails closed when that pointer
     is unrecognisable.
     """
-    journal = _load_handover_journal(storage_root=storage_root)
+    journal = _profile_login_sessions().load_handover_journal(storage_root=storage_root)
     if journal is None:
         return _HandoverRecovery()
-    if journal.phase is _HandoverPhase.A_RETIRED:
+    if journal.phase is HandoverPhase.A_RETIRED:
         _complete_witnessed_retirement(storage_root=storage_root, journal=journal)
-        _clear_handover_journal(storage_root=storage_root, journal=journal)
+        _profile_login_sessions().clear_handover_journal(storage_root=storage_root, journal=journal)
         return _HandoverRecovery(completed_selection=journal.profile_b)
     current = pointer_transaction.read()
     before = journal.pointer_before
@@ -535,18 +303,18 @@ def _recover_interrupted_handover(
         # The pointer stands where it did before this handover, so nothing it
         # selected survived and the profile it moved away from is still the
         # selected one.  There is no completed selection to carry.
-        _clear_handover_journal(storage_root=storage_root, journal=journal)
+        _profile_login_sessions().clear_handover_journal(storage_root=storage_root, journal=journal)
         return _HandoverRecovery()
     if current != after:
-        _refuse_handover_journal("pointer no longer matches either witnessed handover state")
-    if journal.phase is _HandoverPhase.ACTIVATED:
+        _refuse_handover("pointer no longer matches either witnessed handover state")
+    if journal.phase is HandoverPhase.ACTIVATED:
         _complete_witnessed_retirement(storage_root=storage_root, journal=journal)
-        _clear_handover_journal(storage_root=storage_root, journal=journal)
+        _profile_login_sessions().clear_handover_journal(storage_root=storage_root, journal=journal)
         return _HandoverRecovery(completed_selection=journal.profile_b)
     return _HandoverRecovery(interrupted=journal)
 
 
-def _complete_witnessed_retirement(*, storage_root: Path, journal: _ProfileLoginHandoverJournal) -> None:
+def _complete_witnessed_retirement(*, storage_root: Path, journal: ProfileLoginHandoverJournal) -> None:
     """Retire the profile a witnessed-complete handover may not have finished.
 
     A handover that reached activation already serves the operator, so recovery
@@ -910,7 +678,7 @@ def _prepare_login_attempt(
     target = resolve_login_target(name) if name is not None else _resolve_selected_target(selected)
     prior_pointer = selected
     if interrupted_handover is not None and target.bucket_id != interrupted_handover.profile_b:
-        _refuse_handover_journal("incomplete handover requires authenticating its B profile")
+        _refuse_handover("incomplete handover requires authenticating its B profile")
     return _LoginAttempt(
         target=target,
         selected=selected,
@@ -1160,7 +928,7 @@ def _promote_candidate_login(
     prior_pointer: BucketPointer,
     pointer_transaction: ActiveProfilePointerTransaction,
     storage_root: Path,
-    interrupted_handover: _ProfileLoginHandoverJournal | None,
+    interrupted_handover: ProfileLoginHandoverJournal | None,
     completed_selection: str | None,
 ) -> ProfileLoginOutcome:
     """CAS-publish, activate, then retire A through durable phases."""
@@ -1203,8 +971,8 @@ def _promote_candidate_login(
         retired_bucket_ids=retired_bucket_ids,
         storage_root=storage_root,
     )
-    handover = promotion.journal.at_phase(_HandoverPhase.A_RETIRED)
-    _save_handover_journal(storage_root=storage_root, journal=handover)
+    handover = promotion.journal.at_phase(HandoverPhase.A_RETIRED)
+    _profile_login_sessions().save_handover_journal(storage_root=storage_root, journal=handover)
     # Keep the terminal receipt until the next login observes it.  A process
     # may die immediately after A's zeroisation; retaining this one bounded,
     # non-secret file makes that boundary explicit and lets recovery classify
@@ -1235,7 +1003,7 @@ def _publish_candidate_handover(
     prior_pointer: BucketPointer,
     pointer_transaction: ActiveProfilePointerTransaction,
     storage_root: Path,
-    interrupted_handover: _ProfileLoginHandoverJournal | None,
+    interrupted_handover: ProfileLoginHandoverJournal | None,
 ) -> _HandoverPublication:
     """Publish a fresh pointer or validate the pointer from interrupted work."""
     if interrupted_handover is None:
@@ -1275,31 +1043,31 @@ def _publish_fresh_candidate_handover(
             transition_revision=prior_pointer.transition_revision + 1,
         )
     )
-    handover = _ProfileLoginHandoverJournal.prepare(
+    handover = ProfileLoginHandoverJournal.prepare(
         profile_a=retired_bucket_id,
         profile_b=candidate.bucket_id,
         pointer_before=prior_pointer,
         pointer_after=planned_pointer,
         activation_at=_now(),
     )
-    _save_handover_journal(storage_root=storage_root, journal=handover)
+    _profile_login_sessions().save_handover_journal(storage_root=storage_root, journal=handover)
     published = pointer_transaction.compare_and_select(expected=prior_pointer, bucket_id=candidate.bucket_id)
     if published != handover.pointer_after:
-        _refuse_handover_journal("published pointer differs from prepared B witness")
-    handover = handover.at_phase(_HandoverPhase.POINTER_PUBLISHED)
-    _save_handover_journal(storage_root=storage_root, journal=handover)
+        _refuse_handover("published pointer differs from prepared B witness")
+    handover = handover.at_phase(HandoverPhase.POINTER_PUBLISHED)
+    _profile_login_sessions().save_handover_journal(storage_root=storage_root, journal=handover)
     return _HandoverPublication(journal=handover, published_pointer=published)
 
 
 def _resume_candidate_handover(
     *,
-    interrupted_handover: _ProfileLoginHandoverJournal,
+    interrupted_handover: ProfileLoginHandoverJournal,
     pointer_transaction: ActiveProfilePointerTransaction,
 ) -> _HandoverPublication:
     """Validate the durable pointer before replaying an interrupted handover."""
     published = interrupted_handover.pointer_after
     if pointer_transaction.read() != published:
-        _refuse_handover_journal("incomplete handover B pointer changed before recovery")
+        _refuse_handover("incomplete handover B pointer changed before recovery")
     return _HandoverPublication(journal=interrupted_handover, published_pointer=published)
 
 
@@ -1320,32 +1088,32 @@ def _bind_candidate_promotion(
         # primitive treats matching bytes as a no-op, while also retiring only
         # its verified predecessor sidecar if a process died after publication
         # but before durable cleanup.  Do this before B gains any live binding.
-        _save_handover_journal(storage_root=storage_root, journal=handover)
+        _profile_login_sessions().save_handover_journal(storage_root=storage_root, journal=handover)
         # Both context bindings are in-process and do not perform I/O.  A has
         # not been closed, so an unexpected later failure can rebind it before
         # the durable pointer is restored.
         _profile_login_sessions().bind_session(candidate.session)
         previous_record = bind_active_profile_record_session(candidate.record_session)
-        bound = handover.at_least_phase(_HandoverPhase.B_BOUND)
+        bound = handover.at_least_phase(HandoverPhase.B_BOUND)
         if bound != handover:
-            _save_handover_journal(storage_root=storage_root, journal=bound)
+            _profile_login_sessions().save_handover_journal(storage_root=storage_root, journal=bound)
         handover = bound
         persisted = _mint_or_warn(
             storage_root=storage_root,
             material=candidate.material,
             session=candidate.session,
         )
-        accelerated = handover.at_least_phase(_HandoverPhase.ACCELERATED)
+        accelerated = handover.at_least_phase(HandoverPhase.ACCELERATED)
         if accelerated != handover:
-            _save_handover_journal(storage_root=storage_root, journal=accelerated)
+            _profile_login_sessions().save_handover_journal(storage_root=storage_root, journal=accelerated)
         handover = accelerated
         # Activation is required B state, not best-effort telemetry.  Keep it
         # inside the rollback window, with one stable event instant so a crash
         # before the phase receipt can replay the same content-addressed event.
         _record_activation(profile_id=candidate.bucket_id, occurred_at=handover.activation_at)
-        activated = handover.at_least_phase(_HandoverPhase.ACTIVATED)
+        activated = handover.at_least_phase(HandoverPhase.ACTIVATED)
         if activated != handover:
-            _save_handover_journal(storage_root=storage_root, journal=activated)
+            _profile_login_sessions().save_handover_journal(storage_root=storage_root, journal=activated)
         handover = activated
     except BaseException:
         _rollback_candidate_promotion(

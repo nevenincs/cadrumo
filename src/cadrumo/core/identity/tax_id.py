@@ -25,32 +25,10 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import AfterValidator, BeforeValidator
+from pydantic import BeforeValidator
 
-from .documents import (
-    CIF_KIND_LETTERS,
-    NIE_PREFIX_MAP,
-    PREFIXED_NIF_LEADERS,
-    IdentityError,
-    validate_identity,
-)
+from .documents import IdentityError, SpanishTaxIdFormat, validate_identity
 from .nif_iva import normalise_nif_iva
-
-SPANISH_TAX_ID_WIDTH = 9
-"""Character width of every canonical Spanish NIF, NIE, and CIF.
-
-The width is fixed by the identifier grammar rather than chosen here: a NIF is 8
-digits plus a checksum letter, a ``K``/``L``/``M`` NIF and a NIE are a leader
-plus 7 digits plus a checksum, and a CIF is a leader plus 7 digits plus a
-control. Every branch of :func:`validate_spanish_tax_id` therefore operates on
-exactly this many characters, and the function refuses anything else outright.
-
-Exposed as a constant because consumers outside this module need to assert a
-slot can hold a tax identifier at all -- a fixed-width AEAT record field bound
-to a taxpayer identifier but declared at some other width is holding something
-other than that identifier. Those consumers must read the width the validator
-actually enforces; a second literal elsewhere can drift from this one silently.
-"""
 
 
 def tax_id_identity_token(value: str) -> str:
@@ -119,24 +97,12 @@ def same_tax_identifier(left: str | None, right: str | None) -> bool:
     return left_token == right_token
 
 
-def validate_spanish_tax_id(value: str) -> str:
+def validate_spanish_tax_id(value: str, tax_id_format: SpanishTaxIdFormat) -> str:
     """Validate a Spanish NIF, NIE, or CIF and return its canonical form.
-
-    Implements the Agencia Tributaria algorithm:
-
-    * **NIF** — 8 digits, or current ``K``/``L``/``M`` plus 7 digits for
-      natural persons without DNI/NIE, followed by a checksum letter drawn
-      from ``TRWAGMYFPDXBNJZSQVHLCKE`` indexed by ``number % 23``.
-    * **NIE** — a leading ``X``/``Y``/``Z`` substituted with ``0``/``1``/``2``
-      before applying the NIF rule.
-    * **CIF** — a leading letter from ``ABCDEFGHJNPQRSUVW``, 7 digits, and
-      a 1-character control. Leading letters in ``PQRSNW`` require a
-      **letter** control drawn from ``JABCDEFGHI``; leading letters in
-      ``ABEH`` require a **digit** control; all other leaders accept
-      either form (both historically in circulation).
 
     Args:
         value: Raw tax identifier to validate.
+        tax_id_format: Complete authority-supplied format declarations.
 
     Returns:
         The identifier in the package's separator-stripped normal form --
@@ -153,32 +119,35 @@ def validate_spanish_tax_id(value: str) -> str:
             "tax identifier is empty",
             translated_message="errors.identity.document_empty",
         )
-    if len(normalized) == 11 and normalized.startswith("ES"):
-        normalized = normalized[2:]
-    if len(normalized) != SPANISH_TAX_ID_WIDTH:
+    width = tax_id_format.width
+    country_prefix = tax_id_format.country_prefix
+    prefixed_width = tax_id_format.country_prefixed_width
+    strip_width = tax_id_format.country_prefix_strip_width
+    if len(normalized) == prefixed_width and normalized.startswith(country_prefix):
+        normalized = normalized[strip_width:]
+    if len(normalized) != width:
         raise IdentityError(
-            f"tax identifier {normalized!r} must be exactly {SPANISH_TAX_ID_WIDTH} characters, got {len(normalized)}",
+            f"tax identifier {normalized!r} must be exactly {width} characters, got {len(normalized)}",
             translated_message="errors.identity.tax_id_invalid_length",
             context={"candidate": normalized, "length": len(normalized)},
         )
 
-    leader = normalized[0]
-    recognised = (
-        leader.isdigit() or leader in PREFIXED_NIF_LEADERS or leader in NIE_PREFIX_MAP or leader in CIF_KIND_LETTERS
-    )
-    if not recognised:
-        raise IdentityError(
-            f"tax identifier {normalized!r} does not start with a recognised leader {leader!r}",
-            translated_message="errors.identity.tax_id_unrecognised_leader",
-            context={"candidate": normalized, "leader": leader},
+    try:
+        validate_identity(normalized, tax_id_format)
+    except IdentityError as exc:
+        leader = normalized[0]
+        recognised_leader = leader.isdigit() or any(
+            leader in leaders
+            for leaders in (tax_id_format.prefixed_nif_leaders, tax_id_format.nie_leaders, tax_id_format.cif_leaders)
         )
-    validate_identity(normalized)
+        if exc.translated_message == "errors.identity.nif_invalid_shape" and not recognised_leader:
+            raise IdentityError(
+                f"tax identifier {normalized!r} does not start with a recognised leader {leader!r}",
+                translated_message="errors.identity.tax_id_unrecognised_leader",
+                context={"candidate": normalized, "leader": leader},
+            ) from exc
+        raise
     return normalized
-
-
-def _subject_tax_id_validator(value: str) -> str:
-    """Adapt :func:`validate_spanish_tax_id` for pydantic field validation."""
-    return validate_spanish_tax_id(value)
 
 
 type TaxIdIdentityToken = Annotated[str, BeforeValidator(tax_id_identity_token)]
@@ -187,25 +156,14 @@ type TaxIdIdentityToken = Annotated[str, BeforeValidator(tax_id_identity_token)]
 Runs :func:`tax_id_identity_token` BEFORE the field's own length constraints,
 so a field annotated with it stores the canonical token and any ``min_length``
 bound is applied to that token rather than to the raw declaration. Unlike
-:data:`SubjectTaxId` it asserts no checksum, so it fits identifiers whose
-bearer may be non-resident; use :data:`SubjectTaxId` where the value must be a
-valid Spanish NIF / NIE / CIF.
-"""
-
-
-type SubjectTaxId = Annotated[str, AfterValidator(_subject_tax_id_validator)]
-"""Canonical Spanish NIF / NIE / CIF, validated at the pydantic boundary.
-
-Bare ``str`` fields holding tax identifiers cannot enforce the AEAT checksum
-algorithm. Promoting a field to ``SubjectTaxId`` runs
-:func:`validate_spanish_tax_id` on assignment and validation, so a malformed
-identifier fails fast at the model boundary with an
-:class:`IdentityError` rather than leaking into persisted records.
+:data:`~domain.calculations.registry.tax_id_format.SubjectTaxId` it asserts no
+checksum, so it fits identifiers whose bearer may be non-resident; use
+:data:`~domain.calculations.registry.tax_id_format.SubjectTaxId` where the value
+must be a valid Spanish NIF / NIE / CIF.
 """
 
 
 __all__ = [
-    "SubjectTaxId",
     "TaxIdIdentityToken",
     "same_tax_identifier",
     "tax_id_identity_token",

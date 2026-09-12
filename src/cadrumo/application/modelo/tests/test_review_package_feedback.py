@@ -51,6 +51,7 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.review_package_recipient_encryption import RecipientEncryptionAdapter
 from ....adapters.persistence.storage.tests.secure_sql import isolated_two_bucket_runtime
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
@@ -100,6 +101,8 @@ _PLACEHOLDER_WORK_UNIT_ID = derive_work_unit_id(
     period=Period.from_year_and_code(2026, "1T"),
     revision_id="feedback-placeholder-revision",
 )
+_CRYPTO_CAPABILITY = RecipientEncryptionAdapter(repository=object())
+
 _PLACEHOLDER_REVISION_ID = derive_calculation_revision_id(
     work_unit_id=_PLACEHOLDER_WORK_UNIT_ID,
     input_values_by_casilla_id={_BASE_CASILLA: "0.00"},
@@ -204,7 +207,7 @@ def test_full_round_trip_originator_signs_accountant_countersigns_and_returns_fe
         # of the reverse-direction feedback envelope).
         originator_encryption_keypair = ensure_recipient_encryption_keypair(
             bucket_id=runtime.primary.bucket_id,
-            repository=runtime.primary.repository,
+            recipient_encryption=RecipientEncryptionAdapter(repository=runtime.primary.repository),
         )
         originator_encryption_public_key = originator_encryption_keypair
 
@@ -236,17 +239,19 @@ def test_full_round_trip_originator_signs_accountant_countersigns_and_returns_fe
             feedback,
             originator_public_key_hex=originator_encryption_public_key.public_key_hex,
             issued_at=_NOW,
+            recipient_encryption=_CRYPTO_CAPABILITY
         )
 
         # Originator imports and verifies the feedback against their own
         # locally-held archive and signing identities.
         imported = import_feedback_package(
             envelope,
-            originator_private_key=originator_encryption_keypair.private_key(),
+            originator_private_key_hex=originator_encryption_keypair.private_key_hex,
             reviewed_package_path=package_path,
             operator_public_key_hex=operator_signing_keypair.public_key_hex,
             counter_signer_public_key_hex=accountant_signing_keypair.public_key_hex,
             now=_NOW,
+            recipient_encryption=_CRYPTO_CAPABILITY
         )
 
         assert imported.counter_signature_verified is True
@@ -286,7 +291,7 @@ def test_unstructured_feedback_with_no_counter_signed_receipt_imports_cleanly(tm
 
         originator_encryption_keypair = ensure_recipient_encryption_keypair(
             bucket_id=runtime.primary.bucket_id,
-            repository=runtime.primary.repository,
+            recipient_encryption=RecipientEncryptionAdapter(repository=runtime.primary.repository),
         )
         originator_encryption_public_key = originator_encryption_keypair
 
@@ -303,14 +308,16 @@ def test_unstructured_feedback_with_no_counter_signed_receipt_imports_cleanly(tm
             feedback,
             originator_public_key_hex=originator_encryption_public_key.public_key_hex,
             issued_at=_NOW,
+            recipient_encryption=_CRYPTO_CAPABILITY
         )
 
         imported = import_feedback_package(
             envelope,
-            originator_private_key=originator_encryption_keypair.private_key(),
+            originator_private_key_hex=originator_encryption_keypair.private_key_hex,
             reviewed_package_path=package_path,
             operator_public_key_hex=operator_signing_keypair.public_key_hex,
             now=_NOW,
+            recipient_encryption=_CRYPTO_CAPABILITY
         )
 
         assert imported.counter_signature_verified is None
@@ -335,12 +342,14 @@ def test_decrypt_feedback_package_recovers_document_byte_for_byte(tmp_path: Path
         feedback,
         originator_public_key_hex=originator_public_key_hex,
         issued_at=_NOW,
+        recipient_encryption=_CRYPTO_CAPABILITY
     )
 
     recovered = decrypt_feedback_package_from_originator_envelope(
         envelope,
-        originator_private_key=originator_private_key,
+        originator_private_key_hex=originator_private_key.private_bytes_raw().hex(),
         now=_NOW,
+        recipient_encryption=_CRYPTO_CAPABILITY
     )
     assert recovered == feedback
 
@@ -382,13 +391,15 @@ def test_decrypt_feedback_package_fails_with_wrong_private_key() -> None:
         feedback,
         originator_public_key_hex=originator_public_key_hex,
         issued_at=_NOW,
+        recipient_encryption=_CRYPTO_CAPABILITY
     )
 
     with pytest.raises(RecipientDecryptionError):
         decrypt_feedback_package_from_originator_envelope(
             envelope,
-            originator_private_key=wrong_private_key,
+            originator_private_key_hex=wrong_private_key.private_bytes_raw().hex(),
             now=_NOW,
+            recipient_encryption=_CRYPTO_CAPABILITY
         )
 
 
@@ -409,6 +420,7 @@ def test_decrypt_feedback_package_fails_when_ciphertext_tampered() -> None:
         feedback,
         originator_public_key_hex=originator_public_key_hex,
         issued_at=_NOW,
+        recipient_encryption=_CRYPTO_CAPABILITY
     )
 
     tampered_bytes = bytearray(envelope.ciphertext)
@@ -418,8 +430,9 @@ def test_decrypt_feedback_package_fails_when_ciphertext_tampered() -> None:
     with pytest.raises(RecipientDecryptionError):
         decrypt_feedback_package_from_originator_envelope(
             tampered_envelope,
-            originator_private_key=originator_private_key,
+            originator_private_key_hex=originator_private_key.private_bytes_raw().hex(),
             now=_NOW,
+            recipient_encryption=_CRYPTO_CAPABILITY
         )
 
 
@@ -440,13 +453,15 @@ def test_expired_feedback_envelope_refuses() -> None:
         originator_public_key_hex=originator_public_key_hex,
         valid_for=timedelta(days=1),
         issued_at=_NOW,
+        recipient_encryption=_CRYPTO_CAPABILITY
     )
 
     with pytest.raises(RecipientPackageExpiredError):
         decrypt_feedback_package_from_originator_envelope(
             envelope,
-            originator_private_key=originator_private_key,
+            originator_private_key_hex=originator_private_key.private_bytes_raw().hex(),
             now=_NOW + timedelta(days=2),
+            recipient_encryption=_CRYPTO_CAPABILITY
         )
 
 
@@ -464,7 +479,7 @@ def test_import_feedback_package_refuses_when_archive_tampered_after_countersign
 
         originator_encryption_keypair = ensure_recipient_encryption_keypair(
             bucket_id=runtime.primary.bucket_id,
-            repository=runtime.primary.repository,
+            recipient_encryption=RecipientEncryptionAdapter(repository=runtime.primary.repository),
         )
         originator_encryption_public_key = originator_encryption_keypair
 
@@ -493,6 +508,7 @@ def test_import_feedback_package_refuses_when_archive_tampered_after_countersign
             feedback,
             originator_public_key_hex=originator_encryption_public_key.public_key_hex,
             issued_at=_NOW,
+            recipient_encryption=_CRYPTO_CAPABILITY
         )
 
         # Tamper the LOCAL archive the originator still holds, after signing.
@@ -506,11 +522,12 @@ def test_import_feedback_package_refuses_when_archive_tampered_after_countersign
         with pytest.raises(FeedbackCounterSignatureInvalidError):
             import_feedback_package(
                 envelope,
-                originator_private_key=originator_encryption_keypair.private_key(),
+                originator_private_key_hex=originator_encryption_keypair.private_key_hex,
                 reviewed_package_path=package_path,
                 operator_public_key_hex=operator_signing_keypair.public_key_hex,
                 counter_signer_public_key_hex=accountant_signing_keypair.public_key_hex,
                 now=_NOW,
+                recipient_encryption=_CRYPTO_CAPABILITY
             )
 
 
@@ -526,7 +543,7 @@ def test_import_feedback_package_refuses_with_forged_counter_signer_key(tmp_path
 
         originator_encryption_keypair = ensure_recipient_encryption_keypair(
             bucket_id=runtime.primary.bucket_id,
-            repository=runtime.primary.repository,
+            recipient_encryption=RecipientEncryptionAdapter(repository=runtime.primary.repository),
         )
         originator_encryption_public_key = originator_encryption_keypair
 
@@ -555,6 +572,7 @@ def test_import_feedback_package_refuses_with_forged_counter_signer_key(tmp_path
             feedback,
             originator_public_key_hex=originator_encryption_public_key.public_key_hex,
             issued_at=_NOW,
+            recipient_encryption=_CRYPTO_CAPABILITY
         )
 
         forged_counter_signer_public_key_hex = X25519PrivateKey.generate().public_key().public_bytes_raw().hex()
@@ -562,11 +580,12 @@ def test_import_feedback_package_refuses_with_forged_counter_signer_key(tmp_path
         with pytest.raises(FeedbackCounterSignatureInvalidError):
             import_feedback_package(
                 envelope,
-                originator_private_key=originator_encryption_keypair.private_key(),
+                originator_private_key_hex=originator_encryption_keypair.private_key_hex,
                 reviewed_package_path=package_path,
                 operator_public_key_hex=operator_signing_keypair.public_key_hex,
                 counter_signer_public_key_hex=forged_counter_signer_public_key_hex,
                 now=_NOW,
+                recipient_encryption=_CRYPTO_CAPABILITY
             )
 
 
@@ -584,7 +603,7 @@ def test_import_feedback_package_raises_when_receipt_present_but_no_counter_sign
 
         originator_encryption_keypair = ensure_recipient_encryption_keypair(
             bucket_id=runtime.primary.bucket_id,
-            repository=runtime.primary.repository,
+            recipient_encryption=RecipientEncryptionAdapter(repository=runtime.primary.repository),
         )
         originator_encryption_public_key = originator_encryption_keypair
 
@@ -613,16 +632,18 @@ def test_import_feedback_package_raises_when_receipt_present_but_no_counter_sign
             feedback,
             originator_public_key_hex=originator_encryption_public_key.public_key_hex,
             issued_at=_NOW,
+            recipient_encryption=_CRYPTO_CAPABILITY
         )
 
         with pytest.raises(ReviewPackageFeedbackError):
             import_feedback_package(
                 envelope,
-                originator_private_key=originator_encryption_keypair.private_key(),
+                originator_private_key_hex=originator_encryption_keypair.private_key_hex,
                 reviewed_package_path=package_path,
                 operator_public_key_hex=operator_signing_keypair.public_key_hex,
                 counter_signer_public_key_hex=None,
                 now=_NOW,
+                recipient_encryption=_CRYPTO_CAPABILITY
             )
 
 

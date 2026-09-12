@@ -47,7 +47,7 @@ from ...core.decimal.constants import ZERO
 from ...core.filing_year import FilingYear
 from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.identity.digest import ContentDigest
-from ...core.identity.tax_id import SubjectTaxId
+from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -97,7 +97,7 @@ from ...domain.iva_compensation.errors import (
     IvaCompensationYearRangeError,
 )
 from .errors import IvaCompensationModeloError
-from .observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
+from .observations_repository import CalculationObservationRepositoryProtocol, ObservationEnvelopePayload
 from .ports import FiledDeclaracionObservationProtocol
 from .revision_carry_gate import revision_carry_outcome
 
@@ -431,7 +431,7 @@ def iva_compensation_state_from_observation_envelope(
 
 def persist_observation_envelope_and_iva_history(
     *,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
     history_repository: IvaCompensationHistoryRepository,
     envelope: ObservationEnvelopePayload,
     taxpayer_nif: str,

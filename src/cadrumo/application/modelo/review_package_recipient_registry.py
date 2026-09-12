@@ -5,7 +5,7 @@ encrypted review package -- an accountant or gestor -- by the SHA-256
 fingerprint of that recipient's X25519 public key, verified out-of-band
 (read aloud, compared over a separate channel) before it is trusted.
 It is the taxpayer-side companion to
-:mod:`~application.modelo._review_package_recipient_encryption`,
+:mod:`~application.modelo.review_package_recipient_encryption`,
 which consumes a registered recipient's public key to seal a review
 package so only that recipient's matching private key can open it.
 
@@ -28,7 +28,7 @@ public-key trust records at ``FINANCIAL`` sensitivity, never private key
 material.
 
 See Also:
-    :mod:`~application.modelo._review_package_recipient_encryption`
+    :mod:`~application.modelo.review_package_recipient_encryption`
         Consumes a registered recipient's public key to encrypt a
         review package.
     :mod:`~application.modelo._review_package_signing`

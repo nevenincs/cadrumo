@@ -31,8 +31,9 @@ import pytest
 from .....core.field_origin import FieldOrigin
 from .....core.period import Period
 from .....domain.iva import rates as _iva_rates_module
+from .....domain.iva.components import registry_category_projection
 from .....domain.iva.rates import load_iva_rate_table
-from .....domain.iva.schema import NO_PRINTED_TAX_IVA_CATEGORIES, EUMemberState, IvaCategory
+from .....domain.iva.schema import EUMemberState, IvaCategory
 from .....domain.transactions.retencion_facts import statutory_activity_retencion_rates
 from .....tests.attribute_scope import scoped_attribute
 from ..invoice_extraction_prompt import (
@@ -190,7 +191,7 @@ class TestTheNoPrintedTaxLineAsksThePaperQuestion:
     )
     def test_the_reverse_charge_family_is_named_as_a_tax_free_invoice(self, category: IvaCategory) -> None:
         """Fixture anchor: pinned by member, so a rename cannot pass this vacuously."""
-        assert category in NO_PRINTED_TAX_IVA_CATEGORIES
+        assert category in registry_category_projection("no_printed_tax")
         assert category.value.replace("_", " ") in _compiled()
 
     def test_the_line_enumerates_the_derived_set_exactly(self) -> None:
@@ -199,7 +200,9 @@ class TestTheNoPrintedTaxLineAsksThePaperQuestion:
         opening = "carry no tax at all ("
         rendered = text[text.index(opening) + len(opening) : text.index(").")]
 
-        assert set(rendered.split(", ")) == {c.value.replace("_", " ") for c in NO_PRINTED_TAX_IVA_CATEGORIES}
+        assert set(rendered.split(", ")) == {
+            c.value.replace("_", " ") for c in registry_category_projection("no_printed_tax")
+        }
 
 
 class TestRetencionIsAskedForAndNotMerelyEnumerated:

@@ -30,6 +30,7 @@ from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.submission.models import ModeloDraftStatus
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 from ..filing.draft_review import ModeloApprovalStaleReason
 from ..filing.draft_revision_gate import require_modelo_draft_coordinates_current
 from .enums import ReviewSeverity
@@ -263,6 +264,7 @@ def drafts_pending(
     settings: Settings,
     *,
     bucket_id: str,
+    observation_repository: CalculationObservationRepositoryProtocol,
     drafts: tuple[tuple[Path, ModeloDraft], ...] | None = None,
 ) -> tuple[FindingReviewItem, ...]:
     """Return :class:`FindingReviewItem` records for findings + unready drafts.
@@ -289,7 +291,11 @@ def drafts_pending(
         stored = require_modelo_draft_coordinates_current(stored)
         if (stored.profile_tax_id or "") != active_tax_id:
             continue
-        draft, stale_reasons = reviewed_against_current_state(stored, bucket_id=bucket_id)
+        draft, stale_reasons = reviewed_against_current_state(
+            stored,
+            bucket_id=bucket_id,
+            observation_repository=observation_repository,
+        )
         path_str = str(path)
         if draft.findings:
             items.extend(_draft_finding_review_items(draft, path_str=path_str, seen=seen))
@@ -307,6 +313,7 @@ def reviewed_against_current_state(
     draft: ModeloDraft,
     *,
     bucket_id: str,
+    observation_repository: CalculationObservationRepositoryProtocol,
 ) -> tuple[ModeloDraft, tuple[ModeloApprovalStaleReason, ...]]:
     """Return ``draft`` with an aged-out approval reported as aged out.
 
@@ -338,7 +345,12 @@ def reviewed_against_current_state(
         period=draft.period,
         modelos=(draft.modelo,),
     )
-    refreshed = refresh_review_status(draft, bucket_id=bucket_id, schema_provider=schema_provider)
+    refreshed = refresh_review_status(
+        draft,
+        bucket_id=bucket_id,
+        schema_provider=schema_provider,
+        observation_repository=observation_repository,
+    )
     if refreshed.status is not ModeloDraftStatus.APROBACION_CADUCADA:
         return (refreshed, ())
     # Recomputed rather than returned by the refresh, which reports the
@@ -348,7 +360,12 @@ def reviewed_against_current_state(
     # telling them what moved.
     return (
         refreshed,
-        approval_stale_reasons(draft, bucket_id=bucket_id, schema_provider=schema_provider),
+        approval_stale_reasons(
+            draft,
+            bucket_id=bucket_id,
+            schema_provider=schema_provider,
+            observation_repository=observation_repository,
+        ),
     )
 
 

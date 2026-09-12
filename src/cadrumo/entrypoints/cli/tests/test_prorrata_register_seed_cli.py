@@ -22,7 +22,7 @@ from decimal import Decimal
 import pytest
 
 from ....application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
-from ....application.calculations.observations_repository import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....application.prorrata_register.service import ProrrataRegisterService
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
@@ -73,7 +73,7 @@ _NEW_TRANSLATION_KEYS = (
 
 def _law_determined_prior_revision_id() -> str:
     snapshot = bundled_authority().snapshot(
-        Modelo.M303.value,
+        Modelo("303").value,
         filing_year=_PRIOR_YEAR,
         period=_SETTLEMENT_PERIOD,
     )
@@ -84,7 +84,7 @@ def _store_prior_settlement_observation(percentage: Decimal = _PRIOR_DEFINITIVE)
     """Write the prior Modelo 303 settlement observation into the active profile."""
     repository = CalculationObservationRepository()
     observation = registry_grounded_modelo_observation(
-        modelo=Modelo.M303.value,
+        modelo=Modelo("303").value,
         filing_year=_PRIOR_YEAR,
         period=_SETTLEMENT_PERIOD,
         casilla_values={_PORCENTAJE_ID: percentage},
@@ -144,7 +144,7 @@ def test_seed_persists_the_carried_prior_definitiva_entry() -> None:
     assert payload["entry"]["source_observation_ref"] == f"303:{_PRIOR_YEAR}:{_SETTLEMENT_PERIOD}"
     assert payload["findings"] == []
     assert payload["source"] == {
-        "modelo": Modelo.M303.value,
+        "modelo": Modelo("303").value,
         "filing_year": _PRIOR_YEAR,
         "period": _SETTLEMENT_PERIOD,
         "casilla_id": str(_PORCENTAJE_ID),
@@ -188,7 +188,7 @@ def test_seed_surfaces_the_carried_entry_contradiction_rather_than_succeeding() 
             source_observation_ref=f"303:{_PRIOR_YEAR}:{_SETTLEMENT_PERIOD}",
             source_registry_snapshot_refs=(
                 RegistrySnapshotRef(
-                    modelo=Modelo.M303.value,
+                    modelo=Modelo("303").value,
                     revision_id=_law_determined_prior_revision_id(),
                     modelo_year=_PRIOR_YEAR,
                     period=_SETTLEMENT_PERIOD,

@@ -49,7 +49,7 @@ from typing import Protocol, TypedDict
 
 from pydantic import ValidationError
 
-from ...core.aggregation import BindingAggregationOp, RetencionClave, RowSetGroupingKind
+from ...core.aggregation import BindingAggregationOp, RowSetGroupingKind
 from ...core.decimal.coercion import coerce_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.foreign_asset_obligation import M720AssetClassCode
@@ -71,7 +71,7 @@ from ...domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from ...domain.calculations.registry.withholding296_bindings import Withholding296Observation
-from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
+from ...domain.calculations.registry.withholding_bindings import WithholdingObservation, resolve_retencion_clave
 
 __all__ = [
     "AssembledObservations",
@@ -659,8 +659,8 @@ def _assemble_withholding_row(
             context={"row_index": row_index},
         )
     try:
-        clave = RetencionClave(clave_value)
-    except ValueError as exc:
+        clave = resolve_retencion_clave(clave_value, default_date)
+    except (RegistryValidationError, TypeError, ValueError) as exc:
         raise RegistryValidationError(
             translated_message="application.calculations.row_set.errors.percepcion_clave_unsupported",
             context={"row_index": row_index, "clave": clave_value},

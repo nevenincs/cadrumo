@@ -2,7 +2,7 @@
 
 Every :class:`~application.modelo.RecipientEncryptedPackage` carries a
 fresh, unique ``envelope_nonce_hex`` minted at encryption time (see
-:mod:`~application.modelo._review_package_recipient_encryption`). This
+:mod:`~application.modelo.review_package_recipient_encryption`). This
 module lets the recipient side of :func:`~application.modelo.decrypt_review_package_for_recipient`
 record which nonces have already been successfully decrypted, so a captured
 ciphertext replayed a second time against the same recipient bucket is
@@ -34,13 +34,13 @@ stays hand-rolled because it translates a bare ``OSError`` into
 Nonce identity is clock-free (the nonce is a random 32-byte value minted once
 per encryption, never derived from a timestamp), so replay defence does not
 depend on wall-clock ordering the way the paired expiry check does -- see
-:mod:`~application.modelo._review_package_recipient_encryption` for the
+:mod:`~application.modelo.review_package_recipient_encryption` for the
 ``issued_at`` / ``valid_until`` expiry fields, which are a distinct concern
 (a package can be replayed within its validity window, and expiry alone does
 not detect a same-nonce replay before the deadline).
 
 See Also:
-    :mod:`~application.modelo._review_package_recipient_encryption`
+    :mod:`~application.modelo.review_package_recipient_encryption`
         Mints the ``envelope_nonce_hex`` this ledger consumes and defines the
         paired expiry fields.
     :mod:`~application.modelo._review_package_recipient_registry`

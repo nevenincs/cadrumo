@@ -5,8 +5,6 @@ refusal context, and runtime-readiness failure for filing repositories that bind
 to secure-object storage through the bucket runtime.
 
 See Also:
-    :mod:`~adapters.persistence.profile._filing_runtime`
-        Adapter-layer resolver and secure-object factory under test.
     :func:`~core.bucket_pointer.resolve_repository_bucket_id`
         Shared explicit-or-active bucket resolver used by filing and modelo
         repositories.
@@ -26,12 +24,12 @@ import pytest
 from .....adapters.persistence.storage.tests.secure_sql import (
     isolated_storage_root as _isolated_storage,  # noqa: F401 - autouse fixture
 )
+from .....core.bucket_pointer import resolve_repository_bucket_id
 from .....core.config import override_settings
 from .....domain.filing.errors import ModeloDraftError
 from ...storage.errors import StorageValidationError
 from ...storage.runtime_readiness import StorageRuntimeReadinessCode
 from ...storage.runtime_repository import secure_object_repository_for_bucket
-from .._filing_runtime import resolve_filing_repository_bucket_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -46,14 +44,14 @@ _ACTIVE_BUCKET_ID = "34245238-a76d-4ebf-a515-8e5af83cfc0c"
         pytest.param(None, _ACTIVE_BUCKET_ID, _ACTIVE_BUCKET_ID, id="active"),
     ),
 )
-def test_resolve_filing_repository_bucket_id_accepts_explicit_or_active_bucket(
+def test_resolve_repository_bucket_id_accepts_explicit_or_active_bucket(
     tmp_path: Path,
     bucket_id: str | None,
     active_profile: str,
     expected: str,
 ) -> None:
     with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=active_profile):
-        assert resolve_filing_repository_bucket_id(bucket_id) == expected
+        assert resolve_repository_bucket_id(bucket_id, error_type=ModeloDraftError) == expected
 
 
 @pytest.mark.parametrize(
@@ -63,7 +61,7 @@ def test_resolve_filing_repository_bucket_id_accepts_explicit_or_active_bucket(
         pytest.param(None, None, "missing_active_profile_bucket", id="missing-active"),
     ),
 )
-def test_resolve_filing_repository_bucket_id_rejects_unresolved_bucket(
+def test_resolve_repository_bucket_id_rejects_unresolved_bucket(
     tmp_path: Path,
     bucket_id: str | None,
     active_profile: str | None,
@@ -73,7 +71,7 @@ def test_resolve_filing_repository_bucket_id_rejects_unresolved_bucket(
         override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=active_profile),
         pytest.raises(ModeloDraftError) as raised,
     ):
-        resolve_filing_repository_bucket_id(bucket_id)
+        resolve_repository_bucket_id(bucket_id, error_type=ModeloDraftError)
 
     assert raised.value.translated_message == "application.workflow.errors.no_active_profile_bucket"
     assert raised.value.context == {"reason": expected_reason}

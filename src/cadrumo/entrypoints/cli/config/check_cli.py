@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from ....application.auth.operator_probe_ports import OperatorProbePorts
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.capabilities import ServiceCapability
 
@@ -121,7 +122,7 @@ def _probe_dependency_statuses() -> tuple[
     return statuses, ollama, extras
 
 
-def _preflight_payloads() -> list[CheckPreflightPayload]:
+def _preflight_payloads(*, operator_probe_ports: OperatorProbePorts) -> list[CheckPreflightPayload]:
     from ....adapters.outbound.storage.path_budget import windows_worst_case_object_path_suffix_length
     from ....application.preflight import run_preflight_checks
 
@@ -139,6 +140,7 @@ def _preflight_payloads() -> list[CheckPreflightPayload]:
         )
         for row in run_preflight_checks(
             object_path_suffix_length=windows_worst_case_object_path_suffix_length(),
+            operator_probe_ports=operator_probe_ports,
         )
     ]
 
@@ -216,7 +218,9 @@ def config_check(ctx: typer.Context) -> None:
     # The worst-case object-path suffix is measured from the on-disk grammar the
     # storage adapter owns, so it is supplied here at the composition root rather
     # than reached for from the application layer.
-    preflight = _preflight_payloads()
+    from ..state_projection_support import operator_probe_ports
+
+    preflight = _preflight_payloads(operator_probe_ports=operator_probe_ports(ctx))
     issues = _check_issues(capabilities=cap_enabled, ollama=ollama, extras=extras)
     ok = not issues
     result = ConfigCheckResult.model_validate(

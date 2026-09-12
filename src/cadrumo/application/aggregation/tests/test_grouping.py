@@ -22,8 +22,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SOURCE_LEDGER = BindingSourceKind.LEDGER_TRANSACTION
 _SOURCE_INVOICE = BindingSourceKind.COLLECTIBLE_INVOICE
-_SCHEME_WORK = RetencionScheme.WORK_INCOME
-_SCHEME_RENT = RetencionScheme.URBAN_RENTAL
+_SCHEME_WORK = RetencionScheme("rendimientos_trabajo")
+_SCHEME_RENT = RetencionScheme("arrendamiento_urbano")
 
 
 def _observation(
@@ -219,12 +219,12 @@ def test_fold_sums_each_observation_into_its_own_casilla() -> None:
             _income(_tx("2"), _CASILLA_01, "50.00"),
             _income(_tx("3"), _CASILLA_02, "7.00"),
         ),
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         period=_PERIOD,
         amount_fn=_gross,
     )
 
-    assert aggregation.modelo == Modelo.M130.value
+    assert aggregation.modelo == Modelo("130").value
     assert aggregation.period == _PERIOD
     assert dict(aggregation.casilla_values) == {_CASILLA_01: Decimal("150.00"), _CASILLA_02: Decimal("7.00")}
 
@@ -236,7 +236,7 @@ def test_fold_emits_one_provenance_row_per_casilla_in_sorted_order() -> None:
             _income(_tx("2"), _CASILLA_01, "100.00"),
             _income(_tx("3"), _CASILLA_01, "50.00"),
         ),
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         period=_PERIOD,
         amount_fn=_gross,
     )
@@ -251,7 +251,7 @@ def test_fold_sorts_contributing_transaction_ids_within_a_row() -> None:
             _income(_tx("a"), _CASILLA_01, "1.00"),
             _income(_tx("b"), _CASILLA_01, "1.00"),
         ),
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         period=_PERIOD,
         amount_fn=_gross,
     )
@@ -272,7 +272,7 @@ def test_fold_provenance_subtotals_reconcile_with_the_casilla_totals() -> None:
             _income(_tx("2"), _CASILLA_01, "50.00"),
             _income(_tx("3"), _CASILLA_02, "7.00"),
         ),
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         period=_PERIOD,
         amount_fn=_gross,
     )
@@ -291,7 +291,7 @@ def test_fold_leaves_category_id_unset_because_it_groups_on_the_casilla_axis_alo
     """
     aggregation = fold_casilla_observations(
         (_income(_tx("1"), _CASILLA_01, "100.00"),),
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         period=_PERIOD,
         amount_fn=_gross,
     )
@@ -313,13 +313,13 @@ def test_fold_routes_every_amount_through_the_callers_accessor() -> None:
 
     gross_total = fold_casilla_observations(
         observations,
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         period=_PERIOD,
         amount_fn=_gross,
     ).casilla_values[_CASILLA_01]
     base_total = fold_casilla_observations(
         observations,
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         period=_PERIOD,
         amount_fn=lambda observation: observation.taxable_base_amount or observation.gross_amount,
     ).casilla_values[_CASILLA_01]
@@ -331,14 +331,14 @@ def test_fold_routes_every_amount_through_the_callers_accessor() -> None:
 def test_fold_of_no_observations_yields_an_empty_aggregation() -> None:
     aggregation = fold_casilla_observations(
         (),
-        modelo=Modelo.M151.value,
+        modelo=Modelo("151").value,
         period=_PERIOD,
         amount_fn=_gross,
     )
 
     assert dict(aggregation.casilla_values) == {}
     assert tuple(aggregation.provenance) == ()
-    assert aggregation.modelo == Modelo.M151.value
+    assert aggregation.modelo == Modelo("151").value
 
 
 def test_cumulative_year_to_date_window_spans_january_to_quarter_end() -> None:

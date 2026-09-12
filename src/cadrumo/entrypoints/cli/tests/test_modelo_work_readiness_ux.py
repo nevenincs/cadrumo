@@ -72,7 +72,7 @@ def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", Modelo.M130.value,
+            "--modelo", Modelo("130").value,
             "--year", "2025",
             "--period", "1T",
             "--revision", "2019-y-siguientes",
@@ -100,7 +100,7 @@ def test_incomplete_setup_readiness_matches_work_create_and_names_completion_doo
         [
             "--format", "json",
             "app", "modelo", "readiness",
-            "--modelo", Modelo.M130.value,
+            "--modelo", Modelo("130").value,
             "--revision-id", "2019-y-siguientes",
             "--year", "2026",
             "--period", "2T",
@@ -116,7 +116,7 @@ def test_incomplete_setup_readiness_matches_work_create_and_names_completion_doo
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", Modelo.M130.value,
+            "--modelo", Modelo("130").value,
             "--year", "2026",
             "--period", "2T",
         ],
@@ -133,7 +133,7 @@ def test_incomplete_setup_readiness_matches_work_create_and_names_completion_doo
         [
             "--format", "json",
             "app", "modelo", "readiness",
-            "--modelo", Modelo.M130.value,
+            "--modelo", Modelo("130").value,
             "--revision-id", "2019-y-siguientes",
             "--year", "2026",
             "--period", "2T",
@@ -248,7 +248,7 @@ def test_work_create_not_applicable_m130_wins_over_pre_activity_for_irnr_profile
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", Modelo.M130.value,
+            "--modelo", Modelo("130").value,
             "--year", "2026",
             "--period", "2T",
             "--revision", "2019-y-siguientes",
@@ -261,7 +261,7 @@ def test_work_create_not_applicable_m130_wins_over_pre_activity_for_irnr_profile
     error = payload["error"]
     assert error["code"] == "REFUSED_CLI_BOUNDARY"
     message = error["message"]
-    assert Modelo.M130.value in message
+    assert Modelo("130").value in message
     assert "NON_RESIDENT_IRNR" in message
     assert "--allow-not-applicable" in message
     assert "REFUSED_MODELO_PROFILE_READINESS" not in result.output
@@ -394,7 +394,7 @@ def test_work_create_refuses_pre_activity_m130_and_creates_no_unit() -> None:
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", Modelo.M130.value,
+            "--modelo", Modelo("130").value,
             "--year", "2026",
             "--period", "2T",
             "--revision", "2019-y-siguientes",
@@ -406,7 +406,7 @@ def test_work_create_refuses_pre_activity_m130_and_creates_no_unit() -> None:
     assert payload["status"] == "error"
     assert payload["error"]["code"] == "REFUSED_MODELO_PROFILE_READINESS"
     message = payload["error"]["message"]
-    assert f"Modelo {Modelo.M130.value} 2026 2T is before" in message
+    assert f"Modelo {Modelo('130').value} 2026 2T is before" in message
     assert "pre-activity period" in message
     assert "2026-07-15" in message
     assert "2026-06-30" in message

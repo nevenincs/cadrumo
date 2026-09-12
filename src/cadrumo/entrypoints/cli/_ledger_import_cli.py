@@ -15,6 +15,7 @@ from ...application.ledger.actions_import import (
     import_ledger_source,
     plan_ledger_import_sources,
 )
+from ...application.ledger.import_ports import LedgerImportPorts
 from ...application.ledger.models import (
     LedgerSourceImportCommand,
     LedgerSourceImportResult,
@@ -25,12 +26,13 @@ from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.transactions.errors import TransactionValidationError
-from ..ledger_action_composition import compose_ledger_action_ports
+from ..ledger_action_composition import compose_ledger_action_ports, compose_ledger_import_ports
 from ._ledger_support import ledger_transaction_validation_no_recovery
 from .common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
 from .period_parsing import _optional_canonical_period
 
 if TYPE_CHECKING:
+    from ...application.ledger.protocols import BucketEventHistoryCoCommitWriterProtocol
     from ...domain.currency.service import CurrencyNormalizationService
     from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
@@ -128,7 +130,9 @@ def _imported_files(
     import_paths: Sequence[Path],
     *,
     command: Callable[[Path], LedgerSourceImportCommand],
+    import_ports: LedgerImportPorts,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol | None,
     currency_normalizer: CurrencyNormalizationService,
 ) -> _ImportedFolder:
     """Import each statement file, containing a per-file failure to that file.
@@ -150,7 +154,6 @@ def _imported_files(
     Only the project's own failure taxonomy is caught. A ``TypeError`` here is
     a defect and must still crash rather than be reported as a bad statement.
     """
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
     results: list[LedgerSourceImportResult] = []
     refusals: list[_RefusedImportFile] = []
     for file_path in import_paths:
@@ -158,8 +161,9 @@ def _imported_files(
             results.append(
                 import_ledger_source(
                     command(file_path),
+                    ports=import_ports,
                     transaction_repository=transaction_repository,
-                    bucket_event_repository=ports.bucket_event_repository,
+                    bucket_event_repository=bucket_event_repository,
                     currency_normalizer=currency_normalizer,
                 ),
             )
@@ -259,6 +263,12 @@ def ledger_import(
 
     currency_normalizer = CurrencyNormalizationService(rate_provider=default_ecb_rate_provider())
     canonical_period = _optional_canonical_period(period, year=year)
+    import_ports = compose_ledger_import_ports()
+    action_ports = (
+        compose_ledger_action_ports(bucket_id=context.transaction_repository.bucket_id)
+        if context.transaction_repository is not None
+        else None
+    )
     imported = _imported_files(
         _resolve_import_paths(file),
         command=lambda file_path: LedgerSourceImportCommand(
@@ -272,7 +282,9 @@ def ledger_import(
             actor=context.actor,
             source_command="aeat app ledger import",
         ),
+        import_ports=import_ports,
         transaction_repository=context.transaction_repository,
+        bucket_event_repository=None if action_ports is None else action_ports.bucket_event_repository,
         currency_normalizer=currency_normalizer,
     )
     if not imported.results:

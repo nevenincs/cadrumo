@@ -31,7 +31,6 @@ from ...application.ledger.models import (
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.render import tr
-from ...core.irnr import M210PayerMode
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.prorrata_exclusions import Art104TresExclusion
@@ -536,7 +535,7 @@ def _build_m210_classify_options(
     tipo_renta_code: str | None,
     gross_income_amount: str | None,
     applicable_rate: str | None,
-    payer_mode: M210PayerMode | None,
+    payer_mode: str | None,
     payer_id: str | None,
     asset_or_right_id: str | None,
 ) -> M210LedgerClassifyOptions:
@@ -674,7 +673,7 @@ def ledger_classify(
     m210_tipo_renta_code: str | None = None,
     m210_gross_income_amount: str | None = None,
     m210_applicable_rate: str | None = None,
-    m210_payer_mode: M210PayerMode | None = None,
+    m210_payer_mode: str | None = None,
     m210_payer_id: str | None = None,
     m210_asset_or_right_id: str | None = None,
     iva_category: IvaCategory | None = None,

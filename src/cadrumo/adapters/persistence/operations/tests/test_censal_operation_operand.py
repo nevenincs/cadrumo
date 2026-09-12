@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+
 import asyncio
 import json
 from datetime import UTC, date, datetime
@@ -36,6 +38,8 @@ from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
 
+_OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 8, 24, 12, tzinfo=UTC)
@@ -44,6 +48,7 @@ _NOW = datetime(2026, 8, 24, 12, tzinfo=UTC)
 def _test_censal_operation_definition():
     return build_censal_operation_definition(
         certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
 

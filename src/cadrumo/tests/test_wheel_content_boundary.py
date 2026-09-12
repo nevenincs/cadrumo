@@ -49,42 +49,52 @@ _WHEEL_DATA_PREFIX = "cadrumo/_data"
 _WHEEL_CORPUS_PREFIX = f"{_WHEEL_DATA_PREFIX}/corpus/"
 _WHEEL_AUTHORITY_ARTIFACT = f"{_WHEEL_DATA_PREFIX}/registry/authority/authority.json"
 _WHEEL_AUTHORED_REGISTRY_PREFIX = f"{_WHEEL_DATA_PREFIX}/registry/aeat/"
-# Members the build backend places in an archive on its own behalf whatever the
-# project declares: its own generated metadata, and the version-control ignore
-# file hatchling ships so a rebuild from the archive reproduces. Both survive an
-# explicit exclude, so they are recognised rather than fought.
-_BUILD_BACKEND_MEMBERS = frozenset({"PKG-INFO", ".gitignore"})
+_SDIST_AUTHORITY_ARTIFACT = "src/cadrumo/_data/registry/authority/authority.json"
+_SDIST_AUTHORED_REGISTRY_PREFIX = "src/cadrumo/_data/registry/aeat/"
+_PROJECT_VERSION = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
+_ALLOWED_WHEEL_ROOTS = frozenset({"cadrumo", "cadrumo_harness", f"cadrumo-{_PROJECT_VERSION}.dist-info"})
+_ALLOWED_SDIST_FILES = frozenset(
+    {
+        ".gitignore",
+        "CHANGELOG.md",
+        "LICENSE",
+        "NOTICE",
+        "PKG-INFO",
+        "PRIVACY.md",
+        "README.md",
+        "SECURITY.md",
+        "THIRD_PARTY_NOTICES.md",
+        "pyproject.toml",
+    }
+)
+_ALLOWED_SDIST_PREFIXES = ("src/cadrumo/", "src/cadrumo_harness/")
 
 
 def _wheel_root(member: str) -> str:
-    """The wheel member's top-level name, with the backend's version stamp trimmed.
+    """Return a wheel member's exact top-level package or metadata root."""
 
-    ``cadrumo/`` and ``cadrumo-<version>.dist-info/`` are both the product's own.
-    """
-    return Path(member).parts[0].partition("-")[0]
-
-
-def _sdist_root(member: str) -> str:
-    """The sdist member's top-level name, matched whole.
-
-    Not version-trimmed: an sdist's top-level members are real filenames, and
-    trimming would read ``PKG-INFO`` as ``PKG``.
-    """
     return Path(member).parts[0]
 
 
-def _declared_sdist_roots() -> frozenset[str]:
-    """The top-level names the build configuration declares the sdist ships.
+def _unexpected_wheel_members(members: frozenset[str]) -> list[str]:
+    """Return wheel members outside the fixed product-package policy."""
 
-    Derived from the declaration rather than restated here. A restated list is
-    the construct that falls behind what it describes: it would keep passing
-    over content the build configuration no longer ships, and would fail over
-    content it legitimately added. Reading the declaration makes the archive
-    answerable to the same authority that produced it.
-    """
-    config = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    declared = config["tool"]["hatch"]["build"]["targets"]["sdist"]["include"]
-    return frozenset(Path(entry).parts[0] for entry in declared)
+    return sorted(
+        member for member in members if Path(member).parts and _wheel_root(member) not in _ALLOWED_WHEEL_ROOTS
+    )
+
+
+def _unexpected_sdist_members(members: frozenset[str]) -> list[str]:
+    """Return sdist members outside the fixed build-source policy."""
+
+    allowed_directories = {prefix.rstrip("/") for prefix in _ALLOWED_SDIST_PREFIXES}
+    return sorted(
+        member
+        for member in members
+        if member not in _ALLOWED_SDIST_FILES
+        and member not in allowed_directories
+        and not member.startswith(_ALLOWED_SDIST_PREFIXES)
+    )
 
 
 # Corpus source binaries the wheel-split excludes; they ship in the two
@@ -130,8 +140,8 @@ def wheel_members(tmp_path_factory: pytest.TempPathFactory) -> frozenset[str]:
 
 
 @pytest.fixture(scope="module")
-def sdist_members(tmp_path_factory: pytest.TempPathFactory) -> frozenset[str]:
-    """Build the source distribution and return repository-relative archive members."""
+def sdist_archive(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Build and return the sole project source distribution."""
 
     if shutil.which("uv") is None:
         raise AssertionError(
@@ -149,8 +159,36 @@ def sdist_members(tmp_path_factory: pytest.TempPathFactory) -> frozenset[str]:
     archives = scan_directory(out_dir, pattern="cadrumo-*.tar.gz")
     if len(archives) != 1:
         raise AssertionError(f"expected exactly one cadrumo-*.tar.gz in {out_dir}; got {[p.name for p in archives]!r}")
-    with tarfile.open(archives[0], mode="r:gz") as archive:
+    return archives[0]
+
+
+@pytest.fixture(scope="module")
+def sdist_members(sdist_archive: Path) -> frozenset[str]:
+    """Return repository-relative members of the built source distribution."""
+
+    with tarfile.open(sdist_archive, mode="r:gz") as archive:
         return frozenset("/".join(Path(member.name).parts[1:]) for member in archive.getmembers())
+
+
+@pytest.fixture(scope="module")
+def rebuilt_wheel_members(sdist_archive: Path, tmp_path_factory: pytest.TempPathFactory) -> frozenset[str]:
+    """Build a wheel from the isolated sdist and return its archive members."""
+
+    out_dir = tmp_path_factory.mktemp("sdist-wheel-out")
+    subprocess.run(
+        ["uv", "build", "--wheel", "--out-dir", str(out_dir), str(sdist_archive)],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    wheels = scan_directory(out_dir, pattern="cadrumo-*.whl")
+    if len(wheels) != 1:
+        raise AssertionError(
+            f"expected exactly one rebuilt cadrumo-*.whl in {out_dir}; got {[p.name for p in wheels]!r}"
+        )
+    with zipfile.ZipFile(wheels[0]) as archive:
+        return frozenset(info.filename for info in archive.infolist())
 
 
 def _test_members(members: frozenset[str]) -> list[str]:
@@ -186,19 +224,22 @@ def test_distributions_ship_only_the_product_package(
     exclusion list only ever refuses the roots someone remembered to name.
     """
 
-    # An installed wheel is the package and the backend's own dist-info; an
-    # sdist additionally carries the project files the build configuration
-    # declares. Each archive is judged against what IT may ship, never against
-    # a shared list that would have to be loosened to the union of both.
-    allowed_by_archive = (
-        ("wheel", wheel_members, frozenset({_WHEEL_PREFIX}), _wheel_root),
-        ("sdist", sdist_members, _declared_sdist_roots() | _BUILD_BACKEND_MEMBERS, _sdist_root),
+    unexpected_by_archive = (
+        ("wheel", _unexpected_wheel_members(wheel_members)),
+        ("sdist", _unexpected_sdist_members(sdist_members)),
     )
-    for archive_kind, members, allowed_roots, root_of in allowed_by_archive:
-        offenders = sorted(member for member in members if Path(member).parts and root_of(member) not in allowed_roots)
-        assert not offenders, (
-            f"{archive_kind} delivers members the build configuration never declared: {offenders[:10]!r}"
-        )
+    for archive_kind, offenders in unexpected_by_archive:
+        assert not offenders, f"{archive_kind} delivers members outside the fixed product policy: {offenders[:10]!r}"
+
+
+def test_distribution_allowlist_rejects_policy_widening() -> None:
+    """Representative new package and source roots cannot expand the oracle."""
+
+    assert _unexpected_wheel_members(frozenset({"unexpected_product/__init__.py"}))
+    assert _unexpected_wheel_members(frozenset({"cadrumo-rogue/payload.txt"}))
+    assert _unexpected_wheel_members(frozenset({"cadrumo-rogue.dist-info/payload.txt"}))
+    assert _unexpected_wheel_members(frozenset({"cadrumo-9.9.9.dist-info/METADATA"}))
+    assert _unexpected_sdist_members(frozenset({"packaging/unexpected_product/pyproject.toml"}))
 
 
 def test_wheel_keeps_required_data_roots(wheel_members: frozenset[str]) -> None:
@@ -270,15 +311,55 @@ def test_wheel_keeps_registry_payload(wheel_members: frozenset[str]) -> None:
 
     This is deliberately an archive-level release gate: it exercises Hatch's
     actual selection rules and detects both ways the boundary can regress.  A
-    missing signed artifact makes the product unusable, while a retained TOML
+    missing digest-verified artifact makes the product unusable, while a retained TOML
     tree would make a future compiler fallback shippable again.
     """
 
     assert _WHEEL_AUTHORITY_ARTIFACT in wheel_members, (
-        "the built wheel has no signed runtime authority artifact; publication must complete before release"
+        "the built wheel has no digest-verified runtime authority artifact; publication must complete before release"
     )
     authored_members = sorted(member for member in wheel_members if member.startswith(_WHEEL_AUTHORED_REGISTRY_PREFIX))
     assert not authored_members, (
         "the built wheel retains registry authoring input(s), which must stay development-only; "
         f"first ten: {authored_members[:10]!r}"
     )
+
+
+def test_sdist_keeps_only_published_registry_payload(
+    sdist_members: frozenset[str],
+    rebuilt_wheel_members: frozenset[str],
+) -> None:
+    """The source archive can rebuild the artifact-only wheel without authored inputs.
+
+    A wheel-only assertion is insufficient: downstream builders start from the
+    sdist, so admitting the authored tree there would preserve the exact source
+    material needed to recreate a compiler fallback in a rebuilt distribution.
+    """
+
+    assert _SDIST_AUTHORITY_ARTIFACT in sdist_members, (
+        "the built sdist has no digest-verified runtime authority artifact; downstream "
+        "wheel builds would produce an unusable artifact-only runtime"
+    )
+    authored_members = sorted(member for member in sdist_members if member.startswith(_SDIST_AUTHORED_REGISTRY_PREFIX))
+    assert not authored_members, (
+        "the built sdist retains registry authoring input(s), which must stay development-only; "
+        f"first ten: {authored_members[:10]!r}"
+    )
+    assert _WHEEL_AUTHORITY_ARTIFACT in rebuilt_wheel_members, (
+        "the wheel rebuilt from the sdist has no digest-verified runtime authority artifact"
+    )
+    rebuilt_authored_members = sorted(
+        member for member in rebuilt_wheel_members if member.startswith(_WHEEL_AUTHORED_REGISTRY_PREFIX)
+    )
+    assert not rebuilt_authored_members, (
+        "the wheel rebuilt from the sdist retains registry authoring input(s); "
+        f"first ten: {rebuilt_authored_members[:10]!r}"
+    )
+    missing_roots = [
+        root
+        for root in _REQUIRED_DATA_ROOTS
+        if not any(name.startswith(f"{_WHEEL_DATA_PREFIX}/{root}/") for name in rebuilt_wheel_members)
+    ]
+    missing_members = sorted(member for member in _REQUIRED_MEMBERS if member not in rebuilt_wheel_members)
+    assert not missing_roots, f"the wheel rebuilt from the sdist is missing required data roots: {missing_roots!r}"
+    assert not missing_members, f"the wheel rebuilt from the sdist is missing required members: {missing_members!r}"

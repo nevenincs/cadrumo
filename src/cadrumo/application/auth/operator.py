@@ -36,11 +36,11 @@ from ...core.auth_provider import AuthProviderKind
 from ...core.config import Settings, load_settings
 from ...core.time.clock import now
 from ..auth_credentials import ActiveCertificateCredentials
-from .certificate_secret_backend import CertificateSecretBackendFactory
 from ._mutation import AuthBucketEventSpec as _BucketEventSpec
 from ._mutation import build_auth_bucket_events as _build_bucket_events
 from .actions import update_auth
 from .catalogue import AuthProviderListing, get_auth_provider, list_auth_providers
+from .certificate_secret_backend import CertificateSecretBackendFactory
 from .credentials import (
     ActiveAuthProjectionSnapshot,
     active_auth_projection_span,
@@ -59,6 +59,8 @@ from .operator_cleanup import (
     delete_certificate_source_secrets,
     delete_scoped_sessions,
 )
+from .operator_probe_ports import OperatorProbePorts
+from .operator_scope_ports import OperatorScopePorts
 from .operator_probes import (
     live_auth_identity_kind as _live_auth_identity_kind,
 )
@@ -122,7 +124,12 @@ def list_operator_auth_providers() -> AuthProvidersReport:
     return AuthProvidersReport(providers=list_auth_providers())
 
 
-def configure_operator_auth(provider: str, *, certificate_path: Path | None = None) -> AuthConfigureResult:
+def configure_operator_auth(
+    provider: str,
+    *,
+    certificate_path: Path | None = None,
+    operator_scope_ports: OperatorScopePorts,
+) -> AuthConfigureResult:
     """Configure the active auth provider in workflow state.
 
     The active profile is resolved through
@@ -171,12 +178,19 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
     if certificate_path is not None:
         payload["certificate_path"] = str(certificate_path)
 
-    with _active_profile_storage_span(resolved_settings) as bucket_id:
+    with _active_profile_storage_span(
+        resolved_settings,
+        operator_scope_ports=operator_scope_ports,
+    ) as bucket_id:
         if bucket_id is None:
             raise AuthConfigureNoActiveBucketError(
                 translated_message="application.auth.operator.errors.no_active_bucket",
             )
-        with _auth_mutation_span(settings=resolved_settings, bucket_id=bucket_id):
+        with _auth_mutation_span(
+            settings=resolved_settings,
+            bucket_id=bucket_id,
+            operator_scope_ports=operator_scope_ports,
+        ):
             state_repo = workflow_state_repository()
 
             def mutate(current_state: WorkflowState) -> tuple[WorkflowState, tuple[BucketEvent, ...]]:
@@ -237,6 +251,8 @@ def inspect_operator_auth(
     provider: str | None = None,
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_probe_ports: OperatorProbePorts,
+    operator_scope_ports: OperatorScopePorts,
     read_ports: StateProjectionReadPorts,
 ) -> AuthStatusResult:
     """Return current local auth state as :class:`AuthStatusResult`, optionally scoped to a known provider slot.
@@ -258,6 +274,8 @@ def inspect_operator_auth(
 
     projection = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=operator_probe_ports,
+        operator_scope_ports=operator_scope_ports,
         read_ports=read_ports,
         requested_provider=provider,
         probe_live_backend=True,
@@ -271,6 +289,8 @@ def test_operator_auth(
     provider: str | None = None,
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_probe_ports: OperatorProbePorts,
+    operator_scope_ports: OperatorScopePorts,
     read_ports: StateProjectionReadPorts,
     settings: Settings | None = None,
 ) -> AuthTestResult:
@@ -300,10 +320,12 @@ def test_operator_auth(
     same "no provider configured" state on the same state.
     """
     if settings is not None:
-        with _active_profile_storage_span(settings):
+        with _active_profile_storage_span(settings, operator_scope_ports=operator_scope_ports):
             return test_operator_auth(
                 provider,
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
+                operator_probe_ports=operator_probe_ports,
+                operator_scope_ports=operator_scope_ports,
                 read_ports=read_ports,
                 settings=None,
             )
@@ -316,10 +338,13 @@ def test_operator_auth(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             settings=resolved_settings,
             requested_provider=requested_provider,
+            operator_scope_ports=operator_scope_ports,
         ) as snapshot:
             return _test_operator_auth_from_snapshot(
                 snapshot,
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
+                operator_probe_ports=operator_probe_ports,
+                operator_scope_ports=operator_scope_ports,
                 read_ports=read_ports,
                 requested_provider=requested_provider,
                 resolved_settings=resolved_settings,
@@ -330,6 +355,8 @@ def _test_operator_auth_from_snapshot(
     snapshot: ActiveAuthProjectionSnapshot,
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_probe_ports: OperatorProbePorts,
+    operator_scope_ports: OperatorScopePorts,
     read_ports: StateProjectionReadPorts,
     requested_provider: str | None,
     resolved_settings: Settings,
@@ -346,6 +373,8 @@ def _test_operator_auth_from_snapshot(
 
     projection = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=operator_probe_ports,
+        operator_scope_ports=operator_scope_ports,
         read_ports=read_ports,
         auth_snapshot=snapshot,
         requested_provider=requested_provider,
@@ -354,7 +383,11 @@ def _test_operator_auth_from_snapshot(
         include_pending_obligations=False,
     )
     status = _auth_status_from_projection(projection)
-    session_probe = _probe_local_session(status.provider, settings=resolved_settings)
+    session_probe = _probe_local_session(
+        status.provider,
+        settings=resolved_settings,
+        operator_scope_ports=operator_scope_ports,
+    )
     return AuthTestResult(
         **status.model_dump(),
         persisted_session_present=session_probe.present,
@@ -379,6 +412,7 @@ def _clave_movil_preflight_fields(
     provider_kind: AuthProviderKind | None,
     *,
     state: WorkflowState | None = None,
+    operator_probe_ports: OperatorProbePorts,
 ) -> _ClaveMovilPreflightFields:
     """Return the Cl@ve Móvil preflight fields, all ``None`` for other providers.
 
@@ -399,7 +433,12 @@ def _clave_movil_preflight_fields(
             "dni_fecha_configured": None,
             "nie_soporte_configured": None,
         }
-    credentials = probe_clave_credentials(provider_kind, settings=settings, state=state)
+    credentials = probe_clave_credentials(
+        provider_kind,
+        settings=settings,
+        state=state,
+        operator_probe_ports=operator_probe_ports,
+    )
     return {
         "prefer_non_qr": settings.cadrumo_clave_prefer_non_qr,
         "timeout_ms": settings.cadrumo_clave_movil_timeout_ms,
@@ -412,6 +451,8 @@ def build_live_auth_preflight_report(
     provider: str | None = None,
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_probe_ports: OperatorProbePorts,
+    operator_scope_ports: OperatorScopePorts,
     settings: Settings | None = None,
 ) -> LiveAuthPreflightReport:
     """Return a redacted preflight report before a live read may trigger auth.
@@ -444,6 +485,8 @@ def build_live_auth_preflight_report(
         return _build_live_auth_preflight_report(
             provider,
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=operator_probe_ports,
+            operator_scope_ports=operator_scope_ports,
             settings=settings,
         )
     except AuthOperationRequiresCustodySessionError:
@@ -462,14 +505,18 @@ def _build_live_auth_preflight_report(
     provider: str | None = None,
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_probe_ports: OperatorProbePorts,
+    operator_scope_ports: OperatorScopePorts,
     settings: Settings | None = None,
 ) -> LiveAuthPreflightReport:
     """Build the report against an open route, refusing when it cannot be reached."""
     if settings is not None:
-        with _active_profile_storage_span(settings):
+        with _active_profile_storage_span(settings, operator_scope_ports=operator_scope_ports):
             return _build_live_auth_preflight_report(
                 provider,
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
+                operator_probe_ports=operator_probe_ports,
+                operator_scope_ports=operator_scope_ports,
                 settings=None,
             )
 
@@ -482,11 +529,14 @@ def _build_live_auth_preflight_report(
         settings=resolved_settings,
         requested_provider=requested_provider,
         fallback_provider=fallback_provider,
+        operator_scope_ports=operator_scope_ports,
     ) as snapshot:
         provider_kind = snapshot.provider
         probe = _test_operator_auth_from_snapshot(
             snapshot,
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=operator_probe_ports,
+            operator_scope_ports=operator_scope_ports,
             requested_provider=(provider_kind.value if provider_kind is not None else None),
             resolved_settings=resolved_settings,
         )
@@ -494,6 +544,7 @@ def _build_live_auth_preflight_report(
             provider_kind,
             settings=resolved_settings,
             state=snapshot.state,
+            operator_probe_ports=operator_probe_ports,
         )
         certificate_path = Path(probe.certificate_path) if probe.certificate_path else None
         return LiveAuthPreflightReport(
@@ -507,9 +558,19 @@ def _build_live_auth_preflight_report(
             profile_tax_id_present=profile_tax_id_present,
             provider_identity_present=provider_identity_present,
             identity_alignment=identity_alignment,
-            identity_kind=_live_auth_identity_kind(provider_kind, settings=resolved_settings),
+            identity_kind=_live_auth_identity_kind(
+                provider_kind,
+                settings=resolved_settings,
+                state=snapshot.state,
+                operator_probe_ports=operator_probe_ports,
+            ),
             auth_mode=_live_auth_mode(provider_kind, settings=resolved_settings),
-            **_clave_movil_preflight_fields(resolved_settings, provider_kind),
+            **_clave_movil_preflight_fields(
+                resolved_settings,
+                provider_kind,
+                state=snapshot.state,
+                operator_probe_ports=operator_probe_ports,
+            ),
             certificate_path_configured=certificate_path is not None,
             certificate_file_present=bool(
                 certificate_path is not None and certificate_path.is_file(),
@@ -525,6 +586,8 @@ async def login_operator_auth(
     provider: str | None = None,
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_probe_ports: OperatorProbePorts,
+    operator_scope_ports: OperatorScopePorts,
     fresh: bool = False,
     reset_lock: bool = False,
     settings: Settings | None = None,
@@ -546,10 +609,12 @@ async def login_operator_auth(
             result consumed here.
     """
     if settings is not None:
-        with _active_profile_storage_span(settings):
+        with _active_profile_storage_span(settings, operator_scope_ports=operator_scope_ports):
             return await login_operator_auth(
                 provider,
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
+                operator_probe_ports=operator_probe_ports,
+                operator_scope_ports=operator_scope_ports,
                 fresh=fresh,
                 reset_lock=reset_lock,
                 settings=None,
@@ -564,6 +629,7 @@ async def login_operator_auth(
         settings=resolved_settings,
         requested_provider=requested_provider,
         fallback_provider=fallback_provider,
+        operator_scope_ports=operator_scope_ports,
     ) as snapshot:
         provider_kind = snapshot.provider
         if provider_kind is None:
@@ -598,6 +664,7 @@ async def login_operator_auth(
             resolved_settings,
             provider_kind,
             certificate_credentials=certificate_credentials,
+            operator_probe_ports=operator_probe_ports,
         )
 
         from ...domain.buckets.event import BucketEventType
@@ -608,7 +675,11 @@ async def login_operator_auth(
             raise AuthConfigureNoActiveBucketError(
                 translated_message="application.auth.operator.errors.no_active_bucket",
             )
-        with _auth_mutation_span(settings=resolved_settings, bucket_id=bucket_id):
+        with _auth_mutation_span(
+            settings=resolved_settings,
+            bucket_id=bucket_id,
+            operator_scope_ports=operator_scope_ports,
+        ):
             repository = workflow_state_repository()
             _assert_auth_recovery_not_in_progress(repository.load())
             result = await ensure_authenticated_aeat_session(
@@ -619,6 +690,7 @@ async def login_operator_auth(
                 fresh=fresh,
                 reset_lock=reset_lock,
                 operation="operator-auth-login",
+                operator_scope_ports=operator_scope_ports,
             )
 
             occurred_at = now()
@@ -683,6 +755,7 @@ def _revocation_storage_span(
     settings: Settings,
     *,
     target_bucket_id: str | None = None,
+    operator_scope_ports: OperatorScopePorts,
 ):
     """Enter the auth storage span, naming the unrevoked session when it refuses.
 
@@ -699,7 +772,11 @@ def _revocation_storage_span(
     """
     entered = False
     try:
-        with _active_profile_storage_span(settings, target_bucket_id=target_bucket_id) as bucket_id:
+        with _active_profile_storage_span(
+            settings,
+            target_bucket_id=target_bucket_id,
+            operator_scope_ports=operator_scope_ports,
+        ) as bucket_id:
             entered = True
             yield bucket_id
     except AuthOperationRequiresCustodySessionError as exc:
@@ -718,26 +795,40 @@ def logout_operator_auth(
     all_providers: bool = False,
     target_bucket_id: str | None = None,
     settings: Settings | None = None,
+    operator_scope_ports: OperatorScopePorts,
 ) -> AuthLogoutResult:
     """Terminate persisted sessions while preserving provider configuration."""
     if settings is not None:
-        with _revocation_storage_span(settings, target_bucket_id=target_bucket_id):
+        with _revocation_storage_span(
+            settings,
+            target_bucket_id=target_bucket_id,
+            operator_scope_ports=operator_scope_ports,
+        ):
             return logout_operator_auth(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 provider=provider,
                 all_providers=all_providers,
                 target_bucket_id=target_bucket_id,
                 settings=None,
+                operator_scope_ports=operator_scope_ports,
             )
     resolved_settings = load_settings()
-    with _revocation_storage_span(resolved_settings, target_bucket_id=target_bucket_id) as bucket_id:
+    with _revocation_storage_span(
+        resolved_settings,
+        target_bucket_id=target_bucket_id,
+        operator_scope_ports=operator_scope_ports,
+    ) as bucket_id:
         if bucket_id is None:
             raise AuthConfigureNoActiveBucketError(
                 translated_message="application.auth.operator.errors.no_active_bucket",
             )
         from ..workflow.persistence import workflow_state_repository
 
-        with _auth_mutation_span(settings=resolved_settings, bucket_id=bucket_id):
+        with _auth_mutation_span(
+            settings=resolved_settings,
+            bucket_id=bucket_id,
+            operator_scope_ports=operator_scope_ports,
+        ):
             repository = workflow_state_repository()
             started_at = now()
 
@@ -871,26 +962,40 @@ def reset_operator_auth(
     all_providers: bool = False,
     target_bucket_id: str | None = None,
     settings: Settings | None = None,
+    operator_scope_ports: OperatorScopePorts,
 ) -> AuthResetResult:
     """Remove auth custody through one durable, resumable reset operation."""
     if settings is not None:
-        with _revocation_storage_span(settings, target_bucket_id=target_bucket_id):
+        with _revocation_storage_span(
+            settings,
+            target_bucket_id=target_bucket_id,
+            operator_scope_ports=operator_scope_ports,
+        ):
             return reset_operator_auth(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 provider=provider,
                 all_providers=all_providers,
                 target_bucket_id=target_bucket_id,
                 settings=None,
+                operator_scope_ports=operator_scope_ports,
             )
     resolved_settings = load_settings()
-    with _revocation_storage_span(resolved_settings, target_bucket_id=target_bucket_id) as bucket_id:
+    with _revocation_storage_span(
+        resolved_settings,
+        target_bucket_id=target_bucket_id,
+        operator_scope_ports=operator_scope_ports,
+    ) as bucket_id:
         if bucket_id is None:
             raise AuthConfigureNoActiveBucketError(
                 translated_message="application.auth.operator.errors.no_active_bucket",
             )
         from ..workflow.persistence import workflow_state_repository
 
-        with _auth_mutation_span(settings=resolved_settings, bucket_id=bucket_id):
+        with _auth_mutation_span(
+            settings=resolved_settings,
+            bucket_id=bucket_id,
+            operator_scope_ports=operator_scope_ports,
+        ):
             repository = workflow_state_repository()
             started_at = now()
 
@@ -1025,6 +1130,7 @@ def _assert_login_precondition(
     provider_kind: AuthProviderKind,
     *,
     certificate_credentials: ActiveCertificateCredentials | None = None,
+    operator_probe_ports: OperatorProbePorts,
 ) -> None:
     """Refuse login when a provider's local readiness is unmet.
 
@@ -1045,7 +1151,11 @@ def _assert_login_precondition(
                 context={"path": str(cert_path)},
             )
     if provider_kind is AuthProviderKind.CLAVE_MOVIL:
-        credentials = probe_clave_credentials(provider_kind, settings=settings)
+        credentials = probe_clave_credentials(
+            provider_kind,
+            settings=settings,
+            operator_probe_ports=operator_probe_ports,
+        )
         if credentials is None or not credentials.dni_nie:
             raise AuthLoginPreconditionError(
                 translated_message="application.auth.operator.login.refused_clave_movil_identity_unset",

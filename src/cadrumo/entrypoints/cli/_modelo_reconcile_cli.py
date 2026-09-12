@@ -27,7 +27,7 @@ from ...domain.modelos.work_unit import WorkUnit
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_cli_support import resolve_default_actor
 from .common import active_bucket_id_or_refuse, emit_envelope
-from .state_projection_support import certificate_secret_backend_factory
+from .state_projection_support import certificate_secret_backend_factory, operator_scope_ports
 
 
 def _require_profile() -> None:
@@ -146,7 +146,10 @@ def reconcile_pull_verb(
             year=unit.filing_year,
             period=unit.period,
             service=build_justificante_capture_service(unit.bucket_id),
-            read_port=build_justificante_live_read_port(certificate_secret_backend_factory(ctx)),
+            read_port=build_justificante_live_read_port(
+                certificate_secret_backend_factory(ctx),
+                operator_scope_ports(ctx),
+            ),
             registration_ports=build_justificante_registration_ports(),
             verifier=build_justificante_authenticity_verifier(),
         )

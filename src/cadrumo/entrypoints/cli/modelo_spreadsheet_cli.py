@@ -250,11 +250,12 @@ def execute_google_sheets_export(
     from ...application.operations.models import OperationRequest
     from ...core.operations import OperationTerminalCondition, profile_operation_subject
     from ...entrypoints.operation_composition import compose_operation_dependencies
+    from ...adapters.persistence.storage.operator_scope import build_operator_scope_ports
 
     active = resolve_active_profile()
 
     async def run() -> GoogleSheetsExportPublicResultV1:
-        services = compose_operation_dependencies()
+        services = compose_operation_dependencies(operator_scope_ports=build_operator_scope_ports())
         try:
             request = OperationRequest(
                 definition_id=GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,

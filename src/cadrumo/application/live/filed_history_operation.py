@@ -44,6 +44,7 @@ from ..operations.registry import (
 )
 from ..storage.sync_runs.records import SyncRunRecordReference, SyncRunRecordRepositoryProtocol
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ..auth.operator_scope_ports import OperatorScopePorts
 from .filed_data_capture import (
     FILED_HISTORY_DECLARATION_PROGRESS_UNIT,
     FILED_HISTORY_DECLARATION_REFUSAL_CODE,
@@ -66,8 +67,10 @@ from .filed_data_capture import (
     FiledHistoryPairOutcome,
     pull_filed_history,
 )
+from .filed_data_ports import FiledDataCapturePort
 from .filed_observation_ports import FiledObservationPersistencePorts
 from .iva_remote_state_ports import IvaRemoteStatePort
+from .notification_ports import NotificationsPorts
 
 FILED_HISTORY_OPERATION_DEFINITION_ID = "live.filed-history.pull"
 FILED_HISTORY_PHASE_PREFLIGHT = "filed-history.preflight"
@@ -118,8 +121,23 @@ class FiledHistoryComposition(Protocol):
         ...
 
     @property
+    def notifications_ports(self) -> NotificationsPorts:
+        """Return the composed notifications query/persistence bundle."""
+        ...
+
+    @property
+    def filed_data_port(self) -> FiledDataCapturePort:
+        """Return the composed filed-data acquisition port."""
+        ...
+
+    @property
     def certificate_secret_backend_factory(self) -> CertificateSecretBackendFactory:
         """Return the composed certificate-secret capability factory."""
+        ...
+
+    @property
+    def operator_scope_ports(self) -> OperatorScopePorts:
+        """Return the composed operator-auth storage-scope capability."""
         ...
 
 
@@ -130,8 +148,11 @@ type FiledHistoryPull = Callable[
         SyncRunRecordRepositoryProtocol,
         OperationEventEmitter,
         FiledObservationPersistencePorts,
+        FiledDataCapturePort,
         IvaRemoteStatePort,
+        NotificationsPorts,
         CertificateSecretBackendFactory,
+        OperatorScopePorts,
     ],
     Awaitable[FiledHistoryOnboardingRun],
 ]
@@ -159,13 +180,19 @@ async def _pull_recorded_filed_history(
     repository: SyncRunRecordRepositoryProtocol,
     events: OperationEventEmitter,
     ports: FiledObservationPersistencePorts,
+    filed_data_port: FiledDataCapturePort,
     iva_remote_state_port: IvaRemoteStatePort,
+    notifications_ports: NotificationsPorts,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_scope_ports: OperatorScopePorts,
 ) -> FiledHistoryOnboardingRun:
     """Delegate every domain stage and write to the existing composition."""
     return await pull_filed_history(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_scope_ports=operator_scope_ports,
+        filed_data_port=filed_data_port,
         iva_remote_state_port=iva_remote_state_port,
+        notifications_ports=notifications_ports,
         ports=ports,
         output_root=payload.output_root,
         profile=profile,
@@ -177,7 +204,7 @@ async def _pull_recorded_filed_history(
     )
 
 
-def _settled_effect(run: FiledHistoryOnboardingRun) -> OperationEffect:
+def settled_filed_history_effect(run: FiledHistoryOnboardingRun) -> OperationEffect:
     """Classify only effects the canonical result proves were committed."""
     if run.dry_run:
         return OperationEffect.NONE
@@ -369,12 +396,15 @@ class FiledHistoryOperationExecutor:
             self._sync_run_repository,
             context.events,
             composition.ports,
+            composition.filed_data_port,
             composition.iva_remote_state_port,
+            composition.notifications_ports,
             composition.certificate_secret_backend_factory,
+            composition.operator_scope_ports,
         )
         await context.events.phase(FILED_HISTORY_PHASE_RESULT)
         await context.events.phase(FILED_HISTORY_PHASE_CLEANUP)
-        await context.events.effect(_settled_effect(run))
+        await context.events.effect(settled_filed_history_effect(run))
         await context.events.phase(FILED_HISTORY_PHASE_SETTLEMENT)
         return await _settlement_reference(run, context)
 

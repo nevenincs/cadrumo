@@ -10,10 +10,8 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
-from ....application.calculations.observations_repository import (
-    APP_FILING_SOURCE_KIND,
-    CalculationObservationRepository,
-)
+from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations

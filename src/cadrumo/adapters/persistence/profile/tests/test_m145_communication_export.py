@@ -34,7 +34,7 @@ from .....core.resources.bundled_data import bundled_path
 from .....domain.calculations.registry.export import ResolvedExportLayout, resolve_export_layout
 from .....domain.calculations.registry.schema_exports import ExportFieldDefinition
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from .....tests.registry_snapshot import build_snapshot
+from .....domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

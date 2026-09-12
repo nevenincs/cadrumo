@@ -52,7 +52,7 @@ def _m303_snapshot_ref(ejercicio: int) -> RegistrySnapshotRef:
     return (
         bundled_authority()
         .snapshot(
-            Modelo.M303.value,
+            Modelo("303").value,
             filing_year=ejercicio,
             period="4T",
         )

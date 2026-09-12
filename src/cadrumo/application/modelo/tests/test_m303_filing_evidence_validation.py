@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.filing_projection_ref import M303RegimenSimplificadoFact
 from ....core.modelo import Modelo
 from ....core.period import Period
@@ -35,7 +36,6 @@ from ....domain.modelos.calculation_revision_m303_evidence import (
 from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence, M303FilingInstanceEvidence
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ..action_errors import M303FilingEvidenceError
 from ..m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
@@ -96,13 +96,13 @@ def _non_m303_work_unit() -> WorkUnit:
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
-            modelo=Modelo.M130.value,
+            modelo=Modelo("130").value,
             filing_year=period.filing_year,
             period=period,
             revision_id=registry_snapshot.revision.id,
         ),
         bucket_id=_BUCKET_ID,
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         filing_year=period.filing_year,
         period=period,
         revision_id=registry_snapshot.revision.id,

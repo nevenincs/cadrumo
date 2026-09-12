@@ -11,7 +11,7 @@ against the exported or filed
 
 The gate is deliberately repository-backed: transient wallet decisions cannot
 feed the Modelo 303 engine unless the same decision is already present in
-:class:`~cadrumo.application.calculations.IvaWalletDecisionRepository` for the
+:class:`~cadrumo.application.calculations.IvaWalletDecisionRepositoryProtocol` for the
 work-unit taxpayer and period. Calculation, verification, internal filing, and
 export all replay this authority instead of trusting a caller-provided binding
 value for casilla 110. Blocked, missing, stale, target-mismatched, or
@@ -74,8 +74,8 @@ from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.binding_prefill import LocalIvaCompensationRecurrence
 from ..calculations.m303_carry_ingress import M303CarryIngressError, validate_normalized_m303_carry_observation_envelope
 from ..calculations.observations_repository import (
-    CalculationObservationRepository,
-    IvaWalletDecisionRepository,
+    CalculationObservationRepositoryProtocol,
+    IvaWalletDecisionRepositoryProtocol,
     ObservationEnvelopePayload,
 )
 from ..calculations.revision_carry_gate import revision_carry_outcome
@@ -240,7 +240,8 @@ def _persisted_decision_for_calculation(
     work_unit: WorkUnit,
     *,
     snapshot: RegistrySnapshot,
-    repository: IvaWalletDecisionRepository | None,
+    repository: IvaWalletDecisionRepositoryProtocol,
+    observation_repository: CalculationObservationRepositoryProtocol,
 ) -> IvaCompensationReconciliationDecision | None:
     persisted = load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
     if persisted is None:
@@ -250,6 +251,7 @@ def _persisted_decision_for_calculation(
         snapshot=snapshot,
         decision=persisted,
         repository=repository,
+        observation_repository=observation_repository,
     )
     return _require_first_period_zero_decision_grounded(
         work_unit,
@@ -263,13 +265,15 @@ def _resolve_caller_supplied_prior_compensation(
     work_unit: WorkUnit,
     *,
     snapshot: RegistrySnapshot,
-    repository: IvaWalletDecisionRepository | None,
+    repository: IvaWalletDecisionRepositoryProtocol,
+    observation_repository: CalculationObservationRepositoryProtocol,
     supplied_amounts: tuple[Decimal, ...],
 ) -> IvaCompensationReconciliationDecision | None:
     decision = lazily_reconcile_local_iva_compensation_for_work_unit(
         work_unit,
         snapshot=snapshot,
         repository=repository,
+        observation_repository=observation_repository,
         persist=False,
     )
     if decision is None or _decision_is_missing_local_authority(decision):
@@ -302,7 +306,8 @@ def resolve_iva_compensation_decision_for_calculation(
     *,
     snapshot: RegistrySnapshot,
     supplied_decision: object | None,
-    repository: IvaWalletDecisionRepository | None,
+    observation_repository: CalculationObservationRepositoryProtocol,
+    repository: IvaWalletDecisionRepositoryProtocol,
     binding_values: Mapping[BindingId, Decimal] | None,
     backend_binding_values: Mapping[BindingId, Decimal] | None,
     casilla_inputs: Mapping[CasillaId, Decimal] | None,
@@ -332,6 +337,7 @@ def resolve_iva_compensation_decision_for_calculation(
         work_unit,
         snapshot=snapshot,
         repository=repository,
+        observation_repository=observation_repository,
     )
     if persisted is not None:
         return persisted
@@ -346,12 +352,14 @@ def resolve_iva_compensation_decision_for_calculation(
             work_unit,
             snapshot=snapshot,
             repository=repository,
+            observation_repository=observation_repository,
             supplied_amounts=supplied_amounts,
         )
     return lazily_reconcile_local_iva_compensation_for_work_unit(
         work_unit,
         snapshot=snapshot,
         repository=repository,
+        observation_repository=observation_repository,
     )
 
 
@@ -578,7 +586,7 @@ def require_persisted_iva_compensation_decision_for_work_unit(
     *,
     supplied_decision: object,
     snapshot: RegistrySnapshot | None = None,
-    repository: IvaWalletDecisionRepository | None = None,
+    repository: IvaWalletDecisionRepositoryProtocol,
 ) -> object:
     """Require a supplied Modelo 303 wallet decision to match the persisted decision.
 
@@ -624,7 +632,7 @@ def require_persisted_iva_compensation_decision_for_work_unit(
 def load_persisted_iva_compensation_decision_for_work_unit(
     work_unit: WorkUnit,
     *,
-    repository: IvaWalletDecisionRepository | None = None,
+    repository: IvaWalletDecisionRepositoryProtocol,
 ) -> IvaCompensationReconciliationDecision | None:
     """Load the persisted IVA compensation decision for a :class:`~WorkUnit`.
 
@@ -638,11 +646,6 @@ def load_persisted_iva_compensation_decision_for_work_unit(
     taxpayer_nif = taxpayer_nif_for_bucket(work_unit.bucket_id)
     if taxpayer_nif is None:
         return None
-    if repository is None:
-        from ..calculations.observations_repository import IvaWalletDecisionRepository
-
-        repository = IvaWalletDecisionRepository()
-
     return repository.load_decision(
         taxpayer_nif,
         work_unit.period,
@@ -721,7 +724,8 @@ def _refresh_local_iva_compensation_decision_if_evidence_changed(
     *,
     snapshot: RegistrySnapshot,
     decision: IvaCompensationReconciliationDecision,
-    repository: IvaWalletDecisionRepository | None,
+    repository: IvaWalletDecisionRepositoryProtocol,
+    observation_repository: CalculationObservationRepositoryProtocol,
 ) -> IvaCompensationReconciliationDecision:
     if not (
         _decision_is_first_period_zero(decision)
@@ -733,6 +737,7 @@ def _refresh_local_iva_compensation_decision_if_evidence_changed(
         work_unit,
         snapshot=snapshot,
         repository=repository,
+        observation_repository=observation_repository,
         persist=False,
     )
     if refreshed is None or _decision_replay_basis(refreshed) == _decision_replay_basis(decision):
@@ -824,10 +829,9 @@ def _non_blocking_concrete_zero_authority_decision(
 def _save_iva_compensation_decision(
     decision: IvaCompensationReconciliationDecision,
     *,
-    repository: IvaWalletDecisionRepository | None,
+    repository: IvaWalletDecisionRepositoryProtocol,
 ) -> None:
-    repo = repository if repository is not None else IvaWalletDecisionRepository()
-    repo.save_decision(decision)
+    repository.save_decision(decision)
 
 
 def _require_first_period_zero_decision_grounded(
@@ -893,7 +897,8 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
     work_unit: WorkUnit,
     *,
     snapshot: RegistrySnapshot,
-    repository: IvaWalletDecisionRepository | None = None,
+    repository: IvaWalletDecisionRepositoryProtocol,
+    observation_repository: CalculationObservationRepositoryProtocol,
     persist: bool = True,
 ) -> IvaCompensationReconciliationDecision | None:
     """Auto-derive and persist the local-authority Modelo 303 compensation decision.
@@ -919,11 +924,16 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
     from ..calculations.binding_prefill import BindingPrefillReport
     from ..calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 
-    evidence = _prior_period_carry_evidence(work_unit, snapshot=snapshot)
+    evidence = _prior_period_carry_evidence(
+        work_unit,
+        snapshot=snapshot,
+        repository=observation_repository,
+    )
     report = reconcile_modelo_303_iva_compensation(
         snapshot,
         taxpayer_nif=taxpayer_nif,
         wallet=None,
+        repository=observation_repository,
         decision_repository=repository,
         local_recurrence=evidence.recurrence,
         prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
@@ -1053,6 +1063,7 @@ def _prior_period_carry_evidence(
     work_unit: WorkUnit,
     *,
     snapshot: RegistrySnapshot,
+    repository: CalculationObservationRepositoryProtocol,
 ) -> _PriorPeriodCarryEvidence:
     """Return validated filed M303 envelope recurrence, and whether one was stored.
 
@@ -1075,7 +1086,7 @@ def _prior_period_carry_evidence(
     if requirement is None:
         return _NO_PRIOR_PERIOD_OBSERVATION
     source_period = _prior_period_source_period(requirement)
-    payload = CalculationObservationRepository().load_observation(Modelo("303").value, source_period)
+    payload = repository.load_observation(Modelo("303").value, source_period)
     if payload is None:
         return _NO_PRIOR_PERIOD_OBSERVATION
     found = _PriorPeriodCarryEvidence(recurrence=None, prior_period_observation_found=True)
@@ -1105,7 +1116,7 @@ def require_persisted_iva_compensation_decision_matches_revision(
     work_unit: WorkUnit,
     revision: CalculationRevision,
     *,
-    repository: IvaWalletDecisionRepository | None = None,
+    repository: IvaWalletDecisionRepositoryProtocol,
     subject_leaf_key: str = "modelo.export",
 ) -> IvaCompensationReconciliationDecision | None:
     """Return the IVA compensation decision when it matches the revision.

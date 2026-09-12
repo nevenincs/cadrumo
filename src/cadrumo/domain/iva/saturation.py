@@ -58,100 +58,10 @@ from ...core.money.rounding import round_to_cents
 from .errors import IvaRateNotFoundError
 from .lookup import coexisting_tier_rates, lookup_rate
 from .schema import EUMemberState, IvaCategory, IvaRateKind, IvaRateRecord
+from ..calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+from ..calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
 
-# Spanish domestic categories whose rate is a single registry rate tier.
-# Maps the operator-/LLM-selected IvaCategory onto the IvaRateKind whose
-# registry record carries the authoritative percentage. Zero and exempt
-# both resolve to a zero fraction (no positive IVA), so they are handled
-# explicitly below rather than via a positive lookup.
-_CATEGORY_TO_RATE_KIND: dict[IvaCategory, IvaRateKind] = {
-    IvaCategory.DOMESTIC_GENERAL: IvaRateKind.GENERAL,
-    IvaCategory.DOMESTIC_REDUCED: IvaRateKind.REDUCED,
-    IvaCategory.DOMESTIC_SUPER_REDUCED: IvaRateKind.SUPER_REDUCED,
-    IvaCategory.DOMESTIC_ZERO: IvaRateKind.ZERO,
-    IvaCategory.DOMESTIC_EXEMPT: IvaRateKind.EXEMPT,
-}
-
-# Per-category explanation for every IvaCategory whose IVA rate cannot be
-# derived from a single Spanish domestic rate tier. The reason is
-# operator-facing: it states why the system declines to guess and what the
-# operator must supply.
-_NON_DERIVABLE_REASONS: dict[IvaCategory, str] = {
-    IvaCategory.DOMESTIC_NOT_SUBJECT: (
-        "not subject to Spanish IVA (no devengo); no rate is derivable here, "
-        "but this reason does not confirm the filing treatment"
-    ),
-    IvaCategory.OPERACION_NO_SUJETA: (
-        "not subject to Spanish IVA (no devengo); no rate is derivable here, "
-        "but this reason does not confirm the filing treatment"
-    ),
-    IvaCategory.REAGP_COMPENSATION: (
-        "régimen especial de la agricultura, ganadería y pesca: no IVA rate is "
-        "derivable here because none is charged — LIVA art. 130.Cinco sets a "
-        "compensación a tanto alzado of 12 % of the sale price for explotaciones "
-        "agrícolas o forestales and 10,5 % for ganaderas o pesqueras, which is "
-        "not an IVA tipo; supply the compensación from the self-issued document "
-        "LIVA art. 134.Tres requires"
-    ),
-    IvaCategory.DOMESTIC_REVERSE_CHARGE: (
-        "potential domestic reverse charge (inversión del sujeto pasivo): "
-        "no rate is derivable here; verify the operation evidence and supply "
-        "the self-assessed base and cuota explicitly"
-    ),
-    IvaCategory.INTRA_COMMUNITY_SUPPLY: (
-        "potential intra-community supply: no Spanish rate is derivable here; "
-        "verify the customer IVA ID, cross-border transport, and reporting "
-        "evidence before treating it as exempt"
-    ),
-    IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE: (
-        "potential intra-community acquisition under reverse charge: no rate "
-        "is derivable here; verify the acquisition evidence and supply the "
-        "self-assessed base and cuota explicitly"
-    ),
-    IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY: (
-        "potential intra-community service supply: no Spanish rate is "
-        "derivable here because art. 69.Uno.1.o locates the service where the "
-        "recipient is established; verify the customer IVA ID and that no "
-        "art. 70 regla especial brings the service back into the TAI"
-    ),
-    IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE: (
-        "potential intra-community service acquisition under reverse charge: "
-        "no rate is derivable here; verify the acquisition evidence and supply "
-        "the self-assessed base and cuota explicitly"
-    ),
-    IvaCategory.INTRA_COMMUNITY_TRIANGULATION: (
-        "potential intra-community triangulation: no Spanish rate is derivable "
-        "here; verify the triangulation conditions and reporting evidence"
-    ),
-    IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED: (
-        "potential export to a third country: no domestic rate is derivable "
-        "here; verify the export evidence before treating it as zero-rated"
-    ),
-    IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED: (
-        "potential operation assimilated to an export: no domestic rate is "
-        "derivable here; verify the qualifying ship, aircraft, provisioning, "
-        "or related service facts before treating it as exempt"
-    ),
-    IvaCategory.IMPORT_THIRD_COUNTRY: (
-        "import from a third country: IVA is assessed at customs against the "
-        "import base — derivation is left to the operator"
-    ),
-    IvaCategory.RECARGO_EQUIVALENCIA: (
-        "recargo de equivalencia: a surcharge on top of the IVA rate that "
-        "varies by product tier — derivation is left to the operator"
-    ),
-    IvaCategory.REGIMEN_SIMPLIFICADO: (
-        "régimen simplificado: IVA is determined by activity modules, not by "
-        "an inverse split of the gross — derivation is left to the operator"
-    ),
-    IvaCategory.ERRONEOUS_INVOICE: (
-        "erroneous invoice: the line is flagged for correction; no rate is derivable until the operator resolves it"
-    ),
-    IvaCategory.UNKNOWN: (
-        "unknown IVA situation: the category has not been determined — no rate "
-        "can be derived until the operator selects a concrete category"
-    ),
-}
+"""Non-derivable category reasons are projected from fact 0084."""
 
 
 def _ambiguous_tier_reason(
@@ -255,14 +165,19 @@ def resolve_category_rate(category: IvaCategory, *, on_date: date) -> IvaRateRes
             that the registry has no record for on ``on_date`` (a registry
             gap, not a category-shape problem).
     """
-    rate_kind = _CATEGORY_TO_RATE_KIND.get(category)
+    category_catalogue = resolve_iva_category_catalogue(effective_date=on_date)
+    catalogue = resolve_iva_rate_kind_catalogue(effective_date=on_date)
+    rate_kind = next(
+        (definition.token for definition in catalogue.definitions if definition.category == category.value),
+        None,
+    )
     if rate_kind is None:
         return IvaRateResolution(
             category=category,
             derivable=False,
             rate=None,
             rate_kind=None,
-            reason=_NON_DERIVABLE_REASONS[category],
+            reason=category_catalogue.reason(category),
         )
     coexisting = coexisting_tier_rates(EUMemberState.ES, rate_kind, on_date)
     if coexisting:
@@ -273,7 +188,7 @@ def resolve_category_rate(category: IvaCategory, *, on_date: date) -> IvaRateRes
             rate_kind=rate_kind,
             reason=_ambiguous_tier_reason(rate_kind, coexisting, on_date),
         )
-    if rate_kind in (IvaRateKind.ZERO, IvaRateKind.EXEMPT):
+    if rate_kind in (catalogue.zero_token, catalogue.exempt_token):
         return IvaRateResolution(
             category=category,
             derivable=True,

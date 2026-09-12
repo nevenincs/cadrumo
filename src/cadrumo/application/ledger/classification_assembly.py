@@ -106,6 +106,10 @@ from ...domain.iva.establishment import (
     territorial_scope_for_spanish_postal_code,
 )
 from ...domain.iva.identification import identification_state_for_printed_tax_identifier
+from ...domain.calculations.registry.iva_category_catalogue import (
+    registry_category_projection,
+    require_iva_category,
+)
 from ...domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ...domain.iva.supply_nature import SupplyNature
 from . import classification_assembly_rules as _rules
@@ -589,6 +593,7 @@ def _identification_axis_gap(
 def _unresolved_axis_gaps(
     criteria_for: Callable[[CustomerTaxStatus, TransactionKind], IvaInvoiceClassificationCriteria],
     *,
+    transaction_date: date,
     status: CustomerTaxStatus | None,
     supply_nature: SupplyNature | None,
     counterparty_field: str,
@@ -616,7 +621,9 @@ def _unresolved_axis_gaps(
     # value, so it holds genuinely fixed while the other is judged.
     status_candidates = (status,) if status is not None else _STATUS_CANDIDATES
     kind_candidates = (
-        (_rules.NATURE_TO_KIND[supply_nature],) if supply_nature is not None else tuple(_rules.NATURE_TO_KIND.values())
+        (_rules.transaction_kind_for_nature(supply_nature, effective_date=transaction_date),)
+        if supply_nature is not None
+        else _rules.transaction_kind_candidates(effective_date=transaction_date)
     )
     gaps = (
         _status_axis_gap(_probe, status=status, kind_candidates=kind_candidates, inputs=inputs),
@@ -693,6 +700,7 @@ def _initial_classification_state(
         customer_scope,
         supply_nature,
         settled_status,
+        effective_date=transaction_date,
     ):
         missing.append(
             MissingClassifierInput(
@@ -826,6 +834,7 @@ def assemble_classification_criteria(
     missing.extend(
         _unresolved_axis_gaps(
             _criteria_for,
+            transaction_date=transaction_date,
             status=status,
             supply_nature=supply_nature,
             counterparty_field=counterparty_field,
@@ -844,7 +853,11 @@ def assemble_classification_criteria(
     return ClassificationAssembly(
         criteria=_criteria_for(
             status if status is not None else _UNDETERMINED_STATUS,
-            _rules.NATURE_TO_KIND[supply_nature] if supply_nature is not None else _rules.NATURE_INDIFFERENT_KIND,
+            (
+                _rules.transaction_kind_for_nature(supply_nature, effective_date=transaction_date)
+                if supply_nature is not None
+                else _rules.transaction_kind_indifferent(effective_date=transaction_date)
+            ),
         ),
     )
 
@@ -906,7 +919,7 @@ def declared_category_from_document_record(
     if not stated:
         return None
     try:
-        category = IvaCategory(stated)
+        category = require_iva_category(stated)
     except ValueError:
         return None
     return DeclaredFact(value=category, source=ClassifierInputSource.DOCUMENT_EVIDENCE)
@@ -942,14 +955,14 @@ class IvaCategoryResolution(BaseModel):
 def _table_verdict(assembly: ClassificationAssembly) -> IvaCategory | None:
     """Return the category the rule table placed this operation in, if any.
 
-    :attr:`~domain.iva.IvaCategory.UNKNOWN` is read as "not established" rather
+    The registry-declared ``unknown`` category is read as "not established" rather
     than as a treatment, matching how :func:`axis_forks_the_law` reads it: it
     is the table's no-rule-matched sentinel, and carrying it forward as a
     verdict would make an unplaced operation indistinguishable from a placed
     one at every later reader.
     """
     result = classify_from_assembled_criteria(assembly)
-    if result is None or result.category is IvaCategory.UNKNOWN:
+    if result is None or result.category != require_iva_category("unknown"):
         return None
     return result.category
 
@@ -996,14 +1009,6 @@ def _rate_tier_contradiction(declared: IvaCategory, rate_tier: IvaRateKind | Non
 #: relieving categories are here, and only these two are reachable as a declared
 #: code anyway -- the structured readers emit exactly one UNTDID token per
 #: member (``K`` and ``G``).
-_RELIEF_ON_AN_ESTABLISHMENT_PREMISE: frozenset[IvaCategory] = frozenset(
-    {
-        IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
-    },
-)
-
-
 #: Criteria fields naming a party's territorial establishment.
 _RESIDENCY_FIELDS: frozenset[str] = frozenset({"issuer_residency", "customer_residency"})
 
@@ -1066,7 +1071,7 @@ def _unsupported_relief_claim(
     Returns:
         The operator-facing reason, or ``""`` when the claim stands.
     """
-    if declared not in _RELIEF_ON_AN_ESTABLISHMENT_PREMISE:
+    if declared not in registry_category_projection("relief_on_establishment_premise"):
         return ""
     outstanding = {gap.field for gap in assembly.missing} & _RESIDENCY_FIELDS
     if not outstanding:

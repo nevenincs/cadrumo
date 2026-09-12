@@ -51,6 +51,7 @@ from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.submission.models import ModeloDraftStatus
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.user_profile.errors import ProfileNotFoundError
+from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import record_to_path_values
 
@@ -176,6 +177,7 @@ def compute_current_approval_basis(
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
     invoice_catalogue: InvoiceCatalogue | None = None,
+    observation_repository: CalculationObservationRepositoryProtocol,
     prior_filing_observations_fingerprint: str | None = None,
     profile_activity_fingerprint: str | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
@@ -215,7 +217,7 @@ def compute_current_approval_basis(
             :class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository`.
         prior_filing_observations_fingerprint: Optional precomputed prior-filing
             digest. When ``None``, the digest is self-loaded from the bucket's
-            :class:`~application.calculations.CalculationObservationRepository`.
+            :class:`~application.calculations.CalculationObservationRepositoryProtocol`.
             Explicit values let callers reuse a digest they already computed.
         profile_activity_fingerprint: Optional precomputed taxpayer-profile
             digest. When ``None``, the digest is self-loaded from the bucket's
@@ -232,7 +234,7 @@ def compute_current_approval_basis(
     prior_observations_fingerprint = (
         prior_filing_observations_fingerprint
         if prior_filing_observations_fingerprint is not None
-        else _load_prior_filing_observations_fingerprint(bucket_id)
+        else _load_prior_filing_observations_fingerprint(observation_repository)
     )
     profile_fingerprint = (
         profile_activity_fingerprint
@@ -306,6 +308,7 @@ def approval_stale_reasons(
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
     invoice_catalogue: InvoiceCatalogue | None = None,
+    observation_repository: CalculationObservationRepositoryProtocol,
     prior_filing_observations_fingerprint: str | None = None,
     profile_activity_fingerprint: str | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
@@ -353,6 +356,7 @@ def approval_stale_reasons(
         schema_provider=schema_provider,
         transaction_catalogue=transaction_catalogue,
         invoice_catalogue=invoice_catalogue,
+        observation_repository=observation_repository,
         prior_filing_observations_fingerprint=prior_filing_observations_fingerprint,
         profile_activity_fingerprint=profile_activity_fingerprint,
         category_profiles=category_profiles,
@@ -368,6 +372,7 @@ def approve_draft(
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
     invoice_catalogue: InvoiceCatalogue | None = None,
+    observation_repository: CalculationObservationRepositoryProtocol,
     prior_filing_observations_fingerprint: str | None = None,
     profile_activity_fingerprint: str | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
@@ -423,6 +428,7 @@ def approve_draft(
         schema_provider=schema_provider,
         transaction_catalogue=transaction_catalogue,
         invoice_catalogue=invoice_catalogue,
+        observation_repository=observation_repository,
         prior_filing_observations_fingerprint=prior_filing_observations_fingerprint,
         profile_activity_fingerprint=profile_activity_fingerprint,
         category_profiles=category_profiles,
@@ -491,6 +497,7 @@ def _refresh_approved_status(
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None,
     invoice_catalogue: InvoiceCatalogue | None,
+    observation_repository: CalculationObservationRepositoryProtocol,
     prior_filing_observations_fingerprint: str | None,
     profile_activity_fingerprint: str | None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None,
@@ -502,6 +509,7 @@ def _refresh_approved_status(
         schema_provider=schema_provider,
         transaction_catalogue=transaction_catalogue,
         invoice_catalogue=invoice_catalogue,
+        observation_repository=observation_repository,
         prior_filing_observations_fingerprint=prior_filing_observations_fingerprint,
         profile_activity_fingerprint=profile_activity_fingerprint,
         category_profiles=category_profiles,
@@ -537,6 +545,7 @@ def refresh_review_status(
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
     invoice_catalogue: InvoiceCatalogue | None = None,
+    observation_repository: CalculationObservationRepositoryProtocol,
     prior_filing_observations_fingerprint: str | None = None,
     profile_activity_fingerprint: str | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
@@ -589,6 +598,7 @@ def refresh_review_status(
         schema_provider=schema_provider,
         transaction_catalogue=transaction_catalogue,
         invoice_catalogue=invoice_catalogue,
+        observation_repository=observation_repository,
         prior_filing_observations_fingerprint=prior_filing_observations_fingerprint,
         profile_activity_fingerprint=profile_activity_fingerprint,
         category_profiles=category_profiles,
@@ -666,19 +676,9 @@ def _load_invoice_catalogue(bucket_id: str) -> InvoiceCatalogue:
     return InvoiceCatalogueRepository(bucket_id=bucket_id).load()
 
 
-def _load_prior_filing_observations_fingerprint(bucket_id: str) -> str:
-    """Digest the bucket's stored prior-filing observations from the secure backend.
-
-    Self-loads the bucket-scoped
-    :class:`~application.calculations.CalculationObservationRepository` and
-    fingerprints every persisted observation. This is the ``previous_filing``
-    carry and relation fold-in SOURCE store, so the digest changes whenever a
-    prior filed value in the bucket changes — reproducibly, from ``bucket_id``
-    alone, without running the source mesh or resolving any relation.
-    """
-    from ..calculations.observations_repository import CalculationObservationRepository
-
-    return _prior_filing_observations_fingerprint(CalculationObservationRepository(bucket_id=bucket_id).iter_records())
+def _load_prior_filing_observations_fingerprint(repository: CalculationObservationRepositoryProtocol) -> str:
+    """Digest all persisted prior-filing observations supplied by the application port."""
+    return _prior_filing_observations_fingerprint(repository.iter_records())
 
 
 def _prior_filing_observations_fingerprint(payloads: Iterable[_StoredPriorObservation]) -> str:

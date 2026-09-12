@@ -15,6 +15,10 @@ from typing import TYPE_CHECKING, cast
 
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.facts.schema import FactSelector
+from ..calculations.registry.iva_rate_kind_catalogue import (
+    require_iva_rate_kind,
+    resolve_iva_rate_kind_catalogue,
+)
 from ..calculations.registry.schema_base import DateAxis
 from .errors import IvaRateNotFoundError
 from .rates import IVA_RATE_FACT_ID, iva_rate_record_from_fact
@@ -42,6 +46,7 @@ def resolve_iva_rate(
     authority: ValidatedRegistryAuthority | None = None,
 ) -> ResolvedMappingFact:
     """Resolve one dated IVA rate fact and retain the complete authority provenance."""
+    kind = require_iva_rate_kind(kind, effective_date=on_date, authority=authority)
     resolved = _authority(authority).resolve_governed_fact(
         MappingFactQuery(
             fact_id=IVA_RATE_FACT_ID,
@@ -125,7 +130,11 @@ def _in_force_rate_facts(
     return tuple(
         resolve_iva_rate(
             member_state,
-            IvaRateKind(str({selector.name: selector.value for selector in variant.selectors}["kind"])),
+            require_iva_rate_kind(
+                str({selector.name: selector.value for selector in variant.selectors}["kind"]),
+                effective_date=on_date,
+                authority=resolved_authority,
+            ),
             on_date,
             rate_role=str({selector.name: selector.value for selector in variant.selectors}["rate_role"]),
             authority=resolved_authority,
@@ -156,6 +165,7 @@ def lookup_rate(
     Raises:
         IvaRateNotFoundError: If no registered rate satisfies the query.
     """
+    kind = require_iva_rate_kind(kind, effective_date=on_date)
     if not _member_state_is_registered(member_state):
         raise IvaRateNotFoundError(
             translated_message="errors.iva.rate_member_state_unregistered",
@@ -227,10 +237,12 @@ def rate_table_covers(
         ``True`` when a tier-defining rate for ``kind`` (or for any tier when
         ``kind`` is ``None``) covers ``on_date``.
     """
+    if kind is not None:
+        kind = require_iva_rate_kind(kind, effective_date=on_date)
     rates = tuple(iva_rate_record_from_fact(item) for item in _in_force_rate_facts(member_state, on_date))
     return any(
         not rate.supersedes_tier_default
-        and (kind is None or rate.kind is kind)
+        and (kind is None or rate.kind == kind)
         and rate.effective_from <= on_date
         and (rate.effective_until is None or on_date <= rate.effective_until)
         for rate in rates
@@ -261,7 +273,7 @@ def rate_table_covers_any_positive_tier(member_state: EUMemberState, on_date: da
     """
     return any(
         rate_table_covers(member_state, on_date, kind)
-        for kind in (IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED)
+        for kind in resolve_iva_rate_kind_catalogue(effective_date=on_date).positive_kinds
     )
 
 
@@ -295,8 +307,9 @@ def coexisting_tier_rates(
         The in-force coexisting records, in registry declaration order. Empty
         when the tier carries only its ordinary rate on that date.
     """
+    kind = require_iva_rate_kind(kind, effective_date=on_date)
     records = tuple(iva_rate_record_from_fact(rate) for rate in _in_force_rate_facts(member_state, on_date))
-    return tuple(rate for rate in records if rate.kind is kind and rate.supersedes_tier_default)
+    return tuple(rate for rate in records if rate.kind == kind and rate.supersedes_tier_default)
 
 
 def rate_kinds_for_declared_rate(
@@ -355,7 +368,7 @@ def rate_kinds_for_declared_rate(
         # question lives on the category axis, which distinguishes
         # ``DOMESTIC_ZERO`` from ``EXPORT_THIRD_COUNTRY_ZERO_RATED`` and the
         # rest; the rate axis structurally cannot express it.
-        matched.append(IvaRateKind.ZERO)
+        matched.append(resolve_iva_rate_kind_catalogue(effective_date=on_date).zero_token)
     for rate in (iva_rate_record_from_fact(item) for item in _in_force_rate_facts(member_state, on_date)):
         if rate.pct / Decimal("100") != declared_rate:
             continue

@@ -2,7 +2,7 @@
 
 :class:`LocaleError` is the single contributor-tool exception the developer CLI
 catches around every verb. It lives here rather than in
-:mod:`dev.locales.manager` so :mod:`dev.locales._write_guard` can raise it
+:mod:`dev.locales.manager` so :mod:`dev.locales.write_guard` can raise it
 without importing the manager it is imported by.
 """
 

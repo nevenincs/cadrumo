@@ -54,6 +54,7 @@ from .common import (
     transaction_catalogue_repo,
 )
 from .config.status_rendering import precondition_action_lines
+from .state_projection_support import ledger_evidence_ports_factory
 
 if TYPE_CHECKING:
     from ...application.ledger.batch_ingest import BatchItemResult, BatchRunResult, UnresolvedBatchSource
@@ -94,6 +95,7 @@ def evidence_batch(
         bucket_id=bucket_id,
         sources=sources,
         direction=kind,
+        evidence_ports=ledger_evidence_ports_factory(ctx)(bucket_id=bucket_id),
         on_item=(lambda item: emit_progress_line(_progress_line(item))) if text_mode else None,
     )
     emit_envelope(

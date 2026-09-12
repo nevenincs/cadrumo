@@ -7,7 +7,7 @@ here:
 * **Completeness** — every enum member has a row, so a new category cannot ship
   without declaring its components.
 * **Non-divergence** — the cuota-less predicate derived from the table equals
-  the canonical :data:`~domain.iva.CUOTA_LESS_M303_IVA_CATEGORIES` frozenset,
+  the canonical ``cuota_less_m303`` registry projection,
   category by category. The two sides are independent declarations (a hand
   maintained frozenset versus per-row columns), so editing either one alone
   reds the gate; this is what stops the table from becoming a third inline set.
@@ -52,9 +52,10 @@ from ..components import (
     category_components,
     category_cuota_is_zero_by_law,
     cuota_less_m303_categories_from_table,
+    registry_category_projection,
     registry_component_catalogue,
 )
-from ..schema import CUOTA_LESS_M303_IVA_CATEGORIES, EVIDENCE_EXEMPT_IVA_CATEGORIES, IvaCategory
+from ..schema import IvaCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -148,10 +149,11 @@ def test_lookup_returns_the_keyed_row_for_every_member() -> None:
 def test_derived_cuota_less_set_equals_the_canonical_frozenset() -> None:
     """The table is a second view of the cuota-less fact, never a second declaration."""
     derived = cuota_less_m303_categories_from_table()
-    assert derived == CUOTA_LESS_M303_IVA_CATEGORIES, (
-        "Axis-A table and CUOTA_LESS_M303_IVA_CATEGORIES disagree — "
-        f"table-only: {sorted(c.value for c in derived - CUOTA_LESS_M303_IVA_CATEGORIES)}; "
-        f"frozenset-only: {sorted(c.value for c in CUOTA_LESS_M303_IVA_CATEGORIES - derived)}"
+    canonical = registry_category_projection("cuota_less_m303")
+    assert derived == canonical, (
+        "Axis-A table and the registry cuota-less projection disagree — "
+        f"table-only: {sorted(c.value for c in derived - canonical)}; "
+        f"projection-only: {sorted(c.value for c in canonical - derived)}"
     )
 
 
@@ -178,9 +180,10 @@ def test_per_category_cuota_columns_agree_with_the_frozenset(category: IvaCatego
         row.cuota is IvaComponentPresence.ZERO_BY_LAW or row.cuota_settlement is IvaCuotaSettlement.REGIMEN_ESPECIAL
         for row in arising
     )
-    assert declared_cuota_less is (category in CUOTA_LESS_M303_IVA_CATEGORIES), (
+    cuota_less = registry_category_projection("cuota_less_m303")
+    assert declared_cuota_less is (category in cuota_less), (
         f"{category.value}: table says cuota-less={declared_cuota_less}, "
-        f"frozenset says {category in CUOTA_LESS_M303_IVA_CATEGORIES}"
+        f"registry projection says {category in cuota_less}"
     )
 
 
@@ -197,7 +200,9 @@ def test_the_cuota_less_partition_is_non_trivial() -> None:
 
 def test_evidence_exempt_extends_the_cuota_less_set_by_the_three_sentinels() -> None:
     """The evidence-exempt set stays a derived extension, not a parallel list."""
-    assert CUOTA_LESS_M303_IVA_CATEGORIES <= EVIDENCE_EXEMPT_IVA_CATEGORIES
+    cuota_less = registry_category_projection("cuota_less_m303")
+    evidence_exempt = registry_category_projection("evidence_exempt")
+    assert cuota_less <= evidence_exempt
     assert (
         frozenset(
             {
@@ -206,7 +211,7 @@ def test_evidence_exempt_extends_the_cuota_less_set_by_the_three_sentinels() -> 
                 IvaCategory.UNKNOWN,
             },
         )
-        == EVIDENCE_EXEMPT_IVA_CATEGORIES - CUOTA_LESS_M303_IVA_CATEGORIES
+        == evidence_exempt - cuota_less
     )
 
 
@@ -217,7 +222,7 @@ def test_evidence_exempt_extends_the_cuota_less_set_by_the_three_sentinels() -> 
 
 @pytest.mark.parametrize(
     "category",
-    tuple(sorted(CUOTA_LESS_M303_IVA_CATEGORIES, key=_category_id)),
+    tuple(sorted(registry_category_projection("cuota_less_m303"), key=_category_id)),
     ids=_category_id,
 )
 def test_cuota_less_categories_still_require_a_taxable_base(category: IvaCategory) -> None:

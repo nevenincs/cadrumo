@@ -9,12 +9,12 @@ from pathlib import Path
 
 import pytest
 
+from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.casilla_id import validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.payment_election import PaymentElection
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
-from ....core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from ....core.prorrata_register import ProrrataRegisterRegime
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
@@ -28,6 +28,7 @@ from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_
 from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....domain.deadlines.models import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from ....domain.filing.errors import FilingExportError
+from ....domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScope,
@@ -42,7 +43,6 @@ from ....domain.modelos.calculation_revision_m303_evidence import (
 from ....domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.submission.models import ModeloDraftStatus
-from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ...aggregation.m303_arrivals import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
 from ..draft_construction import build_draft
 from ..export import export_draft
@@ -208,7 +208,7 @@ def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_o
     bienes_register = BienesInversionIvaRegister()
     regimen_evidence = _regimen_evidence(period)
     producer_snapshot = build_filing_producer_snapshot(
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         taxpayer_tax_id="12345678Z",
         taxpayer_identity=TaxpayerIdentityFacts(
             legal_name=None,
@@ -299,7 +299,7 @@ def test_exonerado_numeric_payload_refuses_before_target_while_atomic_unit_is_in
 
     with pytest.raises(FilingProducerSnapshotError, match="modelo 303 requires complete M303FilingFacts"):
         build_filing_producer_snapshot(
-            modelo=Modelo.M303,
+            modelo=Modelo("303"),
             taxpayer_tax_id="12345678Z",
             taxpayer_identity=TaxpayerIdentityFacts(
                 legal_name=None,

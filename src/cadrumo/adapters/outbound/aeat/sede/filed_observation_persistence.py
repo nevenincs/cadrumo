@@ -18,8 +18,10 @@ from .....application.calculations.iva_compensation_history import (
     IvaCompensationHistoryRepository,
     persist_observation_envelope_and_iva_history,
 )
-from .....application.calculations.observations_repository import (
+from .....adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
+)
+from .....application.calculations.observations_repository import (
     ObservationEnvelopePayload,
     ObservationSourceKind,
 )
@@ -159,6 +161,10 @@ class CalculationObservationRepositoryAdapter(FiledCalculationObservationReposit
     def __init__(self, *, repository: CalculationObservationRepository) -> None:
         """Bind one already-composed repository instance."""
         self._repository = repository
+
+    def load_observation(self, modelo: str, period: Period) -> ObservationEnvelopePayload | None:
+        """Load one existing calculation-observation envelope."""
+        return _call_adapter("load_calculation_observation", lambda: self._repository.load_observation(modelo, period))
 
     def prepare_observation_envelope(
         self,

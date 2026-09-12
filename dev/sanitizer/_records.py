@@ -28,7 +28,7 @@ from pydantic import (
 )
 
 from cadrumo.core.hashing import sha256_hex
-from cadrumo.core.identity.tax_id import validate_spanish_tax_id
+from cadrumo.domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 
 from .errors import SanitizerValidationError
 
@@ -119,7 +119,7 @@ class NifReplacement(_ReplacementBase):
     @field_validator("synthetic")
     @classmethod
     def _validate_synthetic_nif(cls, value: str) -> str:
-        return validate_spanish_tax_id(value)
+        return validate_runtime_spanish_tax_id(value)
 
 
 class NameReplacement(_ReplacementBase):

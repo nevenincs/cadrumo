@@ -57,7 +57,7 @@ from ..aggregation.source_mesh import (
 from ..aggregation.source_resolution_operations import collect_unhandled_source_diagnostics, merge_source_resolutions
 from ..aggregation.terminal_origin_audit import collect_terminal_origin_diagnostics
 from ..calculations.bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
-from ..calculations.observations_repository import CalculationObservationRepository
+from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 from ..calculations.prorrata_regularizacion import ProrrataRegularizacionSourceResolver
 from ._calculation_modelo_adjustments import m131_objective_estimation_data_base_inputs
 from .calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
@@ -122,7 +122,7 @@ def resolve_prorrata_regularizacion_sources(
     relation_values: Mapping[RelationId, Decimal] | None,
     filing_period_date: date | None,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
 ) -> CalculationSourceResolution:
     """Resolve prorrata and dependent capital-goods staged mesh sources.
 

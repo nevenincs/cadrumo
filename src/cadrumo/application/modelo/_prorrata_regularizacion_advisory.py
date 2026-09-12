@@ -17,7 +17,7 @@ prorrata applies but the provisional percentage ladder is unresolved. Second,
 at the settlement period, it reads the CURRENT year's own registry-computed
 prorrata figures (never a fabricated value) and can look up the PRIOR year's
 persisted ``iva.prorrata-porcentaje`` observation from the local
-:class:`~application.calculations.CalculationObservationRepository` — the
+:class:`~application.calculations.CalculationObservationRepositoryProtocol` — the
 same same-modelo prior-filing lookup pattern
 :mod:`~application.modelo._prior_payment_advisory` already uses for the
 Modelo 130 casilla-05 carry. When a real prior-year percentage is found, the
@@ -73,7 +73,7 @@ from ...domain.prorrata_register.register import ProrrataRegisterError
 from ..aggregation.iva_ledger import compute_annual_deducible_totals_by_regime
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..calculations.observations_repository import (
-    CalculationObservationRepository,
+    CalculationObservationRepositoryProtocol,
     require_observation_envelope_coordinates_current,
 )
 from ..calculations.prorrata_regularizacion import (
@@ -108,7 +108,7 @@ _ESPECIAL_MANDATORY_SOURCE_KIND = "prorrata_especial_mandatory"
 
 
 def _prior_year_definitiva_pct(
-    repository: CalculationObservationRepository,
+    repository: CalculationObservationRepositoryProtocol,
     *,
     filing_year: int,
     porcentaje_id: CasillaId,
@@ -233,7 +233,7 @@ def _settlement_prorrata_diagnostics(
     modelo: str,
     filing_year: int,
     missing_carry_diagnostics: tuple[CalculationSourceDiagnostic, ...],
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
     bucket_id: str | None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Append settlement-only prorrata diagnostics in their canonical order."""
@@ -285,7 +285,7 @@ def collect_prorrata_regularizacion_diagnostics(
     modelo: str,
     period_token: str,
     filing_year: int,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
     bucket_id: str | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Return the annual prorrata-general regularización advisory for one calculation.
@@ -316,7 +316,7 @@ def collect_prorrata_regularizacion_diagnostics(
             prorrata register. When supplied, unresolved provisional register
             state emits a per-period missing-carry advisory before settlement.
         observation_repository: The local
-            :class:`~application.calculations.CalculationObservationRepository`
+            :class:`~application.calculations.CalculationObservationRepositoryProtocol`
             scanned for the prior-year definitive-percentage carry.
 
     Returns:

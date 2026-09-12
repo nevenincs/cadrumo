@@ -14,9 +14,6 @@ from __future__ import annotations
 
 import typer
 
-from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...application.calculations.cross_period_clean_state import (
     cross_period_dependency_inventory,
     evaluate_cross_period_clean_state,
@@ -27,7 +24,6 @@ from ...application.calculations.cross_period_models import (
     CrossPeriodExpectedMemberSet,
 )
 from ...application.calculations.m111_no_retenciones import m111_no_retenciones_periods_for_bucket
-from ...application.calculations.observations_repository import CalculationObservationRepository
 from ...application.modelo.calculation_actions import get_calculation_revision
 from ...application.modelo.filing_actions import file_modelo_revision
 from ...application.modelo.profile_readiness_gate import require_profile_ready_for_work_unit
@@ -68,7 +64,13 @@ from ._modelo_rendering import (
     verification_report_payload,
 )
 from .common import activate_subcommand_output_language, emit_envelope, filing_taxpayer_or_refuse
-from .state_projection_support import certificate_secret_backend_factory
+from .state_projection_support import (
+    calculation_action_ports_factory,
+    certificate_secret_backend_factory,
+    filing_action_ports_factory,
+    operator_scope_ports,
+    verification_repository_bundle_factory,
+)
 
 
 def _profile_expected_member_sets(profile: object) -> tuple[CrossPeriodExpectedMemberSet, ...]:
@@ -213,6 +215,9 @@ def work_verify(
     """Persist a :class:`VerificationReport` for the selected draft revision."""
     activate_subcommand_output_language(ctx, output_language)
     require_active_profile()
+    from ...core.bucket_pointer import require_active_bucket_id
+
+    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=bucket_id or require_active_bucket_id())
     selected_revision = resolve_revision_for_cli(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
@@ -223,13 +228,17 @@ def work_verify(
         bucket_id=bucket_id,
         selector=select.to_calculation_revision_selector().value,
         default_for="verify",
+        calculation_ports=calculation_ports,
     )
-    require_profile_ready_for_work_unit(get_work_unit(selected_revision.work_unit_id))
+    selected_work_unit = get_work_unit(selected_revision.work_unit_id)
+    require_profile_ready_for_work_unit(selected_work_unit)
     workflow_profile = filing_taxpayer_or_refuse(workflow_state_repository().load())
     already_verified = selected_revision.state is not CalculationRevisionState.BORRADOR
     verification = verify_modelo_revision_with_preconditions(
         selected_revision.calculation_revision_id,
         certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+        operator_scope_ports=operator_scope_ports(ctx),
+        verification_repositories=verification_repository_bundle_factory(ctx)(selected_work_unit.bucket_id),
         actor=actor or resolve_default_actor(),
         workflow_profile=workflow_profile,
     )
@@ -266,7 +275,9 @@ def work_verify(
             )
         )
         lines.append(noop_message)
-    notices.extend(m184_socio_handoff_notices(get_calculation_revision(selected_revision.calculation_revision_id)))
+    notices.extend(
+        m184_socio_handoff_notices(get_calculation_revision(selected_revision.calculation_revision_id, ports=calculation_ports))
+    )
     emit_envelope(ctx, command="modelo.work.verify", result=result, lines=lines, notices=notices)
     if not report.granted_verificado_completo:
         raise typer.Exit(code=1)
@@ -293,14 +304,15 @@ def work_dependencies(
         clean_state = None
         if modelo is not None and period is not None:
             active_bucket_id = state.active_profile_bucket_id() or ""
+            verification_repositories = verification_repository_bundle_factory(ctx)(active_bucket_id)
             snapshot = bundled_authority().snapshot(modelo, filing_year=year, period=period)
             clean_state = evaluate_cross_period_clean_state(
                 snapshot,
                 bucket_id=active_bucket_id,
-                observation_repository=CalculationObservationRepository(),
-                filing_repository=ModeloRecordCatalogueRepository(),
-                calculation_repository=CalculationRevisionCatalogueRepository(),
-                verification_repository=VerificationReportCatalogueRepository(),
+                observation_repository=verification_repositories.observation,
+                filing_repository=verification_repositories.filing,
+                calculation_repository=verification_repositories.calculation,
+                verification_repository=verification_repositories.verification,
                 expected_member_sets=_profile_expected_member_sets(workflow_profile),
                 taxpayer_tax_id=workflow_profile.tax_id,
                 activity_start_date=workflow_profile.activity_start_date,
@@ -342,6 +354,9 @@ def work_file(
     """Create an internal :class:`ModeloRecord` for a verified revision."""
     activate_subcommand_output_language(ctx, output_language)
     require_active_profile()
+    from ...core.bucket_pointer import require_active_bucket_id
+
+    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=bucket_id or require_active_bucket_id())
     selected_revision = resolve_revision_for_cli(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
@@ -352,19 +367,24 @@ def work_file(
         bucket_id=bucket_id,
         selector=select,
         default_for="file",
+        calculation_ports=calculation_ports,
     )
-    require_profile_ready_for_work_unit(get_work_unit(selected_revision.work_unit_id))
+    selected_work_unit = get_work_unit(selected_revision.work_unit_id)
+    require_profile_ready_for_work_unit(selected_work_unit)
     workflow_profile = filing_taxpayer_or_refuse(workflow_state_repository().load())
+    filing_ports = filing_action_ports_factory(ctx)(bucket_id=selected_work_unit.bucket_id)
     already_filed = selected_revision.state is CalculationRevisionState.PRESENTADO
     record = file_modelo_revision(
         selected_revision.calculation_revision_id,
         certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+        operator_scope_ports=operator_scope_ports(ctx),
         actor=actor or resolve_default_actor(),
         workflow_profile=workflow_profile,
         notes=notes,
         refund_election=refund_election,
         payment_election=payment_election,
         prior_domiciliation_election=prior_domiciliation_election,
+        ports=filing_ports,
     )
     result = WorkFileResult.model_validate(filing_record_payload(record).model_dump(mode="python"))
     lines = ["operation\tmodelo.work.file", *filing_record_lines(record)]
@@ -386,5 +406,7 @@ def work_file(
             )
         )
         lines.append(noop_message)
-    notices.extend(m184_socio_handoff_notices(get_calculation_revision(record.calculation_revision_id)))
+    notices.extend(
+        m184_socio_handoff_notices(get_calculation_revision(record.calculation_revision_id, ports=calculation_ports))
+    )
     emit_envelope(ctx, command="modelo.work.file", result=result, lines=lines, notices=notices or None)

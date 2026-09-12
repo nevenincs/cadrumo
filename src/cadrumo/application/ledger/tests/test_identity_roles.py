@@ -22,7 +22,7 @@ from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.identity.documents import IdentityError
-from ....core.identity.tax_id import validate_spanish_tax_id
+from ....domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ..identity_roles import (
     IdentityCandidate,
     canonical_identity_token,
@@ -70,14 +70,14 @@ def test_the_fixture_identifiers_still_carry_the_properties_they_are_named_for()
     valid identifiers and every case below would still pass while testing
     something else entirely.
     """
-    assert validate_spanish_tax_id(_UNRELATED_VALID_CIF) == _UNRELATED_VALID_CIF
-    assert validate_spanish_tax_id(_OTHER_VALID_CIF) == _OTHER_VALID_CIF
-    assert validate_spanish_tax_id(_THIRD_VALID_CIF) == _THIRD_VALID_CIF
-    assert validate_spanish_tax_id(_OWN_NIF) == _OWN_NIF
+    assert validate_runtime_spanish_tax_id(_UNRELATED_VALID_CIF) == _UNRELATED_VALID_CIF
+    assert validate_runtime_spanish_tax_id(_OTHER_VALID_CIF) == _OTHER_VALID_CIF
+    assert validate_runtime_spanish_tax_id(_THIRD_VALID_CIF) == _THIRD_VALID_CIF
+    assert validate_runtime_spanish_tax_id(_OWN_NIF) == _OWN_NIF
     with pytest.raises(IdentityError):
-        validate_spanish_tax_id(_SUPPLIER_CIF_FAILING_CHECKSUM)
+        validate_runtime_spanish_tax_id(_SUPPLIER_CIF_FAILING_CHECKSUM)
     with pytest.raises(IdentityError):
-        validate_spanish_tax_id(_FOREIGN_OWN_IVA)
+        validate_runtime_spanish_tax_id(_FOREIGN_OWN_IVA)
 
 
 def test_the_measured_defect_shape_never_yields_a_first_match_identifier() -> None:

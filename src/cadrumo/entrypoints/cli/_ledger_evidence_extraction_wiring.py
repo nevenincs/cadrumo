@@ -19,6 +19,7 @@ from ...adapters.persistence.storage.runtime_repository import secure_object_rep
 from ...application.ledger.document_transcription import DocumentTranscription
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
 from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
+from ...application.ledger.evidence_ports import LedgerEvidencePorts
 from ...application.ledger.evidence_input import (
     EvidenceInput,
     resolve_attachment_evidence_input,
@@ -45,7 +46,7 @@ from ...core.optional_extras import MissingOptionalExtraError
 from ...domain.iva.supply_nature import SupplyNature
 
 
-def invoice_draft_extraction_ports() -> InvoiceDraftExtractionPorts:
+def invoice_draft_extraction_ports(*, evidence_ports: LedgerEvidencePorts) -> InvoiceDraftExtractionPorts:
     """Bind the CLI evidence commands to their concrete adapters."""
 
     def resolve_evidence_input(
@@ -56,7 +57,7 @@ def invoice_draft_extraction_ports() -> InvoiceDraftExtractionPorts:
             reference = classify_evidence_reference(
                 evidence_id,
                 bucket_id=bucket_id,
-                evidence_records=PurchaseInvoiceEvidenceService(settings=settings).list_all(bucket_id=bucket_id),
+                evidence_records=PurchaseInvoiceEvidenceService(ports=evidence_ports).list_all(bucket_id=bucket_id),
                 invoices=InvoiceCatalogueRepository(bucket_id=bucket_id).load(),
             )
             if reference.outcome is EvidenceReferenceOutcome.UNRESOLVED:

@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 _RETENTION_FLOOR_FACT_ID = "lgt-tax-record-retention-floor-years"
 
 
-def _resolve_retention_floor_years(
+def retention_floor_years(
     *,
     effective_date: date,
     authority: ValidatedRegistryAuthority | None = None,
@@ -185,7 +185,7 @@ def assess_retention_floor(
     Returns:
         The :class:`RetentionFloorAssessment` for ``records``.
     """
-    floor_years = _resolve_retention_floor_years(
+    floor_years = retention_floor_years(
         effective_date=as_of.date(),
         authority=authority,
     )

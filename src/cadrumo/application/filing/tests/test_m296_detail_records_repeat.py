@@ -144,7 +144,7 @@ def _record(layout, family: _Family):
 def _producer_snapshot(profile: Modelo296ProfileFacts) -> FilingProducerSnapshot:
     """Build the canonical snapshot whose profile supplies the repeated rows."""
     return build_filing_producer_snapshot(
-        modelo=Modelo.M296,
+        modelo=Modelo("296"),
         taxpayer_tax_id="12345678Z",
         taxpayer_identity=TaxpayerIdentityFacts(
             legal_name=None,

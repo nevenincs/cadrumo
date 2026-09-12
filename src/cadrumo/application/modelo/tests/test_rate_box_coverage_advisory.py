@@ -127,7 +127,7 @@ def _coordinator_diagnostics(values: dict[CasillaId, Decimal]) -> tuple[Calculat
     return collect_bucket_aggregation_advisory_diagnostics(
         _split_revision(),
         values,
-        modelo=Modelo.M390.value,
+        modelo=Modelo("390").value,
         period_token=_ANNUAL_PERIOD,
         filing_year=_FILING_YEAR,
         bucket_id=_BUCKET_ID,

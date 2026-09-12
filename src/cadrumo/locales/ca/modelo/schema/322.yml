@@ -237,14 +237,6 @@ modelo:
           '731':
             help: Informació fiscal de la casella 731 del Modelo 322.
             label: Casella 731 — informació fiscal
-          '75':
-            help: Informació fiscal sobre informació fiscal de la casella 75 del Modelo
-              322.
-            label: Casella 75 — informació fiscal
-          '84':
-            help: Informació fiscal sobre informació fiscal de la casella 84 del Modelo
-              322.
-            label: Casella 84 — informació fiscal
           filing-period:
             help: Informació fiscal de la casella del Modelo 322.
             label: Casella — informació fiscal
@@ -310,10 +302,6 @@ modelo:
           m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-operaciones-interiores:
             help: Informació fiscal de la casella 718 del Modelo 322.
             label: Casella 718 — informació fiscal
-          m322-informacion-adicional-exclusivamente-para-aquellos-sujetos-pasivos-que-sean-destinatarios-de-operaciones-afectadas:
-            help: Informació fiscal sobre informació fiscal de la casella 74 del Modelo
-              322.
-            label: Casella 74 — informació fiscal
           m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-de-operaciones-intragrupo:
             help: Informació fiscal sobre informació fiscal de la casella 10 del Modelo
               322.

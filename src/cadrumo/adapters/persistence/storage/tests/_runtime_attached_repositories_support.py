@@ -91,7 +91,7 @@ from .....tests.aeat_literal_fixtures import (
     JUSTIFICANTE_VERIFY_PATH_FIXTURE,
     aeat_url,
 )
-from .....tests.master_key import EphemeralMasterKeyProvider
+from .ephemeral_master_key import EphemeralMasterKeyProvider
 from ....outbound.aeat.sede.schema import FiledDeclaracionArtefact
 from ....outbound.google.records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
 from ....outbound.llm.models import LLMRequest, LLMResponse, UsageRecord

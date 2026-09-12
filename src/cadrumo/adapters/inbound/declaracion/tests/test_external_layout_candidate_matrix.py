@@ -162,7 +162,7 @@ def _out_of_revision_exercises_for_both_variants(
 
 _MATRIX = (
     *_registry_aligned_cases_for_both_variants(
-        Modelo.M130,
+        Modelo("130"),
         filing_year=2026,
         period="1T",
         revision_id="2019-y-siguientes",
@@ -170,7 +170,7 @@ _MATRIX = (
         expected=_MeasuredOutcome(kind=_OutcomeKind.BLANK_NO_VALUES, missing=_M130_MISSING),
     ),
     *_registry_aligned_cases_for_both_variants(
-        Modelo.M131,
+        Modelo("131"),
         filing_year=2026,
         period="1T",
         revision_id="2026",
@@ -182,7 +182,7 @@ _MATRIX = (
         ),
     ),
     *_registry_aligned_cases_for_both_variants(
-        Modelo.M303,
+        Modelo("303"),
         filing_year=2025,
         period="1T",
         revision_id="2025",
@@ -190,12 +190,12 @@ _MATRIX = (
         expected=_MeasuredOutcome(kind=_OutcomeKind.BLANK_NO_VALUES, missing=_M303_MISSING),
     ),
     *_out_of_revision_exercises_for_both_variants(
-        Modelo.M036,
+        Modelo("036"),
         parser_exercise_period="alta",
         expected=_MeasuredOutcome(kind=_OutcomeKind.BLANK_NO_VALUES, missing=("decl.event-kind",)),
     ),
     *_out_of_revision_exercises_for_both_variants(
-        Modelo.M349,
+        Modelo("349"),
         parser_exercise_period="01",
         expected=_MeasuredOutcome(kind=_OutcomeKind.BLANK_NO_VALUES, missing=_M349_MISSING),
     ),
@@ -299,7 +299,7 @@ def test_matrix_is_exactly_five_modelos_by_two_variants() -> None:
     identities = {(case.modelo, case.candidate_kind) for case in _MATRIX}
     assert identities == {
         (modelo, candidate_kind)
-        for modelo in (Modelo.M036, Modelo.M130, Modelo.M131, Modelo.M303, Modelo.M349)
+        for modelo in (Modelo("036"), Modelo("130"), Modelo("131"), Modelo("303"), Modelo("349"))
         for candidate_kind in ("plain", "fillable")
     }
     assert len(_MATRIX) == 10

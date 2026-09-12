@@ -11,9 +11,15 @@ from __future__ import annotations
 
 import pytest
 
-from ..documents import IdentityDocument, IdentityError, validate_identity
+from ..documents import IdentityDocument, IdentityError
+from ..documents import validate_identity as _validate_identity
+from .tax_id_format_support import SPANISH_TAX_ID_FORMAT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def validate_identity(candidate: object) -> IdentityDocument:
+    return _validate_identity(candidate, SPANISH_TAX_ID_FORMAT)
 
 
 def test_valid_identity_document_variants_round_trip() -> None:
@@ -143,16 +149,16 @@ class TestCifKindCatalogue:
     """Pin the distinction between NIF prefixes and CIF kind letters."""
 
     def test_nif_prefix_absent_from_cif_kind_letters(self) -> None:
-        from ..documents import CIF_KIND_LETTERS
+        cif_kind_letters = SPANISH_TAX_ID_FORMAT.cif_leaders
 
         for nif_prefix in ("K", "L", "M"):
-            assert nif_prefix not in CIF_KIND_LETTERS
+            assert nif_prefix not in cif_kind_letters
 
     def test_current_prefixed_nif_variants_validate_as_nif(self) -> None:
         from ..tax_id import validate_spanish_tax_id
 
         for candidate in ("K1234567L", "L1234567L", "M1234567L"):
-            assert validate_spanish_tax_id(candidate) == candidate
+            assert validate_spanish_tax_id(candidate, SPANISH_TAX_ID_FORMAT) == candidate
             assert validate_identity(candidate) is IdentityDocument.NIF
 
         for candidate in ("K1234567D", "L1234567D", "M1234567D"):

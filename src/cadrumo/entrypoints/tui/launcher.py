@@ -698,8 +698,9 @@ async def operation_services_scope() -> AsyncGenerator[TuiOperationCompositionV1
     it, which is the dependency the TUI boundary exists to forbid.
     """
     from ..operation_composition import compose_operation_dependencies
+    from ...adapters.persistence.storage.operator_scope import build_operator_scope_ports
 
-    services = compose_operation_dependencies()
+    services = compose_operation_dependencies(operator_scope_ports=build_operator_scope_ports())
     composition = TuiOperationCompositionV1(
         services=services,
         public_contracts=services.public_contracts,

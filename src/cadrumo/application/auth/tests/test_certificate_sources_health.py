@@ -6,6 +6,8 @@ self-signed PKCS#12 bundles generated at runtime.
 
 from __future__ import annotations
 
+from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -22,15 +24,20 @@ from ..certificate_source_operations import (
     register_operator_certificate_source,
     set_operator_certificate_source_secret,
 )
+from ..operator_probe_ports import CertificateHealthBand, CertificateHealthObservation
 from ..operator_results import CertificateSourceCheckEntry
 from ..probes import ProviderProbeResult
+from ._operator_probe_fakes import fake_operator_probe_ports
 from .certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 _PROFILE_LABEL = "gestor-cert-rotation"
 _NOW = datetime(2099, 5, 28, 14, 10, 0, tzinfo=UTC)
+_OPERATOR_PROBE_PORTS = fake_operator_probe_ports()
 
 
 def _register_operator_profile() -> None:
@@ -92,15 +99,18 @@ def test_check_reports_ok_for_a_certificate_far_from_expiry(
         name="personal",
         subject_cn="gestor-personal",
     )
-    register_operator_certificate_source(name="personal", certificate_path=cert_path)
+    register_operator_certificate_source(name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
     set_operator_certificate_source_secret(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         name="personal",
         secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     report = check_operator_certificate_sources(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     assert len(report.entries) == 1
@@ -126,15 +136,23 @@ def test_check_reports_expiring_within_the_warning_window(
         name="apoderado-acme",
         subject_cn="apoderado-acme",
     )
-    register_operator_certificate_source(name="apoderado-acme", certificate_path=cert_path)
+    register_operator_certificate_source(name="apoderado-acme", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
     set_operator_certificate_source_secret(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         name="apoderado-acme",
         secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     report = check_operator_certificate_sources(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=fake_operator_probe_ports(
+            certificate_health=CertificateHealthObservation(
+                severity=CertificateHealthBand.WARN,
+                days_until_expiry=30,
+            ),
+        ),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     assert len(report.entries) == 1
@@ -159,15 +177,23 @@ def test_check_reports_expired_for_a_lapsed_certificate(
         name="expired-cert",
         subject_cn="expired-cert",
     )
-    register_operator_certificate_source(name="expired-cert", certificate_path=cert_path)
+    register_operator_certificate_source(name="expired-cert", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
     set_operator_certificate_source_secret(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         name="expired-cert",
         secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     report = check_operator_certificate_sources(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=fake_operator_probe_ports(
+            certificate_health=CertificateHealthObservation(
+                severity=CertificateHealthBand.EXPIRED,
+                days_until_expiry=-5,
+            ),
+        ),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     assert len(report.entries) == 1
@@ -199,21 +225,30 @@ def test_check_covers_every_registered_source_independently(
         name="apoderado-acme",
         subject_cn="apoderado-acme",
     )
-    register_operator_certificate_source(name="personal", certificate_path=valid_cert)
-    register_operator_certificate_source(name="apoderado-acme", certificate_path=expiring_cert, friendly_name="ACME SL")
+    register_operator_certificate_source(name="personal", certificate_path=valid_cert, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(name="apoderado-acme", certificate_path=expiring_cert, friendly_name="ACME SL", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
     set_operator_certificate_source_secret(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         name="personal",
         secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
     set_operator_certificate_source_secret(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         name="apoderado-acme",
         secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     report = check_operator_certificate_sources(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=fake_operator_probe_ports(
+            certificate_evaluator=lambda request: CertificateHealthObservation(
+                severity=CertificateHealthBand.WARN if request.path.stem == "apoderado-acme" else CertificateHealthBand.OK,
+                days_until_expiry=10 if request.path.stem == "apoderado-acme" else 300,
+            ),
+        ),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     by_name = {entry.name: entry for entry in report.entries}
@@ -232,11 +267,13 @@ def test_check_classifies_a_missing_certificate_file_distinctly(
     _register_operator_profile()
     ghost_path = tmp_path / "deleted.p12"
     ghost_path.write_bytes(b"placeholder")
-    register_operator_certificate_source(name="deleted", certificate_path=ghost_path)
+    register_operator_certificate_source(name="deleted", certificate_path=ghost_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
     ghost_path.unlink()
 
     report = check_operator_certificate_sources(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     assert len(report.entries) == 1
@@ -254,6 +291,8 @@ def test_check_with_no_registered_sources_is_empty_and_has_no_warnings(
 
     report = check_operator_certificate_sources(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     assert report.entries == ()

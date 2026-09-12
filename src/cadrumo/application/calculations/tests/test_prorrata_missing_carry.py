@@ -57,7 +57,7 @@ def test_missing_provisional_advisory_names_prior_definitive_follow_up() -> None
 
     assert diagnostic is not None
     assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
-    snapshot = bundled_authority().snapshot(Modelo.M303.value, filing_year=2026, period="4T")
+    snapshot = bundled_authority().snapshot(Modelo("303").value, filing_year=2026, period="4T")
     canonical_target = next(
         casilla_id
         for binding in snapshot.revision.bindings

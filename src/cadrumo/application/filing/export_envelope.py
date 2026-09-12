@@ -12,7 +12,6 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...core.product_identity import AeatProductSoftwareIdentity
 from ...domain.calculations.registry.ids import RecordId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import (
@@ -23,6 +22,7 @@ from ...domain.calculations.registry.schema_exports import (
 )
 from ...domain.filing.errors import FilingExportValidationError
 from ...domain.filing.schema import ModeloDraft, registry_schema_version
+from ...domain.filing.software_identity import AeatProductSoftwareIdentity
 from ...domain.submission.models import ModeloDraftStatus
 from ._envelope_modelo_policy import filing_envelope_modelo_policy
 from .producer_snapshot import FilingProducerSnapshot

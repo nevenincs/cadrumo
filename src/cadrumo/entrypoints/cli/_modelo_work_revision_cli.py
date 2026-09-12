@@ -26,6 +26,7 @@ from ...application.modelo.selectors import ModeloCalculationRevisionSelector
 from ...core.external_constants import OutputLanguage
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
+from ...core.bucket_pointer import require_active_bucket_id
 from ._modelo_behavior_support import require_active_profile, resolve_revision_for_cli, resolve_work_unit_for_cli
 from ._modelo_cli_support import bad_parameter_from_error, selector_bad_parameter
 from ._modelo_payloads import (
@@ -40,6 +41,7 @@ from ._modelo_rendering import (
 )
 from ._modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
 from .common import activate_subcommand_output_language, emit_envelope
+from .state_projection_support import calculation_action_ports_factory
 
 
 @dataclass(frozen=True)
@@ -76,6 +78,7 @@ def _resolve_selected_revision(
     registry_revision: str | None,
     bucket_id: str | None,
     selector: str,
+    calculation_ports,
 ) -> CalculationRevision:
     """Resolve the selected :class:`CalculationRevision` for read-only commands."""
     try:
@@ -88,6 +91,7 @@ def _resolve_selected_revision(
             registry_revision=registry_revision,
             bucket_id=bucket_id,
             selector=selector,
+            calculation_ports=calculation_ports,
         )
     except CalculationRevisionNotFoundError as exc:
         if calculation_revision_id is not None:
@@ -207,7 +211,10 @@ def work_revisions(
         revision=revision,
         bucket_id=bucket_id,
     )
-    revisions = list_calculation_revisions(work_unit_id=resolved_work_unit_id)
+    revisions = list_calculation_revisions(
+        work_unit_id=resolved_work_unit_id,
+        ports=calculation_action_ports_factory(ctx)(bucket_id=bucket_id or require_active_bucket_id()),
+    )
     result = _work_revisions_result(resolved_work_unit_id, revisions)
     lines = _work_revisions_lines(resolved_work_unit_id, revisions)
     emit_envelope(ctx, command="modelo.work.revisions", result=result, lines=lines)
@@ -236,6 +243,7 @@ def work_revision(
     """
     activate_subcommand_output_language(ctx, output_language)
     require_active_profile()
+    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=bucket_id or require_active_bucket_id())
     selected_revision = _resolve_selected_revision(
         _revision_dependencies(),
         calculation_revision_id=calculation_revision_id,
@@ -246,6 +254,7 @@ def work_revision(
         registry_revision=registry_revision,
         bucket_id=bucket_id,
         selector=select,
+        calculation_ports=calculation_ports,
     )
     modality_payload: dict[str, object] = {}
     modality_lines: list[str] = []
@@ -285,6 +294,7 @@ def work_observations(
     """
     activate_subcommand_output_language(ctx, output_language)
     require_active_profile()
+    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=bucket_id or require_active_bucket_id())
     selected_revision = _resolve_selected_revision(
         _revision_dependencies(),
         calculation_revision_id=calculation_revision_id,
@@ -295,6 +305,7 @@ def work_observations(
         registry_revision=registry_revision,
         bucket_id=bucket_id,
         selector=select,
+        calculation_ports=calculation_ports,
     )
     revision_payload = calculation_revision_payload(selected_revision)
     result = WorkObservationsResult.model_validate(

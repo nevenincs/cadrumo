@@ -14,7 +14,6 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -99,7 +98,7 @@ def repo() -> ModeloDraftRepository:
 def _database_bytes(storage_root: Path) -> bytes:
     from ....adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 
-    return read_db_at_rest_bytes(bucket_paths(storage_root, _BUCKET_ID).database_file)
+    return read_db_at_rest_bytes(storage_root / "buckets" / _BUCKET_ID / "db" / "workflow.sqlite3")
 
 
 class TestEmptyState:

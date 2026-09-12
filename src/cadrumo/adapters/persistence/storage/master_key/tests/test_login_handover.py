@@ -41,21 +41,23 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
     current_active_bucket_session,
 )
 from cadrumo.adapters.persistence.storage.master_key.login_throttle import evaluate_login_throttle
+from cadrumo.adapters.persistence.storage.master_key.login_handover_journal import (
+    clear_handover_journal,
+    handover_journal_path,
+    load_handover_journal,
+    save_handover_journal,
+)
+from cadrumo.application.user_profile.login_handover import (
+    HANDOVER_JOURNAL_MAX_BYTES,
+    HandoverPhase,
+    ProfileLoginHandoverJournal,
+)
 from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
 from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.authentication import ProfileAuthenticationRefusedError
 from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
-from cadrumo.application.user_profile.login_session import (
-    _HANDOVER_JOURNAL_MAX_BYTES,
-    _clear_handover_journal,
-    _handover_journal_path,
-    _HandoverPhase,
-    _load_handover_journal,
-    _ProfileLoginHandoverJournal,
-    _save_handover_journal,
-    login_profile,
-)
+from cadrumo.application.user_profile.login_session import login_profile
 from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
 from cadrumo.application.user_profile.profile_pointer import ActiveProfilePointerTransactionError
 from cadrumo.application.user_profile.profile_record_repository import (
@@ -166,9 +168,9 @@ def _close_child_login(
         composition.__exit__(None, None, None)
 
 
-def _prepared_handover_journal() -> _ProfileLoginHandoverJournal:
+def _prepared_handover_journal() -> ProfileLoginHandoverJournal:
     """Build a real current witness through the production journal constructor."""
-    return _ProfileLoginHandoverJournal.prepare(
+    return ProfileLoginHandoverJournal.prepare(
         profile_a="journal-profile-a",
         profile_b="journal-profile-b",
         pointer_before=BucketPointer.selected(bucket_id="journal-profile-a", transition_revision=10),
@@ -180,7 +182,7 @@ def _prepared_handover_journal() -> _ProfileLoginHandoverJournal:
 def test_handover_journal_rejects_the_retired_v1_byte_witness(tmp_path: Path) -> None:
     """The v2 journal path has no byte-witness compatibility reader."""
     storage_root = tmp_path / "handover-root"
-    path = _handover_journal_path(storage_root)
+    path = handover_journal_path(storage_root)
     path.parent.mkdir(parents=True)
     path.write_text(
         json.dumps(
@@ -198,7 +200,7 @@ def test_handover_journal_rejects_the_retired_v1_byte_witness(tmp_path: Path) ->
     )
 
     with pytest.raises(ActiveProfilePointerTransactionError):
-        _load_handover_journal(storage_root=storage_root)
+        load_handover_journal(storage_root=storage_root)
 
 
 def _replace_journal_in_child(path_text: str, payload: bytes, result_queue: Queue[str]) -> None:
@@ -546,7 +548,7 @@ def _crash_at_handover_phase_child(
     storage_root: Path,
     profile_a: str,
     profile_b: str,
-    phase: _HandoverPhase,
+    phase: HandoverPhase,
 ) -> None:
     """Crash the real handover process immediately after one durable receipt.
 
@@ -563,7 +565,7 @@ def _crash_at_handover_phase_child(
     stop_watcher = ThreadEvent()
 
     def crash_after_phase_receipt() -> None:
-        journal_path = _handover_journal_path(storage_root)
+        journal_path = handover_journal_path(storage_root)
         deadline = time.monotonic() + 120
         while not stop_watcher.is_set() and time.monotonic() < deadline:
             if journal_path.is_file():
@@ -578,13 +580,13 @@ def _crash_at_handover_phase_child(
 
     try:
         login_profile(name=profile_a, passphrase_callback=lambda: _PASSWORD_A)
-        if phase is _HandoverPhase.A_RETIRED:
+        if phase is HandoverPhase.A_RETIRED:
             # There is intentionally no production work after the terminal
             # receipt. Crash at the next instruction, after verifying that
             # exact durable boundary, rather than race a watcher against a
             # return path with no further scheduling point.
             login_profile(name=profile_b, passphrase_callback=lambda: _PASSWORD_B)
-            payload = json.loads(_handover_journal_path(storage_root).read_text(encoding="utf-8"))
+            payload = json.loads(handover_journal_path(storage_root).read_text(encoding="utf-8"))
             if payload["phase"] != phase.value:
                 os._exit(1)
             os._exit(0)
@@ -611,15 +613,15 @@ def test_handover_journal_roundtrips_through_the_anchored_bounded_record_store(t
     storage_root.mkdir()
     prepared = _prepared_handover_journal()
 
-    _save_handover_journal(storage_root=storage_root, journal=prepared)
+    save_handover_journal(storage_root=storage_root, journal=prepared)
 
-    path = _handover_journal_path(storage_root)
+    path = handover_journal_path(storage_root)
     assert path.read_bytes() == prepared.canonical_json_bytes()
-    assert _load_handover_journal(storage_root=storage_root) == prepared
+    assert load_handover_journal(storage_root=storage_root) == prepared
 
-    _clear_handover_journal(storage_root=storage_root, journal=prepared)
+    clear_handover_journal(storage_root=storage_root, journal=prepared)
 
-    assert _load_handover_journal(storage_root=storage_root) is None
+    assert load_handover_journal(storage_root=storage_root) is None
 
 
 def test_handover_journal_duplicate_prepared_receipt_is_an_identity_preserving_noop(tmp_path: Path) -> None:
@@ -628,18 +630,18 @@ def test_handover_journal_duplicate_prepared_receipt_is_an_identity_preserving_n
     storage_root.mkdir()
     prepared = _prepared_handover_journal()
 
-    _save_handover_journal(storage_root=storage_root, journal=prepared)
+    save_handover_journal(storage_root=storage_root, journal=prepared)
 
-    path = _handover_journal_path(storage_root)
+    path = handover_journal_path(storage_root)
     before = path.stat()
     before_identity = (before.st_dev, before.st_ino)
     before_bytes = path.read_bytes()
-    _save_handover_journal(storage_root=storage_root, journal=prepared)
+    save_handover_journal(storage_root=storage_root, journal=prepared)
 
     after = path.stat()
     assert (after.st_dev, after.st_ino) == before_identity
     assert path.read_bytes() == before_bytes == prepared.canonical_json_bytes()
-    assert _load_handover_journal(storage_root=storage_root) == prepared
+    assert load_handover_journal(storage_root=storage_root) == prepared
 
 
 def test_handover_journal_duplicate_later_phase_receipt_is_an_identity_preserving_noop(tmp_path: Path) -> None:
@@ -647,20 +649,20 @@ def test_handover_journal_duplicate_later_phase_receipt_is_an_identity_preservin
     storage_root = tmp_path / "handover-root"
     storage_root.mkdir()
     prepared = _prepared_handover_journal()
-    published = prepared.at_phase(_HandoverPhase.POINTER_PUBLISHED)
-    _save_handover_journal(storage_root=storage_root, journal=prepared)
-    _save_handover_journal(storage_root=storage_root, journal=published)
+    published = prepared.at_phase(HandoverPhase.POINTER_PUBLISHED)
+    save_handover_journal(storage_root=storage_root, journal=prepared)
+    save_handover_journal(storage_root=storage_root, journal=published)
 
-    path = _handover_journal_path(storage_root)
+    path = handover_journal_path(storage_root)
     before = path.stat()
     before_identity = (before.st_dev, before.st_ino)
     before_bytes = path.read_bytes()
-    _save_handover_journal(storage_root=storage_root, journal=published)
+    save_handover_journal(storage_root=storage_root, journal=published)
 
     after = path.stat()
     assert (after.st_dev, after.st_ino) == before_identity
     assert path.read_bytes() == before_bytes == published.canonical_json_bytes()
-    assert _load_handover_journal(storage_root=storage_root) == published
+    assert load_handover_journal(storage_root=storage_root) == published
 
 
 def test_handover_journal_retry_converges_after_postpublication_cleanup_refusal(tmp_path: Path) -> None:
@@ -668,15 +670,15 @@ def test_handover_journal_retry_converges_after_postpublication_cleanup_refusal(
     storage_root = tmp_path / "handover-root"
     storage_root.mkdir()
     prepared = _prepared_handover_journal()
-    published = prepared.at_phase(_HandoverPhase.POINTER_PUBLISHED)
-    _save_handover_journal(storage_root=storage_root, journal=prepared)
+    published = prepared.at_phase(HandoverPhase.POINTER_PUBLISHED)
+    save_handover_journal(storage_root=storage_root, journal=prepared)
 
-    path = _handover_journal_path(storage_root)
+    path = handover_journal_path(storage_root)
     compare_and_replace_same_or_predecessor_profile_custody_local_record(
         path,
         current=published.canonical_json_bytes(),
         predecessor=prepared.canonical_json_bytes(),
-        maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES,
+        maximum_bytes=HANDOVER_JOURNAL_MAX_BYTES,
     )
     assert path.with_name(f".{path.name}.cas-idempotent-backup").exists()
 
@@ -700,7 +702,7 @@ def test_handover_journal_retry_converges_after_postpublication_cleanup_refusal(
 
     def save_later_receipt() -> None:
         try:
-            _save_handover_journal(storage_root=storage_root, journal=published)
+            save_handover_journal(storage_root=storage_root, journal=published)
         except BaseException as exc:
             failures.append(exc)
 
@@ -716,16 +718,16 @@ def test_handover_journal_retry_converges_after_postpublication_cleanup_refusal(
         assert isinstance(failures[0], ActiveProfilePointerTransactionError)
 
         assert path.read_bytes() == published.canonical_json_bytes()
-        assert _load_handover_journal(storage_root=storage_root) == published
+        assert load_handover_journal(storage_root=storage_root) == published
 
         release.set()
         assert result_queue.get(timeout=30) == "released"
         child.join(timeout=30)
         assert child.exitcode == 0
 
-        _save_handover_journal(storage_root=storage_root, journal=published)
+        save_handover_journal(storage_root=storage_root, journal=published)
 
-        assert _load_handover_journal(storage_root=storage_root) == published
+        assert load_handover_journal(storage_root=storage_root) == published
         assert not path.with_name(f".{path.name}.cas-idempotent-backup").exists()
     finally:
         release.set()
@@ -743,7 +745,7 @@ def test_handover_journal_refuses_noncurrent_filesystem_artifacts(tmp_path: Path
     """Every journal read remains bounded and refuses links or noncanonical JSON."""
     storage_root = tmp_path / "handover-root"
     storage_root.mkdir()
-    path = _handover_journal_path(storage_root)
+    path = handover_journal_path(storage_root)
     outside = tmp_path / "outside.json"
     outside.write_bytes(b"outside-journal-content")
 
@@ -754,7 +756,7 @@ def test_handover_journal_refuses_noncurrent_filesystem_artifacts(tmp_path: Path
     else:
         path.parent.mkdir()
         if artifact == "oversized":
-            path.write_bytes(b"x" * (_HANDOVER_JOURNAL_MAX_BYTES + 1))
+            path.write_bytes(b"x" * (HANDOVER_JOURNAL_MAX_BYTES + 1))
         elif artifact == "noncanonical":
             path.write_bytes(_prepared_handover_journal().canonical_json_bytes() + b"\n")
         elif artifact == "duplicate":
@@ -766,9 +768,9 @@ def test_handover_journal_refuses_noncurrent_filesystem_artifacts(tmp_path: Path
             os.symlink(outside, path)
 
     with pytest.raises(ActiveProfilePointerTransactionError):
-        _load_handover_journal(storage_root=storage_root)
+        load_handover_journal(storage_root=storage_root)
     with pytest.raises(ActiveProfilePointerTransactionError):
-        _save_handover_journal(storage_root=storage_root, journal=_prepared_handover_journal())
+        save_handover_journal(storage_root=storage_root, journal=_prepared_handover_journal())
 
     assert outside.read_bytes() == b"outside-journal-content"
 
@@ -778,13 +780,13 @@ def test_handover_journal_clear_refuses_to_remove_a_replaced_noncanonical_leaf(t
     storage_root = tmp_path / "handover-root"
     storage_root.mkdir()
     prepared = _prepared_handover_journal()
-    _save_handover_journal(storage_root=storage_root, journal=prepared)
-    path = _handover_journal_path(storage_root)
+    save_handover_journal(storage_root=storage_root, journal=prepared)
+    path = handover_journal_path(storage_root)
     substitute = _prepared_handover_journal().canonical_json_bytes() + b" "
     path.write_bytes(substitute)
 
     with pytest.raises(ActiveProfilePointerTransactionError):
-        _clear_handover_journal(storage_root=storage_root, journal=prepared)
+        clear_handover_journal(storage_root=storage_root, journal=prepared)
 
     assert path.read_bytes() == substitute
 
@@ -794,8 +796,8 @@ def test_handover_journal_refuses_a_fresh_canonical_replacement_from_another_pro
     storage_root = tmp_path / "handover-root"
     storage_root.mkdir()
     prepared = _prepared_handover_journal()
-    _save_handover_journal(storage_root=storage_root, journal=prepared)
-    replacement = _ProfileLoginHandoverJournal.prepare(
+    save_handover_journal(storage_root=storage_root, journal=prepared)
+    replacement = ProfileLoginHandoverJournal.prepare(
         profile_a="substituted-profile-a",
         profile_b="substituted-profile-b",
         pointer_before=BucketPointer.selected(bucket_id="substituted-profile-a", transition_revision=20),
@@ -806,7 +808,7 @@ def test_handover_journal_refuses_a_fresh_canonical_replacement_from_another_pro
     result_queue: Queue[str] = Queue(ctx=context)
     child = context.Process(
         target=_replace_journal_in_child,
-        args=(str(_handover_journal_path(storage_root)), replacement.canonical_json_bytes(), result_queue),
+        args=(str(handover_journal_path(storage_root)), replacement.canonical_json_bytes(), result_queue),
     )
     child.start()
     try:
@@ -815,12 +817,12 @@ def test_handover_journal_refuses_a_fresh_canonical_replacement_from_another_pro
         assert child.exitcode == 0
 
         with pytest.raises(ActiveProfilePointerTransactionError):
-            _save_handover_journal(
+            save_handover_journal(
                 storage_root=storage_root,
-                journal=prepared.at_phase(_HandoverPhase.POINTER_PUBLISHED),
+                journal=prepared.at_phase(HandoverPhase.POINTER_PUBLISHED),
             )
 
-        assert _load_handover_journal(storage_root=storage_root) == replacement
+        assert load_handover_journal(storage_root=storage_root) == replacement
     finally:
         if child.is_alive():
             child.terminate()
@@ -832,8 +834,8 @@ def test_handover_journal_cas_replace_restores_a_valid_sibling_substitute(tmp_pa
     storage_root = tmp_path / "handover-root"
     storage_root.mkdir()
     prepared = _prepared_handover_journal()
-    _save_handover_journal(storage_root=storage_root, journal=prepared)
-    substitute = _ProfileLoginHandoverJournal.prepare(
+    save_handover_journal(storage_root=storage_root, journal=prepared)
+    substitute = ProfileLoginHandoverJournal.prepare(
         profile_a="interleaved-profile-a",
         profile_b="interleaved-profile-b",
         pointer_before=BucketPointer.selected(bucket_id="interleaved-profile-a", transition_revision=30),
@@ -845,20 +847,20 @@ def test_handover_journal_cas_replace_restores_a_valid_sibling_substitute(tmp_pa
     result_queue: Queue[str] = Queue(ctx=context)
     child = context.Process(
         target=_replace_journal_after_cas_stage_appears,
-        args=(str(_handover_journal_path(storage_root)), substitute.canonical_json_bytes(), ready, result_queue),
+        args=(str(handover_journal_path(storage_root)), substitute.canonical_json_bytes(), ready, result_queue),
     )
     child.start()
     try:
         assert ready.wait(30)
         with pytest.raises(ActiveProfilePointerTransactionError):
-            _save_handover_journal(
+            save_handover_journal(
                 storage_root=storage_root,
-                journal=prepared.at_phase(_HandoverPhase.POINTER_PUBLISHED),
+                journal=prepared.at_phase(HandoverPhase.POINTER_PUBLISHED),
             )
         assert result_queue.get(timeout=30) == "replaced-after-capture"
         child.join(timeout=30)
         assert child.exitcode == 0
-        assert _load_handover_journal(storage_root=storage_root) == substitute
+        assert load_handover_journal(storage_root=storage_root) == substitute
     finally:
         if child.is_alive():
             child.terminate()
@@ -870,8 +872,8 @@ def test_handover_journal_cas_clear_refuses_and_preserves_a_valid_sibling_substi
     storage_root = tmp_path / "handover-root"
     storage_root.mkdir()
     prepared = _prepared_handover_journal()
-    _save_handover_journal(storage_root=storage_root, journal=prepared)
-    substitute = _ProfileLoginHandoverJournal.prepare(
+    save_handover_journal(storage_root=storage_root, journal=prepared)
+    substitute = ProfileLoginHandoverJournal.prepare(
         profile_a="clear-interleaved-profile-a",
         profile_b="clear-interleaved-profile-b",
         pointer_before=BucketPointer.selected(bucket_id="clear-interleaved-profile-a", transition_revision=40),
@@ -882,7 +884,7 @@ def test_handover_journal_cas_clear_refuses_and_preserves_a_valid_sibling_substi
     result_queue: Queue[str] = Queue(ctx=context)
     child = context.Process(
         target=_replace_journal_in_child,
-        args=(str(_handover_journal_path(storage_root)), substitute.canonical_json_bytes(), result_queue),
+        args=(str(handover_journal_path(storage_root)), substitute.canonical_json_bytes(), result_queue),
     )
     child.start()
     try:
@@ -890,8 +892,8 @@ def test_handover_journal_cas_clear_refuses_and_preserves_a_valid_sibling_substi
         child.join(timeout=30)
         assert child.exitcode == 0
         with pytest.raises(ActiveProfilePointerTransactionError):
-            _clear_handover_journal(storage_root=storage_root, journal=prepared)
-        assert _load_handover_journal(storage_root=storage_root) == substitute
+            clear_handover_journal(storage_root=storage_root, journal=prepared)
+        assert load_handover_journal(storage_root=storage_root) == substitute
     finally:
         if child.is_alive():
             child.terminate()
@@ -1213,7 +1215,7 @@ def test_crash_after_b_handover_recovers_only_durable_b_pointer(
 
 #: Phases at which the handover was already complete when the process died,
 #: so the recovery login has nothing to replay.
-_TERMINAL_CRASH_PHASES = frozenset({_HandoverPhase.ACTIVATED, _HandoverPhase.A_RETIRED})
+_TERMINAL_CRASH_PHASES = frozenset({HandoverPhase.ACTIVATED, HandoverPhase.A_RETIRED})
 
 
 @pytest.fixture(scope="module")
@@ -1245,7 +1247,7 @@ def _registered_handover_profiles(tmp_path_factory: pytest.TempPathFactory) -> t
         return storage_root, profile_a, profile_b
 
 
-def _assert_journal_settled_for(phase: _HandoverPhase, *, storage_root: Path) -> None:
+def _assert_journal_settled_for(phase: HandoverPhase, *, storage_root: Path) -> None:
     """Assert the journal reached the settled state this crash phase implies.
 
     The two outcomes differ because the journal is an operation record, not an
@@ -1265,7 +1267,7 @@ def _assert_journal_settled_for(phase: _HandoverPhase, *, storage_root: Path) ->
     asserted the pointer names B, so the rollback branch that also clears
     (pointer still at the pre-handover state) cannot have fired.
     """
-    journal_path = _handover_journal_path(storage_root)
+    journal_path = handover_journal_path(storage_root)
     if phase in _TERMINAL_CRASH_PHASES:
         assert not journal_path.exists(), (
             f"a crash at the terminal phase {phase.value} left an operation journal behind; "
@@ -1273,23 +1275,23 @@ def _assert_journal_settled_for(phase: _HandoverPhase, *, storage_root: Path) ->
         )
         return
     terminal_journal = json.loads(journal_path.read_text(encoding="utf-8"))
-    assert terminal_journal["phase"] == _HandoverPhase.A_RETIRED.value
+    assert terminal_journal["phase"] == HandoverPhase.A_RETIRED.value
 
 
 @pytest.mark.parametrize(
     "phase",
     (
-        _HandoverPhase.POINTER_PUBLISHED,
-        _HandoverPhase.B_BOUND,
-        _HandoverPhase.ACCELERATED,
-        _HandoverPhase.ACTIVATED,
-        _HandoverPhase.A_RETIRED,
+        HandoverPhase.POINTER_PUBLISHED,
+        HandoverPhase.B_BOUND,
+        HandoverPhase.ACCELERATED,
+        HandoverPhase.ACTIVATED,
+        HandoverPhase.A_RETIRED,
     ),
 )
 @pytest.mark.os_keychain  # cross-process resume needs a minted acceleration receipt
 def test_crash_at_each_durable_handover_phase_recovers_selected_b(
     tmp_path: Path,
-    phase: _HandoverPhase,
+    phase: HandoverPhase,
     _registered_handover_profiles: tuple[Path, str, str],
 ) -> None:
     """A real process death at every published phase has one B recovery result.
@@ -1318,14 +1320,14 @@ def test_crash_at_each_durable_handover_phase_recovers_selected_b(
             )
             current_pointer = read_pointer(storage_root)
             assert current_pointer.bucket_id == profile_b
-            assert _handover_journal_path(storage_root).is_file()
+            assert handover_journal_path(storage_root).is_file()
 
             # Anti-tautology, phase by phase: the refusal after recovery is only
             # evidence where there was something to refuse. Every phase before
             # the terminal receipt crashed with A's receipt still resumable; the
             # terminal one crashed after retirement had already run.
             crashed = _probe_resumable_session(storage_root, profile_a)
-            if phase is _HandoverPhase.A_RETIRED:
+            if phase is HandoverPhase.A_RETIRED:
                 # `resumed is False` alone is satisfied by ANY refusal, including
                 # one that has nothing to do with retirement: on a host whose
                 # credential store is unreachable no receipt can be minted, so

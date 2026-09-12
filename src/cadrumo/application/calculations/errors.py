@@ -163,7 +163,7 @@ class ObservationEvidenceDisplacementError(_CalculationPreconditionErrorMixin, C
 class ObservationCasillaReferenceError(CoreValidationError):
     """Raised when a persisted filing observation names undeclared casillas.
 
-    :class:`~application.calculations.CalculationObservationRepository`
+    :class:`~application.calculations.CalculationObservationRepositoryProtocol`
     is the encrypted calculation-history substrate for cross-period and
     cross-modelo reads. It must not persist a
     :class:`~domain.calculations.registry.RegistryModeloObservation` whose

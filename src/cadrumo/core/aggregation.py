@@ -21,13 +21,16 @@ Keep the three axes separate:
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Final, Literal
+from typing import Final, Literal, Self
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, GetCoreSchemaHandler, field_validator
+from pydantic_core import CoreSchema, core_schema
 
+from .errors.hierarchy import CoreValidationError
 from .models import STRICT_FROZEN_CONFIG
 
 
@@ -403,7 +406,7 @@ class BindingSourceKind(StrEnum):
     GASTO193_CONTRIBUTOR = "gasto193_contributor"
     # Modelo 296 perceptor rows (IRNR retenciones): its own clave
     # vocabulary (numeric renta claves) cannot ride the shared
-    # withholding family's A-L set, so it declares its own detail-record
+    # registry-declared withholding vocabulary, so it declares its own detail-record
     # source in the same Sheets-pull row shape.
     WITHHOLDING296 = "withholding296"
 
@@ -740,59 +743,49 @@ class LedgerWithholdingDerivation(StrEnum):
     """
 
 
-class RetencionScheme(StrEnum):
-    """Closed catalogue of retenciones schemes across the retenciones family.
+_RETENCION_SCHEME_PATTERN = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
 
-    Each scheme maps to one of the casillas (or grouped casillas) on a
-    retenciones modelo form. The mapping from scheme to modelo lives in the
-    per-modelo entry-point functions; this enum is the union. Declared in
-    :mod:`core` as a closed value set per the architecture contract.
 
-    ``WORK_INCOME`` and ``WORK_INCOME_DIRECTOR`` both fold into the Modelo 111
-    *rendimientos del trabajo* block (casillas 01-06) — the form carries a
-    single trabajo block and does not split them — but they carry distinct
-    statutory retención treatments (Modelo 190 separates them by clave A vs E):
-    ``WORK_INCOME`` (ordinary empleados) follows the personalised progressive
-    procedure of LIRPF art. 101.1; ``WORK_INCOME_DIRECTOR`` (administradores y
-    miembros de consejos de administración) follows the FIXED rate of LIRPF
-    art. 101.2. See :func:`work_income_retencion_treatment`.
+class RetencionScheme(str):
+    """Open wire token for a registry-owned retenciones scheme.
+
+    The published authority owns membership and meaning. This core primitive
+    validates only the stable token shape and exposes ``value`` for existing
+    persistence/sorting call sites; it deliberately does not enumerate scheme
+    values or import the registry authority.
     """
 
-    # Modelo 111 schemes (quarterly retenciones IRPF on labor + activities)
-    WORK_INCOME = "rendimientos_trabajo"  # clave A (empleados, escala progresiva art 101.1)
-    WORK_INCOME_DIRECTOR = "rendimientos_trabajo_administrador"  # clave E (administrador, tipo fijo art 101.2)
-    ECONOMIC_ACTIVITY = "actividades_economicas"  # clave G
-    PROFESSIONAL = "actividades_profesionales"  # clave H (subset of G)
-    PRIZE = "premios"  # clave I (lottery, prize)
-    # Modelo 115 schemes (urban rental withholding)
-    URBAN_RENTAL = "arrendamiento_urbano"  # locales de negocio
-    # Modelo 123 schemes (capital mobiliario, dividends, interest)
-    CAPITAL_INTEREST = "intereses"  # clave I (interest income)
-    CAPITAL_DIVIDEND = "dividendos"  # clave A (dividend income)
-    CAPITAL_OTHER = "otros_capital_mobiliario"  # clave C (other capital income)
+    __slots__ = ()
+
+    def __new__(cls, value: str) -> RetencionScheme:
+        """Construct a token after validating its stable lexical form."""
+        raw = str(value)
+        if _RETENCION_SCHEME_PATTERN.fullmatch(raw) is None:
+            raise CoreValidationError(f"invalid retencion scheme token: {value!r}")
+        return str.__new__(cls, raw)
+
+    @property
+    def value(self) -> str:
+        """Return the canonical wire token."""
+        return str(self)
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        source_type: type[object],
+        handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        """Validate and serialize the open registry token as a string."""
+        del source_type, handler
+        return core_schema.no_info_after_validator_function(
+            cls,
+            core_schema.str_schema(pattern=_RETENCION_SCHEME_PATTERN.pattern),
+            serialization=core_schema.to_string_ser_schema(),
+        )
 
 
 class WorkIncomeRetencionTreatment(BaseModel):
-    """Statutory retención PROCEDURE for a rendimientos-del-trabajo scheme.
-
-    Separates the personalised progressive procedure the law applies to ordinary
-    empleados (LIRPF art. 101.1, developed by RIRPF arts. 80/82-86) from the FIXED
-    rate LIRPF art. 101.2 sets for administradores y miembros de consejos de
-    administración. ``is_fixed_rate`` is ``False`` for the progressive empleado
-    treatment (the per-perceptor percentage is a personalised computation, so no
-    single rate is carried) and ``True`` for the administrador treatment.
-
-    A tiny closed carrier of the STRUCTURAL fact -- which procedure a scheme
-    follows -- per this module's contract of closed value sets and taxonomy
-    only. The fixed rate VALUES themselves (35 %, 19 %, the 100.000 € INCN
-    threshold) are regulatory data resolved from the registry, not module
-    constants: this layer is imported BY the registry schema and must not
-    import back from it (``aeat-architecture-boundaries``), so a caller
-    needing the actual figures reads them from
-    :func:`~domain.transactions.load_administrador_retencion_rates` /
-    :func:`~domain.transactions.administrador_retencion_legal_refs` instead --
-    the same layer the sibling RIRPF art. 95 rate set already lives in.
-    """
+    """Typed result carrier for a registry-resolved withholding treatment."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -800,65 +793,56 @@ class WorkIncomeRetencionTreatment(BaseModel):
     is_fixed_rate: bool
 
 
-_WORK_INCOME_RETENCION_TREATMENTS: Mapping[RetencionScheme, WorkIncomeRetencionTreatment] = MappingProxyType(
-    {
-        RetencionScheme.WORK_INCOME: WorkIncomeRetencionTreatment(
-            scheme=RetencionScheme.WORK_INCOME,
-            is_fixed_rate=False,
-        ),
-        RetencionScheme.WORK_INCOME_DIRECTOR: WorkIncomeRetencionTreatment(
-            scheme=RetencionScheme.WORK_INCOME_DIRECTOR,
-            is_fixed_rate=True,
-        ),
-    },
-)
+class RetencionClave(str):
+    """Opaque Modelo 190/193 clave token projected from registry membership.
 
-
-def work_income_retencion_treatment(scheme: RetencionScheme) -> WorkIncomeRetencionTreatment | None:
-    """Return the statutory :class:`WorkIncomeRetencionTreatment` for a work-income scheme.
-
-    Returns ``None`` for non-work-income schemes (actividades, premios, capital,
-    arrendamiento), which are not governed by the LIRPF art. 101.1/101.2 trabajo
-    procedure. Use it to distinguish the empleado (progressive) treatment from the
-    administrador/consejero (fixed art. 101.2) treatment at the operator boundary.
-    The actual fixed-rate figures live in :mod:`domain.transactions`, not here.
-    """
-    return _WORK_INCOME_RETENCION_TREATMENTS.get(scheme)
-
-
-class RetencionClave(StrEnum):
-    """Modelo 190 / 193 perceptor clave de percepción (the AEAT clave letter).
-
-    Closed catalogue of the retención perceptor clave codes A-L, grounded in the
-    Modelo 190 Diseño de Registros (Orden EHA/3127/2009, actualizada por Orden
-    HAC/1431/2025), campo CLAVE DE PERCEPCIÓN: A trabajo (empleados), B
-    pensionistas y haberes pasivos, C prestaciones o subsidios por desempleo, D
-    prestaciones por desempleo en pago único, E consejeros y administradores, F
-    cursos/conferencias/seminarios y obras, G actividades profesionales, H
-    actividades agrícolas/ganaderas/forestales y empresariales en estimación
-    objetiva, I actividades empresariales / propiedad intelectual e industrial, J
-    imputación de rentas por cesión de derechos de imagen, K premios y
-    aprovechamientos forestales, L rentas exentas y dietas exceptuadas de gravamen.
-    Modelo 193 reuses the A-D letters for its own concepts; the stored clave is the
-    LETTER and its per-modelo meaning is context, so a single letter catalogue
-    covers both. The member name equals its AEAT clave letter (value byte-identical
-    to the stored token). Declared in :mod:`core` as a closed value set per the
-    architecture contract. The M349 / M347 operation "clave" is a DISTINCT taxonomy
-    -- see :class:`OperationKind349` / :class:`OperationKind347`, not this enum.
+    The selected withholding catalogue owns the letter vocabulary and its
+    model applicability. Core carries only the typed token boundary; callers
+    must obtain instances through the registry projection.
     """
 
-    A = "A"
-    B = "B"
-    C = "C"
-    D = "D"
-    E = "E"
-    F = "F"
-    G = "G"
-    H = "H"
-    I = "I"  # noqa: E741 -- AEAT clave letter; the member name IS the canonical token
-    J = "J"
-    K = "K"
-    L = "L"
+    __slots__ = ()
+
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("RetencionClave tokens must be projected from the registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("RetencionClave token must be a non-empty string")
+        return str.__new__(cls, value)
+
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("RetencionClave must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        source_type: type[object],
+        handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        """Accept only an already projected token and serialize it as text."""
+        del source_type, handler
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        """Return the canonical wire token."""
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        """Return the canonical token for diagnostics."""
+        return str(self)
 
 
 class OperationKind347(StrEnum):

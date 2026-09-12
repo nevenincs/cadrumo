@@ -254,7 +254,7 @@ def test_preflight_modelo_111_requires_an_explicit_colegio_concertado_declaratio
             profile_id="11111111-1111-4111-8111-111111111111",
             facts=(),
         ),
-        modelo=Modelo.M111.value,
+        modelo=Modelo("111").value,
         revision_id="2019-y-siguientes",
         period=period,
     )
@@ -272,7 +272,7 @@ def test_preflight_modelo_111_requires_an_explicit_colegio_concertado_declaratio
                 profile_id="11111111-1111-4111-8111-111111111111",
                 facts=(UserProfileFact(path="withholding.colegio_concertado", value=declared),),
             ),
-            modelo=Modelo.M111.value,
+            modelo=Modelo("111").value,
             revision_id="2019-y-siguientes",
             period=period,
         )
@@ -289,7 +289,7 @@ def test_preflight_does_not_require_the_m111_declaration_for_another_modelo(
             profile_id="11111111-1111-4111-8111-111111111111",
             facts=(),
         ),
-        modelo=Modelo.M200.value,
+        modelo=Modelo("200").value,
         revision_id="2024",
         period=Period.from_year_and_code(2024, "0A"),
     )
@@ -400,7 +400,7 @@ def test_preflight_requirement_modelos_reflects_grounding_union_not_the_call_tar
     """``modelos`` is the registry-grounded consuming set, never the caller's target."""
     grounding = ProfileKeyGrounding(
         profile_key="identity.tax_id",
-        modelos=(Modelo.M100,),
+        modelos=(Modelo("100"),),
         legal_refs=("orden-hac-242-2025:art-3",),
         source_refs=(),
     )
@@ -414,7 +414,7 @@ def test_preflight_requirement_modelos_reflects_grounding_union_not_the_call_tar
 
     # The grounding names M100; the call itself carries no target-modelo concept
     # any more, so the row must reflect the grounded set exactly, not a caller hint.
-    assert requirement.modelos == (Modelo.M100.value,)
+    assert requirement.modelos == (Modelo("100").value,)
     assert "orden-hac-242-2025:art-3" in requirement.legal_refs
 
 

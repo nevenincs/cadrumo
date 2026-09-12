@@ -63,12 +63,14 @@ def certificate_register(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.certificate_source_operations import register_operator_certificate_source
     from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
+    from ..state_projection_support import operator_scope_ports
 
     try:
         result = register_operator_certificate_source(
             name=name,
             certificate_path=file,
             friendly_name=friendly_name,
+            operator_scope_ports=operator_scope_ports(ctx),
         )
     except AuthConfigureNoActiveBucketError as exc:
         raise _CliRefusedBoundaryError(
@@ -132,9 +134,10 @@ def certificate_select(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.certificate_source_operations import select_operator_certificate_source
     from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
+    from ..state_projection_support import operator_scope_ports
 
     try:
-        result = select_operator_certificate_source(name=name)
+        result = select_operator_certificate_source(name=name, operator_scope_ports=operator_scope_ports(ctx))
     except AuthConfigureNoActiveBucketError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.no_active_bucket",
@@ -168,9 +171,10 @@ def certificate_remove(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.certificate_source_operations import remove_operator_certificate_source
     from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
+    from ..state_projection_support import operator_scope_ports
 
     try:
-        result = remove_operator_certificate_source(name=name)
+        result = remove_operator_certificate_source(name=name, operator_scope_ports=operator_scope_ports(ctx))
     except AuthConfigureNoActiveBucketError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.no_active_bucket",
@@ -208,10 +212,16 @@ def certificate_check(
     from ....application.auth.certificate_source_operations import check_operator_certificate_sources
     from ....application.auth.probes import PROBE_RESULTS_NEEDING_ATTENTION
     from ..config_payloads import CertificateSourceCheckEntryPayload, CertificateSourceCheckPayload
-    from ..state_projection_support import certificate_secret_backend_factory
+    from ..state_projection_support import (
+        certificate_secret_backend_factory,
+        operator_probe_ports,
+        operator_scope_ports,
+    )
 
     report = check_operator_certificate_sources(
         certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+        operator_probe_ports=operator_probe_ports(ctx),
+        operator_scope_ports=operator_scope_ports(ctx),
     )
     payload = CertificateSourceCheckPayload(
         entries=[
@@ -297,13 +307,14 @@ def certificate_secret_set(
 
     from ....application.auth.certificate_source_operations import set_operator_certificate_source_secret
     from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
-    from ..state_projection_support import certificate_secret_backend_factory
+    from ..state_projection_support import certificate_secret_backend_factory, operator_scope_ports
 
     try:
         result = set_operator_certificate_source_secret(
             name=name,
             secret=SecretStr(secret),
             certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+            operator_scope_ports=operator_scope_ports(ctx),
         )
     except AuthConfigureNoActiveBucketError as exc:
         raise _CliRefusedBoundaryError(
@@ -337,12 +348,13 @@ def certificate_secret_remove(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.certificate_source_operations import remove_operator_certificate_source_secret
     from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
-    from ..state_projection_support import certificate_secret_backend_factory
+    from ..state_projection_support import certificate_secret_backend_factory, operator_scope_ports
 
     try:
         result = remove_operator_certificate_source_secret(
             name=name,
             certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+            operator_scope_ports=operator_scope_ports(ctx),
         )
     except AuthConfigureNoActiveBucketError as exc:
         raise _CliRefusedBoundaryError(

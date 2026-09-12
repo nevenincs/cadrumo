@@ -417,7 +417,7 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="live capture support tests preserve external justificante fixture and work-unit labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/cadrumo/application/modelo/tests/_export_modelo_303_support\.py$"),
+        path=_path(r"^src/cadrumo/adapters/persistence/profile/tests/_export_modelo_303_support\.py$"),
         reason="modelo export support tests preserve external justificante and expediente labels",
     ),
     AllowlistRule(

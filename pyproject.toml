@@ -235,7 +235,7 @@ build-backend = "hatchling.build"
 # inside the product's source distribution. The sdist carries what is needed to
 # build the wheel and nothing else; anything absent from this list is not shipped.
 [tool.hatch.build.targets.sdist]
-include = [
+only-include = [
   "src/cadrumo",
   # The source archive must retain the release authority so rebuilding the
   # product does not silently turn an artifact-only distribution into one that
@@ -303,7 +303,7 @@ exclude = [
   "src/cadrumo_harness/**/tests",
   "src/cadrumo_harness/**/tests/**",
   # The immutable published authority is the only registry payload a product
-  # process may consume.  Its evidence projection is authenticated inside the
+  # process may consume.  Its evidence projection is digest-verified inside the
   # same frame, so it needs no parallel corpus-quality or registry-source
   # payload in the wheel.
   "src/cadrumo/_data/registry/aeat",

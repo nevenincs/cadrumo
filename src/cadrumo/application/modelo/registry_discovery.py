@@ -58,7 +58,9 @@ def declared_modelo_period_tokens(modelo: str | None) -> tuple[str, ...]:
         return ()
     definition = bundled_authority().validate_modelo(modelo.strip())
     return tuple(
-        sorted({token for revision in definition.revisions.values() for token in revision.period_selector.periods}),
+        sorted(
+            {token for revision in definition.revisions.values() for token in revision.period_selector.declared_periods}
+        ),
     )
 
 

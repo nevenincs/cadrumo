@@ -2,9 +2,9 @@
 
 This module implements the Spanish Value-Added-Tax (IVA) prorrata mechanism
 that governs how a taxable person who performs both deductible and
-non-deductible operations may deduct input IVA. The substrate is pure
-domain logic: it produces immutable result objects and never touches
-persistence, the registry, or the CLI.
+non-deductible operations may deduct input IVA. The arithmetic substrate
+produces immutable result objects; its regime vocabulary is resolved through
+the typed facts projection rather than defined as a Python catalogue.
 
 Legal sources (Ley 37/1992 del IVA, BOE-A-1992-28740):
 
@@ -69,6 +69,7 @@ carry validated prorrata references on IVA ledger observations.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import ROUND_CEILING, Decimal
 from enum import StrEnum
 from typing import Annotated
@@ -101,20 +102,54 @@ SectorId = Annotated[
 ]
 
 
-class ProrrataRegime(StrEnum):
-    """LIVA-defined prorrata regime kinds.
+class ProrrataRegime(str):
+    """Opaque registry-projected LIVA prorrata regime token.
 
-    * ``GENERAL`` — single deduction percentage applied to every input IVA
-      amount (art. 103.Uno LIVA for the modality, art. 104 for the
-      percentage).
-    * ``ESPECIAL`` — per-input classification: 100% deductible if used
-      exclusively in deductible activities, 0% if used exclusively in
-      non-deductible, the general percentage if used in both (common-bien
-      under art. 106 LIVA).
+    The regime vocabulary and its legal semantics are selected from the
+    dated ``renta-iva-deduction-ratio-policy`` fact.  This domain type keeps
+    only the token shape; callers must use the typed registry projection when
+    accepting a regime from a reference or producing a default result.
     """
 
-    GENERAL = "general"
-    ESPECIAL = "especial"
+    __slots__ = ()
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
+        """Expose the opaque token as a non-empty string to Pydantic."""
+        from pydantic_core import core_schema
+
+        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema(min_length=1))
+
+    @property
+    def value(self) -> str:
+        """Return the opaque token for canonical reference serialization."""
+        return str(self)
+
+
+def _require_registry_prorrata_regime(
+    value: object,
+    *,
+    effective_date: date | None = None,
+) -> ProrrataRegime:
+    """Resolve one regime token through the dated facts authority."""
+    from ..calculations.registry.errors import RegistryValidationError
+    from ..calculations.registry.prorrata_regime import require_prorrata_regime
+
+    try:
+        return require_prorrata_regime(value, effective_date=effective_date)
+    except RegistryValidationError as exc:
+        raise ProrrataInputError(str(exc)) from exc
+
+
+def _default_registry_prorrata_regime(*, effective_date: date | None = None) -> ProrrataRegime:
+    """Resolve the policy fact's declared default regime without a fallback."""
+    from ..calculations.registry.errors import RegistryValidationError
+    from ..calculations.registry.prorrata_regime import resolve_prorrata_regime_catalogue
+
+    try:
+        return resolve_prorrata_regime_catalogue(effective_date=effective_date).default_regime
+    except RegistryValidationError as exc:
+        raise ProrrataInputError(str(exc)) from exc
 
 
 class ProrrataKind(StrEnum):
@@ -325,7 +360,7 @@ def validate_prorrata_reference(reference_id: str) -> ProrrataReference:
     except ValueError as exc:
         raise ProrrataInputError(f"unknown prorrata_reference kind: {parts[2]!r}") from exc
     try:
-        regime = ProrrataRegime(parts[3])
+        regime = _require_registry_prorrata_regime(parts[3], effective_date=date(year, 1, 1))
     except ValueError as exc:
         raise ProrrataInputError(f"unknown prorrata_reference regime: {parts[3]!r}") from exc
     sector_id = parts[4] if len(parts) == 5 else None
@@ -388,7 +423,7 @@ def compute_prorrata_general(
     percentage = _compute_percentage_general(inputs)
     try:
         return ProrrataResult(
-            regime=ProrrataRegime.GENERAL,
+            regime=_default_registry_prorrata_regime(effective_date=date(year, 1, 1)),
             kind=kind,
             percentage=percentage,
             inputs=inputs,

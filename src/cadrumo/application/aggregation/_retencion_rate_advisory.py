@@ -17,9 +17,8 @@ The received surface aggregates operator-supplied per-perceptor rows: each
 :class:`~.retenciones.RetencionObservation` carries both the ``taxable_base``
 and the withheld ``retencion_amount``. For ordinary work-income rows the
 withholding is a personalised progressive computation, so no single rate can be
-asserted. Fixed-rate administrator rows
-(:attr:`~core.aggregation.RetencionScheme.WORK_INCOME_DIRECTOR`) the law
-uses a fixed rate selected by the governing registry when the paying entity's
+asserted. Administrator rows carry the fixed-treatment scheme selected by the
+governing registry when the paying entity's
 turnover condition requires it.
 
 The engine does not compute the withheld amount (the operator enters it from their
@@ -29,10 +28,9 @@ file silently. This module surfaces that as a non-blocking
 :class:`~.source_mesh.CalculationSourceDiagnostic` on the calculate path,
 grounded in the registry-backed
 :func:`~domain.transactions.load_administrador_retencion_rates` rate set
-(``no-silent-under-declaration``). :class:`~core.aggregation.WorkIncomeRetencionTreatment`
-carries only the STRUCTURAL fact that this scheme follows a fixed procedure;
-the rate figures themselves are regulatory data read from the registry, never a
-literal in this or the core layer (``aeat-registry-authority-flow``). Because
+(``no-silent-under-declaration``). The rate figures and their legal grounding
+are regulatory data read from the registry, never literals in this or the core
+layer (``aeat-registry-authority-flow``). Because
 the engine cannot always know the paying entity's INCN, a row whose effective
 rate matches either authority-selected figure is treated as conforming; only a
 row consistent with neither raises the advisory.
@@ -94,11 +92,7 @@ from enum import Enum, auto
 from functools import cache
 from typing import TYPE_CHECKING, Final
 
-from ...core.aggregation import (
-    LedgerWithholdingDerivation,
-    RetencionScheme,
-    work_income_retencion_treatment,
-)
+from ...core.aggregation import LedgerWithholdingDerivation
 from ...core.money.rounding import CENT
 from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.transactions.retencion_facts import (
@@ -109,7 +103,7 @@ from ...domain.transactions.retencion_facts import (
     statutory_activity_retencion_rates,
 )
 from .renta_income_ledger import RentaIncomeObservation
-from .retenciones import RetencionObservation
+from .retenciones import RetencionObservation, registry_work_income_retencion_treatments
 from .source_mesh import CalculationSourceDiagnostic
 
 if TYPE_CHECKING:
@@ -205,9 +199,8 @@ def administrador_retencion_rate_advisory_observations(
     """Return advisories for administrator rows inconsistent with authority rates.
 
     A :class:`~.source_mesh.CalculationSourceDiagnostic` (reason
-    ``administrador_retencion_rate_mismatch``) is emitted for each
-    :attr:`~core.aggregation.RetencionScheme.WORK_INCOME_DIRECTOR`
-    observation with a strictly-positive ``taxable_base`` whose withheld
+    ``administrador_retencion_rate_mismatch``) is emitted for each registry
+    selected fixed-treatment observation with a strictly-positive ``taxable_base`` whose withheld
     ``retencion_amount`` matches neither authority-selected fixed rate. Rows on
     any other scheme and administrator rows with a non-positive base are out of
     scope and never fire.
@@ -219,15 +212,17 @@ def administrador_retencion_rate_advisory_observations(
     Returns:
         A tuple of non-blocking rate-mismatch diagnostics, in input order.
     """
-    treatment = work_income_retencion_treatment(RetencionScheme.WORK_INCOME_DIRECTOR)
-    if treatment is None or not treatment.is_fixed_rate:
-        return ()
+    treatments = registry_work_income_retencion_treatments(effective_date=effective_date)
+    fixed_treatments = tuple(treatment for treatment in treatments.values() if treatment.is_fixed_rate)
+    if len(fixed_treatments) != 1:
+        raise ValueError("withholding treatment catalogue must declare exactly one fixed-rate scheme")
+    fixed_scheme = fixed_treatments[0].scheme
     rates = load_administrador_retencion_rates(effective_date=effective_date)
     general_rate = rates.general_rate
     reduced_rate = rates.reduced_rate
     diagnostics: list[CalculationSourceDiagnostic] = []
     for observation in observations:
-        if observation.scheme is not RetencionScheme.WORK_INCOME_DIRECTOR:
+        if observation.scheme != fixed_scheme:
             continue
         base = observation.taxable_base
         if base <= Decimal("0"):
@@ -293,18 +288,23 @@ def _declared_activity_hint(profile: TaxpayerProfile) -> bool | None:
 
 def _profile_regime_hint(profile: TaxpayerProfile) -> bool | None:
     """Resolve the profile's weaker regime and prior-year activity signals."""
-    from ...domain.deadlines.models import IrpfEstimationRegime, IVARegime
+    from ...domain.calculations.registry.iva_schema_vocabulary import iva_regime_reagp_token
+    from ...domain.calculations.registry.irpf_regimes import (
+        irpf_estimation_regime_directa_normal_token,
+        irpf_estimation_regime_directa_simplificada_token,
+        irpf_estimation_regime_objetiva_token,
+    )
 
-    if profile.iva_regime is IVARegime.REAGP:
+    if profile.iva_regime == iva_regime_reagp_token():
         return True
-    if profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA:
+    if profile.irpf_estimation_regime == irpf_estimation_regime_objetiva_token():
         return True
     agri_gross = profile.objective_estimation_prior_year_agri_livestock_forest_gross_eur
     if agri_gross is not None and agri_gross > Decimal("0"):
         return True
     if profile.irpf_estimation_regime in {
-        IrpfEstimationRegime.DIRECTA_NORMAL,
-        IrpfEstimationRegime.DIRECTA_SIMPLIFICADA,
+        irpf_estimation_regime_directa_normal_token(),
+        irpf_estimation_regime_directa_simplificada_token(),
     }:
         return False
     return None

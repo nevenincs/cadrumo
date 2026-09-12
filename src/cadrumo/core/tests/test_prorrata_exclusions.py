@@ -1,29 +1,28 @@
-"""Unit tests for the LIVA art. 104.Tres prorrata-exclusion closed set.
+"""Unit tests for the registry-owned LIVA art. 104.Tres exclusions.
 
 The expected membership is taken from an external authority — the bundled
 consolidated LIVA art. 104.Tres (``ley-37-1992-art-104.html#a104``), which
 enumerates exactly six operations excluded from both terms of the prorrata
 ratio (reglas 1.º-6.º) — not from a re-run of the code under test. The
-auto-derived / operator-declared partition keeps only the two
-judgment exclusions (foreign PE, non-habitual inmobiliario/financiero) are
-operator-declared.
+auto-derived / operator-declared partition keeps only the two judgment
+exclusions (foreign PE, non-habitual inmobiliario/financiero) operator-declared.
 """
 
 from __future__ import annotations
 
 import pytest
 
-from ..prorrata_exclusions import (
-    ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS,
-    Art104TresExclusion,
+from ...domain.calculations.registry.prorrata_exclusions import (
+    resolve_art104_tres_exclusion_catalogue,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_art_104_tres_exclusion_has_exactly_the_six_law_members() -> None:
-    """The enum carries exactly the six art. 104.Tres exclusions, no subvenciones member."""
-    assert {member.value for member in Art104TresExclusion} == {
+    """The registry catalogue carries exactly the six art. 104.Tres exclusions."""
+    catalogue = resolve_art104_tres_exclusion_catalogue()
+    assert {str(member) for member in catalogue.all_exclusions} == {
         "foreign_permanent_establishment",
         "direct_iva_cuotas",
         "investment_goods_disposal",
@@ -35,12 +34,11 @@ def test_art_104_tres_exclusion_has_exactly_the_six_law_members() -> None:
 
 def test_operator_declared_set_is_the_two_judgment_exclusions() -> None:
     """Only the PE and non-habitual judgment exclusions are operator-declared."""
+    catalogue = resolve_art104_tres_exclusion_catalogue()
     assert (
-        frozenset(
-            {
-                Art104TresExclusion.FOREIGN_PERMANENT_ESTABLISHMENT,
-                Art104TresExclusion.NON_HABITUAL_REAL_ESTATE_OR_FINANCIAL,
-            }
-        )
-        == ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS
+        {str(member) for member in catalogue.operator_declared}
+        == {
+            "foreign_permanent_establishment",
+            "non_habitual_real_estate_or_financial",
+        }
     )

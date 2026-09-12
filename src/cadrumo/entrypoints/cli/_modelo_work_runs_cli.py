@@ -44,6 +44,7 @@ from ...application.workflow.run_models import (
     WorkflowStage,
     WorkflowStepDetails,
 )
+from ...core.bucket_pointer import require_active_bucket_id
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.json_contract import ResolvedPreconditionAction
@@ -57,6 +58,7 @@ from ._modelo_cli_support import (
 )
 from ._modelo_payloads import WorkResumeResult
 from .common import activate_subcommand_output_language, emit_envelope, resolve_cli_precondition_action
+from .state_projection_support import calculation_action_ports_factory
 from .modelo_aux_payloads import (
     WorkflowRunPayload,
     WorkflowRunSummaryPayload,
@@ -363,6 +365,7 @@ def work_resume(
             registry_revision_id=revision,
             bucket_id=bucket_id,
             selector=parse_revision_selector(select) if select is not None else None,
+            ports=calculation_action_ports_factory(ctx)(bucket_id=bucket_id or require_active_bucket_id()),
         )
         result = resume_modelo_workflow(resolution.run_id)
     except (WorkflowResumeRefusedError, WorkflowError) as exc:

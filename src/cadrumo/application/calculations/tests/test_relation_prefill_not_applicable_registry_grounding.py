@@ -52,7 +52,7 @@ _T0 = datetime(2026, 1, 12, 10, 0, tzinfo=UTC)
 
 
 def _m100_snapshot(filing_year: int) -> RegistrySnapshot:
-    return bundled_authority().snapshot(Modelo.M100.value, filing_year=filing_year, period="0A")
+    return bundled_authority().snapshot(Modelo("100").value, filing_year=filing_year, period="0A")
 
 
 def _save_profile(bucket_id: str, extra_facts: tuple[UserProfileFact, ...]) -> None:
@@ -165,7 +165,7 @@ class TestVerdictWithinTheCandidateSet:
             snapshot = _m100_snapshot(2024)
 
             assert _not_applicable_source_modelos_for_bucket(snapshot, bucket_id) == frozenset(
-                {Modelo.M131.value},
+                {Modelo("131").value},
             ), "estimación directa suppresses only the estimación-objetiva modelo (RIRPF art. 110)"
 
     def test_estimacion_objetiva_suppresses_only_the_directa_modelo(self, tmp_path: Path) -> None:
@@ -183,7 +183,7 @@ class TestVerdictWithinTheCandidateSet:
             snapshot = _m100_snapshot(2024)
 
             assert _not_applicable_source_modelos_for_bucket(snapshot, bucket_id) == frozenset(
-                {Modelo.M130.value},
+                {Modelo("130").value},
             ), "estimación objetiva suppresses only the estimación-directa modelo (RIRPF art. 110)"
 
 
@@ -250,7 +250,7 @@ class TestFailClosed:
                     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="capital_inmobiliario"),
                 ),
             )
-            snapshot = bundled_authority().snapshot(Modelo.M303.value, filing_year=2024, period="1T")
+            snapshot = bundled_authority().snapshot(Modelo("303").value, filing_year=2024, period="1T")
             assert _economic_activity_conditional_source_modelos(snapshot) == frozenset(), (
                 "test precondition: Modelo 303 must declare no economic-activity-conditional dependency"
             )

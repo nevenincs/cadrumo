@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor
+from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
+from cadrumo.application.auth.operator_scope_ports import OperatorScopeStorageError
+from cadrumo.application.auth.tests._operator_scope_fakes import (
+    InwardOperatorScopeStorage,
+    build_inward_operator_scope_ports,
+    build_inward_operator_scope_ports_for_active_route,
+)
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -10,19 +17,12 @@ import pytest
 from pydantic import SecretStr
 
 from ....adapters.outbound.aeat.auth import session_store
-from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
-from ....adapters.persistence.storage.bucket.errors import BucketBusyError
-from ....adapters.persistence.storage.bucket.lockfile import acquire_lock, release_lock
-from ....adapters.persistence.storage.master_key.active_session import (
-    current_active_bucket_session,
-    has_active_bucket_session,
-)
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.wizard.catalogue import WIZARD_FLOWS
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import load_settings, override_settings
 from ....core.errors.error_codes import build_error_envelope, resolve_error_message
-from ....user_profile.profile_keys import profile_keys
+from ...user_profile.profile_keys import profile_keys
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
 from ...workflow.persistence import workflow_state_repository
@@ -38,6 +38,8 @@ from ..operator_results import AuthOperationScopeConflictError, AuthProviderNotC
 from ..operator_scope import auth_mutation_span
 from ..sessions import load_persisted_session, storage_state_paths
 
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_A = "11111111-1111-4111-8111-111111111111"
@@ -50,7 +52,7 @@ def _create_profile(profile_id: str, *, provider: str | None = None) -> None:
     with open_test_profile_session(profile_id):
         register_minimal_profile(profile_id=profile_id)
         if provider is not None:
-            configure_operator_auth(provider)
+            configure_operator_auth(provider, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
 
 def _logout(*, unlock: str | None = None, **kwargs):
@@ -63,7 +65,7 @@ def _logout(*, unlock: str | None = None, **kwargs):
     operator has unlocked the profile they are revoking".
     """
     with open_test_profile_session(unlock or kwargs.get("target_bucket_id") or _PROFILE_A):
-        return logout_operator_auth(**kwargs)
+        return logout_operator_auth(**kwargs, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
 
 def _reset(*, unlock: str | None = None, **kwargs):
@@ -74,7 +76,7 @@ def _reset(*, unlock: str | None = None, **kwargs):
     custody guard refuses.
     """
     with open_test_profile_session(unlock or kwargs.get("target_bucket_id") or _PROFILE_A):
-        return reset_operator_auth(**kwargs)
+        return reset_operator_auth(**kwargs, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
 
 def test_auth_mutation_uses_canonical_bucket_lock(tmp_path: Path) -> None:
@@ -83,20 +85,20 @@ def test_auth_mutation_uses_canonical_bucket_lock(tmp_path: Path) -> None:
         settings = load_settings().model_copy(
             update={"cadrumo_file_lock_timeout_s": 0.05},
         )
-        paths = bucket_paths(settings.cadrumo_local_storage_root, _PROFILE_A)
+        storage = _OPERATOR_SCOPE_PORTS.storage
+        assert isinstance(storage, InwardOperatorScopeStorage)
+        paths = storage.resolve(settings.cadrumo_local_storage_root, _PROFILE_A)
 
         def attempt_auth_mutation() -> None:
-            with auth_mutation_span(settings=settings, bucket_id=_PROFILE_A):
+            with auth_mutation_span(settings=settings, bucket_id=_PROFILE_A, operator_scope_ports=_OPERATOR_SCOPE_PORTS):
                 pass
 
-        acquire_lock(paths)
+        storage.block(_PROFILE_A)
         try:
-            with ThreadPoolExecutor(max_workers=1) as executor:
-                blocked = executor.submit(attempt_auth_mutation)
-                with pytest.raises(BucketBusyError):
-                    blocked.result(timeout=5)
+            with pytest.raises(OperatorScopeStorageError):
+                attempt_auth_mutation()
         finally:
-            release_lock(paths)
+            storage.unblock(_PROFILE_A)
 
 
 def test_logout_reopens_pointer_profile_and_is_idempotent(tmp_path: Path) -> None:
@@ -121,9 +123,9 @@ def test_logout_reopens_pointer_profile_and_is_idempotent(tmp_path: Path) -> Non
         # The revocation opens and closes its own session; the caller's
         # context holds none before or after, which is what stops a mutation
         # leaking an unlocked profile into whatever runs next.
-        assert has_active_bucket_session() is False
+        assert build_inward_operator_scope_ports(session=None).session.current() is None
         first = _logout(provider="certificate")
-        assert has_active_bucket_session() is False
+        assert build_inward_operator_scope_ports(session=None).session.current() is None
 
         with open_test_profile_session(_PROFILE_A):
             after_first = workflow_state_repository().load()
@@ -195,11 +197,13 @@ def test_certificate_logout_removes_session_and_preserves_certificate_configurat
                 name="personal",
                 certificate_path=certificate_path,
                 friendly_name="Personal certificate",
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             )
-            select_operator_certificate_source(name="personal")
+            select_operator_certificate_source(name="personal", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
             set_operator_certificate_source_secret(
                 name="personal",
                 secret=SecretStr("certificate-passphrase"),
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             )
             repository = workflow_state_repository()
             before = repository.load()
@@ -285,8 +289,8 @@ def test_reset_removes_certificate_registry_and_secure_secret(tmp_path: Path) ->
         cert_path.write_bytes(b"placeholder")
         _create_profile(_PROFILE_A, provider="certificate")
         with open_test_profile_session(_PROFILE_A):
-            register_operator_certificate_source(name="personal", certificate_path=cert_path)
-            set_operator_certificate_source_secret(name="personal", secret=SecretStr("do-not-leak"))
+            register_operator_certificate_source(name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+            set_operator_certificate_source_secret(name="personal", secret=SecretStr("do-not-leak"), operator_scope_ports=_OPERATOR_SCOPE_PORTS)
             assert resolve_certificate_source_secret(name="personal", bucket_id=_PROFILE_A) is not None
 
         first = _reset(provider="certificate")
@@ -365,7 +369,7 @@ def test_explicit_target_bucket_restores_unrelated_ambient_session(tmp_path: Pat
         _create_profile(_PROFILE_B, provider="clave_movil")
 
         with open_test_profile_session(_PROFILE_A):
-            ambient_before = current_active_bucket_session()
+            ambient_before = _OPERATOR_SCOPE_PORTS.session.current()
             assert ambient_before is not None
             assert ambient_before.bucket_id == _PROFILE_A
             state_a_before = workflow_state_repository().load()
@@ -375,7 +379,7 @@ def test_explicit_target_bucket_restores_unrelated_ambient_session(tmp_path: Pat
                 target_bucket_id=_PROFILE_B,
             )
 
-            ambient_after = current_active_bucket_session()
+            ambient_after = _OPERATOR_SCOPE_PORTS.session.current()
             assert ambient_after is ambient_before
             assert workflow_state_repository().load() == state_a_before
 
@@ -404,10 +408,10 @@ def test_revoking_a_locked_profile_refuses_and_says_the_session_is_still_live(tm
         _create_profile(_PROFILE_A, provider="certificate")
 
         with override_settings(cadrumo_active_profile=_PROFILE_A):
-            assert has_active_bucket_session() is False
+            assert build_inward_operator_scope_ports(session=None).session.current() is None
 
             with pytest.raises(AuthOperationRequiresCustodySessionError) as raised:
-                logout_operator_auth(provider="certificate")
+                logout_operator_auth(provider="certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     message = resolve_error_message(raised.value)
     assert _PROFILE_A in message

@@ -43,9 +43,7 @@ from cadrumo.application.evidence.profile_legal_hold import LegalHoldCaseAuthori
 from cadrumo.application.filing.retention import FilingRetentionAuthority
 from cadrumo.application.user_profile.custody_hold_models import ProfileCustodyHoldEvidence
 from cadrumo.application.user_profile.custody_repository import profile_custody_transaction_lock
-from cadrumo.application.user_profile.custody_service import (
-    _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService,
-)
+from cadrumo.application.user_profile.custody_service import ProfileCustodyTransactionService
 from cadrumo.application.user_profile.custody_transactions import (
     CustodyReceiptOwner,
     ProfileCustodyTransactionConflictError,

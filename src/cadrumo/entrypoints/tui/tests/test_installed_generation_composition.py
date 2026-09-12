@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
@@ -75,6 +77,8 @@ from ..navigation import TuiScreenContextV1
 from ..profile.overview import ProfileManagerScreen
 from ..secret.login import LoginScreen
 from ..secret.passphrase import PassphraseScreen
+
+_OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -275,6 +279,7 @@ def _operation_runtime() -> TuiOperationCompositionV1:
             build_censal_operation_registration(
                 build_censal_operation_definition(
                     certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 )
             ).contract,
         )

@@ -123,8 +123,9 @@ _UTF_8: str = UTF_8_ENCODING
 # ``tests/test_manager.py`` rather than being trusted because it was written.
 _PUBLIC_DATA_ALIASES: dict[str, tuple[str, ...]] = {
     "cadrumo.core.casilla_id": ("CasillaId",),
-    "cadrumo.core.identity": ("ContentDigest",),
-    "cadrumo.core.identity.tax_id": ("SubjectTaxId", "TaxIdIdentityToken"),
+    "cadrumo.core.identity.digest": ("ContentDigest",),
+    "cadrumo.core.identity.tax_id": ("TaxIdIdentityToken",),
+    "cadrumo.domain.calculations.registry.tax_id_format": ("SubjectTaxId",),
 }
 _PUBLIC_FUNCTION_ALIASES: dict[str, tuple[str, ...]] = {}
 

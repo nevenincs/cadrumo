@@ -14,6 +14,7 @@ from ....application.user_profile.login_session_port import (
     ProfilePersistedSessionPort,
     ProfileSessionResumeOutcomePort,
 )
+from ....application.user_profile.login_handover import ProfileLoginHandoverJournal
 from .custody.acceleration_receipt import (
     advance_persisted_profile_session_idle_deadline,
     delete_profile_session,
@@ -31,6 +32,11 @@ from .master_key.active_session import (
 )
 from .master_key.bucket_session import BucketSession
 from .master_key.login_throttle import evaluate_login_throttle, record_login_failure, reset_login_throttle
+from .master_key.login_handover_journal import (
+    clear_handover_journal,
+    load_handover_journal,
+    save_handover_journal,
+)
 
 
 def bucket_session(session: ProfileBucketSessionPort) -> BucketSession:
@@ -47,6 +53,25 @@ def _persisted_receipt(record: ProfilePersistedSessionPort) -> PersistedProfileS
 
 class _PersistenceProfileLoginSession:
     """Delegate the aggregate port to the canonical custody/session authorities."""
+
+    def load_handover_journal(self, *, storage_root: Path) -> ProfileLoginHandoverJournal | None:
+        return load_handover_journal(storage_root=storage_root)
+
+    def save_handover_journal(
+        self,
+        *,
+        storage_root: Path,
+        journal: ProfileLoginHandoverJournal,
+    ) -> None:
+        save_handover_journal(storage_root=storage_root, journal=journal)
+
+    def clear_handover_journal(
+        self,
+        *,
+        storage_root: Path,
+        journal: ProfileLoginHandoverJournal,
+    ) -> None:
+        clear_handover_journal(storage_root=storage_root, journal=journal)
 
     def current_session(self) -> ProfileBucketSessionPort | None:
         return current_active_bucket_session()

@@ -18,7 +18,6 @@ from ....core.modelo import Modelo
 from ....core.payment_election import PaymentElection
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
-from ....core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, RegistroRegularizacionResult
@@ -48,6 +47,7 @@ from ....domain.deadlines.models import (
 )
 from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.schema import ModeloDraft
+from ....domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
@@ -157,7 +157,7 @@ def _required_iae_epigrafe(value: str | None) -> str:
 
 def _m303_2026_snapshot() -> RegistrySnapshot:
     """Load the real 2026 revision from the published authority artifact."""
-    return bundled_authority().snapshot(Modelo.M303.value, filing_year=2026, period="1T")
+    return bundled_authority().snapshot(Modelo("303").value, filing_year=2026, period="1T")
 
 
 #: Modelo 303 prints the shared envelope grammar in its thirteen-row spelling:
@@ -276,7 +276,7 @@ def _m303_did_producer_snapshot(
     iva_profile = taxpayer.iva
     assert iva_profile is not None
     return build_filing_producer_snapshot(
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         taxpayer_tax_id=taxpayer.tax_id,
         taxpayer_identity=TaxpayerIdentityFacts(
             legal_name=None,

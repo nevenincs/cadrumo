@@ -11,6 +11,7 @@ from decimal import Decimal
 
 from ...core.config import Settings
 from ...core.logging import get_logger
+from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 from .enums import ReviewItemKind, ReviewState, severity_rank
 from .models import ReviewItem
 from .source_adapters import (
@@ -27,6 +28,7 @@ def _source_review_items(
     settings: Settings,
     *,
     bucket_id: str,
+    observation_repository: CalculationObservationRepositoryProtocol,
     confidence_below: Decimal | None,
 ) -> list[ReviewItem]:
     """Collect the source-owned items before queue-level filters are applied."""
@@ -37,7 +39,7 @@ def _source_review_items(
     return [
         *transactions_pending(settings, bucket_id=bucket_id),
         *invoices_pending(settings, bucket_id=bucket_id),
-        *drafts_pending(settings, bucket_id=bucket_id),
+        *drafts_pending(settings, bucket_id=bucket_id, observation_repository=observation_repository),
     ]
 
 
@@ -76,6 +78,7 @@ class ReviewQueue:
         settings: Settings,
         *,
         bucket_id: str,
+        observation_repository: CalculationObservationRepositoryProtocol,
         kinds: frozenset[ReviewItemKind] | None = None,
         modelo: str | None = None,
         state: ReviewState = ReviewState.PENDING,
@@ -112,6 +115,7 @@ class ReviewQueue:
         items = _source_review_items(
             settings,
             bucket_id=bucket_id,
+            observation_repository=observation_repository,
             confidence_below=confidence_below,
         )
         items = _filter_review_items(items, kinds=kinds, modelo=modelo)

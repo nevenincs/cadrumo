@@ -39,6 +39,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.calculations.registry.iva_schema_vocabulary import require_iva_regime
 
 # Runtime imports: both are pydantic field types on the models below, so a
 # TYPE_CHECKING-only import leaves the models un-buildable at construction.
@@ -131,6 +132,12 @@ class ClassifierInputs(BaseModel):
     counterparty_taxable_person: CounterpartyTaxablePersonStatus = CounterpartyTaxablePersonStatus.UNKNOWN
     filer_iva_regime: IVARegime | None = None
     facts: tuple[ClassifierInputFact, ...] = ()
+
+    @model_validator(mode="after")
+    def _validate_filer_regime_registry_membership(self) -> ClassifierInputs:
+        if self.filer_iva_regime is not None:
+            require_iva_regime(self.filer_iva_regime)
+        return self
 
 
 def _printed_counterparty_identifier(draft: InvoiceDraft) -> str | None:

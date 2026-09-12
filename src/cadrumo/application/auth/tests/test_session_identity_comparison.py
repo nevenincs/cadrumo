@@ -300,7 +300,7 @@ class TestClaveIdentityIsComparedCanonically:
     wrongly grant one — a hazard the censal-autofill safety argument depends on
     this guard closing.
 
-    Both sides now go through :func:`validate_spanish_tax_id`, the same
+    Both sides now go through :func:`validate_runtime_spanish_tax_id`, the same
     authority the censal-read ownership guard uses for the same question.
     """
 
@@ -378,5 +378,5 @@ class TestClaveIdentityIsComparedCanonically:
         """
         source = inspect.getsource(sessions._assert_active_profile_identity_matches_provider)
 
-        assert "validate_spanish_tax_id" in source
+        assert "validate_runtime_spanish_tax_id" in source
         assert ".upper()" not in source, "a local normaliser would diverge from the canonical form"

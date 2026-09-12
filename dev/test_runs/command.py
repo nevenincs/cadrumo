@@ -1205,7 +1205,7 @@ class _LocalesStatusSignalProcessor:
                 },
             }
             details = {
-                "processor_error": self._decode_error or "unknown processor failure",
+                "processor_error": f"{error['type']}: {error['message']}",
                 "root_cause": error,
             }
             outcome = "unavailable"

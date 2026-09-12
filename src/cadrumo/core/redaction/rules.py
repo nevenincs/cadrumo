@@ -123,7 +123,7 @@ already knew to redact.
 # or trailing hyphen belonging to the surrounding text.
 #
 # **This widens the SCAN, not the RULE.** Both admission gates below already
-# normalise the span they are handed -- ``validate_identity`` documents that it
+# normalise the span they are handed -- core ``validate_identity`` documents that it
 # tolerates dashes and spaces, and the NIF-IVA arm calls ``normalise_nif_iva``
 # before asking the per-State table -- so the separator-bearing spelling was
 # never rejected by a rule. It simply never reached one, because a scan anchored
@@ -189,7 +189,7 @@ _PREFIXED_IDENTITY_SEPARATOR = r"[ .\-]?"
 # sequence outputs, the separator-bearing population was more over-redaction
 # than redaction.
 #
-# So the separated arm asks. ``validate_identity`` separates the two
+# So the separated arm asks. Core ``validate_identity`` separates the two
 # populations exactly -- it refuses every work-unit name and accepts every real
 # printed identity -- and a rule that CAN refuse belongs behind :func:`_gated_sub`
 # like the other gated arms. Err-wide is not weakened where its claim still
@@ -642,7 +642,11 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
         # Imported here, not at module scope: ``core.identity`` reaches
         # ``core.errors``, which reaches this module — the same cycle the
         # lazy ``..errors`` imports below step around.
-        from ..identity.documents import IdentityError, validate_identity
+        from ..identity.documents import (
+            SPANISH_TAX_ID_BOOTSTRAP_FORMAT,
+            IdentityError,
+            validate_identity,
+        )
         from ..identity.nif_iva import normalise_nif_iva
 
         def _hash_if_identity(span: str) -> str | None:
@@ -650,13 +654,13 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
             # same-bearer predicate uses (``same_tax_identifier``), so pattern
             # and gate agree by construction rather than by coincidence. They
             # did not: this scan admits a dot as an internal separator while
-            # ``validate_identity`` strips only spaces and dashes, so the
+            # core ``validate_identity`` strips spaces and dashes, so the
             # printed ``B.1234567.4`` matched the scan, was refused by the gate
             # and reached the operator raw -- while ``same_tax_identifier``
             # answered that it is the very same bearer as the ``B12345674``
             # this funnel hashes.
             try:
-                validate_identity(normalise_nif_iva(span))
+                validate_identity(normalise_nif_iva(span), SPANISH_TAX_ID_BOOTSTRAP_FORMAT)
             except IdentityError:
                 return None
             return _sha256_prefix(span)
@@ -664,7 +668,11 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
         return _gated_sub(pattern, value, protected, _hash_if_identity)
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA:
         # Imported at call time for the reason the identity arm above states.
-        from ..identity.documents import IdentityError, validate_identity
+        from ..identity.documents import (
+            SPANISH_TAX_ID_BOOTSTRAP_FORMAT,
+            IdentityError,
+            validate_identity,
+        )
         from ..identity.nif_iva import nif_iva_format_for_country, normalise_nif_iva
 
         def _hash_if_nif_iva(span: str) -> str | None:
@@ -676,7 +684,7 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
                 # ES arm asks that authority about the BODY -- which is the
                 # whole of what the prefixed spelling adds.
                 try:
-                    validate_identity(body)
+                    validate_identity(body, SPANISH_TAX_ID_BOOTSTRAP_FORMAT)
                 except IdentityError:
                     return None
                 return _sha256_prefix(span)

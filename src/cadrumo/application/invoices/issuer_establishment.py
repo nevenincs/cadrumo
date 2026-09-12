@@ -75,6 +75,7 @@ See Also:
 from __future__ import annotations
 
 from ...domain.contribuyente.renta_codes import FiscalResidency
+from ...domain.calculations.registry.renta_codes_catalogue import fiscal_residency_requires_country
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.invoices.enums import InvoiceClass
 from ...domain.invoices.models import Invoice
@@ -102,7 +103,7 @@ def issuer_established_in_tai(profile: TaxpayerProfile) -> bool:
         with-permanent-establishment carve-out this predicate does not yet
         model.
     """
-    return profile.fiscal_residency is not FiscalResidency.NON_RESIDENT_IRNR
+    return not fiscal_residency_requires_country(profile.fiscal_residency)
 
 
 def simplificada_requires_tax_id_for_domestic_issuer(invoice: Invoice, profile: TaxpayerProfile) -> bool:

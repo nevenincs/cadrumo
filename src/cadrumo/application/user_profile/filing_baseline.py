@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from ...domain.contribuyente.entity_type import (
+    entity_type_attribution_entity_token,
+    entity_type_legal_entity_token,
+)
 from ...domain.deadlines.setup_answer_projection import SETUP_ANSWER_FIELDS
 from .completeness import conditional_profile_missing_required
 
@@ -23,13 +27,13 @@ def missing_filing_baseline_flags(values: Mapping[str, object]) -> tuple[str, ..
     entity_type = _profile_token(values, "taxpayer_type.entity_type")
     if not entity_type:
         missing.append("entity-type")
-    if entity_type == "legal_entity":
+    if entity_type == entity_type_legal_entity_token().value:
         if not _profile_token(values, "taxpayer_type.legal_entity_form"):
             missing.append("legal-entity-form")
         if not _profile_token(values, "identity.legal_name"):
             missing.append("legal-name")
         return _dedupe_with_conditional_profile_flags(values, missing)
-    if entity_type == "attribution_entity":
+    if entity_type == entity_type_attribution_entity_token().value:
         if not _profile_token(values, "identity.name"):
             missing.append("name")
         return _dedupe_with_conditional_profile_flags(values, missing)

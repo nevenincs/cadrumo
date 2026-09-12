@@ -42,7 +42,6 @@ from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
 from typing import Final, override
 
-from .config import load_settings as _load_settings
 from .locks_errors import LockAcquisitionError
 from .logging import get_logger
 
@@ -60,12 +59,16 @@ def _default_lock_timeout() -> float:
     The setting is only a local wait budget. It is not a lease, TTL, or
     stale-lock age; the OS lock is released by descriptor teardown.
     """
-    return _load_settings().cadrumo_file_lock_timeout_s
+    from .config import load_settings
+
+    return load_settings().cadrumo_file_lock_timeout_s
 
 
 def _default_retry_backoff() -> float:
     """Return the currently effective non-blocking retry backoff in seconds."""
-    return _load_settings().cadrumo_file_lock_retry_backoff_s
+    from .config import load_settings
+
+    return load_settings().cadrumo_file_lock_retry_backoff_s
 
 
 class _DefaultLockTimeout:

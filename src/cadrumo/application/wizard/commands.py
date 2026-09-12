@@ -151,10 +151,10 @@ _CCAA_CHOICE_VALUES: list[str] = _ccaa_choice_values()
 
 
 def _fiscal_residency_choice_values() -> list[str]:
-    """Return the FiscalResidency choice tokens accepted by ``--fiscal-residency``."""
-    from ...domain.contribuyente.renta_codes import FiscalResidency
+    """Return the registry-declared residency tokens accepted by the CLI."""
+    from ...domain.calculations.registry.renta_codes_catalogue import fiscal_residency_choices
 
-    return [member.value for member in FiscalResidency]
+    return [member.value for member in fiscal_residency_choices()]
 
 
 _FISCAL_RESIDENCY_CHOICE_VALUES: list[str] = _fiscal_residency_choice_values()
@@ -170,14 +170,15 @@ def _taxpayer_type_choice_values() -> tuple[list[str], list[str], list[str], lis
     flag choices never drift from the values the wizard catalogue and
     the profile schema validate against.
     """
-    from ...domain.contribuyente.entity_type import EntityType, LegalEntityForm
-    from ...domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory
+    from ...domain.contribuyente.entity_type import entity_type_tokens, legal_entity_form_tokens
+    from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_tokens
+    from ...domain.deadlines.models import IrpfIncomeCategory
 
     return (
-        [member.value for member in EntityType],
-        [member.value for member in LegalEntityForm],
+        [member.value for member in entity_type_tokens()],
+        [member.value for member in legal_entity_form_tokens()],
         [member.value for member in IrpfIncomeCategory],
-        [member.value for member in IrpfEstimationRegime],
+        [member.value for member in irpf_estimation_regime_tokens()],
     )
 
 
@@ -213,10 +214,10 @@ def _irpf_personal_choice_values() -> tuple[list[str], list[str]]:
     the wizard catalogue and the profile schema validate against.
     """
     from ...domain.contribuyente.renta_codes import SituacionFamiliar
-    from ...domain.deadlines.models import IrpfSpecialRegime
+    from ...domain.calculations.registry.irpf_regimes import irpf_special_regime_tokens
 
     return (
-        [member.value for member in IrpfSpecialRegime],
+        [member.value for member in irpf_special_regime_tokens()],
         [member.value for member in SituacionFamiliar],
     )
 
@@ -1641,7 +1642,9 @@ def profile_next_step_modelo(profile_values: dict[str, str]) -> str | None:
             — the two share the same ``taxpayer_type.fiscal_residency`` key.
     """
     fiscal_residency = profile_values.get("taxpayer_type.fiscal_residency", "").strip().lower()
-    if fiscal_residency == "non_resident_irnr":
+    from ...domain.calculations.registry.renta_codes_catalogue import fiscal_residency_requires_country
+
+    if fiscal_residency_requires_country(fiscal_residency):
         return Modelo("210").value
     return None
 

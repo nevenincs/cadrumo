@@ -113,7 +113,7 @@ def diagnostics_telemetry_flush(
         compose_diagnostics_auth_probe_port,
         compose_diagnostics_run_health_port,
     )
-    from .state_projection_support import state_projection_read_ports
+    from .state_projection_support import operator_probe_ports, state_projection_read_ports
 
     overrides: dict[str, object] = {}
     if opt_in is not None:
@@ -128,10 +128,15 @@ def diagnostics_telemetry_flush(
 
     settings = load_settings()
     run_telemetry_port = compose_diagnostics_run_health_port()
-    from .state_projection_support import certificate_secret_backend_factory
+    from .state_projection_support import (
+        certificate_secret_backend_factory,
+        operator_scope_ports,
+    )
 
     auth_probe_port = compose_diagnostics_auth_probe_port(
         certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+        operator_probe_ports=operator_probe_ports(ctx),
+        operator_scope_ports=operator_scope_ports(ctx),
         read_ports=state_projection_read_ports(ctx),
     )
 

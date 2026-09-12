@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_a_modelo_with_no_export_layout_refuses_before_writing_output(tmp_path: Path) -> None:
     snapshot = build_filing_producer_snapshot(
-        modelo=Modelo.M111,
+        modelo=Modelo("111"),
         taxpayer_tax_id="12345678Z",
         taxpayer_identity=TaxpayerIdentityFacts(
             legal_name=None,

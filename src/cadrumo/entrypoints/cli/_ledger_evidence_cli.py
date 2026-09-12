@@ -21,6 +21,7 @@ from ...application.ledger.evidence import (
     PurchaseInvoiceEvidencePatch,
     PurchaseInvoiceEvidenceService,
 )
+from ...application.ledger.evidence_ports import LedgerEvidencePorts
 from ...application.ledger.invoice_confirmation import InvoiceConfirmationResult, confirm_invoice_draft_from_evidence
 from ...application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
 from ...application.ledger.invoice_draft_payloads import EvidenceExtractResult
@@ -54,6 +55,7 @@ from .ledger_business_payloads import (
     EvidenceUpdateResult,
     EvidenceViewResult,
 )
+from .state_projection_support import ledger_evidence_ports_factory
 
 
 class _InvoiceClassKwarg(TypedDict, total=False):
@@ -133,7 +135,7 @@ def evidence_add(
 ) -> None:
     """Register a purchase invoice evidence record and return its id."""
     transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    result = _evidence_service().add(
+    result = _evidence_service(ctx=ctx, bucket_id=transaction_repository.bucket_id).add(
         bucket_id=transaction_repository.bucket_id,
         source_path=source_path,
         supplier=supplier,
@@ -154,7 +156,10 @@ def evidence_add(
 def evidence_view(ctx: typer.Context, evidence_id: str) -> None:
     """Show one purchase invoice evidence record by id."""
     transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    record = _evidence_service().view(bucket_id=transaction_repository.bucket_id, evidence_id=evidence_id)
+    record = _evidence_service(ctx=ctx, bucket_id=transaction_repository.bucket_id).view(
+        bucket_id=transaction_repository.bucket_id,
+        evidence_id=evidence_id,
+    )
     emit_envelope(
         ctx,
         command="ledger.evidence.view",
@@ -166,7 +171,9 @@ def evidence_view(ctx: typer.Context, evidence_id: str) -> None:
 def evidence_list(ctx: typer.Context) -> None:
     """List every purchase invoice evidence record in the active bucket."""
     transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    records = _evidence_service().list_all(bucket_id=transaction_repository.bucket_id)
+    records = _evidence_service(ctx=ctx, bucket_id=transaction_repository.bucket_id).list_all(
+        bucket_id=transaction_repository.bucket_id,
+    )
     payload = {
         "bucket_id": transaction_repository.bucket_id,
         "count": len(records),
@@ -206,7 +213,7 @@ def evidence_update(
         iva_amount=parse_optional_decimal_amount(iva_amount, label="iva-amount"),
         notes=notes,
     )
-    result = _evidence_service().update(
+    result = _evidence_service(ctx=ctx, bucket_id=transaction_repository.bucket_id).update(
         bucket_id=transaction_repository.bucket_id, evidence_id=evidence_id, patch=patch
     )
     payload = _evidence_payload(result.record)
@@ -223,7 +230,10 @@ def evidence_remove(ctx: typer.Context, evidence_id: str, yes: bool = False) -> 
     if not yes:
         raise bad(tr("cli.app.ledger.evidence.yes_required"))
     transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    result = _evidence_service().remove(bucket_id=transaction_repository.bucket_id, evidence_id=evidence_id)
+    result = _evidence_service(ctx=ctx, bucket_id=transaction_repository.bucket_id).remove(
+        bucket_id=transaction_repository.bucket_id,
+        evidence_id=evidence_id,
+    )
     payload = _evidence_payload(result.record)
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _evidence_text_lines(result.record)
@@ -257,6 +267,7 @@ def _mint_extract_consent(
     evidence_id: str | None,
     off_host_provider: LLMProvider | None,
     acknowledged: bool,
+    evidence_ports: LedgerEvidencePorts,
 ) -> EvidenceConsentToken | None:
     """Return the token authorising ONE off-host read, or ``None`` for the on-host default.
 
@@ -307,7 +318,10 @@ def _mint_extract_consent(
         raise bad(
             tr("cli.app.ledger.evidence.extract_off_host_needs_evidence_id"),
         )
-    record = PurchaseInvoiceEvidenceService().view(bucket_id=bucket_id, evidence_id=evidence_id)
+    record = PurchaseInvoiceEvidenceService(ports=evidence_ports).view(
+        bucket_id=bucket_id,
+        evidence_id=evidence_id,
+    )
     content_address = record.source_sha256
     if not content_address:
         raise bad(
@@ -339,6 +353,7 @@ def _extract_evidence_draft(
     attachment_id: str | None,
     off_host_provider: LLMProvider | None,
     consent_token: EvidenceConsentToken | None,
+    evidence_ports: LedgerEvidencePorts,
 ) -> InvoiceDraft:
     """Run the application-owned evidence reader for one secure reference."""
     return extract_invoice_draft_from_evidence(
@@ -347,7 +362,7 @@ def _extract_evidence_draft(
         attachment_id=attachment_id,
         off_host_provider=off_host_provider,
         consent_token=consent_token,
-        ports=invoice_draft_extraction_ports(),
+        ports=invoice_draft_extraction_ports(evidence_ports=evidence_ports),
     )
 
 
@@ -453,11 +468,13 @@ def evidence_extract(
     """
     _require_exact_evidence_reference(evidence_id, attachment_id)
     transaction_repository = transaction_catalogue_repo(current_workflow_state())
+    evidence_ports = ledger_evidence_ports_factory(ctx)(bucket_id=transaction_repository.bucket_id)
     consent_token = _mint_extract_consent(
         bucket_id=transaction_repository.bucket_id,
         evidence_id=evidence_id,
         off_host_provider=off_host_provider,
         acknowledged=acknowledge_off_host,
+        evidence_ports=evidence_ports,
     )
     draft = _extract_evidence_draft(
         bucket_id=transaction_repository.bucket_id,
@@ -465,6 +482,7 @@ def evidence_extract(
         attachment_id=attachment_id,
         off_host_provider=off_host_provider,
         consent_token=consent_token,
+        evidence_ports=evidence_ports,
     )
     reviewed_reference = evidence_id or attachment_id or ""
     emit_envelope(
@@ -679,6 +697,7 @@ def _run_evidence_confirm(
     _require_exact_evidence_reference(evidence_id, attachment_id)
     transaction_repository = transaction_catalogue_repo(current_workflow_state())
     bucket_id = transaction_repository.bucket_id
+    evidence_ports = ledger_evidence_ports_factory(ctx)(bucket_id=bucket_id)
     resolutions: list[FindingResolution] = [parse_finding_resolution(raw) for raw in resolve]
     try:
         result = confirm_invoice_draft_from_evidence(
@@ -702,7 +721,8 @@ def _run_evidence_confirm(
             series=series,
             notes=notes,
             resolutions=resolutions,
-            extraction_ports=invoice_draft_extraction_ports(),
+            evidence_ports=evidence_ports,
+            extraction_ports=invoice_draft_extraction_ports(evidence_ports=evidence_ports),
         )
     except (InvoiceValidationError, ValidationError) as exc:
         if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:
@@ -755,8 +775,10 @@ def _invoice_class_kwarg(invoice_class: InvoiceClass | None) -> _InvoiceClassKwa
     return {"invoice_class": invoice_class}
 
 
-def _evidence_service() -> PurchaseInvoiceEvidenceService:
-    return PurchaseInvoiceEvidenceService()
+def _evidence_service(*, ctx: typer.Context, bucket_id: str) -> PurchaseInvoiceEvidenceService:
+    return PurchaseInvoiceEvidenceService(
+        ports=ledger_evidence_ports_factory(ctx)(bucket_id=bucket_id),
+    )
 
 
 def _evidence_payload(record: PurchaseInvoiceEvidence) -> dict[str, object]:

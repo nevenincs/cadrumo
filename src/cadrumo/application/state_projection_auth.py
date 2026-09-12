@@ -17,8 +17,10 @@ from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import CadrumoError
 from ..core.logging import get_logger
 from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .auth.credentials import project_active_certificate_credentials
 from .auth.certificate_secret_backend import CertificateSecretBackendFactory
+from .auth.credentials import project_active_certificate_credentials
+from .auth.operator_probe_ports import OperatorProbePorts
+from .auth.operator_scope_ports import OperatorScopePorts
 from .auth.operator_probes import bind_profile_auth_settings, probe_provider_credentials
 from .auth.probes import ProviderProbeResult
 from .auth.providers import select_provider
@@ -153,6 +155,7 @@ def _describe_backend_health(
     configured: bool,
     backend_settings: Settings | None,
     certificate_credentials: ActiveCertificateCredentials | None,
+    operator_scope_ports: OperatorScopePorts,
 ) -> _BackendProbeOutcome:
     """Describe the selected backend, lowering ``configured`` and never elevating it.
 
@@ -167,6 +170,7 @@ def _describe_backend_health(
             settings=backend_settings,
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             certificate_credentials=certificate_credentials,
+            operator_scope_ports=operator_scope_ports,
         )
         description = backend.describe()
         return _BackendProbeOutcome(
@@ -200,6 +204,7 @@ def _probe_backend_readiness(
     credential_bucket_id: str | None,
     backend_settings: Settings | None,
     certificate_credentials: ActiveCertificateCredentials | None,
+    operator_scope_ports: OperatorScopePorts,
 ) -> _BackendProbeOutcome:
     """Probe the live backend, downgrading readiness only.
 
@@ -221,6 +226,7 @@ def _probe_backend_readiness(
         configured=configured,
         backend_settings=backend_settings,
         certificate_credentials=certificate_credentials,
+        operator_scope_ports=operator_scope_ports,
     )
 
 
@@ -230,6 +236,7 @@ def _probe_credentials(
     effective_certificate_path: str,
     backend_settings: Settings | None,
     certificate_credentials: ActiveCertificateCredentials | None,
+    operator_probe_ports: OperatorProbePorts,
 ) -> tuple[ProviderProbeResult, str]:
     """Probe provider credentials, returning ``(probe_result, probe_summary)``."""
     provider_probe = probe_provider_credentials(
@@ -237,6 +244,7 @@ def _probe_credentials(
         effective_certificate_path,
         settings=backend_settings,
         certificate_credentials=certificate_credentials,
+        operator_probe_ports=operator_probe_ports,
     )
     return provider_probe.result, provider_probe.summary
 
@@ -245,6 +253,8 @@ def build_auth_readiness(
     state: WorkflowState,
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_probe_ports: OperatorProbePorts,
+    operator_scope_ports: OperatorScopePorts,
     provider_kind: AuthProviderKind | None,
     provider_kind_is_authoritative: bool,
     requested_provider: str | None,
@@ -284,6 +294,7 @@ def build_auth_readiness(
             provider_kind,
             settings=load_settings(),
             state=state,
+            operator_probe_ports=operator_probe_ports,
         )
 
     configured = _provider_configured(
@@ -307,6 +318,7 @@ def build_auth_readiness(
             credential_bucket_id=credential_bucket_id,
             backend_settings=backend_settings,
             certificate_credentials=certificate_credentials,
+            operator_scope_ports=operator_scope_ports,
         )
         configured = probe.configured
         available = probe.available
@@ -319,6 +331,7 @@ def build_auth_readiness(
             effective_certificate_path=effective_certificate_path,
             backend_settings=backend_settings,
             certificate_credentials=certificate_credentials,
+            operator_probe_ports=operator_probe_ports,
         )
 
     authenticated = configured and bool(auth.authenticated_at)

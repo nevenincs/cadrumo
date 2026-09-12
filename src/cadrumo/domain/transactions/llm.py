@@ -52,6 +52,7 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.unit_proportion import UNIT_PROPORTION_MAX, UNIT_PROPORTION_MIN, is_unit_proportion
 from ..categories.registry import resolve_category_profiles
 from ..categories.spending_category import SpendingCategory
+from ..calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ..iva.schema import IvaCategory
 from .enums import BusinessClassification
 from .errors import LLMClassifierError, TransactionValidationError
@@ -387,77 +388,22 @@ def prompt_spec_with_every_spending_category(
     )
 
 
-# Concise model-facing descriptions for each closed Spanish IVA situation.
-# Model-facing only: these reach the prompt body, never a rendered operator
-# surface, which is why they are hardcoded English rather than translation
-# keys. These hint the model's SELECTION; they do not ground a number —
-# the rate is looked up from the registry and the base/amount derived
-# downstream. The IVA catalogue's own ``label`` fields are i18n keys that are
-# not carried in the locale catalogues, so they cannot serve as hints; these
-# curated one-liners are the authoritative prompt descriptions instead.
-_IVA_CATEGORY_HINTS: dict[IvaCategory, str] = {
-    IvaCategory.DOMESTIC_GENERAL: "domestic supply at the general 21% rate",
-    IvaCategory.DOMESTIC_REDUCED: "reduced 10% rate (hospitality, transport, some foods)",
-    IvaCategory.DOMESTIC_SUPER_REDUCED: "super-reduced 4% rate (basic foods, books, medicines)",
-    IvaCategory.DOMESTIC_ZERO: "domestic supply at a 0% rate",
-    IvaCategory.DOMESTIC_EXEMPT: "domestic supply exempt from IVA (education, health, finance — Art. 20)",
-    IvaCategory.DOMESTIC_NOT_SUBJECT: "operation not subject to Spanish IVA",
-    # No RATE is stated on purpose: the compensación percentages differ by
-    # activity and have moved, and a stale figure in a classifier hint would
-    # steer a classification the filing then carries. The article is what
-    # distinguishes it, and it is the one this codebase already grounds the
-    # compensación on (_LIVA_REAGP_COMPENSACION).
-    IvaCategory.REAGP_COMPENSATION: (
-        "REAGP compensación a tanto alzado — the buyer pays a farmer, forester or fisher under the "
-        "special agriculture regime instead of repercutido IVA (LIVA Art. 130); it is NOT IVA the "
-        "supplier charged"
-    ),
-    IvaCategory.DOMESTIC_REVERSE_CHARGE: "domestic reverse charge — the recipient self-assesses IVA (Art. 84)",
-    IvaCategory.INTRA_COMMUNITY_SUPPLY: "exempt intra-community supply of goods to an EU business (Art. 25)",
-    IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE: "reverse-charge EU goods acquisition",
-    IvaCategory.INTRA_COMMUNITY_TRIANGULATION: "intra-community triangular operation",
-    # The services pair states what separates it from the goods pair above,
-    # because that is the one distinction the auto-derived fallback hint cannot
-    # convey: a service and an entrega both show no Spanish cuota, for
-    # different legal reasons, and the reason is what a filing cites.
-    IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY: (
-        "service supplied to an EU business — NOT SUBJECT to Spanish IVA because Art. 69.Uno.1 "
-        "locates it where the customer is established; this is a SERVICE, not the Art. 25 "
-        "exempt supply of goods"
-    ),
-    IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE: (
-        "service received from an EU supplier — reverse charge, the Spanish recipient "
-        "self-assesses IVA under Art. 84.Uno.2; this is a SERVICE, not a goods acquisition"
-    ),
-    IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED: "export of goods outside the EU, zero-rated (Art. 21)",
-    IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED: "operation assimilated to an export, exempt/zero-rated (Art. 22)",
-    IvaCategory.IMPORT_THIRD_COUNTRY: "import of goods from outside the EU",
-    IvaCategory.RECARGO_EQUIVALENCIA: "purchase subject to the recargo de equivalencia surcharge",
-    IvaCategory.REGIMEN_SIMPLIFICADO: "régimen simplificado (modules), not a general-regime invoice",
-    IvaCategory.OPERACION_NO_SUJETA: "operation outside the scope of Spanish IVA",
-    IvaCategory.ERRONEOUS_INVOICE: "erroneous invoice flagged for correction",
-    IvaCategory.UNKNOWN: "IVA situation not yet determined",
-}
-
-
 def default_iva_category_choices() -> tuple[IvaCategoryChoice, ...]:
     """Return the grounded IVA-category choices for the saturation prompt.
 
-    The allow-list is the closed :class:`cadrumo.domain.iva.IvaCategory` enum (the
-    registry :class:`cadrumo.domain.iva.IvaCatalogue` is validated to carry a
-    regulation for every member, so the enum and the catalogue set are
-    identical). Each choice is hinted with a concise description from
-    :data:`_IVA_CATEGORY_HINTS`. The model SELECTS a category only; every
+    The allow-list and concise hints are projected from the dated IVA category
+    facts registry. The model SELECTS a category only; every
     regulated euro figure is derived downstream from the registry rate, never
     emitted by the model.
 
     Returns:
-        One :class:`IvaCategoryChoice` per :class:`cadrumo.domain.iva.IvaCategory`,
-        ordered by enum declaration.
+        One :class:`IvaCategoryChoice` per registry-declared IVA category, in
+        authored order.
     """
+    catalogue = resolve_iva_category_catalogue()
     return tuple(
-        IvaCategoryChoice(value=category, hint=_IVA_CATEGORY_HINTS.get(category, category.value.replace("_", " ")))
-        for category in IvaCategory
+        IvaCategoryChoice(value=definition.token, hint=catalogue.hint(definition.token))
+        for definition in catalogue.definitions
     )
 
 

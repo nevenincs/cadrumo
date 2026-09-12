@@ -52,18 +52,22 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.payment_election import PaymentElection
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...core.product_identity import AeatProductSoftwareIdentity
 from ...core.refund_election import RefundElection
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.filing.software_identity import AeatProductSoftwareIdentity
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ...domain.modelos.verification_report import VerificationReport
 from ...domain.modelos.work_unit import WorkUnit
+from ..auth.operator_probe_ports import OperatorProbePorts
 from ..state_projection_ports import StateProjectionReadError, StateProjectionReadPorts
 from .calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
+from .calculation_action_ports import CalculationActionPorts
 from .export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
+from .export_ports import ModeloExportPorts
 from .verification_actions import verify_modelo_revision
+from .verification_repository_ports import VerificationRepositoryBundle
 from .work_addressing import (
     ensure_modelo_work_unit_for_active_target,
     law_selected_revision_for_work_target,
@@ -72,6 +76,7 @@ from .work_unit_repository import work_unit_catalogue_repository
 
 if TYPE_CHECKING:
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
+    from ..auth.operator_scope_ports import OperatorScopePorts
     from ..state_projection import ProjectionModeloReadiness
 
 _log = get_logger(__name__)
@@ -222,6 +227,11 @@ def run_modelo_quickfile(
     command: QuickfileCommand,
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_probe_ports: OperatorProbePorts,
+    operator_scope_ports: OperatorScopePorts,
+    verification_repositories: VerificationRepositoryBundle,
+    calculation_action_ports: CalculationActionPorts,
+    modelo_export_ports: ModeloExportPorts,
     read_ports: StateProjectionReadPorts,
     workflow_profile: TaxpayerProfile,
     build_calculation_inputs: Callable[[str], WorkCalculateInputBundle],
@@ -241,6 +251,16 @@ def run_modelo_quickfile(
 
     Args:
         command: The resolved quickfile target.
+        certificate_secret_backend_factory: Application-owned certificate-secret
+            backend factory used by readiness.
+        operator_probe_ports: Required inward operator-auth probe capabilities.
+        verification_repositories: The required application-owned repository
+            bundle used by the verify stage.
+        calculation_action_ports: The required calculation capabilities bound
+            to the command's profile bucket.
+        modelo_export_ports: The required application-owned repository bundle
+            used by the export stage.
+        read_ports: Required application-owned profile and workspace reads.
         workflow_profile: The active :class:`TaxpayerProfile` the readiness and
             calculate stages are evaluated against.
         build_calculation_inputs: Factory producing the calculate-stage inputs.
@@ -285,6 +305,8 @@ def run_modelo_quickfile(
     readiness = _resolve_readiness(
         command,
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=operator_probe_ports,
+        operator_scope_ports=operator_scope_ports,
         registry_revision_id=registry_revision_id,
         read_ports=read_ports,
     )
@@ -329,6 +351,7 @@ def run_modelo_quickfile(
             work_unit_id=work_unit.work_unit_id,
             actor=command.actor,
             inputs=calculation_inputs,
+            ports=calculation_action_ports,
         )
     except CadrumoError as exc:
         return _halted(
@@ -353,6 +376,8 @@ def run_modelo_quickfile(
         report = verify_modelo_revision(
             calculation_revision.calculation_revision_id,
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_scope_ports=operator_scope_ports,
+            verification_repositories=verification_repositories,
             actor=command.actor,
             workflow_profile=workflow_profile,
         )
@@ -412,6 +437,7 @@ def run_modelo_quickfile(
                 product_software_identity=command.product_software_identity,
             ),
             workflow_profile=workflow_profile,
+            export_ports=modelo_export_ports,
         )
     except CadrumoError as exc:
         return _halted(
@@ -485,6 +511,8 @@ def _resolve_readiness(
     command: QuickfileCommand,
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_probe_ports: OperatorProbePorts,
+    operator_scope_ports: OperatorScopePorts,
     registry_revision_id: RevisionId,
     read_ports: StateProjectionReadPorts,
 ) -> ProjectionModeloReadiness | None:
@@ -500,6 +528,8 @@ def _resolve_readiness(
     try:
         projection = build_operator_state_projection(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=operator_probe_ports,
+            operator_scope_ports=operator_scope_ports,
             read_ports=read_ports,
             modelo_readiness_requests=(
                 ModeloReadinessRequest(

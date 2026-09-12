@@ -47,7 +47,7 @@ if TYPE_CHECKING:
     )
     from ...application.modelo.review_package_counter_sign import CounterSignedReceipt
     from ...application.modelo.review_package_feedback import ImportedFeedback
-    from ...application.modelo.review_package_recipient_encryption import (
+    from ...application.modelo.recipient_encryption import (
         RecipientDecryptedPackage,
         RecipientEncryptedPackage,
     )

@@ -15,12 +15,6 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
-from ...adapters.persistence.storage.bucket.lockfile import acquire_lock, release_lock
-from ...adapters.persistence.storage.master_key.active_session import (
-    current_active_bucket_session,
-    session_serves_bucket,
-)
 from ...core.config import Settings, load_settings
 from ...core.config_live_tests import LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD
 from ...core.identity.bucket import BucketId
@@ -33,9 +27,9 @@ from .operator_results import (
     AuthProviderNotConfiguredError,
     CertificateSecretMutationInProgressError,
 )
+from .operator_scope_ports import OperatorScopeBucketPaths, OperatorScopePorts, OperatorScopeSession
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage.master_key.bucket_session import BucketSession
     from ..workflow.state_models import WorkflowState
 
 _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS = (
@@ -124,8 +118,9 @@ def _is_explicitly_routed(
 
 
 def _can_reuse_active_session(
-    active_session: BucketSession | None,
+    active_session: OperatorScopeSession | None,
     *,
+    operator_scope_ports: OperatorScopePorts,
     bucket_id: str,
     target_storage_root: str,
     ambient_storage_root: str,
@@ -137,7 +132,7 @@ def _can_reuse_active_session(
     reuses only on an exact root match; a session without one reuses only when
     the caller did not explicitly route and the ambient root matches the target.
     """
-    if not session_serves_bucket(active_session, bucket_id):
+    if not operator_scope_ports.session.serves_bucket(active_session, bucket_id):
         return False
     if active_session.storage_root is not None:
         return _canonical_storage_root(active_session.storage_root) == target_storage_root
@@ -149,6 +144,7 @@ def active_profile_storage_span(
     settings: Settings | None = None,
     *,
     target_bucket_id: str | None = None,
+    operator_scope_ports: OperatorScopePorts,
 ):
     """Return a storage context for the explicit target or active profile.
 
@@ -177,9 +173,10 @@ def active_profile_storage_span(
             with nullcontext():
                 yield None
             return
-        active_session = current_active_bucket_session()
+        active_session = operator_scope_ports.session.current()
         if _can_reuse_active_session(
             active_session,
+            operator_scope_ports=operator_scope_ports,
             bucket_id=bucket_id,
             target_storage_root=target_storage_root,
             ambient_storage_root=ambient_storage_root,
@@ -201,6 +198,7 @@ def operator_auth_revocation_is_reachable(
     settings: Settings | None = None,
     *,
     bucket_id: str,
+    operator_scope_ports: OperatorScopePorts,
 ) -> bool:
     """Report whether an auth revocation for ``bucket_id`` could open its store.
 
@@ -214,7 +212,11 @@ def operator_auth_revocation_is_reachable(
     off a caught refusal.
     """
     try:
-        with active_profile_storage_span(settings, target_bucket_id=bucket_id) as resolved:
+        with active_profile_storage_span(
+            settings,
+            target_bucket_id=bucket_id,
+            operator_scope_ports=operator_scope_ports,
+        ) as resolved:
             return resolved is not None
     except AuthOperationRequiresCustodySessionError:
         return False
@@ -224,6 +226,7 @@ def operator_auth_revocation_is_reachable(
 class _AuthMutationOwnership:
     root: Path
     bucket_id: str
+    paths: OperatorScopeBucketPaths
     pid: int
     thread_id: int
     depth: int
@@ -233,7 +236,12 @@ _AUTH_MUTATION_OWNERSHIP = threading.local()
 
 
 @contextmanager
-def auth_mutation_span(*, settings: Settings, bucket_id: str) -> Generator[None]:
+def auth_mutation_span(
+    *,
+    settings: Settings,
+    bucket_id: str,
+    operator_scope_ports: OperatorScopePorts,
+) -> Generator[None]:
     """Acquire or re-enter the canonical per-bucket auth mutation span."""
     root = settings.cadrumo_local_storage_root.expanduser().resolve(strict=False)
     current_pid = os.getpid()
@@ -254,11 +262,12 @@ def auth_mutation_span(*, settings: Settings, bucket_id: str) -> Generator[None]
             ownership.depth -= 1
         return
 
-    paths = bucket_paths(root, bucket_id)
-    acquire_lock(paths, wait_seconds=settings.cadrumo_file_lock_timeout_s)
+    paths = operator_scope_ports.storage.resolve(root, bucket_id)
+    operator_scope_ports.storage.acquire_lock(paths, wait_seconds=settings.cadrumo_file_lock_timeout_s)
     ownership = _AuthMutationOwnership(
         root=root,
         bucket_id=bucket_id,
+        paths=paths,
         pid=current_pid,
         thread_id=current_thread_id,
         depth=1,
@@ -269,7 +278,7 @@ def auth_mutation_span(*, settings: Settings, bucket_id: str) -> Generator[None]
     finally:
         ownership.depth = 0
         del _AUTH_MUTATION_OWNERSHIP.current
-        release_lock(paths)
+        operator_scope_ports.storage.release_lock(paths)
 
 
 def assert_auth_cleanup_not_in_progress(state: WorkflowState) -> None:

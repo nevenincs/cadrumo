@@ -22,6 +22,7 @@ from ..workflow.state_models import WorkflowState
 from .certificate_secret_backend import CertificateSecretBackendFactory
 from .certificate_sources import active_certificate_source
 from .operator_scope import active_profile_storage_span
+from .operator_scope_ports import OperatorScopePorts
 
 
 def resolve_certificate_source_secret(
@@ -159,6 +160,7 @@ def active_auth_projection_span(
     settings: Settings | None = None,
     requested_provider: str | None = None,
     fallback_provider: str | None = None,
+    operator_scope_ports: OperatorScopePorts,
 ) -> Generator[ActiveAuthProjectionSnapshot]:
     """Pin one active route while loading state, provider, credentials, and consumers.
 
@@ -169,7 +171,7 @@ def active_auth_projection_span(
     without reopening the route.
     """
     resolved = settings or load_settings()
-    with active_profile_storage_span(resolved) as bucket_id:
+    with active_profile_storage_span(resolved, operator_scope_ports=operator_scope_ports) as bucket_id:
         if bucket_id is None:
             yield _stateless_auth_projection_snapshot(
                 bucket_id=None,
@@ -211,6 +213,7 @@ def resolve_active_provider_kind(
     settings: Settings | None = None,
     requested_provider: str | None = None,
     fallback_provider: str | None = None,
+    operator_scope_ports: OperatorScopePorts,
 ) -> AuthProviderKind | None:
     """Resolve the provider kind the operator's persisted selection names.
 
@@ -233,6 +236,7 @@ def resolve_active_provider_kind(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         requested_provider=requested_provider,
         fallback_provider=fallback_provider,
+        operator_scope_ports=operator_scope_ports,
     ) as snapshot:
         return snapshot.provider
 
@@ -241,6 +245,7 @@ def resolve_active_certificate_credentials(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     settings: Settings | None = None,
+    operator_scope_ports: OperatorScopePorts,
 ) -> ActiveCertificateCredentials:
     """Resolve the exact certificate credential selected for the active profile."""
     resolved = settings or load_settings()
@@ -249,6 +254,7 @@ def resolve_active_certificate_credentials(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             settings=resolved,
             requested_provider="certificate",
+            operator_scope_ports=operator_scope_ports,
         ) as snapshot:
             if snapshot.state is None:
                 return unnamed_certificate_credentials(resolved)

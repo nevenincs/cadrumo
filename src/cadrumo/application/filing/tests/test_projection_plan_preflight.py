@@ -168,7 +168,7 @@ def test_render_context_and_m303_builder_refuse_nonowned_or_cross_period_authori
         )
 
     producer = build_filing_producer_snapshot(
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         taxpayer_tax_id="12345678Z",
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
@@ -226,7 +226,7 @@ def test_render_context_and_m303_builder_refuse_nonowned_or_cross_period_authori
 )
 def test_m303_projection_refuses_wrong_annual_orden_authority(orden_update: dict[str, object]) -> None:
     producer = build_filing_producer_snapshot(
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         taxpayer_tax_id="12345678Z",
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),

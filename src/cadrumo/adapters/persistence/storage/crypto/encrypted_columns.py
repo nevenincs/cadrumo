@@ -13,7 +13,7 @@ All decorators and helpers resolve key bytes through
 :func:`~adapters.persistence.storage.master_key.active_session.get_active_master_key`
 on the active
 :class:`~adapters.persistence.storage.master_key.bucket_session.BucketSession`.
-Tests use :class:`~cadrumo.tests.master_key.EphemeralMasterKeyProvider`,
+Tests use :class:`~cadrumo.adapters.persistence.storage.tests.ephemeral_master_key.EphemeralMasterKeyProvider`,
 whose context manager enters a real session without touching the OS
 keychain or file backend.
 

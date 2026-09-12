@@ -6,7 +6,7 @@ from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.verification_report import ModeloVerificationFinding
 from ...domain.modelos.work_unit import WorkUnit
-from ..calculations.observations_repository import CalculationObservationRepository
+from .verification_repository_ports import CalculationObservationRepositoryProtocol
 
 
 def _registry_m720_declarations(
@@ -51,7 +51,7 @@ def modelo_720_redeclaration_findings(
     *,
     work_unit: WorkUnit,
     revision: CalculationRevision,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
     registry_query_service: RegistryQueryService,
 ) -> tuple[ModeloVerificationFinding, ...]:
     # fact-relocation: selected M720 detail, applicability, and verification declarations are consumed through RegistryQueryService

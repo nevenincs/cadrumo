@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 import asyncio
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -45,6 +47,9 @@ from ..sessions import (
     _prepare_clave_auth,
     storage_state_paths,
 )
+from ._operator_probe_fakes import fake_operator_probe_ports
+
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
@@ -53,6 +58,7 @@ _DRAFT_STORAGE_WRITTEN_AT = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
 _SESSION_PROBE_NOW = datetime(2026, 5, 26, 12, 0, 0, tzinfo=UTC)
 _EXPIRED_SESSION_AUTHENTICATED_AT = _SESSION_PROBE_NOW - timedelta(minutes=30)
 _LIVE_SESSION_AUTHENTICATED_AT = _SESSION_PROBE_NOW - timedelta(minutes=5)
+_OPERATOR_PROBE_PORTS = fake_operator_probe_ports()
 
 
 def _register_operator_profile() -> None:
@@ -70,7 +76,7 @@ def test_test_operator_auth_reports_the_active_profile() -> None:
 
     _register_operator_profile()
 
-    result = run_operator_auth_test("certificate")
+    result = run_operator_auth_test("certificate", operator_probe_ports=_OPERATOR_PROBE_PORTS, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert result.active_profile == _PROFILE_LABEL
     assert result.active_profile_registered is True
@@ -81,7 +87,7 @@ def test_test_operator_auth_reports_the_active_profile() -> None:
 def test_auth_status_preserves_the_active_profile_typed_verdict() -> None:
     """Auth status forwards the state projection verdict without recovery prose."""
 
-    result = inspect_operator_auth("certificate")
+    result = inspect_operator_auth("certificate", operator_probe_ports=_OPERATOR_PROBE_PORTS, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert not hasattr(result, "active_profile_next_action")
     verdict = result.active_profile_precondition_verdict
@@ -100,7 +106,7 @@ def test_auth_status_is_not_blocked_by_unreadable_workspace_drafts() -> None:
     """
 
     _register_operator_profile()
-    configure_operator_auth("certificate")
+    configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
     now = _DRAFT_STORAGE_WRITTEN_AT
 
     period = Period.from_year_and_code(2026, "1T")
@@ -144,7 +150,7 @@ def test_auth_status_is_not_blocked_by_unreadable_workspace_drafts() -> None:
         payload=b"{not-json",
     )
 
-    result = inspect_operator_auth("certificate")
+    result = inspect_operator_auth("certificate", operator_probe_ports=_OPERATOR_PROBE_PORTS, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert result.provider == "certificate"
     assert result.active_profile == _PROFILE_LABEL
@@ -163,7 +169,7 @@ def test_configure_operator_auth_emits_auth_provider_configured_event() -> None:
 
     _register_operator_profile()
 
-    configure_operator_auth("certificate")
+    configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     state = workflow_state_repository().load()
     active_bucket_id = state.active_profile_bucket_id()
@@ -190,7 +196,7 @@ def test_configure_operator_auth_event_payload_records_certificate_path(tmp_path
     cert_path = tmp_path / "operator.p12"
     cert_path.write_bytes(b"binary certificate payload")
 
-    configure_operator_auth("certificate", certificate_path=cert_path)
+    configure_operator_auth("certificate", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     catalogue = BucketEventHistoryRepository().load()
     matching = [
@@ -222,7 +228,7 @@ def test_configure_operator_auth_refuses_when_no_active_profile_bucket(tmp_path:
         override_settings(cadrumo_local_storage_root=tmp_path / "no-active", cadrumo_active_profile=None),
         pytest.raises(AuthConfigureNoActiveBucketError) as excinfo,
     ):
-        configure_operator_auth("certificate")
+        configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
     assert excinfo.value.translated_message == "application.auth.operator.errors.no_active_bucket"
 
     catalogue = BucketEventHistoryRepository().load()
@@ -239,7 +245,7 @@ def test_configure_operator_auth_unknown_provider_emits_no_event() -> None:
     auth_provider_before = state_before.auth.provider
 
     with pytest.raises(KeyError):
-        configure_operator_auth("not_a_provider")
+        configure_operator_auth("not_a_provider", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     state_after = workflow_state_repository().load()
     assert state_after.auth.provider == auth_provider_before
@@ -266,9 +272,9 @@ def test_inspect_operator_auth_configured_is_false_without_certificate_path() ->
 
     _register_operator_profile()
 
-    configure_operator_auth("certificate")  # no certificate_path argument
+    configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)  # no certificate_path argument
 
-    result = inspect_operator_auth()
+    result = inspect_operator_auth(operator_probe_ports=_OPERATOR_PROBE_PORTS, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert result.provider == "certificate"
     assert result.configured is False, (
@@ -298,9 +304,9 @@ def test_inspect_operator_auth_configured_is_true_with_certificate_path(
     cert_path.write_bytes(b"placeholder cert")
 
     with override_settings(cadrumo_certificate_path=cert_path):
-        configure_operator_auth("certificate", certificate_path=cert_path)
+        configure_operator_auth("certificate", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
-        result = inspect_operator_auth()
+        result = inspect_operator_auth(operator_probe_ports=_OPERATOR_PROBE_PORTS, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert result.provider == "certificate"
     assert result.configured is True, (
@@ -331,9 +337,9 @@ def test_inspect_operator_auth_configured_true_when_path_persisted_to_workflow_s
     cert_path = tmp_path / "operator.p12"
     cert_path.write_bytes(b"placeholder cert")
 
-    configure_operator_auth("certificate", certificate_path=cert_path)
+    configure_operator_auth("certificate", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
-    result = inspect_operator_auth()
+    result = inspect_operator_auth(operator_probe_ports=_OPERATOR_PROBE_PORTS, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert result.provider == "certificate"
     assert result.certificate_path == str(cert_path), (
@@ -365,16 +371,16 @@ def test_inspect_operator_auth_distinguishes_no_path_set_from_file_missing(
     _register_operator_profile()
 
     # 1) no path set
-    configure_operator_auth("certificate")  # no --file
-    no_path = inspect_operator_auth()
+    configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)  # no --file
+    no_path = inspect_operator_auth(operator_probe_ports=_OPERATOR_PROBE_PORTS, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
     assert no_path.configured is False
     assert no_path.health_severity == "info", f"no-path-set must be info, not error — got {no_path.health_severity!r}"
     no_path_summary = no_path.health_summary
 
     # 2) path set + file missing
     ghost = tmp_path / "missing.p12"
-    configure_operator_auth("certificate", certificate_path=ghost)
-    missing_file = inspect_operator_auth()
+    configure_operator_auth("certificate", certificate_path=ghost, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    missing_file = inspect_operator_auth(operator_probe_ports=_OPERATOR_PROBE_PORTS, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
     assert missing_file.configured is False
     assert missing_file.health_severity == "warning", (
         f"path-set + file-missing must be warning — got {missing_file.health_severity!r}"
@@ -398,7 +404,7 @@ def test_configure_operator_auth_certificate_without_file_is_incomplete() -> Non
 
     _register_operator_profile()
 
-    result = configure_operator_auth("certificate")  # no certificate_path
+    result = configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)  # no certificate_path
 
     assert result.provider == "certificate"
     assert result.complete is False, (
@@ -427,7 +433,7 @@ def test_configure_operator_auth_certificate_with_file_is_complete(tmp_path: Pat
     cert_path = tmp_path / "operator.p12"
     cert_path.write_bytes(b"placeholder cert")
 
-    result = configure_operator_auth("certificate", certificate_path=cert_path)
+    result = configure_operator_auth("certificate", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert result.complete is True, f"a supplied resolvable file must be complete — got {result.complete!r}"
     assert result.incomplete_reason == ""
@@ -443,7 +449,7 @@ def test_configure_operator_auth_certificate_with_unresolved_file_is_incomplete(
     _register_operator_profile()
     ghost = tmp_path / "missing.p12"
 
-    result = configure_operator_auth("certificate", certificate_path=ghost)
+    result = configure_operator_auth("certificate", certificate_path=ghost, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert result.complete is False, (
         f"an unresolvable certificate path must not report success — got complete={result.complete!r}"
@@ -470,8 +476,8 @@ def test_auth_status_and_test_agree_when_no_provider_configured() -> None:
 
     _register_operator_profile()
 
-    status = inspect_operator_auth()
-    probe = run_operator_auth_test()
+    status = inspect_operator_auth(operator_probe_ports=_OPERATOR_PROBE_PORTS, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    probe = run_operator_auth_test(operator_probe_ports=_OPERATOR_PROBE_PORTS, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert status.provider == ""
     assert status.provider == probe.provider, (
@@ -508,26 +514,30 @@ def test_invalid_persisted_provider_fails_closed_across_snapshot_consumers() -> 
         ),
     )
 
-    with active_auth_projection_span() as snapshot:
+    with active_auth_projection_span(operator_scope_ports=_OPERATOR_SCOPE_PORTS) as snapshot:
         assert snapshot.state is not None
         assert snapshot.state.auth.provider == invalid_selector
         assert snapshot.provider is None
         projection = build_operator_state_projection(
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
             auth_snapshot=snapshot,
             probe_live_backend=True,
             include_workspace_summary=False,
             include_pending_obligations=False,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
         direct_state_projection = build_operator_state_projection(
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
             state=snapshot.state,
             probe_live_backend=True,
             include_workspace_summary=False,
             include_pending_obligations=False,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
 
-    status = inspect_operator_auth()
-    probe = run_operator_auth_test()
-    preflight = build_live_auth_preflight_report()
+    status = inspect_operator_auth(operator_probe_ports=_OPERATOR_PROBE_PORTS, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    probe = run_operator_auth_test(operator_probe_ports=_OPERATOR_PROBE_PORTS, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    preflight = build_live_auth_preflight_report(operator_probe_ports=_OPERATOR_PROBE_PORTS, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     for readiness in (projection.auth, direct_state_projection.auth, status, probe, preflight):
         assert readiness.provider == ""
@@ -536,7 +546,13 @@ def test_invalid_persisted_provider_fails_closed_across_snapshot_consumers() -> 
         assert invalid_selector not in readiness.model_dump_json()
 
     with pytest.raises(AuthLoginPreconditionError) as excinfo:
-        asyncio.run(login_operator_auth(guarded_read_context=""))
+        asyncio.run(
+            login_operator_auth(
+                guarded_read_context="",
+                operator_probe_ports=_OPERATOR_PROBE_PORTS,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            ),
+        )
 
     assert excinfo.value.translated_message == "application.auth.operator.errors.provider_not_configured"
     assert invalid_selector not in str(excinfo.value)
@@ -548,9 +564,9 @@ def test_auth_test_probes_the_provider_when_one_is_configured() -> None:
     default when nothing is configured and nothing is requested."""
 
     _register_operator_profile()
-    configure_operator_auth("certificate")
+    configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
-    probe = run_operator_auth_test()
+    probe = run_operator_auth_test(operator_probe_ports=_OPERATOR_PROBE_PORTS, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert probe.provider == "certificate"
 
@@ -561,7 +577,7 @@ def test_auth_test_probes_explicitly_requested_provider() -> None:
 
     _register_operator_profile()
 
-    probe = run_operator_auth_test("clave_movil")
+    probe = run_operator_auth_test("clave_movil", operator_probe_ports=_OPERATOR_PROBE_PORTS, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert probe.provider == "clave_movil"
 
@@ -583,7 +599,12 @@ def test_live_auth_preflight_reports_redacted_clave_profile_alignment() -> None:
         },
     )
 
-    report = build_live_auth_preflight_report("clave_movil", settings=settings)
+    report = build_live_auth_preflight_report(
+        "clave_movil",
+        settings=settings,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+    )
 
     assert report.provider == "clave_movil"
     assert report.active_profile == _PROFILE_LABEL
@@ -609,7 +630,7 @@ def test_live_auth_preflight_reports_expired_persisted_session_state() -> None:
         overrides={"identity.tax_id": "12345678Z", "auth.clave_movil_route": ClaveMovilRoute.QR.value},
     )
     with override_settings(cadrumo_clave_movil_dni_nie=SecretStr("12345678Z")):
-        configure_operator_auth("clave_movil")
+        configure_operator_auth("clave_movil", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
         captured_at = _EXPIRED_SESSION_AUTHENTICATED_AT
         path = storage_state_paths(AuthProviderKind.CLAVE_MOVIL).storage_state
         session_store.save(
@@ -624,7 +645,11 @@ def test_live_auth_preflight_reports_expired_persisted_session_state() -> None:
         )
 
         with frozen_clock(_SESSION_PROBE_NOW):
-            report = build_live_auth_preflight_report("clave_movil")
+            report = build_live_auth_preflight_report(
+                "clave_movil",
+                operator_probe_ports=_OPERATOR_PROBE_PORTS,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            )
 
     assert report.probe_result is ProviderProbeResult.OK
     assert report.persisted_session_present is True
@@ -634,7 +659,7 @@ def test_live_auth_preflight_reports_expired_persisted_session_state() -> None:
 
 def test_live_auth_preflight_uses_explicit_certificate_settings(tmp_path: Path) -> None:
     _register_operator_profile()
-    configure_operator_auth("certificate")
+    configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
     cert_path = tmp_path / "operator.p12"
     cert_path.write_bytes(b"not a pkcs12 bundle")
     base_settings = load_settings()
@@ -648,7 +673,12 @@ def test_live_auth_preflight_uses_explicit_certificate_settings(tmp_path: Path) 
     )
 
     with override_settings(cadrumo_certificate_path=None):
-        report = build_live_auth_preflight_report("certificate", settings=explicit_settings)
+        report = build_live_auth_preflight_report(
+            "certificate",
+            settings=explicit_settings,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
     assert report.provider == "certificate"
     assert report.certificate_path_configured is True
@@ -682,10 +712,10 @@ def test_auth_test_carries_a_local_session_probe_status_does_not() -> None:
     """
 
     _register_operator_profile()
-    configure_operator_auth("certificate")
+    configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
-    status = inspect_operator_auth()
-    probe = run_operator_auth_test()
+    status = inspect_operator_auth(operator_probe_ports=_OPERATOR_PROBE_PORTS, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    probe = run_operator_auth_test(operator_probe_ports=_OPERATOR_PROBE_PORTS, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     # The probe fields are an ``auth test`` exclusive — not on the
     # ``auth status`` result shape.
@@ -722,7 +752,7 @@ def test_configure_clave_movil_mismatch_carries_an_explanatory_detail() -> None:
         overrides={"identity.tax_id": "00000000T", "auth.clave_movil_route": ClaveMovilRoute.QR.value},
     )
     with override_settings(cadrumo_clave_movil_dni_nie="00000001R"):
-        result = configure_operator_auth("clave_movil")
+        result = configure_operator_auth("clave_movil", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert result.identity_alignment == "mismatch"
     assert result.identity_alignment_detail != ""
@@ -747,7 +777,7 @@ def test_configure_clave_movil_match_carries_no_alignment_detail() -> None:
         overrides={"identity.tax_id": "12345678Z", "auth.clave_movil_route": ClaveMovilRoute.QR.value},
     )
     with override_settings(cadrumo_clave_movil_dni_nie="12345678Z"):
-        result = configure_operator_auth("clave_movil")
+        result = configure_operator_auth("clave_movil", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert result.identity_alignment == "matches"
     assert result.identity_alignment_detail == ""
@@ -766,7 +796,7 @@ def test_configure_clave_movil_without_provider_identity_is_incomplete() -> None
     )
 
     with override_settings(cadrumo_clave_movil_dni_nie=None):
-        result = configure_operator_auth("clave_movil")
+        result = configure_operator_auth("clave_movil", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert result.identity_alignment == "clave_identity_missing"
     assert result.complete is False
@@ -784,7 +814,7 @@ def test_operator_auth_test_reports_profile_scoped_clave_session() -> None:
         profile_id=_BUCKET_ID, display_name=_PROFILE_LABEL, overrides={"identity.tax_id": "TEST-IDENTITY"}
     )
     with override_settings(cadrumo_clave_movil_dni_nie=SecretStr("TEST-IDENTITY")):
-        configure_operator_auth("clave_movil")
+        configure_operator_auth("clave_movil", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
         captured_at = _LIVE_SESSION_AUTHENTICATED_AT
         path = storage_state_paths(AuthProviderKind.CLAVE_MOVIL).storage_state
         session_store.save(
@@ -799,7 +829,7 @@ def test_operator_auth_test_reports_profile_scoped_clave_session() -> None:
         )
 
         with frozen_clock(_SESSION_PROBE_NOW):
-            result = run_operator_auth_test("clave_movil")
+            result = run_operator_auth_test("clave_movil", operator_probe_ports=_OPERATOR_PROBE_PORTS, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert result.persisted_session_present is True
     assert result.persisted_session_expired is False
@@ -852,9 +882,9 @@ def test_reset_provider_scope_removes_only_the_target_provider_artefacts(tmp_pat
     cert_path.write_bytes(b"placeholder cert")
     settings = load_settings()
 
-    configure_operator_auth("certificate", certificate_path=cert_path)
-    register_operator_certificate_source(name="personal", certificate_path=cert_path)
-    set_operator_certificate_source_secret(name="personal", secret=SecretStr("cert-passphrase"))
+    configure_operator_auth("certificate", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    register_operator_certificate_source(name="personal", certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    set_operator_certificate_source_secret(name="personal", secret=SecretStr("cert-passphrase"), operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     certificate_session = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
     session_store.save(
@@ -879,7 +909,7 @@ def test_reset_provider_scope_removes_only_the_target_provider_artefacts(tmp_pat
         assert certificate_lock.is_file()
         assert clave_lock.is_file()
 
-        result = reset_operator_auth(provider="certificate")
+        result = reset_operator_auth(provider="certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
         assert certificate_lock.exists() is False
         assert clave_lock.is_file(), "an unrelated provider's acquisition lock must survive a scoped reset"
@@ -910,8 +940,8 @@ def test_configure_operator_auth_repeated_calls_append_distinct_events() -> None
 
     _register_operator_profile()
 
-    configure_operator_auth("certificate")
-    configure_operator_auth("certificate")
+    configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     catalogue = BucketEventHistoryRepository().load()
     matching = [

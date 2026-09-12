@@ -9,9 +9,8 @@ deductibility validator runs.
 
 This check is intentionally scoped to each revision's OWN bindings
 (:func:`~cadrumo.domain.calculations.registry.renta_first_slice_binding_target_casillas`),
-not the universal BOE-prescribed
-:data:`cadrumo.domain.renta._first_slice_routing.FIRST_SLICE_EXPENSE_CASILLAS`
-codomain spanning every filing year. Casilla ids are added, split, and
+not the universal BOE-prescribed routing projection spanning every filing year.
+Casilla ids are added, split, and
 renumbered across Modelo 100 revisions -- for example "Aportaciones a
 mutualidades alternativas" shares a combined casilla with Seguridad
 Social contributions (id ``0186``) on the 2020-2022 revisions but gets

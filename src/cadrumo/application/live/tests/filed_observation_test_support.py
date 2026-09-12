@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from ..filed_observation_ports import FiledObservationPersistencePorts
+from ..errors import LiveApplicationError
+from ..filed_data_ports import FiledDataCapturePort
 from ..iva_remote_state_ports import IvaRemoteStatePort
 
 
@@ -231,11 +233,56 @@ class _UnavailableIvaRemoteStatePort:
         raise RuntimeError("test bundle does not provide live IVA access")
 
 
+class _UnavailableFiledDataRegister:
+    """Refuse live register access while preserving per-pair continuation."""
+
+    @property
+    def walk_timeout_ms(self) -> int:
+        """Return the deterministic timeout used by application-only tests."""
+        return 1
+
+    async def walk(self, *, modelo: str, ejercicio: int) -> tuple[object, ...]:
+        """Raise the application boundary refusal for every requested pair."""
+        raise LiveApplicationError(
+            translated_message="application.live.filed_observations.errors.registry_enrollment_failed",
+            context={"operation": "test_filed_register_walk", "modelo": modelo, "ejercicio": ejercicio},
+        )
+
+    async def capture_observation(self, declaration: object, **_: object) -> object:
+        """Refuse capture because no live register row exists in this fake."""
+        del declaration
+        raise LiveApplicationError(
+            translated_message="application.live.filed_observations.errors.registry_enrollment_failed",
+        )
+
+
+class _UnavailableFiledDataCapturePort:
+    """Application-only filed-data port that never opens a real Sede session."""
+
+    @asynccontextmanager
+    async def open_register(self, *, operation: str):
+        """Yield the per-pair refusal register used by composition tests."""
+        del operation
+        yield _UnavailableFiledDataRegister()
+
+    async def discover_availability(self, *, operation: str) -> object:
+        """Refuse direct register discovery in this in-memory bundle."""
+        del operation
+        raise LiveApplicationError(
+            translated_message="application.live.filed_observations.errors.registry_enrollment_failed",
+        )
+
+    async def capture_source_observations(self, *args: object, **kwargs: object) -> tuple[object, ...]:
+        """Return no source rows because source capture is outside these tests."""
+        del args, kwargs
+        return ()
+
 @dataclass(frozen=True, slots=True)
 class InMemoryFiledObservationTestBundle:
     """Composed test ports for the filed-history application boundary."""
 
     ports: FiledObservationPersistencePorts
+    filed_data_port: FiledDataCapturePort
     iva_remote_state_port: IvaRemoteStatePort
 
 
@@ -256,6 +303,7 @@ def in_memory_filed_observation_test_bundle() -> InMemoryFiledObservationTestBun
             bucket_event_repository=_InMemoryBucketEventRepository(),
             baseline_import=_InMemoryBaselineImport(),
         ),
+        filed_data_port=_UnavailableFiledDataCapturePort(),
         iva_remote_state_port=_UnavailableIvaRemoteStatePort(),
     )
 

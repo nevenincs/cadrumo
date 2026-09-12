@@ -158,11 +158,18 @@ def emit_bare_invocation_and_exit(ctx: typer.Context) -> None:
     # invoked.
     from ...application.overview.status_report import build_overview_status_report
     from ...application.workflow.persistence import workflow_state_repository
-    from .state_projection_support import certificate_secret_backend_factory, state_projection_read_ports
+    from .state_projection_support import (
+        certificate_secret_backend_factory,
+        operator_probe_ports,
+        operator_scope_ports,
+        state_projection_read_ports,
+    )
 
     workflow_state = workflow_state_repository().load()
     overview_report = build_overview_status_report(
         certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+        operator_probe_ports=operator_probe_ports(ctx),
+        operator_scope_ports=operator_scope_ports(ctx),
         state=workflow_state,
         read_ports=state_projection_read_ports(ctx),
     )

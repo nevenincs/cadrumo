@@ -14,6 +14,8 @@ to :mod:`user_profile` and are proven in theirs.
 
 from __future__ import annotations
 
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 import ast
 import asyncio
 import inspect
@@ -25,6 +27,8 @@ from ..censo import (
     LIVE_CENSAL_READ_OPERATION,
     pull_censal_datos,
 )
+
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -48,7 +52,7 @@ def test_the_read_refuses_under_pytest_without_the_live_opt_in() -> None:
     prevent.
     """
     with pytest.raises(AeatLiveReadNotEnabledError):
-        asyncio.run(pull_censal_datos())
+        asyncio.run(pull_censal_datos(operator_scope_ports=_OPERATOR_SCOPE_PORTS))
 
 
 def test_the_door_reaches_only_the_sede_read_symbol() -> None:

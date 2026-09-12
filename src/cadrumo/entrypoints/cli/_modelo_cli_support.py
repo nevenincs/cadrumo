@@ -23,6 +23,7 @@ from ...application.modelo.calculate_input import (
     build_work_calculate_input_bundle,
     is_detail_casilla_override_key,
 )
+from ...application.modelo.calculation_action_ports import CalculationActionPorts
 from ...application.modelo.registry_discovery import declared_modelo_period_tokens
 from ...application.modelo.selectors import (
     ModeloCalculationRevisionSelector,
@@ -471,6 +472,7 @@ def _parse_work_calculate_cli_specs(
 def work_calculate_input_bundle_from_cli(
     *,
     work_unit_id: str,
+    ports: CalculationActionPorts,
     casilla: list[str] | None,
     binding: list[str] | None,
     relation: list[str] | None,
@@ -501,6 +503,7 @@ def work_calculate_input_bundle_from_cli(
         _validate_m349_detail_rows_for_work_unit(work_unit_id, detail_rows)
         return build_work_calculate_input_bundle(
             work_unit_id=work_unit_id,
+            ports=ports,
             casilla_overrides=casilla_pairs,
             binding_overrides=binding_pairs,
             relation_overrides=relation_pairs,

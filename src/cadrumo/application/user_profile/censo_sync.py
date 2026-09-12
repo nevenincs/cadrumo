@@ -34,9 +34,9 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel
 
 from ...core.identity.documents import IdentityError
-from ...core.identity.tax_id import validate_spanish_tax_id
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ...domain.user_profile.values import UserProfileFact
 from .censal_observation import CensalObservation, CensalObservationAddress
 from .censo_errors import CensoSyncError
@@ -117,7 +117,8 @@ def _assert_read_belongs_to_this_profile(
     is required to complete the profile in any case.
 
     Both sides are compared in the CANONICAL form
-    :func:`~core.identity.tax_id.validate_spanish_tax_id` returns, rather than by an
+    :func:`~cadrumo.domain.calculations.registry.tax_id_runtime.validate_runtime_spanish_tax_id`
+    returns, rather than by an
     ad-hoc strip-and-upper. That single change closes the guard's two ways of
     being wrong at once, and they fail in opposite directions:
 
@@ -157,13 +158,13 @@ def _assert_read_belongs_to_this_profile(
             translated_message="application.user_profile.errors.censal_read_identity_absent",
         )
     try:
-        existing = validate_spanish_tax_id(recorded_identity.value)
+        existing = validate_runtime_spanish_tax_id(recorded_identity.value)
     except IdentityError as exc:
         raise CensalIdentityMismatchError(
             translated_message="application.user_profile.errors.censal_read_identity_profile_malformed",
         ) from exc
     try:
-        incoming = validate_spanish_tax_id(incoming_tax_id or "")
+        incoming = validate_runtime_spanish_tax_id(incoming_tax_id or "")
     except IdentityError as exc:
         raise CensalIdentityMismatchError(
             translated_message="application.user_profile.errors.censal_read_identity_read_malformed",

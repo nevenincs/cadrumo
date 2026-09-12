@@ -45,6 +45,7 @@ from ...core.prorrata_exclusions import Art104TresExclusion
 from ...core.text_bounds import NonEmptyStr
 from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import EUMemberState, IvaCategory
+from ...domain.calculations.registry.prorrata_exclusions import require_art104_tres_exclusion
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import (
@@ -162,6 +163,14 @@ class _ManualLedgerTransactionInput(_LedgerCountryCodeModel):
         if len(set(normalised)) != len(normalised):
             raise ValueError("identifier tuple must not contain duplicates")
         return normalised
+
+    @field_validator("art_104_tres_exclusion", mode="before", check_fields=False)
+    @classmethod
+    def _require_registry_art104_tres_exclusion(cls, value: object) -> object:
+        """Accept only exclusion tokens declared by the published facts authority."""
+        if value is None:
+            return None
+        return require_art104_tres_exclusion(value)
 
 
 class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):

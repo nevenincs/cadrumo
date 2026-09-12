@@ -12,9 +12,10 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.decimal.constants import ZERO
-from ...core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.irnr_tipo_renta import require_tipo_renta_irnr, tipo_renta_pension_token
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -122,10 +123,7 @@ def _treaty_rate(
     casilla_id: CasillaId | None,
 ) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
     """Resolve the shared dated treaty fact and apply its typed result."""
-    try:
-        income_kind = TipoRentaIrnr(tipo_renta)
-    except ValueError:
-        income_kind = None
+    income_kind = require_tipo_renta_irnr(tipo_renta)
 
     override = (
         resolve_m210_convenio_override(
@@ -153,14 +151,16 @@ def _treaty_rate(
                 source_refs=source_refs,
             ),
         ]
-    if override.kind is ConvenioOverrideKind.EXEMPT:
+    if override.kind.value == "exempt":
         return ZERO, []
-    if override.kind is ConvenioOverrideKind.FLAT and override.rate is not None:
+    if override.kind.value == "flat" and override.rate is not None:
         return override.rate, []
-    if override.kind is ConvenioOverrideKind.CEILING and override.rate is not None:
+    if override.kind.value == "ceiling" and override.rate is not None:
         if baseline_rate is None:
             return None, []
         return min(baseline_rate, override.rate), []
+    if override.kind.value != "allocation_domestic_tariff":
+        raise RegistryValidationError(f"unsupported convenio override kind {override.kind.value!r}")
     # Base-dependent treaty branches remain owned by the registry formula runtime.
     return None, []
 
@@ -176,6 +176,7 @@ def resolve_m210_rate(
     casilla_id: CasillaId | None = None,
 ) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
     """Resolve the scalar rate or return a typed application finding."""
+    tipo_renta = require_tipo_renta_irnr(tipo_renta).value
     baseline, tariff = _selected_rate_parameters(snapshot, year=year)
     baseline_rate, parseable = _rate_from_parameter(baseline, tipo_renta=tipo_renta, year=year)
     if not parseable:
@@ -195,7 +196,7 @@ def resolve_m210_rate(
 
     if baseline_rate is not None:
         return baseline_rate, []
-    if tipo_renta == TipoRentaIrnr.PENSION.value and _tariff_declared(tariff, year=year):
+    if tipo_renta == tipo_renta_pension_token().value and _tariff_declared(tariff, year=year):
         return None, []
     return None, [
         _rate_finding(

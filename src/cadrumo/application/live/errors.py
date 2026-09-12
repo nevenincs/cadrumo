@@ -19,16 +19,12 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import Protocol, runtime_checkable
 
 from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..operator_actions.models import PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict
-
-if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilApprovalTimeoutError
-    from ...adapters.outbound.aeat.sede.errors import SedeError
 
 
 class LiveIvaAcquisitionFailureMode(StrEnum):
@@ -45,6 +41,23 @@ class LiveIvaAcquisitionFailureMode(StrEnum):
     PENDING_CLAVE_REQUEST = "pending_clave_request"
     LIVE_NAVIGATION_FAILED = "live_navigation_failed"
     UNKNOWN = "unknown"
+
+
+@runtime_checkable
+class LiveIvaAcquisitionFailureProtocol(Protocol):
+    """Application-facing live-IVA failure classification exposed by adapters.
+
+    Outbound adapters own their provider-specific exception classes and local
+    tax-portal failure taxonomies.  When one of those exceptions crosses into
+    live application orchestration, it exposes this one application-owned
+    classification rather than asking the application to identify the
+    concrete adapter type or enum that produced it.
+    """
+
+    @property
+    def live_iva_failure_mode(self) -> LiveIvaAcquisitionFailureMode:
+        """Return the application-level mode for this adapter failure."""
+        ...
 
 
 class LiveReadPrecondition(StrEnum):
@@ -161,66 +174,23 @@ class LiveIvaSurfaceTimeoutError(LiveApplicationError):
         self.timeout_ms = timeout_ms
 
 
-def _classify_clave_movil_timeout(exc: ClaveMovilApprovalTimeoutError) -> LiveIvaAcquisitionFailureMode:
-    from ...adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilFailureMode
-
-    context = exc.context if isinstance(exc.context, dict) else {}
-    phone_state = str(context.get("phone_state") or "")
-    auth_mode = str(context.get("auth_mode") or "")
-    if phone_state == "app_did_not_prompt":
-        return LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT
-    if exc.failure_mode == ClaveMovilFailureMode.PENDING_PETITION_BLOCKED.value:
-        return LiveIvaAcquisitionFailureMode.PENDING_CLAVE_REQUEST
-    if exc.failure_mode == ClaveMovilFailureMode.INITIAL_NAVIGATION_TIMEOUT.value:
-        return LiveIvaAcquisitionFailureMode.LIVE_NAVIGATION_FAILED
-    if exc.failure_mode in {
-        ClaveMovilFailureMode.AUTH_COMPLETION_TIMEOUT.value,
-        ClaveMovilFailureMode.APPROVAL_TIMEOUT.value,
-    }:
-        return LiveIvaAcquisitionFailureMode.OPERATOR_TIMEOUT
-    if auth_mode == "qr":
-        return LiveIvaAcquisitionFailureMode.QR_REQUIRED
-    if exc.failure_mode == ClaveMovilFailureMode.PUSH_WAIT_STATE_NOT_REACHED.value:
-        return LiveIvaAcquisitionFailureMode.DOM_DRIFT
-    return LiveIvaAcquisitionFailureMode.UNKNOWN
-
-
-def _classify_sede_error(exc: SedeError) -> LiveIvaAcquisitionFailureMode:
-    from ...adapters.outbound.aeat.sede.errors import SedeFailureMode
-
-    if exc.failure_mode == SedeFailureMode.AUTH_GATE_DETECTED.value:
-        context = exc.context if isinstance(exc.context, dict) else {}
-        required_provider = str(context.get("required_auth_provider") or "").casefold()
-        if required_provider in {"certificate", "certificado"}:
-            return LiveIvaAcquisitionFailureMode.CERTIFICATE_REQUIRED
-        return LiveIvaAcquisitionFailureMode.AEAT_403
-    if exc.failure_mode == SedeFailureMode.EXTERNAL_SHAPE_CHANGED.value:
-        return LiveIvaAcquisitionFailureMode.DOM_DRIFT
-    if exc.failure_mode == SedeFailureMode.LIVE_NAVIGATION_FAILED.value:
-        return LiveIvaAcquisitionFailureMode.LIVE_NAVIGATION_FAILED
-    return LiveIvaAcquisitionFailureMode.UNKNOWN
-
-
 def classify_live_iva_acquisition_failure(exc: BaseException) -> LiveIvaAcquisitionFailureMode:
-    """Map adapter exceptions to the live IVA acquisition result vocabulary.
+    """Resolve an application-level mode from an application or adapter failure.
 
-    Returns a :class:`LiveIvaAcquisitionFailureMode` member identifying
-    the failure category.
+    Outbound adapters translate their concrete failures into
+    :class:`LiveIvaAcquisitionFailureProtocol` before they cross this boundary.
+    The application therefore never identifies an adapter exception or reads
+    an adapter-owned taxonomy here.
+
+    Returns:
+        A :class:`LiveIvaAcquisitionFailureMode` member identifying the
+        failure category.
     """
-    from ...adapters.outbound.aeat.auth.clave_movil_support import (
-        ClaveMovilApprovalTimeoutError,
-        ClaveMovilConfigurationError,
-    )
-    from ...adapters.outbound.aeat.sede.errors import SedeError
-
     if isinstance(exc, LiveIvaSurfaceTimeoutError):
         return LiveIvaAcquisitionFailureMode.LIVE_NAVIGATION_FAILED
-    if isinstance(exc, ClaveMovilApprovalTimeoutError):
-        return _classify_clave_movil_timeout(exc)
-    if isinstance(exc, ClaveMovilConfigurationError):
-        return LiveIvaAcquisitionFailureMode.WRONG_IDENTITY
-    if isinstance(exc, SedeError):
-        return _classify_sede_error(exc)
+    if isinstance(exc, LiveIvaAcquisitionFailureProtocol):
+        mode = exc.live_iva_failure_mode
+        return mode if isinstance(mode, LiveIvaAcquisitionFailureMode) else LiveIvaAcquisitionFailureMode.UNKNOWN
     return LiveIvaAcquisitionFailureMode.UNKNOWN
 
 
@@ -228,6 +198,7 @@ __all__ = [
     "LiveApplicationError",
     "LiveApplicationInputError",
     "LiveIvaAcquisitionFailureMode",
+    "LiveIvaAcquisitionFailureProtocol",
     "LiveIvaSurfaceTimeoutError",
     "LiveReadPrecondition",
     "classify_live_iva_acquisition_failure",

@@ -18,9 +18,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final, NamedTuple
 
-from ...adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
 from ...core.directory_scan import DirectoryEntryKind, scan_directory
-from ...core.errors.error_codes import resolve_error_message
 from ...core.external_constants import DEFAULT_CURRENCY, XLS_EXTENSION, XLSX_EXTENSION
 from ...core.hashing import canonical_json_bytes, sha256_file, sha256_hex
 from ...core.i18n.render import tr
@@ -50,6 +48,7 @@ from .actions_common import (
     resolve_transaction_repository,
     save_transaction_catalogue_and_events,
 )
+from .import_ports import LedgerImportPorts
 from .models import (
     LedgerImportDiagnosticReport,
     LedgerImportOperationResult,
@@ -239,21 +238,17 @@ def evaluate_import_rows(
     )
 
 
-def _prepare_source_import(command: LedgerSourceImportCommand) -> _PreparedSourceImport:
+def _prepare_source_import(
+    command: LedgerSourceImportCommand,
+    *,
+    ports: LedgerImportPorts,
+) -> _PreparedSourceImport:
     """Validate, resolve, and ingest one source before touching a repository."""
     _require_readable_source(command.path)
-    provider = _resolve_financial_provider(command.provider, command.path)
+    provider = _resolve_financial_provider(command.provider, command.path, ports=ports)
     validation = _validate_import_source(provider, command.path)
     source_verification = _build_source_verification(source=command.source, verify=command.verify)
-    from ...adapters.inbound.financial.providers.base import FinancialProviderError
-
-    try:
-        parsed_rows = tuple(provider.ingest(command.path))
-    except FinancialProviderError as exc:
-        raise TransactionValidationError(
-            translated_message="errors.transaction.ledger_import_failed",
-            context={"reason": resolve_error_message(exc)},
-        ) from exc
+    parsed_rows = tuple(provider.ingest(command.path))
     return _PreparedSourceImport(
         parsed_rows=parsed_rows,
         validation=validation,
@@ -334,6 +329,7 @@ def _persist_source_import(
     *,
     command: LedgerSourceImportCommand,
     bucket_id: str,
+    ports: LedgerImportPorts,
     parsed_rows: tuple[ParsedLedgerRowProtocol, ...],
     repository: TransactionCatalogueCoCommitWriterProtocol,
     event_repository: BucketEventHistoryCoCommitWriterProtocol,
@@ -347,6 +343,7 @@ def _persist_source_import(
     result = import_ledger_transactions(
         bucket_id=bucket_id,
         parsed_rows=parsed_rows,
+        ports=ports,
         transaction_repository=repository,
         bucket_event_repository=event_repository,
         actor=command.actor,
@@ -388,6 +385,7 @@ def import_ledger_transactions(
     *,
     bucket_id: str,
     parsed_rows: Iterable[ParsedLedgerRowProtocol],
+    ports: LedgerImportPorts,
     transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
     bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol,
     actor: str = "operator",
@@ -438,9 +436,7 @@ def import_ledger_transactions(
         imported_refs=tuple(imported_refs),
         skipped_refs=tuple(skipped_refs),
         likely_duplicate_refs=plan.likely_duplicate_refs,
-        catalogue_path=(
-            f"db://secure_objects/{TRANSACTION_CATALOGUE_NAMESPACE.namespace}/transaction-catalogue:{bucket_id}"
-        ),
+        catalogue_path=ports.catalogue_location.path_for(bucket_id=bucket_id),
     )
     if not imported_transactions:
         return LedgerImportOperationResult(summary=summary, import_batch_id=import_batch_id)
@@ -480,6 +476,7 @@ def import_ledger_transactions(
 def import_ledger_source(
     command: LedgerSourceImportCommand,
     *,
+    ports: LedgerImportPorts,
     transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None = None,
     bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol | None = None,
     currency_normalizer: CurrencyNormalizationService | None = None,
@@ -488,7 +485,7 @@ def import_ledger_source(
 
     Returns a :class:`~cadrumo.application.ledger.models.LedgerSourceImportResult`.
     """
-    prepared = _prepare_source_import(command)
+    prepared = _prepare_source_import(command, ports=ports)
     loaded = _load_source_catalogue(command, transaction_repository)
     raw_diagnostics, diagnostics = _source_import_diagnostics(
         command=command,
@@ -514,6 +511,7 @@ def import_ledger_source(
     return _persist_source_import(
         command=command,
         bucket_id=command.bucket_id,
+        ports=ports,
         parsed_rows=prepared.parsed_rows,
         repository=repository,
         event_repository=event_repository,
@@ -525,13 +523,7 @@ def import_ledger_source(
     )
 
 
-def _resolve_financial_provider(provider: str, path: Path) -> FinancialProviderProtocol:
-    from ...adapters.inbound.financial.providers.csv import CsvProvider
-    from ...adapters.inbound.financial.providers.detection import detect_provider
-    from ...adapters.inbound.financial.providers.ofx import OfxProvider
-    from ...adapters.inbound.financial.providers.pdf_n26 import PdfN26Provider
-    from ...adapters.inbound.financial.providers.xlsx import XlsxProvider
-
+def _resolve_financial_provider(provider: str, path: Path, *, ports: LedgerImportPorts) -> FinancialProviderProtocol:
     try:
         provider_id = LedgerProviderID(provider.strip().lower())
     except ValueError as exc:
@@ -540,24 +532,10 @@ def _resolve_financial_provider(provider: str, path: Path) -> FinancialProviderP
             translated_message="errors.transaction.unknown_ledger_provider",
             context={"provider": provider, "providers": known},
         ) from exc
-    if provider_id is LedgerProviderID.AUTO:
-        detected = detect_provider(path)
-        if detected is None:
-            raise _unsupported_import_source(path)
-        return detected
-    if provider_id is LedgerProviderID.CSV:
-        return CsvProvider()
-    if provider_id in {LedgerProviderID.OFX, LedgerProviderID.QFX}:
-        return OfxProvider()
-    if provider_id in {LedgerProviderID.XLSX, LedgerProviderID.EXCEL}:
-        return XlsxProvider()
-    if provider_id is LedgerProviderID.N26:
-        detected = detect_provider(path)
-        if detected is None:
-            raise _unsupported_import_source(path)
-        return detected
-    # PDF and PDF_N26
-    return PdfN26Provider()
+    resolved = ports.provider_resolver.resolve(provider_id=provider_id.value, path=path)
+    if resolved is None:
+        raise _unsupported_import_source(path)
+    return resolved
 
 
 def _require_readable_source(path: Path) -> None:

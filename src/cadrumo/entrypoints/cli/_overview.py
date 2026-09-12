@@ -90,6 +90,7 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from ...application.overview.calendar_models import CalendarWarning
+    from ...application.live.expedientes_ports import ExpedientesPortsFactory
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
     from ...application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
     from ...application.workflow.state_models import WorkflowState
@@ -182,7 +183,7 @@ def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> CliRefusedBo
     )
     from ...application.user_profile.preflight import format_profile_selector_requirements
     from ...domain.calculations.registry.profile_grounding import build_profile_grounding_index
-    from ...domain.contribuyente.entity_type import EntityType
+    from ...domain.contribuyente.entity_type import entity_type_natural_person_token
     from ...domain.user_profile.loader import load_user_profile_schema
     from .common import attach_cli_policy_verdict
     from .errors import CliRefusedBoundaryError
@@ -190,7 +191,7 @@ def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> CliRefusedBo
     missing: list[str] = []
     if profile.entity_type is None:
         missing.append(_ENTITY_TYPE_SELECTOR)
-    elif profile.entity_type is EntityType.NATURAL_PERSON and not profile.irpf_income_categories:
+    elif profile.entity_type == entity_type_natural_person_token() and not profile.irpf_income_categories:
         missing.append(_IRPF_INCOME_CATEGORIES_SELECTOR)
     return attach_cli_policy_verdict(
         CliRefusedBoundaryError(
@@ -326,7 +327,12 @@ def overview_status(
     """
     from ...application.user_profile.projections import record_to_values
     from ...core.bucket_pointer import resolve_active_bucket_id
-    from .state_projection_support import certificate_secret_backend_factory, state_projection_read_ports
+    from .state_projection_support import (
+        certificate_secret_backend_factory,
+        operator_probe_ports,
+        operator_scope_ports,
+        state_projection_read_ports,
+    )
 
     current = current_workflow_state() if resolve_active_bucket_id() is not None else None
     if period is not None:
@@ -338,6 +344,8 @@ def overview_status(
     raw_values = record_to_values(profile_record) if profile_record is not None else None
     report = _overview_application.build_overview_status_report(
         certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+        operator_probe_ports=operator_probe_ports(ctx),
+        operator_scope_ports=operator_scope_ports(ctx),
         state=current,
         raw_values=raw_values,
         read_ports=state_projection_read_ports(ctx),
@@ -407,6 +415,8 @@ def overview_calendar(
     # every genuinely filed obligation silently dropped and redisplayed as
     # unfiled. Read the declared identity instead, so absence stays absence.
     expected_tax_id = declared_tax_id(record)
+    from .state_projection_support import expedientes_ports_factory
+
     evidence_notices: list[Notice] = []
     calendar_today = today_madrid()
     live_events, live_notice = local_live_calendar_events(
@@ -414,6 +424,7 @@ def overview_calendar(
         rng,
         as_of=calendar_today,
         expected_tax_id=expected_tax_id,
+        expedientes_ports=expedientes_ports_factory(ctx)(bucket_id=bucket_id),
     )
     modelo_record_events, modelo_events_notice = local_modelo_record_calendar_events(
         bucket_id,
@@ -487,6 +498,7 @@ def _profile_calendar_inputs(
     rng: OverviewCalendarRange,
     as_of: _date,
     label: str,
+    expedientes_ports_factory: ExpedientesPortsFactory,
 ) -> _ProfileCalendarInputs | None:
     """Read one profile's calendar inputs, or ``None`` when the bucket is unreadable.
 
@@ -507,6 +519,7 @@ def _profile_calendar_inputs(
             rng,
             as_of=as_of,
             expected_tax_id=taxpayer.tax_id,
+            expedientes_ports=expedientes_ports_factory(bucket_id=bucket_id),
         )
         modelo_record_events, _ = local_modelo_record_calendar_events(
             bucket_id,
@@ -570,6 +583,7 @@ def _profile_calendar_projection(
     as_of: _date,
     allow_incomplete: bool,
     show_suppressed: bool,
+    expedientes_ports_factory: ExpedientesPortsFactory,
 ) -> tuple[dict[str, object], list[str], list[Notice]] | None:
     """Build one profile calendar block, or return ``None`` for a skipped bucket."""
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
@@ -580,6 +594,7 @@ def _profile_calendar_projection(
         rng=rng,
         as_of=as_of,
         label=pointer.label,
+        expedientes_ports_factory=expedientes_ports_factory,
     )
     if inputs is None:
         return None
@@ -616,6 +631,7 @@ def _overview_calendar_all_profiles(
     """
     from ...application.workflow.profile_bucket_scan import list_profile_buckets
     from ...core.bucket_pointer import resolve_active_bucket_id
+    from .state_projection_support import expedientes_ports_factory
 
     today = today_madrid()
     buckets = list_profile_buckets()
@@ -635,6 +651,7 @@ def _overview_calendar_all_profiles(
     all_lines.extend(f"profile_setup_incomplete\t{pointer.bucket_id}\t{pointer.label}" for pointer in setup_incomplete)
     all_coverage_notices: list[Notice] = []
     all_calendars: list[dict[str, object]] = []
+    ports_factory = expedientes_ports_factory(ctx)
 
     for bucket_id, pointer in sorted(active_buckets.items(), key=lambda kv: kv[1].label):
         projection = _profile_calendar_projection(
@@ -644,6 +661,7 @@ def _overview_calendar_all_profiles(
             as_of=today,
             allow_incomplete=allow_incomplete,
             show_suppressed=show_suppressed,
+            expedientes_ports_factory=ports_factory,
         )
         if projection is None:
             all_lines.append(f"profile_skipped\t{bucket_id}\t{pointer.label}")
@@ -786,6 +804,7 @@ def overview_prepare(
     from ...application.modelo.registry_discovery import registry_describe_modelo_for_scope
     from ...application.overview.data_prep import build_data_prep_walkthrough
     from ...domain.calculations.registry.errors import RegistrySnapshotError
+    from .state_projection_support import ledger_evidence_ports_factory
 
     current = current_workflow_state()
     bucket_id = current.active_profile_bucket_id()
@@ -805,7 +824,9 @@ def overview_prepare(
 
     transaction_repository = transaction_catalogue_repo(current)
     invoice_catalogue = load_invoices()
-    evidence_records = PurchaseInvoiceEvidenceService().list_all(bucket_id=bucket_id)
+    evidence_records = PurchaseInvoiceEvidenceService(
+        ports=ledger_evidence_ports_factory(ctx)(bucket_id=bucket_id),
+    ).list_all(bucket_id=bucket_id)
     preflight_report = preflight_ledger_tax_readiness(
         bucket_id=bucket_id,
         period=canonical_period,
@@ -854,6 +875,7 @@ def overview_pipeline(
     from ...domain.modelos.verification_report import VerificationReport
     from ..ledger_action_composition import compose_ledger_action_ports
     from ._ledger_payloads import LedgerStatusResult
+    from .state_projection_support import calculation_action_ports_factory, filing_action_ports_factory
 
     current = current_workflow_state()
     bucket_id = current.active_profile_bucket_id()
@@ -880,8 +902,8 @@ def overview_pipeline(
         and unit.period.registry_token == canonical_period.registry_token
     )
 
-    calculation_repository = CalculationRevisionCatalogueRepository(bucket_id=bucket_id)
-    verification_repository = VerificationReportCatalogueRepository(bucket_id=bucket_id)
+    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=bucket_id)
+    filing_ports = filing_action_ports_factory(ctx)(bucket_id=bucket_id)
     revisions_by_id: dict[str, CalculationRevision] = {}
     reports_by_revision_id: dict[str, tuple[VerificationReport, ...]] = {}
     for unit in work_units:
@@ -889,12 +911,12 @@ def overview_pipeline(
             continue
         revision = get_calculation_revision(
             unit.current_calculation_revision_id,
-            calculation_repository=calculation_repository,
+            ports=calculation_ports,
         )
         revisions_by_id[revision.calculation_revision_id] = revision
         reports_by_revision_id[revision.calculation_revision_id] = list_verification_reports(
+            ports=filing_ports,
             calculation_revision_id=revision.calculation_revision_id,
-            verification_repository=verification_repository,
         )
 
     report = build_pipeline_health_report(

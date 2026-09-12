@@ -14,6 +14,7 @@ from datetime import date
 
 from ...core.citation_grounding import CitationGrounding
 from ...core.validity_window import years_covered_by_every_group
+from ..calculations.registry.iva_category_catalogue import require_iva_category
 from .errors import IvaCatalogueError
 from .schema import IvaCatalogue, IvaCategory, IvaCitation, IvaRegulation
 
@@ -24,7 +25,7 @@ def bundled_iva_catalogue() -> IvaCatalogue:
 
     regulations: dict[IvaCategory, IvaRegulation] = {}
     for published in bundled_authority().catalogues.runtime.iva_regulations.values():
-        category = IvaCategory(published.category)
+        category = require_iva_category(published.category)
         regulations[category] = IvaRegulation.model_validate(
             {
                 "category": category,

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+
 import asyncio
 from datetime import timedelta
 from pathlib import Path
@@ -46,6 +48,8 @@ from .test_censal_operation_executor import (
     _wait_for_phase,
 )
 
+_OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _PATHS = (
@@ -63,6 +67,7 @@ _VALUES = {
 def _test_censal_operation_definition():
     return build_censal_operation_definition(
         certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
 

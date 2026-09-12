@@ -37,7 +37,8 @@ from ....domain.bienes_inversion.register import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_iva_bindings import structurally_unroutable_iva_base_categories
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.iva.schema import CUOTA_LESS_M303_IVA_CATEGORIES, IvaCategory
+from ....domain.iva.components import registry_category_projection
+from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -142,7 +143,7 @@ def test_domestic_zero_is_structurally_unroutable_on_m303() -> None:
 
     Per Ruling B, this is the proof the screen exists at all: cuota-less by
     law, base-bearing by law, and reused from
-    :data:`CUOTA_LESS_M303_IVA_CATEGORIES` would wrongly suppress it.
+    the registry's ``cuota_less_m303`` projection would wrongly suppress it.
     """
     unroutable = structurally_unroutable_iva_base_categories(_m303_revision())
 
@@ -162,7 +163,7 @@ def test_a_fully_covered_category_is_not_reported() -> None:
 def test_the_out_of_scope_declaration_is_not_a_re_export_of_cuota_less() -> None:
     """Ruling B, checked rather than asserted: the two suppression sets differ.
 
-    ``CUOTA_LESS_M303_IVA_CATEGORIES`` answers "does this produce a cuota?" and
+    the registry's ``cuota_less_m303`` projection answers "does this produce a cuota?" and
     would wrongly suppress DOMESTIC_ZERO here (base-bearing despite being
     cuota-less). The out-of-scope set for THIS screen is a real, smaller,
     independently-justified set -- proved by two cuota-less members landing on
@@ -173,8 +174,9 @@ def test_the_out_of_scope_declaration_is_not_a_re_export_of_cuota_less() -> None
     """
     unroutable = set(structurally_unroutable_iva_base_categories(_m303_revision()))
 
-    assert IvaCategory.DOMESTIC_ZERO in CUOTA_LESS_M303_IVA_CATEGORIES
-    assert IvaCategory.REGIMEN_SIMPLIFICADO in CUOTA_LESS_M303_IVA_CATEGORIES
+    cuota_less = registry_category_projection("cuota_less_m303")
+    assert IvaCategory.DOMESTIC_ZERO in cuota_less
+    assert IvaCategory.REGIMEN_SIMPLIFICADO in cuota_less
     assert IvaCategory.DOMESTIC_ZERO in unroutable
     assert IvaCategory.REGIMEN_SIMPLIFICADO not in unroutable
 

@@ -1,9 +1,9 @@
-"""Closed AEAT Renta profile-code vocabularies.
+"""AEAT Renta profile-code types and stable export projections.
 
-These enums model the small code sets consumed by the Modelo 100
-profile bindings. They are intentionally domain-owned so CLI and wizard
-surfaces can expose accepted values without hard-coding tax vocabulary
-in the presentation layer.
+The closed profile vocabularies remain here where they are form-owned. The
+cross-cutting fiscal-residency vocabulary is an opaque token projected from
+the governed facts registry, so CLI and wizard surfaces obtain its choices
+through the registry resolver rather than maintaining a second catalogue.
 
 :class:`RentaSexCode`, :class:`RentaMaritalStatus`, and
 :class:`RentaDisabilityGrade` back Modelo 100
@@ -17,7 +17,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 from types import MappingProxyType
+from typing import Self
 
+from pydantic import GetCoreSchemaHandler
+from pydantic_core import CoreSchema, core_schema
+
+from ...core.errors.hierarchy import CoreValidationError
 from .ccaa import CCAA
 
 
@@ -155,68 +160,56 @@ class RentaDisabilityGrade(StrEnum):
     ASSISTANCE_OR_REDUCED_MOBILITY = "4"
 
 
-# ISO 3166-1 alpha-2 codes for EU member states and EEA members.
-# Post-Brexit: GB is excluded (left EU 2020-12-31, left EEA 2020-12-31).
-# Source: https://ec.europa.eu/eurostat/statistics-explained/index.php/Glossary:European_Economic_Area_(EEA)
-# EEA = EU27 + IS, LI, NO.  CH has bilateral agreements but is not EEA.
-UE_EEA_COUNTRY_CODES: frozenset[str] = frozenset(
-    {
-        # EU 27
-        "AT",
-        "BE",
-        "BG",
-        "CY",
-        "CZ",
-        "DE",
-        "DK",
-        "EE",
-        "GR",
-        "ES",
-        "FI",
-        "FR",
-        "HR",
-        "HU",
-        "IE",
-        "IT",
-        "LT",
-        "LU",
-        "LV",
-        "MT",
-        "NL",
-        "PL",
-        "PT",
-        "RO",
-        "SE",
-        "SI",
-        "SK",
-        # EEA non-EU
-        "IS",
-        "LI",
-        "NO",
-    },
-)
-"""Closed set of EU + EEA ISO-3166-1 alpha-2 country codes (post-Brexit)."""
+class FiscalResidency(str):
+    """Opaque fiscal-residency token projected from the facts registry.
 
-
-class FiscalResidency(StrEnum):
-    """Fiscal residency category governing the applicable tax regime.
-
-    Determines whether the taxpayer files under IRPF (Spanish resident)
-    or IRNR (non-resident), following TRLIRNR RDLeg 5/2004 Art. 2:
-
-    - ``RESIDENT_IRPF``: habitual residence in Spain; subject to IRPF
-      (Ley 35/2006 LIRPF). Files Modelo 100 (or Modelo 151 for impatriados).
-    - ``NON_RESIDENT_IRNR``: no habitual residence in Spain; subject to
-      IRNR (RDLeg 5/2004 TRLIRNR). Files Modelo 210 (general),
-      Modelo 216 (retenciones), or Modelo 247 (pensiones).
-
-    Post-Brexit note (from 1 January 2021): GB is no longer an EU/EEA
-    member; ``ue_eee_status`` returns ``False`` for GB residents regardless
-    of prior residence history.
+    The registry owns residency membership and its downstream regime meaning.
+    This type retains only the stable wire-token shape; callers obtain values
+    through the typed residency catalogue resolver.
     """
 
-    RESIDENT_IRPF = "resident_irpf"
-    NON_RESIDENT_IRNR = "non_resident_irnr"
+    __slots__ = ()
+
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("FiscalResidency tokens must be projected from the registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("FiscalResidency token must be a non-empty string")
+        return str.__new__(cls, value)
+
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("FiscalResidency must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        source_type: type[object],
+        handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        """Accept only an already projected token and serialize it as text."""
+        del source_type, handler
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        """Return the canonical token for serialization."""
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        """Return the canonical token for diagnostics."""
+        return str(self)
 
 
 class SituacionFamiliar(StrEnum):
@@ -302,7 +295,6 @@ class SituacionFamiliarM145(StrEnum):
 __all__ = [
     "RENTA_MODELO100_CCAA_CODIGOS",
     "RENTA_MODELO100_ECIVIL_EXPORT_CODES",
-    "UE_EEA_COUNTRY_CODES",
     "FiscalResidency",
     "RentaDisabilityGrade",
     "RentaMaritalStatus",

@@ -24,7 +24,7 @@ from __future__ import annotations
 import hashlib
 from uuid import UUID
 
-from ....core.identity.documents import nif_check_letter
+from ....domain.calculations.registry.tax_id_runtime import runtime_nif_check_letter
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_cli_profile, register_minimal_profile
 
@@ -61,7 +61,7 @@ def distinct_nif(name: str) -> str:
     """
 
     number = int(hashlib.sha256(name.encode("utf-8")).hexdigest(), 16) % 100_000_000
-    return f"{number:08d}{nif_check_letter(number)}"
+    return f"{number:08d}{runtime_nif_check_letter(number)}"
 
 
 def create_profile_via_cli(name: str, *, tax_id: str | None = None, complete: bool = True) -> None:

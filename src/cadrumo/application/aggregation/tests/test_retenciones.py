@@ -58,7 +58,7 @@ class TestObservationContract:
                     "source_kind": "invoice",
                     "source_object_id": "x",
                     "perceptor_nif": "A1",
-                    "scheme": RetencionScheme.WORK_INCOME,
+                    "scheme": RetencionScheme("rendimientos_trabajo"),
                     "taxable_base": Decimal("0"),
                     "retencion_amount": Decimal("0"),
                     "accrued_on": "2025-01-01",
@@ -73,7 +73,7 @@ class TestObservationContract:
                 source_kind=BindingSourceKind.RETENCIONES_AGGREGATION,
                 source_object_id="x",
                 perceptor_nif="A1",
-                scheme=RetencionScheme.WORK_INCOME,
+                scheme=RetencionScheme("rendimientos_trabajo"),
                 taxable_base=Decimal("0"),
                 retencion_amount=Decimal("0"),
                 accrued_on="2025-01-01",
@@ -88,11 +88,13 @@ class TestObservationContract:
         }
         observed: set[BindingSourceKind] = set()
         for kind in expected:
-            obs = _obs(nif="A1", scheme=RetencionScheme.WORK_INCOME, base="0", retencion="0", source_kind=kind)
+            obs = _obs(
+                nif="A1", scheme=RetencionScheme("rendimientos_trabajo"), base="0", retencion="0", source_kind=kind
+            )
             observed.add(obs.source_kind)
             from_string = _obs(
                 nif="A1",
-                scheme=RetencionScheme.WORK_INCOME,
+                scheme=RetencionScheme("rendimientos_trabajo"),
                 base="0",
                 retencion="0",
                 source_kind=kind,
@@ -115,7 +117,7 @@ class TestAggregate111:
         obs = _obs(
             nif="B12345678",
             name="Acme S.L.",
-            scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+            scheme=RetencionScheme("actividades_economicas"),
             base="1000.00",
             retencion="150.00",
         )
@@ -125,7 +127,7 @@ class TestAggregate111:
         assert row.source_kind is BindingSourceKind.LEDGER_TRANSACTION
         assert row.perceptor_nif == "B12345678"
         assert row.perceptor_name == "Acme S.L."
-        assert row.scheme is RetencionScheme.ECONOMIC_ACTIVITY
+        assert row.scheme == RetencionScheme("actividades_economicas")
         assert row.observations_count == 1
         assert row.total_taxable_base == Decimal("1000.00")
         assert row.total_retencion == Decimal("150.00")
@@ -134,14 +136,14 @@ class TestAggregate111:
     def test_multiple_observations_same_perceptor_and_scheme_sum(self) -> None:
         obs_a = _obs(
             nif="B1",
-            scheme=RetencionScheme.WORK_INCOME,
+            scheme=RetencionScheme("rendimientos_trabajo"),
             base="500.00",
             retencion="75.00",
             source_id="tx-1",
         )
         obs_b = _obs(
             nif="B1",
-            scheme=RetencionScheme.WORK_INCOME,
+            scheme=RetencionScheme("rendimientos_trabajo"),
             base="700.00",
             retencion="105.00",
             source_id="tx-2",
@@ -155,14 +157,14 @@ class TestAggregate111:
     def test_same_perceptor_different_schemes_yield_separate_rollups(self) -> None:
         obs_work = _obs(
             nif="B1",
-            scheme=RetencionScheme.WORK_INCOME,
+            scheme=RetencionScheme("rendimientos_trabajo"),
             base="500.00",
             retencion="75.00",
             source_id="tx-1",
         )
         obs_econ = _obs(
             nif="B1",
-            scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+            scheme=RetencionScheme("actividades_economicas"),
             base="700.00",
             retencion="105.00",
             source_id="tx-2",
@@ -170,15 +172,15 @@ class TestAggregate111:
         result = aggregate_retenciones_111((obs_work, obs_econ), period=_P_2025_Q1)
         assert len(result.rollups) == 2
         schemes = {row.scheme for row in result.rollups}
-        assert schemes == {RetencionScheme.WORK_INCOME, RetencionScheme.ECONOMIC_ACTIVITY}
+        assert schemes == {RetencionScheme("rendimientos_trabajo"), RetencionScheme("actividades_economicas")}
         # Same perceptor counted once
         assert result.total_perceptors == 1
 
     def test_distinct_perceptors_count_separately(self) -> None:
         observations = (
-            _obs(nif="A1", scheme=RetencionScheme.WORK_INCOME, base="100", retencion="15", source_id="t1"),
-            _obs(nif="A2", scheme=RetencionScheme.WORK_INCOME, base="200", retencion="30", source_id="t2"),
-            _obs(nif="A3", scheme=RetencionScheme.WORK_INCOME, base="300", retencion="45", source_id="t3"),
+            _obs(nif="A1", scheme=RetencionScheme("rendimientos_trabajo"), base="100", retencion="15", source_id="t1"),
+            _obs(nif="A2", scheme=RetencionScheme("rendimientos_trabajo"), base="200", retencion="30", source_id="t2"),
+            _obs(nif="A3", scheme=RetencionScheme("rendimientos_trabajo"), base="300", retencion="45", source_id="t3"),
         )
         result = aggregate_retenciones_111(observations, period=_P_2025_Q1)
         assert result.total_perceptors == 3
@@ -187,9 +189,11 @@ class TestAggregate111:
 
     def test_rollups_sort_deterministically_by_perceptor_then_scheme(self) -> None:
         observations = (
-            _obs(nif="Z1", scheme=RetencionScheme.WORK_INCOME, base="100", retencion="15", source_id="t1"),
-            _obs(nif="A1", scheme=RetencionScheme.ECONOMIC_ACTIVITY, base="200", retencion="30", source_id="t2"),
-            _obs(nif="A1", scheme=RetencionScheme.WORK_INCOME, base="300", retencion="45", source_id="t3"),
+            _obs(nif="Z1", scheme=RetencionScheme("rendimientos_trabajo"), base="100", retencion="15", source_id="t1"),
+            _obs(
+                nif="A1", scheme=RetencionScheme("actividades_economicas"), base="200", retencion="30", source_id="t2"
+            ),
+            _obs(nif="A1", scheme=RetencionScheme("rendimientos_trabajo"), base="300", retencion="45", source_id="t3"),
         )
         result = aggregate_retenciones_111(observations, period=_P_2025_Q1)
         keys = [(row.perceptor_nif, row.scheme.value) for row in result.rollups]
@@ -197,8 +201,8 @@ class TestAggregate111:
 
     def test_aggregation_is_input_order_invariant(self) -> None:
         observations = (
-            _obs(nif="A1", scheme=RetencionScheme.WORK_INCOME, base="100", retencion="15", source_id="t1"),
-            _obs(nif="A1", scheme=RetencionScheme.WORK_INCOME, base="200", retencion="30", source_id="t2"),
+            _obs(nif="A1", scheme=RetencionScheme("rendimientos_trabajo"), base="100", retencion="15", source_id="t1"),
+            _obs(nif="A1", scheme=RetencionScheme("rendimientos_trabajo"), base="200", retencion="30", source_id="t2"),
         )
         forward = aggregate_retenciones_111(observations, period=_P_2025_Q1)
         reverse = aggregate_retenciones_111(tuple(reversed(observations)), period=_P_2025_Q1)
@@ -221,31 +225,37 @@ class TestAggregate111:
 class TestAggregate123:
     def test_123_aggregates_capital_income_schemes(self) -> None:
         observations = (
-            _obs(nif="B1", scheme=RetencionScheme.CAPITAL_INTEREST, base="500", retencion="95", source_id="c1"),
-            _obs(nif="B1", scheme=RetencionScheme.CAPITAL_DIVIDEND, base="1000", retencion="190", source_id="c2"),
-            _obs(nif="B1", scheme=RetencionScheme.WORK_INCOME, base="999", retencion="150", source_id="c3"),
+            _obs(nif="B1", scheme=RetencionScheme("intereses"), base="500", retencion="95", source_id="c1"),
+            _obs(nif="B1", scheme=RetencionScheme("dividendos"), base="1000", retencion="190", source_id="c2"),
+            _obs(nif="B1", scheme=RetencionScheme("rendimientos_trabajo"), base="999", retencion="150", source_id="c3"),
         )
         result = aggregate_retenciones_123(observations, period=_P_2025_Q1)
         assert result.modelo == "123"
         # WORK_INCOME observation is filtered out (not in 123 catalogue)
         assert len(result.rollups) == 2
         schemes = {row.scheme for row in result.rollups}
-        assert schemes == {RetencionScheme.CAPITAL_INTEREST, RetencionScheme.CAPITAL_DIVIDEND}
+        assert schemes == {RetencionScheme("intereses"), RetencionScheme("dividendos")}
 
     def test_123_other_scheme_included(self) -> None:
         observations = (
-            _obs(nif="B1", scheme=RetencionScheme.CAPITAL_OTHER, base="300", retencion="57", source_id="c1"),
+            _obs(
+                nif="B1", scheme=RetencionScheme("otros_capital_mobiliario"), base="300", retencion="57", source_id="c1"
+            ),
         )
         result = aggregate_retenciones_123(observations, period=_P_2025_Q1)
         assert len(result.rollups) == 1
-        assert result.rollups[0].scheme is RetencionScheme.CAPITAL_OTHER
+        assert result.rollups[0].scheme == RetencionScheme("otros_capital_mobiliario")
 
 
 class TestAggregate180190193:
     def test_180_widens_115_observations_to_annual_period(self) -> None:
         observations = (
-            _obs(nif="L1", scheme=RetencionScheme.URBAN_RENTAL, base="2000", retencion="380", source_id="r1"),
-            _obs(nif="L1", scheme=RetencionScheme.URBAN_RENTAL, base="2000", retencion="380", source_id="r2"),
+            _obs(
+                nif="L1", scheme=RetencionScheme("arrendamiento_urbano"), base="2000", retencion="380", source_id="r1"
+            ),
+            _obs(
+                nif="L1", scheme=RetencionScheme("arrendamiento_urbano"), base="2000", retencion="380", source_id="r2"
+            ),
         )
         result = aggregate_retenciones_180(observations, period=_P_2025_ANNUAL)
         assert result.modelo == "180"
@@ -255,8 +265,16 @@ class TestAggregate180190193:
 
     def test_190_widens_111_observations_to_annual_period(self) -> None:
         observations = (
-            _obs(nif="A1", scheme=RetencionScheme.WORK_INCOME, base="1000", retencion="150", source_id="t1"),
-            _obs(nif="A2", scheme=RetencionScheme.PROFESSIONAL, base="500", retencion="75", source_id="t2"),
+            _obs(
+                nif="A1", scheme=RetencionScheme("rendimientos_trabajo"), base="1000", retencion="150", source_id="t1"
+            ),
+            _obs(
+                nif="A2",
+                scheme=RetencionScheme("actividades_profesionales"),
+                base="500",
+                retencion="75",
+                source_id="t2",
+            ),
         )
         result = aggregate_retenciones_190(observations, period=_P_2025_ANNUAL)
         assert result.modelo == "190"
@@ -264,8 +282,8 @@ class TestAggregate180190193:
 
     def test_193_widens_123_observations_to_annual_period(self) -> None:
         observations = (
-            _obs(nif="B1", scheme=RetencionScheme.CAPITAL_DIVIDEND, base="800", retencion="152", source_id="c1"),
-            _obs(nif="B2", scheme=RetencionScheme.CAPITAL_INTEREST, base="200", retencion="38", source_id="c2"),
+            _obs(nif="B1", scheme=RetencionScheme("dividendos"), base="800", retencion="152", source_id="c1"),
+            _obs(nif="B2", scheme=RetencionScheme("intereses"), base="200", retencion="38", source_id="c2"),
         )
         result = aggregate_retenciones_193(observations, period=_P_2025_ANNUAL)
         assert result.modelo == "193"
@@ -276,22 +294,22 @@ class TestAggregate180190193:
 class TestAggregate115:
     def test_115_filters_to_urban_rental_only(self) -> None:
         observations = (
-            _obs(nif="L1", scheme=RetencionScheme.URBAN_RENTAL, base="800", retencion="152", source_id="r1"),
-            _obs(nif="L1", scheme=RetencionScheme.WORK_INCOME, base="100", retencion="15", source_id="r2"),
+            _obs(nif="L1", scheme=RetencionScheme("arrendamiento_urbano"), base="800", retencion="152", source_id="r1"),
+            _obs(nif="L1", scheme=RetencionScheme("rendimientos_trabajo"), base="100", retencion="15", source_id="r2"),
         )
         result = aggregate_retenciones_115(observations, period=_P_2025_Q1)
         assert result.modelo == "115"
         assert len(result.rollups) == 1
         row = result.rollups[0]
-        assert row.scheme is RetencionScheme.URBAN_RENTAL
+        assert row.scheme == RetencionScheme("arrendamiento_urbano")
         assert row.total_taxable_base == Decimal("800")
         assert row.total_retencion == Decimal("152")
 
     def test_115_sums_per_landlord_nif(self) -> None:
         observations = (
-            _obs(nif="L1", scheme=RetencionScheme.URBAN_RENTAL, base="500", retencion="95", source_id="r1"),
-            _obs(nif="L1", scheme=RetencionScheme.URBAN_RENTAL, base="500", retencion="95", source_id="r2"),
-            _obs(nif="L2", scheme=RetencionScheme.URBAN_RENTAL, base="700", retencion="133", source_id="r3"),
+            _obs(nif="L1", scheme=RetencionScheme("arrendamiento_urbano"), base="500", retencion="95", source_id="r1"),
+            _obs(nif="L1", scheme=RetencionScheme("arrendamiento_urbano"), base="500", retencion="95", source_id="r2"),
+            _obs(nif="L2", scheme=RetencionScheme("arrendamiento_urbano"), base="700", retencion="133", source_id="r3"),
         )
         result = aggregate_retenciones_115(observations, period=_P_2025_Q1)
         assert result.total_perceptors == 2
@@ -355,7 +373,11 @@ class TestAggregationInvariants:
         from pydantic import ValidationError
 
         row = aggregate_retenciones_111(
-            (_obs(nif="A1", scheme=RetencionScheme.WORK_INCOME, base="100", retencion="15", source_id="t1"),),
+            (
+                _obs(
+                    nif="A1", scheme=RetencionScheme("rendimientos_trabajo"), base="100", retencion="15", source_id="t1"
+                ),
+            ),
             period=_P_2025_Q1,
         ).rollups[0]
         with pytest.raises(ValidationError, match="distinct perceptor"):
@@ -386,7 +408,7 @@ class TestAccruedDateAuthority:
         with pytest.raises(ValidationError):
             _obs(
                 nif="11111111H",
-                scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+                scheme=RetencionScheme("actividades_economicas"),
                 base="100",
                 retencion="15",
                 accrued=impossible,
@@ -397,14 +419,18 @@ class TestAccruedDateAuthority:
         """Only the extended ``YYYY-MM-DD`` wire form is admitted."""
         with pytest.raises(ValidationError):
             _obs(
-                nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, base="100", retencion="15", accrued=malformed
+                nif="11111111H",
+                scheme=RetencionScheme("actividades_economicas"),
+                base="100",
+                retencion="15",
+                accrued=malformed,
             )
 
     def test_valid_accrued_date_is_admitted_and_aggregates(self) -> None:
         """The positive control: a real accrual date is admitted and rolls up."""
         observation = _obs(
             nif="11111111H",
-            scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+            scheme=RetencionScheme("actividades_economicas"),
             base="100",
             retencion="15",
             accrued="2026-03-01",

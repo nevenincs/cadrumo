@@ -43,9 +43,7 @@ from cadrumo.adapters.persistence.storage.master_key.login_throttle import login
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.evidence.profile_legal_hold import LegalHoldCaseAuthority
 from cadrumo.application.filing.retention import FilingRetentionAuthority
-from cadrumo.application.user_profile.custody_service import (
-    _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService,
-)
+from cadrumo.application.user_profile.custody_service import ProfileCustodyTransactionService
 from cadrumo.application.user_profile.custody_transactions import CustodyReceiptOwner
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from cadrumo.application.user_profile.login_session import (

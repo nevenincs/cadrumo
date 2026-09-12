@@ -19,7 +19,7 @@ bindings declared on one :class:`ModeloRevision` directly:
    ``source_revision_selector``, ``source_periods``, ``source_casilla_id``,
    and ``aggregation.op``.
 2. Scanning the local
-   :class:`~application.calculations.CalculationObservationRepository`
+   :class:`~application.calculations.CalculationObservationRepositoryProtocol`
    for prior :class:`RegistryModeloObservation` filings matching the source
    quadruple.
 3. Folding the source filings' casilla values through the declared
@@ -88,6 +88,11 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.calculations.registry.iva_wallet_carry_targets import is_iva_wallet_owned_carry_target
+from ...domain.calculations.registry.irpf_regimes import (
+    irpf_estimation_regime_directa_normal_token,
+    irpf_estimation_regime_directa_simplificada_token,
+    irpf_estimation_regime_objetiva_token,
+)
 from ...domain.calculations.registry.observation_fold import resolve_observed_requirement_value
 from ...domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
 from ...domain.calculations.registry.relations import (
@@ -110,7 +115,7 @@ from .m111_no_retenciones import (
     is_m111_no_retenciones_period,
     m111_no_retenciones_periods_for_bucket,
 )
-from .observations_repository import CalculationObservationRepository
+from .observations_repository import CalculationObservationRepositoryProtocol
 from .relation_prefill_m202 import (
     modelo_202_first_period_previous_payment_defaults as _modelo_202_first_period_previous_payment_defaults,
 )
@@ -121,14 +126,13 @@ if TYPE_CHECKING:
 
 STORAGE_DEGRADATION_ERRORS = _STORAGE_DEGRADATION_ERRORS
 _ECONOMIC_ACTIVITY_CATEGORY: Final = "actividad_economica"
-_DIRECT_ESTIMATION_REGIMES: Final = frozenset({"directa_normal", "directa_simplificada"})
 _log = get_logger(__name__)
 
 
 def _gather_observations_for_snapshot(
     snapshot: RegistrySnapshot,
     *,
-    repository: CalculationObservationRepository,
+    repository: CalculationObservationRepositoryProtocol,
     activity_start_date: date | None = None,
     m111_no_retenciones_periods: frozenset[tuple[int, str]] | None = None,
 ) -> tuple[RegistryModeloObservation, ...]:
@@ -137,7 +141,7 @@ def _gather_observations_for_snapshot(
     Uses the registry relation requirement resolver to compute the set of
     ``(source_modelo, filing_year, period)`` requirements, and pulls matching
     :class:`RegistryModeloObservation` rows from
-    :class:`~application.calculations.CalculationObservationRepository`.
+    :class:`~application.calculations.CalculationObservationRepositoryProtocol`.
     Returns the union (deduplicated) so the runtime resolver can fold them
     through the declared aggregation in one pass. ``activity_start_date`` scopes
     out source periods strictly before the operator's activity start (a
@@ -299,9 +303,12 @@ def _not_applicable_source_modelos_for_bucket(snapshot: RegistrySnapshot, bucket
         return frozenset[str]()
 
     estimation_regime = str(values.get("irpf.estimation_regime") or "").strip()
-    if estimation_regime in _DIRECT_ESTIMATION_REGIMES:
+    if estimation_regime in {
+        irpf_estimation_regime_directa_normal_token(),
+        irpf_estimation_regime_directa_simplificada_token(),
+    }:
         return candidates & frozenset({str(Modelo("131"))})
-    if estimation_regime == "objetiva":
+    if estimation_regime == irpf_estimation_regime_objetiva_token():
         return candidates & frozenset({str(Modelo("130"))})
     return frozenset[str]()
 
@@ -330,11 +337,12 @@ def _entity_type_from_token(raw: str | None) -> EntityType | None:
     """Map a raw ``taxpayer_type.entity_type`` token to :class:`EntityType`, or ``None``."""
     if not raw:
         return None
-    from ...domain.contribuyente.entity_type import EntityType
+    from ...domain.calculations.registry.entity_type import require_entity_type
+    from ...domain.calculations.registry.errors import RegistryValidationError
 
     try:
-        return EntityType(raw)
-    except ValueError:
+        return require_entity_type(raw)
+    except RegistryValidationError:
         return None
 
 
@@ -665,7 +673,7 @@ def _relation_values_for_snapshot(
 def resolve_relations_from_local_store(
     snapshot: RegistrySnapshot,
     *,
-    repository: CalculationObservationRepository | None = None,
+    repository: CalculationObservationRepositoryProtocol,
     captured_at: datetime | None = None,
     modelo_202_first_year_cuota: bool = False,
     activity_start_date: date | None = None,
@@ -677,9 +685,7 @@ def resolve_relations_from_local_store(
     Args:
         snapshot: The :class:`RegistrySnapshot` whose declared relations are
             resolved from prior observation records in the local store.
-        repository: Optional observation repository. Defaults to the active
-            profile's
-            :class:`~application.calculations.CalculationObservationRepository`.
+        repository: The composed observation repository capability.
         captured_at: Optional timestamp for relation provenance. Defaults to
             the current clock.
         modelo_202_first_year_cuota: When ``True`` (IS-3), an otherwise-unresolved
@@ -711,7 +717,7 @@ def resolve_relations_from_local_store(
     ``provenance="operator_manual"`` so the engine emits a blank cell the
     operator can fill by hand.
     """
-    repo = repository if repository is not None else CalculationObservationRepository()
+    repo = repository
     when = captured_at if captured_at is not None else now()
     activity_start_date = _default_activity_start_date(activity_start_date)
     m111_no_retenciones_periods = _default_m111_no_retenciones_periods(
@@ -1178,7 +1184,7 @@ def _resolve_context_relation_values(
     snapshot: RegistrySnapshot,
     *,
     context: CalculationSourceContext,
-    repository: CalculationObservationRepository | None,
+    repository: CalculationObservationRepositoryProtocol | None,
     captured_at: datetime | None,
     inputs: _RelationPrefillContextInputs,
 ) -> RelationValues:
@@ -1295,11 +1301,11 @@ class RelationPrefillSourceResolver:
     def __init__(
         self,
         *,
-        repository: CalculationObservationRepository | None = None,
+        repository: CalculationObservationRepositoryProtocol,
         registry_snapshot: RegistrySnapshot | None = None,
         captured_at: datetime | None = None,
     ) -> None:
-        """Initialize the resolver with the optional repository, snapshot, and capture time."""
+        """Initialize the resolver with its composed repository and context."""
         self._repository = repository
         self._registry_snapshot = registry_snapshot
         self._captured_at = captured_at

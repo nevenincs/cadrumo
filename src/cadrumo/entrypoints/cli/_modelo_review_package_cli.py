@@ -25,7 +25,7 @@ check only (did every member arrive byte-for-byte); ``verify-signature`` and
 ``verify-receipt`` are AUTHENTICITY checks (who signed it).
 
 ``encrypt-for-recipient`` / ``decrypt`` wire the X25519 CONFIDENTIALITY layer
-(:mod:`~application.modelo._review_package_recipient_encryption`) onto
+(:mod:`~application.modelo.review_package_recipient_encryption`) onto
 the CLI: a package sealed with ``encrypt-for-recipient`` can be opened only by
 the holder of the matching X25519 private key, unlike ``sign``/``counter-sign``,
 which leave the archive itself in plaintext ZIP form.
@@ -90,9 +90,9 @@ from ...application.modelo.review_package_feedback import (
     encrypt_feedback_package_for_originator,
     import_feedback_package,
 )
+from ...application.modelo.recipient_encryption import RecipientEncryptedPackage
 from ...application.modelo.review_package_recipient_encryption import (
     RecipientDecryptionError,
-    RecipientEncryptedPackage,
     RecipientEncryptionError,
     decrypt_review_package_for_recipient,
     encrypt_review_package_for_recipient,
@@ -120,6 +120,11 @@ from ._modelo_cli_support import (
     resolve_explicit_or_active_bucket_id,
 )
 from ._modelo_export_cli import export_modelo_revision_for_cli
+from .state_projection_support import (
+    calculation_action_ports_factory,
+    modelo_export_ports_factory,
+    recipient_encryption_capability_factory,
+)
 from ._modelo_review_package_rendering import (
     review_package_build_result_lines,
     review_package_build_result_payload,
@@ -165,6 +170,9 @@ def review_package_build(
         registry_revision=operator_input.registry_revision,
         bucket_id=operator_input.bucket_id,
         select=operator_input.select,
+        calculation_ports=calculation_action_ports_factory(ctx)(
+            bucket_id=resolve_explicit_or_active_bucket_id(operator_input.bucket_id),
+        ),
     )
     target_revision_id = selected_revision.calculation_revision_id
     resolved_actor = operator_input.actor or resolve_default_actor()
@@ -182,6 +190,10 @@ def review_package_build(
             payment_election=operator_input.payment_election,
             prior_domiciliation_election=operator_input.prior_domiciliation_election,
             workflow_profile=workflow_profile,
+            export_ports=modelo_export_ports_factory(ctx)(
+                bucket_id=str(work_unit.bucket_id),
+                m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
+            ),
         )
         from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 
@@ -387,6 +399,7 @@ def review_package_encrypt_for_recipient(
             )
         )
     resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
+    recipient_encryption = recipient_encryption_capability_factory(ctx)(bucket_id=resolved_bucket_id)
     registry = RecipientFingerprintRegistryRepository(bucket_id=resolved_bucket_id)
     try:
         recipient = registry.get(recipient_id)
@@ -404,6 +417,7 @@ def review_package_encrypt_for_recipient(
         envelope = encrypt_review_package_for_recipient(
             package.read_bytes(),
             recipient_public_key_hex=recipient.public_key_hex,
+            recipient_encryption=recipient_encryption,
             review_only=review_only,
             valid_for=timedelta(days=valid_for_days) if valid_for_days is not None else None,
         )
@@ -443,12 +457,17 @@ def review_package_decrypt(ctx: typer.Context, envelope_path: Path, output: Path
     except ValueError as exc:
         raise bad_parameter_from_error(RecipientEncryptionError(str(exc))) from exc
     resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-
-    repository = secure_object_repository_for_bucket(resolved_bucket_id)
-    keypair = ensure_recipient_encryption_keypair(bucket_id=resolved_bucket_id, repository=repository)
+    recipient_encryption = recipient_encryption_capability_factory(ctx)(bucket_id=resolved_bucket_id)
+    keypair = ensure_recipient_encryption_keypair(
+        bucket_id=resolved_bucket_id,
+        recipient_encryption=recipient_encryption,
+    )
     try:
-        decrypted = decrypt_review_package_for_recipient(envelope, recipient_private_key=keypair.private_key())
+        decrypted = decrypt_review_package_for_recipient(
+            envelope,
+            recipient_private_key_hex=keypair.private_key_hex,
+            recipient_encryption=recipient_encryption,
+        )
     except RecipientDecryptionError as exc:
         raise bad_parameter_from_error(exc) from exc
     # The recipient's bucket records that it opened this package.
@@ -488,6 +507,7 @@ def review_package_encrypt_feedback(
     from ._modelo_cli_support import bad_parameter_from_error
 
     resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
+    recipient_encryption = recipient_encryption_capability_factory(ctx)(bucket_id=resolved_bucket_id)
     registry = RecipientFingerprintRegistryRepository(bucket_id=resolved_bucket_id)
     try:
         originator = registry.get(originator_id)
@@ -518,7 +538,9 @@ def review_package_encrypt_feedback(
             submitted_by=submitted_by,
         )
         envelope = encrypt_feedback_package_for_originator(
-            feedback, originator_public_key_hex=originator.public_key_hex
+            feedback,
+            originator_public_key_hex=originator.public_key_hex,
+            recipient_encryption=recipient_encryption,
         )
     except (ReviewPackageFeedbackError, RecipientEncryptionError) as exc:
         raise bad_parameter_from_error(exc) from exc
@@ -566,14 +588,19 @@ def review_package_import_feedback(
     except ValueError as exc:
         raise bad_parameter_from_error(RecipientEncryptionError(str(exc))) from exc
     resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
+    recipient_encryption = recipient_encryption_capability_factory(ctx)(bucket_id=resolved_bucket_id)
     from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
     repository = secure_object_repository_for_bucket(resolved_bucket_id)
-    keypair = ensure_recipient_encryption_keypair(bucket_id=resolved_bucket_id, repository=repository)
+    keypair = ensure_recipient_encryption_keypair(
+        bucket_id=resolved_bucket_id,
+        recipient_encryption=recipient_encryption,
+    )
     try:
         imported = import_feedback_package(
             envelope,
-            originator_private_key=keypair.private_key(),
+            originator_private_key_hex=keypair.private_key_hex,
+            recipient_encryption=recipient_encryption,
             reviewed_package_path=package,
             operator_public_key_hex=operator_public_key_hex,
             counter_signer_public_key_hex=counter_signer_public_key_hex,
@@ -585,7 +612,9 @@ def review_package_import_feedback(
         from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 
         emit_collab_feedback_countersign_attached_event(
-            imported, bucket_id=resolved_bucket_id, repository=BucketEventHistoryRepository(objects=repository)
+            imported,
+            bucket_id=resolved_bucket_id,
+            repository=BucketEventHistoryRepository(objects=repository),
         )
         attached = True
     result, lines = review_package_import_feedback_result(

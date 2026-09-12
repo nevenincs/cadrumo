@@ -20,10 +20,7 @@ from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalog
 from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from .....application.auth.diagnostics import list_auth_diagnostics
 from .....application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
-from .....application.calculations.observations_repository import (
-    CalculationObservationRepository,
-    IvaWalletDecisionRepository,
-)
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository, IvaWalletDecisionRepository
 from .....application.diagnostics import (
     preview_quarantine_unreadable_secure_objects,
     secure_object_unreadable_total,

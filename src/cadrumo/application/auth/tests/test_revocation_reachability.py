@@ -17,6 +17,8 @@ different silent failure.
 
 from __future__ import annotations
 
+from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 from pathlib import Path
 
 import pytest
@@ -29,6 +31,8 @@ from ....core.config import load_settings
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
 from .certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -62,29 +66,31 @@ def test_reachability_answers_both_ways_and_an_open_session_removes_the_out_of_b
         certificate_path = tmp_path / "operator.p12"
         certificate_path.write_bytes(b"test certificate")
         with open_test_profile_session(_PROFILE_ID):
-            register_operator_certificate_source(name="personal", certificate_path=certificate_path)
+            register_operator_certificate_source(name="personal", certificate_path=certificate_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
             set_operator_certificate_source_secret(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 name="personal",
                 secret=SecretStr("test-passphrase"),
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             )
             assert _certificate_secret_present(_PROFILE_ID, certificate_secret_backend_factory) is True
 
         # Cold: no session serves the profile, so a revocation cannot open it.
-        assert operator_auth_revocation_is_reachable(bucket_id=_PROFILE_ID) is False
+        assert operator_auth_revocation_is_reachable(bucket_id=_PROFILE_ID, operator_scope_ports=_OPERATOR_SCOPE_PORTS) is False
 
         with open_test_profile_session(_PROFILE_ID):
-            assert operator_auth_revocation_is_reachable(bucket_id=_PROFILE_ID) is True
+            assert operator_auth_revocation_is_reachable(bucket_id=_PROFILE_ID, operator_scope_ports=_OPERATOR_SCOPE_PORTS) is True
             # An open session for ONE profile is not an open session for another:
             # a predicate that reported reachability from any session at all
             # would let a caller revoke against whichever bucket happened to be
             # bound, which is the confusion the underlying span refuses.
-            assert operator_auth_revocation_is_reachable(bucket_id=_OTHER_PROFILE_ID) is False
+            assert operator_auth_revocation_is_reachable(bucket_id=_OTHER_PROFILE_ID, operator_scope_ports=_OPERATOR_SCOPE_PORTS) is False
 
             result = reset_operator_auth(
                 all_providers=True,
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 target_bucket_id=_PROFILE_ID,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             )
 
         assert result.removed_certificate_secrets == 1
@@ -114,12 +120,13 @@ def test_a_locked_profile_refuses_the_revocation_that_reachability_predicted(
         write_pointer(root, BucketPointer.selected(bucket_id=_PROFILE_ID, transition_revision=1))
         settings = load_settings()
 
-        assert operator_auth_revocation_is_reachable(bucket_id=_PROFILE_ID) is False
+        assert operator_auth_revocation_is_reachable(bucket_id=_PROFILE_ID, operator_scope_ports=_OPERATOR_SCOPE_PORTS) is False
         with pytest.raises(AuthOperationRequiresCustodySessionError) as refused:
             reset_operator_auth(
                 all_providers=True,
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 target_bucket_id=_PROFILE_ID,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             )
         assert refused.value.translated_message == "application.auth.operator.errors.revoke_requires_custody_session"
 
