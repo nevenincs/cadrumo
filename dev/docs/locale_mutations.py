@@ -480,7 +480,7 @@ def _validate_msgids(
     catalogue_keys = _all_message_keys(catalogue)
     source_keys = _all_message_keys(pot)
     missing = sorted(source_keys - catalogue_keys)
-    stale = sorted(catalogue_keys - source_keys)
+    stale = catalogue_keys - source_keys
     unlisted_stale = sorted(stale - allowed_stale)
     unexpected_allowed = sorted(allowed_stale - stale)
     if missing or unlisted_stale or unexpected_allowed:
