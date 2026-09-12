@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "0543"
+continuidad_id = "irpf-tipo-medio-gravamen-ahorro-autonomico"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:855 y aeat-dr-100-2024-dictionary:875: campo TMAAH; tipo medio autonómico de gravamen de la base liquidable del ahorro en el bloque de cálculo del impuesto. Misma magnitud y función fiscal en ambas ediciones."
 number = "0543"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 data_type = "ratio"

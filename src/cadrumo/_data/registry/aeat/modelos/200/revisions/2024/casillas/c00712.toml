@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00712"
+continuidad_id = "is-balance-patrimonio-neto-fondo-de-reserva-obligatorio-de-cooperativas"
 number = "00712"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"

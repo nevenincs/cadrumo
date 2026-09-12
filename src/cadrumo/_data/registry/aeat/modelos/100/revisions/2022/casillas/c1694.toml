@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "1694"
+continuidad_id = "irpf-aeip-30-aniversario-de-la-escuela-superior-de-musica-reina-sofia-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:1180 y aeat-dr-100-2022-dictionary:1235: campo M21ESMA; columna Aplicado en esta declaración del programa 30 Aniversario de la Escuela Superior de Música Reina Sofía en Anexo A. Misma designación y función fiscal."
 number = "1694"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

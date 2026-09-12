@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00047"
+continuidad_id = "is-entidades-sometidas-a-normativa-foral"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 59/59, filas 64/64: Entidades sometidas a normativa foral [00047]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00047"
 section = ["entidades_sometidas_a_normativa_foral"]
 data_type = "decimal"

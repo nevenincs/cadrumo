@@ -1,0 +1,107 @@
+# The 2025 diseno de registros withdraws every page-5 regimen simplificado
+# reduction slot the 2024 design carried. The two termino-municipal-de-Lorca slots
+# (offsets 223 and 543) and the whole 1205-1507 block that held the DANA municipal
+# reductions, the per-actividad Reducciones (total) subtotals, and the five
+# actividades agricolas y ganaderas DANA reductions are all restated in the 2025
+# design as "RESERVADO PARA LA A.E.A.T. (Dejar en blanco)" -- at 1205 as a single
+# 303-position reserved run covering 1205 through 1507. No successor slot carries
+# the meaning forward, so each identifier is retired rather than replaced.
+
+# Design offset 223 in the 2024 design; reserved and left blank in the 2025 design.
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-reduccion-aplicable-por-actividad-realizada-en-el-termin"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]
+
+# Design offset 543 in the 2024 design; reserved and left blank in the 2025 design.
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reduccion-aplicable-por-actividad-realizada-en-el-termin"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]
+
+# Design offset 1205 in the 2024 design; reserved and left blank in the 2025 design.
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-reduccion-aplicable-por-actividad-realizada-en-municip"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]
+
+# Design offset 1222 in the 2024 design; reserved and left blank in the 2025 design.
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-reducciones-total"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]
+
+# Design offset 1239 in the 2024 design; reserved and left blank in the 2025 design.
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reduccion-aplicable-por-actividad-realizada-en-municip"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]
+
+# Design offset 1256 in the 2024 design; reserved and left blank in the 2025 design.
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reducciones-total"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]
+
+# Design offset 1273 in the 2024 design; reserved and left blank in the 2025 design.
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-reduccion-aplicable-por-1273"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]
+
+# Design offset 1290 in the 2024 design; reserved and left blank in the 2025 design.
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-reduccion-aplicable-por-1290"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]
+
+# Design offset 1307 in the 2024 design; reserved and left blank in the 2025 design.
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-reduccion-aplicable-por-1307"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]
+
+# Design offset 1324 in the 2024 design; reserved and left blank in the 2025 design.
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-reduccion-aplicable-por-1324"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]
+
+# Design offset 1341 in the 2024 design; reserved and left blank in the 2025 design.
+[[revisions."2025".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-reduccion-aplicable-por-1341"
+to_revision = "2025"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]

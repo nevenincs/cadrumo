@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00770"
+continuidad_id = "is-pyg-continuadas-consumo-de-existencias-de-socios-cooperativas"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200007/DP200007, campos 23/23, filas 28/28: Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Consumo de existencias de socios (cooperativas)  [00770]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00770"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 data_type = "money"
@@ -9,6 +12,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00771"
+continuidad_id = "is-pyg-continuadas-compras-efectuadas-a-los-socios-cooperativas"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200007/DP200007, campos 24/24, filas 29/29: Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Compras efectuadas a los socios (cooperativas)  [00771]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00771"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 data_type = "money"
@@ -18,6 +24,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00772"
+continuidad_id = "is-pyg-continuadas-variacion-de-existencias-adquiridas-a-socios-cooperativas"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200007/DP200007, campos 25/25, filas 30/30: Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Variación de existencias adquiridas a socios (cooperativas)  [00772]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00772"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 data_type = "money"

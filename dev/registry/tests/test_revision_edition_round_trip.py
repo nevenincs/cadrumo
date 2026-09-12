@@ -56,7 +56,8 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_occurrence_locale_key,
 )
-from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor, ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 
 from ..._paths import REPO_ROOT
 from ..compiler.authority import compile_validated_authority, compiled_bundled_authority

@@ -429,7 +429,7 @@ def _annual_orden_years_from_sources(
 
 
 def _single_m303_modelo(modelos: Sequence[ModeloDefinition]) -> ModeloDefinition:
-    candidates = tuple(modelo for modelo in modelos if modelo.id == Modelo.M303)
+    candidates = tuple(modelo for modelo in modelos if modelo.id == Modelo("303"))
     if len(candidates) != 1:
         raise RegistryValidationError(f"annual Orden compiler requires exactly one Modelo 303, got {len(candidates)}")
     return candidates[0]

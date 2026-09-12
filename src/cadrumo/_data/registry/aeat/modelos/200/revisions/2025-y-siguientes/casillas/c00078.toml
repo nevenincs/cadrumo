@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00078"
+continuidad_id = "is-diocesis-provincia-religiosa-o-entidad-eclesiastica-que-integra-entidades-menores-de-ellas-dependientes"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 52/52, filas 57/57: Diócesis, provincia religiosa o entidad eclesiástica que integra entidades menores de ellas dependientes [00078]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00078"
 section = ["diocesis_provincia_religiosa_o_entidad_eclesiastic"]
 data_type = "decimal"

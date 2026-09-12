@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "0139"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-valor-catastral-construccion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:228 y aeat-dr-100-2023-dictionary:232: C_VCCACC, valor catastral de la construcción del inmueble accesorio a efectos de amortización. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "0139"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 semantic_role = "irpf_inmueble_valor_catastral_construccion"

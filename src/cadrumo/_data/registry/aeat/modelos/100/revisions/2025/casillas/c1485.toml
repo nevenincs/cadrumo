@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "1485"
+continuidad_id = "irpf-estimacion-objetiva-agraria-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2024-dictionary:372 y aeat-dr-100-2025-dictionary:375: campo E5AT, tipo TIT; mismo titular de actividades agricolas ganaderas o forestales en estimacion objetiva, descrito por el grupo oficial de ambas ediciones."
 number = "1485"
 section = ["toma_datos_ampliada"]
 data_type = "text"

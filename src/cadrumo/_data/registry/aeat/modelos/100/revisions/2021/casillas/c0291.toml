@@ -1,5 +1,8 @@
 [[revisions."2021".casillas]]
 id = "0291"
+continuidad_id = "irpf-premios-juegos-publicitarios-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2020-dictionary:515 y aeat-dr-100-2021-dictionary:522: campo TITG12, tipo TIT; mismo perceptor de premios de juegos con fines publicitarios, descrito por el grupo oficial de ambas ediciones."
 number = "0291"
 section = ["toma_datos_ampliada"]
 data_type = "text"

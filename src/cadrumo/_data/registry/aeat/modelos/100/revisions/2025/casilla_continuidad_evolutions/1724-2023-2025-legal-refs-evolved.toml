@@ -1,0 +1,9 @@
+# Grounding: NIF del primer productor financiado en el régimen general; la edición 2025 añade la referencia a su orden de aprobación.
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1724-2023-2025-legal-refs-evolved"
+continuidad_id = "irpf-incentivos-inversion-productor-1-nif"
+from_revision = "2023"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-68.2","orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2023-dictionary","aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]

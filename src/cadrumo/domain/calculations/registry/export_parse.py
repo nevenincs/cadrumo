@@ -28,8 +28,8 @@ from .schema_references import SourceReference
 # (``NO``/``SI``); the tokens differ but both rows carry a boolean. Public: this
 # is the one canonical declaration of the vocabulary. The application-layer XML
 # dictionary renderer (``_export_xml_dictionary.py``) shares the exact same two
-# type codes for the write direction and imports them through this package's
-# facade rather than re-declaring its own copy.
+# type codes for the write direction and imports them from this defining module
+# rather than re-declaring its own copy.
 LOGICAL_DICTIONARY_TYPE = "LGC"
 SINO_DICTIONARY_TYPE = "S_N"
 # Named as a set rather than matched by prefix so a future type code beginning

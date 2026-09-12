@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "0753"
+continuidad_id = "irpf-incentivos-inversion-aeip-saldos-anteriores-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:1154 y aeat-dr-100-2023-dictionary:1192: campo M21REA; saldos anteriores de regímenes AEIP aplicados en ambas ediciones del Anexo A, sin cambio de función ni de régimen."
 number = "0753"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado_flag"

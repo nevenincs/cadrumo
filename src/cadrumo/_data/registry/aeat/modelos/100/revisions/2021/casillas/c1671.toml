@@ -1,5 +1,7 @@
 [[revisions."2021".casillas]]
 id = "1671"
+# aeat-dr-100-2021-dictionary:1010: TITEDIF, titular de la deduccion por rehabilitacion energetica del edificio.
+continuidad_id = "irpf-deduccion-eficiencia-energetica-edificios-contribuyente-titular"
 number = "1671"
 section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
 data_type = "text"

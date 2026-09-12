@@ -1,4 +1,6 @@
 [revisions."2023"]
+binding_source_refs = ["aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]
+formula_source_refs = ["lirpf-cuota-chain-authority"]
 predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["ley-35-2006:art-27"], source_refs = ["aeat-dr-100-2023-dictionary"] } }
 casilla_source_refs = ["aeat-dr-100-2023-dictionary"]
 # Prepared and reviewed by an agent against the bundled AEAT diseño de registros

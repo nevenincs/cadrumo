@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00004"
+continuidad_id = "is-sociedad-de-inversion-inmobiliaria-o-fondo-de-inversion-inmobiliaria"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 32/32, filas 37/37: Sociedad de inversión inmobiliaria o fondo de inversión inmobiliaria [00004]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00004"
 section = ["sociedad_de_inversion_inmobiliaria_o_fondo_de_inve"]
 data_type = "decimal"

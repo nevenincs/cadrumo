@@ -12,3 +12,8 @@ source_refs = ["aeat-modelo-128-procedure", "boe-modelo-128-form-text", "boe-mod
 review_status = "agent_reviewed"
 reviewed_by = "agent calculation-grade attestation against cited AEAT form arithmetic"
 reviewed_at = 2026-08-24
+
+[revisions."2019-y-siguientes".source_default_dispositions.formulas]
+kind = "underivable"
+reason = """
+No leading source_refs run is shared by two rows of this edition's formulas family. The family holds a single source-stating row, and one statement can open no run that a second shares, so no default is derivable here and the row keeps its own refs rather than lifting them to a manifest default a later authored row might not carry."""

@@ -17,6 +17,7 @@
 # stays advisory because a bound total can legitimately be mid-aggregation when
 # the operator calculates, and because the operator, not this application, files.
 [[revisions."2020-y-siguientes".verification_predicates]]
+id = "implies-nonzero:importe-operaciones-cuando-operadores-declarados"
 predicate_id = "modelo-349-importe-operaciones-cuando-operadores-declarados"
 expression = 'implies_nonzero(["decl.numero-operadores", "decl.importe-operaciones"])'
 finding_kind = "ADVISORY"

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-12'
 modified: '2026-09-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:cf33ff9fd1e31b93eb1d6a6ec7edf762debaf5e38f00f29b877f1de7dc8c9c26'
+body_hash: 'sha256:f4fd23a90f924b7947a3215bc20ff54d960ec9e9bf20da28b223068edfe15a10'
 step_id: 'S28'
 related:
   - "[[2026-09-11-binding-schema-plan]]"
@@ -26,17 +26,12 @@ related:
 - `verify:` `uv run --no-sync pytest dev/registry/tests/test_binding_span_strip.py -n 0` -> `pass`
 - `verify:` `uv run ty check dev/registry/rename_formula_binding_identifiers.py dev/registry/tests/test_binding_span_strip.py` -> `pass`
 - `verify:` `uv run --no-sync ruff check dev/registry/rename_formula_binding_identifiers.py dev/registry/tests/test_binding_span_strip.py` -> `pass`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/714/`
+- `verify:` `uv run --no-sync python dev/registry/rename_formula_binding_identifiers.py --strip-spans --modelo 714` -> `4844 candidates, 1415 rename pairs, 0 refused, 0 collisions, 153 restored-field rows`
+- `verify:` `uv run --no-sync python dev/registry/rename_formula_binding_identifiers.py --strip-spans --modelo 714 --apply` -> `9688 references rewritten, 160 files touched`
+- `verify:` `load_modelo_directory('src/cadrumo/_data/registry/aeat/modelos/714')` -> `pass`
+- `verify:` re-measure after apply -> `0 binding ids, 0 candidates`
 
 ## Notes
 
-The modelo 714 identifier pass is planned but not applied: the dry run reports
-4844 strips, 1415 rename pairs, 0 refusals, 0 collisions and 0 stranded export
-trees, and the apply, the revision regeneration and the delta-status report are
-deferred to a later run. No registry data was rewritten.
-
-The Step was scoped to a record-design-derived repetition index in the export
-tree generator. Measurement showed no generator produces these ids and no index
-needed deriving: the repetition is already carried by each row's own
-`provider.field`, and 153 ids merely spell a separator-bounded truncation of it.
-The rule therefore restores the declared field and lives in the rename tool; the
-generator and its mappings are unchanged, so the Scope paths above are stale.
+- The 714 pass is applied: 4,844 span ids stripped under the full-provider.field slot rule (153 restored slots), 9,688 references rewritten across 160 files, 0 collisions in all five editions, load-verified; 714 has no generated export tree. The machine-filled Scope paths naming the export generator are stale: the generator needed no change.

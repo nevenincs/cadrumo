@@ -11,6 +11,9 @@
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "490-01-indicador-pagina-complementaria-12"
+continuidad_id = "pagina-complementaria-liquidacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 conserva el indicador C o blanco de pagina complementaria de liquidacion, distinto del indicador de declaracion complementaria."
 number = "490-01-indicador-pagina-complementaria"
 section = ["490_01"]
 data_type = "text"
@@ -20,6 +23,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "490-01-tipo-declaracion-13"
+continuidad_id = "tipo-de-declaracion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 nota 1 mantiene I ingreso, U domiciliacion, N negativa y D devolucion."
 number = "490-01-tipo-declaracion"
 section = ["490_01"]
 data_type = "text"
@@ -29,6 +35,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "490-01-identificacion-email-154"
+continuidad_id = "declarante-correo-electronico"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene el correo electronico de identificacion del declarante."
 number = "490-01-identificacion-email"
 section = ["490_01"]
 data_type = "text"
@@ -38,6 +47,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "490-01-identificacion-nif-representante-254"
+continuidad_id = "representante-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene el NIF del representante, separado del NIF del declarante."
 number = "490-01-identificacion-nif-representante"
 section = ["490_01"]
 data_type = "text"
@@ -47,6 +59,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "490-01-identificacion-nombre-representante-263"
+continuidad_id = "representante-nombre-razon-social"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene razon social, nombre y apellidos del representante como un campo combinado."
 number = "490-01-identificacion-nombre-representante"
 section = ["490_01"]
 data_type = "text"
@@ -56,6 +71,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "490-01-grupo-denominacion-388"
+continuidad_id = "grupo-denominacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene la denominacion o nombre del grupo."
 number = "490-01-grupo-denominacion"
 section = ["490_01"]
 data_type = "text"
@@ -65,6 +83,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "490-01-grupo-pais-dominante-513"
+continuidad_id = "grupo-dominante-pais-residencia"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene el pais de residencia de la dominante codificado ISO 3166-1 alfa-2."
 number = "490-01-grupo-pais-dominante"
 section = ["490_01"]
 data_type = "text"
@@ -74,6 +95,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "490-01-grupo-dominante-515"
+continuidad_id = "grupo-entidad-dominante"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene la entidad dominante del grupo, distinta de su pais de residencia y del nombre del grupo."
 number = "490-01-grupo-dominante"
 section = ["490_01"]
 data_type = "text"
@@ -83,6 +107,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "liq-indicador-regularizacion-A"
+continuidad_id = "regularizacion-base-imponible-indicador"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene el indicador X o blanco de regularizacion de base imponible del art. 10.3 Ley 4/2020."
 number = "A"
 section = ["490_01"]
 data_type = "text"
@@ -92,6 +119,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "liq-publi-ing-01"
+continuidad_id = "publicidad-en-linea-ingresos-totales"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene los ingresos totales de servicios de publicidad en linea, no su base imponible."
 number = "01"
 section = ["490_01"]
 data_type = "money"
@@ -101,6 +131,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "liq-publi-base-02"
+continuidad_id = "publicidad-en-linea-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene la base imponible del periodo de servicios de publicidad en linea, separada de su regularizacion."
 number = "02"
 section = ["490_01"]
 data_type = "money"
@@ -110,6 +143,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "liq-publi-reg-base-03"
+continuidad_id = "publicidad-en-linea-regularizacion-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene la regularizacion con signo de la base imponible de publicidad en linea, art. 10.3."
 number = "03"
 section = ["490_01"]
 data_type = "money"
@@ -119,6 +155,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "liq-interm-a-ing-04"
+continuidad_id = "intermediacion-subyacente-ingresos-totales"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene los ingresos totales de intermediacion en linea con entrega de bienes o prestacion de servicios subyacentes."
 number = "04"
 section = ["490_01"]
 data_type = "money"
@@ -128,6 +167,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "liq-interm-a-base-05"
+continuidad_id = "intermediacion-subyacente-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene la base imponible de intermediacion en linea con entrega de bienes o prestacion de servicios subyacentes."
 number = "05"
 section = ["490_01"]
 data_type = "money"
@@ -137,6 +179,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "liq-interm-a-reg-base-06"
+continuidad_id = "intermediacion-subyacente-regularizacion-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene la regularizacion con signo, art. 10.3, de intermediacion con entrega de bienes o prestacion de servicios subyacentes."
 number = "06"
 section = ["490_01"]
 data_type = "money"
@@ -146,6 +191,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "liq-interm-b-ing-07"
+continuidad_id = "demas-intermediacion-ingresos-totales"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene los ingresos totales de los demas servicios de intermediacion en linea, distintos del grupo con prestaciones subyacentes."
 number = "07"
 section = ["490_01"]
 data_type = "money"
@@ -155,6 +203,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "liq-interm-b-base-08"
+continuidad_id = "demas-intermediacion-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene la base imponible de los demas servicios de intermediacion en linea."
 number = "08"
 section = ["490_01"]
 data_type = "money"
@@ -164,6 +215,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "liq-interm-b-reg-base-09"
+continuidad_id = "demas-intermediacion-regularizacion-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene la regularizacion con signo de la base imponible de los demas servicios de intermediacion en linea, art. 10.3."
 number = "09"
 section = ["490_01"]
 data_type = "money"
@@ -173,6 +227,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "liq-datos-ing-10"
+continuidad_id = "transmision-datos-ingresos-totales"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene los ingresos totales de los servicios de transmision de datos, no su base imponible."
 number = "10"
 section = ["490_01"]
 data_type = "money"
@@ -182,6 +239,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "liq-datos-base-11"
+continuidad_id = "transmision-datos-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene la base imponible del periodo de los servicios de transmision de datos."
 number = "11"
 section = ["490_01"]
 data_type = "money"
@@ -191,6 +251,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "liq-datos-reg-base-12"
+continuidad_id = "transmision-datos-regularizacion-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene la regularizacion con signo de la base imponible de los servicios de transmision de datos, art. 10.3."
 number = "12"
 section = ["490_01"]
 data_type = "money"
@@ -200,6 +263,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "liq-base-imponible-total-13"
+continuidad_id = "base-imponible-total-periodo"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene la suma de las bases imponibles del periodo de publicidad, las dos clases de intermediacion y transmision de datos."
 number = "13"
 section = ["490_01"]
 data_type = "money"
@@ -209,6 +275,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "liq-reg-periodos-anteriores-14"
+continuidad_id = "regularizacion-base-imponible-periodos-anteriores"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene la suma con signo de las cuatro regularizaciones de base imponible de periodos anteriores, art. 10.3 Ley 4/2020."
 number = "14"
 section = ["490_01"]
 data_type = "money"
@@ -218,6 +287,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "liq-tipo-15"
+continuidad_id = "tipo-impositivo"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene el tipo impositivo aplicado a la base imponible total del periodo."
 number = "15"
 section = ["490_01"]
 data_type = "ratio"
@@ -227,6 +299,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "liq-cuota-integra-16"
+continuidad_id = "cuota-integra"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene la cuota integra como producto de base imponible total del periodo por tipo impositivo, antes de reparto territorial."
 number = "16"
 section = ["490_01"]
 data_type = "money"
@@ -328,6 +403,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "490-01-ingreso-bic-swift-1009"
+continuidad_id = "ingreso-devolucion-bic-swift"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene el codigo BIC/SWIFT de ingreso o devolucion, separado del IBAN; el desplazamiento del campo no cambia su funcion."
 number = "490-01-ingreso-bic-swift"
 section = ["490_01"]
 data_type = "text"
@@ -337,6 +415,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "490-01-ingreso-iban-1020"
+continuidad_id = "ingreso-devolucion-iban"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene el codigo IBAN de la cuenta de ingreso o devolucion, de 34 caracteres; el desplazamiento del campo no cambia su funcion."
 number = "490-01-ingreso-iban"
 section = ["490_01"]
 data_type = "text"
@@ -346,6 +427,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "490-01-declaracion-complementaria-1054"
+continuidad_id = "declaracion-complementaria"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene C o blanco para la declaracion complementaria, distinto del indicador de pagina complementaria."
 number = "490-01-declaracion-complementaria"
 section = ["490_01"]
 data_type = "text"
@@ -355,6 +439,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "490-01-justificante-anterior-1055"
+continuidad_id = "justificante-declaracion-anterior"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene el numero de justificante de la declaracion anterior de 13 caracteres, asociado a la declaracion complementaria."
 number = "490-01-justificante-anterior"
 section = ["490_01"]
 data_type = "text"
@@ -364,6 +451,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "490-01-declaracion-negativa-1068"
+continuidad_id = "declaracion-negativa"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2022-2t y aeat-dr-490-2023: DR49001 mantiene N o blanco para la declaracion negativa, distinto del tipo general de declaracion."
 number = "490-01-declaracion-negativa"
 section = ["490_01"]
 data_type = "text"

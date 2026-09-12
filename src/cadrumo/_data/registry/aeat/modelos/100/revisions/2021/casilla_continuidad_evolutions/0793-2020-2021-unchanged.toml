@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2020-dictionary:1059 y aeat-dr-100-2021-dictionary:1117; Barcelona Equestrian Challenge (3ª Edición), columna Aplicado, M21ECHA.
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0793-2020-2021-unchanged"
+continuidad_id = "irpf-aeip-barcelona-equestrian-challenge-3a-edicion-aplicado"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]

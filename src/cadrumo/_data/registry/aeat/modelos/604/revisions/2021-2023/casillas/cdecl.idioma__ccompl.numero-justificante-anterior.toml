@@ -7,6 +7,7 @@
 
 [[revisions."2021-2023".casillas]]
 id = "decl.idioma"
+continuidad_id = "idioma-declaracion"
 number = "decl-idioma"
 section = ["declaracion"]
 data_type = "text"
@@ -16,6 +17,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "decl.tipo-autoliquidacion"
+continuidad_id = "tipo-autoliquidacion"
 number = "decl-tipo-autoliquidacion"
 section = ["declaracion"]
 data_type = "text"
@@ -25,6 +27,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "sp.codigo-lei"
+continuidad_id = "sujeto-pasivo-codigo-lei"
 number = "sp-codigo-lei"
 section = ["sujeto_pasivo"]
 data_type = "text"
@@ -34,6 +37,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "sp.codigo-bic"
+continuidad_id = "sujeto-pasivo-codigo-bic"
 number = "sp-codigo-bic"
 section = ["sujeto_pasivo"]
 data_type = "text"
@@ -43,6 +47,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-es.tipo-via"
+continuidad_id = "domicilio-fiscal-espana-tipo-via"
 number = "dom-es-tipo-via"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -52,6 +57,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-es.nombre-via"
+continuidad_id = "domicilio-fiscal-espana-nombre-via"
 number = "dom-es-nombre-via"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -61,6 +67,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-es.tipo-numeracion"
+continuidad_id = "domicilio-fiscal-espana-tipo-numeracion"
 number = "dom-es-tipo-numeracion"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -70,6 +77,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-es.numero-casa"
+continuidad_id = "domicilio-fiscal-espana-numero-casa"
 number = "dom-es-numero-casa"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -79,6 +87,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-es.calificador-numero"
+continuidad_id = "domicilio-fiscal-espana-calificador-numero"
 number = "dom-es-calificador-numero"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -88,6 +97,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-es.bloque"
+continuidad_id = "domicilio-fiscal-espana-bloque"
 number = "dom-es-bloque"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -97,6 +107,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-es.portal"
+continuidad_id = "domicilio-fiscal-espana-portal"
 number = "dom-es-portal"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -106,6 +117,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-es.escalera"
+continuidad_id = "domicilio-fiscal-espana-escalera"
 number = "dom-es-escalera"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -115,6 +127,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-es.planta"
+continuidad_id = "domicilio-fiscal-espana-planta"
 number = "dom-es-planta"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -124,6 +137,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-es.puerta"
+continuidad_id = "domicilio-fiscal-espana-puerta"
 number = "dom-es-puerta"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -133,6 +147,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-es.complemento"
+continuidad_id = "domicilio-fiscal-espana-complemento"
 number = "dom-es-complemento"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -142,6 +157,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-es.localidad"
+continuidad_id = "domicilio-fiscal-espana-localidad"
 number = "dom-es-localidad"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -151,6 +167,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-es.codigo-postal"
+continuidad_id = "domicilio-fiscal-espana-codigo-postal"
 number = "dom-es-codigo-postal"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -160,6 +177,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-es.municipio"
+continuidad_id = "domicilio-fiscal-espana-municipio"
 number = "dom-es-municipio"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -169,6 +187,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-es.codigo-provincia"
+continuidad_id = "domicilio-fiscal-espana-codigo-provincia"
 number = "dom-es-codigo-provincia"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -178,6 +197,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-es.provincia"
+continuidad_id = "domicilio-fiscal-espana-provincia"
 number = "dom-es-provincia"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -187,6 +207,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-ex.domicilio"
+continuidad_id = "domicilio-fiscal-extranjero-domicilio"
 number = "dom-ex-domicilio"
 section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
@@ -196,6 +217,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-ex.complemento"
+continuidad_id = "domicilio-fiscal-extranjero-complemento"
 number = "dom-ex-complemento"
 section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
@@ -205,6 +227,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-ex.poblacion"
+continuidad_id = "domicilio-fiscal-extranjero-poblacion"
 number = "dom-ex-poblacion"
 section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
@@ -214,6 +237,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-ex.codigo-postal"
+continuidad_id = "domicilio-fiscal-extranjero-codigo-postal"
 number = "dom-ex-codigo-postal"
 section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
@@ -223,6 +247,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-ex.provincia-region-estado"
+continuidad_id = "domicilio-fiscal-extranjero-provincia-region-estado"
 number = "dom-ex-provincia-region-estado"
 section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
@@ -232,6 +257,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-ex.pais"
+continuidad_id = "domicilio-fiscal-extranjero-pais"
 number = "dom-ex-pais"
 section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
@@ -241,6 +267,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "dom-ex.codigo-pais"
+continuidad_id = "domicilio-fiscal-extranjero-codigo-pais"
 number = "dom-ex-codigo-pais"
 section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
@@ -250,6 +277,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "sp.persona-contacto"
+continuidad_id = "sujeto-pasivo-persona-contacto"
 number = "sp-persona-contacto"
 section = ["sujeto_pasivo"]
 data_type = "text"
@@ -259,6 +287,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "sp.telefono-contacto"
+continuidad_id = "sujeto-pasivo-telefono-contacto"
 number = "sp-telefono-contacto"
 section = ["sujeto_pasivo"]
 data_type = "text"
@@ -268,6 +297,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "anexo.numero-justificante"
+continuidad_id = "numero-justificante-anexo-informativo"
 number = "anexo-numero-justificante"
 section = ["anexo_informativo"]
 data_type = "text"
@@ -277,6 +307,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "liq.01-base-imponible"
+continuidad_id = "base-imponible-operaciones-sujetas-no-exentas"
 number = "01"
 section = ["liquidacion"]
 data_type = "money"
@@ -286,6 +317,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "liq.02-cuota"
+continuidad_id = "cuota-operaciones-sujetas-no-exentas"
 number = "02"
 section = ["liquidacion"]
 data_type = "money"
@@ -304,6 +336,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "liq.03-base-rectificaciones"
+continuidad_id = "base-imponible-rectificaciones"
 number = "03"
 section = ["liquidacion"]
 data_type = "money"
@@ -313,6 +346,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "liq.04-signo-cuota-rectificaciones"
+continuidad_id = "signo-cuota-rectificaciones"
 number = "liq-04-signo-cuota-rectificaciones"
 section = ["liquidacion"]
 data_type = "text"
@@ -322,6 +356,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "liq.04-cuota-rectificaciones"
+continuidad_id = "cuota-rectificaciones"
 number = "04"
 section = ["liquidacion"]
 data_type = "money"
@@ -331,6 +366,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "liq.05-operaciones-exentas"
+continuidad_id = "importe-operaciones-exentas"
 number = "05"
 section = ["liquidacion"]
 data_type = "money"
@@ -358,6 +394,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "compl.declaracion-complementaria"
+continuidad_id = "declaracion-complementaria"
 number = "compl-declaracion-complementaria"
 section = ["complementaria"]
 data_type = "text"
@@ -367,6 +404,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "compl.numero-justificante-anterior"
+continuidad_id = "numero-justificante-declaracion-anterior"
 number = "compl-numero-justificante-anterior"
 section = ["complementaria"]
 data_type = "text"

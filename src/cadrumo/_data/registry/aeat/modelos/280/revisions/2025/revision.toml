@@ -1,8 +1,46 @@
 [revisions."2025"]
 casilla_source_refs = ["boe-modelo-280-base-order"]
 authority_grade = "applicability"
+# Modelo 280, declaración informativa anual de Planes de Ahorro a Largo Plazo.
+#
+# CONTINUATION, NOT A NEW DESIGN. The selector opens at 2025 and does not close.
+# Orden HAP/2118/2015 approves this modelo once and open-endedly: art 1 approves
+# «el modelo 280 [...] así como los diseños de registro», and art 4 fixes a
+# RECURRING plazo -- «durante el mes de febrero de cada año, en relación con la
+# información correspondiente al año natural inmediato anterior» -- rather than
+# re-approving the declaration for each ejercicio. Its disposición final states
+# applicability to the modelos 280 «correspondientes a 2015 y ejercicios
+# siguientes». There is consequently no per-ejercicio approving orden to key a
+# revision to, and a year-closed selector would under-declare the law: it would
+# leave an ejercicio the orden plainly covers unanswerable. The sibling per-
+# ejercicio shape belongs to modelos whose orden is re-issued annually (200/220);
+# it is the wrong shape here.
+#
+# THE DESIGN HAS NOT MOVED SINCE 2022. The approving orden has been amended three
+# times -- HFP/1822/2016 (importes en euros), HAC/1276/2019 (TGVI Online and the
+# número identificativo) and HFP/1192/2022 (posición 137, fallecimiento del
+# tomador) -- and HFP/1192/2022 is the LAST. The BOE consolidated text of
+# BOE-A-2015-11074 lists those three and no amendment after them, and AEAT's own
+# modelo 280 procedure page cites the same four ordenes; both surfaces were read
+# on 2026-09-12. aeat-dr-280-2022 is therefore the current diseño de registro,
+# and the two 500-byte records transcribed in this revision's export_layouts
+# carry forward unchanged. Nothing exists that a later revision could declare as
+# changed, so a thin successor keyed to 2026 would assert a boundary the sources
+# do not contain.
+#
+# WHAT THE OPEN SELECTOR DOES NOT CLAIM. It is a claim about the approving orden
+# and the design, not about future calendars: only the plazos actually authored
+# in deadline_windows are declared, and an unauthored year resolves the layout
+# without a window rather than inventing one. authority_grade stays
+# "applicability"; opening the span promotes nothing.
+#
+# The revision id stays "2025" rather than the usual "<year>-y-siguientes" folder
+# spelling. The id is the key the locale catalogues index this revision's casilla
+# labels by, so respelling it is a cross-tree rename, not a selector correction;
+# siblings 194/2024 and 721/2024 carry the same open selector under a plain-year
+# id. The span is what the selector says, not what the folder is called.
 valid_from = 2025-01-01
-period_selector = { years = [2025], periods = ["0A"] }
+period_selector = { year_from = 2025, periods = ["0A"] }
 orden_aplicabilidad = [
     "orden-hap-2118-2015:art-1",
     "orden-hfp-1822-2016:art-sexto",
@@ -27,8 +65,26 @@ source_refs = [
     "boe-modelo-280-2022-amendment-hfp-1192",
 ]
 review_status = "agent_reviewed"
-reviewed_by = "agent-prepared-pending-operator"
-reviewed_at = 2026-08-19
+reviewed_by = """\
+agent: TEMPORAL-SPAN review only. This stamp re-dates the revision because its selector \
+changed -- years = [2025] became year_from = 2025 with no upper bound -- and a stamp must not \
+attest a span the revision no longer has. VERIFIED -- THE APPROVING ORDEN IS OPEN-ENDED: \
+Orden HAP/2118/2015 art 1 approves the modelo and its diseños de registro once, art 4 sets a \
+recurring February plazo «de cada año» over «el año natural inmediato anterior», and the \
+disposición final reaches «2015 y ejercicios siguientes». Read from the BOE consolidated text \
+of BOE-A-2015-11074 on 2026-09-12. VERIFIED -- NO LATER AMENDMENT: that consolidated text \
+lists exactly three amending ordenes (HFP/1822/2016, HAC/1276/2019, HFP/1192/2022) and none \
+after 2022; AEAT's modelo 280 procedure page cites the same four ordenes and no other. Both \
+were read on 2026-09-12. The bundled aeat-dr-280-2022 is therefore current, so the span opens \
+over an unchanged design rather than over an unevidenced one. NOT RE-MADE -- THE CASILLA, \
+EXPORT-LAYOUT AND BINDING REVIEW IS INHERITED, not re-performed: it is the agent-prepared \
+2026-08-19 review of the two 500-byte records against aeat-dr-280-2022, and nothing in it was \
+re-read for this change. NOT CLAIMED -- NO OPERATOR COUNTERSIGNATURE, on either the inherited \
+review or this one. NOT CLAIMED -- FUTURE PLAZOS: only the two authored deadline windows are \
+declared; the open selector asserts nothing about a calendar year whose window is unauthored. \
+NOT CLAIMED -- authority grade is unchanged at applicability; opening a span promotes \
+nothing."""
+reviewed_at = 2026-09-12
 
 [revisions."2025".family_dispositions.formulas]
 reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."

@@ -42,6 +42,13 @@ type ExportFieldId = Annotated[str, Field(min_length=1, max_length=160, pattern=
 type WorkbookFixtureId = Annotated[str, Field(min_length=1, max_length=160, pattern=_REF_RE)]
 type WorkbookOutputId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type OracleId = Annotated[str, Field(min_length=1, max_length=128, pattern=_ORACLE_ID_RE)]
+# A projection endpoint is named by the endpoint it projects -- its projection
+# kind and the semantic axes of its typed reference -- and a verification
+# predicate by its operator and subject. Both are longer than a hand-authored
+# ref and neither may carry an edition token, so they share the ref grammar at
+# the wider bound rather than the 128-character one.
+type ProjectionEndpointId = Annotated[str, Field(min_length=1, max_length=160, pattern=_REF_RE)]
+type VerificationPredicateId = Annotated[str, Field(min_length=1, max_length=160, pattern=_REF_RE)]
 
 
 def is_registry_id(value: str) -> bool:

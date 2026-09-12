@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "0462"
+continuidad_id = "irpf-reduccion-prevision-social-contribuyente"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2024-dictionary:760 y aeat-dr-100-2025-dictionary:786: campo TITRG, tipo TIT; mismo contribuyente que aporta o al que se imputan contribuciones de prevision social, descrito por el grupo oficial de ambas ediciones."
 number = "0462"
 section = ["toma_datos_ampliada"]
 data_type = "text"

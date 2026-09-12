@@ -2,6 +2,7 @@
 # Each identity is explicitly grounded in this revision's official record design.
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-cnae.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -11,6 +12,7 @@ field = "cnae"
 casilla_id = "500"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-operaciones-total.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -20,6 +22,7 @@ field = "operaciones_total"
 casilla_id = "501"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-operaciones-con-derecho.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -29,6 +32,7 @@ field = "operaciones_con_derecho"
 casilla_id = "502"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-tipo.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -38,6 +42,7 @@ field = "tipo"
 casilla_id = "503"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-porcentaje.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -47,6 +52,7 @@ field = "porcentaje"
 casilla_id = "504"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-cnae.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -56,6 +62,7 @@ field = "cnae"
 casilla_id = "505"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-operaciones-total.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -65,6 +72,7 @@ field = "operaciones_total"
 casilla_id = "506"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-operaciones-con-derecho.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -74,6 +82,7 @@ field = "operaciones_con_derecho"
 casilla_id = "507"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-tipo.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -83,6 +92,7 @@ field = "tipo"
 casilla_id = "508"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-porcentaje.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -92,6 +102,7 @@ field = "porcentaje"
 casilla_id = "509"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-cnae.slot-3"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -101,6 +112,7 @@ field = "cnae"
 casilla_id = "510"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-operaciones-total.slot-3"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -110,6 +122,7 @@ field = "operaciones_total"
 casilla_id = "511"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-operaciones-con-derecho.slot-3"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -119,6 +132,7 @@ field = "operaciones_con_derecho"
 casilla_id = "512"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-tipo.slot-3"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -128,6 +142,7 @@ field = "tipo"
 casilla_id = "513"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-porcentaje.slot-3"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -137,6 +152,7 @@ field = "porcentaje"
 casilla_id = "514"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-cnae.slot-4"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -146,6 +162,7 @@ field = "cnae"
 casilla_id = "515"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-operaciones-total.slot-4"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -155,6 +172,7 @@ field = "operaciones_total"
 casilla_id = "516"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-operaciones-con-derecho.slot-4"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -164,6 +182,7 @@ field = "operaciones_con_derecho"
 casilla_id = "517"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-tipo.slot-4"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -173,6 +192,7 @@ field = "tipo"
 casilla_id = "518"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-porcentaje.slot-4"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -182,6 +202,7 @@ field = "porcentaje"
 casilla_id = "519"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-cnae.slot-5"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -191,6 +212,7 @@ field = "cnae"
 casilla_id = "520"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-operaciones-total.slot-5"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -200,6 +222,7 @@ field = "operaciones_total"
 casilla_id = "521"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-operaciones-con-derecho.slot-5"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -209,6 +232,7 @@ field = "operaciones_con_derecho"
 casilla_id = "522"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-tipo.slot-5"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -218,6 +242,7 @@ field = "tipo"
 casilla_id = "523"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-prorrata-activity:field-porcentaje.slot-5"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -227,6 +252,7 @@ field = "porcentaje"
 casilla_id = "524"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-domestic-current-base.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -236,6 +262,7 @@ field = "domestic_current_base"
 casilla_id = "700"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-domestic-current-cuota.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -245,6 +272,7 @@ field = "domestic_current_cuota"
 casilla_id = "701"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-domestic-investment-base.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -254,6 +282,7 @@ field = "domestic_investment_base"
 casilla_id = "702"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-domestic-investment-cuota.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -263,6 +292,7 @@ field = "domestic_investment_cuota"
 casilla_id = "703"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-import-current-base.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -272,6 +302,7 @@ field = "import_current_base"
 casilla_id = "704"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-import-current-cuota.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -281,6 +312,7 @@ field = "import_current_cuota"
 casilla_id = "705"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-import-investment-base.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -290,6 +322,7 @@ field = "import_investment_base"
 casilla_id = "706"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-import-investment-cuota.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -299,6 +332,7 @@ field = "import_investment_cuota"
 casilla_id = "707"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-intra-eu-current-base.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -308,6 +342,7 @@ field = "intra_eu_current_base"
 casilla_id = "708"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-intra-eu-current-cuota.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -317,6 +352,7 @@ field = "intra_eu_current_cuota"
 casilla_id = "709"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-intra-eu-investment-base.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -326,6 +362,7 @@ field = "intra_eu_investment_base"
 casilla_id = "710"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-intra-eu-investment-cuota.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -335,6 +372,7 @@ field = "intra_eu_investment_cuota"
 casilla_id = "711"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-reagp-base.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -344,6 +382,7 @@ field = "reagp_base"
 casilla_id = "712"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-reagp-cuota.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -353,6 +392,7 @@ field = "reagp_cuota"
 casilla_id = "713"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-rectification-base.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -362,6 +402,7 @@ field = "rectification_base"
 casilla_id = "714"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-rectification-cuota.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -371,6 +412,7 @@ field = "rectification_cuota"
 casilla_id = "715"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-investment-regularisation.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -380,6 +422,7 @@ field = "investment_regularisation"
 casilla_id = "716"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-total.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -389,6 +432,7 @@ field = "total"
 casilla_id = "717"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-domestic-current-base.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -398,6 +442,7 @@ field = "domestic_current_base"
 casilla_id = "718"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-domestic-current-cuota.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -407,6 +452,7 @@ field = "domestic_current_cuota"
 casilla_id = "719"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-domestic-investment-base.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -416,6 +462,7 @@ field = "domestic_investment_base"
 casilla_id = "720"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-domestic-investment-cuota.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -425,6 +472,7 @@ field = "domestic_investment_cuota"
 casilla_id = "721"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-import-current-base.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -434,6 +482,7 @@ field = "import_current_base"
 casilla_id = "722"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-import-current-cuota.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -443,6 +492,7 @@ field = "import_current_cuota"
 casilla_id = "723"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-import-investment-base.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -452,6 +502,7 @@ field = "import_investment_base"
 casilla_id = "724"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-import-investment-cuota.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -461,6 +512,7 @@ field = "import_investment_cuota"
 casilla_id = "725"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-intra-eu-current-base.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -470,6 +522,7 @@ field = "intra_eu_current_base"
 casilla_id = "726"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-intra-eu-current-cuota.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -479,6 +532,7 @@ field = "intra_eu_current_cuota"
 casilla_id = "727"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-intra-eu-investment-base.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -488,6 +542,7 @@ field = "intra_eu_investment_base"
 casilla_id = "728"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-intra-eu-investment-cuota.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -497,6 +552,7 @@ field = "intra_eu_investment_cuota"
 casilla_id = "729"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-reagp-base.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -506,6 +562,7 @@ field = "reagp_base"
 casilla_id = "730"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-reagp-cuota.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -515,6 +572,7 @@ field = "reagp_cuota"
 casilla_id = "731"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-rectification-base.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -524,6 +582,7 @@ field = "rectification_base"
 casilla_id = "732"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-rectification-cuota.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -533,6 +592,7 @@ field = "rectification_cuota"
 casilla_id = "733"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-investment-regularisation.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -542,6 +602,7 @@ field = "investment_regularisation"
 casilla_id = "734"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-differentiated-deduction:field-total.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -551,6 +612,7 @@ field = "total"
 casilla_id = "735"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-exonerado-390-activity:field-activity-code.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -559,6 +621,7 @@ slot = 1
 field = "activity_code"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-exonerado-390-activity:field-iae-epigrafe.slot-1"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -567,6 +630,7 @@ slot = 1
 field = "iae_epigrafe"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-exonerado-390-activity:field-activity-code.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -575,6 +639,7 @@ slot = 2
 field = "activity_code"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-exonerado-390-activity:field-iae-epigrafe.slot-2"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -583,6 +648,7 @@ slot = 2
 field = "iae_epigrafe"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-exonerado-390-activity:field-activity-code.slot-3"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -591,6 +657,7 @@ slot = 3
 field = "activity_code"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-exonerado-390-activity:field-iae-epigrafe.slot-3"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -599,6 +666,7 @@ slot = 3
 field = "iae_epigrafe"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-exonerado-390-activity:field-activity-code.slot-4"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -607,6 +675,7 @@ slot = 4
 field = "activity_code"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-exonerado-390-activity:field-iae-epigrafe.slot-4"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -615,6 +684,7 @@ slot = 4
 field = "iae_epigrafe"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-exonerado-390-activity:field-activity-code.slot-5"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -623,6 +693,7 @@ slot = 5
 field = "activity_code"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-exonerado-390-activity:field-iae-epigrafe.slot-5"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -631,6 +702,7 @@ slot = 5
 field = "iae_epigrafe"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-exonerado-390-activity:field-activity-code.slot-6"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -639,6 +711,7 @@ slot = 6
 field = "activity_code"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-exonerado-390-activity:field-iae-epigrafe.slot-6"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -647,12 +720,14 @@ slot = 6
 field = "iae_epigrafe"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-exonerado-390-operaciones-terceros"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 [revisions."2022".projection_endpoints.projection_ref]
 projection_kind = "m303_exonerado_390_operaciones_terceros"
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-activity:cohort-agricola.field-activity-code.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -662,6 +737,7 @@ slot = 1
 field = 'activity_code'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-volumen-ingresos.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -671,6 +747,7 @@ slot = 1
 fact = 'volumen_ingresos'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-indice-cuota.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -680,6 +757,7 @@ slot = 1
 fact = 'indice_cuota'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuota-devengada.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -689,6 +767,7 @@ slot = 1
 fact = 'cuota_devengada'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-porcentaje-ingreso-cuenta.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -698,6 +777,7 @@ slot = 1
 fact = 'porcentaje_ingreso_cuenta'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-ingreso-cuenta.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -707,6 +787,7 @@ slot = 1
 fact = 'ingreso_cuenta'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuota-soportada-operaciones-corrientes.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -716,6 +797,7 @@ slot = 1
 fact = 'cuota_soportada_operaciones_corrientes'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuota-anual-derivada-regimen-simplificado.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -725,6 +807,7 @@ slot = 1
 fact = 'cuota_anual_derivada_regimen_simplificado'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-activity:cohort-agricola.field-activity-code.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -734,6 +817,7 @@ slot = 2
 field = 'activity_code'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-volumen-ingresos.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -743,6 +827,7 @@ slot = 2
 fact = 'volumen_ingresos'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-indice-cuota.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -752,6 +837,7 @@ slot = 2
 fact = 'indice_cuota'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuota-devengada.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -761,6 +847,7 @@ slot = 2
 fact = 'cuota_devengada'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-porcentaje-ingreso-cuenta.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -770,6 +857,7 @@ slot = 2
 fact = 'porcentaje_ingreso_cuenta'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-ingreso-cuenta.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -779,6 +867,7 @@ slot = 2
 fact = 'ingreso_cuenta'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuota-soportada-operaciones-corrientes.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -788,6 +877,7 @@ slot = 2
 fact = 'cuota_soportada_operaciones_corrientes'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuota-anual-derivada-regimen-simplificado.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -797,6 +887,7 @@ slot = 2
 fact = 'cuota_anual_derivada_regimen_simplificado'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-activity:cohort-no-agricola.field-iae-epigrafe.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -806,6 +897,7 @@ slot = 1
 field = 'iae_epigrafe'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-activity:cohort-no-agricola.field-auxiliary-activity-indicator.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -815,6 +907,7 @@ slot = 1
 field = 'auxiliary_activity_indicator'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-1.slot-1.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -825,6 +918,7 @@ module_order = 1
 value = 'declared_quantity'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-1.slot-1.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -835,6 +929,7 @@ module_order = 1
 value = 'cuota_devengada'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-2.slot-1.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -845,6 +940,7 @@ module_order = 2
 value = 'declared_quantity'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-2.slot-1.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -855,6 +951,7 @@ module_order = 2
 value = 'cuota_devengada'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-3.slot-1.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -865,6 +962,7 @@ module_order = 3
 value = 'declared_quantity'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-3.slot-1.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -875,6 +973,7 @@ module_order = 3
 value = 'cuota_devengada'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-4.slot-1.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -885,6 +984,7 @@ module_order = 4
 value = 'declared_quantity'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-4.slot-1.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -895,6 +995,7 @@ module_order = 4
 value = 'cuota_devengada'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-5.slot-1.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -905,6 +1006,7 @@ module_order = 5
 value = 'declared_quantity'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-5.slot-1.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -915,6 +1017,7 @@ module_order = 5
 value = 'cuota_devengada'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-6.slot-1.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -925,6 +1028,7 @@ module_order = 6
 value = 'declared_quantity'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-6.slot-1.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -935,6 +1039,7 @@ module_order = 6
 value = 'cuota_devengada'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-7.slot-1.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -945,6 +1050,7 @@ module_order = 7
 value = 'declared_quantity'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-7.slot-1.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -955,6 +1061,7 @@ module_order = 7
 value = 'cuota_devengada'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-devengada-operaciones-corrientes.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -964,6 +1071,7 @@ slot = 1
 fact = 'cuota_devengada_operaciones_corrientes'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-reducciones.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -973,6 +1081,7 @@ slot = 1
 fact = 'reducciones'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-indice-corrector-actividad-temporada.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -982,6 +1091,7 @@ slot = 1
 fact = 'indice_corrector_actividad_temporada'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-porcentaje-ingreso-cuenta.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -991,6 +1101,7 @@ slot = 1
 fact = 'porcentaje_ingreso_cuenta'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-ingreso-cuenta.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1000,6 +1111,7 @@ slot = 1
 fact = 'ingreso_cuenta'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuotas-soportadas-operaciones-corrientes.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1009,6 +1121,7 @@ slot = 1
 fact = 'cuotas_soportadas_operaciones_corrientes'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-indice-corrector-actividades-temporada.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1018,6 +1131,7 @@ slot = 1
 fact = 'indice_corrector_actividades_temporada'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-resultado-cuarto-trimestre.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1027,6 +1141,7 @@ slot = 1
 fact = 'resultado_cuarto_trimestre'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-porcentaje-cuota-minima.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1036,6 +1151,7 @@ slot = 1
 fact = 'porcentaje_cuota_minima'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-devolucion-cuotas-soportadas-otros-paises.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1045,6 +1161,7 @@ slot = 1
 fact = 'devolucion_cuotas_soportadas_otros_paises'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-minima.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1054,6 +1171,7 @@ slot = 1
 fact = 'cuota_minima'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-anual-derivada-regimen-simplificado.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1063,6 +1181,7 @@ slot = 1
 fact = 'cuota_anual_derivada_regimen_simplificado'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-activity:cohort-no-agricola.field-iae-epigrafe.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1072,6 +1191,7 @@ slot = 2
 field = 'iae_epigrafe'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-activity:cohort-no-agricola.field-auxiliary-activity-indicator.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1081,6 +1201,7 @@ slot = 2
 field = 'auxiliary_activity_indicator'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-1.slot-2.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1091,6 +1212,7 @@ module_order = 1
 value = 'declared_quantity'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-1.slot-2.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1101,6 +1223,7 @@ module_order = 1
 value = 'cuota_devengada'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-2.slot-2.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1111,6 +1234,7 @@ module_order = 2
 value = 'declared_quantity'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-2.slot-2.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1121,6 +1245,7 @@ module_order = 2
 value = 'cuota_devengada'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-3.slot-2.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1131,6 +1256,7 @@ module_order = 3
 value = 'declared_quantity'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-3.slot-2.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1141,6 +1267,7 @@ module_order = 3
 value = 'cuota_devengada'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-4.slot-2.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1151,6 +1278,7 @@ module_order = 4
 value = 'declared_quantity'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-4.slot-2.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1161,6 +1289,7 @@ module_order = 4
 value = 'cuota_devengada'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-5.slot-2.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1171,6 +1300,7 @@ module_order = 5
 value = 'declared_quantity'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-5.slot-2.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1181,6 +1311,7 @@ module_order = 5
 value = 'cuota_devengada'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-6.slot-2.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1191,6 +1322,7 @@ module_order = 6
 value = 'declared_quantity'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-6.slot-2.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1201,6 +1333,7 @@ module_order = 6
 value = 'cuota_devengada'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-7.slot-2.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1211,6 +1344,7 @@ module_order = 7
 value = 'declared_quantity'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-7.slot-2.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1221,6 +1355,7 @@ module_order = 7
 value = 'cuota_devengada'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-devengada-operaciones-corrientes.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1230,6 +1365,7 @@ slot = 2
 fact = 'cuota_devengada_operaciones_corrientes'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-reducciones.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1239,6 +1375,7 @@ slot = 2
 fact = 'reducciones'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-indice-corrector-actividad-temporada.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1248,6 +1385,7 @@ slot = 2
 fact = 'indice_corrector_actividad_temporada'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-porcentaje-ingreso-cuenta.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1257,6 +1395,7 @@ slot = 2
 fact = 'porcentaje_ingreso_cuenta'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-ingreso-cuenta.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1266,6 +1405,7 @@ slot = 2
 fact = 'ingreso_cuenta'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuotas-soportadas-operaciones-corrientes.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1275,6 +1415,7 @@ slot = 2
 fact = 'cuotas_soportadas_operaciones_corrientes'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-indice-corrector-actividades-temporada.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1284,6 +1425,7 @@ slot = 2
 fact = 'indice_corrector_actividades_temporada'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-resultado-cuarto-trimestre.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1293,6 +1435,7 @@ slot = 2
 fact = 'resultado_cuarto_trimestre'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-porcentaje-cuota-minima.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1302,6 +1445,7 @@ slot = 2
 fact = 'porcentaje_cuota_minima'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-devolucion-cuotas-soportadas-otros-paises.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1311,6 +1455,7 @@ slot = 2
 fact = 'devolucion_cuotas_soportadas_otros_paises'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-minima.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]
@@ -1320,6 +1465,7 @@ slot = 2
 fact = 'cuota_minima'
 
 [[revisions."2022".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-anual-derivada-regimen-simplificado.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2022", "boe-orden-hfp-1335-2021-iva-authority"]
 [revisions."2022".projection_endpoints.projection_ref]

@@ -80,13 +80,32 @@ predecessors and must be **byte-identical** to what the edition materialises to
 now, with the manifest defaults it declares inlined into the rows they fill, and
 must pass the same round-trip gate. Anything short of identity refuses.
 
-Because that proof compares the tree with itself, only one operation is admitted
-through it: **lifting in place**. On the chain path the tool may stop a row
+Because that proof compares the tree with itself, the default operation on the
+chain path is **lifting in place**. On that path the tool may stop a row
 restating what it can inherit from a manifest default, and may declare a default
 the edition does not yet declare; it may not add, drop or reorder a member, and
 the identity of every casilla row and reference-family member is compared before
 and after to enforce that structurally. Predecessors, review stamps and row order
 are left exactly as authored.
+
+**Dropping restatement** (``--drop-restatement``) is the second operation the
+same proof admits, and it is opt-in precisely because it removes declarations.
+A successor edition states a member its predecessor already carries, byte for
+byte; the union rule says it should state only what is new or divergent, so the
+restatement is deleted and the loader's keyed merge puts the inherited member
+back in the same position. The proof is unchanged and is what authorises the
+write: a correct drop is invisible to it, because the member the edition
+materialises after the drop is the member it materialised before. A drop that
+was not a restatement changes the materialisation and is refused. Nothing about
+:func:`_prove_chain` is relaxed to let a drop through.
+
+What the drop will touch is decided by what the loader actually inherits, not by
+what looks repetitive. A family whose members do not inherit must keep its full
+copy, because omission there is deletion rather than inheritance; see
+``_DROPPABLE_FAMILIES`` for the enrolled set and for every family held back and
+why. Manifest scalars are never stripped: this loader has no manifest-scalar
+inheritance, so an omitted ``orden_aplicabilidad`` or ``casilla_source_refs`` is
+absent, not inherited. Root editions inherit nothing and are skipped whole.
 
 Determinism and idempotency. Every choice is a function of the input tree, taken
 in sorted or validity order, so two runs over the same tree write the same
@@ -96,8 +115,13 @@ already-lifted tree is a clean no-op.
 
 Where it stops:
 
-- Casilla declarations only. Formulas, bindings, layouts and every other family,
-  including the completeness manifest, stay declared in full by every edition.
+- Migration states casilla declarations only. Formulas, bindings, layouts and
+  every other family are left exactly as the edition declares them by the
+  migration proper. That is this tool's scope, NOT a claim about the loader:
+  the loader inherits formulas and nine further keyed families along the
+  predecessor chain, and ``--drop-restatement`` below is the operation that
+  removes what those families restate. Bindings and the completeness manifest
+  genuinely do not inherit and stay full copy in every edition.
 - It never authors a retirement, a repurpose, or lineage; it reads them.
 - Label text is not rewritten. Locale keys are edition-scoped and the loader
   gives an inherited row its origin edition's key as a fallback.
@@ -110,6 +134,7 @@ Where it stops:
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import re
 import shutil
@@ -149,17 +174,24 @@ from .source_default_rule import edition_source_default
 
 __all__ = [
     "BlockedCause",
+    "DropOutcome",
+    "DropPlan",
+    "EditionDrop",
     "EditionPlan",
+    "FamilyDrop",
     "KeptReason",
     "LiftCounts",
     "MigrationOutcome",
     "MigrationPlan",
     "MigrationRefusedError",
     "PredecessorBasis",
+    "drop_restatement",
     "main",
     "migrate_modelo",
     "persist_migration_report",
+    "plan_drop",
     "plan_migration",
+    "render_drop_outcome",
     "render_outcome",
 ]
 
@@ -359,12 +391,18 @@ def _as_row(value: object) -> _Row:
     return {str(key): item for key, item in thawed.items()}
 
 
-def _split_blocks(text: str) -> tuple[str, list[str]]:
-    """Split a fragment into its preamble and one text block per casilla row header."""
+def _split_blocks(text: str, header: re.Pattern[str] = _ROW_HEADER) -> tuple[str, list[str]]:
+    """Split a fragment into its preamble and one text block per member header.
+
+    ``header`` selects the family being read. It defaults to the casilla row
+    header so every existing caller keeps its behaviour; the drop operation
+    passes the header of whichever family it is reading, because the keyed
+    families are laid out on disk exactly as casillas are.
+    """
     lines = text.splitlines(keepends=True)
     starts: list[int] = []
     for index, line in enumerate(lines):
-        if _ROW_HEADER.match(line.rstrip("\r\n")):
+        if header.match(line.rstrip("\r\n")):
             start = index
             while start > 0 and lines[start - 1].lstrip().startswith("#") and (not starts or start - 1 > starts[-1]):
                 start -= 1
@@ -376,14 +414,14 @@ def _split_blocks(text: str) -> tuple[str, list[str]]:
     return "".join(lines[: starts[0]]), blocks
 
 
-def _block_row(block: str) -> _Row:
+def _block_row(block: str, section: str = _CASILLAS) -> _Row:
     revisions = tomllib.loads(block).get("revisions")
     if not isinstance(revisions, dict) or len(revisions) != 1:
-        raise MigrationRefusedError(f"casilla block does not declare exactly one revision:\n{block}")
+        raise MigrationRefusedError(f"{section} block does not declare exactly one revision:\n{block}")
     (revision,) = revisions.values()
-    rows = revision.get(_CASILLAS) if isinstance(revision, dict) else None
+    rows = revision.get(section) if isinstance(revision, dict) else None
     if not isinstance(rows, list) or len(rows) != 1:
-        raise MigrationRefusedError(f"casilla block does not declare exactly one row:\n{block}")
+        raise MigrationRefusedError(f"{section} block does not declare exactly one member:\n{block}")
     return _as_row(rows[0])
 
 
@@ -1345,6 +1383,44 @@ def _member_identities(source: _EditionSource) -> Mapping[str, tuple[str, ...]]:
     return identities
 
 
+#: Marks a rendered date so it can never compare equal to a string that happens
+#: to read the same. TOML forbids control characters in keys and strings, so no
+#: declaration can produce a table that collides with this tag.
+_DATE_TAG: Final = "\x00date"
+
+
+def _comparable(value: object, *, revision_id: str, path: str) -> object:
+    """Render one materialised value as a JSON-comparable one, refusing any type the proof cannot compare.
+
+    The proof is byte identity, so every value must render to bytes that
+    distinguish it from every value it is not. A ``default=`` fallback breaks
+    that in both directions: two different values whose fallback renders alike
+    compare equal, and a value falling back to ``repr`` embeds an address that
+    differs between the two reads the proof compares. So the permitted set is
+    closed, and anything outside it is refused by key path and type.
+
+    The set is what the corpus holds: ``tomllib`` yields ``str``, ``int``,
+    ``float``, ``bool`` and the three ``datetime`` types, and a census of every
+    modelo TOML file finds ``str``, ``int``, ``bool``, ``date`` and ``float``
+    only. ``None`` reaches the payload from ``label_origins``. A ``datetime``
+    or ``time`` the corpus does not use today is refused rather than guessed at.
+    """
+    if value is None or isinstance(value, str | bool | int | float):
+        return value
+    if isinstance(value, Mapping):
+        return {
+            str(key): _comparable(item, revision_id=revision_id, path=f"{path}.{key}") for key, item in value.items()
+        }
+    if isinstance(value, list | tuple):
+        return [_comparable(item, revision_id=revision_id, path=f"{path}[{index}]") for index, item in enumerate(value)]
+    if type(value) is datetime.date:
+        return {_DATE_TAG: value.isoformat()}
+    raise MigrationRefusedError(
+        f"edition {revision_id!r}: the value at {path} is a {type(value).__name__}, which the chain proof cannot "
+        "compare; the proof is byte identity and refuses a type it has no exact rendering for",
+    )
+
+
 def _chain_materialisation(source: _EditionSource) -> bytes:
     """The edition as its chain materialises it, defaults inlined, rendered as comparable bytes.
 
@@ -1352,10 +1428,21 @@ def _chain_materialisation(source: _EditionSource) -> bytes:
     comparison is blind to where a declaration was inserted in a manifest and
     exact about the order of members.
     """
-    table = {key: _thaw(value) for key, value in source.table.items() if key not in _DECLARED_DEFAULT_KEYS}
-    table[_CASILLAS] = [dict(row) for row in _effective_rows(source)]
-    payload = {"revision": source.revision_id, "label_origins": list(source.origins), "table": table}
-    return json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str).encode("utf-8")
+    table = {
+        key: _comparable(value, revision_id=source.revision_id, path=f"table.{key}")
+        for key, value in source.table.items()
+        if key not in _DECLARED_DEFAULT_KEYS
+    }
+    table[_CASILLAS] = [
+        _comparable(row, revision_id=source.revision_id, path=f"table.{_CASILLAS}[{index}]")
+        for index, row in enumerate(_effective_rows(source))
+    ]
+    payload = {
+        "revision": source.revision_id,
+        "label_origins": _comparable(list(source.origins), revision_id=source.revision_id, path="label_origins"),
+        "table": table,
+    }
+    return json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
 
 
 def _read_staged_edition(modelo_dir: Path, revision_id: str, *, side: str) -> _EditionSource:
@@ -1392,15 +1479,9 @@ def _prove_chain(
     for revision_id in revision_ids:
         before = _read_staged_edition(reference_modelo_dir, revision_id, side="reference")
         after = _read_staged_edition(staged_modelo_dir, revision_id, side="staged")
-        reference_members, staged_members = _member_identities(before), _member_identities(after)
-        for section, members in reference_members.items():
-            staged_section = staged_members.get(section, ())
-            if staged_section != members:
-                raise MigrationRefusedError(
-                    f"edition {revision_id!r}: lifting changed the {section} members, which a lift may never do: "
-                    f"{len(members)} before, {len(staged_section)} after, first difference at "
-                    f"{_first_difference(members, staged_section)}",
-                )
+        difference = _member_difference(_member_identities(before), _member_identities(after))
+        if difference is not None:
+            raise MigrationRefusedError(f"edition {revision_id!r}: {difference}")
         if _chain_materialisation(before) != _chain_materialisation(after):
             raise MigrationRefusedError(
                 f"edition {revision_id!r}: the staged tree materialises to different bytes than the tree it was "
@@ -1414,6 +1495,30 @@ def _prove_chain(
     )
 
 
+def _member_difference(
+    reference_members: Mapping[str, tuple[str, ...]],
+    staged_members: Mapping[str, tuple[str, ...]],
+) -> str | None:
+    """Describe the first family whose members differ, or ``None`` when every family is identical.
+
+    The comparison is symmetric over both sides' families. Reading the
+    reference's families alone would leave a family the staged tree holds and
+    the reference does not uncompared by member identity, so the difference
+    would fall through to the byte comparison and be reported as an unspecific
+    change of bytes rather than as the members it actually is.
+    """
+    staged_only = [section for section in staged_members if section not in reference_members]
+    for section in [*reference_members, *staged_only]:
+        members, staged_section = reference_members.get(section, ()), staged_members.get(section, ())
+        if staged_section != members:
+            return (
+                f"lifting changed the {section} members, which a lift may never do: "
+                f"{len(members)} before, {len(staged_section)} after, first difference at "
+                f"{_first_difference(members, staged_section)}"
+            )
+    return None
+
+
 def _first_difference(before: Sequence[str], after: Sequence[str]) -> str:
     """Describe the first position at which two member-identity sequences diverge."""
     for index, (left, right) in enumerate(zip(before, after, strict=False)):
@@ -1422,6 +1527,456 @@ def _first_difference(before: Sequence[str], after: Sequence[str]) -> str:
     shared = min(len(before), len(after))
     trailing = list(before[shared:]) or list(after[shared:])
     return f"position {shared}: {trailing!r} on the {'reference' if len(before) > len(after) else 'staged'} side only"
+
+
+# ── dropping restatement ────────────────────────────────────────────────────
+
+
+@dataclass(frozen=True, slots=True)
+class _DroppableFamily:
+    """One family whose restated members a successor edition may stop declaring.
+
+    ``section`` is the table key and the fragment directory, ``identity`` the
+    field naming the same member across editions, and ``identity_fields`` the
+    fields that carry what the member IS rather than what it declares. A stated
+    member whose identity field differs from the inherited one is a divergence,
+    never a restatement: dropping it would silently change the member the
+    edition holds, so it is always kept.
+    """
+
+    section: str
+    identity: str
+    identity_fields: tuple[str, ...] = ()
+
+
+#: The families a drop may touch, and the reason each one is safe.
+#:
+#: A restatement is redundant only where the family INHERITS. Omitting a member
+#: of a family the loader does not carry along the predecessor chain does not
+#: leave the predecessor's member in its place; it deletes the member outright.
+#: So this set mirrors the loader's keyed-family enrolment - its own merge for
+#: casillas, and ``_KEYED_FAMILIES`` for the rest - and a family absent from
+#: that enrolment is absent here.
+#:
+#: The enrolment is mirrored rather than imported: it is private to the compiler
+#: package. Mirroring is safe here in the one direction that matters, because
+#: the chain proof is what authorises the write. A family wrongly listed here
+#: produces a materialisation difference and refuses the modelo loudly; it can
+#: never write a silent loss. A family wrongly omitted costs an opportunity and
+#: nothing else. Drift therefore fails safe, and fails closed.
+_DROPPABLE_FAMILIES: Final[tuple[_DroppableFamily, ...]] = (
+    _DroppableFamily(section=_CASILLAS, identity=_LINEAGE, identity_fields=("id",)),
+    _DroppableFamily(section="formulas", identity="id", identity_fields=("target_casilla_id",)),
+    _DroppableFamily(section="applicability", identity="id"),
+    _DroppableFamily(section="filing_schedules", identity="id"),
+    _DroppableFamily(section="live_cross_references", identity="id"),
+    _DroppableFamily(section="extraction_profiles", identity="id"),
+    _DroppableFamily(section="dependency_classifications", identity="id"),
+    _DroppableFamily(section="constructs", identity="id"),
+    _DroppableFamily(section="application_links", identity="id"),
+    _DroppableFamily(section="parameters", identity="id", identity_fields=("data_type",)),
+)
+
+#: Families deliberately held back, and what holds each one back. Naming them
+#: here keeps the refusal a decision on the record rather than an omission, and
+#: gives ``--family`` something honest to refuse against.
+_HELD_BACK_FAMILIES: Final[Mapping[str, str]] = {
+    "bindings": (
+        "not enrolled in the loader's keyed families, so a dropped member is deleted rather than inherited; the "
+        "strip that enrolment would make legal is the bindings lane's own tool, not this one"
+    ),
+    "deadline_windows": (
+        "enrolled, but inheritance is conditional on the successor's period_selector covering the member's own "
+        "filing_year and period, so an omitted member is not reliably inherited; its year and period are data, "
+        "and this tool will not guess at a selector"
+    ),
+    "completeness_manifest": "a per-edition graded closure claim; inheriting it would attest for the successor "
+    "something nobody established",
+    "workbook_parity_refs": "a per-edition claim about that edition's own workbook",
+    "export_layouts": "a per-edition claim about that edition's own record design",
+    "projection_endpoints": "not enrolled in the loader's keyed families",
+    "verification_predicates": "carries no member identity, so no member can be matched to an inherited one",
+    "verification_expectations": "not enrolled in the loader's keyed families",
+}
+
+#: Manifest scalars that are load-bearing per-edition defaults. This loader has
+#: NO manifest-scalar inheritance: an omitted default is absent, not inherited,
+#: so stripping one would silently change every member it fills. The drop never
+#: touches the manifest at all; the constant records why.
+_NEVER_STRIPPED_SCALARS: Final[frozenset[str]] = frozenset({"orden_aplicabilidad", "casilla_source_refs"})
+
+
+@dataclass(frozen=True, slots=True)
+class _MemberFragment:
+    """One family fragment file, split into its preamble and its member blocks."""
+
+    path: Path
+    preamble: str
+    blocks: tuple[_Block, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class FamilyDrop:
+    """What one family of one edition would lose, and what it keeps and why."""
+
+    section: str
+    dropped: tuple[str, ...]
+    kept_new: tuple[str, ...]
+    kept_differs: tuple[str, ...]
+    kept_pinned: tuple[str, ...]
+
+    @property
+    def stated(self) -> int:
+        return len(self.dropped) + len(self.kept_new) + len(self.kept_differs) + len(self.kept_pinned)
+
+
+@dataclass(frozen=True, slots=True)
+class EditionDrop:
+    """What one edition would lose across every family the drop accepts."""
+
+    revision_id: str
+    predecessor: str | None
+    skipped: str | None
+    families: tuple[FamilyDrop, ...]
+
+    @property
+    def dropped(self) -> int:
+        return sum(len(family.dropped) for family in self.families)
+
+
+@dataclass(frozen=True, slots=True)
+class DropPlan:
+    """What a whole modelo would lose, decided without writing anything."""
+
+    modelo_id: str
+    editions: tuple[EditionDrop, ...]
+
+    @property
+    def dropped(self) -> int:
+        return sum(edition.dropped for edition in self.editions)
+
+
+def _family_header(section: str) -> re.Pattern[str]:
+    return re.compile(rf"^\[\[revisions\.{_REVISION_SEGMENT}\.{re.escape(section)}\]\]\s*$")
+
+
+def _read_family_fragments(edition_dir: Path, section: str) -> tuple[_MemberFragment, ...]:
+    """Read one family's fragment directory, which is laid out exactly as ``casillas`` is."""
+    header = _family_header(section)
+    fragments: list[_MemberFragment] = []
+    for path in sorted((edition_dir / section).glob("*.toml")):
+        preamble, texts = _split_blocks(path.read_text(encoding="utf-8"), header)
+        blocks = tuple(_Block(text, _block_row(text, section)) for text in texts)
+        fragments.append(_MemberFragment(path, preamble, blocks))
+    return tuple(fragments)
+
+
+def _identity_of(member: Mapping[str, object], family: _DroppableFamily) -> str | None:
+    value = member.get(family.identity)
+    return value if isinstance(value, str) else None
+
+
+def _materialised_members(table: Mapping[str, object], section: str) -> tuple[_Row, ...]:
+    raw = table.get(section, ())
+    return tuple(_as_row(member) for member in (raw if isinstance(raw, list | tuple) else ()))
+
+
+def _declared_predecessor(manifest: Mapping[str, object]) -> str | None:
+    """The predecessor this edition names, or ``None`` for a root or an undeclared edition.
+
+    A ``predecessor`` table rather than a string is the explicit no-predecessor
+    root declaration. It inherits nothing, so it has no restatement to drop.
+    """
+    declared = manifest.get("predecessor")
+    return declared if isinstance(declared, str) else None
+
+
+def _plan_family_drop(
+    *,
+    family: _DroppableFamily,
+    revision_id: str,
+    stated: Sequence[_Block],
+    inherited: Sequence[_Row],
+) -> FamilyDrop:
+    """Decide which of one family's stated members restate exactly what the edition would inherit.
+
+    The equality is exact over the member's whole table, with nothing set aside.
+    A census counts a member restated with ``source_refs`` and ``legal_refs``
+    held apart, because it is measuring what the union could eventually absorb;
+    that is a larger population than this one. References are part of what
+    materialises, so a member whose references differ is not a restatement here
+    however alike the rest of it reads.
+
+    Raises:
+        MigrationRefusedError: When a stated member carries no identity, or the
+            edition states two members under one identity, either of which would
+            make the member that supersedes the inherited one a guess.
+    """
+    by_identity: dict[str, list[_Row]] = {}
+    for member in inherited:
+        identity = _identity_of(member, family)
+        if identity is not None:
+            by_identity.setdefault(identity, []).append(member)
+    dropped: list[str] = []
+    kept_new: list[str] = []
+    kept_differs: list[str] = []
+    kept_pinned: list[str] = []
+    seen: set[str] = set()
+    for block in stated:
+        member = block.row
+        identity = _identity_of(member, family)
+        if identity is None:
+            raise MigrationRefusedError(
+                f"edition {revision_id!r}: states a {family.section} member carrying no {family.identity!r}, so it "
+                "cannot be matched to an inherited member",
+            )
+        if identity in seen:
+            raise MigrationRefusedError(
+                f"edition {revision_id!r}: states more than one {family.section} member under {family.identity} "
+                f"{identity!r}, so neither can be said to restate the inherited member",
+            )
+        seen.add(identity)
+        candidates = by_identity.get(identity, [])
+        if len(candidates) != 1:
+            kept_new.append(identity)
+            continue
+        (candidate,) = candidates
+        if family.section == _CASILLAS and any(claim in member for claim in _LINEAGE_CLAIMS):
+            kept_pinned.append(identity)
+            continue
+        if any(member.get(field) != candidate.get(field) for field in family.identity_fields):
+            kept_differs.append(identity)
+            continue
+        left = _comparable(member, revision_id=revision_id, path=f"{family.section}.{identity}")
+        right = _comparable(candidate, revision_id=revision_id, path=f"{family.section}.{identity}")
+        if left == right:
+            dropped.append(identity)
+        else:
+            kept_differs.append(identity)
+    return FamilyDrop(
+        section=family.section,
+        dropped=tuple(dropped),
+        kept_new=tuple(kept_new),
+        kept_differs=tuple(kept_differs),
+        kept_pinned=tuple(kept_pinned),
+    )
+
+
+def _plan_edition_drop(
+    modelo_dir: Path,
+    revision_id: str,
+    *,
+    families: Sequence[_DroppableFamily],
+) -> EditionDrop:
+    """Decide what one edition would stop stating, reading the tree and writing nothing."""
+    edition_dir = modelo_dir / "revisions" / revision_id
+    source = _read_edition(modelo_dir, revision_id)
+    predecessor = _declared_predecessor(source.manifest)
+    if predecessor is None:
+        return EditionDrop(
+            revision_id=revision_id,
+            predecessor=None,
+            skipped="root edition: inherits nothing, so it states no restatement",
+            families=(),
+        )
+    inherited_table = _read_edition(modelo_dir, predecessor).table
+    drops: list[FamilyDrop] = []
+    for family in families:
+        stated = [block for fragment in _read_family_fragments(edition_dir, family.section) for block in fragment.blocks]
+        if not stated:
+            continue
+        drop = _plan_family_drop(
+            family=family,
+            revision_id=revision_id,
+            stated=stated,
+            inherited=_materialised_members(inherited_table, family.section),
+        )
+        if drop.stated:
+            drops.append(drop)
+    return EditionDrop(revision_id=revision_id, predecessor=predecessor, skipped=None, families=tuple(drops))
+
+
+def plan_drop(
+    modelo_dir: Path,
+    definition: ModeloDefinition,
+    *,
+    families: Sequence[_DroppableFamily] = _DROPPABLE_FAMILIES,
+) -> DropPlan:
+    """Decide every edition's droppable restatement for one modelo, writing nothing."""
+    return DropPlan(
+        modelo_id=str(definition.id),
+        editions=tuple(
+            _plan_edition_drop(modelo_dir, str(revision.id), families=families)
+            for revision in ordered_revisions(definition)
+        ),
+    )
+
+
+def _rewrite_family_fragment(fragment: _MemberFragment, family: _DroppableFamily, dropped: frozenset[str]) -> None:
+    """Remove the dropped members from one fragment, deleting a fragment left holding nothing."""
+    kept = [block for block in fragment.blocks if _identity_of(block.row, family) not in dropped]
+    if len(kept) == len(fragment.blocks):
+        return
+    if kept:
+        text = fragment.preamble + "".join(block.text for block in kept)
+        fragment.path.write_text(text.rstrip("\n") + "\n", encoding="utf-8", newline="\n")
+        return
+    if fragment.preamble.strip() and not all(
+        not line.strip() or line.lstrip().startswith("#") for line in fragment.preamble.splitlines()
+    ):
+        raise MigrationRefusedError(
+            f"{fragment.path}: every member would be dropped but the fragment carries declarations outside them, "
+            "which this tool does not rewrite",
+        )
+    fragment.path.unlink()
+
+
+def _write_drop(modelo_dir: Path, edition: EditionDrop, families: Mapping[str, _DroppableFamily]) -> None:
+    """Apply one edition's planned drops to a staged tree."""
+    edition_dir = modelo_dir / "revisions" / edition.revision_id
+    for drop in edition.families:
+        if not drop.dropped:
+            continue
+        family = families[drop.section]
+        dropped = frozenset(drop.dropped)
+        for fragment in _read_family_fragments(edition_dir, drop.section):
+            _rewrite_family_fragment(fragment, family, dropped)
+        section_dir = edition_dir / drop.section
+        if section_dir.is_dir() and not any(section_dir.iterdir()):
+            section_dir.rmdir()
+
+
+@dataclass(frozen=True, slots=True)
+class DropOutcome:
+    """The result of planning, staging and proving one modelo's drop."""
+
+    plan: DropPlan
+    staged_registry: Path | None
+    report: RoundTripReport | None
+    applied: bool
+    changed: bool
+
+
+def drop_restatement(
+    *,
+    registry_root: Path,
+    modelo_id: str,
+    work_dir: Path,
+    sections: Sequence[str] | None = None,
+    export_scenarios: Mapping[str, EditionExportScenario] | None = None,
+    apply: bool = False,
+) -> DropOutcome:
+    """Plan, stage and prove one modelo's restatement drop; publish it only when the gate reports nothing.
+
+    The proof is the chain proof, unchanged and unweakened. A dropped member is
+    a member the edition materialises identically without stating it, so a
+    correct drop leaves every edition's member identity, member order and
+    materialised bytes exactly as they were. That is why the existing guard is
+    the right authority for this operation rather than an obstacle to it: it
+    passes precisely when the drop was a restatement, and refuses the moment it
+    was not.
+
+    Raises:
+        MigrationRefusedError: When a family is not one the drop accepts, or the
+            staged tree does not materialise identically to the tree it was
+            planned from.
+    """
+    registry_root, work_dir = _resolve_work_directory(registry_root, work_dir)
+    modelo_dir = registry_root / _MODELOS / modelo_id
+    if not modelo_dir.is_dir() or not _inside(modelo_dir, registry_root):
+        raise MigrationRefusedError(f"{registry_root} holds no modelo {modelo_id!r}")
+    families = _selected_families(sections)
+    definition = _load(registry_root, modelo_id)
+    plan = plan_drop(modelo_dir, definition, families=families)
+    if not plan.dropped:
+        return DropOutcome(plan=plan, staged_registry=None, report=None, applied=False, changed=False)
+    reference = copy_registry_tree(
+        registry_root,
+        _scratch_path(work_dir, "reference", "registry", "aeat"),
+        modelo_id=modelo_id,
+    )
+    staged = copy_registry_tree(
+        registry_root,
+        _scratch_path(work_dir, "dropped", "registry", "aeat"),
+        modelo_id=modelo_id,
+    )
+    by_section = {family.section: family for family in families}
+    for edition in plan.editions:
+        _write_drop(_scratch_path(work_dir, "dropped", "registry", "aeat", _MODELOS, modelo_id), edition, by_section)
+    report = edition_round_trip_report(
+        live_registry_root=staged,
+        reference_registry_root=reference,
+        modelo_id=modelo_id,
+        export_scenarios=export_scenarios or {},
+    )
+    report = _prove_chain(
+        reference_modelo_dir=reference / _MODELOS / modelo_id,
+        staged_modelo_dir=staged / _MODELOS / modelo_id,
+        revision_ids=tuple(edition.revision_id for edition in plan.editions),
+        report=report,
+    )
+    applied = False
+    if apply and not report.findings:
+        compile_validated_authority(staged, bundled_path()).modelo(modelo_id)
+        target = modelo_dir.resolve()
+        displaced = _scratch_path(work_dir, "displaced", modelo_id)
+        shutil.move(target, displaced)
+        try:
+            shutil.copytree(staged / _MODELOS / modelo_id, target)
+        except OSError:
+            if target.exists():
+                shutil.rmtree(target)
+            shutil.move(displaced, target)
+            raise
+        applied = True
+    return DropOutcome(plan=plan, staged_registry=staged, report=report, applied=applied, changed=True)
+
+
+def _selected_families(sections: Sequence[str] | None) -> tuple[_DroppableFamily, ...]:
+    """Resolve ``--family`` names against the accepted set, refusing a held-back family by name and reason."""
+    if sections is None:
+        return _DROPPABLE_FAMILIES
+    accepted = {family.section: family for family in _DROPPABLE_FAMILIES}
+    selected: list[_DroppableFamily] = []
+    for section in sections:
+        if section in accepted:
+            selected.append(accepted[section])
+            continue
+        if section in _HELD_BACK_FAMILIES:
+            raise MigrationRefusedError(
+                f"family {section!r} is held back from dropping: {_HELD_BACK_FAMILIES[section]}",
+            )
+        raise MigrationRefusedError(
+            f"family {section!r} is not a family this tool drops; it accepts "
+            f"{', '.join(sorted(accepted))} and holds back {', '.join(sorted(_HELD_BACK_FAMILIES))}",
+        )
+    return tuple(selected)
+
+
+def render_drop_outcome(outcome: DropOutcome) -> str:
+    """Return one greppable line per edition family, one per gate finding, and a closing summary."""
+    lines: list[str] = []
+    for edition in outcome.plan.editions:
+        if edition.skipped is not None:
+            lines.append(
+                f"edition modelo={outcome.plan.modelo_id} revision={edition.revision_id} skipped={edition.skipped}"
+            )
+            continue
+        for family in edition.families:
+            lines.append(
+                f"edition modelo={outcome.plan.modelo_id} revision={edition.revision_id} "
+                f"predecessor={edition.predecessor} family={family.section} stated={family.stated} "
+                f"dropped={len(family.dropped)} kept_new={len(family.kept_new)} "
+                f"kept_differs={len(family.kept_differs)} kept_pinned={len(family.kept_pinned)}"
+            )
+    for finding in outcome.report.findings if outcome.report is not None else ():
+        lines.append(f"finding kind={finding.kind} {finding}")
+    lines.append(
+        f"summary modelo={outcome.plan.modelo_id} dropped={outcome.plan.dropped} "
+        f"changed={outcome.changed} applied={outcome.applied} "
+        f"findings={len(outcome.report.findings) if outcome.report is not None else 0}"
+    )
+    return "\n".join(lines)
 
 
 # ── the migration ───────────────────────────────────────────────────────────
@@ -1603,9 +2158,14 @@ def render_outcome(outcome: MigrationOutcome) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _render(outcome: MigrationOutcome | DropOutcome) -> str:
+    """Render whichever outcome the invoked operation produced."""
+    return render_drop_outcome(outcome) if isinstance(outcome, DropOutcome) else render_outcome(outcome)
+
+
 def persist_migration_report(
     repository: Path,
-    outcome: MigrationOutcome,
+    outcome: MigrationOutcome | DropOutcome,
     command: Sequence[str],
 ) -> Path:
     """Persist one rendered migration outcome under the canonical audit log hierarchy.
@@ -1619,7 +2179,7 @@ def persist_migration_report(
     """
     run_dir = allocate_run_directory(repository.resolve(), family=_REPORT_FAMILY, label=_REPORT_LABEL)
     run_dir.mkdir(parents=True, exist_ok=False)
-    rendered = render_outcome(outcome)
+    rendered = _render(outcome)
     report_path = run_dir / "report.md"
     report_path.write_text(
         f"command: {' '.join(command)}\n\n{rendered}",
@@ -1641,23 +2201,47 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--modelo", required=True, help="modelo id, for example 303")
     parser.add_argument("--work-dir", type=Path, required=True, help="new directory for the reference and staging")
     parser.add_argument("--declare-blocked-roots", action="store_true", help="keep blocked editions full-copy")
+    parser.add_argument(
+        "--drop-restatement",
+        action="store_true",
+        help="drop members that restate exactly what the edition inherits, instead of migrating",
+    )
+    parser.add_argument(
+        "--family",
+        action="append",
+        metavar="SECTION",
+        help="limit --drop-restatement to this family; repeatable, defaults to every accepted family",
+    )
     parser.add_argument("--apply", action="store_true", help="publish the staged modelo when the gate is clean")
     arguments = parser.parse_args(argv)
+    if arguments.family and not arguments.drop_restatement:
+        parser.error("--family only applies to --drop-restatement")
     try:
-        outcome = migrate_modelo(
-            registry_root=arguments.registry_root,
-            modelo_id=arguments.modelo,
-            work_dir=arguments.work_dir,
-            declare_blocked_roots=arguments.declare_blocked_roots,
-            export_scenarios=edition_export_scenarios(arguments.modelo),
-            apply=arguments.apply,
+        outcome = (
+            drop_restatement(
+                registry_root=arguments.registry_root,
+                modelo_id=arguments.modelo,
+                work_dir=arguments.work_dir,
+                sections=arguments.family,
+                export_scenarios=edition_export_scenarios(arguments.modelo),
+                apply=arguments.apply,
+            )
+            if arguments.drop_restatement
+            else migrate_modelo(
+                registry_root=arguments.registry_root,
+                modelo_id=arguments.modelo,
+                work_dir=arguments.work_dir,
+                declare_blocked_roots=arguments.declare_blocked_roots,
+                export_scenarios=edition_export_scenarios(arguments.modelo),
+                apply=arguments.apply,
+            )
         )
     except MigrationRefusedError as exc:
         sys.stderr.write(f"refused: {exc}\n")
         return 1
     command = tuple(sys.argv) if argv is None else (sys.argv[0], *argv)
     report_path = persist_migration_report(REPO_ROOT, outcome, command)
-    sys.stdout.write(render_outcome(outcome))
+    sys.stdout.write(_render(outcome))
     sys.stdout.write(f"report persisted to {report_path}\n")
     if outcome.report is not None and outcome.report.findings:
         return 1

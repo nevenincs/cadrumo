@@ -1,0 +1,51 @@
+[revisions."2022"]
+casilla_source_refs = ["aeat-dr-193-2019", "boe-modelo-193-2011-form"]
+# Applicability-grade historical epoch for modelo 193, filing year 2022.
+#
+# The gap this closes was authoring debt, not a legal absence: modelo 193 was
+# approved by Orden EHA/3377/2011 and filed for 2022, and the record design
+# governing that exercise -- Orden EHA/3377/2011 as updated by Orden
+# HAC/1276/2019 -- is bundled and hash-pinned as aeat-dr-193-2019, whose own
+# applicability window closes 2022-12-31.
+#
+# What this revision establishes, by measurement against that bundled design:
+#   - the complete Tipo 1, Tipo 2 and gastos casilla set with the design's own
+#     positions, transcribed field by field;
+#   - that this epoch's perceptor record ENDS at position 248. The design
+#     states "249-500 -------- BLANCOS.", so the foral retention split
+#     (249-313), the Ceuta/Melilla clave (314) and the numero de orden, NIF
+#     del pagador anterior, fecha de devengo and clave de mercado added at
+#     315-339 by later editions are absent here rather than omitted;
+#   - and that every legal_ref it cites is in force across the whole exercise.
+#
+# Why the grade is 'applicability' and NOT 'filing': the calculation surface of
+# this modelo -- the modelo 123 relation prefills and the base and retenciones
+# formulas built on them -- is grounded in the corpus by
+# aeat-modelo-193-procedure and aeat-modelo-193-296-note-2025, both of which
+# open on 2024-01-01 and so cannot be cited by a 2022 revision. Rather than
+# cite a source outside its own window or mint an id for evidence the corpus
+# does not hold, this revision declares no bindings, formulas, export layout
+# or completeness manifest, and its resumen totals are operator-supplied.
+#
+# Promoting this to filing grade needs ONE acquisition: AEAT's modelo 193
+# procedure or instrucciones as they stood for ejercicio 2022, registered as
+# its own source. The record geometry is already here and would not change.
+review_status = "agent_reviewed"
+reviewed_by = "agent: authored from the bundled hash-pinned aeat-dr-193-2019 record design. Casilla positions were verified row by row against the design's own position table and against the 2024 revision, and the additive deltas separating the epochs were confirmed in the design text. No human operator has countersigned it."
+reviewed_at = 2026-09-12
+authority_grade = "applicability"
+id = "2022"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+period_selector = { year_from = 2022, year_to = 2022, periods = ["0A"] }
+legal_refs = [
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-99",
+    "orden-eha-3377-2011:art-1",
+    "rd-439-2007:art-108",
+    "rd-439-2007:art-90",
+    "ley-35-2006:art-101",
+    "ley-58-2003:art-93",
+]
+orden_aplicabilidad = ["orden-eha-3377-2011:art-1"]
+source_refs = ["aeat-dr-193-2019", "boe-modelo-193-2011-form"]

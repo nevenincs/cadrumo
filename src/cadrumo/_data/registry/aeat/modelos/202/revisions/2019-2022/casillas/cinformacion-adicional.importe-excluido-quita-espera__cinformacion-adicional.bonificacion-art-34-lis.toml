@@ -8,6 +8,7 @@
 
 [[revisions."2019-2022".casillas]]
 id = "informacion-adicional.importe-excluido-quita-espera"
+continuidad_id = "importe-excluido-quita-espera"
 number = "informacion-adicional.importe-excluido-quita-espera"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
@@ -17,6 +18,7 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
 
 [[revisions."2019-2022".casillas]]
 id = "informacion-adicional.integrado-base-imponible-quita-espera"
+continuidad_id = "importe-integrado-base-imponible-quita-espera"
 number = "informacion-adicional.integrado-base-imponible-quita-espera"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
@@ -26,6 +28,7 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
 
 [[revisions."2019-2022".casillas]]
 id = "informacion-adicional.integrado-cuota-quita-espera-cooperativas"
+continuidad_id = "importe-integrado-cuota-quita-espera-cooperativas"
 number = "informacion-adicional.integrado-cuota-quita-espera-cooperativas"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
@@ -35,6 +38,7 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
 
 [[revisions."2019-2022".casillas]]
 id = "informacion-adicional.rentas-reversion-deterioros"
+continuidad_id = "rentas-reversion-deterioros-integradas-base-imponible"
 number = "informacion-adicional.rentas-reversion-deterioros"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
@@ -44,6 +48,7 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
 
 [[revisions."2019-2022".casillas]]
 id = "informacion-adicional.reserva-inversiones-canarias"
+continuidad_id = "importe-reserva-inversiones-canarias"
 number = "informacion-adicional.reserva-inversiones-canarias"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
@@ -53,6 +58,7 @@ legal_refs = ["ley-27-2014:art-40", "ley-19-1994:art-27"]
 
 [[revisions."2019-2022".casillas]]
 id = "informacion-adicional.bonificacion-ley-19-1994-art-26"
+continuidad_id = "importe-bonificacion-art-26-ley-19-1994"
 number = "informacion-adicional.bonificacion-ley-19-1994-art-26"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
@@ -62,6 +68,7 @@ legal_refs = ["ley-27-2014:art-40"]
 
 [[revisions."2019-2022".casillas]]
 id = "informacion-adicional.no-computable-regimen-zec"
+continuidad_id = "importe-no-computable-regimen-zec"
 number = "informacion-adicional.no-computable-regimen-zec"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
@@ -71,6 +78,7 @@ legal_refs = ["ley-27-2014:art-40"]
 
 [[revisions."2019-2022".casillas]]
 id = "informacion-adicional.minoracion-rentas-bonificacion-art-33-lis"
+continuidad_id = "minoracion-rentas-bonificacion-art-33-lis"
 number = "informacion-adicional.minoracion-rentas-bonificacion-art-33-lis"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
@@ -80,6 +88,7 @@ legal_refs = ["ley-27-2014:art-40"]
 
 [[revisions."2019-2022".casillas]]
 id = "informacion-adicional.excluido-aumento-capital-art-17-2"
+continuidad_id = "importe-excluido-aumento-capital-art-17-2-lis"
 number = "informacion-adicional.excluido-aumento-capital-art-17-2"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
@@ -89,6 +98,7 @@ legal_refs = ["ley-27-2014:art-40"]
 
 [[revisions."2019-2022".casillas]]
 id = "informacion-adicional.renta-exenta-cap-xiv-tit-vii-lis"
+continuidad_id = "renta-exenta-cap-xiv-tit-vii-lis"
 number = "informacion-adicional.renta-exenta-cap-xiv-tit-vii-lis"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"
@@ -98,6 +108,7 @@ legal_refs = ["ley-27-2014:art-40"]
 
 [[revisions."2019-2022".casillas]]
 id = "informacion-adicional.bonificacion-art-34-lis"
+continuidad_id = "importe-bonificacion-art-34-lis"
 number = "informacion-adicional.bonificacion-art-34-lis"
 section = ["sociedades", "pago_fraccionado", "informacion_adicional"]
 data_type = "money"

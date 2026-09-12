@@ -98,6 +98,7 @@ def test_validator_rejects_verification_predicate_with_unknown_operator() -> Non
     modelo, catalogues = _committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     typo_predicate = VerificationPredicateDefinition(
+        id="cap-lt-when-positive:typo-predicate",
         predicate_id="modelo-130-typo-predicate",
         legal_refs=("rd-439-2007:art-110",),
         expression='cap_lt_when_positive(["15", "14"])',  # typo: lt instead of le
@@ -124,6 +125,7 @@ def test_validator_rejects_roll_forward_balances_with_wrong_arity() -> None:
     modelo, catalogues = _committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     bad_arity = VerificationPredicateDefinition(
+        id="roll-forward-balances:bad-roll-forward",
         predicate_id="modelo-130-bad-roll-forward",
         legal_refs=("rd-439-2007:art-110",),
         expression='roll_forward_balances(["01", "02", "03"])',  # three ids; needs four
@@ -155,6 +157,7 @@ def test_validator_rejects_verification_predicate_unknown_casilla_refs() -> None
     validator = RegistryValidator(catalogues, source_root=bundled_path())
     for operator_name, expression in cases:
         predicate = VerificationPredicateDefinition(
+            id=f"{operator_name.replace('_', '-')}:missing-casilla",
             predicate_id=f"modelo-130-{operator_name}-missing-casilla",
             legal_refs=("rd-439-2007:art-110",),
             expression=expression,
@@ -177,6 +180,7 @@ def test_validator_rejects_known_verification_predicate_with_malformed_casilla_l
     modelo, catalogues = _committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     predicate = VerificationPredicateDefinition(
+        id="any-nonzero:malformed-any-nonzero",
         predicate_id="modelo-130-malformed-any-nonzero",
         legal_refs=("rd-439-2007:art-110",),
         expression='any_nonzero("01")',
@@ -196,6 +200,7 @@ def test_validator_rejects_verification_predicate_with_malformed_expression() ->
     modelo, catalogues = _committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     malformed_predicate = VerificationPredicateDefinition(
+        id="malformed-expression:malformed-predicate",
         predicate_id="modelo-130-malformed-predicate",
         legal_refs=("rd-439-2007:art-110",),
         expression="just a string with no call shape",
@@ -259,6 +264,7 @@ def test_validator_rejects_casilla_equals_implies_nonzero_malformed_m130_predica
     )
     for case_id, expression, match in cases:
         predicate = VerificationPredicateDefinition(
+            id=f"casilla-equals-implies-nonzero:{case_id}",
             predicate_id=f"modelo-130-casilla-equals-implies-nonzero-{case_id}",
             legal_refs=("rd-439-2007:art-110",),
             expression=expression,
@@ -281,6 +287,7 @@ def test_validator_rejects_casilla_equals_implies_nonzero_text_consequent() -> N
     modelo, catalogues = _committed_modelo("210")
     revision = modelo.revisions["2025"]
     predicate = VerificationPredicateDefinition(
+        id="casilla-equals-implies-nonzero:casilla-equals-implies-nonzero-text-consequent",
         predicate_id="modelo-210-casilla-equals-implies-nonzero-text-consequent",
         legal_refs=("trlirnr-rdleg-5-2004:art-24",),
         expression='casilla_equals_implies_nonzero(["tipo_renta", "inmobiliaria", "tipo_renta"])',
@@ -353,6 +360,7 @@ def test_validator_rejects_deduccion_requires_adquisicion_before_malformed_m130_
     )
     for case_id, expression, match in cases:
         predicate = VerificationPredicateDefinition(
+            id=f"deduccion-requires-adquisicion-before:{case_id}",
             predicate_id=f"modelo-130-deduccion-requires-adquisicion-before-{case_id}",
             legal_refs=("rd-439-2007:art-110",),
             expression=expression,
@@ -408,6 +416,7 @@ def test_validator_rejects_advisory_when_positive_malformed_m130_predicates() ->
     )
     for case_id, expression, match in cases:
         predicate = VerificationPredicateDefinition(
+            id=f"advisory-when-positive:{case_id}",
             predicate_id=f"modelo-130-advisory-when-positive-{case_id}",
             legal_refs=("rd-439-2007:art-110",),
             expression=expression,
@@ -471,6 +480,7 @@ def test_validator_rejects_advisory_when_ratio_ge_unreadable_threshold(threshold
     modelo, catalogues = _committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     predicate = VerificationPredicateDefinition(
+        id="advisory-when-ratio-ge:ratio-bad-threshold",
         predicate_id="modelo-130-ratio-bad-threshold",
         legal_refs=("rd-439-2007:art-110",),
         expression=f'advisory_when_ratio_ge(["01", "02", "{threshold}"])',
@@ -507,6 +517,7 @@ def test_validator_accepts_advisory_when_ratio_ge_plain_threshold(threshold: str
     modelo, catalogues = _committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     predicate = VerificationPredicateDefinition(
+        id="advisory-when-ratio-ge:ratio-ok-threshold",
         predicate_id="modelo-130-ratio-ok-threshold",
         legal_refs=("rd-439-2007:art-110",),
         expression=f'advisory_when_ratio_ge(["01", "02", "{threshold}"])',
@@ -525,6 +536,7 @@ def test_validator_rejects_advisory_when_ratio_ge_unknown_casilla() -> None:
     modelo, catalogues = _committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     predicate = VerificationPredicateDefinition(
+        id="advisory-when-ratio-ge:ratio-unknown-casilla",
         predicate_id="modelo-130-ratio-unknown-casilla",
         legal_refs=("rd-439-2007:art-110",),
         expression='advisory_when_ratio_ge(["01", "missing-casilla", "0.5"])',
@@ -544,6 +556,7 @@ def test_validator_rejects_advisory_when_ratio_ge_wrong_arity() -> None:
     modelo, catalogues = _committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
     predicate = VerificationPredicateDefinition(
+        id="advisory-when-ratio-ge:ratio-bad-arity",
         predicate_id="modelo-130-ratio-bad-arity",
         legal_refs=("rd-439-2007:art-110",),
         expression='advisory_when_ratio_ge(["01", "02"])',  # threshold missing

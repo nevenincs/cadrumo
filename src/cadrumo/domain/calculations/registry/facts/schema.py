@@ -30,7 +30,6 @@ from ..schema_base import (
 from ..schema_references import (
     DateSupportEnvelope,
     RegistryValidityWindow,
-    TemporalProjectionDirection,
     materialize_date_window_series,
 )
 from ..schema_scalars import DecimalValue
@@ -44,7 +43,6 @@ __all__ = [
     "FactId",
     "FactOwnership",
     "FactPayload",
-    "FactProjectionDirection",
     "FactProviderId",
     "FactSelector",
     "FactVariantId",
@@ -170,10 +168,6 @@ class FactOwnership(StrEnum):
 
 
 FactOwnershipField = Annotated[FactOwnership, BeforeValidator(coerce_enum_member(FactOwnership))]
-
-
-FactProjectionDirection = TemporalProjectionDirection
-"""Public FACTS name for the registry-wide temporal projection direction."""
 
 
 class FactSelector(RegistryModel):
@@ -425,7 +419,6 @@ class GovernedFactVariant(RegistryTemporalDeltaDeclaration):
     source_citations: tuple[SourceCitation, ...] = ()
     review_status: RevisionReviewStatusField
     ownership: FactOwnershipField
-    source_revision_id: RevisionId | None = Field(default=None, exclude_if=lambda value: value is None)
     source_revision_ids: tuple[RevisionId, ...] = Field(default=(), exclude_if=lambda value: not value)
     precedence_over: tuple[FactVariantId, ...] = ()
 
@@ -445,29 +438,14 @@ class GovernedFactVariant(RegistryTemporalDeltaDeclaration):
             raise RegistryValidationError("governed fact citations must name a declared source_ref")
         if not self.legal_refs and not self.source_refs:
             raise RegistryValidationError("governed fact variant must declare legal or source evidence")
-        source_revision_ids = self.effective_source_revision_ids
+        source_revision_ids = self.source_revision_ids
         if len(set(source_revision_ids)) != len(source_revision_ids):
             raise RegistryValidationError("governed fact source revision ids must be unique")
-        if (
-            self.source_revision_id is not None
-            and self.source_revision_ids
-            and self.source_revision_ids != (self.source_revision_id,)
-        ):
-            raise RegistryValidationError(
-                "governed fact singular and plural source revision declarations must name the same sole revision"
-            )
         if self.ownership is FactOwnership.GENERATED and not source_revision_ids:
             raise RegistryValidationError("generated governed fact variant must retain its source revision ids")
         if self.ownership is FactOwnership.AUTHORED and source_revision_ids:
             raise RegistryValidationError("authored governed fact variant cannot claim generated source revisions")
         return self
-
-    @property
-    def effective_source_revision_ids(self) -> tuple[RevisionId, ...]:
-        """Return every source revision, accepting the singular authored spelling."""
-        if self.source_revision_ids:
-            return self.source_revision_ids
-        return () if self.source_revision_id is None else (self.source_revision_id,)
 
     def revision_identity(self) -> str:
         """Return the stable fact revision identity used by shared predecessor mechanics."""

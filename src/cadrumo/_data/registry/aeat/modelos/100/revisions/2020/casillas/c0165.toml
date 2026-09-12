@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "0165"
+# aeat-dr-100-2020-dictionary:241: TIT_E1, titular de la actividad en estimacion directa.
+continuidad_id = "irpf-estimacion-directa-contribuyente-titular"
 number = "0165"
 section = ["toma_datos_ampliada"]
 data_type = "text"

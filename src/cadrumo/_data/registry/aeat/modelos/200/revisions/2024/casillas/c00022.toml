@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00022"
+continuidad_id = "is-regimen-entidades-navieras-en-funcion-del-tonelaje"
 number = "00022"
 section = ["regimen_entidades_navieras_en_funcion_del_tonelaje"]
 data_type = "decimal"

@@ -4,6 +4,11 @@ number = "ejercicio"
 section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
+continuidad_id = "filing-year"
+# AEAT aeat-dr-308-2009 and aeat-dr-308-2011-july identify the same
+# declaration-header Ejercicio, distinct from the aircraft manufacture year.
+# Their selectors overlap in 2011, so this shared identity does not assert a
+# grounded predecessor link between the two alternative applicability windows.
 required = true
 input_kind = "informational"
 legal_refs = ["orden-eha-3786-2008:art-2"]

@@ -1,5 +1,7 @@
 [[revisions."2022".casillas]]
 id = "0768"
+# Grounding: aeat-dr-100-2022-dictionary:1331, M21FJSA; importe aplicado del programa 100 años del fallecimiento de Joaquín Sorolla (Anexo A).
+continuidad_id = "irpf-aeip-100-anos-del-fallecimiento-de-joaquin-sorolla-aplicado"
 number = "0768"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

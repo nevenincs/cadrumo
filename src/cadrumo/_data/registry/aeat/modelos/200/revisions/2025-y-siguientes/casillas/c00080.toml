@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00080"
+continuidad_id = "is-uniones-federaciones-y-confederaciones-de-cooperativas"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 29/29, filas 34/34: Uniones, federaciones y confederaciones de cooperativas [00080]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00080"
 section = ["uniones_federaciones_y_confederaciones_de_cooperat"]
 data_type = "decimal"

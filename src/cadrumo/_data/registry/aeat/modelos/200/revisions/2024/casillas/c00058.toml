@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00058"
+continuidad_id = "is-mutua-de-seguros-o-mutualidad-de-prevision-social"
 number = "00058"
 section = ["mutua_de_seguros_o_mutualidad_de_prevision_social"]
 data_type = "decimal"

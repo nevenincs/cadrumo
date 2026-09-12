@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00060"
+continuidad_id = "is-fondos-o-activos-de-titulizacion"
 number = "00060"
 section = ["fondos_o_activos_de_titulizacion"]
 data_type = "decimal"

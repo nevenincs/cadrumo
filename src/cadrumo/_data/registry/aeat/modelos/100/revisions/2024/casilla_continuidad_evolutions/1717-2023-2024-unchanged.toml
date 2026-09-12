@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2023-dictionary:1321 y aeat-dr-100-2024-dictionary:1260; Programa Deporte lnclusivo II, columna Aplicado, M21PDIA.
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m100-1717-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-programa-deporte-lnclusivo-ii-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]

@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00044"
+continuidad_id = "is-contribuyente-que-genera-deducciones-del-art-36-1-y-36-3-lis-con-financiacion-realizada-por-otros-contribuyentes"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 98/98, filas 103/103: Contribuyente que genera deducciones del art. 36.1 y 36.3 LIS con financiación realizada por otros contribuyentes [00044]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00044"
 section = ["contribuyente_que_genera_deducciones_del_art_36_1"]
 data_type = "decimal"

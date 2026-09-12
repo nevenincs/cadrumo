@@ -419,6 +419,59 @@ class NoRevisionForPeriodError(RegistrySnapshotError):
         )
 
 
+class EjercicioOrdenNotYetPublishedError(NoRevisionForPeriodError):
+    """The modelo cannot answer this filing year yet, and says so itself.
+
+    An annual modelo is re-approved once per ejercicio, and the Orden approving
+    ejercicio N is published during year N+1. A request for a year whose Orden
+    is unwritten is not an oversight and not a gap anybody can close: no author
+    can supply what the authority has not issued.
+
+    Raised in place of the plain absence refusal when the modelo declares a
+    matching ``pending_ejercicio_ordenes`` entry. It subclasses
+    :class:`NoRevisionForPeriodError` deliberately -- every existing handler
+    keeps catching it, and the answer really is that no revision matched -- so
+    only callers that want the distinction pay any attention to it.
+
+    Structured attributes add ``rests_on`` and ``expected_publication_year`` to
+    the inherited natural key, because an operator told to wait is owed both
+    what the product currently rests on and when that changes.
+    """
+
+    def __init__(
+        self,
+        *,
+        modelo_id: str,
+        filing_year: int,
+        period: str,
+        revision_id: RevisionId | None,
+        available_revision_ids: Iterable[str],
+        rests_on: str,
+        expected_publication_year: int,
+    ) -> None:
+        """Construct the awaiting-Orden refusal."""
+        super().__init__(
+            modelo_id=modelo_id,
+            filing_year=filing_year,
+            period=period,
+            revision_id=revision_id,
+            available_revision_ids=available_revision_ids,
+        )
+        self.rests_on: str = rests_on
+        self.expected_publication_year: int = expected_publication_year
+        self.args = (
+            f"modelo {modelo_id}: filing year {filing_year} awaits its approving Orden; "
+            f"the modelo rests on {rests_on} and the next Orden is expected in "
+            f"{expected_publication_year}",
+        )
+        self.translated_message = "errors.snapshot.ejercicio_orden_not_yet_published"
+        self.context = {
+            **(self.context or {}),
+            "rests_on": rests_on,
+            "expected_publication_year": expected_publication_year,
+        }
+
+
 class AmbiguousRevisionSelectionError(RegistrySnapshotError):
     """More than one registry revision matches the temporal natural key.
 

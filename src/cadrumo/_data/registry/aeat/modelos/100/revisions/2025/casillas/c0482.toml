@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "0482"
+continuidad_id = "irpf-reduccion-pensiones-anualidades-contribuyente-pagador"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2024-dictionary:789 y aeat-dr-100-2025-dictionary:815: campo IPCT, tipo TIT; mismo contribuyente que paga pensiones compensatorias o anualidades con reduccion, descrito por el grupo oficial de ambas ediciones."
 number = "0482"
 section = ["toma_datos_ampliada"]
 data_type = "text"

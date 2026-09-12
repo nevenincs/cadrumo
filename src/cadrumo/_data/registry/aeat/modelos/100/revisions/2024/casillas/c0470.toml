@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "0470"
+continuidad_id = "irpf-reduccion-prevision-social-discapacidad-contribuyente-aportante"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:762 y aeat-dr-100-2024-dictionary:777: campo TIT2, tipo TIT; mismo aportante a sistemas de prevision social de personas con discapacidad, descrito por el grupo oficial de ambas ediciones."
 number = "0470"
 section = ["toma_datos_ampliada"]
 data_type = "text"

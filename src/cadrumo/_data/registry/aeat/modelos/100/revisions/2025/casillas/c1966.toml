@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "1966"
+continuidad_id = "irpf-retribucion-especie-empresas-emergentes-imputacion-diferida-contribuyente"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2024-dictionary:2030 y aeat-dr-100-2025-dictionary:2171: campo C1REME, tipo TIT; mismo perceptor de retribuciones en especie pendientes de imputacion del articulo 14.2.m, descrito por el grupo oficial de ambas ediciones."
 number = "1966"
 section = ["toma_datos_ampliada", "rdto_trabajo", "retrib_especie_anexo_c"]
 data_type = "text"

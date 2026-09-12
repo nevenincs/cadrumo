@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "0542"
+continuidad_id = "irpf-tipo-medio-gravamen-ahorro-estatal"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:842 y aeat-dr-100-2023-dictionary:854: campo TMEAH; tipo medio estatal de gravamen de la base liquidable del ahorro en el bloque de cálculo del impuesto. Misma magnitud y función fiscal en ambas ediciones."
 number = "0542"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 data_type = "ratio"

@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00057"
+continuidad_id = "is-regimen-fiscal-salida-socimi"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 71/71, filas 76/76: Régimen fiscal salida SOCIMI [00057]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00057"
 section = ["regimen_fiscal_salida_socimi"]
 data_type = "decimal"

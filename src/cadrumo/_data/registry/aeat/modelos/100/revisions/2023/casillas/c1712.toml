@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "1712"
+continuidad_id = "irpf-aeip-habitos-saludables-para-el-control-del-riesgo-cardiovascular-aprender-a-cuidarnos-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:1286 y aeat-dr-100-2023-dictionary:1306: campo M21HRCA; columna Aplicado en esta declaración del programa Hábitos Saludables para el control del riesgo Cardiovascular \"Aprender a cuidarnos\" en Anexo A. Misma designación y función fiscal."
 number = "1712"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

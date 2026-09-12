@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00009"
+continuidad_id = "is-entidad-dominante-de-grupo-fiscal"
 number = "00009"
 section = ["entidad_dominante_de_grupo_fiscal"]
 data_type = "decimal"

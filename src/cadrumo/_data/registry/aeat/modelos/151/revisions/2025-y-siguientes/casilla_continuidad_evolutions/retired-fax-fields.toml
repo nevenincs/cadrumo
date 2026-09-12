@@ -1,0 +1,33 @@
+# AEAT's 2015 M15101000 design allocates fax slots to the taxpayer's
+# domestic and foreign addresses and the representative. In the replacement
+# design their captions have no field number, position or length. The allocated
+# fields are contiguous across each former slot: 393/394, 685/686 and 982/983.
+# These are withdrawn fax data fields, not continuations of telephone numbers.
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "retired-contribuyente-fax-domicilio-espana"
+continuidad_id = "contribuyente-fax-domicilio-espana"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "retired-contribuyente-fax-domicilio-extranjero"
+continuidad_id = "contribuyente-fax-domicilio-extranjero"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "retired-representante-fax"
+continuidad_id = "representante-fax"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+

@@ -73,6 +73,9 @@ _FIELD_LITERALS: dict[str, str] = {
         '{ casilla_continuidad_evolutions = { reason = "declared for the placement refusal", '
         f'legal_refs = ["{_LEGAL_REF}"], source_refs = ["aeat-manual"] }} }}'
     ),
+    "source_default_dispositions": (
+        '{ bindings = { kind = "underivable", reason = "declared for the placement refusal" } }'
+    ),
 }
 
 _CASILLA_FRAGMENT = f"""
@@ -225,6 +228,7 @@ def test_the_manifest_only_set_is_exactly_todays_marked_fields() -> None:
         "legal_refs",
         "orden_aplicabilidad",
         "predecessor",
+        "source_default_dispositions",
         "valid_to",
     }
 

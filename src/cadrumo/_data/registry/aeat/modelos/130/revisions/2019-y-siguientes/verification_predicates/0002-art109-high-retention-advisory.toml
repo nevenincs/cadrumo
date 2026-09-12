@@ -11,6 +11,7 @@
 # (casilla 14 - casilla 15 - casilla 16); Art. 109 belongs to
 # applicability/deadline/profile behavior.
 [[revisions."2019-y-siguientes".verification_predicates]]
+id = "profile-flag-enabled:art109-exencion-alta-retencion"
 predicate_id = "modelo-130-art109-exencion-alta-retencion"
 expression = 'profile_flag_enabled("art109_activity_income_withholding_ge_70pct")'
 finding_kind = "ADVISORY"

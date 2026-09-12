@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2023-dictionary:1255, M21AERA; 150 Aniversario de creación de la Academia de España en Roma deja de figurar como programa aplicado en aeat-dr-100-2024-dictionary.
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m100-1691-2023-2024-retired"
+continuidad_id = "irpf-aeip-150-aniversario-de-creacion-de-la-academia-de-espana-en-roma-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]

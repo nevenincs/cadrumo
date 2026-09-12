@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00018"
+continuidad_id = "is-cooperativa-especialmente-protegida"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 39/39, filas 44/44: Cooperativa especialmente protegida [00018]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00018"
 section = ["cooperativa_especialmente_protegida"]
 data_type = "decimal"

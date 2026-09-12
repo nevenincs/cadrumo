@@ -46,7 +46,6 @@ def test_bundled_tree_declares_one_ordered_supported_year_catalogue() -> None:
         pytest.param({"floor": 2026, "horizon": 2022}, id="horizon-precedes-floor"),
         pytest.param({"floor": 1999, "horizon": 2026}, id="floor-below-range"),
         pytest.param({"floor": 2022, "horizon": 2100}, id="horizon-above-range"),
-        pytest.param({"floor": 2022, "horizon": 2026, "hard_ceiling": 2026}, id="ceiling-at-horizon"),
         pytest.param({"floor": 2022, "horizon": 2026, "hard_ceiling": 2024}, id="ceiling-below-horizon"),
         pytest.param({"years": (2022, 2023)}, id="retired-enumerated-key"),
     ],
@@ -82,6 +81,15 @@ def test_a_declared_hard_ceiling_closes_the_span_above_the_horizon() -> None:
     assert not catalogue.admits_filing_year(2029)
 
 
+def test_a_hard_ceiling_at_the_horizon_disables_forward_projection() -> None:
+    catalogue = SupportedFilingYearsCatalogue(floor=2022, horizon=2026, hard_ceiling=2026)
+
+    assert catalogue.admits_filing_year(2026)
+    assert not catalogue.admits_filing_year(2027)
+    assert catalogue.projection_coordinate(2026) == 2026
+    assert catalogue.projection_coordinate(2027) is None
+
+
 @pytest.mark.parametrize(
     ("status", "source_ref", "acquisition_condition_key", "message"),
     [
@@ -112,7 +120,7 @@ def test_m303_annual_orden_projection_years_are_driven_by_registry_catalogue() -
     catalogue = authority.catalogues.supported_filing_years
     assert catalogue is not None
 
-    orden = authority.catalogues.supplementary_ordenes[Modelo.M303]
+    orden = authority.catalogues.supplementary_ordenes[Modelo("303")]
     assert tuple(sorted({projection.ejercicio for projection in orden.projections})) == catalogue.years
 
 

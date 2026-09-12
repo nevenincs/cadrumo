@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "0276"
+continuidad_id = "irpf-institucion-inversion-colectiva-imputacion-contribuyente"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:511 y aeat-dr-100-2023-dictionary:517: campo F5ET, tipo TIT; mismo contribuyente que imputa las rentas de la institucion de inversion colectiva, descrito por el grupo oficial de ambas ediciones."
 number = "0276"
 section = ["toma_datos_ampliada"]
 data_type = "text"

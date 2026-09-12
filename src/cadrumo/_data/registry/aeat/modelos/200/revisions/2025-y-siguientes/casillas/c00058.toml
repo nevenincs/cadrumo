@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00058"
+continuidad_id = "is-mutua-de-seguros-o-mutualidad-de-prevision-social"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 49/49, filas 54/54: Mutua de seguros o Mutualidad de previsión social [00058]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00058"
 section = ["mutua_de_seguros_o_mutualidad_de_prevision_social"]
 data_type = "decimal"

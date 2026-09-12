@@ -1,5 +1,7 @@
 [[revisions."2022".casillas]]
 id = "0788"
+# Grounding: aeat-dr-100-2022-dictionary:1361, M21BAMA; importe aplicado del programa Bicentenario del Ateneo de Madrid (Anexo A).
+continuidad_id = "irpf-aeip-bicentenario-del-ateneo-de-madrid-aplicado"
 number = "0788"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

@@ -1024,11 +1024,7 @@ def _date_axis_name(node: ast.AST | None) -> str | None:
     future member without a hand-maintained fact/callsite list. Dynamic axis
     expressions remain unresolved and therefore blocking.
     """
-    if (
-        isinstance(node, ast.Attribute)
-        and isinstance(node.value, ast.Name)
-        and node.value.id == "DateAxis"
-    ):
+    if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == "DateAxis":
         return node.attr.lower()
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return node.value
@@ -1303,7 +1299,9 @@ def _consumer_fact_scan(
             for callsite in deduped_callsites
             if isinstance(callsite.get("date_axis"), str) and callsite.get("date_axis")
         }
-        axis_resolved = bool(deduped_callsites) and bool(requested_axes) and bool(requested_axes <= compiled_axes)
+        axis_declared = bool(deduped_callsites) and bool(requested_axes)
+        axis_compatible = bool(compiled_fact is not None and requested_axes <= compiled_axes)
+        axis_resolved = axis_declared and axis_compatible
         associated_row_ids = sorted(
             row_id
             for row_id, paths in row_files.items()
@@ -1314,7 +1312,12 @@ def _consumer_fact_scan(
             blockers.append("authored_fact_missing")
         if compiled_fact is None:
             blockers.append("bundled_authority_fact_missing")
-        if not axis_resolved:
+        # A missing bundled fact already has its own named blocker. Do not
+        # mislabel a statically recognized axis as absent merely because the
+        # compiled authority is not present yet. A genuinely missing axis, or
+        # an axis incompatible with an available compiled variant, remains
+        # blocking.
+        if not axis_declared or (compiled_fact is not None and not axis_compatible):
             blockers.append("query_date_axis_unresolved")
         observation = {
             "fact_id": fact_id,
@@ -1326,6 +1329,7 @@ def _consumer_fact_scan(
             "bundled_authority_artifact_status": artifact_status,
             "compiled_variant_date_axes": sorted(compiled_axes),
             "requested_query_date_axes": sorted(requested_axes),
+            "query_date_axis_recognized": axis_declared,
             "query_date_axis_resolved": axis_resolved,
             "proof_chain": {
                 "authored_presence": bool(authored_paths),
@@ -2042,6 +2046,121 @@ def _fact_declaration(
     return declaration_by_id, missing_fields
 
 
+def _missing_typed_binding_fields(
+    declaration: dict[str, Any],
+    destination: dict[str, Any],
+) -> list[str]:
+    """Validate the live typed binding surface used by placement closures.
+
+    Older placement claims named the pre-refactor ``source`` and ``selector``
+    siblings.  Those keys are intentionally no longer part of
+    :class:`BindingDefinition`: the provider discriminator and its typed
+    members are now the source/selector contract.  Keep this check local to
+    binding destinations so a stale claim cannot be made to pass merely by
+    adding forbidden compatibility keys to authored TOML.
+    """
+    missing: list[str] = []
+    provider = declaration.get("provider")
+    value = declaration.get("value")
+    legal_refs = declaration.get("legal_refs")
+    source_refs = declaration.get("source_refs")
+    if not isinstance(provider, dict):
+        missing.append("provider")
+    elif not isinstance(provider.get("kind"), str) or not provider["kind"].strip():
+        missing.append("provider.kind")
+    if not isinstance(value, dict):
+        missing.append("value")
+    if not isinstance(legal_refs, list) or not legal_refs:
+        missing.append("legal_refs")
+    if not isinstance(source_refs, list) or not source_refs:
+        missing.append("source_refs")
+
+    semantic_requirements = destination.get("semantic_requirements", {})
+    if not isinstance(semantic_requirements, dict):
+        missing.append("semantic_requirements")
+        return sorted(set(missing))
+    declaration_requirements = semantic_requirements.get(declaration.get("id"), {})
+    if declaration_requirements is None:
+        declaration_requirements = {}
+    if not isinstance(declaration_requirements, dict):
+        missing.append("semantic_requirements[declaration]")
+        return sorted(set(missing))
+
+    def compare(actual: Any, expected: Any, path: str) -> None:
+        if isinstance(expected, dict):
+            if not isinstance(actual, dict):
+                missing.append(path)
+                return
+            for key, nested in expected.items():
+                compare(actual.get(key), nested, f"{path}.{key}")
+            return
+        if actual != expected:
+            missing.append(path)
+
+    for key, expected in declaration_requirements.items():
+        compare(declaration.get(key), expected, key)
+    return sorted(set(missing))
+
+
+def _validate_absorbed_relation_requirements(
+    declaration_by_id: dict[str, dict[str, Any]],
+    destination: dict[str, Any],
+) -> dict[str, list[str]]:
+    """Check relation claims that were absorbed into typed binding providers.
+
+    Relation TOMLs are no longer a live schema family.  A manifest may retain
+    the old relation identity as an audit label, but it must point at an
+    existing binding declaration and state the exact provider/applicability/
+    aggregation shape that proves the equivalence.
+    """
+    missing: dict[str, list[str]] = {}
+    absorbed = destination.get("absorbed_relations")
+    if absorbed is None:
+        return missing
+    if not isinstance(absorbed, list):
+        return {"<destination>": ["absorbed_relations"]}
+
+    def compare(actual: Any, expected: Any, path: str, errors: list[str]) -> None:
+        if isinstance(expected, dict):
+            if not isinstance(actual, dict):
+                errors.append(path)
+                return
+            for key, nested in expected.items():
+                compare(actual.get(key), nested, f"{path}.{key}", errors)
+            return
+        if actual != expected:
+            errors.append(path)
+
+    for index, relation in enumerate(absorbed):
+        label = f"absorbed_relations[{index}]"
+        if not isinstance(relation, dict):
+            missing.setdefault(label, []).append(label)
+            continue
+        canonical_id = relation.get("canonical_declaration_id")
+        legacy_id = relation.get("legacy_declaration_id")
+        if not isinstance(canonical_id, str) or not canonical_id.strip():
+            missing.setdefault(label, []).append(f"{label}.canonical_declaration_id")
+            continue
+        declaration = declaration_by_id.get(canonical_id)
+        if declaration is None:
+            missing.setdefault(canonical_id, []).append("absorbed canonical declaration")
+            continue
+        errors: list[str] = []
+        requirements = relation.get("requirements", {})
+        if not isinstance(requirements, dict):
+            errors.append(f"{label}.requirements")
+        else:
+            for key, expected in requirements.items():
+                compare(declaration.get(key), expected, key, errors)
+        if not isinstance(legacy_id, str) or not legacy_id.strip():
+            errors.append(f"{label}.legacy_declaration_id")
+        if not isinstance(relation.get("legacy_path"), str) or not relation["legacy_path"].strip():
+            errors.append(f"{label}.legacy_path")
+        if errors:
+            missing[canonical_id] = sorted(set(errors))
+    return missing
+
+
 def _placement_scan(
     row: dict[str, Any],
     source_scan: dict[str, Any],
@@ -2161,8 +2280,14 @@ def _placement_scan(
                 field for field in destination["required_fields"] if field not in declaration_by_id[declaration_id]
             ]
             missing.extend(fact_missing_fields.get(declaration_id, []))
+            if destination.get("family") == "bindings":
+                missing.extend(_missing_typed_binding_fields(declaration_by_id[declaration_id], destination))
             if missing:
                 missing_fields[declaration_id] = sorted(set(missing))
+        absorbed_missing = _validate_absorbed_relation_requirements(declaration_by_id, destination)
+        for declaration_id, fields in absorbed_missing.items():
+            missing_fields.setdefault(declaration_id, []).extend(fields)
+            missing_fields[declaration_id] = sorted(set(missing_fields[declaration_id]))
         observation["found_declaration_ids"] = found_ids
         observation["missing_declaration_ids"] = missing_ids
         observation["missing_required_fields"] = missing_fields
@@ -2688,6 +2813,40 @@ def _validate_placement(candidate_id: str, closure: dict[str, Any]) -> None:
             raise ManifestError(f"{destination_label}.required_fields must be non-empty")
         if any(not isinstance(value, str) or not value.strip() for value in fields):
             raise ManifestError(f"{destination_label}.required_fields must contain non-empty strings")
+        semantic_requirements = destination.get("semantic_requirements")
+        if semantic_requirements is not None:
+            if not isinstance(semantic_requirements, dict) or not semantic_requirements:
+                raise ManifestError(f"{destination_label}.semantic_requirements must be a non-empty object")
+            unknown_requirement_ids = sorted(set(semantic_requirements) - set(ids))
+            if unknown_requirement_ids:
+                raise ManifestError(
+                    f"{destination_label}.semantic_requirements reference undeclared IDs: "
+                    + ", ".join(unknown_requirement_ids),
+                )
+            if any(not isinstance(value, dict) for value in semantic_requirements.values()):
+                raise ManifestError(f"{destination_label}.semantic_requirements values must be objects")
+        absorbed_relations = destination.get("absorbed_relations")
+        if absorbed_relations is not None:
+            if family != "bindings":
+                raise ManifestError(f"{destination_label}.absorbed_relations requires family=bindings")
+            if not isinstance(absorbed_relations, list) or not absorbed_relations:
+                raise ManifestError(f"{destination_label}.absorbed_relations must be a non-empty list")
+            for relation_index, relation in enumerate(absorbed_relations):
+                relation_label = f"{destination_label}.absorbed_relations[{relation_index}]"
+                if not isinstance(relation, dict):
+                    raise ManifestError(f"{relation_label} must be an object")
+                for field in ("legacy_path", "legacy_declaration_id", "canonical_declaration_id", "requirements"):
+                    if field not in relation:
+                        raise ManifestError(f"{relation_label}.{field} is required")
+                if not isinstance(relation["legacy_path"], str) or not relation["legacy_path"].strip():
+                    raise ManifestError(f"{relation_label}.legacy_path is required")
+                if not isinstance(relation["legacy_declaration_id"], str) or not relation["legacy_declaration_id"].strip():
+                    raise ManifestError(f"{relation_label}.legacy_declaration_id is required")
+                canonical_id = relation["canonical_declaration_id"]
+                if canonical_id not in ids:
+                    raise ManifestError(f"{relation_label}.canonical_declaration_id must be declared")
+                if not isinstance(relation["requirements"], dict) or not relation["requirements"]:
+                    raise ManifestError(f"{relation_label}.requirements must be a non-empty object")
         duplicate_ids = declaration_ids.intersection(ids)
         if duplicate_ids:
             raise ManifestError(f"{label}: duplicate declaration IDs: {', '.join(sorted(duplicate_ids))}")

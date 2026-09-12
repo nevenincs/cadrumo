@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "0165"
+continuidad_id = "irpf-estimacion-directa-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:248 y aeat-dr-100-2022-dictionary:247: campo TIT_E1, tipo TIT; mismo titular de la actividad en estimacion directa, descrito por el grupo oficial de ambas ediciones."
 number = "0165"
 section = ["toma_datos_ampliada"]
 data_type = "text"

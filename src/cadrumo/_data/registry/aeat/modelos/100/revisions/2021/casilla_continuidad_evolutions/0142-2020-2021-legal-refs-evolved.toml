@@ -1,0 +1,9 @@
+# Grounding: C_TRIBUADACC, gastos y tributos inherentes a la adquisición del inmueble accesorio para su amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0142-2020-2021-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-gastos-tributos-adquisicion"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23-2021"]
+source_refs = ["aeat-dr-100-2020-dictionary","aeat-dr-100-2021-dictionary"]

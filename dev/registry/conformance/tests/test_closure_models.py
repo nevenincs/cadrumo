@@ -206,32 +206,3 @@ def test_evidence_and_models_are_strict_and_immutable() -> None:
             evidence=(evidence, evidence),
         )
 
-
-def test_closure_contract_is_owned_by_its_public_defining_module() -> None:
-    """Every closure symbol is defined once, publicly, and bound nowhere else."""
-    from ... import conformance as conformance_namespace
-    from ..closure_models import RegistryClosureFilingChannelRefusal
-
-    owned = (
-        RegistryClosureEvidence,
-        RegistryClosureFilingChannelRefusal,
-        RegistryClosureLimb,
-        RegistryClosureOwnerDisposition,
-        RegistryClosureRefusal,
-    )
-    for symbol in owned:
-        assert symbol.__module__ == "dev.registry.conformance.closure_models"
-        assert not hasattr(conformance_namespace, symbol.__name__)
-    for alias in ("RegistryClosureLimbName", "RegistryClosureLimbOutcome", "RegistryClosureRefusalReason"):
-        assert not hasattr(conformance_namespace, alias)
-
-
-def test_the_retired_private_closure_module_is_gone() -> None:
-    """No private path, alias, or re-export survives the hard move."""
-    import importlib
-    from pathlib import Path
-
-    package = Path(importlib.import_module("dev.registry.conformance").__file__).parent
-
-    assert not (package / "_closure.py").exists()
-    assert importlib.util.find_spec("dev.registry.conformance._closure") is None

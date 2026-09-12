@@ -53,8 +53,6 @@ __all__ = [
     "TemporalProjectionDirection",
     "TemporalSupportEnvelope",
     "materialize_date_window_series",
-    "resolve_supported_validity_window",
-    "resolve_validity_window",
     "source_window_applies_across",
 ]
 
@@ -258,49 +256,6 @@ class RegistryTemporalBounds(RegistryModel):
         return self
 
 
-def resolve_validity_window(
-    bounds: RegistryTemporalBounds,
-    *,
-    fallback: RegistryValidityWindow,
-) -> RegistryValidityWindow:
-    """Resolve omitted delta bounds from the containing revision/support window.
-
-    Endpoint inheritance is deliberately symmetric: an omitted lower bound
-    propagates backward to the fallback floor and an omitted upper bound
-    propagates forward to its ceiling (including an open ceiling). Constructing
-    the concrete result re-runs the common ordering invariant.
-    """
-    return RegistryValidityWindow(
-        valid_from=bounds.valid_from if bounds.valid_from is not None else fallback.valid_from,
-        valid_to=bounds.valid_to if bounds.valid_to is not None else fallback.valid_to,
-    )
-
-
-def resolve_supported_validity_window(
-    bounds: RegistryTemporalBounds,
-    *,
-    fallback: RegistryValidityWindow,
-    support: DateSupportEnvelope,
-    propagate_backward: bool = False,
-    propagate_forward: bool = False,
-) -> RegistryValidityWindow:
-    """Resolve delta bounds with explicit first/last-declaration propagation.
-
-    A first declaration may inherit the support floor instead of its containing
-    revision's lower bound. A last declaration may inherit the hard ceiling;
-    where no ceiling is declared that produces an open end. Interior omitted
-    endpoints inherit their containing revision window. Authored bounds always
-    win and are never rewritten.
-    """
-    valid_from = bounds.valid_from
-    if valid_from is None:
-        valid_from = support.floor if propagate_backward else fallback.valid_from
-    valid_to = bounds.valid_to
-    if valid_to is None:
-        valid_to = support.hard_ceiling if propagate_forward else fallback.valid_to
-    return RegistryValidityWindow(valid_from=valid_from, valid_to=valid_to)
-
-
 def materialize_date_window_series(
     declarations: Sequence[tuple[str, RegistryTemporalBounds]],
     *,
@@ -391,17 +346,19 @@ class OrderedSupportEnvelope[CoordinateT]:
     hard_ceiling: CoordinateT | None
 
     def admits_coordinate(self, coordinate: CoordinateT) -> bool:
+        """Return whether a coordinate lies between the hard support gates."""
         if coordinate < self.floor:  # type: ignore[operator]
             return False
         return self.hard_ceiling is None or coordinate <= self.hard_ceiling  # type: ignore[operator]
 
     def projection_coordinate(self, coordinate: CoordinateT) -> CoordinateT | None:
+        """Map an admitted coordinate to the newest authored coordinate."""
         if not self.admits_coordinate(coordinate):
             return None
         return min(coordinate, self.horizon)  # type: ignore[type-var]
 
 
-class DateSupportEnvelope(OrderedSupportEnvelope[date], RegistryModel):
+class DateSupportEnvelope(RegistryModel, OrderedSupportEnvelope[date]):
     """Hard gates and authored horizon on an effective-date axis."""
 
     floor: date
@@ -414,7 +371,7 @@ class DateSupportEnvelope(OrderedSupportEnvelope[date], RegistryModel):
         return self
 
 
-class TemporalSupportEnvelope(OrderedSupportEnvelope[int], RegistryModel):
+class TemporalSupportEnvelope(RegistryModel, OrderedSupportEnvelope[int]):
     """Hard gates and authored horizon shared by forward-projecting registries.
 
     ``floor`` and ``hard_ceiling`` are refusal boundaries. ``horizon`` is the

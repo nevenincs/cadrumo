@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "0124"
+# Grounding: aeat-dr-100-2020-dictionary:207, C_VCC; valor catastral de la construcción del inmueble principal a efectos de amortización.
+continuidad_id = "irpf-inmueble-amortizacion-valor-catastral-construccion"
 number = "0124"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 semantic_role = "irpf_inmueble_valor_catastral_construccion"

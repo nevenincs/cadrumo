@@ -1,4 +1,5 @@
 [revisions."2025-y-siguientes"]
+formula_source_refs = ["aeat-modelo-151-procedure"]
 predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["ley-35-2006:art-93"], source_refs = ["aeat-modelo-151-procedure"] } }
 casilla_source_refs = ["aeat-dr-151-2023"]
 # Prepared and reviewed by an agent against the bundled diseno de registros and
@@ -75,3 +76,8 @@ A live cross-reference declares an AEAT surface this application READS at runtim
 bound and no guard policy to declare. Should a Modelo 151 consulta reader ever be built, this disposition is what it replaces."""
 legal_refs = ["ley-35-2006:art-93", "orden-hfp-1338-2023:art-1"]
 source_refs = ["aeat-modelo-151-procedure"]
+
+[revisions."2025-y-siguientes".source_default_dispositions.bindings]
+kind = "underivable"
+reason = """
+No leading source_refs run is shared by two rows of this edition's bindings family. The family holds a single source-stating row, and one statement can open no run that a second shares, so no default is derivable here and the row keeps its own refs rather than lifting them to a manifest default a later authored row might not carry."""

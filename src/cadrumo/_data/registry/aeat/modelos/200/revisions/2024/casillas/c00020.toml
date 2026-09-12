@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00020"
+continuidad_id = "is-otros-regimenes-especiales"
 number = "00020"
 section = ["otros_regimenes_especiales"]
 data_type = "decimal"

@@ -14,7 +14,6 @@ from cadrumo.core.filing_projection_ref import (
     M303ProrrataActivityProjectionRef,
 )
 from cadrumo.core.i18n.render import tr
-from cadrumo.core.modelo import Modelo
 from cadrumo.core.prorrata_register import ProrrataActivityRowType, ProrrataRegisterRegime
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -474,7 +473,7 @@ def test_incomplete_ejercicio_refuses_with_the_typed_localised_operator_facing_r
     error = excinfo.value
     assert error.translated_message == "application.filing.m303_prorrata_activity_rows.errors.activity_rows_incomplete"
     assert error.context == {
-        "modelo": Modelo.M303.value,
+        "modelo": "303",
         "filing_year": 2025,
         "required_slot_first": 1,
         "required_slot_last": 5,

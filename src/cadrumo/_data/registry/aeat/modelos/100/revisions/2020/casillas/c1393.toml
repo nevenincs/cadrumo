@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "1393"
+# Grounding: aeat-dr-100-2020-dictionary:1740, DICT; titular del inmueble en el desglose voluntario de gastos y mejoras del arrendamiento.
+continuidad_id = "irpf-inmueble-desglose-gastos-titular"
 number = "1393"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"

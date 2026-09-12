@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "0042"
+# aeat-dr-100-2020-dictionary:119: TITDT4, titular de los seguros sujetos a la disposicion transitoria cuarta.
+continuidad_id = "irpf-capital-mobiliario-dt4-contribuyente-titular"
 number = "0042"
 section = ["toma_datos_ampliada"]
 data_type = "text"

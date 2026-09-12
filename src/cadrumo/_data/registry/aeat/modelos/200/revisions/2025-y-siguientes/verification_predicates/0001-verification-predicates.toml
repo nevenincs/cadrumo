@@ -8,6 +8,7 @@
 # this surfaces an operator-facing advisory rather than refusing the draft, until
 # the base imponible is derived directly from resultado contable.
 [[revisions."2025-y-siguientes".verification_predicates]]
+id = "implies-nonzero:base-imponible-determinada-cuando-resultado-positivo"
 predicate_id = "modelo-200-base-imponible-determinada-cuando-resultado-positivo"
 expression = 'implies_nonzero(["00501", "DP200014:00552"])'
 finding_kind = "ADVISORY"
@@ -27,6 +28,7 @@ legal_refs = ["ley-27-2014:art-30"]
 # chain (00500→00501→00552→00562→00592); mirrors the no-silent-under-declaration
 # stance and the 00501→00552 base-determination advisory above.
 [[revisions."2025-y-siguientes".verification_predicates]]
+id = "implies-nonzero:resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo"
 predicate_id = "modelo-200-resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo"
 expression = 'implies_nonzero(["00500", "00501"])'
 finding_kind = "ADVISORY"
@@ -39,6 +41,7 @@ legal_refs = ["ley-27-2014:art-10", "ley-27-2014:art-30"]
 # verify gate refuses; electing LESS than the ceiling is permitted (compensation
 # is a right, not a mandate). cap_le_when_positive holds when the ceiling <= 0.
 [[revisions."2025-y-siguientes".verification_predicates]]
+id = "cap-le-when-positive:compensacion-bin-no-excede-limite-art-26"
 predicate_id = "modelo-200-compensacion-bin-no-excede-limite-art-26"
 expression = 'cap_le_when_positive(["DP200014:00547", "DP200014:bin-aplicada-maxima"])'
 finding_kind = "BLOCKING_RULE"
@@ -48,6 +51,7 @@ legal_refs = ["ley-27-2014:art-26"]
 # the BIN stock available at the start of the period (casilla 00670). You cannot
 # compensate more negative bases than you hold.
 [[revisions."2025-y-siguientes".verification_predicates]]
+id = "cap-le-when-positive:compensacion-bin-no-excede-stock-disponible"
 predicate_id = "modelo-200-compensacion-bin-no-excede-stock-disponible"
 expression = 'cap_le_when_positive(["DP200014:00547", "00670"])'
 finding_kind = "BLOCKING_RULE"
@@ -66,6 +70,7 @@ legal_refs = ["ley-27-2014:art-26"]
 # the operator confirms rather than overlooks the deductible carry. Mirrors the
 # no-silent-under-declaration advisory stance (positive input, zero dependent).
 [[revisions."2025-y-siguientes".verification_predicates]]
+id = "implies-nonzero:dotaciones-deterioro-cumplido-disponible-integrar"
 predicate_id = "modelo-200-dotaciones-deterioro-cumplido-disponible-integrar"
 expression = 'implies_nonzero(["01495", "01496"])'
 finding_kind = "ADVISORY"
@@ -87,6 +92,7 @@ legal_refs = ["ley-27-2014:art-13"]
 # guard fires only on a genuine discontinuity, mirroring the M200 base/dotaciones
 # advisories and no-silent-under-declaration.
 [[revisions."2025-y-siguientes".verification_predicates]]
+id = "roll-forward-balances:bin-stock-cierre-reconcilia-roll-forward"
 predicate_id = "modelo-200-bin-stock-cierre-reconcilia-roll-forward"
 expression = 'roll_forward_balances(["00671", "00670", "DP200014:00547", "DP200014:00552"])'
 finding_kind = "ADVISORY"

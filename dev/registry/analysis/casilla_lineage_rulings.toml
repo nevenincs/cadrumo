@@ -759,6 +759,8 @@ grounded = [
   "p05.tipo-de-renta-1-08>p07.tipo-de-renta-01-08",
   "p05.total-ganancias-patrimoniales-4>p07.total-ganancias-patrimoniales-04",
   "p05.total-retenciones-o-ingresos-a-cuenta-9>p07.total-retenciones-o-ingresos-a-cuenta-05",
+  "did.devolucion-swift-bic>did.devolucion-swift-bic",
+  "p03.total-retenciones-o-ingresos-a-cuenta-16>p03.total-retenciones-o-ingresos-a-cuenta-16",
 ]
 held = [
   "p01.contribuyente-56-codigo-postal>p01.contribuyente-codigo-postal-del-domicilio-38",
@@ -887,4 +889,15 @@ grounded = [
   "decl.rg-tipo-05>decl.rg-tipo-05",
   "decl.rg-tipo-08>decl.rg-tipo-08",
   "decl.transmitente-nif-iva>decl.transmitente-nif-iva",
+]
+
+[[ruling]]
+modelo = "604"
+predecessor = "2021-2023"
+successor = "2024-y-siguientes"
+rationale = "The 2024 diseno de registro appends the territorial attribution boxes [08] to [12] to the liquidacion, moving the tail campos later in the record while their printed boxes stand: A deducir [06] and Resultado de la autoliquidacion [07] repeat verbatim. The one-byte sign campo at position 645 also stands - same width, type and 'Blanco o N' contenido - and 2024 corrects its group caption to Rectificaciones, the group its own box reference [03] names in both disenos, where 2021-2023 carried the caption of the preceding merged group cell."
+grounded = [
+  "liq.03-signo-base-sujetas>liq.03-signo-base-rectificaciones",
+  "liq.06-a-deducir>liq.06-a-deducir",
+  "liq.07-resultado>liq.07-resultado",
 ]

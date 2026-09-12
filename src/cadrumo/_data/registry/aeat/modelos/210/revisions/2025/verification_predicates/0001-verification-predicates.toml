@@ -10,6 +10,7 @@
 # or empty.
 
 [[revisions."2025".verification_predicates]]
+id = "profile-field-required:representante-fiscal-required"
 predicate_id = "m210-representante-fiscal-required"
 expression = 'profile_field_required("representante_fiscal_nif", "non_resident_irnr_non_eea")'
 finding_kind = "BLOCKING_RULE"
@@ -32,6 +33,7 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-10"]
 # support. It is now closed by the casilla_equals_implies_nonzero guard
 # below.
 [[revisions."2025".verification_predicates]]
+id = "implies-nonzero:rendimientos-integros-implica-base-imponible"
 predicate_id = "modelo-210-2025-rendimientos-integros-implica-base-imponible"
 expression = 'implies_nonzero(["rendimientos_integros", "base_imponible"])'
 finding_kind = "ADVISORY"
@@ -58,6 +60,7 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 # legitimately zero base_imponible for an inmobiliaria filer (e.g. zero
 # days of imputation in the filing window) is not ruled out.
 [[revisions."2025".verification_predicates]]
+id = "casilla-equals-implies-nonzero:inmobiliaria-implica-base-imponible"
 predicate_id = "modelo-210-2025-inmobiliaria-implica-base-imponible"
 expression = 'casilla_equals_implies_nonzero(["tipo_renta", "inmobiliaria", "base_imponible"])'
 finding_kind = "ADVISORY"
@@ -74,6 +77,7 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24"]
 # could itself be stale or under review, so the guard prompts
 # confirmation of eligibility rather than refusing the filing outright.
 [[revisions."2025".verification_predicates]]
+id = "casilla-equals-implies-profile-flag:ue-residente-requiere-residencia-ue-eee"
 predicate_id = "modelo-210-2025-ue-residente-requiere-residencia-ue-eee"
 expression = 'casilla_equals_implies_profile_flag(["tipo_renta", "ue_residente", "ue_eee_status"])'
 finding_kind = "ADVISORY"

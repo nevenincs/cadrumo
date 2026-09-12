@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00015"
+continuidad_id = "is-entidad-zec-sin-consolidacion-fiscal"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 55/55, filas 60/60: Entidad ZEC (sin consolidación fiscal) [00015]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00015"
 section = ["entidad_zec_sin_consolidacion_fiscal"]
 data_type = "decimal"

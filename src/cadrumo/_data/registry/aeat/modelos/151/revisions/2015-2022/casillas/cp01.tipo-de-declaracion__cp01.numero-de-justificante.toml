@@ -15,6 +15,7 @@
 # AEAT campo: Tipo de declaración
 [[revisions."2015-2022".casillas]]
 id = "p01.tipo-de-declaracion"
+continuidad_id = "tipo-de-declaracion"
 number = "13"
 segmento = "M15101000"
 section = ["p01", "tipo_de_declaracion"]
@@ -274,6 +275,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Contribuyente. 61 - Nº de Fax.
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-61-no-de-fax"
+continuidad_id = "contribuyente-fax-domicilio-espana"
 number = "300-308"
 segmento = "M15101000"
 section = ["p01", "contribuyente"]
@@ -393,6 +395,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Contribuyente Domicilio Extranjero. 72 - Nº Fax
 [[revisions."2015-2022".casillas]]
 id = "p01.contribuyente-domicilio-extranjero-72-no-fax"
+continuidad_id = "contribuyente-fax-domicilio-extranjero"
 number = "601-615"
 segmento = "M15101000"
 section = ["p01", "contribuyente_domicilio_extranjero"]
@@ -686,6 +689,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Representante. 61 - Nº de Fax.
 [[revisions."2015-2022".casillas]]
 id = "p01.representante-61-no-de-fax"
+continuidad_id = "representante-fax"
 number = "913-921"
 segmento = "M15101000"
 section = ["p01", "representante"]

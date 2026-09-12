@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2020-dictionary:1077 y aeat-dr-100-2021-dictionary:1135; Deporte Inclusivo, columna Aplicado, M21DTIA.
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0801-2020-2021-unchanged"
+continuidad_id = "irpf-aeip-deporte-inclusivo-aplicado"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]

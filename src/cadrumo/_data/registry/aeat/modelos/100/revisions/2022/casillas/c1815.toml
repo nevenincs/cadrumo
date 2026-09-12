@@ -1,5 +1,7 @@
 [[revisions."2022".casillas]]
 id = "1815"
+# aeat-dr-100-2022-dictionary:608: G2DINMT, titular de los inmuebles o derechos reales transmitidos.
+continuidad_id = "irpf-inmuebles-transmision-contribuyente-titular"
 number = "1815"
 section = ["toma_datos_ampliada"]
 data_type = "text"

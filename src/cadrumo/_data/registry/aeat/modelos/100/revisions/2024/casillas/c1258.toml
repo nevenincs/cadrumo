@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "1258"
+continuidad_id = "irpf-compensacion-saldos-ganancias-perdidas-ahorro-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:2092 y aeat-dr-100-2024-dictionary:2175: campo C2PPAPT, tipo TIT; mismo titular de saldos negativos de ganancias y perdidas del ahorro, descrito por el grupo oficial de ambas ediciones."
 number = "1258"
 section = ["resultados", "anexo_c_res", "saldos_neg_gy_p_ahorro_res"]
 data_type = "text"

@@ -17,6 +17,9 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2016-2017".casillas]]
 id = "decl.tipo-declaracion"
+continuidad_id = "declaracion-tipo-309"
+# Modern chain starts here; no predecessor link is asserted to the 2004
+# combined-name, country-description or separate category-flag surfaces.
 number = "13"
 section = ["declarante", "liquidacion"]
 data_type = "text"
@@ -28,6 +31,9 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2016-2017".casillas]]
 id = "decl.nombre"
+continuidad_id = "declarante-nombre-309"
+# Modern chain starts here; no predecessor link is asserted to the 2004
+# combined-name, country-description or separate category-flag surfaces.
 number = "83-102"
 section = ["declarante", "liquidacion"]
 data_type = "name"
@@ -53,6 +59,9 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2016-2017".casillas]]
 id = "decl.transmitente-apellidos"
+continuidad_id = "transmitente-apellidos"
+# Modern chain starts here; no predecessor link is asserted to the 2004
+# combined-name, country-description or separate category-flag surfaces.
 number = "118-177"
 section = ["declarante", "liquidacion"]
 data_type = "name"
@@ -64,6 +73,9 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2016-2017".casillas]]
 id = "decl.transmitente-nombre"
+continuidad_id = "transmitente-nombre"
+# Modern chain starts here; no predecessor link is asserted to the 2004
+# combined-name, country-description or separate category-flag surfaces.
 number = "178-197"
 section = ["declarante", "liquidacion"]
 data_type = "name"
@@ -75,6 +87,9 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2016-2017".casillas]]
 id = "decl.transmitente-pais"
+continuidad_id = "transmitente-pais"
+# Modern chain starts here; no predecessor link is asserted to the 2004
+# combined-name, country-description or separate category-flag surfaces.
 number = "198-199"
 section = ["declarante", "liquidacion"]
 data_type = "country_code"
@@ -86,6 +101,9 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2016-2017".casillas]]
 id = "decl.situacion-tributaria"
+continuidad_id = "situacion-tributaria"
+# Modern chain starts here; no predecessor link is asserted to the 2004
+# combined-name, country-description or separate category-flag surfaces.
 number = "200"
 section = ["declarante", "liquidacion"]
 data_type = "text"
@@ -97,6 +115,9 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2016-2017".casillas]]
 id = "decl.hecho-imponible"
+continuidad_id = "hecho-imponible"
+# Modern chain starts here; no predecessor link is asserted to the 2004
+# combined-name, country-description or separate category-flag surfaces.
 number = "201"
 section = ["declarante", "liquidacion"]
 data_type = "text"

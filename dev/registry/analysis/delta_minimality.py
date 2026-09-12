@@ -98,13 +98,9 @@ from typing import Final
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.identifier_lineage import identifier_lineage
+from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
-from cadrumo.domain.calculations.registry.schema import (
-    DeclaredPredecessor,
-    ModeloDefinition,
-    ModeloRevision,
-    NoPredecessor,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ..compiler.authority import compiled_bundled_authority

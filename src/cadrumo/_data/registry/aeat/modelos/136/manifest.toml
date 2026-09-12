@@ -25,3 +25,8 @@ source_refs = [
     "boe-modelo-136-current-form-text",
     "boe-modelo-136-current-form",
 ]
+
+[modelo.inception.unauthored]
+earliest_authored = 2026
+reason = "Gravamen especial approved by Orden HAP/70/2013; the 2018 redesign applies from 3T 2018 onward, so 2022-2025 existed in law and are not yet authored."
+legal_refs = ["orden-hap-70-2013:art-5"]

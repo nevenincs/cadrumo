@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "1953"
+continuidad_id = "irpf-aeip-750-aniversario-del-consolat-del-mar-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:1426 y aeat-dr-100-2024-dictionary:1347: campo M21CONMA; columna Aplicado en esta declaración del programa 750 aniversario del Consolat del Mar en Anexo A. Misma designación y función fiscal."
 number = "1953"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

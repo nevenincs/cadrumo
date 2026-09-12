@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "0143"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-mejoras-previas"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:233 y aeat-dr-100-2022-dictionary:232: C_IMPMJEAACC, mejoras de años anteriores en el inmueble accesorio a efectos de amortización. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "0143"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 semantic_role = "irpf_inmueble_mejoras_previas"

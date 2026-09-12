@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "0398"
+continuidad_id = "irpf-ganancias-diferidas-reinversion-contribuyente"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:690 y aeat-dr-100-2024-dictionary:705: campo G3D_CT, tipo TIT; mismo titular de ganancias acogidas al diferimiento por reinversion, descrito por el grupo oficial de ambas ediciones."
 number = "0398"
 section = ["toma_datos_ampliada"]
 data_type = "text"

@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2022-dictionary:1358 y aeat-dr-100-2023-dictionary:1369; Caravaca de la Cruz 2024. Año Jubilar, columna Aplicado, M21CAJA.
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0787-2022-2023-unchanged"
+continuidad_id = "irpf-aeip-caravaca-de-la-cruz-2024-ano-jubilar-aplicado"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]

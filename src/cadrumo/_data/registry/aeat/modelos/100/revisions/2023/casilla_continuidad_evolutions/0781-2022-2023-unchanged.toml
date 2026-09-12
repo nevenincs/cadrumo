@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2022-dictionary:1340 y aeat-dr-100-2023-dictionary:1351; Conmemoración del 50 aniversario de la muerte del artista español Pablo Picasso, columna Aplicado, M21MPPA.
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0781-2022-2023-unchanged"
+continuidad_id = "irpf-aeip-conmemoracion-del-50-aniversario-de-la-muerte-del-artista-espanol-pablo-picasso-aplicado"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]

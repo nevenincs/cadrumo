@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00014"
+continuidad_id = "is-agrupacion-europea-de-interes-economico"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 37/37, filas 42/42: Agrupación europea de  interés económico [00014]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00014"
 section = ["agrupacion_europea_de_interes_economico"]
 data_type = "decimal"

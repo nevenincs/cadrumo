@@ -1,4 +1,5 @@
 [revisions."2015-2022"]
+formula_source_refs = ["aeat-modelo-151-procedure"]
 casilla_source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 # Prepared and reviewed by an agent against the bundled diseno de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
@@ -98,3 +99,8 @@ A live cross-reference declares an AEAT surface this application READS at runtim
 bound and no guard policy to declare. Should a Modelo 151 consulta reader ever be built, this disposition is what it replaces."""
 legal_refs = ["ley-35-2006:art-93", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-modelo-151-procedure"]
+
+[revisions."2015-2022".source_default_dispositions.bindings]
+kind = "underivable"
+reason = """
+No leading source_refs run is shared by two rows of this edition's bindings family. The family holds a single source-stating row, and one statement can open no run that a second shares, so no default is derivable here and the row keeps its own refs rather than lifting them to a manifest default a later authored row might not carry."""

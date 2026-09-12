@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "1212"
+continuidad_id = "irpf-inmueble-gastos-pendientes-referencia-catastral"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2024-dictionary:2037 y aeat-dr-100-2025-dictionary:2178: C1ICRC, referencia catastral del inmueble con intereses y gastos de reparación pendientes de deducir. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "1212"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"

@@ -16,11 +16,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
-from cadrumo.domain.calculations.registry.revision_predecessor_date_agreement import (
-    EditionWindow,
+from cadrumo.domain.calculations.registry.revision_contracts import (
+    DeclaredPredecessor,
+    RevisionWindow,
     validate_predecessor_date_agreement,
 )
-from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 
 from ..compiler.loader import load_modelo_directory
@@ -121,8 +121,8 @@ def test_an_overlapping_pair_is_exempt_whichever_way_the_edge_points(tmp_path: P
         load_modelo_directory(modelo_dir)
 
 
-def _window(valid_from: date, *years: int, periods: tuple[str, ...] = ("0A",)) -> EditionWindow:
-    return EditionWindow(
+def _window(valid_from: date, *years: int, periods: tuple[str, ...] = ("0A",)) -> RevisionWindow:
+    return RevisionWindow(
         valid_from=valid_from,
         valid_to=None,
         period_selector=PeriodSelector(years=years, periods=periods),

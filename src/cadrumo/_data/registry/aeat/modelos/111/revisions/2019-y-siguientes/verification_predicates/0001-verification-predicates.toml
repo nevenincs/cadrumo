@@ -23,6 +23,7 @@
 # a blocking rule would refuse a legitimate draft rather than let the operator
 # weigh it.
 [[revisions."2019-y-siguientes".verification_predicates]]
+id = "implies-nonzero:retencion-actividades-economicas-cuando-importe-positivo"
 predicate_id = "modelo-111-retencion-actividades-economicas-cuando-importe-positivo"
 expression = 'implies_nonzero(["08", "09"])'
 finding_kind = "ADVISORY"

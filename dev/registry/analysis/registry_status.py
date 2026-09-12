@@ -16,7 +16,7 @@ from cadrumo.domain.calculations.registry.authority import (
     bundled_authority_artifact_path,
 )
 
-from ..compiler.validate_bindings import unreferenced_binding_advisories
+from ..compiler.validate_bindings import informational_binding_ids, unreferenced_binding_advisories
 from ..conformance.cli import load_bundled_runtime_authority, validate_registry
 from ..maintenance_support import OracleEnvironment
 from ..parity.maintenance import audit_registry_oracles
@@ -45,6 +45,14 @@ class RegistryStatus:
     refuses them. Surfacing the count per modelo is what keeps the residue
     measurable instead of invisible -- an advisory nothing prints is
     indistinguishable from an advisory nothing raises.
+    """
+    informational_bindings: tuple[tuple[str, int], ...]
+    """Per-modelo count of bindings declaring a non-calculation disposition.
+
+    The dispositioned counterpart of :attr:`unreferenced_bindings`: a row the
+    author classed as informational leaves the advisory and arrives here, so the
+    disposition is a move between two reported lines rather than a way to make a
+    binding stop being counted at all.
     """
     details: tuple[str, ...]
 
@@ -157,6 +165,15 @@ def collect_registry_status(
         modelos = ", ".join(f"{modelo}={count}" for modelo, count in unreferenced_bindings)
         details.append(f"UNREFERENCED-BINDINGS: {total} binding(s) named by no typed consumer ({modelos})")
 
+    informational_bindings = _informational_binding_counts(authority)
+    if informational_bindings:
+        informational_total = sum(count for _, count in informational_bindings)
+        informational_modelos = ", ".join(f"{modelo}={count}" for modelo, count in informational_bindings)
+        details.append(
+            f"INFORMATIONAL-BINDINGS: {informational_total} binding(s) declaring a non-calculation "
+            f"disposition ({informational_modelos})"
+        )
+
     return RegistryStatus(
         valid=valid,
         oracles=oracles,
@@ -167,6 +184,7 @@ def collect_registry_status(
         authority_candidate_digest=candidate_digest,
         loadable=loadable,
         unreferenced_bindings=unreferenced_bindings,
+        informational_bindings=informational_bindings,
         details=tuple(details),
     )
 
@@ -194,6 +212,23 @@ def _unreferenced_binding_counts(authority: ValidatedRegistryAuthority | None) -
         )
         if advisories:
             counts.append((str(modelo.id), len(advisories)))
+    return tuple(sorted(counts))
+
+
+def _informational_binding_counts(authority: ValidatedRegistryAuthority | None) -> tuple[tuple[str, int], ...]:
+    """Count, per modelo, the bindings that declare a non-calculation disposition.
+
+    Read through the compiler-owned :func:`informational_binding_ids` for the
+    same reason the unreferenced count reads through its advisory: the report
+    must not hold a second opinion about what the disposition means.
+    """
+    if authority is None:
+        return ()
+    counts: list[tuple[str, int]] = []
+    for modelo in authority.modelos:
+        total = sum(len(informational_binding_ids(revision)) for revision in modelo.revisions.values())
+        if total:
+            counts.append((str(modelo.id), total))
     return tuple(sorted(counts))
 
 
@@ -291,6 +326,10 @@ def _payload(status: RegistryStatus, *, blocking: bool) -> dict[str, object]:
         "unreferenced_bindings": {
             "total": sum(count for _, count in status.unreferenced_bindings),
             "by_modelo": dict(status.unreferenced_bindings),
+        },
+        "informational_bindings": {
+            "total": sum(count for _, count in status.informational_bindings),
+            "by_modelo": dict(status.informational_bindings),
         },
         "details": list(status.details),
         "actions": actions,

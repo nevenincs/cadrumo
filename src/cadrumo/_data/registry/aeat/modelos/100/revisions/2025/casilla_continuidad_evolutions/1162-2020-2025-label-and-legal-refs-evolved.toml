@@ -1,8 +1,0 @@
-[[revisions."2025".casilla_continuidad_evolutions]]
-id = "m100-1162-2020-2025-label-and-legal-refs-evolved"
-continuidad_id = "irpf-deduccion-la-rioja-arrendamiento-municipio-codigo"
-from_revision = "2020"
-to_revision = "2025"
-evolution_kind = "label_and_legal_refs_evolved"
-legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
-source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

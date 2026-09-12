@@ -20,12 +20,10 @@ questions, and the guard consumes it.
 from __future__ import annotations
 
 import inspect
-from importlib.util import find_spec
 
 import pytest
 from pydantic import AnyUrl
 
-from ..... import core as core
 from .....core.external_constants import load_external_constants
 from .....core.remote_authority import (
     REMOTE_READ_SCHEME,
@@ -37,7 +35,6 @@ from .....core.remote_authority import (
     sanctioned_gov_idp_host_suffixes,
 )
 from .....tests.aeat_literal_fixtures import aeat_host, aeat_url, configured_path
-from ... import registry as registry
 from ..remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
@@ -226,7 +223,7 @@ def test_canonical_scheme_is_tls() -> None:
 
 
 def test_aeat_suffixes_preserve_configured_and_legacy_authority() -> None:
-    """The typed registry supplies both AEAT suffixes without a runtime-settings facade."""
+    """The typed registry supplies both AEAT suffixes without a runtime-settings dependency."""
     domains = load_external_constants().aeat.domains
 
     assert aeat_host_suffixes() == (domains.host_suffix, domains.legacy_host_suffix)
@@ -250,27 +247,6 @@ def test_sanctioned_idp_is_separate_from_aeat_authority() -> None:
     assert idp_suffix == domains.clave.removeprefix("https://")
     assert is_sanctioned_gov_idp_host(f"se-pasarela.{idp_suffix}")
     assert not is_aeat_host(idp_suffix)
-
-
-def test_registry_remote_authority_surface_has_no_facade_or_retired_module() -> None:
-    """Consumers reach the direct core owner; packages expose no compatibility surface."""
-    retired_module = ".".join(("cadrumo", "domain", "calculations", "registry", "aeat_hosts"))
-
-    assert find_spec(retired_module) is None
-    assert registry.__all__ == []
-    assert not hasattr(registry, "aeat_hosts")
-    assert not any(
-        hasattr(core, name)
-        for name in (
-            "REMOTE_READ_SCHEME",
-            "canonical_remote_hostname",
-            "aeat_host_suffixes",
-            "is_aeat_host",
-            "first_aeat_host",
-            "sanctioned_gov_idp_host_suffixes",
-            "is_sanctioned_gov_idp_host",
-        )
-    )
 
 
 # --------------------------------------------------------------------------

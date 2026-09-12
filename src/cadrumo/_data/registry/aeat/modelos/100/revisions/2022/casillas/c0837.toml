@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "0837"
+continuidad_id = "irpf-incentivos-inversion-canarias-activos-fijos-saldos-anteriores-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:1273 y aeat-dr-100-2022-dictionary:1401: campo M22AFA; saldos anteriores de adquisición de activos fijos en Canarias aplicados en ambas ediciones del Anexo A, sin cambio de función ni de régimen."
 number = "0837"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado_flag"

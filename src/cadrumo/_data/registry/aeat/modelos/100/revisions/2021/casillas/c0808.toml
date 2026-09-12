@@ -1,5 +1,8 @@
 [[revisions."2021".casillas]]
 id = "0808"
+continuidad_id = "irpf-aeip-camino-lebaniego-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2020-dictionary:1092 y aeat-dr-100-2021-dictionary:1141: campo M21CLEA; columna Aplicado en esta declaración del programa Camino Lebaniego en Anexo A. Misma designación y función fiscal."
 number = "0808"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

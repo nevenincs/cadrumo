@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00056"
+continuidad_id = "is-entidad-en-regimen-de-atribucion-de-rentas-con-tributacion-por-el-impuesto-sobre-sociedades"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 53/53, filas 58/58: Entidad en régimen de atribución de rentas con tributación por el Impuesto sobre Sociedades [00056]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00056"
 section = ["entidad_en_regimen_de_atribucion_de_rentas_con_tri"]
 data_type = "decimal"

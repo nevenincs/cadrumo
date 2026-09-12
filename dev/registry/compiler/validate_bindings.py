@@ -46,6 +46,7 @@ if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 
 __all__ = [
+    "informational_binding_ids",
     "unreferenced_binding_advisories",
     "validate_binding_registration_section",
 ]
@@ -134,6 +135,10 @@ def unreferenced_binding_advisories(*, prefix: str, revision: ModeloRevision) ->
     ``applicability.kind == "non_calculation"`` and is skipped here. The
     remainder is an advisory rather than a refusal while the authored corpus
     still carries several hundred such rows.
+
+    The skipped rows are not lost: :func:`informational_binding_ids` reports the
+    same population under its own name, so a disposition moves a row from one
+    counted line to another rather than out of the report.
     """
     consumers = binding_consumers(revision)
     advisories: list[str] = []
@@ -147,3 +152,19 @@ def unreferenced_binding_advisories(*, prefix: str, revision: ModeloRevision) ->
             f"declares no non_calculation applicability",
         )
     return tuple(advisories)
+
+
+def informational_binding_ids(revision: ModeloRevision) -> tuple[BindingId, ...]:
+    """Return the bindings of one revision that declare a non-calculation disposition.
+
+    The counterpart of :func:`unreferenced_binding_advisories`: the advisory
+    skips these rows, and this is where they stay visible. Authoring a
+    disposition must move a binding between two reported lines, never make it
+    disappear, or the disposition would become a way to silence a row rather
+    than to classify it.
+    """
+    return tuple(
+        binding.id
+        for binding in revision.bindings
+        if binding.applicability.kind == BindingApplicabilityKind.NON_CALCULATION
+    )

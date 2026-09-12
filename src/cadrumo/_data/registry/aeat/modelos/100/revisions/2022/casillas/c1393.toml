@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "1393"
+continuidad_id = "irpf-inmueble-desglose-gastos-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:1954 y aeat-dr-100-2022-dictionary:2144: DICT, titular del inmueble en el desglose voluntario de gastos y mejoras del arrendamiento. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "1393"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"

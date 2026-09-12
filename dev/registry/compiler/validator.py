@@ -38,7 +38,11 @@ from .corpus_catalogue import (
     verify_catalogue_identity_bindings,
     verify_source_catalogue,
 )
-from .fact_validation import governed_fact_catalogue_failures, retired_fact_provider_closure_failures
+from .fact_validation import (
+    governed_fact_catalogue_failures,
+    iva_binding_cash_accounting_vocabulary_failures,
+    retired_fact_provider_closure_failures,
+)
 from .legal_grounding import verify_legal_catalogue_grounding
 from .registry_scope import validate_registry_scope
 from .source_evidence_fingerprint import (
@@ -102,6 +106,7 @@ class RegistryValidator:
         self._legal = catalogues.legal
         self._sources = catalogues.sources
         self._facts = catalogues.facts
+        self._runtime = catalogues.runtime
         self._supported_filing_years = (
             () if catalogues.supported_filing_years is None else catalogues.supported_filing_years.years
         )
@@ -168,6 +173,7 @@ class RegistryValidator:
             id(self._legal),
             id(self._sources),
             id(self._facts),
+            id(self._runtime),
             self._supported_filing_years,
             self._source_root_key(),
             self._corpus_root_key(),
@@ -180,23 +186,53 @@ class RegistryValidator:
             and cached[1] is self._legal
             and cached[2] is self._sources
             and cached[3] is self._facts
+            and cached[4] is self._runtime
         ):
-            return cached[4]
+            return cached[5]
         failures = tuple(self._validate_modelo(modelo, validate_catalogues=True))
-        MODELO_VALIDATION_CACHE[cache_key] = (modelo, self._legal, self._sources, self._facts, failures)
+        MODELO_VALIDATION_CACHE[cache_key] = (
+            modelo,
+            self._legal,
+            self._sources,
+            self._facts,
+            self._runtime,
+            failures,
+        )
         return failures
 
     def _validate_catalogues(self) -> tuple[str, ...]:
         if self._catalogue_failures is not None:
             return self._catalogue_failures
         source_root_key = self._source_root_key()
-        cache_key = (id(self._legal), id(self._sources), id(self._facts), source_root_key, self._source_evidence_key())
+        cache_key = (
+            id(self._legal),
+            id(self._sources),
+            id(self._facts),
+            id(self._runtime),
+            source_root_key,
+            self._source_evidence_key(),
+        )
         cached = CATALOGUE_FAILURE_CACHE.get(cache_key)
-        if cached is not None and cached[0] is self._legal and cached[1] is self._sources and cached[2] is self._facts:
-            self._catalogue_failures = cached[3]
+        if (
+            cached is not None
+            and cached[0] is self._legal
+            and cached[1] is self._sources
+            and cached[2] is self._facts
+            and cached[3] is self._runtime
+        ):
+            self._catalogue_failures = cached[4]
             return self._catalogue_failures
 
         failures: list[str] = []
+        failures.extend(
+            _missing_refs(
+                "runtime catalogues",
+                "published authority",
+                self._runtime.legal_reference_ids(),
+                self._legal,
+                "legal",
+            )
+        )
         if self._source_root is not None:
             try:
                 verify_legal_catalogue_grounding(self._legal, source_root=self._source_root)
@@ -238,13 +274,20 @@ class RegistryValidator:
         )
         failures.extend(retired_fact_provider_closure_failures(self._facts, source_refs=self._sources))
         self._catalogue_failures = tuple(failures)
-        CATALOGUE_FAILURE_CACHE[cache_key] = (self._legal, self._sources, self._facts, self._catalogue_failures)
+        CATALOGUE_FAILURE_CACHE[cache_key] = (
+            self._legal,
+            self._sources,
+            self._facts,
+            self._runtime,
+            self._catalogue_failures,
+        )
         return self._catalogue_failures
 
     def _validate_modelo(self, modelo: ModeloDefinition, *, validate_catalogues: bool) -> list[str]:
         failures: list[str] = []
         if validate_catalogues:
             failures.extend(self._validate_catalogues())
+        failures.extend(iva_binding_cash_accounting_vocabulary_failures(modelo, self._facts))
         failures.extend(_missing_refs("modelo", modelo.id, modelo.legal_refs, self._legal, "legal"))
         failures.extend(_missing_refs("modelo", modelo.id, modelo.source_refs, self._sources, "source"))
         failures.extend(
@@ -272,13 +315,14 @@ class RegistryValidator:
     def _registry_cache_key(
         self,
         modelo_tuple: tuple[ModeloDefinition, ...],
-    ) -> tuple[tuple[int, ...], int, int, int, tuple[int, ...], str | None, str | None, SourceEvidenceFingerprint]:
+    ) -> tuple[tuple[int, ...], int, int, int, int, tuple[int, ...], str | None, str | None, SourceEvidenceFingerprint]:
         """Build the identity and environment key for a registry validation."""
         return (
             tuple(id(modelo) for modelo in modelo_tuple),
             id(self._legal),
             id(self._sources),
             id(self._facts),
+            id(self._runtime),
             self._supported_filing_years,
             self._source_root_key(),
             self._corpus_root_key(),
@@ -289,7 +333,7 @@ class RegistryValidator:
         self,
         modelo_tuple: tuple[ModeloDefinition, ...],
         cache_key: tuple[
-            tuple[int, ...], int, int, int, tuple[int, ...], str | None, str | None, SourceEvidenceFingerprint
+            tuple[int, ...], int, int, int, int, tuple[int, ...], str | None, str | None, SourceEvidenceFingerprint
         ],
     ) -> tuple[str, ...] | None:
         """Return a cache hit only when both tuple and catalogue identities still match."""
@@ -300,9 +344,10 @@ class RegistryValidator:
             or cached[1] is not self._legal
             or cached[2] is not self._sources
             or cached[3] is not self._facts
+            or cached[4] is not self._runtime
         ):
             return None
-        return cached[4]
+        return cached[5]
 
     def _validate_registry_modelos(self, modelo_tuple: tuple[ModeloDefinition, ...]) -> list[str]:
         """Run catalogue and per-model checks in their established order."""
@@ -314,13 +359,20 @@ class RegistryValidator:
     def _cache_registry_failures(
         self,
         cache_key: tuple[
-            tuple[int, ...], int, int, int, tuple[int, ...], str | None, str | None, SourceEvidenceFingerprint
+            tuple[int, ...], int, int, int, int, tuple[int, ...], str | None, str | None, SourceEvidenceFingerprint
         ],
         modelo_tuple: tuple[ModeloDefinition, ...],
         failures: tuple[str, ...],
     ) -> None:
         """Persist a completed registry validation result under its exact key."""
-        REGISTRY_VALIDATION_CACHE[cache_key] = (modelo_tuple, self._legal, self._sources, self._facts, failures)
+        REGISTRY_VALIDATION_CACHE[cache_key] = (
+            modelo_tuple,
+            self._legal,
+            self._sources,
+            self._facts,
+            self._runtime,
+            failures,
+        )
 
     def validate_registry(self, modelos: Iterable[ModeloDefinition]) -> None:
         """Validate every modelo and the cross-model relation graph.

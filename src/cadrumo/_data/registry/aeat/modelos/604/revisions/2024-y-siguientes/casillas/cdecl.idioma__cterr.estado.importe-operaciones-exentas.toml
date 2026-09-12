@@ -7,6 +7,9 @@
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "decl.idioma"
+continuidad_id = "idioma-declaracion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 0, campo 9, Idioma de la declaracion; ambos conservan E/C/G/V y su nota de idiomas. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "decl-idioma"
 section = ["declaracion"]
 data_type = "text"
@@ -16,6 +19,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "decl.tipo-autoliquidacion"
+continuidad_id = "tipo-autoliquidacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 6, Tipo de autoliquidacion; ambos remiten a Nota 1: I a ingresar y N negativa con resultado cero. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "decl-tipo-autoliquidacion"
 section = ["declaracion"]
 data_type = "text"
@@ -25,6 +31,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "sp.codigo-lei"
+continuidad_id = "sujeto-pasivo-codigo-lei"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 11, Codigo LEI del sujeto pasivo, sujeto al estandar ISO 17442. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "sp-codigo-lei"
 section = ["sujeto_pasivo"]
 data_type = "text"
@@ -34,6 +43,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "sp.codigo-bic"
+continuidad_id = "sujeto-pasivo-codigo-bic"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 12, Codigo BIC del sujeto pasivo. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "sp-codigo-bic"
 section = ["sujeto_pasivo"]
 data_type = "text"
@@ -43,6 +55,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.tipo-via"
+continuidad_id = "domicilio-fiscal-espana-tipo-via"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 13, tipo via del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-es-tipo-via"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -52,6 +67,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.nombre-via"
+continuidad_id = "domicilio-fiscal-espana-nombre-via"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 14, nombre via del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-es-nombre-via"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -61,6 +79,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.tipo-numeracion"
+continuidad_id = "domicilio-fiscal-espana-tipo-numeracion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 15, tipo numeracion del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-es-tipo-numeracion"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -70,6 +91,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.numero-casa"
+continuidad_id = "domicilio-fiscal-espana-numero-casa"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 16, numero casa del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-es-numero-casa"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -79,6 +103,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.calificador-numero"
+continuidad_id = "domicilio-fiscal-espana-calificador-numero"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 17, calificador numero del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-es-calificador-numero"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -88,6 +115,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.bloque"
+continuidad_id = "domicilio-fiscal-espana-bloque"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 18, bloque del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-es-bloque"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -97,6 +127,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.portal"
+continuidad_id = "domicilio-fiscal-espana-portal"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 19, portal del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-es-portal"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -106,6 +139,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.escalera"
+continuidad_id = "domicilio-fiscal-espana-escalera"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 20, escalera del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-es-escalera"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -115,6 +151,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.planta"
+continuidad_id = "domicilio-fiscal-espana-planta"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 21, planta del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-es-planta"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -124,6 +163,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.puerta"
+continuidad_id = "domicilio-fiscal-espana-puerta"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 22, puerta del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-es-puerta"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -133,6 +175,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.complemento"
+continuidad_id = "domicilio-fiscal-espana-complemento"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 23, complemento del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-es-complemento"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -142,6 +187,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.localidad"
+continuidad_id = "domicilio-fiscal-espana-localidad"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 24, localidad del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-es-localidad"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -151,6 +199,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.codigo-postal"
+continuidad_id = "domicilio-fiscal-espana-codigo-postal"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 25, codigo postal del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-es-codigo-postal"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -160,6 +211,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.municipio"
+continuidad_id = "domicilio-fiscal-espana-municipio"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 26, municipio del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-es-municipio"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -169,6 +223,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.codigo-provincia"
+continuidad_id = "domicilio-fiscal-espana-codigo-provincia"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 27, codigo provincia del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-es-codigo-provincia"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -178,6 +235,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.provincia"
+continuidad_id = "domicilio-fiscal-espana-provincia"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 28, provincia del domicilio fiscal del sujeto pasivo en territorio espanol; se mantiene el mismo componente y su condicion. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-es-provincia"
 section = ["sujeto_pasivo", "domicilio_espana"]
 data_type = "text"
@@ -187,6 +247,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.domicilio"
+continuidad_id = "domicilio-fiscal-extranjero-domicilio"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 29, domicilio del domicilio fiscal del sujeto pasivo en el extranjero; se conserva el mismo componente y ambito territorial. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-ex-domicilio"
 section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
@@ -196,6 +259,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.complemento"
+continuidad_id = "domicilio-fiscal-extranjero-complemento"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 30, complemento del domicilio fiscal del sujeto pasivo en el extranjero; se conserva el mismo componente y ambito territorial. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-ex-complemento"
 section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
@@ -205,6 +271,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.poblacion"
+continuidad_id = "domicilio-fiscal-extranjero-poblacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 31, poblacion del domicilio fiscal del sujeto pasivo en el extranjero; se conserva el mismo componente y ambito territorial. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-ex-poblacion"
 section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
@@ -214,6 +283,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.codigo-postal"
+continuidad_id = "domicilio-fiscal-extranjero-codigo-postal"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 32, codigo postal del domicilio fiscal del sujeto pasivo en el extranjero; se conserva el mismo componente y ambito territorial. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-ex-codigo-postal"
 section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
@@ -223,6 +295,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.provincia-region-estado"
+continuidad_id = "domicilio-fiscal-extranjero-provincia-region-estado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 33, provincia region estado del domicilio fiscal del sujeto pasivo en el extranjero; se conserva el mismo componente y ambito territorial. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-ex-provincia-region-estado"
 section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
@@ -232,6 +307,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.pais"
+continuidad_id = "domicilio-fiscal-extranjero-pais"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 34, pais del domicilio fiscal del sujeto pasivo en el extranjero; se conserva el mismo componente y ambito territorial. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-ex-pais"
 section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
@@ -241,6 +319,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.codigo-pais"
+continuidad_id = "domicilio-fiscal-extranjero-codigo-pais"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 35, codigo pais del domicilio fiscal del sujeto pasivo en el extranjero; se conserva el mismo componente y ambito territorial. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "dom-ex-codigo-pais"
 section = ["sujeto_pasivo", "domicilio_extranjero"]
 data_type = "text"
@@ -250,6 +331,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "sp.persona-contacto"
+continuidad_id = "sujeto-pasivo-persona-contacto"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 36, Persona de contacto del sujeto pasivo, obligatoria. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "sp-persona-contacto"
 section = ["sujeto_pasivo"]
 data_type = "text"
@@ -259,6 +343,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "sp.telefono-contacto"
+continuidad_id = "sujeto-pasivo-telefono-contacto"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 37, Telefono de contacto del sujeto pasivo, obligatorio. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "sp-telefono-contacto"
 section = ["sujeto_pasivo"]
 data_type = "text"
@@ -268,6 +355,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "anexo.numero-justificante"
+continuidad_id = "numero-justificante-anexo-informativo"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 38, Numero de justificante del anexo informativo, obligatorio. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "anexo-numero-justificante"
 section = ["anexo_informativo"]
 data_type = "text"
@@ -277,6 +367,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.01-base-imponible"
+continuidad_id = "base-imponible-operaciones-sujetas-no-exentas"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 39: BI [01] de operaciones sujetas no exentas realizadas en el periodo; la base conserva su poblacion aunque el diseno de 2024 explicite su obligatoriedad. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "01"
 section = ["liquidacion"]
 data_type = "money"
@@ -286,6 +379,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.02-cuota"
+continuidad_id = "cuota-operaciones-sujetas-no-exentas"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 40: Cuota [02] de operaciones sujetas no exentas realizadas en el periodo; misma cuota anterior al reparto territorial. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "02"
 section = ["liquidacion"]
 data_type = "money"
@@ -304,6 +400,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.03-base-rectificaciones"
+continuidad_id = "base-imponible-rectificaciones"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 42: Rectificaciones - BI [03]; misma base de rectificaciones. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "03"
 section = ["liquidacion"]
 data_type = "money"
@@ -313,6 +412,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.04-signo-cuota-rectificaciones"
+continuidad_id = "signo-cuota-rectificaciones"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 43: Rectificaciones - Signo Cuota [04]; Nota 4 en ambos exige N salvo que la cuota sea cero. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "liq-04-signo-cuota-rectificaciones"
 section = ["liquidacion"]
 data_type = "text"
@@ -322,6 +424,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.04-cuota-rectificaciones"
+continuidad_id = "cuota-rectificaciones"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, campo 44: Rectificaciones - Cuota [04]; misma cuota de rectificaciones anterior al reparto territorial. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "04"
 section = ["liquidacion"]
 data_type = "money"
@@ -331,6 +436,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.05-operaciones-exentas"
+continuidad_id = "importe-operaciones-exentas"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, Operaciones exentas realizadas en el periodo [05], campo 41 en el diseno anterior y 45 en 2024; misma poblacion de operaciones exentas. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "05"
 section = ["liquidacion"]
 data_type = "money"
@@ -420,6 +528,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "compl.declaracion-complementaria"
+continuidad_id = "declaracion-complementaria"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, Declaracion complementaria, campo 45 anterior y 54 en 2024; misma marca blanco o X. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "compl-declaracion-complementaria"
 section = ["complementaria"]
 data_type = "text"
@@ -429,6 +540,9 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "compl.numero-justificante-anterior"
+continuidad_id = "numero-justificante-declaracion-anterior"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-604-2021 y aeat-dr-604-2024, pagina 1, Numero justificante declaracion anterior, campo 46 anterior y 55 en 2024; mismo antecedente de la complementaria. La descripcion oficial prueba la misma funcion en ambos disenos."
 number = "compl-numero-justificante-anterior"
 section = ["complementaria"]
 data_type = "text"

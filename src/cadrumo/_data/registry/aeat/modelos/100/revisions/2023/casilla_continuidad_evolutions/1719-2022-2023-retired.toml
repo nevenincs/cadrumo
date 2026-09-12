@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2022-dictionary:1307, M21ENEA; Enfermedades Neurodegenerativas. Año lnternacional de la lnvestigación e lnnovación. Período 2021-2022 deja de figurar como programa aplicado en aeat-dr-100-2023-dictionary.
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1719-2022-2023-retired"
+continuidad_id = "irpf-aeip-enfermedades-neurodegenerativas-ano-lnternacional-de-la-lnvestigacion-e-lnnovacion-periodo-2021-2022-aplicado"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]

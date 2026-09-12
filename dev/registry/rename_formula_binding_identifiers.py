@@ -170,6 +170,28 @@ its provider's ``field``, the surviving name restores that field in full: the
 dropped segments carry the repetition index of a repeated record block, and the
 provider states it already, so nothing is invented.
 
+No id may carry its provider offset in ANY spelling, which is wider than the
+``<from>-<to>`` run. Restoring a truncated slot can put the address straight
+back where the provider's own ``field`` ends in the offset, and a row that never
+spelled a run at all may still end in one, so a trailing separator-bounded token
+equal to ``str(provider.offset)`` -- or to the
+``<offset>-<offset + length - 1>`` remnant -- is dropped as well, repeating
+while both spellings are stacked. The proof is the same per row: only this row's
+own address is removed, never a repetition index or a clave ordinal that happens
+to look like one. Where a corpus names several slots of one record block by their
+offsets alone, the offset-free names collide; the pairs are listed and the modelo
+is refused whole. A collision is never disambiguated by putting an offset back,
+because that is the restatement the rule exists to remove, and a slot whose
+design-record name is genuinely different needs an ``identifier_evolutions`` row
+grounded in that design rather than a spelling invented here.
+
+Emptied fragment directories. A pass that strips a family's last fragment leaves
+the directory behind, and the revision loader walks directories rather than
+files: an empty ``applicability/`` is a family declaring nothing and fails the
+load. Such a directory is part of this pass's own output, so ``--apply`` removes
+every directory it emptied -- after ``git status`` proves nothing is pending
+under it, and reporting rather than sweeping when something is.
+
 Modes. ``--measure`` (the default) parses every in-scope declaration, reports
 the embedding counts, checks the renamed ids for collisions within a
 revision's combined primary-id namespace, and lists the generated export
@@ -1936,6 +1958,12 @@ class SpanStripPlan:
     stranded_export_trees: tuple[str, ...] = ()
     #: True once a within-edition collision withdrew the whole modelo.
     refused_modelo: bool = False
+    #: Every strip the per-row proof produced, INCLUDING the ones a collision
+    #: later withdrew. ``strips`` is the surviving plan; this is the full
+    #: inventory of which id encoded which address, which is what the durable
+    #: address map has to record -- a withdrawn id is precisely the one whose
+    #: correspondence nothing else in the tree will hold.
+    candidates: list[SpanStrip] = field(default_factory=list)
 
     @property
     def rename_map(self) -> dict[str, str]:
@@ -2034,6 +2062,51 @@ def restore_truncated_field_slot(new_id: str, slot: str, member: Mapping[str, An
     return new_id[: len(new_id) - len(slot)] + declared
 
 
+def drop_provider_offset_tail(identifier: str, member: Mapping[str, Any]) -> str:
+    """Return *identifier* with any trailing statement of its provider's own offset removed.
+
+    The span strip removes the ``<from>-<to>`` run an id spells, and
+    :func:`restore_truncated_field_slot` then restores the provider's whole
+    ``field``. Where that ``field`` ITSELF ends in the offset -- which is how
+    modelo 714's asset-slot corpus is authored, ``...inst-invers-290`` at offset
+    290 -- the restoration puts the address straight back under a different
+    spelling, and the rule the strip exists to enforce is not met: no member id
+    may carry its provider offset in ANY spelling.
+
+    So the tail is dropped too, under the same per-row proof the run strip uses.
+    A trailing separator-bounded token is removed only when it EQUALS
+    ``str(provider.offset)`` or the ``<offset>-<offset + length - 1>`` remnant
+    the run strip could leave behind; the removal repeats, because restoring a
+    field can leave both spellings stacked. A number that is not this row's own
+    address is never touched -- a repetition index, a casilla number and a
+    clave ordinal all look the same and mean different things, and only the
+    provider proves which one an address is.
+
+    The result may not be unique across the record: where a corpus names several
+    slots of one block by their offsets alone, two rows land on one name. That
+    is a real finding about the corpus, not a spelling to disambiguate, and the
+    caller's collision gate refuses it.
+    """
+    address = provider_address(member)
+    if address is None:
+        return identifier
+    offset, last = address
+    tokens = (f"{offset}-{last}", str(offset))
+    shortened = True
+    while shortened:
+        shortened = False
+        for token in tokens:
+            if not identifier.endswith(token):
+                continue
+            start = len(identifier) - len(token)
+            if start <= 0 or identifier[start - 1] not in _IDENTIFIER_SEPARATORS:
+                continue
+            identifier = identifier[: start - 1]
+            shortened = True
+            break
+    return identifier
+
+
 def edition_declared_families(revision_dir: Path, revision_id: str) -> dict[str, list[dict[str, Any]]]:
     """Merge every authored fragment below one edition into one member list per declared family.
 
@@ -2101,36 +2174,47 @@ def plan_span_strip(modelo: str, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
             if not isinstance(identifier, str) or not identifier or identifier in seen:
                 continue
             seen.add(identifier)
-            runs = span_runs(identifier)
-            if not runs:
-                continue
             address = provider_address(member)
+            runs = span_runs(identifier)
             matching = [] if address is None else [run for run in runs if (run[2], run[3]) == address]
-            if address is None or not matching:
+            if runs and not matching:
+                # A span-shaped run this provider does not declare stays where it
+                # is, and the refusal names it. It is deliberately NOT a bar on
+                # the offset-tail drop below: that removal is proven by the same
+                # provider on a DIFFERENT segment of the id, and letting an
+                # unexplained run elsewhere veto it would leave the row carrying
+                # its own address under a rule the reader cannot state.
                 candidates = tuple(identifier[start:end] for start, end, _low, _high in runs)
                 rendered = "no offset/length" if address is None else f"{address[0]}-{address[1]}"
                 plan.refusals.append(str(SpanProviderMismatchError(modelo, edition, identifier, candidates, rendered)))
-                continue
             if len(matching) > 1:
                 plan.refusals.append(
                     f"{modelo} {edition} bindings {identifier}: spells its provider address "
                     f"{address[0]}-{address[1]} more than once; refusing to choose which run to remove"
                 )
                 continue
-            start, end, _low, _high = matching[0]
-            new_id = strip_span_segment(identifier, start, end)
-            new_id = restore_truncated_field_slot(new_id, identifier[end + 1 :], member)
+            new_id, segment = identifier, ""
+            if len(matching) == 1:
+                start, end, _low, _high = matching[0]
+                segment = identifier[start:end]
+                new_id = strip_span_segment(identifier, start, end)
+                new_id = restore_truncated_field_slot(new_id, identifier[end + 1 :], member)
+            # The restoration can put the address straight back where the
+            # provider's own ``field`` ends in the offset, and a row that never
+            # spelled a run may still end in one, so the tail drop runs on both.
+            tailless = drop_provider_offset_tail(new_id, member)
+            if tailless != new_id:
+                segment = f"{segment}+{new_id[len(tailless) + 1 :]}" if segment else new_id[len(tailless) + 1 :]
+                new_id = tailless
+            if new_id == identifier:
+                continue
             if not new_id:
-                plan.refusals.append(f"{modelo} {edition} bindings {identifier}: the whole identifier is the span")
+                plan.refusals.append(
+                    f"{modelo} {edition} bindings {identifier}: the whole identifier is its provider address"
+                )
                 continue
             edition_strips.append(
-                SpanStrip(
-                    modelo=modelo,
-                    edition=edition,
-                    old_id=identifier,
-                    new_id=new_id,
-                    segment=identifier[start:end],
-                )
+                SpanStrip(modelo=modelo, edition=edition, old_id=identifier, new_id=new_id, segment=segment)
             )
 
         # The post-strip image of this edition's WHOLE authored namespace, so a
@@ -2144,6 +2228,7 @@ def plan_span_strip(modelo: str, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
             if len(owners) > 1:
                 plan.collisions.append(f"{modelo} {edition}: {collapsed} would be shared by {', '.join(owners)}")
         plan.strips.extend(edition_strips)
+        plan.candidates.extend(edition_strips)
         inventory[edition] = sorted(owned.items())
 
     # The same cross-edition projection the family collapse runs: the strip is
@@ -2185,6 +2270,132 @@ def apply_span_strip(
     return rewrite_identifier_references(renames, modelos_root, mappings_root, code_files=code_files)
 
 
+GENERATED_ROOT = REPO_ROOT / "dev" / "registry" / "generated"
+
+
+def write_address_map(
+    plan: SpanStripPlan,
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+    generated_root: Path = GENERATED_ROOT,
+) -> Path:
+    """Record which binding id encoded which fixed-width address, before any of it is dropped.
+
+    The strip removes the id's copy of its provider address, which is the point:
+    the address is typed data, not a name. But the old id is what every prior
+    commit, audit note and external reference spells, and once it is rewritten
+    nothing in the tree holds the correspondence -- the new id names a slot and
+    the provider names an address, and no record says the two used to be one
+    string. So the map is written first, for every candidate the plan found
+    INCLUDING a modelo the collision gate refuses, because a refused modelo is
+    exactly the one a later reader needs the addresses for.
+
+    Generated output: it is produced by this tool from the corpus and is never
+    hand-edited.
+    """
+    modelo_dir = modelos_root / plan.modelo
+    addresses: dict[str, dict[str, Any]] = {}
+    for revision_dir in iter_revision_dirs(modelo_dir):
+        edition = revision_dir.name
+        for member in edition_declared_families(revision_dir, edition).get("bindings", ()):
+            identifier = member.get("id")
+            provider = member.get("provider")
+            if not isinstance(identifier, str) or not isinstance(provider, Mapping):
+                continue
+            addresses[f"{edition}\t{identifier}"] = {
+                "record": provider.get("record"),
+                "offset": provider.get("offset"),
+                "length": provider.get("length"),
+                "field": provider.get("field"),
+            }
+    entries = [
+        {
+            "edition": strip.edition,
+            "old_id": strip.old_id,
+            "new_id": strip.new_id,
+            "removed": strip.segment,
+            **addresses.get(f"{strip.edition}\t{strip.old_id}", {}),
+        }
+        for strip in sorted(plan.candidates, key=lambda item: (item.edition, item.old_id))
+    ]
+    document = {
+        "modelo": plan.modelo,
+        "refused_modelo": plan.refused_modelo,
+        "candidates": len(plan.candidates),
+        "surviving": len(plan.strips),
+        "applied": len(plan.rename_map),
+        "bindings": entries,
+    }
+    generated_root.mkdir(parents=True, exist_ok=True)
+    target = generated_root / f"{plan.modelo}-binding-id-address-map.json"
+    target.write_text(json.dumps(document, indent=2, ensure_ascii=False, sort_keys=False) + "\n", encoding="utf-8")
+    return target
+
+
+class DirtyFragmentDirectoryError(Exception):
+    """A fragment directory this pass emptied carries uncommitted work, so it is not removed."""
+
+    def __init__(self, directory: Path, status: str) -> None:
+        """Record the directory and the porcelain status that stopped its removal."""
+        super().__init__(
+            f"{directory}: the pass emptied this fragment directory, but git reports uncommitted state under "
+            f"it ({status.strip()!r}). Removing it would discard work this tool did not write, so it is left "
+            "in place; resolve the pending change and re-run."
+        )
+        self.directory = directory
+
+
+def _git_status_clean(directory: Path, repo_root: Path = REPO_ROOT) -> str | None:
+    """Return the porcelain status under *directory*, or ``None`` when git reports nothing.
+
+    ``None`` means clean and therefore safe to remove. Any other value is a
+    contributor's pending change and is reported rather than swept away.
+    """
+    import subprocess
+
+    completed = subprocess.run(  # noqa: S603
+        ["git", "status", "--porcelain", "--", str(directory)],  # noqa: S607
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        return completed.stderr or f"git status exited {completed.returncode}"
+    return completed.stdout or None
+
+
+def remove_emptied_fragment_directories(modelo_dir: Path, repo_root: Path = REPO_ROOT) -> list[Path]:
+    """Remove every fragment directory under *modelo_dir* that now holds no fragment.
+
+    A pass that strips a family's last fragment leaves the directory behind, and
+    the revision loader walks directories rather than files: an empty
+    ``applicability/`` is not "no applicability declared", it is a family
+    directory declaring nothing, and the loader fails on it. The directory is
+    therefore part of the pass's own output and is removed by the pass that
+    emptied it.
+
+    Only a directory holding no files at all, at any depth, is a candidate --
+    a directory still carrying a non-TOML file states something this rule cannot
+    read. Each candidate is checked against ``git status`` first and left in
+    place when anything is pending under it, because an empty directory beside a
+    staged deletion is another contributor's half-finished change.
+
+    Raises:
+        DirtyFragmentDirectoryError: When an emptied directory carries
+            uncommitted state.
+    """
+    removed: list[Path] = []
+    for directory in sorted((path for path in modelo_dir.rglob("*") if path.is_dir()), reverse=True):
+        if any(child.is_file() for child in directory.rglob("*")):
+            continue
+        status = _git_status_clean(directory, repo_root)
+        if status is not None:
+            raise DirtyFragmentDirectoryError(directory, status)
+        directory.rmdir()
+        removed.append(directory)
+    return removed
+
+
 def _run_span_strip(
     modelos: Sequence[str],
     *,
@@ -2200,7 +2411,8 @@ def _run_span_strip(
         plan = plan_span_strip(modelo)
         entry = {
             "stripped_count": len(plan.rename_map),
-            "candidates": len(plan.strips),
+            "candidates": len(plan.candidates),
+            "surviving": len(plan.strips),
             "refused_modelo": plan.refused_modelo,
             "strips": [
                 {"edition": s.edition, "old_id": s.old_id, "new_id": s.new_id, "segment": s.segment}
@@ -2228,6 +2440,12 @@ def _run_span_strip(
                 )
             for module, counts in sorted(entry["test_mentions"].items()):
                 print(f"  TEST {module} names {len(counts)} stripped ids; owned by its author, not rewritten here")
+        if plan.candidates and write:
+            # Written before the rename, and for a refused modelo too: once the
+            # address leaves the id, nothing else records which id carried it.
+            address_map = write_address_map(plan)
+            entry["address_map"] = str(address_map.relative_to(REPO_ROOT).as_posix())
+            print(f"  ADDRESS MAP {address_map.relative_to(REPO_ROOT).as_posix()} ({len(plan.candidates)} candidates)")
         if plan.refused_modelo:
             exit_code = 1
             continue
@@ -2237,6 +2455,15 @@ def _run_span_strip(
             except GeneratedExportTreeStaleError as exc:
                 print(f"Refusing to apply {modelo}: {exc}", file=sys.stderr)
                 return 1
+            try:
+                emptied = remove_emptied_fragment_directories(REGISTRY_MODELOS_ROOT / modelo)
+            except DirtyFragmentDirectoryError as exc:
+                print(f"Left in place: {exc}", file=sys.stderr)
+                emptied = []
+                exit_code = 1
+            entry["emptied_directories_removed"] = [str(path.as_posix()) for path in emptied]
+            for path in emptied:
+                print(f"  REMOVED emptied fragment directory {path.as_posix()}")
             entry["files_touched"] = len(touched)
             entry["references_rewritten"] = hits
             print(f"Span strip {modelo}: {hits} references rewritten, {len(touched)} files touched")

@@ -67,6 +67,7 @@ from .ids import (
     OracleId,
     SourceRefId,
     VerificationExpectationId,
+    VerificationPredicateId,
     WorkbookFixtureId,
     WorkbookOutputId,
     WorkbookParityRefId,
@@ -1329,6 +1330,19 @@ class VerificationPredicateDefinition(RegistryModel):
       equality with a Decimal-pair divergence.
     """
 
+    id: VerificationPredicateId
+    """The predicate's edition-free identity: its kind and its subject.
+
+    ``predicate_id`` beside it is the authored narrative name, scoped to the
+    edition that declares it (``modelo-100-2025-...``), which is exactly why it
+    cannot serve as the identity: a successor restating the same invariant
+    would name it differently and nothing could see the two as one predicate.
+    This identity is the expression's operator and the subject the authored
+    name states once that edition scope is removed, so the same invariant
+    carries the same identity in every edition and the family inherits along a
+    predecessor chain. A year that belongs to the invariant rather than to the
+    edition -- a statutory cutoff such as ``anterior-2013`` -- stays in it.
+    """
     predicate_id: str = Field(min_length=1, max_length=128)
     legal_refs: LegalRefs
     expression: str = Field(min_length=1, max_length=512)

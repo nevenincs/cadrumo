@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00002"
+continuidad_id = "is-entidad-parcialmente-exenta"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 28/28, filas 33/33: Entidad parcialmente exenta [00002]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00002"
 section = ["entidad_parcialmente_exenta"]
 data_type = "decimal"

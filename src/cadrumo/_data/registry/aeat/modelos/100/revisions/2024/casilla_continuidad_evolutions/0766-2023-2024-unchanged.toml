@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2023-dictionary:1339 y aeat-dr-100-2024-dictionary:1272; Programa de preparación de los deportistas españoles de los Juegos de París 2024, columna Aplicado, M21JPAA.
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m100-0766-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-programa-de-preparacion-de-los-deportistas-espanoles-de-los-juegos-de-paris-2024-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]

@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2023-dictionary:1417 y aeat-dr-100-2024-dictionary:1338; Ryder Cup 2031, columna Aplicado, M21RYCA.
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m100-1950-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-ryder-cup-2031-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]

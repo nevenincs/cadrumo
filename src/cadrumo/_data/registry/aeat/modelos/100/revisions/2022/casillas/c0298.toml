@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "0298"
+continuidad_id = "irpf-ganancias-perdidas-sin-transmision-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:529 y aeat-dr-100-2022-dictionary:532: campo TITG13, tipo TIT; mismo titular de ganancias y perdidas no derivadas de transmisiones, descrito por el grupo oficial de ambas ediciones."
 number = "0298"
 section = ["toma_datos_ampliada"]
 data_type = "text"

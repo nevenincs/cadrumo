@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2022-dictionary:1337 y aeat-dr-100-2023-dictionary:1348; Centenario del nacimiento de Victoria de los Ángeles, columna Aplicado, M21VANA.
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0779-2022-2023-unchanged"
+continuidad_id = "irpf-aeip-centenario-del-nacimiento-de-victoria-de-los-angeles-aplicado"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]

@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "1237"
+continuidad_id = "irpf-exencion-reinversion-rentas-vitalicias-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2024-dictionary:2137 y aeat-dr-100-2025-dictionary:2279: campo C1ERRT, tipo TIT; mismo titular de la exencion por reinversion en rentas vitalicias, descrito por el grupo oficial de ambas ediciones."
 number = "1237"
 section = ["resultados", "anexo_c_res", "exencion_rentas_vitalicias_res"]
 data_type = "text"

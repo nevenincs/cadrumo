@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "0509"
+continuidad_id = "irpf-deduccion-bienes-corporales-illes-balears-autonomica"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:874 y aeat-dr-100-2024-dictionary:894: campo DED12A; parte autonómica de la deducción por rendimientos de bienes corporales producidos en las Illes Balears en el bloque de cálculo del impuesto. Misma magnitud y función fiscal en ambas ediciones."
 number = "0509"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_bienes_corporales_illes_balears_autonomica"

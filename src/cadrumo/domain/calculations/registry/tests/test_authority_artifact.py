@@ -5,12 +5,12 @@ from __future__ import annotations
 import json
 from collections.abc import MutableMapping
 from datetime import date
+from decimal import Decimal
 from pathlib import Path
 from typing import cast
 
 import pytest
 
-from .....core.aggregation import BindingSourceKind
 from .....core.hashing import canonical_json_bytes, sha256_hex
 from ..authority_artifact import (
     AUTHORITY_ARTIFACT_SCHEMA_VERSION,
@@ -22,19 +22,75 @@ from ..authority_artifact import (
     read_shared_authority_artifact,
     write_authority_artifact,
 )
-from ..schema import BindingDefinition, NoPredecessor
+from ..errors import RegistryValidationError
+from ..revision_contracts import NoPredecessor
+from ..runtime_catalogues import (
+    ApoderamientoScopeRecord,
+    CountryVocabularyRecord,
+    PublishedIvaPlaceOfSupplyRule,
+    PublishedIvaRegulation,
+    PublishedRecargoBand,
+    RuntimeRegistryCatalogues,
+    SpanishPostalTerritory,
+    TerritoryCarveOut,
+)
+from ..schema import BindingDefinition, RegistryCatalogues
 from ._artifact_runtime_support import _minimal_catalogues, _minimal_modelo, _minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _IDENTITY_DIGEST = "e4c712d347701b34615314b6e3f8fdfd75ca5ee3eabe9c1c651668549fb7f66f"
+_LEGAL_ID = "ley-35-2006:art-1"
+
+
+def _complete_catalogues() -> RegistryCatalogues:
+    catalogues = _minimal_catalogues()
+    runtime = RuntimeRegistryCatalogues(
+        iva_regulations={
+            "fixture-exempt": PublishedIvaRegulation(
+                category="fixture-exempt",
+                requires_reverse_charge=False,
+                requires_supplier_iva_id=False,
+                manual_references=(),
+                citations=(),
+                notes="No legal treatment is asserted by this fixture row.",
+                legal_basis_exempt=True,
+            )
+        },
+        iva_place_of_supply={
+            "fixture-exempt": PublishedIvaPlaceOfSupplyRule(
+                rule_id="fixture-exempt", notes="No placement is asserted.", legal_basis_exempt=True
+            )
+        },
+        countries={"ES": CountryVocabularyRecord(code="ES", alpha3="ESP", names=("Espana",))},
+        spanish_postal_territories={
+            "28": SpanishPostalTerritory(
+                postal_prefixes=("28",), scope="peninsula_baleares", name="Madrid", legal_refs=(_LEGAL_ID,)
+            )
+        },
+        territory_carve_outs={
+            "ES": TerritoryCarveOut(code="ES", name="Espana", establishes_nothing=True, legal_refs=(_LEGAL_ID,))
+        },
+        recargo_bands={
+            "all": PublishedRecargoBand(
+                id="all", min_completed_months=0, surcharge_pct=Decimal("1"), legal_ref=_LEGAL_ID
+            )
+        },
+        apoderamientos_version="fixture-v1",
+        apoderamientos_scopes={
+            "GENERAL": ApoderamientoScopeRecord(
+                code="GENERAL", name_es="General", name_en="General", name_ca="General", name_hu="Altalanos"
+            )
+        },
+    ).require_complete()
+    return catalogues.model_copy(update={"runtime": runtime})
 
 
 def _validated_authority_payload() -> AuthorityArtifact:
     """Build a real typed registry payload without requiring the authoring corpus."""
     return AuthorityArtifact(
         modelos=(_minimal_modelo(_minimal_revision()),),
-        catalogues=_minimal_catalogues(),
+        catalogues=_complete_catalogues(),
         identity_digest=_IDENTITY_DIGEST,
     )
 
@@ -69,16 +125,36 @@ def test_published_authority_round_trips_as_the_complete_typed_payload(tmp_path:
     assert revision.reviewed_at == date(2026, 7, 1)
 
 
+def test_v4_omits_schema_defaults_and_restores_the_same_typed_model(tmp_path: Path) -> None:
+    """Compact v4 may omit only declared defaults; strict hydration restores their meaning."""
+    artifact_path = tmp_path / "authority.json"
+    published = AuthorityArtifact(
+        modelos=(_minimal_modelo(_minimal_revision()),),
+        catalogues=_complete_catalogues(),
+        identity_digest=_IDENTITY_DIGEST,
+    )
+
+    write_authority_artifact(artifact_path, published)
+
+    frame = json.loads(artifact_path.read_bytes())
+    wire_modelo = frame["payload"]["modelos"][0]
+    assert frame["schema_version"] == "cadrumo-authority-artifact-v4"
+    assert "capabilities" not in wire_modelo
+    assert "calculation_class" not in wire_modelo
+    assert "output_sensitivity" not in wire_modelo
+    assert read_authority_artifact(artifact_path) == published
+
+
 def test_published_authority_round_trips_strict_profile_selector_json(tmp_path: Path) -> None:
     """JSON arrays in a published selector rehydrate to the declared tuple shape."""
     artifact_path = tmp_path / "authority.json"
     binding = BindingDefinition.model_validate(
         {
             "id": "profile-selector",
-            "source": BindingSourceKind.PROFILE,
+            "provider": {"kind": "profile", "profile_key": "tax.id", "profile_keys": ()},
+            "value": {"data_type": "text", "channel": "text"},
             # The explicit empty tuple becomes a JSON array in the artifact.
             # Its strict rehydration is the regression under test.
-            "selector": {"profile_key": "tax.id", "profile_keys": ()},
             "legal_refs": ("ley-35-2006:art-1",),
             "source_refs": ("aeat-dr-130-2019-v12",),
         }
@@ -86,7 +162,7 @@ def test_published_authority_round_trips_strict_profile_selector_json(tmp_path: 
     modelo = _minimal_modelo(_minimal_revision(bindings=(binding,)))
     published = AuthorityArtifact(
         modelos=(modelo,),
-        catalogues=_minimal_catalogues(),
+        catalogues=_complete_catalogues(),
         identity_digest=_IDENTITY_DIGEST,
     )
 
@@ -107,7 +183,7 @@ def test_published_authority_preserves_a_grounded_no_predecessor_declaration(tmp
     revision = _minimal_revision().model_copy(update={"predecessor": predecessor})
     published = AuthorityArtifact(
         modelos=(_minimal_modelo(revision),),
-        catalogues=_minimal_catalogues(),
+        catalogues=_complete_catalogues(),
         identity_digest=_IDENTITY_DIGEST,
     )
 
@@ -129,6 +205,21 @@ def test_a_payload_edited_without_its_digest_is_refused_as_corrupt(tmp_path: Pat
         read_authority_artifact(artifact_path)
 
 
+def test_writer_refuses_a_missing_runtime_table(tmp_path: Path) -> None:
+    """A minimal authority is not publishable until every runtime table is present."""
+    incomplete = _complete_catalogues().model_copy(
+        update={"runtime": RuntimeRegistryCatalogues().model_copy(update={"countries": {}})}
+    )
+    artifact = AuthorityArtifact(
+        modelos=(_minimal_modelo(_minimal_revision()),),
+        catalogues=incomplete,
+        identity_digest=_IDENTITY_DIGEST,
+    )
+
+    with pytest.raises(RegistryValidationError, match=r"runtime authority catalogues are incomplete:.*countries"):
+        write_authority_artifact(tmp_path / "authority.json", artifact)
+
+
 def test_a_digest_consistent_frame_does_not_admit_an_invalid_typed_payload(tmp_path: Path) -> None:
     """A matching digest never substitutes for strict authority reconstruction."""
     artifact_path = tmp_path / "authority.json"
@@ -141,7 +232,14 @@ def test_a_digest_consistent_frame_does_not_admit_an_invalid_typed_payload(tmp_p
         read_authority_artifact(artifact_path)
 
 
-@pytest.mark.parametrize("superseded", ["cadrumo-authority-artifact-v1", "cadrumo-authority-artifact-v2"])
+@pytest.mark.parametrize(
+    "superseded",
+    [
+        "cadrumo-authority-artifact-v1",
+        "cadrumo-authority-artifact-v2",
+        "cadrumo-authority-artifact-v3",
+    ],
+)
 def test_a_frame_of_an_earlier_format_is_refused_by_name(tmp_path: Path, superseded: str) -> None:
     """An earlier frame names the format to republish in."""
     artifact_path = tmp_path / "authority.json"

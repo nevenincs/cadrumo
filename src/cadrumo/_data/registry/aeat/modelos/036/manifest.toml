@@ -18,3 +18,7 @@ source_refs = [
     "aeat-modelo-036-procedure",
 ]
 
+[modelo.inception.unauthored]
+earliest_authored = 2025
+reason = "Censo de empresarios approved by Orden EHA/1274/2007; filing years 2022-2024 existed in law and are not yet authored."
+legal_refs = ["orden-eha-1274-2007:art-1"]

@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00018"
+continuidad_id = "is-cooperativa-especialmente-protegida"
 number = "00018"
 section = ["cooperativa_especialmente_protegida"]
 data_type = "decimal"

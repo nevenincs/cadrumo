@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00088"
+continuidad_id = "is-tipo-gravamen-reducido-para-entidades-con-incn-periodo-anterior-inferior-a-1-millon-euros-art-29-1-lis"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 88/88, filas 93/93: Tipo gravamen reducido para entidades con INCN periodo anterior inferior a 1 millón euros (art. 29.1 LIS) [00088]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00088"
 section = ["tipo_gravamen_reducido_para_entidades_con_incn_per"]
 data_type = "decimal"

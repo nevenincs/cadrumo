@@ -25,7 +25,9 @@ def _canonical_report():
 
 def test_real_below_grade_row_is_complete_without_filing_export() -> None:
     report = _canonical_report()
-    row = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo.M036, "2025-02-03-y-siguientes"))
+    row = next(
+        item for item in report.rows if (item.modelo, item.revision) == (Modelo("036"), "2025-02-03-y-siguientes")
+    )
     assert row.temporal_coverage.status == "validated"
     assert row.filing_export is not None
     assert (row.filing_export.outcome, row.filing_export.evidence, row.filing_export.refusal) == (
@@ -42,9 +44,9 @@ def test_real_below_grade_row_is_complete_without_filing_export() -> None:
 def test_real_grade_scope_row_guards_bite_both_participation_mutations() -> None:
     report = _canonical_report()
     below_grade = next(
-        item for item in report.rows if (item.modelo, item.revision) == (Modelo.M036, "2025-02-03-y-siguientes")
+        item for item in report.rows if (item.modelo, item.revision) == (Modelo("036"), "2025-02-03-y-siguientes")
     )
-    filing_grade = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo.M100, "2025"))
+    filing_grade = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo("100"), "2025"))
     assert below_grade.filing_export is not None and filing_grade.filing_export is not None
     below_payload = _declared_row_fields(below_grade)
     below_payload["filing_export"] = filing_grade.filing_export.model_dump(mode="python")
@@ -60,7 +62,7 @@ def test_real_grade_scope_row_guards_bite_both_participation_mutations() -> None
 
 def test_real_loader_reports_stale_layout_bytes_from_a_live_catalogue_mutation() -> None:
     authority = compiled_bundled_authority()
-    modelo = authority.modelo(Modelo.M100)
+    modelo = authority.modelo(Modelo("100"))
     revision = modelo.revisions["2025"]
     source_id = next(
         ref
@@ -74,7 +76,7 @@ def test_real_loader_reports_stale_layout_bytes_from_a_live_catalogue_mutation()
     )
     mutated = replace(authority, catalogues=catalogues, _snapshots={})
     report = load_registry_closure_report(as_of=_AS_OF, registry_authority=mutated)
-    row = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo.M100, "2025"))
+    row = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo("100"), "2025"))
     assert row.filing_export is not None
     assert row.filing_export.refusal is not None
     assert (row.filing_export.outcome, row.filing_export.refusal.reason) == ("refused", "stale_evidence")
@@ -83,7 +85,7 @@ def test_real_loader_reports_stale_layout_bytes_from_a_live_catalogue_mutation()
 
 def test_real_loader_reports_cross_limb_disagreement_from_divergent_authority_cache() -> None:
     authority = compiled_bundled_authority()
-    modelo = authority.modelo(Modelo.M303)
+    modelo = authority.modelo(Modelo("303"))
     selected = modelo.revisions["2025"]
     selector = selected.period_selector.model_copy(update={"years": (2026,), "year_from": None, "year_to": None})
     divergent_revision = selected.model_copy(update={"period_selector": selector})
@@ -92,7 +94,7 @@ def test_real_loader_reports_cross_limb_disagreement_from_divergent_authority_ca
         authority, _modelos_by_id={**authority._modelos_by_id, divergent_modelo.id: divergent_modelo}, _snapshots={}
     )
     report = load_registry_closure_report(as_of=_AS_OF, registry_authority=mutated)
-    row = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo.M303, "2026-y-siguientes"))
+    row = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo("303"), "2026-y-siguientes"))
     assert row.temporal_coverage.failure_code == "selected_revision_mismatch"
     assert row.filing_export is not None
     assert row.filing_export.refusal is not None

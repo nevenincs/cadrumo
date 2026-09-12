@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00038"
+continuidad_id = "is-entidad-dedicada-al-arrend-viviendas"
 number = "00038"
 section = ["entidad_dedicada_al_arrend_viviendas"]
 data_type = "decimal"

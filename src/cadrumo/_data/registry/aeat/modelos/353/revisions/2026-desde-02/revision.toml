@@ -1,7 +1,9 @@
 [revisions."2026-desde-02"]
 binding_source_refs = ["aeat-dr-353-2026"]
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["orden-eha-3434-2007:art-2"], source_refs = ["aeat-dr-353-2026"] } }
+formula_source_refs = ["aeat-dr-353-2026", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
+predecessor = "2021-2025"
 casilla_source_refs = ["aeat-dr-353-2026"]
+reviewed_against = "2021-2025"
 # Prepared and reviewed by an agent against the bundled diseno de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather

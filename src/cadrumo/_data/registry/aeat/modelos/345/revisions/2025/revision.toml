@@ -1,8 +1,23 @@
 [revisions."2025"]
 casilla_source_refs = ["aeat-dr-345-2025"]
 authority_grade = "applicability"
+# valid_to is open, and the selector is now open with it. Two provisions carry
+# the claim forward. Orden HFP/823/2022 disposicion final segunda reads "sera
+# aplicable, por primera vez, a las declaraciones informativas correspondientes
+# al ejercicio 2022 que se presentaran a partir de 2023", and Orden HAC/1430/2025
+# disposicion final unica reads, verbatim in the bundled corpus, "sera aplicable,
+# POR PRIMERA VEZ, a las declaraciones informativas correspondientes al ejercicio
+# 2025 para los modelos 199, 182, 193, 184, 282, 289 y 345 [...] que se deban
+# presentar a partir del 1 de enero de 2026". "Por primera vez" opens a window
+# that runs until an orden amends it, and BOE's consolidated text of
+# BOE-A-2022-14168 (read 2026-09-12) records exactly four amendments -- HFP/528/2023,
+# HFP/1397/2023, HAC/1504/2024 and HAC/1430/2025 -- with nothing after December
+# 2025. AEAT's current disenos-de-registro page for modelos 300-399, read the same
+# day, lists "345 - Orden HFP/823/2022 (actualizado por Orden HAC/1430/2025, de 3
+# de diciembre)" and publishes no ejercicio 2026 design. A years = [2025] selector
+# therefore refused ejercicio 2026 under a design no orden has withdrawn.
 valid_from = 2025-01-01
-period_selector = { years = [2025], periods = ["0A"] }
+period_selector = { year_from = 2025, periods = ["0A"] }
 orden_aplicabilidad = [
     "orden-hfp-823-2022:art-1",
     "orden-hfp-823-2022:art-3",
@@ -37,7 +52,7 @@ source_refs = [
 ]
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
-reviewed_at = 2026-08-19
+reviewed_at = 2026-09-12
 
 [revisions."2025".family_dispositions.formulas]
 reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."

@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00036"
+continuidad_id = "is-sociedad-de-garantia-reciproca-o-de-reafianzamiento"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 47/47, filas 52/52: Sociedad de garantía recíproca o de reafianzamiento [00036]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00036"
 section = ["sociedad_de_garantia_reciproca_o_de_reafianzamient"]
 data_type = "decimal"

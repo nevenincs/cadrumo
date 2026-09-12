@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00032"
+continuidad_id = "is-sociedades-desarrollo-industrial-regional"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 46/46, filas 51/51: Sociedades desarrollo industrial regional [00032]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00032"
 section = ["sociedades_desarrollo_industrial_regional"]
 data_type = "decimal"

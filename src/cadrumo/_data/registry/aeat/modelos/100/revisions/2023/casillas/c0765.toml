@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "0765"
+continuidad_id = "irpf-aeip-175-aniversario-de-la-construccion-del-gran-teatre-del-liceu-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:1220 y aeat-dr-100-2023-dictionary:1246: campo M21CTLA; columna Aplicado en esta declaración del programa 175 Aniversario de la construcción del Gran Teatre del Liceu en Anexo A. Misma designación y función fiscal."
 number = "0765"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

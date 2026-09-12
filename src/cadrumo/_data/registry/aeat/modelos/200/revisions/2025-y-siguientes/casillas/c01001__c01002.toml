@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01001"
+continuidad_id = "is-balance-patrimonio-neto-reserva-de-capitalizacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200005/DP200005, campos 18/18, filas 23/23: Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - Reserva de capitalización [01001]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "01001"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -9,6 +12,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01002"
+continuidad_id = "is-balance-patrimonio-neto-reserva-de-nivelacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200005/DP200005, campos 19/19, filas 24/24: Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - Reserva de nivelación [01002]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "01002"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"

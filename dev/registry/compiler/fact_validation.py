@@ -6,10 +6,16 @@ from collections.abc import Collection, Mapping
 from datetime import timedelta
 from itertools import pairwise
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue, GovernedFactVariant
+from cadrumo.domain.calculations.registry.facts.schema import (
+    GovernedFact,
+    GovernedFactCatalogue,
+    GovernedFactVariant,
+    MappingFactPayload,
+)
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
@@ -17,7 +23,15 @@ from . import fact_providers
 from .legal_grounding import verify_legal_reference_grounding
 from .validate_evidence import EvidenceValidator
 
-__all__ = ["governed_fact_catalogue_failures", "retired_fact_provider_closure_failures"]
+if TYPE_CHECKING:
+    from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+
+
+__all__ = [
+    "governed_fact_catalogue_failures",
+    "iva_binding_cash_accounting_vocabulary_failures",
+    "retired_fact_provider_closure_failures",
+]
 
 
 # These facts replaced the retired global provider. Keep the
@@ -130,6 +144,75 @@ def governed_fact_catalogue_failures(
                                 f"governed fact {fact_id!r} variant {variant.variant_id!r} source citation "
                                 f"{citation.source_ref!r} missing text {required_text!r}"
                             )
+    return tuple(failures)
+
+
+def iva_binding_cash_accounting_vocabulary_failures(
+    modelo: ModeloDefinition,
+    catalogue: GovernedFactCatalogue,
+) -> tuple[str, ...]:
+    """Check IVA binding treatment codes against the authored IVA vocabulary.
+
+    ``IvaCashAccountingTreatment`` remains the runtime observation type, but a
+    registry binding names an authored tax classification.  Keeping the latter
+    as a small identifier type lets the authored binding retain every
+    classification present in the canonical schema fact without making the
+    Python enum a second authority.  This check runs while the authored
+    catalogue is compiled, before published authority is involved.
+    """
+    relevant_bindings = tuple(
+        (revision, binding)
+        for revision in modelo.revisions.values()
+        for binding in revision.bindings
+        if getattr(getattr(binding, "source", None), "value", getattr(binding, "source", None))
+        == "ledger_iva_aggregation"
+    )
+    if not relevant_bindings:
+        return ()
+
+    fact_id = "iva-statutory-schema-vocabulary"
+    fact = catalogue.facts.get(fact_id)
+    if fact is None:
+        return (
+            f"modelo {modelo.id!r} has ledger_iva_aggregation bindings but authored IVA vocabulary fact "
+            f"{fact_id!r} is missing",
+        )
+
+    vocabulary: set[str] = set()
+    for variant in fact.variants:
+        payload = variant.payload
+        if not isinstance(payload, MappingFactPayload):
+            continue
+        for entry in payload.entries:
+            key = entry.key
+            value = entry.value
+            if (
+                isinstance(key, str)
+                and key.startswith("cash_accounting.")
+                and key.endswith(".value")
+                and isinstance(value, str)
+                and value
+            ):
+                vocabulary.add(value)
+    if not vocabulary:
+        return (f"authored IVA vocabulary fact {fact_id!r} has no cash_accounting.*.value declarations",)
+
+    failures: list[str] = []
+    for revision, binding in relevant_bindings:
+        values = getattr(binding.provider, "cash_accounting_treatments", None)
+        if not values:
+            failures.append(
+                f"modelo {modelo.id!r} revision {revision.id!r} binding {binding.id!r} "
+                "must declare at least one cash-accounting treatment",
+            )
+            continue
+        for value in values:
+            if not isinstance(value, str) or value not in vocabulary:
+                failures.append(
+                    f"modelo {modelo.id!r} revision {revision.id!r} binding {binding.id!r} "
+                    f"declares unknown cash-accounting treatment {value!r}; "
+                    f"expected one of {sorted(vocabulary)!r} from authored fact {fact_id!r}",
+                )
     return tuple(failures)
 
 

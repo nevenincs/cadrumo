@@ -22,6 +22,11 @@ review_status = "agent_reviewed"
 reviewed_by = "agent: the official BOE-A-2005-10950 final provision establishes use of Modelo 576 from 2006, including exercise 2007. Its annex is graphical form evidence only; no fixed-width record geometry, field offsets, or export claim is copied from the 2008 AEAT design."
 reviewed_at = 2026-08-26
 
+[revisions."2007".source_default_dispositions.casillas]
+kind = "underivable"
+reason = """
+No leading source_refs run is shared by two rows. The 2005 orden's annex is a graphical form, not a parser-usable record design, so this edition authors the single declaration-year casilla and no other source-stating row. One statement can open no run that a second shares, and the row keeps its own procedure citation rather than lifting it to a manifest default the next authored row might not carry."""
+
 [revisions."2007".family_dispositions.deadline_windows]
 reason = """
 The cited final provision establishes the model's applicability but supplies no recurring calendar presentation window. No deadline window is authored from a non-calendar citation, and no date is fabricated for an event-based filing process."""

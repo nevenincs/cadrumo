@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00228"
+continuidad_id = "is-balance-pasivo-corriente-total"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 6/6, filas 11/11: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - PASIVO CORRIENTE [00228]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00228"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -9,6 +12,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00229"
+continuidad_id = "is-balance-pasivo-corriente-pasivos-vinculados-con-activos-no-corrientes"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 12/12, filas 17/17: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Pasivos vinculados con activos no corrientes [00229]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00229"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -18,6 +24,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00230"
+continuidad_id = "is-balance-pasivo-corriente-provisiones-a-corto-plazo"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 13/13, filas 18/18: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Provisiones a corto plazo [00230]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00230"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -27,6 +36,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00231"
+continuidad_id = "is-balance-pasivo-corriente-deudas-a-corto-plazo"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 16/16, filas 21/21: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Deudas a corto plazo [00231]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00231"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -36,6 +48,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00232"
+continuidad_id = "is-balance-pasivo-corriente-obligaciones-y-otros-valores-negociables"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 17/17, filas 22/22: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Obligaciones y otros valores negociables [00232]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00232"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -45,6 +60,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00233"
+continuidad_id = "is-balance-pasivo-corriente-deudas-con-entidades-de-credito"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 18/18, filas 23/23: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Deudas con entidades de crédito [00233]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00233"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -54,6 +72,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00234"
+continuidad_id = "is-balance-pasivo-corriente-acreedores-por-arrendamiento-financiero"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 19/19, filas 24/24: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Acreedores por arrendamiento financiero [00234]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00234"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -63,6 +84,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00235"
+continuidad_id = "is-balance-pasivo-corriente-derivados"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 20/20, filas 25/25: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Derivados [00235]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00235"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -72,6 +96,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00236"
+continuidad_id = "is-balance-pasivo-corriente-otros-pasivos-financieros"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 21/21, filas 26/26: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Otros pasivos financieros [00236]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00236"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -81,6 +108,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00237"
+continuidad_id = "is-balance-pasivo-corriente-otras-deudas-a-corto-plazo"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 22/22, filas 27/27: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Otras deudas a corto plazo [00237]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00237"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -90,6 +120,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00238"
+continuidad_id = "is-balance-pasivo-corriente-deudas-con-empresas-del-grupo-y-asociadas-a-corto-plazo"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 23/23, filas 28/28: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Deudas con empresas del grupo y asociadas a corto plazo [00238]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00238"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -99,6 +132,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00239"
+continuidad_id = "is-balance-pasivo-corriente-acreedores-comerciales-y-otras-cuentas-a-pagar"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 24/24, filas 29/29: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Acreedores comerciales y otras cuentas a pagar [00239]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00239"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -108,6 +144,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00240"
+continuidad_id = "is-balance-pasivo-corriente-proveedores"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 25/25, filas 30/30: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Proveedores [00240]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00240"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -117,6 +156,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00241"
+continuidad_id = "is-balance-pasivo-corriente-proveedores-a-largo-plazo"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 26/26, filas 31/31: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Proveedores - Proveedores a largo plazo [00241]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00241"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -126,6 +168,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00242"
+continuidad_id = "is-balance-pasivo-corriente-proveedores-a-corto-plazo"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 27/27, filas 32/32: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Proveedores - Proveedores a corto plazo [00242]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00242"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -135,6 +180,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00243"
+continuidad_id = "is-balance-pasivo-corriente-proveedores-empresas-del-grupo-y-asociadas"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 28/28, filas 33/33: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Proveedores, empresas del grupo y asociadas [00243]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00243"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -144,6 +192,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00244"
+continuidad_id = "is-balance-pasivo-corriente-acreedores-varios"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 29/29, filas 34/34: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Acreedores varios [00244]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00244"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -153,6 +204,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00245"
+continuidad_id = "is-balance-pasivo-corriente-personal-remuneraciones-pendientes-de-pago"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 30/30, filas 35/35: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Personal (remuneraciones pendientes de pago) [00245]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00245"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -162,6 +216,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00246"
+continuidad_id = "is-balance-pasivo-corriente-pasivos-por-impuesto-corriente"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 31/31, filas 36/36: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Pasivos por impuesto corriente [00246]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00246"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -171,6 +228,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00247"
+continuidad_id = "is-balance-pasivo-corriente-otras-deudas-con-las-administraciones-publicas"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 32/32, filas 37/37: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Otras deudas con las Administraciones Públicas [00247]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00247"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -180,6 +240,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00248"
+continuidad_id = "is-balance-pasivo-corriente-anticipos-de-clientes"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 33/33, filas 38/38: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Anticipos de clientes [00248]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00248"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -189,6 +252,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00249"
+continuidad_id = "is-balance-pasivo-corriente-otros-acreedores"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 34/34, filas 39/39: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Otros acreedores [00249]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00249"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -198,6 +264,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00250"
+continuidad_id = "is-balance-pasivo-corriente-periodificaciones-a-corto-plazo"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 35/35, filas 40/40: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Periodificaciones a corto plazo [00250]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00250"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -207,6 +276,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00251"
+continuidad_id = "is-balance-pasivo-corriente-deuda-con-caracteristicas-especiales-a-corto-plazo"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 36/36, filas 41/41: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - Deuda con características especiales a corto plazo  [00251]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00251"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -216,6 +288,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00252"
+continuidad_id = "is-balance-patrimonio-neto-pasivo-total"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200006/DP200006, campos 37/37, filas 42/42: Balance: Patrimonio neto y pasivo (II) - Patrimonio neto y pasivo - TOTAL PATRIMONIO NETO Y PASIVO [00252]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00252"
 section = ["balance_patrimonio_neto_y_pasivo_ii", "patrimonio_neto_y_pasivo"]
 data_type = "money"

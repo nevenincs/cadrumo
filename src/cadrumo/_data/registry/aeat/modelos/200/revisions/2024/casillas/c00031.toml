@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00031"
+continuidad_id = "is-entidades-de-capital-riesgo"
 number = "00031"
 section = ["entidades_de_capital_riesgo"]
 data_type = "decimal"

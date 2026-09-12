@@ -294,6 +294,25 @@ applies_from = 2026-02-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_26/DR353e26v12.xlsx"
 review_status = "pending_review"
 
+[legal."orden-hac-27-2026:art-tercero"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-27-2026.html#articulo-tercero"
+document_id = "BOE-A-2026-1761"
+article = "artículo tercero"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-1761"
+published_at = 2026-01-26
+effective_from = 2026-01-27
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-12
+reviewed_by = "agent-review (verbatim against the bundled orden-hac-27-2026 excerpt, artículo tercero)"
+notes = """Artículo tercero de la Orden HAC/27/2026: sustituye el anexo I de la Orden EHA/3111/2009, que aprueba el modelo 390, por el anexo IV de esta orden. Es la autoridad que reemplaza el diseño del modelo 390; la disposición final única, punto 2, fija su primera aplicación al ejercicio 2026. Registrada porque el cierre de la revisión 2025 del modelo 390 es correcto y no un defecto de autoría: existe un diseño nuevo, aún no adquirido como aeat-dr-390-2026. Nota de cita: el excerpt del BOE usa espacios duros (U+00A0) entre palabra y número -- anexo IV, modelo 390 -- de modo que una cita que los atraviese no casa con el texto. Los required_text se han elegido sin U+00A0 a propósito."""
+required_text = [
+    "se sustituye por el anexo",
+    "de esta orden",
+]
+
 [legal."orden-hac-27-2026:disposicion-final-unica"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -1546,8 +1565,8 @@ el aviso cita la letra, no el articulo entero: citar solo art-6 apuntaria al con
 factura y no a la provision que exige ese dato."""
 required_text = [
     "Contenido de la factura",
-    "sera obligatoria la consignacion del Numero de Identificacion Fiscal del destinatario",
-    "el empresario o profesional obligado a la expedicion de la factura haya de considerarse establecido en dicho territorio",
+    "será obligatoria la consignación del Número de Identificación Fiscal del destinatario",
+    "el empresario o profesional obligado a la expedición de la factura haya de considerarse establecido en dicho territorio",
 ]
 
 [legal."rd-1619-2012:art-15"]

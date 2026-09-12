@@ -22,6 +22,7 @@
 # a blocking rule on a bound-value disagreement would refuse drafts whose ledger
 # is merely incomplete at the moment of calculation.
 [[revisions."2019-y-siguientes".verification_predicates]]
+id = "implies-nonzero:base-retenciones-declarada-cuando-perceptores-positivos"
 predicate_id = "modelo-115-base-retenciones-declarada-cuando-perceptores-positivos"
 expression = 'implies_nonzero(["01", "02"])'
 finding_kind = "ADVISORY"

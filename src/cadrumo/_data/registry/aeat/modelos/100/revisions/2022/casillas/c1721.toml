@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "1721"
+continuidad_id = "irpf-aeip-el-tiempo-de-la-libertad-comuneros-v-centenario-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:1258 y aeat-dr-100-2022-dictionary:1313: campo M21COMA; columna Aplicado en esta declaración del programa El tiempo de la libertad, Comuneros V Centenario en Anexo A. Misma designación y función fiscal."
 number = "1721"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

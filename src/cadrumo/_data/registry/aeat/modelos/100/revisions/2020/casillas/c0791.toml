@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "0791"
+# Grounding: aeat-dr-100-2020-dictionary:1056, M21NMSA; importe aplicado del programa Nuevas Metas (Anexo A).
+continuidad_id = "irpf-aeip-nuevas-metas-aplicado"
 number = "0791"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

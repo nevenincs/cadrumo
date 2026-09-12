@@ -1,5 +1,7 @@
 [[revisions."2023".casillas]]
 id = "0764"
+# Grounding: aeat-dr-100-2023-dictionary:1219, M21SPSA; deducción del régimen general por contribuciones empresariales a previsión social (DA tercera RDL 13/2022) aplicada.
+continuidad_id = "irpf-deduccion-contribuciones-empresariales-prevision-social-aplicado"
 number = "0764"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_deduccion_contribuciones_empresariales_prevision_social_aplicado"

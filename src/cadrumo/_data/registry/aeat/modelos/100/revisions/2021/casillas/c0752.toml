@@ -1,5 +1,8 @@
 [[revisions."2021".casillas]]
 id = "0752"
+continuidad_id = "irpf-incentivos-inversion-regimen-general-saldos-anteriores-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2020-dictionary:987 y aeat-dr-100-2021-dictionary:1060: campo M21RGA; saldos anteriores del régimen general LIS aplicados en ambas ediciones del Anexo A, sin cambio de función ni de régimen."
 number = "0752"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado_flag"

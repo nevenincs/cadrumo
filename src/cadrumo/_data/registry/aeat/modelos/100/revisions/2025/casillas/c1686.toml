@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "1686"
+continuidad_id = "irpf-incentivos-inversion-innovacion-tecnologica-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2024-dictionary:1209 y aeat-dr-100-2025-dictionary:1237: campo M21ITA; deducción del régimen general por innovación tecnológica (art. 35.2 LIS) aplicada en ambas ediciones del Anexo A, sin cambio de función ni de régimen."
 number = "1686"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado_flag"

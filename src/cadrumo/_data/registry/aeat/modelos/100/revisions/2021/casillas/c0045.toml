@@ -1,5 +1,8 @@
 [[revisions."2021".casillas]]
 id = "0045"
+continuidad_id = "irpf-capital-mobiliario-general-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2020-dictionary:122 y aeat-dr-100-2021-dictionary:127: campo TITBIG, tipo TIT, atributo titular de TomaDatosAmpliada; el mismo titular del capital mobiliario integrado en la base general en ambas ediciones."
 number = "0045"
 section = ["toma_datos_ampliada"]
 data_type = "text"

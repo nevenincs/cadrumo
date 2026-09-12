@@ -643,7 +643,7 @@ notes = "Orden EHA/3290/2008 art 1: aprobacion del modelo 216, Impuesto sobre la
 required_text = [
     "Se aprueba el modelo 216",
     "Retenciones e ingresos a cuenta",
-    "Declaracion-documento de ingreso",
+    "Declaración-documento de ingreso",
 ]
 
 [legal."orden-eha-3290-2008:art-4"]
@@ -661,7 +661,7 @@ reviewed_at = 2026-07-04
 reviewed_by = "agent-replaced the bundled excerpt with the BOE published text of art. 4 of BOE-A-2008-18497; the prior excerpt was hand-shaped despite claiming a verbatim fetch; operator to re-stamp"
 notes = "Orden EHA/3290/2008 art 4: plazo de presentacion del modelo 216. Con caracter general (trimestral), la presentacion e ingreso se efectua en los veinte primeros dias naturales de los meses de abril, julio, octubre y enero por el trimestre natural inmediato anterior. Para grandes empresas, mensual, en los veinte primeros dias naturales de cada mes. Binding deadline provision grounding the M216 trimestral deadline windows."
 required_text = [
-    "Plazo de presentacion del modelo 216",
+    "Plazo de presentación del modelo 216",
     "veinte primeros días naturales de los meses de abril, julio, octubre y enero",
     "grandes empresas",
 ]

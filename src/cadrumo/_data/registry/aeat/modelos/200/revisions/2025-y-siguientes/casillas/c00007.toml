@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00007"
+continuidad_id = "is-imputacion-en-base-imponible-rentas-positivas-art-100-lis"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 74/74, filas 79/79: Imputación en base imponible rentas positivas art. 100 LIS   [00007]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00007"
 section = ["imputacion_en_base_imponible_rentas_positivas_art"]
 data_type = "decimal"

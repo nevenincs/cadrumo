@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00003"
+continuidad_id = "is-sociedad-de-inversion-de-capital-variable-o-fondo-de-inversion-de-caracter-financiero"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 30/30, filas 35/35: Sociedad de inversión de capital variable o fondo de inversión de carácter financiero [00003]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00003"
 section = ["sociedad_de_inversion_de_capital_variable_o_fondo"]
 data_type = "decimal"

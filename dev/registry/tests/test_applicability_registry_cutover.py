@@ -182,7 +182,7 @@ def _write_scratch_tree(root: Path, *, applicable_reason: str) -> None:
 def _literal_equivalent_rule() -> ModeloApplicabilityRule:
     """The Python-literal shape the fragment above transcribes, for the equivalence proof."""
     return ModeloApplicabilityRule(
-        modelo=Modelo.M100,
+        modelo=Modelo("100"),
         applicable_entity_types=frozenset({EntityType.NATURAL_PERSON}),
         applicable_fiscal_residencies=frozenset({FiscalResidency.RESIDENT_IRPF}),
         applicable_reason="applies",
@@ -216,7 +216,7 @@ def test_registry_resolved_rule_matches_the_literal_it_transcribes_per_profile(t
     _write_scratch_tree(tmp_path, applicable_reason="applies")
     authority = compile_validated_authority(tmp_path / "registry" / "aeat", tmp_path)
 
-    registry_rule = resolve_applicability_rule_from_authority(authority, Modelo.M100)
+    registry_rule = resolve_applicability_rule_from_authority(authority, Modelo("100"))
     literal_rule = _literal_equivalent_rule()
 
     for profile in _representative_profiles():
@@ -253,7 +253,7 @@ def test_a_fresh_authority_sees_a_mutated_applicability_rule(tmp_path: Path) -> 
     registry_root = tmp_path / "registry" / "aeat"
 
     original_authority = compile_validated_authority(registry_root, tmp_path)
-    original_rule = resolve_applicability_rule_from_authority(original_authority, Modelo.M100)
+    original_rule = resolve_applicability_rule_from_authority(original_authority, Modelo("100"))
     assert original_rule.applicable_reason == "applies (original)"
 
     fragment_path = (
@@ -269,10 +269,10 @@ def test_a_fresh_authority_sees_a_mutated_applicability_rule(tmp_path: Path) -> 
     assert mutated_authority is not original_authority, (
         "the fingerprint-keyed authority cache must key a new instance on the mutated content, or this proof is vacuous"
     )
-    mutated_rule = resolve_applicability_rule_from_authority(mutated_authority, Modelo.M100)
+    mutated_rule = resolve_applicability_rule_from_authority(mutated_authority, Modelo("100"))
     assert mutated_rule.applicable_reason == "applies (mutated)"
 
     # The ORIGINAL authority instance must keep answering what it always did --
     # staleness is seen by resolving fresh, never by an existing instance mutating.
-    replayed_rule = resolve_applicability_rule_from_authority(original_authority, Modelo.M100)
+    replayed_rule = resolve_applicability_rule_from_authority(original_authority, Modelo("100"))
     assert replayed_rule.applicable_reason == "applies (original)"

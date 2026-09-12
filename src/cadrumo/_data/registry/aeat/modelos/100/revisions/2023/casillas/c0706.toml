@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "0706"
+continuidad_id = "irpf-aeip-andalucia-valderrama-masters-2022-2024-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:1241 y aeat-dr-100-2023-dictionary:1264: campo M21AVAA; columna Aplicado en esta declaración del programa Andalucía Valderrama Masters 2022/2024 en Anexo A. Misma designación y función fiscal."
 number = "0706"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

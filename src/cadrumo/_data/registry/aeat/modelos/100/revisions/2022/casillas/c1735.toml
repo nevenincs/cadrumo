@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "1735"
+continuidad_id = "irpf-ayudas-publicas-imputacion-cuartas-partes-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:1735 y aeat-dr-100-2022-dictionary:1898: campo G4ATIT, tipo TIT; mismo titular de ayudas publicas imputables por cuartas partes, descrito por el grupo oficial de ambas ediciones."
 number = "1735"
 section = ["resultados", "anexo_c_res", "gan_per_cuartas"]
 data_type = "text"

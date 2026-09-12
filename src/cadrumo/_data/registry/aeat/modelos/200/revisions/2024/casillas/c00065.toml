@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00065"
+continuidad_id = "is-bonificacion-personal-investigador-rd-475-2014"
 number = "00065"
 section = ["bonificacion_personal_investigador_rd_475_2014"]
 data_type = "decimal"

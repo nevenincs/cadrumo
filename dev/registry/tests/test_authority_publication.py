@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -13,6 +14,16 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     write_authority_artifact,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
+from cadrumo.domain.calculations.registry.runtime_catalogues import (
+    ApoderamientoScopeRecord,
+    CountryVocabularyRecord,
+    PublishedIvaPlaceOfSupplyRule,
+    PublishedIvaRegulation,
+    PublishedRecargoBand,
+    RuntimeRegistryCatalogues,
+    SpanishPostalTerritory,
+    TerritoryCarveOut,
+)
 
 from ..compiler import fact_providers
 from ..conformance.loader_directory_mode_support import (
@@ -37,7 +48,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _CATALOGUE = (
     """\
 [supported_filing_years]
-years = [2025]
+floor = 2025
+horizon = 2025
 
 [sociedades_annual_manual_coverage]
 """
@@ -146,9 +158,48 @@ source_refs = ["test-source-001"]
 
 def _previous_publication() -> AuthorityArtifact:
     """Return a complete typed authority representing an already published release."""
+    legal_id = "ley-35-2006:art-1"
+    runtime = RuntimeRegistryCatalogues(
+        iva_regulations={
+            "fixture-exempt": PublishedIvaRegulation(
+                category="fixture-exempt",
+                requires_reverse_charge=False,
+                requires_supplier_iva_id=False,
+                manual_references=(),
+                citations=(),
+                notes="No legal treatment is asserted.",
+                legal_basis_exempt=True,
+            )
+        },
+        iva_place_of_supply={
+            "fixture-exempt": PublishedIvaPlaceOfSupplyRule(
+                rule_id="fixture-exempt", notes="No placement is asserted.", legal_basis_exempt=True
+            )
+        },
+        countries={"ES": CountryVocabularyRecord(code="ES", alpha3="ESP", names=("Espana",))},
+        spanish_postal_territories={
+            "28": SpanishPostalTerritory(
+                postal_prefixes=("28",), scope="peninsula_baleares", name="Madrid", legal_refs=(legal_id,)
+            )
+        },
+        territory_carve_outs={
+            "ES": TerritoryCarveOut(code="ES", name="Espana", establishes_nothing=True, legal_refs=(legal_id,))
+        },
+        recargo_bands={
+            "all": PublishedRecargoBand(
+                id="all", min_completed_months=0, surcharge_pct=Decimal("1"), legal_ref=legal_id
+            )
+        },
+        apoderamientos_version="fixture-v1",
+        apoderamientos_scopes={
+            "GENERAL": ApoderamientoScopeRecord(
+                code="GENERAL", name_es="General", name_en="General", name_ca="General", name_hu="Altalanos"
+            )
+        },
+    ).require_complete()
     return AuthorityArtifact(
         modelos=(minimal_modelo(minimal_revision()),),
-        catalogues=minimal_catalogues(),
+        catalogues=minimal_catalogues().model_copy(update={"runtime": runtime}),
         identity_digest="e4c712d347701b34615314b6e3f8fdfd75ca5ee3eabe9c1c651668549fb7f66f",
     )
 
@@ -177,6 +228,43 @@ def _stage_valid_candidate(root: Path) -> None:
     legal_corpus.write_text("<html>test provision text</html>", encoding="utf-8")
     write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="test provision text")
     (legal_dir / "catalogue.toml").write_text(_CATALOGUE, encoding="utf-8")
+    iva_dir = registry_root / "iva"
+    iva_dir.mkdir()
+    (iva_dir / "catalogues.toml").write_text(
+        '[[regulations]]\ncategory = "fixture-exempt"\nrequires_reverse_charge = false\n'
+        "requires_supplier_iva_id = false\nmanual_references = []\ncitations = []\n"
+        'notes = "No legal treatment is asserted."\nlegal_basis_exempt = true\n',
+        encoding="utf-8",
+    )
+    (iva_dir / "place_of_supply.toml").write_text(
+        '[[place_of_supply_rules]]\nrule_id = "fixture-exempt"\nnotes = "No placement is asserted."\n'
+        "legal_basis_exempt = true\n",
+        encoding="utf-8",
+    )
+    (iva_dir / "country_names.toml").write_text(
+        '[[country]]\ncode = "ES"\nalpha3 = "ESP"\nnames = ["Espana"]\n', encoding="utf-8"
+    )
+    (iva_dir / "territories.toml").write_text(
+        '[[territory]]\npostal_prefixes = ["28"]\nscope = "peninsula_baleares"\nname = "Madrid"\n'
+        'legal_refs = ["test-ley-001:art-1"]\n',
+        encoding="utf-8",
+    )
+    (iva_dir / "territory_carve_outs.toml").write_text(
+        '[[carve_out]]\ncode = "ES"\nname = "Espana"\nestablishes_nothing = true\n'
+        'legal_refs = ["test-ley-001:art-1"]\n',
+        encoding="utf-8",
+    )
+    (legal_dir / "ley-58-2003-recargo-bands.toml").write_text(
+        '[[band]]\nid = "all"\nmin_completed_months = 0\nsurcharge_pct = "1"\nlegal_ref = "test-ley-001:art-1"\n',
+        encoding="utf-8",
+    )
+    apoderamientos_dir = registry_root / "apoderamientos"
+    apoderamientos_dir.mkdir()
+    (apoderamientos_dir / "scopes.toml").write_text(
+        'catalogue_version = "fixture-v1"\n[[scopes]]\ncode = "GENERAL"\nname_es = "General"\n'
+        'name_en = "General"\nname_ca = "General"\nname_hu = "Altalanos"\nmodelo_codes = []\n',
+        encoding="utf-8",
+    )
     (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MANIFEST, encoding="utf-8")
     write_fragmented_revision(revision_dir, _REVISION)
 

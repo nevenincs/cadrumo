@@ -16,9 +16,11 @@ from pathlib import Path
 import pytest
 
 from ..rename_formula_binding_identifiers import (
+    DirtyFragmentDirectoryError,
     ChainedRenameMapError,
     apply_span_strip,
     plan_span_strip,
+    remove_emptied_fragment_directories,
     rewrite_identifier_references,
 )
 
@@ -193,3 +195,198 @@ def test_an_unchained_map_still_rewrites(tmp_path: Path) -> None:
     assert 'id = "modelo-131.page1.dos"' in text
     assert hits == 2
     assert len(touched) == 1
+
+
+# ---------------------------------------------------------------------------
+# No id may carry its provider offset in ANY spelling
+# ---------------------------------------------------------------------------
+
+
+def _addressed_binding(edition: str, identifier: str, *, offset: int, length: int, field: str) -> str:
+    """A binding whose provider states a record, a field name and an address."""
+    return (
+        f'[[revisions."{edition}".bindings]]\n'
+        f'id = "{identifier}"\n'
+        f"provider = {{ kind = \"manual_input\", record = \"r1\", field = \"{field}\", "
+        f"offset = {offset}, length = {length} }}\n\n"
+    )
+
+
+def test_a_trailing_bare_offset_is_dropped_without_any_span_run(tmp_path: Path) -> None:
+    """The rule is the address, not the ``<from>-<to>`` shape it is sometimes spelled in."""
+    _seed_edition(
+        tmp_path,
+        "2024",
+        _addressed_binding("2024", "modelo-131.r1.saldo-290", offset=290, length=13, field="saldo-290"),
+    )
+
+    plan = plan_span_strip(MODELO, modelos_root=tmp_path)
+
+    assert plan.rename_map == {"modelo-131.r1.saldo-290": "modelo-131.r1.saldo"}
+    assert not plan.collisions
+
+
+def test_a_restored_field_that_re_states_the_offset_is_stripped_again(tmp_path: Path) -> None:
+    """Restoring the whole field puts the address back; the tail drop takes it off again.
+
+    This is the defect the rule closes: the id spelled its span AND a truncated
+    slot, the slot was restored from ``provider.field``, and that field itself
+    ends in the offset -- so the address survived the strip under a second
+    spelling.
+    """
+    _seed_edition(
+        tmp_path,
+        "2024",
+        _addressed_binding(
+            "2024",
+            "modelo-131.r1.290-302.saldo",
+            offset=290,
+            length=13,
+            field="saldo-medio-290",
+        ),
+    )
+
+    plan = plan_span_strip(MODELO, modelos_root=tmp_path)
+
+    assert plan.rename_map == {"modelo-131.r1.290-302.saldo": "modelo-131.r1.saldo-medio"}
+
+
+def test_a_trailing_number_that_is_not_the_offset_stays(tmp_path: Path) -> None:
+    """A repetition index and an address look identical; only the provider tells them apart."""
+    _seed_edition(
+        tmp_path,
+        "2024",
+        _addressed_binding("2024", "modelo-131.r1.epigrafe-1", offset=290, length=13, field="epigrafe-1"),
+    )
+
+    plan = plan_span_strip(MODELO, modelos_root=tmp_path)
+
+    assert plan.rename_map == {}
+    assert not plan.collisions
+
+
+def test_two_slots_named_by_their_offsets_alone_refuse_the_whole_modelo(tmp_path: Path) -> None:
+    """Detector teeth: an offset-only corpus collapses onto one name and is refused, not renumbered."""
+    _seed_edition(
+        tmp_path,
+        "2024",
+        _addressed_binding("2024", "modelo-131.r1.bloque-14", offset=14, length=1, field="bloque-14")
+        + _addressed_binding("2024", "modelo-131.r1.bloque-15", offset=15, length=5, field="bloque-15"),
+    )
+
+    plan = plan_span_strip(MODELO, modelos_root=tmp_path)
+
+    assert plan.rename_map == {}
+    assert plan.refused_modelo
+    collision = "".join(plan.collisions)
+    assert "modelo-131.r1.bloque" in collision
+    assert "modelo-131.r1.bloque-14" in collision
+    assert "modelo-131.r1.bloque-15" in collision
+
+
+def test_two_mid_word_truncated_slots_sharing_a_prefix_are_refused(tmp_path: Path) -> None:
+    """Injectivity over the POST-image: two different labels truncated to one prefix collide.
+
+    An id derived from a provider field truncated at a fixed width can land on
+    the same spelling as a different label truncated the same way. The gate
+    compares the whole post-strip namespace, so the pair is named rather than
+    silently merged.
+    """
+    _seed_edition(
+        tmp_path,
+        "2024",
+        _addressed_binding("2024", "modelo-131.r1.situado-en-el-termin-20", offset=20, length=4, field="x-20")
+        + _addressed_binding("2024", "modelo-131.r1.situado-en-el-termin", offset=90, length=4, field="y"),
+    )
+
+    plan = plan_span_strip(MODELO, modelos_root=tmp_path)
+
+    assert plan.rename_map == {}
+    assert plan.refused_modelo
+    assert any("modelo-131.r1.situado-en-el-termin" in collision for collision in plan.collisions)
+
+
+def test_an_unexplained_span_run_does_not_veto_the_offset_tail_drop(tmp_path: Path) -> None:
+    """The run stays and is reported; the address the provider DOES prove still goes.
+
+    The two segments are judged separately because they are proven separately:
+    a run the provider does not declare may be a page label or a year range, and
+    letting it block a removal proven elsewhere in the same id would leave the
+    row carrying its own address for an unrelated reason.
+    """
+    _seed_edition(
+        tmp_path,
+        "2024",
+        _addressed_binding("2024", "modelo-131.131-02.saldo-290", offset=290, length=13, field="saldo-290"),
+    )
+
+    plan = plan_span_strip(MODELO, modelos_root=tmp_path)
+
+    assert plan.rename_map == {"modelo-131.131-02.saldo-290": "modelo-131.131-02.saldo"}
+    assert any("131-02" in refusal for refusal in plan.refusals)
+
+
+# ---------------------------------------------------------------------------
+# Emptied fragment directories
+# ---------------------------------------------------------------------------
+
+
+def _git(repo: Path, *args: str) -> None:
+    """Run one git command inside an isolated scratch repository."""
+    import subprocess
+
+    subprocess.run(  # noqa: S603
+        ["git", *args],  # noqa: S607
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
+def _scratch_repo(tmp_path: Path) -> Path:
+    """An isolated git repository, so the contributor's own worktree is never consulted."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    _git(repo, "config", "user.email", "test@example.invalid")
+    _git(repo, "config", "user.name", "test")
+    (repo / "seed.txt").write_text("seed\n", encoding="utf-8")
+    _git(repo, "add", "seed.txt")
+    _git(repo, "commit", "-qm", "seed")
+    return repo
+
+
+def test_a_fragment_directory_the_pass_emptied_is_removed(tmp_path: Path) -> None:
+    """The loader walks directories, so an empty family directory is a failed load, not silence."""
+    repo = _scratch_repo(tmp_path)
+    modelo_dir = repo / "modelos" / MODELO
+    (modelo_dir / "revisions" / "2024" / "applicability").mkdir(parents=True)
+    _write(modelo_dir / "revisions" / "2024" / "bindings" / "0001-bindings.toml", "# kept\n")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-qm", "corpus")
+
+    removed = remove_emptied_fragment_directories(modelo_dir, repo_root=repo)
+
+    assert removed == [modelo_dir / "revisions" / "2024" / "applicability"]
+    assert not (modelo_dir / "revisions" / "2024" / "applicability").exists()
+    # The family that still declares something is untouched.
+    assert (modelo_dir / "revisions" / "2024" / "bindings" / "0001-bindings.toml").is_file()
+
+
+def test_an_emptied_directory_carrying_pending_work_is_left_in_place(tmp_path: Path) -> None:
+    """Detector teeth: a pending deletion under the directory is another contributor's change."""
+    repo = _scratch_repo(tmp_path)
+    modelo_dir = repo / "modelos" / MODELO
+    applicability = modelo_dir / "revisions" / "2024" / "applicability"
+    _write(applicability / "0001-applicability.toml", "# tracked\n")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-qm", "corpus")
+    # Someone else's in-flight removal: tracked, deleted in the worktree, not committed.
+    (applicability / "0001-applicability.toml").unlink()
+
+    with pytest.raises(DirtyFragmentDirectoryError) as refusal:
+        remove_emptied_fragment_directories(modelo_dir, repo_root=repo)
+
+    assert refusal.value.directory == applicability
+    assert applicability.is_dir()

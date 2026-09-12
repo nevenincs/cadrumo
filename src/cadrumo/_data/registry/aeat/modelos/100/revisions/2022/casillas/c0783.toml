@@ -1,5 +1,7 @@
 [[revisions."2022".casillas]]
 id = "0783"
+# Grounding: aeat-dr-100-2022-dictionary:1346, M21SRCA; importe aplicado del programa Año de Investigación Santiago Ramón y Cajal 2022 (Anexo A).
+continuidad_id = "irpf-aeip-ano-de-investigacion-santiago-ramon-y-cajal-2022-aplicado"
 number = "0783"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

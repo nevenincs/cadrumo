@@ -1,5 +1,7 @@
 [[revisions."2021".casillas]]
 id = "1735"
+# aeat-dr-100-2021-dictionary:1735: G4ATIT, titular de ayudas publicas imputables por cuartas partes.
+continuidad_id = "irpf-ayudas-publicas-imputacion-cuartas-partes-contribuyente-titular"
 number = "1735"
 section = ["resultados", "anexo_c_res", "gan_per_cuartas"]
 data_type = "text"

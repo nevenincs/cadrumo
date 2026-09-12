@@ -20,3 +20,8 @@ source_refs = [
     "aeat-modelo-193-procedure",
     "boe-modelo-193-2011-form",
 ]
+
+[modelo.inception.unauthored]
+earliest_authored = 2024
+reason = "Approved by Orden EHA/3377/2011; filing years 2022-2023 existed in law and are not yet authored."
+legal_refs = ["orden-eha-3377-2011:art-1"]

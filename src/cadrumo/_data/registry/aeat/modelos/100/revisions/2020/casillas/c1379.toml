@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "1379"
+# aeat-dr-100-2020-dictionary:1726: C3BLT, titular de bases liquidables generales negativas pendientes.
+continuidad_id = "irpf-compensacion-bases-liquidables-negativas-contribuyente-titular"
 number = "1379"
 section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
 data_type = "text"

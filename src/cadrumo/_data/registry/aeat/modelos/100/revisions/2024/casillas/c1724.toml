@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "1724"
+continuidad_id = "irpf-incentivos-inversion-productor-1-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:1443 y aeat-dr-100-2024-dictionary:1364: campo NIF1RG; NIF del primer productor financiado en el régimen general en ambas ediciones del Anexo A, sin cambio de función ni de régimen."
 number = "1724"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 data_type = "nif"

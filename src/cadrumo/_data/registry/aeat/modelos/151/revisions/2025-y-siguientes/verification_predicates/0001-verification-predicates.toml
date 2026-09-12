@@ -7,12 +7,14 @@
 # 00501->DP200014:00552 worked-pattern guards.
 
 [[revisions."2025-y-siguientes".verification_predicates]]
+id = "implies-nonzero:base-liquidable-implica-cuota-integra"
 predicate_id = "modelo-151-base-liquidable-implica-cuota-integra"
 expression = 'implies_nonzero(["impatriado.base-liquidable-general", "impatriado.cuota-integra-general"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-35-2006:art-93"]
 
 [[revisions."2025-y-siguientes".verification_predicates]]
+id = "implies-nonzero:base-ahorro-implica-cuota-ahorro"
 predicate_id = "modelo-151-base-ahorro-implica-cuota-ahorro"
 expression = 'implies_nonzero(["impatriado.base-liquidable-ahorro", "impatriado.cuota-integra-ahorro"])'
 finding_kind = "ADVISORY"

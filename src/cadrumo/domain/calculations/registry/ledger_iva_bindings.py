@@ -7,7 +7,7 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Annotated, Literal, NamedTuple, Protocol
 
-from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
+from pydantic import BaseModel, BeforeValidator, Field, StringConstraints, field_validator, model_validator
 
 from ....core.aggregation import (
     BindingAggregationOp,
@@ -46,6 +46,27 @@ from .schema_base import coerce_decimal_tuple, coerce_enum_member, coerce_enum_t
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition, ModeloRevision
+
+
+IvaCashAccountingTreatmentCode = Annotated[
+    str,
+    StringConstraints(min_length=1, pattern=r"^[a-z][a-z0-9_]*$"),
+]
+"""Authored cash-accounting vocabulary token, validated against the IVA fact catalogue.
+
+The runtime observation still uses :class:`IvaCashAccountingTreatment` because
+that enum describes the application's operational routes.  A registry binding
+is different: its treatment vocabulary is an authored tax classification and
+must be checked against the canonical IVA schema fact rather than duplicated
+in this module.
+"""
+
+
+def _coerce_cash_accounting_treatment_codes(value: object) -> object:
+    """Hydrate TOML arrays before strict tuple validation."""
+    if isinstance(value, (tuple, list)):
+        return tuple(value)
+    return value
 
 
 class IvaLedgerObservation(BaseModel):
@@ -208,8 +229,8 @@ class LedgerIvaProvider(BaseModel):
         BeforeValidator(coerce_enum_tuple(IvaLedgerObservationRole)),
     ] = Field(min_length=1)
     cash_accounting_treatments: Annotated[
-        tuple[IvaCashAccountingTreatment, ...],
-        BeforeValidator(coerce_enum_tuple(IvaCashAccountingTreatment)),
+        tuple[IvaCashAccountingTreatmentCode, ...],
+        BeforeValidator(_coerce_cash_accounting_treatment_codes),
     ] = Field(min_length=1)
     applied_rates: Annotated[tuple[Decimal, ...], BeforeValidator(coerce_decimal_tuple)] | None = Field(
         default=None,
@@ -250,8 +271,8 @@ class LedgerIvaProvider(BaseModel):
     @classmethod
     def _cash_accounting_treatments_unique(
         cls,
-        value: tuple[IvaCashAccountingTreatment, ...],
-    ) -> tuple[IvaCashAccountingTreatment, ...]:
+        value: tuple[IvaCashAccountingTreatmentCode, ...],
+    ) -> tuple[IvaCashAccountingTreatmentCode, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("cash_accounting_treatments entries must be unique")
         return value
@@ -315,11 +336,6 @@ class _InvoiceLedgerScreenShape(NamedTuple):
     fact: LedgerIvaFact
 
 
-_INVOICE_LEDGER_SCREEN_CASH_ACCOUNTING_TREATMENTS: tuple[IvaCashAccountingTreatment, ...] = (
-    IvaCashAccountingTreatment.NONE,
-    IvaCashAccountingTreatment.TAXPAYER_REGIME,
-    IvaCashAccountingTreatment.SUPPLIER_REGIME,
-)
 _INVOICE_LEDGER_SCREEN_OBSERVATION_ROLES: tuple[IvaLedgerObservationRole, ...] = (IvaLedgerObservationRole.SETTLEMENT,)
 _INVOICE_LEDGER_SCREEN_RATE_SLOTS: tuple[_InvoiceLedgerScreenShape, ...] = (
     _InvoiceLedgerScreenShape(
@@ -403,6 +419,7 @@ def _is_invoice_ledger_screen_candidate(
     selector: LedgerIvaProvider,
     *,
     modelo: str,
+    cash_accounting_treatments: tuple[str, ...] | None = None,
 ) -> bool:
     """Return whether a binding has the screen's typed candidate envelope.
 
@@ -426,7 +443,7 @@ def _is_invoice_ledger_screen_candidate(
     return (
         selector.exemption_articles is None
         and selector.observation_roles == _INVOICE_LEDGER_SCREEN_OBSERVATION_ROLES
-        and selector.cash_accounting_treatments == _INVOICE_LEDGER_SCREEN_CASH_ACCOUNTING_TREATMENTS
+        and (cash_accounting_treatments is None or selector.cash_accounting_treatments == cash_accounting_treatments)
         and selector.flow_direction in {IvaFlowDirection.REPERCUTIDO, IvaFlowDirection.SOPORTADO}
         and selector.fact in _INVOICE_LEDGER_SCREEN_FACTS
         and set(selector.categories).issubset(_INVOICE_LEDGER_SCREEN_DOMESTIC_CATEGORIES)
@@ -468,6 +485,11 @@ def invoice_ledger_screen_bindings(
         shape: [] for shape in _INVOICE_LEDGER_SCREEN_RATE_SLOTS
     }
     expected_prefix = f"modelo-{modelo}-"
+    # The screen's treatment vocabulary is a revision declaration.  Derive it
+    # from the first structural candidate instead of restating the allowed
+    # classifications in Python; authored compilation checks each declaration
+    # against the canonical IVA vocabulary fact.
+    screen_cash_accounting_treatments: tuple[str, ...] | None = None
     for binding in revision.bindings:
         if binding.source != BindingSourceKind.LEDGER_IVA_AGGREGATION:
             continue
@@ -477,8 +499,11 @@ def invoice_ledger_screen_bindings(
             binding,
             selector,
             modelo=modelo,
+            cash_accounting_treatments=screen_cash_accounting_treatments,
         ):
             continue
+        if screen_cash_accounting_treatments is None:
+            screen_cash_accounting_treatments = selector.cash_accounting_treatments
         shape = _invoice_ledger_screen_shape(selector)
         if shape not in _INVOICE_LEDGER_SCREEN_SHAPE_SET:
             raise RegistryValidationError(
@@ -587,7 +612,7 @@ class IvaSelectorAxesProtocol(Protocol):
         ...
 
     @property
-    def cash_accounting_treatment(self) -> IvaCashAccountingTreatment:
+    def cash_accounting_treatment(self) -> str:
         """Return the observation's cash-accounting treatment."""
         ...
 
@@ -619,7 +644,7 @@ class _IvaReachabilityProbeObservation(NamedTuple):
     category: IvaCategory
     rate_kind: IvaRateKind
     flow_direction: IvaFlowDirection
-    cash_accounting_treatment: IvaCashAccountingTreatment
+    cash_accounting_treatment: str
     observation_role: IvaLedgerObservationRole
     exemption_article: IvaExemptionArticle | None
     # The probe asks whether a binding is REACHABLE by some observation, so it

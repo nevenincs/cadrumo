@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "0487"
+continuidad_id = "irpf-reduccion-mutualidad-deportistas-contribuyente-aportante"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:718 y aeat-dr-100-2022-dictionary:767: campo MDTIT, tipo TIT; mismo aportante a la mutualidad de deportistas con derecho a reduccion, descrito por el grupo oficial de ambas ediciones."
 number = "0487"
 section = ["toma_datos_ampliada"]
 data_type = "text"

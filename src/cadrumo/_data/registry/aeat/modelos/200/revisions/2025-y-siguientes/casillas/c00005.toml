@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00005"
+continuidad_id = "is-comunidades-titulares-de-montes-vecinales-en-mano-comun"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 33/33, filas 38/38: Comunidades titulares de montes vecinales en mano común [00005]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00005"
 section = ["comunidades_titulares_de_montes_vecinales_en_mano"]
 data_type = "decimal"

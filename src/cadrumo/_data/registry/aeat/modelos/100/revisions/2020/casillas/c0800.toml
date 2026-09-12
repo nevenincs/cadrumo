@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "0800"
+# Grounding: aeat-dr-100-2020-dictionary:1074, M21CCBA; importe aplicado del programa VIII Centenario de la Catedral de Burgos 2021 (Anexo A).
+continuidad_id = "irpf-aeip-viii-centenario-de-la-catedral-de-burgos-2021-aplicado"
 number = "0800"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

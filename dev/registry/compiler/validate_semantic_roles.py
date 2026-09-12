@@ -207,4 +207,8 @@ def semantic_role_typo_twin_failures(
     modelos: Iterable[ModeloDefinition],
 ) -> tuple[str, ...]:
     """Fail when an unreviewed singleton ``semantic_role`` looks like a typo."""
-    return grouped_semantic_role_typo_twin_failures(_collect_role_observations(modelos))
+    modelo_tuple = tuple(modelos)
+    return grouped_semantic_role_typo_twin_failures(
+        _collect_role_observations(modelo_tuple),
+        known_modelo_codes=frozenset(str(modelo.id) for modelo in modelo_tuple),
+    )

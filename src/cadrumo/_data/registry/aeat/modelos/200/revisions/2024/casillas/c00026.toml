@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00026"
+continuidad_id = "is-entidad-inactiva"
 number = "00026"
 section = ["entidad_inactiva"]
 data_type = "decimal"

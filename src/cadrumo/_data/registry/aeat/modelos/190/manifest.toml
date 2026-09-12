@@ -22,3 +22,8 @@ source_refs = [
     "boe-modelo-190-2025-form",
     "boe-modelo-190-2025-amendment",
 ]
+
+[modelo.inception.unauthored]
+earliest_authored = 2024
+reason = "Approved by Orden EHA/3127/2009; filing years 2022-2023 existed in law and are not yet authored."
+legal_refs = ["orden-eha-3127-2009:art-1"]

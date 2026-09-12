@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00012"
+continuidad_id = "is-socimi"
 number = "00012"
 section = ["socimi"]
 data_type = "decimal"

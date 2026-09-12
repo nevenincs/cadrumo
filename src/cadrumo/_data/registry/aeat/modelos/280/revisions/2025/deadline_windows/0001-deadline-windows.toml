@@ -1,3 +1,20 @@
+# Modelo 280 annual plazo. Orden HAP/2118/2015 art 4 is the whole rule and it is
+# recurring, not per-ejercicio: «durante el mes de febrero de cada año, en
+# relación con la información correspondiente al año natural inmediato
+# anterior». Each row below is that one article applied to one año natural.
+#
+# THE TWO ROWS DO NOT USE THE SAME CONVENTION, deliberately. The 2025 row closes
+# on 2 March 2026 because AEAT PUBLISHED that date: 28 February 2026 is a
+# Saturday, and the bundled calendario page (aeat-calendario-contribuyente-2026-
+# hasta-2-marzo) carries the extension verbatim, so the row cites it. No
+# calendario is bundled for 2027, so the 2026 row carries the NOMINAL statutory
+# last day of February instead. 28 February 2027 is a Sunday, so the real plazo
+# will very likely close on the next día hábil; moving it is owned by
+# cadrumo.domain.deadlines.festivos.shift_deadline, which knows the national and CCAA
+# holiday calendars this authoring tree does not and reports WHY a deadline
+# moved. Pre-shifting it here without AEAT's published date would be inventing
+# an official date, which is the one thing a deadline window may never do.
+
 [[revisions."2025".deadline_windows]]
 id = "modelo-280-2025-0a"
 filing_year = 2025
@@ -7,4 +24,14 @@ opens_on = 2026-02-01
 closes_on = 2026-03-02
 legal_refs = ["orden-hap-2118-2015:art-4"]
 source_refs = ["aeat-modelo-280-procedure", "boe-modelo-280-base-order", "aeat-calendario-contribuyente-2026-hasta-2-marzo"]
+
+[[revisions."2025".deadline_windows]]
+id = "modelo-280-2026-0a"
+filing_year = 2026
+period = "2026 0A"
+period_kind = "annual"
+opens_on = 2027-02-01
+closes_on = 2027-02-28
+legal_refs = ["orden-hap-2118-2015:art-4"]
+source_refs = ["aeat-modelo-280-procedure", "boe-modelo-280-base-order"]
 

@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "1954"
+continuidad_id = "irpf-aeip-congreso-de-la-union-internacional-de-arquitectos-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:1429 y aeat-dr-100-2024-dictionary:1350: campo M21VIAA; columna Aplicado en esta declaración del programa Congreso de la Unión Internacional de Arquitectos en Anexo A. Misma designación y función fiscal."
 number = "1954"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

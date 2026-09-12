@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "0535"
+continuidad_id = "irpf-tipo-medio-gravamen-general-autonomico"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2024-dictionary:867 y aeat-dr-100-2025-dictionary:893: campo TMA; tipo medio autonómico de gravamen de la base liquidable general en el bloque de cálculo del impuesto. Misma magnitud y función fiscal en ambas ediciones."
 number = "0535"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 data_type = "ratio"

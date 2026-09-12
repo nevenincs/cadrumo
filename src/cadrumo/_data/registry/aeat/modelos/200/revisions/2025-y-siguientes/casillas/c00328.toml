@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00328"
+continuidad_id = "is-pyg-interrumpidas-resultado-del-ejercicio-procedente-de-operaciones-interrumpidas-neto-de-impuestos"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200008/DP200008, campos 43/43, filas 48/48: Cuenta de pérdidas y ganancias (II) - Operaciones interrumpidas - RESULTADO DEL EJERCICIO PROCEDENTE DE OPERACIONES INTERRUMPIDAS NETO DE IMPUESTOS [00328]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00328"
 section = ["cuenta_de_perdidas_y_ganancias_ii", "operaciones_interrumpidas"]
 data_type = "money"

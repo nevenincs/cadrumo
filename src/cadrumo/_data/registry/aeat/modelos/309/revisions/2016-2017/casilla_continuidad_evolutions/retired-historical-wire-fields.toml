@@ -1,0 +1,22 @@
+# The complete 2004 design defines Letras etiqueta (persona fisica) and free
+# Observaciones. Neither field survives in the 2016 M30900/M30901 design.
+# The AUX software-version and developer-NIF fields are different concepts,
+# not replacement carriers for either of these historical presentation values.
+
+[[revisions."2016-2017".casilla_continuidad_evolutions]]
+id = "retired-letras-etiqueta-persona-fisica"
+continuidad_id = "letras-etiqueta-persona-fisica"
+from_revision = "2004-2015"
+to_revision = "2016-2017"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2016"]
+
+[[revisions."2016-2017".casilla_continuidad_evolutions]]
+id = "retired-observaciones-presentacion"
+continuidad_id = "observaciones-presentacion"
+from_revision = "2004-2015"
+to_revision = "2016-2017"
+evolution_kind = "retired"
+legal_refs = ["orden-hac-3625-2003:apartado-1"]
+source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2016"]

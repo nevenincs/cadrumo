@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "1231"
+# aeat-dr-100-2020-dictionary:1579: C1ERET, titular de la exencion por reinversion en empresas nuevas o recientes.
+continuidad_id = "irpf-exencion-reinversion-nuevas-empresas-contribuyente-titular"
 number = "1231"
 section = ["resultados", "anexo_c_res", "exencion_nuevas_empresas_res"]
 data_type = "text"

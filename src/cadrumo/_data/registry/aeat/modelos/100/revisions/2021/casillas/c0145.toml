@@ -1,5 +1,8 @@
 [[revisions."2021".casillas]]
 id = "0145"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-base"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2020-dictionary:228 y aeat-dr-100-2021-dictionary:235: C_BASEAMORACC, base de amortización del inmueble accesorio. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "0145"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 semantic_role = "irpf_inmueble_base_amortizacion"

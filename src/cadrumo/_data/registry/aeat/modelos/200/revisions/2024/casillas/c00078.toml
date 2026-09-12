@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00078"
+continuidad_id = "is-diocesis-provincia-religiosa-o-entidad-eclesiastica-que-integra-entidades-menores-de-ellas-dependientes"
 number = "00078"
 section = ["diocesis_provincia_religiosa_o_entidad_eclesiastic"]
 data_type = "decimal"

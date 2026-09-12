@@ -22,3 +22,9 @@ source_refs = [
     "aeat-modelo-714-procedure",
     "boe-modelo-714-layout",
 ]
+
+[[modelo.pending_ejercicio_ordenes]]
+filing_year = 2026
+approval_cadence = "per_ejercicio_orden"
+rests_on = "orden-hac-277-2026:art-4"
+expected_publication_year = 2027

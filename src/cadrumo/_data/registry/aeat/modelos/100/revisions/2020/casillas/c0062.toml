@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "0062"
+# aeat-dr-100-2020-dictionary:135: TIT_C, titular del inmueble.
+continuidad_id = "irpf-inmuebles-contribuyente-titular"
 number = "0062"
 section = ["toma_datos_ampliada"]
 data_type = "text"

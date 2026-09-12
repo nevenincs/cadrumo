@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "0477"
+continuidad_id = "irpf-reduccion-patrimonio-protegido-contribuyente-aportante"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:708 y aeat-dr-100-2022-dictionary:757: campo PPTIT, tipo TIT; mismo aportante al patrimonio protegido de personas con discapacidad, descrito por el grupo oficial de ambas ediciones."
 number = "0477"
 section = ["toma_datos_ampliada"]
 data_type = "text"

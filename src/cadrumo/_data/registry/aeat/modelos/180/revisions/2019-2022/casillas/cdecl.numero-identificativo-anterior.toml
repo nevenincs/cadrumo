@@ -1,5 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "decl.numero-identificativo-anterior"
+continuidad_id = "numero-identificativo-declaracion-anterior"
 number = "123-135"
 section = ["declarante", "identificacion"]
 data_type = "text"

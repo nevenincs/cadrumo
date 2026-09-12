@@ -20,12 +20,14 @@
 # net-credit month raises nothing.
 
 [[revisions."2008-2022".verification_predicates]]
+id = "implies-nonzero:repercutido-general-implica-cuota-devengada-total"
 predicate_id = "modelo-322-2024-2025-repercutido-general-implica-cuota-devengada-total"
 expression = 'implies_nonzero(["iva.repercutido.general", "iva.cuota-devengada-total"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1"]
 
 [[revisions."2008-2022".verification_predicates]]
+id = "implies-nonzero:cuota-devengada-implica-resultado"
 predicate_id = "modelo-322-2024-2025-cuota-devengada-implica-resultado"
 expression = 'implies_nonzero(["iva.cuota-devengada-total", "iva.resultado-regimen-general"])'
 finding_kind = "ADVISORY"

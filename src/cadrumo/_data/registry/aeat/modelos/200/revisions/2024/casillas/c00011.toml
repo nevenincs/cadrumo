@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00011"
+continuidad_id = "is-entidad-de-tenencia-de-valores-extranjeros"
 number = "00011"
 section = ["entidad_de_tenencia_de_valores_extranjeros"]
 data_type = "decimal"

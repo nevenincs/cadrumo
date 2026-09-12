@@ -12,7 +12,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELO_SPECIFIC_BODIES = {
     "module_name": '"""Modelo-named."""\nVALUE = 1\n',
-    "modelo_reference": "from cadrumo.core import Modelo\nOWNER = Modelo.M303\n",
+    "modelo_reference": "from cadrumo.core import Modelo\nOWNER = Modelo('303')\n",
     "defined_symbol": "def evaluate_m210_resolve_something() -> int:\n    return 1\n",
 }
 

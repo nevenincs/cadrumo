@@ -19,3 +19,7 @@ legal_refs = [
 source_refs = [
     "aeat-modelo-721-procedure",
 ]
+
+[modelo.inception]
+filing_year = 2023
+legal_refs = ["orden-hfp-886-2023:art-1"]

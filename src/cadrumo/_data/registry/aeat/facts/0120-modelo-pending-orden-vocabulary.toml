@@ -1,0 +1,27 @@
+[fact]
+fact_id = "modelo-pending-orden-vocabulary"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-pending-orden-vocabulary:2025-01-01"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-modelo-100-procedure"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-100-procedure"
+required_text = ["Modelo 100"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "approval_cadence.per_ejercicio_orden.value", value = "per_ejercicio_orden" },
+  { key = "approval_cadence.per_ejercicio_orden.description", value = "One governing Orden approves one ejercicio and is published after that ejercicio." },
+  { key = "pending_status.not_yet_published.value", value = "not_yet_published" },
+  { key = "pending_status.not_yet_published.description", value = "The approving Orden for the filing year is not yet published; the declaration is refused once the applicable Orden exists." },
+  { key = "publication_year_error.template", value = "pending ejercicio Orden for {filing_year} expects publication in {expected_publication_year}; an Orden approving an ejercicio is published after it, so a year at or before the ejercicio describes an Orden that would already exist" },
+  { key = "duplicate_error.template", value = "pending ejercicio Orden declares filing year {year} more than once" },
+]

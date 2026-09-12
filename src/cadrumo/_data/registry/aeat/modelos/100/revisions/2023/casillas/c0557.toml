@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "0557"
+continuidad_id = "irpf-deduccion-ric-canarias-autonomica"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:856 y aeat-dr-100-2023-dictionary:868: campo DED5A; parte autonómica de la deducción por dotaciones a la Reserva para Inversiones en Canarias en el bloque de cálculo del impuesto. Misma magnitud y función fiscal en ambas ediciones."
 number = "0557"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_ric_canarias_autonomica"

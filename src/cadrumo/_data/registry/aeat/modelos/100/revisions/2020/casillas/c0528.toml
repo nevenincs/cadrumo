@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "0528"
+# Grounding: aeat-dr-100-2020-dictionary:743, CEXGE1; escala estatal aplicada a la base liquidable general.
+continuidad_id = "irpf-escala-sobre-base-general-estatal"
 number = "0528"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_escala_sobre_base_general_estatal"

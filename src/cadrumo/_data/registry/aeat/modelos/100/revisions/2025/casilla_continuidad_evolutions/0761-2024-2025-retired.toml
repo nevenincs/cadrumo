@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2024-dictionary:1266, M21ADBA; Plan 2030 de Apoyo al Deporte de Base deja de figurar como programa aplicado en aeat-dr-100-2025-dictionary.
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-0761-2024-2025-retired"
+continuidad_id = "irpf-aeip-plan-2030-de-apoyo-al-deporte-de-base-aplicado"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]

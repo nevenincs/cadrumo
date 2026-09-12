@@ -15,6 +15,7 @@
 # is at or below zero, so a retenedor with no rentas in the period never fires
 # it -- modelo 123 is filed quarterly even for a quarter with no activity.
 [[revisions."2024-y-siguientes".verification_predicates]]
+id = "implies-nonzero:base-declarada-cuando-rentas-positivas"
 predicate_id = "modelo-123-2024-y-siguientes-base-declarada-cuando-rentas-positivas"
 expression = 'implies_nonzero(["03", "06"])'
 finding_kind = "ADVISORY"
@@ -41,6 +42,7 @@ legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 # ADVISORY, never BLOCKING: a category whose payer applied no withholding in one
 # leaf while the other leaf covers it is legitimate, and must not refuse a draft.
 [[revisions."2024-y-siguientes".verification_predicates]]
+id = "implies-nonzero:base-total-implica-retenciones-total"
 predicate_id = "modelo-123-2024-y-siguientes-base-total-implica-retenciones-total"
 expression = 'implies_nonzero(["06", "09"])'
 finding_kind = "ADVISORY"

@@ -1,0 +1,9 @@
+# Grounding: C_DIASARRAM, días arrendados del inmueble principal para el cálculo de su amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m100-0122-2023-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-dias-arrendado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2023-dictionary","aeat-dr-100-2024-dictionary"]

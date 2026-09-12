@@ -40,16 +40,15 @@ from .errors import RegistryValidationError
 from .ids import BindingId
 from .ledger_binding_selector_support import ImpatriadoLedgerIncomeFact, mapping_lacks_fact
 
-# Ledger-aggregation binding source kinds. Re-exported from
-# :data:`cadrumo.core.aggregation.LEDGER_BINDING_SOURCE_KINDS`, which derives the
-# set from :class:`~cadrumo.core.BindingSourceKind` (the single source-kind
-# taxonomy). Every binding whose ``source`` is a member reads its values from
+# Ledger-aggregation binding source kinds, imported from the canonical
+# :data:`cadrumo.core.aggregation.LEDGER_BINDING_SOURCE_KINDS` definition. Every
+# binding whose ``source`` is a member reads its values from
 # the bucket-scoped ledger (transaction-classified IVA / OSS aggregation, Renta
 # first-slice income and estimación directa gastos aggregation, the M130
 # pago-fraccionado gastos cumulative aggregation,
 # the M151 impatriado Spanish-source base aggregation, or the M210 explicit
-# IRNR income projection). Cross-domain consumers route through this name so the
-# registry stays the single source of truth for ledger readiness.
+# IRNR income projection). Cross-domain consumers import the taxonomy from its
+# defining core module.
 __all__ = [
     "ImpatriadoIncomeObservationProtocol",
     "resolve_ledger_impatriado_income_aggregation_binding_values",

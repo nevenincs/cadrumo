@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00080"
+continuidad_id = "is-uniones-federaciones-y-confederaciones-de-cooperativas"
 number = "00080"
 section = ["uniones_federaciones_y_confederaciones_de_cooperat"]
 data_type = "decimal"

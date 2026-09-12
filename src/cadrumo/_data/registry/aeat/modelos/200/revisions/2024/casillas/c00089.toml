@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00089"
+continuidad_id = "is-participe-de-agrupacion-de-interes-economico-o-de-union-temporal-de-empresas"
 number = "00089"
 section = ["participe_de_agrupacion_de_interes_economico_o_de"]
 data_type = "decimal"

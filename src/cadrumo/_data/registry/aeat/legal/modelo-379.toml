@@ -13,9 +13,9 @@ reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2023-26739 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/1415/2023 articulo 1: aprueba el Modelo 379, Declaracion informativa sobre pagos transfronterizos, de formato electronico y contenido anexo."
 required_text = [
-    "Articulo 1. Aprobacion del modelo 379",
+    "Artículo 1. Aprobación del modelo 379",
     "Se aprueba el modelo 379",
-    "envio de ficheros informaticos",
+    "envío de ficheros informáticos",
 ]
 
 [legal."orden-hfp-1415-2023:art-2"]
@@ -33,8 +33,8 @@ reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2023-26739 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/1415/2023 articulo 2: obliga a presentar el Modelo 379 a los proveedores de servicios de pago referidos en el articulo 166.quater de la Ley del IVA."
 required_text = [
-    "Articulo 2. Obligados a presentar el modelo 379",
-    "Estan obligados a presentar el modelo 379",
+    "Artículo 2. Obligados a presentar el modelo 379",
+    "Están obligados a presentar el modelo 379",
     "proveedores de servicios de pagos",
 ]
 
@@ -53,9 +53,9 @@ reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2023-26739 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/1415/2023 articulo 3: el Modelo 379 declara los registros que deben mantener los proveedores de servicios de pago."
 required_text = [
-    "Articulo 3. Objeto de la informacion del modelo 379",
+    "Artículo 3. Objeto de la información del modelo 379",
     "registros que deben mantener los proveedores de servicios de pago",
-    "articulo 62.ter del Reglamento del Impuesto sobre el Valor Anadido",
+    "artículo 62.ter del Reglamento del Impuesto sobre el Valor Añadido",
 ]
 
 [legal."orden-hfp-1415-2023:art-4"]
@@ -73,7 +73,7 @@ reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2023-26739 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/1415/2023 articulo 4: fija la periodicidad trimestral del Modelo 379 y remite el plazo al articulo 81 bis del Reglamento del IVA."
 required_text = [
-    "Articulo 4. Plazo de presentacion del modelo 379",
+    "Artículo 4. Plazo de presentación del modelo 379",
     "periodicidad trimestral",
     "pagos transfronterizos realizados en cada trimestre natural",
 ]
@@ -93,8 +93,8 @@ reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2023-26739 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/1415/2023 articulo 5: establece la presentacion electronica del Modelo 379 por Internet y el ajuste del fichero al anexo/formato de la Sede electronica."
 required_text = [
-    "Articulo 5. Forma de presentacion",
-    "se efectuara por via telematica",
+    "Artículo 5. Forma de presentación",
+    "se efectuará por vía telemática",
     "código seguro de verificación de 16 caracteres",
 ]
 

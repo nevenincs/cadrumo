@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Literal
 
 import pytest
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.filing_producer_key import FilingProducerKey
@@ -33,6 +33,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.snapshot import validate_materialized_export_record_families
 
+from ..author_family_identities import derive_projection_endpoint_id
 from ..compiler.loader_semantics import (
     compile_export_semantic_field as _compile_export_semantic_field,
 )
@@ -80,8 +81,17 @@ def _field(*, field_id: str = "projection.field", projection_ref: object) -> Exp
     )
 
 
+def _reference_payload(projection_ref: object) -> dict[str, object]:
+    """Return the authored form of a typed reference, for identity derivation."""
+    if isinstance(projection_ref, BaseModel):
+        return projection_ref.model_dump(mode="json")
+    assert isinstance(projection_ref, dict)
+    return dict(projection_ref)
+
+
 def _declaration(*, projection_ref: object) -> ProjectionEndpointDeclaration:
     return ProjectionEndpointDeclaration(
+        id=derive_projection_endpoint_id({"projection_ref": _reference_payload(projection_ref)}),
         projection_ref=projection_ref,
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
@@ -250,20 +260,27 @@ def test_registry_loader_hydrates_required_flat_module_projection() -> None:
     )
 
 
-def test_projection_endpoint_index_preserves_duplicate_declarations_and_indexes_numbered_endpoints() -> None:
+def test_projection_endpoint_index_indexes_numbered_endpoints() -> None:
     reference = _prorrata_ref()
-    first = _declaration(projection_ref=reference)
-    second = _declaration(projection_ref=reference)
+    declaration = _declaration(projection_ref=reference)
     slotless = _declaration(
         projection_ref=M303Exonerado390OperacionesTercerosProjectionRef(
             projection_kind="m303_exonerado_390_operaciones_terceros",
         ),
     )
-    revision = _revision(projection_endpoints=(first, second, slotless))
+    revision = _revision(projection_endpoints=(declaration, slotless))
 
-    assert revision.projection_endpoint_index()[reference] == (first, second)
-    assert revision.projection_declarations_for_casilla(_PROJECTION_CASILLA) == (first, second)
+    assert revision.projection_endpoint_index()[reference] == (declaration,)
+    assert revision.projection_declarations_for_casilla(_PROJECTION_CASILLA) == (declaration,)
     assert revision.projection_declarations_for_casilla(_UNKNOWN_CASILLA) == ()
+
+
+def test_a_revision_declaring_one_endpoint_twice_is_refused() -> None:
+    """The endpoint identity makes a repeated declaration refusable at the revision."""
+    reference = _prorrata_ref()
+
+    with pytest.raises((ValidationError, RegistryValidationError), match="duplicate ids"):
+        _revision(projection_endpoints=(_declaration(projection_ref=reference), _declaration(projection_ref=reference)))
 
 
 def test_repeat_field_family_positive_controls_include_fixed_slot_projection() -> None:
@@ -420,6 +437,7 @@ def test_projection_endpoint_loader_hydrates_only_the_canonical_toml_payload() -
     compiled = _compile_projection_endpoint_declaration(
         source_path,
         {
+            "id": "m303-prorrata-activity:field-cnae.slot-1",
             "projection_ref": {
                 "projection_kind": "m303_prorrata_activity",
                 "slot": 1,

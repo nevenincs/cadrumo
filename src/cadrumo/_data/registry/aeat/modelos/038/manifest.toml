@@ -14,3 +14,8 @@ source_refs = [
     "enrolled-modelo-038-procedure",
     "aeat-dr-038-2024",
 ]
+
+[modelo.inception.unauthored]
+earliest_authored = 2024
+reason = "Approved by Orden HAC/66/2002; filing years 2022-2023 existed in law and are not yet authored."
+legal_refs = ["orden-hac-66-2002:art-1"]

@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "0539"
+continuidad_id = "irpf-escala-sobre-minimo-ahorro-autonomico"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:839 y aeat-dr-100-2023-dictionary:851: campo CIEAUT2; escala autonómica sobre el mínimo personal y familiar aplicable a la base del ahorro en el bloque de cálculo del impuesto. Misma magnitud y función fiscal en ambas ediciones."
 number = "0539"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_escala_sobre_minimo_ahorro_autonomico"

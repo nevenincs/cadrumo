@@ -1,0 +1,21 @@
+# Plazo from Orden EHA/3377/2011 art. 5, which states the twenty-natural-day
+# base rule for the printed form and then the wider 1 to 31 January window for
+# every form in current use. The 2022 resumen is presented in January 2023.
+[[revisions."2022".deadline_windows]]
+id = "modelo-193-2022-0a"
+filing_year = 2022
+period = "2022 0A"
+period_kind = "annual"
+opens_on = 2023-01-01
+closes_on = 2023-01-31
+applicability_condition_mode = "all"
+legal_refs = ["orden-eha-3377-2011:art-5"]
+source_refs = ["boe-modelo-193-2011-form"]
+
+[[revisions."2022".deadline_windows.applicability_conditions]]
+field = "pays_capital_income_with_retencion"
+op = "equals"
+value = true
+explanation = "Retenedor que satisface determinados rendimientos o rentas del capital mobiliario sujetos a retencion y presenta el resumen anual."
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-193-2011-form"]

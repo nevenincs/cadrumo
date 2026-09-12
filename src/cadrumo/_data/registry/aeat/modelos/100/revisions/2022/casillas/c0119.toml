@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "0119"
+continuidad_id = "irpf-inmueble-amortizacion-adquisicion-lucrativa"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:209 y aeat-dr-100-2022-dictionary:208: C_LUCRATIVA, adquisición lucrativa del inmueble principal a efectos de amortización. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "0119"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "boolean"

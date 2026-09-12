@@ -39,7 +39,7 @@ from .fixed_width_codec import (
     ExportSignPositionValue,
     validate_fixed_width_shape,
 )
-from .ids import BindingId, ExportFieldId, ExportLayoutId, RecordId, SourceRefId
+from .ids import BindingId, ExportFieldId, ExportLayoutId, ProjectionEndpointId, RecordId, SourceRefId
 from .schema_base import CasillaDataType, LegalRefs, RegistryModel, SourceRefs, coerce_enum_member
 
 __all__ = [
@@ -430,6 +430,17 @@ class ProjectionEndpointDeclaration(RegistryModel):
     immutable revision fact before record-design coordinates are generated.
     """
 
+    id: ProjectionEndpointId
+    """The endpoint's edition-free identity: what it projects, never where.
+
+    Derived from the declaration's own typed reference -- the projection kind
+    and the semantic axes of that reference -- so the same endpoint carries the
+    same identity in every edition that declares it, and the family inherits
+    along a predecessor chain instead of being restated in full. The numbered
+    casilla a reference resolves to is deliberately not part of it: that box is
+    the edition's address for the endpoint and renumbers between editions,
+    while the endpoint does not.
+    """
     projection_ref: FilingProjectionRef
     legal_refs: LegalRefs
     source_refs: SourceRefs

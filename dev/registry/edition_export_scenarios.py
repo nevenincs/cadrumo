@@ -234,7 +234,7 @@ def m303_export_scenario(period: Period) -> EditionExportScenario:
 def _m303_producer_snapshot(period: Period) -> FilingProducerSnapshot:
     authority = compiled_bundled_authority()
     registry_snapshot = authority.snapshot(
-        str(Modelo.M303), filing_year=period.filing_year, period=period.registry_token
+        str(Modelo("303")), filing_year=period.filing_year, period=period.registry_token
     )
     profile = ModeloIVAProfile(
         tax_territory=M303TaxTerritory.COMMON_REGIME,
@@ -246,7 +246,7 @@ def _m303_producer_snapshot(period: Period) -> FilingProducerSnapshot:
         charge_account=ChargeAccount(iban=_CHARGE_IBAN),
     )
     return build_filing_producer_snapshot(
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         taxpayer_tax_id=SYNTHETIC_TAX_ID,
         taxpayer_identity=_TAXPAYER,
         presenter=_presenter(),
@@ -269,7 +269,7 @@ def _m303_filing_facts(
 ) -> M303FilingFacts:
     regimen = _m303_regimen_simplificado_evidence(period, authority=authority, registry_snapshot=registry_snapshot)
     parameters = resolve_bienes_inversion_regularizacion_parameters(
-        registry_snapshot.revision, modelo_id=str(Modelo.M303), filing_period_date=period.end_date
+        registry_snapshot.revision, modelo_id=str(Modelo("303")), filing_period_date=period.end_date
     )
     return M303FilingFacts(
         joint_return_elected=False,
@@ -376,7 +376,7 @@ def _m303_regimen_simplificado_evidence(
 def _m303_prorrata_register(period: Period, *, authority: ValidatedRegistryAuthority) -> ProrrataRegister:
     """A general-regime register carrying the prior year's definitive percentage for the common and both sectors."""
     prior_snapshot_ref = authority.snapshot(
-        str(Modelo.M303), filing_year=period.filing_year - 1, period="4T"
+        str(Modelo("303")), filing_year=period.filing_year - 1, period="4T"
     ).snapshot_ref
     return ProrrataRegister(
         sector_definitions=_M303_DIFFERENTIATED_SECTORS,
@@ -449,7 +449,7 @@ def m390_export_scenario(period: Period) -> EditionExportScenario:
 
 def _m390_producer_snapshot() -> FilingProducerSnapshot:
     return build_filing_producer_snapshot(
-        modelo=Modelo.M390,
+        modelo=Modelo("390"),
         taxpayer_tax_id=SYNTHETIC_TAX_ID,
         taxpayer_identity=_TAXPAYER,
         presenter=_presenter(),
@@ -489,7 +489,7 @@ def m131_export_scenario(period: Period) -> EditionExportScenario:
 
 def _m131_producer_snapshot() -> FilingProducerSnapshot:
     return build_filing_producer_snapshot(
-        modelo=Modelo.M131,
+        modelo=Modelo("131"),
         taxpayer_tax_id=SYNTHETIC_TAX_ID,
         taxpayer_identity=_TAXPAYER,
         presenter=_presenter(),
@@ -509,7 +509,7 @@ def _m131_producer_snapshot() -> FilingProducerSnapshot:
 
 #: Per modelo, the scenario builder and the period each edition is rendered for.
 _DECLARED_SCENARIOS: Final[Mapping[str, tuple[Callable[[Period], EditionExportScenario], Mapping[str, Period]]]] = {
-    str(Modelo.M303): (m303_export_scenario, M303_SCENARIO_PERIODS),
-    str(Modelo.M131): (m131_export_scenario, M131_SCENARIO_PERIODS),
-    str(Modelo.M390): (m390_export_scenario, M390_SCENARIO_PERIODS),
+    str(Modelo("303")): (m303_export_scenario, M303_SCENARIO_PERIODS),
+    str(Modelo("131")): (m131_export_scenario, M131_SCENARIO_PERIODS),
+    str(Modelo("390")): (m390_export_scenario, M390_SCENARIO_PERIODS),
 }

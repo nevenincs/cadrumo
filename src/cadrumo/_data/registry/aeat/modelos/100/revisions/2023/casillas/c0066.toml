@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "0066"
+continuidad_id = "irpf-inmueble-referencia-catastral"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:145 y aeat-dr-100-2023-dictionary:149: RC, referencia catastral de la relación general de inmuebles. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "0066"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"

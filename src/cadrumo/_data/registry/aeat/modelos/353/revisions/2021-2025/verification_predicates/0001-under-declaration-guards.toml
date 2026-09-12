@@ -16,12 +16,14 @@
 # trivially, so a group with a net negative aggregate raises nothing.
 
 [[revisions."2021-2025".verification_predicates]]
+id = "implies-nonzero:resultado-total-implica-resultado"
 predicate_id = "modelo-353-2021-2025-resultado-total-implica-resultado"
 expression = 'implies_nonzero(["01", "03"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-2"]
 
 [[revisions."2021-2025".verification_predicates]]
+id = "implies-nonzero:resultado-implica-resultado-autoliquidacion"
 predicate_id = "modelo-353-2021-2025-resultado-implica-resultado-autoliquidacion"
 expression = 'implies_nonzero(["03", "05"])'
 finding_kind = "ADVISORY"

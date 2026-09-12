@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "0841"
+continuidad_id = "irpf-incentivos-inversion-canarias-empleo-discapacidad-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2024-dictionary:1402 y aeat-dr-100-2025-dictionary:1436: campo M22CEA; deducción canaria por creación de empleo de trabajadores con discapacidad (art. 38 LIS) aplicada en ambas ediciones del Anexo A, sin cambio de función ni de régimen."
 number = "0841"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado_flag"

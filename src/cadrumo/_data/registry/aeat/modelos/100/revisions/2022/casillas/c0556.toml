@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "0556"
+continuidad_id = "irpf-deduccion-ric-canarias-estatal"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:785 y aeat-dr-100-2022-dictionary:855: campo DED5E; parte estatal de la deducción por dotaciones a la Reserva para Inversiones en Canarias en el bloque de cálculo del impuesto. Misma magnitud y función fiscal en ambas ediciones."
 number = "0556"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_ric_canarias_estatal"

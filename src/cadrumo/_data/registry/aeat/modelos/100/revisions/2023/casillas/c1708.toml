@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "1708"
+continuidad_id = "irpf-aeip-nuevas-metas-ii-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:1277 y aeat-dr-100-2023-dictionary:1297: campo M21NMEA; columna Aplicado en esta declaración del programa Nuevas Metas II en Anexo A. Misma designación y función fiscal."
 number = "1708"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

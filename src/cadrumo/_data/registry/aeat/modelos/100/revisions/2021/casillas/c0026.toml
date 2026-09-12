@@ -1,5 +1,8 @@
 [[revisions."2021".casillas]]
 id = "0026"
+continuidad_id = "irpf-capital-mobiliario-ahorro-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2020-dictionary:103 y aeat-dr-100-2021-dictionary:108: campo TITBIH, tipo TIT, atributo titular de TomaDatosAmpliada; el mismo titular del capital mobiliario integrado en el ahorro en ambas ediciones."
 number = "0026"
 section = ["toma_datos_ampliada"]
 data_type = "text"

@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "0764"
+continuidad_id = "irpf-deduccion-contribuciones-empresariales-prevision-social-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2024-dictionary:1230 y aeat-dr-100-2025-dictionary:1258: campo M21SPSA; deducción del régimen general por contribuciones empresariales a previsión social (DA tercera RDL 13/2022) aplicada en ambas ediciones del Anexo A, sin cambio de función ni de régimen."
 number = "0764"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_deduccion_contribuciones_empresariales_prevision_social_aplicado"

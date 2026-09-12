@@ -323,7 +323,7 @@ def _m303_2026_snapshot() -> RegistrySnapshot:
     hardcodes never engages here.
     """
     authority = bundled_authority()
-    modelo = authority.modelo(Modelo.M303.value)
+    modelo = authority.modelo("303")
     return build_snapshot(
         modelo,
         authority.catalogues,
@@ -449,7 +449,7 @@ def _m303_did_producer_snapshot(
     iva_profile = taxpayer.iva
     assert iva_profile is not None
     return build_filing_producer_snapshot(
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         taxpayer_tax_id=taxpayer.tax_id,
         taxpayer_identity=TaxpayerIdentityFacts(
             legal_name=None,
@@ -841,7 +841,7 @@ def test_m303_account_bearing_dispositions_refuse_without_their_selected_account
 
     with pytest.raises(FilingProducerSnapshotError, match=message):
         build_filing_producer_snapshot(
-            modelo=Modelo.M303,
+            modelo=Modelo("303"),
             taxpayer_tax_id=taxpayer.tax_id,
             taxpayer_identity=TaxpayerIdentityFacts(
                 legal_name=None,

@@ -1,4 +1,6 @@
 [revisions."2018-2022"]
+binding_source_refs = ["aeat-dr-309-2018", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
+formula_source_refs = ["aeat-dr-309-2018", "aeat-modelo-309-instructions", "aeat-modelo-309-procedure"]
 predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["orden-hac-3625-2003:apartado-1"], source_refs = ["aeat-dr-309-2018"] } }
 casilla_source_refs = ["aeat-dr-309-2018"]
 # Prepared and reviewed by an agent against the bundled diseño de registros and

@@ -239,7 +239,7 @@ def _terminal_product_scope(
     applicability grade, or a missing producer namespace. Those facts cannot
     silently expand the terminal boundary to another modelo or revision.
     """
-    if getattr(modelo, "id", None) != Modelo.M036 or getattr(revision, "id", None) != "2025-02-03-y-siguientes":
+    if getattr(modelo, "id", None) != Modelo("036") or getattr(revision, "id", None) != "2025-02-03-y-siguientes":
         return None
     return _FilingCapabilityBlocker(
         disposition="terminal_product_scope",
@@ -278,7 +278,7 @@ def _terminal_no_authority(
     dedicated regression then forces a fresh adjudication before anyone can
     silently retain the terminal label.
     """
-    if getattr(modelo, "id", None) != Modelo.M136 or getattr(revision, "id", None) != "2026":
+    if getattr(modelo, "id", None) != Modelo("136") or getattr(revision, "id", None) != "2026":
         return None
 
     source_refs = set(getattr(revision, "source_refs", ()))
@@ -420,7 +420,7 @@ def _blocker(
     terminal = _terminal_no_authority(modelo, revision, sources)
     if terminal is not None:
         return terminal
-    if modelo.id == Modelo.M136 and _modelo_136_has_machine_contract(revision, sources):
+    if modelo.id == Modelo("136") and _modelo_136_has_machine_contract(revision, sources):
         return _authorable(
             "a machine-readable Modelo 136 contract is cited, but its semantic map and emitted-byte proof are absent",
             # No current predecessor route may be claimed for a machine contract
@@ -447,7 +447,7 @@ def _blocker(
         if (source := sources.get(str(ref))) is not None and getattr(source, "kind", None) == "record_design"
     )
     if not designs:
-        if modelo.id == Modelo.M721:
+        if modelo.id == Modelo("721"):
             return _authorable(
                 "no positional record design is bundled; finite BOE form-spec packages do not establish the missing pair-complete 2023/2024 AEAT structured-message contract",
                 owners=_M721_OWNERS,
@@ -471,7 +471,7 @@ def _blocker(
             reconsideration="the temporal owner registers the official source with exact applicability before it becomes a source_ref",
         )
     if not cited:
-        if modelo.id == Modelo.M185:
+        if modelo.id == Modelo("185"):
             return _authorable(
                 (
                     "the registered 2026 record design is outside this historical revision; the 2003-2025 Annex-I "
@@ -575,7 +575,7 @@ def _producer_vocabulary_gap(modelo: ModeloDefinition) -> _FilingCapabilityBlock
     prefix = f"m{modelo.id}."
     if any(member.value.startswith(prefix) for member in FilingProducerKey):
         return None
-    owners = _M220_2024_OWNERS if modelo.id == Modelo.M220 else (_SOURCE_CASILLA_OWNER, _EXPORT_OWNER)
+    owners = _M220_2024_OWNERS if modelo.id == Modelo("220") else (_SOURCE_CASILLA_OWNER, _EXPORT_OWNER)
     return _authorable(
         (
             f"no FilingProducerKey is namespaced {prefix!r}, so non-casilla design fields have no canonical "
@@ -618,7 +618,7 @@ def _casilla_surface_shortfall(
     ]
     if not peers or declared >= min(peers):
         return None
-    owners = _M390_OWNERS if modelo.id == Modelo.M390 else (_SOURCE_CASILLA_OWNER, _EXPORT_OWNER)
+    owners = _M390_OWNERS if modelo.id == Modelo("390") else (_SOURCE_CASILLA_OWNER, _EXPORT_OWNER)
     return _authorable(
         (
             f"declares {declared} casilla(s) while every filing-grade sibling declares at least {min(peers)}; "
@@ -646,17 +646,17 @@ def _uncovered_design_owners(modelo: ModeloDefinition) -> tuple[_OwnerRoute, ...
     already accepted for each distinct evidence gap; they do not create a
     parallel temporal, source, or export authority.
     """
-    if modelo.id == Modelo.M182:
+    if modelo.id == Modelo("182"):
         return _M182_OWNERS
-    if modelo.id == Modelo.M187:
+    if modelo.id == Modelo("187"):
         return _M187_OWNERS
-    if modelo.id == Modelo.M188:
+    if modelo.id == Modelo("188"):
         return _M188_OWNERS
-    if modelo.id == Modelo.M194:
+    if modelo.id == Modelo("194"):
         return _M194_OWNERS
-    if modelo.id == Modelo.M220:
+    if modelo.id == Modelo("220"):
         return _M220_2025_OWNERS
-    if modelo.id == Modelo.M763:
+    if modelo.id == Modelo("763"):
         return _M763_OWNERS
     # A new live shortfall must stay visibly unrouted until its own predecessor
     # row is accepted; it may not inherit one of the reviewed Modelo routes.
@@ -739,7 +739,7 @@ def test_loaded_worklist_keeps_terminal_and_generic_owner_dispositions_distinct(
         assert set(blocker.owners) <= allowed_owners
 
     by_revision = {(modelo, revision): blocker for modelo, revision, blocker in unable}
-    modelo_185 = by_revision[(Modelo.M185.value, "2003-2025")]
+    modelo_185 = by_revision[("185", "2003-2025")]
     assert modelo_185.owners == _M185_OWNERS
     assert "Annex-I authority" in modelo_185.finding
 
@@ -755,12 +755,12 @@ def test_worklist_keeps_distinct_terminal_refusals_separate_from_owner_routed_ga
     unable = _revisions_that_cannot_emit()
     by_revision = {(modelo, revision): blocker for modelo, revision, blocker in unable}
 
-    modelo_136 = by_revision[(Modelo.M136.value, "2026")]
+    modelo_136 = by_revision[("136", "2026")]
     assert modelo_136.disposition == "terminal_no_authority"
     assert modelo_136.owners == ()
     assert "No export layout is authorable now" in modelo_136.report()
 
-    modelo_036 = by_revision[(Modelo.M036.value, "2025-02-03-y-siguientes")]
+    modelo_036 = by_revision[("036", "2025-02-03-y-siguientes")]
     assert modelo_036.disposition == "terminal_product_scope"
     assert modelo_036.owners == ()
     assert "TERMINAL PRODUCT-SCOPE" in modelo_036.report()
@@ -781,7 +781,7 @@ def test_modelo_136_terminal_refusal_becomes_owner_routed_when_machine_authority
     identifier or a permanent hand-maintained exclusion.
     """
     modelos, catalogues = bundled_registry_tree()
-    modelo = next(item for item in modelos if item.id == Modelo.M136)
+    modelo = next(item for item in modelos if item.id == Modelo("136"))
     revision = modelo.revisions["2026"]
     source_id = "boe-modelo-136-current-form"
     upgraded = dict(catalogues.sources)
@@ -797,9 +797,9 @@ def test_modelo_136_terminal_refusal_becomes_owner_routed_when_machine_authority
 def test_modelo_036_product_scope_terminal_is_exact_to_the_reviewed_revision() -> None:
     """MUTATION: an adjacent identity cannot inherit M036's product boundary."""
     modelos, _catalogues = bundled_registry_tree()
-    modelo_036 = next(item for item in modelos if item.id == Modelo.M036)
+    modelo_036 = next(item for item in modelos if item.id == Modelo("036"))
     reviewed_revision = modelo_036.revisions["2025-02-03-y-siguientes"]
-    modelo_038 = next(item for item in modelos if item.id == Modelo.M038)
+    modelo_038 = next(item for item in modelos if item.id == Modelo("038"))
     other_revision = next(iter(modelo_038.revisions.values()))
 
     terminal = _terminal_product_scope(modelo_036, reviewed_revision)

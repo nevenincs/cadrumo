@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2021-dictionary:1249 y aeat-dr-100-2022-dictionary:1304; Valencia 2020-2021, Año Jubilar. Camino del Santo Cáliz, columna Aplicado, M21CSCA.
+[[revisions."2022".casilla_continuidad_evolutions]]
+id = "m100-1718-2021-2022-unchanged"
+continuidad_id = "irpf-aeip-valencia-2020-2021-ano-jubilar-camino-del-santo-caliz-aplicado"
+from_revision = "2021"
+to_revision = "2022"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2022-dictionary"]

@@ -102,3 +102,15 @@ number = "modulos-7-unidades"
 [[revisions."2026".completeness_manifest.casillas]]
 casilla_id = "modulos-minoracion-inversion"
 number = "modulos-minoracion-inversion"
+
+[[revisions."2026".completeness_manifest.casillas]]
+casilla_id = "modulos-indice-pequena-dimension"
+number = "modulos-indice-pequena-dimension"
+
+[[revisions."2026".completeness_manifest.casillas]]
+casilla_id = "modulos-indice-temporada"
+number = "modulos-indice-temporada"
+
+[[revisions."2026".completeness_manifest.casillas]]
+casilla_id = "modulos-indice-inicio-actividad"
+number = "modulos-indice-inicio-actividad"

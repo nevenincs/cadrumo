@@ -1,5 +1,7 @@
 [[revisions."2022".casillas]]
 id = "0781"
+# Grounding: aeat-dr-100-2022-dictionary:1340, M21MPPA; importe aplicado del programa Conmemoración del 50 aniversario de la muerte del artista español Pablo Picasso (Anexo A).
+continuidad_id = "irpf-aeip-conmemoracion-del-50-aniversario-de-la-muerte-del-artista-espanol-pablo-picasso-aplicado"
 number = "0781"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

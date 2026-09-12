@@ -1,0 +1,9 @@
+# Grounding: C_BASEAMORACC, base de amortización del inmueble accesorio. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m100-0145-2021-2024-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-base"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary","aeat-dr-100-2024-dictionary"]

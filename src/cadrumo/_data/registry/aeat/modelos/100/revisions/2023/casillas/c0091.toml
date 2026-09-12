@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "0091"
+continuidad_id = "irpf-inmueble-arrendatario-1-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:170 y aeat-dr-100-2023-dictionary:174: CNIF1RNR, identificación fiscal del primer arrendatario de vivienda habitual. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "0091"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"

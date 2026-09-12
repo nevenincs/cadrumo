@@ -53,3 +53,8 @@ source_refs = [
     "aeat-modelo-115-obligaciones-retenedor",
     "aeat-modelo-115-guia-censal",
 ]
+
+[revisions."2019-y-siguientes".source_default_dispositions.formulas]
+kind = "underivable"
+reason = """
+No leading source_refs run is shared by two rows of this edition's formulas family. Its rows state disjoint leading references, so no run is common to two of them, no default is derivable here, and each row keeps its own refs rather than having a manifest default add references the row does not state."""

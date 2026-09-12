@@ -22,3 +22,8 @@ source_refs = [
     "boe-modelo-280-2019-amendment-hac-1276",
     "boe-modelo-280-2022-amendment-hfp-1192",
 ]
+
+[modelo.inception.unauthored]
+earliest_authored = 2025
+reason = "Approved by Orden HAP/2118/2015 in force from 2016; filing years 2022-2024 existed in law and are not yet authored."
+legal_refs = ["orden-hap-2118-2015:art-1"]

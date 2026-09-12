@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "1800"
+continuidad_id = "irpf-monedas-virtuales-transmision-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:593 y aeat-dr-100-2023-dictionary:599: campo G2DCRIT, tipo TIT; mismo titular de las monedas virtuales transmitidas, descrito por el grupo oficial de ambas ediciones."
 number = "1800"
 section = ["toma_datos_ampliada"]
 data_type = "text"

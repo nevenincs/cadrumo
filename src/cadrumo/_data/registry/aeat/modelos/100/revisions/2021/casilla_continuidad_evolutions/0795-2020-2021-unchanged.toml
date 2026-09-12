@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2020-dictionary:1062 y aeat-dr-100-2021-dictionary:1120; Universo Mujer (II), columna Aplicado, M21UMUA.
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0795-2020-2021-unchanged"
+continuidad_id = "irpf-aeip-universo-mujer-ii-aplicado"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]

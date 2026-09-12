@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00070"
+continuidad_id = "is-compensacion-bases-imponibles-negativas-para-entidades-de-nueva-creacion-art-26-3-lis"
 number = "00070"
 section = ["compensacion_bases_imponibles_negativas_para_entid"]
 data_type = "decimal"

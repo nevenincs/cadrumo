@@ -1,0 +1,12 @@
+# Plazo from Orden EHA/3127/2009 art. 5, which states the twenty-natural-day
+# base rule and then the «No obstante» exception giving 1 to 31 January for
+# every form in current use. The 2022 resumen is presented in January 2023.
+[[revisions."2022".deadline_windows]]
+id = "modelo-190-2022-0a"
+filing_year = 2022
+period = "2022 0A"
+period_kind = "annual"
+opens_on = 2023-01-01
+closes_on = 2023-01-31
+legal_refs = ["rd-439-2007:art-108", "orden-eha-3127-2009:art-5"]
+source_refs = ["aeat-modelo-190-procedure"]

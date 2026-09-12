@@ -11,6 +11,9 @@
 # AEAT campo: Tipo de declaración
 [[revisions."2025-y-siguientes".casillas]]
 id = "p01.tipo-de-declaracion"
+continuidad_id = "tipo-de-declaracion"
+continuidad_origin = "grounded"
+continuidad_evidence = "Both aeat-dr-151-2015 and aeat-dr-151-2023 identify Tipo de declaracion in M15101000 and define D as Devolucion in note 1. This is the same return-type indicator, not the added principal/associated-taxpayer condition. The replacing approval order does not change its role."
 number = "13-13"
 segmento = "M15101000"
 section = ["p01", "tipo_de_declaracion"]

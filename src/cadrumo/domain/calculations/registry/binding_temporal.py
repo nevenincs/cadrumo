@@ -31,6 +31,7 @@ from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from ....core.period import RegistrySelectorPeriodCode
 from .errors import RegistryValidationError
+from .ids import RevisionId
 from .period_offset_math import apply_period_offset, same_ejercicio_prior_quarter_anchors
 from .schema_base import RegistryModel
 
@@ -48,6 +49,7 @@ __all__ = [
     "FilingYearOffsetByTargetPeriod",
     "GeneratedBinding",
     "NonCalculation",
+    "NonCalculationReason",
     "PriorQuarterExpandingSpan",
     "SameFilingYearPeriods",
     "SameTargetContext",
@@ -565,6 +567,33 @@ class TargetPeriods(RegistryModel):
         return _reject_duplicate_periods(value)
 
 
+NonCalculationReason = Literal[
+    "informational_total",
+    "profile_input",
+    "rate_band_reserved",
+    "application_calculation_handoff",
+]
+"""The classes of declaration that legitimately have no typed calculation consumer.
+
+Each member is a class the authored corpus actually contains, not a speculative
+slot:
+
+``informational_total``
+    A total the official design reports for information only. Modelo 303's
+    criterio-de-caja entregas and adquisiciones totals are this: the printed
+    casillas left the form, and the total is still declared and handed off.
+``profile_input``
+    A taxpayer-profile fact declared as a binding for a downstream consumer
+    rather than for a casilla of its own revision.
+``rate_band_reserved``
+    A rate-band declaration kept for a band the revision's form does not print,
+    so the band stays declarable without claiming a box.
+``application_calculation_handoff``
+    A value an application-layer calculation reads directly, rather than a
+    formula or casilla of the revision.
+"""
+
+
 class NonCalculation(RegistryModel):
     """The binding is not consumed by calculation, and that is declared intent.
 
@@ -572,9 +601,35 @@ class NonCalculation(RegistryModel):
     indistinguishable from an orphaned declaration unless the author says so.
     This member is that statement, so the compiler can refuse every *other*
     unreferenced binding instead of tolerating all of them.
+
+    The statement is not a bare flag: :attr:`reason` classes WHY the row has no
+    calculation consumer, and :attr:`consumed_by` names WHAT does read it. A
+    disposition that named neither would be indistinguishable from an author
+    silencing an orphan, which is the failure this member exists to prevent --
+    hence the refusal of a blank ``consumed_by``. :attr:`box_retired_in` records
+    the revision from which the printed casilla is absent, so a retired box is
+    traceable to the edition that retired it rather than inferred from the
+    casilla's absence.
     """
 
     kind: Literal[BindingApplicabilityKind.NON_CALCULATION] = BindingApplicabilityKind.NON_CALCULATION
+    reason: NonCalculationReason
+    box_retired_in: RevisionId | None = None
+    consumed_by: Annotated[str, Field(min_length=1, max_length=300)]
+
+    @model_validator(mode="after")
+    def _validate_disposition(self) -> NonCalculation:
+        if not self.consumed_by.strip():
+            raise RegistryValidationError(
+                "non_calculation applicability must name a non-blank consumed_by",
+                context={"reason": self.reason},
+            )
+        if self.box_retired_in is not None and not self.box_retired_in.strip():
+            raise RegistryValidationError(
+                "non_calculation box_retired_in must be a non-blank revision id when declared",
+                context={"reason": self.reason},
+            )
+        return self
 
 
 BindingApplicability = Annotated[

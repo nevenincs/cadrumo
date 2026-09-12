@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "0281"
+# aeat-dr-100-2020-dictionary:505: TITG11, perceptor de premios de juegos sin fines publicitarios.
+continuidad_id = "irpf-premios-juegos-contribuyente-titular"
 number = "0281"
 section = ["toma_datos_ampliada"]
 data_type = "text"

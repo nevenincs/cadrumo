@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00045"
+continuidad_id = "is-inversiones-anticipadas-reserva-inversiones-en-canarias-art-27-11-ley-19-1994"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 84/84, filas 89/89: Inversiones anticipadas - reserva inversiones en Canarias (art. 27.11 Ley 19/1994) [00045]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00045"
 section = ["inversiones_anticipadas", "reserva_inversiones_en_canarias_art_27_11_ley_19_1"]
 data_type = "decimal"

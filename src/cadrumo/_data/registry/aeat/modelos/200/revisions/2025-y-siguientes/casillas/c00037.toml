@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00037"
+continuidad_id = "is-opcion-de-fraccionamiento-art-19-1-lis"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 97/97, filas 102/102: Opción de fraccionamiento art. 19.1 LIS [00037]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00037"
 section = ["opcion_de_fraccionamiento_art_19_1_lis"]
 data_type = "decimal"

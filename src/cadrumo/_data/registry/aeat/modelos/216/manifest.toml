@@ -11,3 +11,9 @@ legal_refs = [
     "trlirnr-rdleg-5-2004:art-24",
 ]
 source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
+
+[modelo.inception.unauthored]
+earliest_authored = 2024
+reason = "Governed by Orden EHA/3290/2008; the same consolidated text shows Modelo 216 filed under the Orden of 21 December 2000, so 2022-2023 existed in law and are not yet authored. Measured: the registered design aeat-dr-216-2020-2023 spans 2020-01-01 to 2023-12-31 as one unchanged era, so the correct unit is a single edition for that span, not one per year. Its wire layout is fully recoverable (24 fields, 400 positions), but its casilla identity is not: the design names the seven liquidacion boxes only 'Partida 1' to 'Partida 7', printing no box numbers, and the pre-2024 Anexo I that prints them is absent here, the consolidated orden carrying only the form substituted by Orden HAC/56/2024. No pre-2024 instructions are held to ground the box arithmetic either. Acquiring that form is the prerequisite; the layout alone cannot carry a filing-grade edition."
+legal_refs = ["orden-eha-3290-2008:art-1"]
+source_refs = ["aeat-dr-216-2020-2023"]

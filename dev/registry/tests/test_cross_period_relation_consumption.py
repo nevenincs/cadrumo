@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.handoffs import relation_consumption_channels, relation_consumption_index
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
@@ -48,7 +47,7 @@ _EVIDENCE_ROLE = "factual_evidence"
 
 
 def test_relation_consumption_includes_real_alternate_binding_channel() -> None:
-    snapshot = bundled_authority().snapshot(Modelo.M390.value, filing_year=2025, period="0A")
+    snapshot = bundled_authority().snapshot("390", filing_year=2025, period="0A")
     binding = next(
         item
         for item, _provider in relation_prefill_bindings_for_period(snapshot.revision)

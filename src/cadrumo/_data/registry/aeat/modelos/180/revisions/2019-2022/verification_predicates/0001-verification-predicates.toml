@@ -18,6 +18,7 @@
 # it. It stays advisory because the relation fold-in can legitimately be
 # mid-population when the operator calculates, and because the operator files.
 [[revisions."2019-2022".verification_predicates]]
+id = "implies-nonzero:base-anual-cuando-perceptores-declarados"
 predicate_id = "modelo-180-base-anual-cuando-perceptores-declarados"
 expression = 'implies_nonzero(["decl.total-perceptores", "decl.base-total"])'
 finding_kind = "ADVISORY"

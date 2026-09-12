@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "1394"
+continuidad_id = "irpf-inmueble-desglose-gastos-referencia-catastral"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:1955 y aeat-dr-100-2022-dictionary:2145: DICRC, referencia catastral del inmueble en el desglose voluntario de gastos y mejoras del arrendamiento. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "1394"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"

@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "0310"
+continuidad_id = "irpf-fondos-inversion-transmision-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:554 y aeat-dr-100-2024-dictionary:569: campo G2A_T, tipo TIT; mismo titular de las participaciones del fondo transmitidas, descrito por el grupo oficial de ambas ediciones."
 number = "0310"
 section = ["toma_datos_ampliada"]
 data_type = "text"

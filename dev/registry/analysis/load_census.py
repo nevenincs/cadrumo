@@ -26,21 +26,18 @@ measurement boundary, not a verdict, and the distinction is load-bearing here:
 execution set however live it is.
 
 **The reference map** is who *can* run a module: which production and test
-modules name a symbol the package facade owns for it. A registry module is
-almost never imported directly from outside the package -- the architecture
-rules route every cross-package import through the facade -- so module-level
-importer counts systematically read zero for modules with real consumers. The
-map is symbol-level for exactly that reason.
+modules import its canonical defining module. The map records the module named
+by the import statement itself and leaves direct canonical evidence visible
+even when a module is only referenced from a function or a test.
 
 What this cannot see, stated rather than assumed away:
 
 - **Dynamic import targets that are not literal strings.** :func:`dynamic_import_sites`
-  harvests ``import_module("literal")`` edges the AST-only graph misses -- the
-  registry facade's own PEP 562 lazy exports are built this way -- and reports
-  every non-literal target as UNRESOLVED. There is no sanctioned inventory of
-  first-party function-local edges to check those against, so an unresolved site
-  is reported on the graph difference alone and left unclassified; it is never
-  implied that a list cleared it.
+  harvests ``import_module("literal")`` edges the AST-only graph misses and
+  reports every non-literal target as UNRESOLVED. There is no sanctioned
+  inventory of first-party function-local edges to check those against, so an
+  unresolved site is reported on the graph difference alone and left
+  unclassified; it is never implied that a list cleared it.
 - **Attribute access through a module object.** ``from ... import registry``
   followed by ``registry.symbol`` reads as a package import, not a symbol
   reference.
@@ -75,8 +72,9 @@ ROOT_PACKAGE: Final[str] = "cadrumo"
 REGISTRY_PACKAGE: Final[str] = "cadrumo.domain.calculations.registry"
 REGISTRY_DIR: Final[Path] = SOURCE_ROOT / "cadrumo" / "domain" / "calculations" / "registry"
 
-#: The sanctioned way to load the registry: the validated authority, plus the
-#: package namespace itself, which is inert and owns nothing.
+#: The sanctioned way to load the registry: the validated authority and its
+#: package root. The root is included because importing a defining module also
+#: loads its ancestor packages; it is not a source of registry definitions.
 #: ``compiled_bundled_authority()`` is the only production load entry point the
 #: authority-flow rule admits.
 LOAD_ENTRY_POINTS: Final[tuple[str, ...]] = (
@@ -241,8 +239,8 @@ def _import_targets(node: ast.stmt, *, owner: str) -> frozenset[str]:
 def registry_package_modules() -> frozenset[str]:
     """Return every production module file in the registry package.
 
-    Derived from the directory rather than from the facade, so a module the
-    facade never mentions is still counted.
+    Derived from the directory rather than from consumer imports, so a module
+    with no observed consumer is still counted.
 
     Returns:
         Dotted module names, ``conftest`` excluded.
@@ -528,10 +526,9 @@ def dynamic_import_sites(*, production_only: bool = True) -> tuple[DynamicImport
     """Harvest every ``import_module`` call site the AST import graph cannot represent.
 
     Two shapes are resolved: a literal argument (relative literals are resolved
-    against the calling package, which is how the registry facade's PEP 562
-    lazy export table is written), and a loop over a module-level tuple of
-    module paths. Anything else -- an f-string, a comprehension over a mapping,
-    a computed name -- is recorded with ``target=None`` and stays unclassified.
+    against the calling package), and a loop over a module-level tuple of module
+    paths. Anything else -- an f-string, a comprehension over a mapping, a
+    computed name -- is recorded with ``target=None`` and stays unclassified.
 
     Args:
         production_only: Restrict to production modules. Dynamic imports inside
@@ -573,46 +570,53 @@ def dynamic_import_sites(*, production_only: bool = True) -> tuple[DynamicImport
     return tuple(sites)
 
 
-def _imported_registry_module(node: ast.ImportFrom, module: str) -> str | None:
-    """Resolve one ``from ... import`` to the registry module it names, if any.
+def _registry_import_targets(node: ast.Import | ast.ImportFrom, module: str) -> tuple[str, ...]:
+    """Return canonical registry modules named directly by one import statement.
 
-    The registry package namespace is inert by architectural rule, so a consumer
-    names the defining module in the import statement itself and there is no
-    symbol table to resolve through. Both spellings are read: the absolute
-    ``from cadrumo.domain.calculations.registry.authority import ...`` a
-    cross-package consumer uses, and the relative ``from ..authority import ...``
-    the package's own tests use.
+    ``from`` imports resolve the module path before the imported symbol is
+    considered. A package-root ``from`` import contributes an alias only when
+    that alias names a real registry submodule; package-owned symbols are never
+    inferred. Plain ``import`` statements contribute each dotted module they
+    name. The registry package itself is not a defining module.
 
     Args:
         node: The import statement.
         module: The dotted name of the module containing it.
 
     Returns:
-        The owning registry submodule, or ``None`` when the import names
-        something else. The package itself is never an owner: publishing
-        nothing, it can own nothing.
+        Canonical registry module names, possibly empty.
     """
-    if node.level == 0:
-        target = node.module or ""
+    if isinstance(node, ast.Import):
+        targets = tuple(alias.name for alias in node.names)
+    elif node.level == 0:
+        targets = (node.module or "",)
     else:
         base = module.split(".")
         # ``a.b.c`` sits in package ``a.b``; one further level per extra dot.
         del base[len(base) - node.level :]
         target = ".".join((*base, node.module)) if node.module else ".".join(base)
-    if not target.startswith(REGISTRY_PACKAGE + "."):
-        return None
-    return target
+        targets = (target,)
+    defining_modules = registry_package_modules()
+    resolved: list[str] = []
+    for target in targets:
+        if target.startswith(REGISTRY_PACKAGE + "."):
+            resolved.append(target)
+        elif target == REGISTRY_PACKAGE and isinstance(node, ast.ImportFrom):
+            resolved.extend(
+                candidate for alias in node.names if (candidate := f"{target}.{alias.name}") in defining_modules
+            )
+    return tuple(resolved)
 
 
 @dataclass(frozen=True)
 class ReferenceMap:
-    """Who names each registry module, split by surface."""
+    """Canonical defining-module consumers, split by surface."""
 
     production: Mapping[str, frozenset[str]] = field(default_factory=dict)
     tests: Mapping[str, frozenset[str]] = field(default_factory=dict)
 
     def consumers(self, module: str) -> frozenset[str]:
-        """Return every module naming a symbol ``module`` owns.
+        """Return every module importing canonical defining module ``module``.
 
         Args:
             module: The owning dotted module name.
@@ -643,18 +647,16 @@ def build_reference_map() -> ReferenceMap:
             continue
         if module is None:
             continue
-        # The package's own production modules reach siblings by direct import,
-        # which the graph already records. Its TESTS reach them by relative
-        # import (``from ..authority import ...``), so they are consumers this
-        # map must see -- excluding them once reported two live modules as dead.
+        # The package's own production modules are already represented by graph
+        # edges. Its tests are also consumers, so retain their direct canonical
+        # imports in this map rather than allowing them to look unreferenced.
         if module.startswith(REGISTRY_PACKAGE + ".") and not is_test_module(module):
             continue
         bucket = tests if is_test_module(module) else production
         for node in ast.walk(tree):
-            if not isinstance(node, ast.ImportFrom):
+            if not isinstance(node, ast.Import | ast.ImportFrom):
                 continue
-            owner = _imported_registry_module(node, module)
-            if owner is not None:
+            for owner in _registry_import_targets(node, module):
                 bucket.setdefault(owner, set()).add(module)
     report_unread(
         "registry load census reference map",
@@ -669,7 +671,7 @@ def build_reference_map() -> ReferenceMap:
 
 
 def unreferenced_modules(graph: grimp.ImportGraph, reference_map: ReferenceMap) -> frozenset[str]:
-    """Return registry modules nothing outside themselves and the facade reaches.
+    """Return registry modules with no observed canonical defining-module consumer.
 
     A module qualifies only when three independent signals agree: no production
     module inside the package imports it, no module anywhere names it in an
@@ -679,10 +681,11 @@ def unreferenced_modules(graph: grimp.ImportGraph, reference_map: ReferenceMap) 
 
     Args:
         graph: The runtime import graph.
-        reference_map: The symbol-level reference map.
+        reference_map: The canonical defining-module reference map.
 
     Returns:
-        Candidate modules, facade excluded.
+        Candidate modules, with the package root excluded because it is not a
+        defining module.
     """
     candidates: set[str] = set()
     for module in sorted(registry_package_modules()):

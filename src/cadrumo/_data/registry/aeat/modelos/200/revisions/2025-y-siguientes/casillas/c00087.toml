@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00087"
+continuidad_id = "is-inversiones-anticipadas-reserva-inversiones-en-illes-balears-da-70a-cuatro-10-ley-31-2022"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 85/85, filas 90/90: Inversiones anticipadas-reserva inversiones en Illes Balears (DA 70ª.Cuatro.10 Ley 31/2022) [00087]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00087"
 section = ["inversiones_anticipadas_reserva_inversiones_en_ill"]
 data_type = "decimal"

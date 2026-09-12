@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "1671"
+continuidad_id = "irpf-deduccion-eficiencia-energetica-edificios-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:1122 y aeat-dr-100-2024-dictionary:1129: campo TITEDIF, tipo TIT; mismo titular de la deduccion por rehabilitacion energetica del edificio, descrito por el grupo oficial de ambas ediciones."
 number = "1671"
 section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
 data_type = "text"

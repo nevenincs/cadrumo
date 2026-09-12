@@ -13,6 +13,7 @@
 # current C14. This predicate remains the verification backstop for
 # externally supplied, imported, or tampered over-cap calculation data.
 [[revisions."2019-y-siguientes".verification_predicates]]
+id = "cap-le-when-positive:c15-cap-by-c14"
 predicate_id = "modelo-130-c15-cap-by-c14"
 expression = 'cap_le_when_positive(["15", "14"])'
 finding_kind = "BLOCKING_RULE"

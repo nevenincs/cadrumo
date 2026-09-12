@@ -1,5 +1,8 @@
 [[revisions."2021".casillas]]
 id = "0784"
+continuidad_id = "irpf-aeip-andalucia-valderrama-masters-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2020-dictionary:1041 y aeat-dr-100-2021-dictionary:1108: campo M21AVMA; columna Aplicado en esta declaración del programa Andalucía Valderrama Masters en Anexo A. Misma designación y función fiscal."
 number = "0784"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

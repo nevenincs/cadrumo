@@ -71,7 +71,7 @@ reviewed_by = "downloaded official BOE-A-2016-9834 consolidated HTML from BOE on
 notes = "Orden HAP/1695/2016 articulo 1: aprueba el Modelo 289 y su anexo de contenido para la declaracion informativa anual de cuentas financieras."
 required_text = [
     "Se aprueba el modelo 289",
-    "Declaracion informativa anual de cuentas financieras",
+    "Declaración informativa anual de cuentas financieras",
     "anexo III de la misma",
 ]
 
@@ -268,7 +268,7 @@ reviewed_by = "downloaded official BOE-A-2021-20004 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/1351/2021 articulo octavo: modifica la comunicacion de inexistencia de cuentas que comunicar y los anexos I, II y III del Modelo 289."
 required_text = [
     "Orden HAP/1695/2016, de",
-    "Se modifica el articulo",
+    "Se modifica el artículo",
     "declaración informativa anual de cuentas financieras en el ámbito de la asistencia mutua",
 ]
 
@@ -379,7 +379,7 @@ authority = "boe"
 kind = "orden"
 corpus_ref = "corpus/normatives/html/orden-hac-1430-2025.html#dfunica"
 document_id = "BOE-A-2025-25389"
-article = "disposicion final unica"
+article = "disposición final única"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-25389#dfunica"
 published_at = 2025-12-16
 effective_from = 2025-12-17
@@ -388,7 +388,7 @@ reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2025-25389 HTML from BOE on 2026-07-01"
 notes = "Orden HAC/1430/2025 disposicion final unica: aplica por primera vez las modificaciones del Modelo 289 a las declaraciones del ejercicio 2025 presentadas desde 2026."
 required_text = [
-    "disposicion final unica",
+    "disposición final única",
     "declaraciones informativas correspondientes al ejercicio 2025",
     "modelos 199, 182, 193, 184, 282, 289 y 345",
 ]

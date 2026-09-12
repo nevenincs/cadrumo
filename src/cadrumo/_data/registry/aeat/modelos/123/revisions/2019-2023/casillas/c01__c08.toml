@@ -1,6 +1,7 @@
 
 [[revisions."2019-2023".casillas]]
 id = "01"
+continuidad_id = "perceptor-count"
 number = "01"
 section = ["retenciones_ingresos_cuenta"]
 data_type = "integer"

@@ -1,4 +1,6 @@
 [revisions.2019-2022]
+binding_source_refs = ["aeat-modelo-180-ayuda-resumen-datos", "aeat-modelo-180-ayuda-presentacion", "boe-modelo-180-2014-form"]
+formula_source_refs = ["aeat-modelo-180-ayuda-resumen-datos", "boe-modelo-180-2014-form"]
 casilla_source_refs = ["aeat-dr-180-2014"]
 # Prepared and reviewed by an agent against the bundled diseño de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and

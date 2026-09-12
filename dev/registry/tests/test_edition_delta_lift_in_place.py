@@ -24,6 +24,8 @@ shared legal catalogues a single synthetic modelo does not carry.
 
 from __future__ import annotations
 
+import dataclasses
+import datetime
 import shutil
 from pathlib import Path
 from typing import Final
@@ -37,9 +39,12 @@ from ..conformance.loader_directory_mode_support import write_standard_manifest
 from ..edition_delta_migration import (
     MigrationRefusedError,
     PredecessorBasis,
+    _chain_materialisation,
     _edition_changes,
+    _member_difference,
     _plan,
     _prove_chain,
+    _read_edition,
     _write_edition,
     plan_migration,
 )
@@ -357,3 +362,69 @@ def test_a_modelo_naming_no_predecessor_still_plans_through_the_full_copy_path(t
     assert successor.inherited_ids == ("0001", "0003")
     assert successor.stated_ids == ("0002", "0005")
     assert successor.stated_ids != _AUTHORED_ORDER
+
+
+def test_a_value_the_chain_proof_cannot_render_is_refused_by_key_path_and_type(tmp_path: Path) -> None:
+    """The proof is byte identity, so a value it has no exact rendering for fails closed rather than stringifies.
+
+    A ``default=`` fallback would render this value as text and let the proof
+    pass on it, which is unsound in both directions: two values whose fallback
+    reads alike would compare equal, and a fallback reaching ``repr`` embeds an
+    address that differs between the reference and staged reads the proof
+    compares, making the proof fail at random.
+    """
+    modelo_dir = _build_modelo(tmp_path / "input", names_predecessor=True)
+    source = _read_edition(modelo_dir, _SUCCESSOR)
+    # The unplanted edition renders, so the refusal below cannot pass vacuously.
+    assert _chain_materialisation(source)
+
+    planted = dataclasses.replace(source, table={**source.table, "audit_stamp": {"taken_at": datetime.time(9, 0)}})
+
+    with pytest.raises(MigrationRefusedError) as refusal:
+        _chain_materialisation(planted)
+
+    assert str(refusal.value) == (
+        f"edition '{_SUCCESSOR}': the value at table.audit_stamp.taken_at is a time, which the chain proof cannot "
+        "compare; the proof is byte identity and refuses a type it has no exact rendering for"
+    )
+
+
+def test_a_date_and_the_text_that_reads_like_it_do_not_materialise_alike(tmp_path: Path) -> None:
+    """Dates are what the corpus holds, so they render -- but never to the bare text a string would give."""
+    modelo_dir = _build_modelo(tmp_path / "input", names_predecessor=True)
+    source = _read_edition(modelo_dir, _SUCCESSOR)
+
+    dated = dataclasses.replace(source, table={**source.table, "stamp": datetime.date(2025, 1, 1)})
+    as_text = dataclasses.replace(source, table={**source.table, "stamp": "2025-01-01"})
+
+    # A date is permitted: the corpus declares `valid_from` and its kin as bare
+    # TOML dates, so refusing them would refuse every edition.
+    assert _chain_materialisation(dated)
+    assert _chain_materialisation(dated) != _chain_materialisation(as_text)
+    # And two editions holding the same date still prove identical.
+    assert _chain_materialisation(dated) == _chain_materialisation(
+        dataclasses.replace(source, table={**source.table, "stamp": datetime.date(2025, 1, 1)}),
+    )
+
+
+def test_a_family_only_the_staged_tree_holds_is_reported_as_a_member_change() -> None:
+    """Member identity is compared over both sides' families, not the reference's alone.
+
+    Reading the reference's families only would leave a family the staged tree
+    holds and the reference does not uncompared here, so the difference would
+    fall through to the byte comparison and be reported as an unspecific change
+    of bytes rather than as the members it is.
+    """
+    shared: dict[str, tuple[str, ...]] = {"casillas": ("0001|base",)}
+
+    assert _member_difference(shared, shared) is None
+    assert _member_difference(shared, {**shared, "bindings": ("modelo-999-2025-iva",)}) == (
+        "lifting changed the bindings members, which a lift may never do: 0 before, 1 after, first difference at "
+        "position 0: ['modelo-999-2025-iva'] on the staged side only"
+    )
+    # The reference-only direction, which the asymmetric read already caught,
+    # keeps reporting on the side that still holds the member.
+    assert _member_difference({**shared, "bindings": ("modelo-999-2025-iva",)}, shared) == (
+        "lifting changed the bindings members, which a lift may never do: 1 before, 0 after, first difference at "
+        "position 0: ['modelo-999-2025-iva'] on the reference side only"
+    )

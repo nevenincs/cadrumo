@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "0529"
+continuidad_id = "irpf-escala-sobre-base-general-autonomico"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2024-dictionary:861 y aeat-dr-100-2025-dictionary:887: campo CEXGA1; escala autonómica aplicada a la base liquidable general en el bloque de cálculo del impuesto. Misma magnitud y función fiscal en ambas ediciones."
 number = "0529"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_escala_sobre_base_general_autonomico"

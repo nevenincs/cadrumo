@@ -1,0 +1,13 @@
+# The declaration tax-year role is unchanged; modern header declarations
+# cite the filing regulation in addition to the approval order, while the
+# historical field cites the older general return references.
+
+[[revisions."2018-2022".casilla_continuidad_evolutions]]
+id = "filing-year-from-2004-legal-refs-evolved"
+continuidad_id = "filing-year"
+from_revision = "2004-2015"
+to_revision = "2018-2022"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004", "aeat-dr-309-2018"]
+

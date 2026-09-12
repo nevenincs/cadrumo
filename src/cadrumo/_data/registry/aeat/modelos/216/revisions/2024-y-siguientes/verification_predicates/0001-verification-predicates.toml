@@ -21,6 +21,7 @@
 # with no retencion has no ordinary reading; it stays advisory because the
 # operator files, and an alert they can weigh is the safeguard here.
 [[revisions."2024-y-siguientes".verification_predicates]]
+id = "implies-nonzero:retenciones-declaradas-cuando-base-sometida-positiva"
 predicate_id = "modelo-216-retenciones-declaradas-cuando-base-sometida-positiva"
 expression = 'implies_nonzero(["10", "13"])'
 finding_kind = "ADVISORY"

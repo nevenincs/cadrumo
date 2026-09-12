@@ -423,25 +423,25 @@ def _modelo_arg_code(node: ast.expr) -> str | None:
     """Return the three-digit modelo code a ``read_parameter`` first arg denotes.
 
     Recognises the bare literal (``"100"``) and the canonical
-    :class:`cadrumo.core.Modelo` enum references that replaced it during the
-    modelo-enum-hardening sweep: the member ``Modelo.M100`` and its
-    ``Modelo.M100.value`` form. Any other expression yields ``None`` (the
-    call is treated as not statically analysable for this modelo).
+    :class:`cadrumo.core.Modelo` construction that wraps it, ``Modelo("100")``,
+    including a trailing ``.value`` accessor. Any other expression yields
+    ``None`` (the call is treated as not statically analysable for this modelo).
     """
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return node.value
-    # Unwrap a trailing ``.value`` (``Modelo.M100.value`` -> ``Modelo.M100``).
+    # Unwrap a trailing ``.value`` accessor before inspecting the construction.
     if isinstance(node, ast.Attribute) and node.attr == "value":
         node = node.value
-    # ``Modelo.M100`` -> Attribute(value=Name("Modelo"), attr="M100").
+    # ``Modelo("100")`` -> Call(func=Name("Modelo"), args=[Constant("100")]).
     if (
-        isinstance(node, ast.Attribute)
-        and isinstance(node.value, ast.Name)
-        and node.value.id == "Modelo"
-        and node.attr.startswith("M")
-        and node.attr[1:].isdigit()
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "Modelo"
+        and len(node.args) == 1
+        and isinstance(node.args[0], ast.Constant)
+        and isinstance(node.args[0].value, str)
     ):
-        return node.attr[1:]
+        return node.args[0].value
     return None
 
 

@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "1713"
+continuidad_id = "irpf-aeip-mundiales-badminton-espana-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:1234 y aeat-dr-100-2022-dictionary:1289: campo M21MBEA; columna Aplicado en esta declaración del programa Mundiales Bádminton España en Anexo A. Misma designación y función fiscal."
 number = "1713"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2021-dictionary:1210 y aeat-dr-100-2022-dictionary:1268; Centenario de Revista de Occidente, columna Aplicado, M21CROA.
+[[revisions."2022".casilla_continuidad_evolutions]]
+id = "m100-1705-2021-2022-unchanged"
+continuidad_id = "irpf-aeip-centenario-de-revista-de-occidente-aplicado"
+from_revision = "2021"
+to_revision = "2022"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2022-dictionary"]

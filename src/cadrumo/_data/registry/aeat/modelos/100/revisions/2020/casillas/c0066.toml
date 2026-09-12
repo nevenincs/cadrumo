@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "0066"
+# Grounding: aeat-dr-100-2020-dictionary:139, RC; referencia catastral de la relación general de inmuebles.
+continuidad_id = "irpf-inmueble-referencia-catastral"
 number = "0066"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"

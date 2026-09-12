@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "0308"
+continuidad_id = "irpf-ganancias-dt9-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:541 y aeat-dr-100-2022-dictionary:546: campo G20T, tipo TIT; mismo titular de las transmisiones sometidas a la disposicion transitoria novena, descrito por el grupo oficial de ambas ediciones."
 number = "0308"
 section = ["toma_datos_ampliada"]
 data_type = "text"

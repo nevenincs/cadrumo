@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "1237"
+# aeat-dr-100-2020-dictionary:1585: C1ERRT, titular de la exencion por reinversion en rentas vitalicias.
+continuidad_id = "irpf-exencion-reinversion-rentas-vitalicias-contribuyente-titular"
 number = "1237"
 section = ["resultados", "anexo_c_res", "exencion_rentas_vitalicias_res"]
 data_type = "text"

@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "0135"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-fecha-adquisicion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:228 y aeat-dr-100-2024-dictionary:241: C_FADQACC, fecha de adquisición del inmueble accesorio a efectos de amortización. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "0135"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"

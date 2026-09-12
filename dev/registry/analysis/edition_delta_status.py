@@ -319,6 +319,8 @@ COVERAGE_CONDITIONS: Final[tuple[str, ...]] = (
     "promised_coordinate_unserved",
     "coordinate_served_twice",
     "promised_year_projected",
+    "awaiting_ejercicio_orden",
+    "pending_orden_declaration_stale",
 )
 
 #: Every condition this screen can report, declared once and used at each
@@ -326,6 +328,7 @@ COVERAGE_CONDITIONS: Final[tuple[str, ...]] = (
 CONDITIONS: Final[tuple[str, ...]] = (
     "derived_field_authored",
     "unknown_authoring_key",
+    "edition_without_manifest",
     "row_source_refs_restated",
     "row_source_refs_liftable",
     "constraints_source_refs_restated",
@@ -345,6 +348,7 @@ CONDITIONS: Final[tuple[str, ...]] = (
 
 #: Measured alongside the conditions and never counted as findings.
 MEASUREMENTS: Final[tuple[str, ...]] = (
+    "member_restated_dispositioned",
     "row_pinned_by_lineage_claim",
     "row_source_refs_irreducible",
     "row_identical_unchained",
@@ -452,6 +456,46 @@ _YEAR_RANGE: Final = re.compile(r"(?<![0-9])(\d{4})-(\d{4})(?![0-9])")
 _ADDRESS_SPAN: Final = re.compile(r"\.\d+-\d+(?=\.)")
 
 
+def _span_is_address(segment: str, entry: Mapping[str, Any]) -> bool:
+    """Return whether a ``NNN-NNN`` identifier segment is a byte address rather than data.
+
+    The provider is the arbiter, as it is for the rename tool: a segment equal
+    to the provider's own ``record`` code (``714-02`` is a page record, not a
+    span) is data, and a provider carrying ``offset``/``length`` names an
+    address only when the segment equals ``offset-(offset+length-1)``. Without a
+    provider to consult the segment keeps its address reading.
+    """
+    provider = entry.get("provider")
+    if not isinstance(provider, Mapping):
+        return True
+    if provider.get("record") == segment:
+        return False
+    offset, length = provider.get("offset"), provider.get("length")
+    if isinstance(offset, int) and isinstance(length, int) and not isinstance(offset, bool):
+        return segment == f"{offset}-{offset + length - 1}"
+    return True
+
+
+_BARE_OFFSET: Final = re.compile(r"[.-](\d+)$")
+
+
+def _bare_offset_in_identifier(identifier: str, entry: Mapping[str, Any]) -> int | None:
+    """Return the provider offset an identifier carries as a bare trailing number, else ``None``.
+
+    A replay that re-spells ``…290-302…`` as ``…-290`` still binds the id to
+    its byte address; the dot-bounded span test cannot see it, so the trailing
+    segment is compared with the provider's own ``offset``.
+    """
+    provider = entry.get("provider")
+    if not isinstance(provider, Mapping):
+        return None
+    offset = provider.get("offset")
+    if not isinstance(offset, int) or isinstance(offset, bool):
+        return None
+    tail = _BARE_OFFSET.search(identifier)
+    return offset if tail is not None and int(tail.group(1)) == offset else None
+
+
 def edition_token_in_identifier(identifier: str, edition_id: str) -> str | None:
     """Return the edition token an identifier carries, or ``None``.
 
@@ -480,6 +524,18 @@ def edition_token_in_identifier(identifier: str, edition_id: str) -> str | None:
     return max(matches, key=len) if matches else None
 
 
+def _declared_families(value: object) -> frozenset[str]:
+    """The family names a per-family disposition table declares.
+
+    The value is a table keyed by family name; anything else is not a
+    declaration and names nothing, which is the safe reading -- a malformed
+    disposition must not silently excuse a family.
+    """
+    if not isinstance(value, dict):
+        return frozenset[str]()
+    return frozenset(str(name) for name in value)
+
+
 def _as_refs(value: object) -> tuple[str, ...]:
     return tuple(str(item) for item in value) if isinstance(value, list) else ()
 
@@ -505,11 +561,14 @@ class EditionStatus:
     declares_no_predecessor: bool = False
     predecessor_id: str | None = None
     root_reason: str = ""
+    has_manifest: bool = True
     export_surface: bool = False
     members: dict[str, dict[str, dict[str, Any]]] = field(default_factory=dict)
     rows_by_id: dict[str, dict[str, Any]] = field(default_factory=dict)
     stated_keys: tuple[RowKey, ...] = ()
     retired_lineages: frozenset[str] = frozenset()
+    source_default_dispositions: frozenset[str] = frozenset()
+    family_dispositions: frozenset[str] = frozenset()
     declared_default: tuple[str, ...] = ()
     effective_default: tuple[str, ...] = ()
     orden: tuple[str, ...] = ()
@@ -654,13 +713,25 @@ def _restated_members(
         if key is None or family in _PER_EDITION_FAMILIES or (family == _CASILLAS and successor.declares_predecessor):
             continue
         inherited = _materialised_members(predecessor, by_edition, family)
+        # A family the successor declares as stated in full, or empty, by
+        # construction is not restatement debt: the corpus has said why it
+        # looks that way. Counted apart so the disposition is visible as a
+        # quantity rather than disappearing into a silent exclusion.
+        dispositioned = family in successor.family_dispositions
         restated = 0
         for identity, member in successor.members.get(family, {}).items():
             before = inherited.get(identity)
             if before is not None and _comparable(before) == _comparable(member):
                 restated += 1
-                successor._add("member_restated", f"{family}/{identity}", f"identical to {predecessor.edition}")
-        if restated:
+                if not dispositioned:
+                    successor._add("member_restated", f"{family}/{identity}", f"identical to {predecessor.edition}")
+                else:
+                    successor._add(
+                        "member_restated_dispositioned",
+                        f"{family}/{identity}",
+                        f"identical to {predecessor.edition}, family stated in full by declaration",
+                    )
+        if restated and not dispositioned:
             counts.append((family, restated))
         if family == _CASILLAS:
             _measure_unchained(predecessor, successor)
@@ -795,8 +866,15 @@ def _blockers(
     )
     if repurposed:
         blockers.append(f"undeclared_repurpose={repurposed}")
+    # Two different answers that must not coincide. `None` means the scenarios
+    # module could not be consulted at all -- unknowable, recorded as a
+    # limitation, and no blocker is claimed. An empty set means it WAS consulted
+    # and declares no scenario for this modelo, which is a real blocker: the
+    # tool cannot compare the successor's bytes and will refuse to apply.
     scenarios = _scenario_editions(successor.modelo)
-    if successor.export_surface and scenarios is not None and successor.edition not in scenarios:
+    if scenarios is None:
+        pass
+    elif successor.export_surface and successor.edition not in scenarios:
         blockers.append("export_scenario_missing")
     return tuple(blockers)
 
@@ -814,7 +892,10 @@ def edges(statuses: tuple[EditionStatus, ...]) -> tuple[Edge, ...]:
     """
     by_modelo: dict[str, list[EditionStatus]] = defaultdict(list)
     for status in statuses:
-        by_modelo[status.modelo].append(status)
+        # An edition with no manifest cannot take part in an edge: it has no
+        # valid_from to order it and nothing to inherit from or to.
+        if status.has_manifest:
+            by_modelo[status.modelo].append(status)
     found: list[Edge] = []
     for modelo, editions in sorted(by_modelo.items()):
         by_edition = {status.edition: status for status in editions}
@@ -953,6 +1034,14 @@ def scan_edition(modelo_id: str, edition_dir: Path, typed_fields: frozenset[str]
 
     manifest = edition_dir / _MANIFEST
     manifest_table: dict[str, Any] = {}
+    # A directory with no revision.toml is not an edition. It has no
+    # valid_from to order it, no authority grade, no predecessor declaration --
+    # so it sorts first, screens as `ready` with no cause, and sits at the top
+    # of the worklist while the migration tool refuses it outright. That is a
+    # half-authored directory being presented as the campaign's next job.
+    status.has_manifest = manifest.exists()
+    if not status.has_manifest:
+        status._add("edition_without_manifest", "<edition>", f"{edition_dir.name} has no {_MANIFEST}")
     if manifest.exists():
         table = tomllib.loads(manifest.read_text(encoding="utf-8")).get(_REVISIONS, {}).get(edition_id, {})
         manifest_table = table if isinstance(table, dict) else {}
@@ -969,6 +1058,14 @@ def scan_edition(modelo_id: str, edition_dir: Path, typed_fields: frozenset[str]
             none = predecessor.get("none")
             status.root_reason = str(none.get("reason", "")) if isinstance(none, dict) else ""
         status.export_surface = bool(table.get("export_layouts"))
+        # Two sanctioned per-family declarations, read off the manifest like
+        # everything else here. `source_default_dispositions` states that a
+        # family's default is UNDERIVABLE and says why; `family_dispositions`
+        # states that a family is stated in full, or empty, by construction.
+        # Both answer a condition this screen would otherwise report forever,
+        # and both are the corpus saying so rather than a heuristic guessing.
+        status.source_default_dispositions = _declared_families(table.get("source_default_dispositions"))
+        status.family_dispositions = _declared_families(table.get("family_dispositions"))
         status.declared_default = _as_refs(table.get(_EDITION_SOURCE_DEFAULT))
         status.orden = _as_refs(table.get(_EDITION_ORDEN))
         status.valid_from = str(table.get("valid_from", ""))
@@ -1007,7 +1104,12 @@ def scan_edition(modelo_id: str, edition_dir: Path, typed_fields: frozenset[str]
     derived, withheld = edition_source_default(rows) if rows else (None, None)
     status.effective_default = status.declared_default or (derived or ())
 
-    if statements and not status.effective_default and withheld is not None:
+    if (
+        statements
+        and not status.effective_default
+        and withheld is not None
+        and _CASILLAS not in status.source_default_dispositions
+    ):
         status._add("edition_default_underivable", "<edition>", withheld)
     if status.effective_default and not status.declared_default:
         status._add("edition_default_undeclared", "<edition>", json.dumps(list(status.effective_default)))
@@ -1065,11 +1167,18 @@ def scan_edition(modelo_id: str, edition_dir: Path, typed_fields: frozenset[str]
                 if token is not None and not _token_is_member_data(token, entry):
                     status._add("edition_keyed_identifier", entry["id"], f"{family} token={token}")
                 span = _ADDRESS_SPAN.search(entry["id"])
-                if span is not None:
+                if span is not None and _span_is_address(span.group(0).strip("."), entry):
                     status._add("identifier_is_address", entry["id"], f"{family} span={span.group(0).strip('.')}")
+                elif (offset := _bare_offset_in_identifier(entry["id"], entry)) is not None:
+                    status._add("identifier_is_address", entry["id"], f"{family} offset={offset}")
         status.members[family] = keyed
         default_key = _FAMILY_DEFAULT_KEYS.get(family)
-        if default_key is not None and family != _CASILLAS and default_key not in manifest_table:
+        if (
+            default_key is not None
+            and family != _CASILLAS
+            and default_key not in manifest_table
+            and family not in status.source_default_dispositions
+        ):
             derived_default, _withheld = edition_source_default(members)
             if derived_default:
                 status._add("family_default_undeclared", family, json.dumps(list(derived_default)))
@@ -1143,6 +1252,13 @@ class LedgerScope:
     rows comes back as stale and fails that gate. Counting them as misses read
     as debt and would have produced exactly that bad write.
 
+    ``unclaimed_predecessor`` splits again on whether the seeder has a ledgered
+    reason to stand off the modelo. Its ``[[excluded]]`` entries name the
+    modelos it will not examine and why; a row in one of those is a wait with a
+    stated reason, not backlog, and hand-seeding it would fail the totality gate
+    per row. A row in any other modelo is the seeder's next run. Presenting the
+    two as one number offered work that cannot be taken.
+
     ``unnamed_successor`` is a row in a later edition the seeder does judge,
     which the ledger should have named and did not. That one is a genuine miss.
 
@@ -1159,6 +1275,8 @@ class LedgerScope:
     unclaimed_predecessor: int
     outside_ledger_scope: int
     unnamed_successor: int
+    unclaimed_predecessor_excluded: int = 0
+    unclaimed_predecessor_seedable: int = 0
 
 
 def ledger_scope(
@@ -1172,14 +1290,19 @@ def ledger_scope(
     an unreadable ledger never renders as a ledger that accounts for nothing.
     """
     try:
-        rows = tomllib.loads(path.read_text(encoding="utf-8")).get("refusal", ())
+        document = tomllib.loads(path.read_text(encoding="utf-8"))
+        rows = document.get("refusal", ())
         named = {(row["modelo"], row["revision"], row["casilla"]) for row in rows}
+        # Read from the ledger's own declaration rather than by importing the
+        # seeder, which would take the domain import this screen exists without.
+        excluded = {str(entry["modelo"]) for entry in document.get("excluded", ()) if "modelo" in entry}
     except (OSError, tomllib.TOMLDecodeError, KeyError, TypeError) as exc:
         _note_limitation(f"lineage_ledger_unreadable: {type(exc).__name__}; ledger coverage is unmeasured")
         return None
     predecessors = {(edge.modelo, edge.predecessor) for edge in found_edges}
     successors = {(edge.modelo, edge.successor) for edge in found_edges}
     counted = first_edition = outside = later = 0
+    excluded_rows = seedable_rows = 0
     for status in statuses:
         key = (status.modelo, status.edition)
         if key not in predecessors:
@@ -1192,6 +1315,10 @@ def ledger_scope(
                 continue
             if key not in successors:
                 first_edition += 1
+                if status.modelo in excluded:
+                    excluded_rows += 1
+                else:
+                    seedable_rows += 1
             elif status.declares_no_predecessor:
                 outside += 1
             else:
@@ -1202,6 +1329,8 @@ def ledger_scope(
         unclaimed_predecessor=first_edition,
         outside_ledger_scope=outside,
         unnamed_successor=later,
+        unclaimed_predecessor_excluded=excluded_rows,
+        unclaimed_predecessor_seedable=seedable_rows,
     )
 
 
@@ -1319,7 +1448,13 @@ def build_report(registry_root: Path, *, modelo_ids: tuple[str, ...] = ()) -> Re
     return Report(
         statuses=statuses,
         promised_years=promised,
-        gaps=coverage_gaps(statuses, promised, load_coverage_dispositions()),
+        gaps=coverage_gaps(
+            statuses,
+            promised,
+            load_coverage_dispositions(),
+            pending_ejercicio_ordenes(registry_root),
+            _legal_publication_years(registry_root),
+        ),
         edges=found_edges,
     )
 
@@ -1361,6 +1496,100 @@ def supported_filing_years(registry_root: Path) -> tuple[int, ...]:
         _note_limitation(f"promise_bounds_inverted: horizon {horizon} precedes floor {floor}; coverage is unmeasured")
         return ()
     return tuple(range(floor, horizon + 1))
+
+
+#: A modelo's own manifest, which carries facts about the FORM rather than
+#: about any one edition of it.
+_MODELO_MANIFEST: Final = "manifest.toml"
+_PENDING_ORDENES: Final = "pending_ejercicio_ordenes"
+_LEGAL_DIR: Final = "legal"
+
+
+@dataclass(frozen=True, slots=True)
+class PendingOrden:
+    """A declaration that a promised year has no approving Orden yet.
+
+    An annual modelo on a per-ejercicio re-approval chain cannot answer a filing
+    year until the Orden approving that ejercicio is published, which happens in
+    the following spring. That is not a gap anyone can close by authoring: the
+    authority does not exist yet. So the coordinate is reported as
+    ``awaiting_ejercicio_orden`` and counted as disposed rather than as a hole.
+
+    The danger is that such a declaration outlives its own reason and becomes a
+    permanent excuse. ``stale`` is the guard: once the catalogue carries an
+    Orden published in or after the year this declaration says to wait for, the
+    wait is over, and the declaration is reported as a finding instead of
+    disposing of anything.
+    """
+
+    modelo: str
+    filing_year: int
+    cadence: str
+    rests_on: str
+    expected_publication_year: int
+
+
+def pending_ejercicio_ordenes(registry_root: Path) -> dict[tuple[str, int], PendingOrden]:
+    """Read every ``[[modelo.pending_ejercicio_ordenes]]`` declaration, keyed by coordinate.
+
+    Read off the raw manifest for the same reason every other fact here is: the
+    screen must keep reporting when the domain cannot be imported, and the
+    declaration is a TOML table before it is a typed model.
+    """
+    found: dict[tuple[str, int], PendingOrden] = {}
+    modelos_root = registry_root / _MODELOS
+    if not modelos_root.is_dir():
+        return found
+    for modelo_dir in sorted(path for path in modelos_root.iterdir() if path.is_dir()):
+        manifest = modelo_dir / _MODELO_MANIFEST
+        if not manifest.is_file():
+            continue
+        declared = tomllib.loads(manifest.read_text(encoding="utf-8")).get("modelo", {})
+        for entry in declared.get(_PENDING_ORDENES, ()) if isinstance(declared, dict) else ():
+            year, expected = entry.get("filing_year"), entry.get("expected_publication_year")
+            if not isinstance(year, int) or not isinstance(expected, int):
+                continue
+            found[(modelo_dir.name, year)] = PendingOrden(
+                modelo=modelo_dir.name,
+                filing_year=year,
+                cadence=str(entry.get("approval_cadence", "")),
+                rests_on=str(entry.get("rests_on", "")),
+                expected_publication_year=expected,
+            )
+    return found
+
+
+@cache
+def _legal_publication_years(registry_root: Path) -> tuple[int, ...]:
+    """Every year an Orden in the legal catalogue was published in.
+
+    Used only to decide whether an awaited Orden has since arrived. Read raw,
+    like everything else here, and cached because the catalogue is large and the
+    answer does not change within a run.
+    """
+    years: set[int] = set()
+    legal = registry_root / _LEGAL_DIR
+    if not legal.is_dir():
+        return ()
+    for path in sorted(legal.glob("*.toml")):
+        for entry in tomllib.loads(path.read_text(encoding="utf-8")).get("legal", {}).values():
+            if not isinstance(entry, dict) or entry.get("kind") != "orden":
+                continue
+            published = entry.get("published_at")
+            if hasattr(published, "year"):
+                years.add(published.year)
+    return tuple(sorted(years))
+
+
+def _pending_orden_is_stale(pending: PendingOrden, published_years: tuple[int, ...]) -> bool:
+    """Whether the Orden this declaration waits for has since been published.
+
+    A suppression that outlives its reason is worse than no suppression, because
+    it reads as adjudicated. The declaration names the year it expects the Orden
+    in; once the catalogue carries an Orden from that year or later, the wait it
+    describes is over and the declaration must stop disposing of anything.
+    """
+    return any(year >= pending.expected_publication_year for year in published_years)
 
 
 def _earliest_admitted_year(status: EditionStatus) -> int | None:
@@ -1437,7 +1666,12 @@ class CoverageGap:
 
     @property
     def disposed(self) -> bool:
-        """Whether a signed declaration CLOSES this gap, rather than merely naming it.
+        """Whether a declaration CLOSES this gap, rather than merely naming it.
+
+        An ``awaiting_ejercicio_orden`` coordinate closes on its own kind: the
+        Orden approving that ejercicio does not exist, so no authoring reaches
+        it and no signature is needed to say so. A declaration whose Orden has
+        since been published closes nothing -- it is the finding.
 
         A gap can be legitimate -- a modelo that did not legally exist in a
         promised filing year has a gap no authoring will ever serve -- and only
@@ -1447,13 +1681,15 @@ class CoverageGap:
         refuse identically in the corpus, which is exactly why the screen must
         not pool them.
         """
-        return self.classification in _CLOSING_CLASSIFICATIONS
+        return self.kind == "awaiting_ejercicio_orden" or self.classification in _CLOSING_CLASSIFICATIONS
 
 
 def coverage_gaps(
     statuses: tuple[EditionStatus, ...],
     promised_years: tuple[int, ...],
     dispositions: Mapping[CoverageCoordinate, CoverageDisposition] | None = None,
+    pending: Mapping[tuple[str, int], PendingOrden] | None = None,
+    published_years: tuple[int, ...] = (),
 ) -> tuple[CoverageGap, ...]:
     """Project every modelo's declared reach against the promised filing years.
 
@@ -1499,7 +1735,22 @@ def coverage_gaps(
                 # would report work nobody owes. The two are reported as
                 # separate conditions and never pooled, because one is a
                 # resolution mode and the other is a hole.
-                kind = "promised_year_projected" if _projects_year(editions, year) else "promised_year_unserved"
+                # Three ways a year no revision admits can fail to be a hole,
+                # and they are decided in this order because each is stronger
+                # than the next. An Orden that does not exist yet cannot be
+                # authored around, so it wins outright -- unless the Orden has
+                # since been published, in which case the declaration is the
+                # finding. Otherwise a year with coverage below it carries
+                # forward. Only what survives both is unserved.
+                waiting = (pending or {}).get((modelo, year))
+                if waiting is not None and _pending_orden_is_stale(waiting, published_years):
+                    kind = "pending_orden_declaration_stale"
+                elif waiting is not None:
+                    kind = "awaiting_ejercicio_orden"
+                elif _projects_year(editions, year):
+                    kind = "promised_year_projected"
+                else:
+                    kind = "promised_year_unserved"
                 gaps.append(CoverageGap(modelo, kind, year, "*", (), *_disposition(modelo, kind, year, "*")))
                 continue
             for period in periods:
@@ -1971,7 +2222,9 @@ def _signal_lines(report: Report) -> list[str]:
         lines.append(
             f"ledger unchained_on_edge={scope.unchained_on_edge} named={scope.named} "
             f"unclaimed_predecessor={scope.unclaimed_predecessor} unnamed_successor={scope.unnamed_successor} "
-            f"outside_ledger_scope={scope.outside_ledger_scope}"
+            f"outside_ledger_scope={scope.outside_ledger_scope} "
+            f"unclaimed_predecessor_excluded={scope.unclaimed_predecessor_excluded} "
+            f"unclaimed_predecessor_seedable={scope.unclaimed_predecessor_seedable}"
         )
     lines += _family_lines(report)
     lines += [
@@ -2014,7 +2267,7 @@ def _signal_lines(report: Report) -> list[str]:
         f"rooted {edge.modelo} {edge.predecessor} -> {edge.successor} "
         f"predecessor_rows={edge.predecessor_rows} unchained={edge.predecessor_rows_without_lineage} "
         f"shared_chains={edge.chained_both_sides} causes={','.join(edge.blockers) or 'none'}"
-        f" kind={edge.root_kind}"
+        f" kind={edge.root_kind} successor_rows={edge.successor_rows}"
         for edge in found_edges
         if edge.rooted_pending_lineage
     ]
@@ -2133,6 +2386,8 @@ def render_report(report: Report, *, totals_only: bool = False) -> str:
             f"  {'unchained rows on an edge':<32} {_fmt(scope.unchained_on_edge):>8}",
             f"  {'named by the ledger':<32} {_fmt(scope.named):>8}",
             f"  {'unclaimed predecessor (retire/inherit)':<38} {_fmt(scope.unclaimed_predecessor):>8}",
+            f"  {'  ledgered wait (excluded modelo)':<38} {_fmt(scope.unclaimed_predecessor_excluded):>8}",
+            f"  {'  seedable on the next run':<38} {_fmt(scope.unclaimed_predecessor_seedable):>8}",
             f"  {'outside ledger scope (no-predecessor)':<38} {_fmt(scope.outside_ledger_scope):>8}",
             f"  {'unnamed successor (ledger miss)':<38} {_fmt(scope.unnamed_successor):>8}",
             "",
@@ -2151,7 +2406,15 @@ def render_report(report: Report, *, totals_only: bool = False) -> str:
     out.append("COVERAGE (its own campaign; never folded into the shape verdict)")
     out += [f"  {kind:<32} {_fmt(census[kind]):>8}" for kind in COVERAGE_CONDITIONS]
     out.append(f"  {'modelos uncovered':<32} {_fmt(len({gap.modelo for gap in report.gaps})):>8}")
-    out.append(f"  {'closed (inception)':<32} {_fmt(sum(1 for gap in report.gaps if gap.disposed)):>8}")
+    # Two different reasons a coordinate closes, never pooled under one label:
+    # a modelo that did not exist, and an Orden that does not exist yet.
+    out.append(
+        f"  {'closed (inception)':<32} {_fmt(sum(1 for gap in report.gaps if gap.classification == 'inception')):>8}"
+    )
+    out.append(
+        f"  {'closed (awaiting ejercicio orden)':<32} "
+        f"{_fmt(sum(1 for gap in report.gaps if gap.kind == 'awaiting_ejercicio_orden')):>8}"
+    )
     out.append(
         f"  {'classified debt (unauthored)':<32} "
         f"{_fmt(sum(1 for gap in report.gaps if gap.classified and not gap.disposed)):>8}"
@@ -2242,6 +2505,31 @@ def render_report(report: Report, *, totals_only: bool = False) -> str:
                 _fmt(sig.outstanding),
             )
             for sig in ordered
+        ],
+    )
+    out.append("")
+
+    out.append("EDGES  (every adjacent pair, in valid_from order)")
+    out += _table(
+        # `succ rows` is the column that stops an edge being misread as lineage
+        # work. A successor declaring far fewer rows than its predecessor has no
+        # counterpart to chain TO: its unchained count cannot fall by seeding at
+        # all, because the rows it would chain to were never authored. That is
+        # an authoring backlog wearing a lineage number.
+        ("modelo", "predecessor", "successor", "state", "kind", "rows", "succ rows", "unchained", "shared"),
+        [
+            (
+                edge.modelo,
+                edge.predecessor,
+                edge.successor,
+                edge.state,
+                edge.root_kind or "-",
+                _fmt(edge.predecessor_rows),
+                _fmt(edge.successor_rows),
+                _fmt(edge.predecessor_rows_without_lineage),
+                _fmt(edge.chained_both_sides),
+            )
+            for edge in found_edges
         ],
     )
     out.append("")

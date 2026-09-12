@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "0125"
+continuidad_id = "irpf-inmueble-amortizacion-porcentaje-construccion-catastral"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:218 y aeat-dr-100-2024-dictionary:231: C_PORVCC, porcentaje del valor catastral de construcción sobre el total del inmueble principal. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "0125"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "decimal"

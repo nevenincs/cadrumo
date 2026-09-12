@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "1245"
+continuidad_id = "irpf-compensacion-saldos-ganancias-perdidas-general-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2024-dictionary:2162 y aeat-dr-100-2025-dictionary:2304: campo C2PPPT, tipo TIT; mismo titular de saldos negativos de ganancias y perdidas de la base general, descrito por el grupo oficial de ambas ediciones."
 number = "1245"
 section = ["resultados", "anexo_c_res", "saldos_neg_gy_p_general_res"]
 data_type = "text"

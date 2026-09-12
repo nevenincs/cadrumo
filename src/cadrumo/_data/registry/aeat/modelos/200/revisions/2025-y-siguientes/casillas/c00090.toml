@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00090"
+continuidad_id = "is-opcion-art-39-3-lis"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 92/92, filas 97/97: Opción art. 39.3 LIS  [00090]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00090"
 section = ["opcion_art_39_3_lis"]
 data_type = "decimal"

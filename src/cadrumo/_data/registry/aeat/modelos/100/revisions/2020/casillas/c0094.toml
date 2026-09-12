@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "0094"
+# Grounding: aeat-dr-100-2020-dictionary:166, CNIF2RNR; identificación fiscal del segundo arrendatario de vivienda habitual.
+continuidad_id = "irpf-inmueble-arrendatario-2-nif"
 number = "0094"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"

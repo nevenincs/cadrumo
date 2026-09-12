@@ -1,0 +1,99 @@
+# Modelo 190 Tipo 2 (registro de perceptor) detail-row casillas.
+#
+# One row of the repeating perceptor record. `number` carries the AEAT
+# record-design position range each slot occupies, transcribed from
+# "B. TIPO DE REGISTRO 2: REGISTRO DE PERCEPTOR" of the diseño governing this
+# exercise. This revision declares no export layout, so the casillas record
+# the design's coordinates without claiming a fichero-BOE producer.
+
+[[revisions."2023".casillas]]
+id = "perc.nif"
+continuidad_id = "payee-nif"
+number = "18-26"
+section = ["perceptor", "identificacion"]
+data_type = "nif"
+semantic_role = "payee_nif"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+
+[[revisions."2023".casillas]]
+id = "perc.nombre"
+continuidad_id = "payee-name"
+number = "36-75"
+section = ["perceptor", "identificacion"]
+data_type = "name"
+semantic_role = "payee_name"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+
+[[revisions."2023".casillas]]
+id = "perc.clave"
+continuidad_id = "payee-clave-percepcion"
+number = "78"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_clave_percepcion"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+
+[[revisions."2023".casillas]]
+id = "perc.subclave"
+continuidad_id = "payee-subclave-percepcion"
+number = "79-80"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_subclave_percepcion"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+
+[[revisions."2023".casillas]]
+id = "perc.percepcion-dineraria"
+continuidad_id = "percepcion-integra-dineraria"
+number = "82-94"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "percepcion_integra_dineraria"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+
+[[revisions."2023".casillas]]
+id = "perc.retenciones-practicadas"
+continuidad_id = "perc-retenciones-practicadas"
+number = "95-107"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+
+[[revisions."2023".casillas]]
+id = "perc.percepcion-especie"
+continuidad_id = "percepcion-valoracion-especie"
+number = "109-121"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "percepcion_valoracion_especie"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+
+[[revisions."2023".casillas]]
+id = "perc.ingresos-a-cuenta"
+continuidad_id = "ingresos-a-cuenta-efectuados"
+number = "122-134"
+section = ["perceptor", "percepcion"]
+data_type = "money"
+semantic_role = "ingresos_a_cuenta_efectuados"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]

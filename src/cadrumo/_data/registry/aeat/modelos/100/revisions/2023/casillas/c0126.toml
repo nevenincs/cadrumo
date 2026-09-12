@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "0126"
+continuidad_id = "irpf-inmueble-amortizacion-importe-adquisicion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:215 y aeat-dr-100-2023-dictionary:219: C_COSTEAD, importe de adquisición del inmueble principal a efectos de amortización. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "0126"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 semantic_role = "irpf_inmueble_importe_adquisicion"

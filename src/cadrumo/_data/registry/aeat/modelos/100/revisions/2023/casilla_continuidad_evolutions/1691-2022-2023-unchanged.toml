@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2022-dictionary:1229 y aeat-dr-100-2023-dictionary:1255; 150 Aniversario de creación de la Academia de España en Roma, columna Aplicado, M21AERA.
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1691-2022-2023-unchanged"
+continuidad_id = "irpf-aeip-150-aniversario-de-creacion-de-la-academia-de-espana-en-roma-aplicado"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]

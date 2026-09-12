@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "1245"
+# aeat-dr-100-2020-dictionary:1592: C2PPPT, titular de saldos negativos de ganancias y perdidas de la base general.
+continuidad_id = "irpf-compensacion-saldos-ganancias-perdidas-general-contribuyente-titular"
 number = "1245"
 section = ["resultados", "anexo_c_res", "saldos_neg_gy_p_general_res"]
 data_type = "text"

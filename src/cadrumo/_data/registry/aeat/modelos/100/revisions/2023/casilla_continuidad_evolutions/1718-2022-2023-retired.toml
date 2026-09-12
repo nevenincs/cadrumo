@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2022-dictionary:1304, M21CSCA; Valencia 2020-2021, Año Jubilar. Camino del Santo Cáliz deja de figurar como programa aplicado en aeat-dr-100-2023-dictionary.
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1718-2022-2023-retired"
+continuidad_id = "irpf-aeip-valencia-2020-2021-ano-jubilar-camino-del-santo-caliz-aplicado"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]

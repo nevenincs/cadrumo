@@ -1,5 +1,8 @@
 [[revisions."2021".casillas]]
 id = "1231"
+continuidad_id = "irpf-exencion-reinversion-nuevas-empresas-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2020-dictionary:1579 y aeat-dr-100-2021-dictionary:1772: campo C1ERET, tipo TIT; mismo titular de la exencion por reinversion en empresas nuevas o recientes, descrito por el grupo oficial de ambas ediciones."
 number = "1231"
 section = ["resultados", "anexo_c_res", "exencion_nuevas_empresas_res"]
 data_type = "text"

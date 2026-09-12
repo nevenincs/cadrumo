@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "1441"
+continuidad_id = "irpf-estimacion-objetiva-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:306 y aeat-dr-100-2023-dictionary:312: campo E4AT, tipo TIT; mismo titular de actividades en estimacion objetiva no agraria, descrito por el grupo oficial de ambas ediciones."
 number = "1441"
 section = ["toma_datos_ampliada"]
 data_type = "text"

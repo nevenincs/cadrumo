@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "1956"
+continuidad_id = "irpf-aeip-xxxvii-copa-america-barcelona-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:1435 y aeat-dr-100-2024-dictionary:1356: campo M21CABA; columna Aplicado en esta declaración del programa XXXVII Copa América Barcelona en Anexo A. Misma designación y función fiscal."
 number = "1956"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

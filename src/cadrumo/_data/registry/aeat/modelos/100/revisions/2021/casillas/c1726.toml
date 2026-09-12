@@ -1,5 +1,7 @@
 [[revisions."2021".casillas]]
 id = "1726"
+# Grounding: aeat-dr-100-2021-dictionary:1264, NIF3RG; NIF del tercer productor financiado en el régimen general.
+continuidad_id = "irpf-incentivos-inversion-productor-3-nif"
 number = "1726"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 data_type = "nif"

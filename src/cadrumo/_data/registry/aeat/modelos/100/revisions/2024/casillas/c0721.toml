@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "0721"
+continuidad_id = "irpf-deduccion-cuota-general-importe"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:1054 y aeat-dr-100-2024-dictionary:1061: campo DEDAL; importe total de la deducción transitoria por alquiler de vivienda habitual en el bloque de cálculo del impuesto. Misma magnitud y función fiscal en ambas ediciones."
 number = "0721"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_cuota_general_importe"

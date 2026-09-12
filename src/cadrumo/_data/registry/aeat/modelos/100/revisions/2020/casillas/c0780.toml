@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "0780"
+# Grounding: aeat-dr-100-2020-dictionary:1029, M21PDMA; importe aplicado del programa Plan Decenio Milliarium Montserrat 1025-2025 (Anexo A).
+continuidad_id = "irpf-aeip-plan-decenio-milliarium-montserrat-1025-2025-aplicado"
 number = "0780"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

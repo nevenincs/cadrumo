@@ -15,6 +15,7 @@
 # re-confirmed byte-identical to 2025-y-siguientes during plan authoring:
 # clave 13 = clave 04 + clave 38 - clave 39.
 [[revisions.2023-2024.verification_predicates]]
+id = "implies-nonzero:base-imponible-previa-determinada-cuando-resultado-positivo"
 predicate_id = "modelo-202-base-imponible-previa-determinada-cuando-resultado-positivo"
 expression = 'implies_nonzero(["04", "13"])'
 finding_kind = "ADVISORY"
@@ -26,6 +27,7 @@ legal_refs = ["ley-27-2014:art-40-3", "ley-27-2014:art-40"]
 # filings, but verification must refuse the overstatement case where both
 # alternative lanes are positive.
 [[revisions.2023-2024.verification_predicates]]
+id = "at-most-one-positive:b1-b2-resultado-previo-at-most-one-positive"
 predicate_id = "modelo-202-b1-b2-resultado-previo-at-most-one-positive"
 expression = 'at_most_one_positive(["18", "26"])'
 finding_kind = "BLOCKING_RULE"

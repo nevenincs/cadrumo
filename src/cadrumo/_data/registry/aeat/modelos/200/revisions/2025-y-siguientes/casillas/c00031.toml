@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00031"
+continuidad_id = "is-entidades-de-capital-riesgo"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 45/45, filas 50/50: Entidades de capital-riesgo [00031]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00031"
 section = ["entidades_de_capital_riesgo"]
 data_type = "decimal"

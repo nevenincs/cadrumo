@@ -250,7 +250,7 @@ def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
     taxpayer = m303_did._taxpayer_profile()
     assert taxpayer.iva is not None
     producer = m303_did.build_filing_producer_snapshot(
-        modelo=m303_did.Modelo.M303,
+        modelo=m303_did.Modelo("303"),
         taxpayer_tax_id=taxpayer.tax_id,
         taxpayer_identity=m303_did.TaxpayerIdentityFacts(
             legal_name=None,

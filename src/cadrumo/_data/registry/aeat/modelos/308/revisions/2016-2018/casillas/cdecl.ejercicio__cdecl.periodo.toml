@@ -4,6 +4,9 @@ number = "ejercicio"
 section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
+continuidad_id = "filing-year"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-308-2011-july names the declaration-header Ejercicio; aeat-dr-308-2016 names Ejercicio devengo (AAAA) in M30800 and Devengo - Ejercicio in M30801. These identify the same refund declaration's tax year under Orden EHA/3786/2008 art. 2, despite the new record envelope."
 required = true
 input_kind = "informational"
 

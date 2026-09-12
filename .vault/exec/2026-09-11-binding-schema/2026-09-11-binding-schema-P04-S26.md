@@ -5,7 +5,7 @@ tags:
 date: '2026-09-12'
 modified: '2026-09-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:ff98ec30ff7f73f741cb1777dffc62405460f301541aaabc409ce51ddc8bdfe9'
+body_hash: 'sha256:394b4f6ef135f575d30b6080fc2764ee1eb419b571d7c543cd07891e0623d1ed'
 step_id: 'S26'
 related:
   - "[[2026-09-11-binding-schema-plan]]"
@@ -64,3 +64,6 @@ The modelo 200 verification-expectation duplicate was not the subset it was
 described as: the keyed row covered casilla DP200014B:00599, which the surviving
 row did not. That casilla was unioned into the surviving row before the keyed row
 was deleted, so no verification coverage was dropped.
+
+A src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/identifier_evolutions/0001-replaced-regimen-simplificado-lorca-relabel.toml
+A src/cadrumo/_data/registry/aeat/modelos/390/revisions/2025/identifier_evolutions/0001-retired-regimen-simplificado-reducciones.toml

@@ -65,7 +65,15 @@ def test_temporal_union_round_trips_every_member_through_its_discriminator(
 
 
 def test_applicability_and_authorship_unions_round_trip_every_member() -> None:
-    members: list[object] = [AllRevisionContexts(), TargetPeriods(periods=("0A",)), NonCalculation()]
+    members: list[object] = [
+        AllRevisionContexts(),
+        TargetPeriods(periods=("0A",)),
+        NonCalculation(
+            reason="informational_total",
+            box_retired_in="2023",
+            consumed_by="modelo-390 annual informational handoff",
+        ),
+    ]
     for member in members:
         assert _APPLICABILITY.validate_python(_APPLICABILITY.dump_python(member, mode="json")) == member
 

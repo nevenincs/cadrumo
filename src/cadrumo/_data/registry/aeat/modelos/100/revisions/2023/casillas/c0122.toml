@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "0122"
+continuidad_id = "irpf-inmueble-amortizacion-dias-arrendado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:211 y aeat-dr-100-2023-dictionary:215: C_DIASARRAM, días arrendados del inmueble principal para el cálculo de su amortización. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "0122"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "integer"
