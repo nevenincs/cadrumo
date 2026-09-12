@@ -29,6 +29,8 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.prose_elision import IssueDetail
 from ...core.unit_proportion import UnitProportion
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.m210_income_classification import M210IncomeClassification
@@ -91,6 +93,30 @@ class IrnrIncomeLedgerAggregation(LedgerAggregationResultBase[IrnrIncomeObservat
 
     selected_official_tipo_renta_code: str = Field(min_length=2, max_length=2)
     out_of_window_summary: OutOfWindowTransactionSummary | None = None
+
+
+def _resolve_irnr_registry_revision(
+    revision: ModeloRevision,
+    *,
+    modelo: str,
+    period: Period,
+) -> ModeloRevision:
+    """Confirm the injected revision is the selected registry scope.
+
+    The caller still supplies the typed revision snapshot used by the
+    aggregation boundary.  The query is the authority-owned selection seam:
+    an unscoped or mismatched revision is refused rather than replaced by a
+    Python catalogue or default.
+    """
+    report = RegistryQueryService(bundled_authority()).describe_modelo(
+        modelo,
+        period=period.registry_token,
+    )
+    if report.revision != revision.id:
+        raise AggregationValidationError(
+            "selected registry revision does not match the requested IRNR scope",
+        )
+    return revision
 
 
 def aggregate_irnr_income_ledger_from_repositories(
@@ -176,7 +202,12 @@ def aggregate_irnr_income_ledger(
             context={"period": str(period)},
         )
 
-    declared_codes = _resolve_selected_income_type_codes(revision, period)
+    selected_revision = _resolve_irnr_registry_revision(
+        revision,
+        modelo=modelo,
+        period=period,
+    )
+    declared_codes = _resolve_selected_income_type_codes(selected_revision, period)
     if selected_official_tipo_renta_code not in declared_codes:
         raise AggregationValidationError(
             t("aggregation.irnr_income_ledger.diagnostics.tipo_renta_code_not_declared"),

@@ -41,16 +41,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _MINTING_CALLABLES: tuple[tuple[str, str], ...] = (
     ("....application.user_profile.custody_ports", "create_profile_recovery_enrollment_material"),
     ("....application.user_profile.recovery_custody", "mint_profile_creation_recovery"),
-    # The primitive beneath both, and a SECOND reachable path: a prohibition
-    # naming only application-layer callables could be walked around by
-    # importing this directly. The list this replaces did exactly that.
-    #
-    # Named at its CANONICAL defining module. It was reachable through the
-    # storage package until the import-centralisation work removed that
-    # re-export, which reds this anchor rather than silently emptying the
-    # prohibition below -- the anchor doing precisely the job it was written
-    # for. The prohibition itself scans for the symbol NAME, so it is
-    # unaffected by where the definition lives.
+    # The primitive beneath both is a second reachable path: naming only the
+    # application-layer callables would permit a direct primitive import. The
+    # prohibition scans for the symbol name from its defining module.
     ("....adapters.persistence.storage.recovery_key", "generate_recovery_key"),
 )
 

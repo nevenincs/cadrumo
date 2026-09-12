@@ -104,7 +104,7 @@ msgstr ""
 
 #: ../../reference/registry-legal-api.md:22
 msgid "Runtime authority artifact"
-msgstr ""
+msgstr "Artefacte d'autoritat d'execució"
 
 #: ../../reference/registry-legal-api.md:24
 msgid ""
@@ -115,56 +115,71 @@ msgid ""
 "`registry/authority/authority.json` and checks its schema version and "
 "content digest before reconstructing typed authority data."
 msgstr ""
+"L'artefacte d'autoritat d'execució és la publicació versionada i "
+"verificada mitjançant un resum criptogràfic del registre validat de "
+"l'AEAT, destinada als càlculs instal·lats i a les exportacions de "
+"declaracions. És una sortida generada. `bundled_authority()` llegeix el "
+"fitxer empaquetat `registry/authority/authority.json` i en comprova la "
+"versió de l'esquema i el resum del contingut abans de reconstruir les "
+"dades d'autoritat tipades."
 
 #: ../../reference/registry-legal-api.md
 msgid "Term"
-msgstr ""
+msgstr "Terme"
 
 #: ../../reference/registry-legal-api.md
 msgid "Validated candidate"
-msgstr ""
+msgstr "Candidat validat"
 
 #: ../../reference/registry-legal-api.md
 msgid ""
 "The registry and source-evidence inputs accepted by the development "
 "compiler."
 msgstr ""
+"Les entrades del registre i de les proves d'origen acceptades pel "
+"compilador de desenvolupament."
 
 #: ../../reference/registry-legal-api.md
 msgid "Validation receipt"
-msgstr ""
+msgstr "Justificant de validació"
 
 #: ../../reference/registry-legal-api.md
 msgid ""
 "The digests captured for those inputs; a change before publication "
 "refuses the candidate."
 msgstr ""
+"Els resums capturats per a aquestes entrades; qualsevol canvi abans de la"
+" publicació rebutja el candidat."
 
 #: ../../reference/registry-legal-api.md
 msgid "Identity digest"
-msgstr ""
+msgstr "Resum d'identitat"
 
 #: ../../reference/registry-legal-api.md
 msgid ""
 "The content-addressed identity of the candidate, recorded in the artifact"
 " so a stale artifact can be detected."
 msgstr ""
+"La identitat del candidat basada en el contingut, registrada a "
+"l'artefacte perquè es pugui detectar si està desactualitzat."
 
 #: ../../reference/registry-legal-api.md
 msgid "Authority artifact"
-msgstr ""
+msgstr "Artefacte d'autoritat"
 
 #: ../../reference/registry-legal-api.md
 msgid "The atomically written JSON publication containing the resolved authority."
-msgstr ""
+msgstr "La publicació JSON escrita atòmicament que conté l'autoritat resolta."
 
 #: ../../reference/registry-legal-api.md
 msgid "Schema version"
-msgstr ""
+msgstr "Versió de l'esquema"
 
 #: ../../reference/registry-legal-api.md
 msgid "The artifact format identifier. Runtime refuses an unsupported version."
 msgstr ""
+"L'identificador del format de l'artefacte. El temps d'execució rebutja "
+"les versions no compatibles."
 
 #: ../../reference/registry-legal-api.md:38
 msgid ""
@@ -174,6 +189,10 @@ msgid ""
 "`payload` together. The digest detects a truncated, corrupted, or hand-"
 "edited file."
 msgstr ""
+"L'artefacte és un únic objecte JSON canònic amb exactament tres membres: "
+"`schema_version`, `payload` i `payload_sha256`. `payload_sha256` és el "
+"resum SHA-256 del JSON canònic de `schema_version` i `payload` plegats. "
+"El resum detecta un fitxer truncat, corrupte o editat manualment."
 
 #: ../../reference/registry-legal-api.md:43
 msgid ""
@@ -184,6 +203,13 @@ msgid ""
 "timestamps never contribute, so an identical checkout anywhere derives "
 "the same identity."
 msgstr ""
+"El resum d'identitat incorpora, per a cada fitxer del registre i cada "
+"fitxer de proves d'origen, el camí relatiu a la seva arrel i el SHA-256 "
+"del contingut. Els fitxers del registre es resumeixen amb els finals de "
+"línia CRLF llegits com a LF. Les proves d'origen es resumeixen byte a "
+"byte. Els camins absoluts, les mides i les marques de temps no hi "
+"contribueixen mai; per tant, un clon idèntic obté la mateixa identitat a "
+"qualsevol lloc."
 
 #: ../../reference/registry-legal-api.md:49
 msgid ""
@@ -199,58 +225,70 @@ msgid ""
 "Every non-text fact value is therefore written as an object with one tag "
 "that names its type:"
 msgstr ""
+"El format actual és `cadrumo-authority-artifact-v4`. La seva càrrega útil"
+" és una projecció compacta de l'autoritat tipada completa. Els camps "
+"obligatoris sempre s'escriuen; un camp només s'omet quan el seu valor "
+"tipat és igual al valor predeterminat declarat pel seu esquema. La "
+"rehidratació estricta restaura aquests valors predeterminats. Els "
+"discriminadors i les grafies de les unions definides es mantenen en el "
+"format transmès, de manera que la compactació no endevina quina variant "
+"tipada ha de construir. Els decimals i les dates són cadenes JSON quan "
+"l'esquema tipa un camp com a decimal o data. Un valor de fet governat pot"
+" ser text, un enter, un decimal, un booleà o una data, i JSON no els pot "
+"distingir només pel valor. Per tant, tot valor de fet que no sigui text "
+"s'escriu com un objecte amb una etiqueta que n'indica el tipus:"
 
 #: ../../reference/registry-legal-api.md
 msgid "Fact value"
-msgstr ""
+msgstr "Valor del fet"
 
 #: ../../reference/registry-legal-api.md
 msgid "Written as"
-msgstr ""
+msgstr "S'escriu com"
 
 #: ../../reference/registry-legal-api.md
 msgid "Decimal"
-msgstr ""
+msgstr "Decimal"
 
 #: ../../reference/registry-legal-api.md
 #, python-brace-format
 msgid "`{\"$decimal\": \"0.40\"}`"
-msgstr ""
+msgstr "`{\"$decimal\": \"0.40\"}`"
 
 #: ../../reference/registry-legal-api.md
 msgid "Date"
-msgstr ""
+msgstr "Data"
 
 #: ../../reference/registry-legal-api.md
 #, python-brace-format
 msgid "`{\"$date\": \"2025-01-01\"}`"
-msgstr ""
+msgstr "`{\"$date\": \"2025-01-01\"}`"
 
 #: ../../reference/registry-legal-api.md
 msgid "Integer"
-msgstr ""
+msgstr "Enter"
 
 #: ../../reference/registry-legal-api.md
 #, python-brace-format
 msgid "`{\"$int\": 5}`"
-msgstr ""
+msgstr "`{\"$int\": 5}`"
 
 #: ../../reference/registry-legal-api.md
 msgid "Boolean"
-msgstr ""
+msgstr "Booleà"
 
 #: ../../reference/registry-legal-api.md
 #, python-brace-format
 msgid "`{\"$bool\": true}`"
-msgstr ""
+msgstr "`{\"$bool\": true}`"
 
 #: ../../reference/registry-legal-api.md
 msgid "Text"
-msgstr ""
+msgstr "Text"
 
 #: ../../reference/registry-legal-api.md
 msgid "The bare JSON string, for example `\"0.40\"`"
-msgstr ""
+msgstr "La cadena JSON nua, per exemple `\"0.40\"`"
 
 #: ../../reference/registry-legal-api.md:68
 msgid ""
@@ -260,6 +298,12 @@ msgid ""
 " from the shape of a string. It refuses every superseded v1, v2, or v3 "
 "artifact and names the v4 format to republish in."
 msgstr ""
+"El temps d'execució descodifica la càrrega útil amb el mateix esquema "
+"estricte que utilitza el compilador de desenvolupament. Rebutja una "
+"etiqueta desconeguda, un valor etiquetat mal format o no canònic i "
+"qualsevol valor de fet no textual sense etiqueta; mai no infereix un "
+"tipus a partir de la forma d'una cadena. Rebutja tots els artefactes v1, "
+"v2 o v3 supersedits i indica el format v4 que cal tornar a publicar."
 
 #: ../../reference/registry-legal-api.md:74
 msgid ""
@@ -271,6 +315,15 @@ msgid ""
 "bytes or an untyped JSON bag. A v4 write or read refuses an authority "
 "when any required runtime catalogue is empty."
 msgstr ""
+"El compilador, no pas el temps d'execució del producte, amplia els canvis"
+" d'autoria en revisions canòniques completes. L'artefacte també conté "
+"catàlegs tipats d'execució per a les normatives d'IVA, les regles del "
+"lloc de prestació, els àlies de països, els territoris postals espanyols,"
+" les excepcions territorials, les bandes de recàrrec i els àmbits "
+"d'apoderament. Són registres d'esquema congelats, no bytes TOML "
+"incrustats ni un contenidor JSON sense tipus. Una escriptura o lectura v4"
+" rebutja una autoritat quan qualsevol catàleg d'execució obligatori és "
+"buit."
 
 #: ../../reference/registry-legal-api.md:81
 msgid ""
@@ -281,6 +334,12 @@ msgid ""
 "`horizon`, and optional `hard_ceiling`—used to admit supported "
 "coordinates."
 msgstr ""
+"Els tipus de modelo i del domini fiscal validen la sintaxi estable dels "
+"identificadors sense carregar l'arbre d'autoria. L'autoritat compilada "
+"n'és la propietària i valida aquests identificadors contra els "
+"vocabularis publicats. La mateixa autoritat projecta l'envolupant "
+"temporal compartida `floor`, `horizon` i `hard_ceiling` opcional, "
+"utilitzada per admetre coordenades compatibles."
 
 #: ../../reference/registry-legal-api.md:87
 msgid ""
@@ -292,6 +351,14 @@ msgid ""
 " failures occur before authority-dependent calculation or filing "
 "proceeds."
 msgstr ""
+"El camí de càrrega de l'artefacte `bundled_authority()` no compila fonts,"
+" no carrega l'arbre d'autoria en brut, no té cap camí de reparació ni cap"
+" memòria cau paral·lela de taules d'execució. Si falta l'artefacte, "
+"genera un error de no disponibilitat. Un marc mal format, un membre "
+"inesperat, un catàleg tipat incomplet o una càrrega útil no vàlida "
+"generen un error de format. Un desajust del resum genera un error "
+"d'integritat. Aquestes fallades es produeixen abans que es faci cap "
+"càlcul o presentació dependent de l'autoritat."
 
 #: ../../reference/registry-legal-api.md:94
 msgid ""
@@ -300,6 +367,11 @@ msgid ""
 " development-only "
 "`dev.registry.pipeline.cli.publish_authority_candidate_workflow` API:"
 msgstr ""
+"Les eines de desenvolupament publiquen amb `uv run --no-sync python -m "
+"dev.registry.pipeline publish-authority` o programàticament mitjançant "
+"l'API de desenvolupament "
+"`dev.registry.pipeline.cli.publish_authority_candidate_workflow`, "
+"exclusiva del desenvolupament:"
 
 #: ../../reference/registry-legal-api.md:107
 msgid ""
@@ -308,6 +380,11 @@ msgid ""
 "and source evidence. See [Publish a validated runtime authority](../how-"
 "to/publish-runtime-authority.md) for the workflow and recovery path."
 msgstr ""
+"`python -m dev.registry.conformance integrity` rebutja un artefacte el "
+"resum d'identitat registrat del qual difereix de la identitat del "
+"registre i de les proves d'origen actuals. Consulteu [Publicar una "
+"autoritat d'execució validada](../how-to/publish-runtime-authority.md) "
+"per conèixer el flux de treball i la via de recuperació."
 
 #: ../../reference/registry-legal-api.md:112
 msgid "Filing-input contract shapes"

@@ -1238,6 +1238,18 @@ docs-generate-sequences:
 docs-generate-catalogs:
     uv run --no-sync python -m dev.docs.i18n
 
+# Apply a validated batch of documentation PO translations through the owning i18n service.
+[doc('Apply a schema-v1 documentation PO update manifest; mutates only its validated catalogues.')]
+[group('docs')]
+docs-locales-set-batch MANIFEST:
+    uv run --no-sync python -m dev.docs.i18n set-batch {{quote(MANIFEST)}}
+
+# Preview a documentation PO translation batch without writing any catalogue.
+[doc('Validate and preview a documentation PO update manifest without writing catalogues.')]
+[group('docs')]
+docs-locales-set-batch-dry-run MANIFEST:
+    uv run --no-sync python -m dev.docs.i18n set-batch {{quote(MANIFEST)}} --dry-run
+
 # Regenerate the committed terminology coverage report through its generator.
 [doc('Generate the committed terminology coverage report through its owning generator.')]
 [group('docs')]

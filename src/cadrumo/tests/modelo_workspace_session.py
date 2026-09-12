@@ -1,7 +1,6 @@
 """Public real-storage construction support for modelo workspace destinations.
 
-Entrypoint tests consume this defining test-support module directly. It is not
-an application-layer test helper or a package facade.
+Entrypoint tests consume this defining test-support module directly.
 
 The seeding here previously existed only as a fixture inside the workspace view
 tests' own conftest, which made it reachable from exactly one package. A second

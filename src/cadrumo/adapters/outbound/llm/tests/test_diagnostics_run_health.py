@@ -1,4 +1,4 @@
-"""Real-behavior diagnostics over encrypted LLM telemetry and local auth state."""
+"""Real-behavior diagnostics over encrypted LLM telemetry and explicit auth facts."""
 
 from __future__ import annotations
 
@@ -11,10 +11,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...adapters.outbound.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
-from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ...core.directory_scan import scan_directory
-from ..diagnostics_run_health import (
+from .....application.diagnostics_run_health import (
     ErrorsBreakdownReport,
     LatencyReport,
     LlmRunHealthProviderMetrics,
@@ -26,9 +23,13 @@ from ..diagnostics_run_health import (
     build_run_health_report,
     list_recent_runs,
 )
-from ..ledger.llm_diagnostics import LlmUsageCostProviderMetrics
+from .....application.diagnostics_run_health_ports import DiagnosticAuthProbePort, DiagnosticAuthProbeResult
+from .....application.ledger.llm_diagnostics import LlmUsageCostProviderMetrics
+from .....core.directory_scan import scan_directory
+from ....persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ..run_telemetry import LLMRunRecord, LLMRunTelemetryDiagnosticsAdapter, LLMRunTelemetryRecorder
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _BUCKET_ID = "55555555-5555-4555-8555-555555555555"
 
@@ -73,12 +74,22 @@ def _seed(recorder: LLMRunTelemetryRecorder) -> None:
     )
 
 
-def test_build_run_health_report_folds_llm_runs_and_real_auth_probe(profile: TestRuntimeProfile) -> None:
-    """Real LLM records fold per provider alongside the real local auth probe."""
+class _FakeAuthProbe(DiagnosticAuthProbePort):
+    """Return a fixed, redacted auth verdict for run-health projections."""
+
+    def probe(self) -> DiagnosticAuthProbeResult:
+        return DiagnosticAuthProbeResult()
+
+
+def test_build_run_health_report_folds_llm_runs_and_explicit_auth_probe(profile: TestRuntimeProfile) -> None:
+    """Real LLM records fold per provider alongside an explicit auth port."""
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
     _seed(recorder)
 
-    report = build_run_health_report(run_telemetry_recorder=recorder)
+    report = build_run_health_report(
+        run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder),
+        auth_probe_port=_FakeAuthProbe(),
+    )
 
     assert report.has_run_data is True
     providers = {row.provider: row for row in report.llm_providers}
@@ -107,7 +118,8 @@ def test_build_run_health_report_provider_filter_scopes_llm_section(profile: Tes
 
     report = build_run_health_report(
         provider="llm:codex:test-model",
-        run_telemetry_recorder=recorder,
+        run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder),
+        auth_probe_port=_FakeAuthProbe(),
     )
 
     assert len(report.llm_providers) == 1
@@ -126,7 +138,8 @@ def test_build_run_health_report_date_range_scopes_llm_section(profile: TestRunt
     report = build_run_health_report(
         since=date(2026, 4, 1),
         until=date(2026, 4, 1),
-        run_telemetry_recorder=recorder,
+        run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder),
+        auth_probe_port=_FakeAuthProbe(),
     )
 
     assert report.total_runs == 1
@@ -138,7 +151,10 @@ def test_build_run_health_report_empty_store_reports_no_run_data(profile: TestRu
     """An empty run-telemetry store reports ``has_run_data = False``, not an error."""
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
 
-    report = build_run_health_report(run_telemetry_recorder=recorder)
+    report = build_run_health_report(
+        run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder),
+        auth_probe_port=_FakeAuthProbe(),
+    )
 
     assert report.has_run_data is False
     assert report.llm_providers == ()
@@ -150,7 +166,7 @@ def test_list_recent_runs_orders_most_recent_first(profile: TestRuntimeProfile) 
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
     _seed(recorder)
 
-    rows = list_recent_runs(run_telemetry_recorder=recorder)
+    rows = list_recent_runs(run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder))
 
     assert [row.run_id for row in rows] == ["c", "b", "a"]
     assert rows[0].provider == "llm:codex:test-model"
@@ -165,7 +181,7 @@ def test_list_recent_runs_limit_caps_the_most_recent_rows(profile: TestRuntimePr
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
     _seed(recorder)
 
-    rows = list_recent_runs(run_telemetry_recorder=recorder, limit=2)
+    rows = list_recent_runs(run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder), limit=2)
 
     assert [row.run_id for row in rows] == ["c", "b"]
 
@@ -175,7 +191,9 @@ def test_list_recent_runs_provider_filter_scopes_the_listing(profile: TestRuntim
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
     _seed(recorder)
 
-    rows = list_recent_runs(run_telemetry_recorder=recorder, provider="llm:claude:test-model")
+    rows = list_recent_runs(
+        run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder), provider="llm:claude:test-model"
+    )
 
     assert {row.run_id for row in rows} == {"a", "b"}
     assert all(row.provider == "llm:claude:test-model" for row in rows)
@@ -186,7 +204,9 @@ def test_list_recent_runs_date_range_scopes_the_listing(profile: TestRuntimeProf
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
     _seed(recorder)
 
-    rows = list_recent_runs(run_telemetry_recorder=recorder, since=date(2026, 4, 1), until=date(2026, 4, 1))
+    rows = list_recent_runs(
+        run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder), since=date(2026, 4, 1), until=date(2026, 4, 1)
+    )
 
     assert [row.run_id for row in rows] == ["a"]
 
@@ -195,7 +215,7 @@ def test_list_recent_runs_empty_store_returns_empty_tuple(profile: TestRuntimePr
     """An empty run-telemetry store returns an empty listing, not an error."""
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
 
-    rows = list_recent_runs(run_telemetry_recorder=recorder)
+    rows = list_recent_runs(run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder))
 
     assert rows == ()
 
@@ -226,7 +246,7 @@ def test_build_latency_report_computes_nearest_rank_percentiles(profile: TestRun
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
     _seed_percentiles(recorder)
 
-    report = build_latency_report(run_telemetry_recorder=recorder)
+    report = build_latency_report(run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder))
 
     assert report.has_run_data is True
     assert report.overall.entries == 10
@@ -243,7 +263,7 @@ def test_build_latency_report_breaks_down_by_provider(profile: TestRuntimeProfil
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
     _seed(recorder)
 
-    report = build_latency_report(run_telemetry_recorder=recorder)
+    report = build_latency_report(run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder))
 
     by_provider = dict(report.by_provider)
     assert set(by_provider) == {"llm:claude:test-model", "llm:codex:test-model"}
@@ -257,7 +277,9 @@ def test_build_latency_report_provider_filter_omits_by_provider_breakdown(profil
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
     _seed(recorder)
 
-    report = build_latency_report(provider="llm:codex:test-model", run_telemetry_recorder=recorder)
+    report = build_latency_report(
+        provider="llm:codex:test-model", run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder)
+    )
 
     assert report.overall.entries == 1
     assert report.overall.p50_duration_ms == 500
@@ -268,7 +290,7 @@ def test_build_latency_report_empty_store_reports_no_run_data(profile: TestRunti
     """An empty run-telemetry store reports ``has_run_data = False``, not an error."""
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
 
-    report = build_latency_report(run_telemetry_recorder=recorder)
+    report = build_latency_report(run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder))
 
     assert report.has_run_data is False
     assert report.overall.entries == 0
@@ -281,7 +303,9 @@ def test_build_latency_report_date_range_scopes_the_percentiles(profile: TestRun
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
     _seed(recorder)
 
-    report = build_latency_report(since=date(2026, 4, 1), until=date(2026, 4, 1), run_telemetry_recorder=recorder)
+    report = build_latency_report(
+        since=date(2026, 4, 1), until=date(2026, 4, 1), run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder)
+    )
 
     assert report.overall.entries == 1
     assert report.overall.p50_duration_ms == 1000
@@ -292,7 +316,7 @@ def test_build_error_breakdown_groups_by_provider_and_error_kind(profile: TestRu
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
     _seed(recorder)
 
-    report = build_error_breakdown(run_telemetry_recorder=recorder)
+    report = build_error_breakdown(run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder))
 
     assert report.has_failures is True
     assert report.total_runs == 3
@@ -329,7 +353,7 @@ def test_build_error_breakdown_sorts_by_descending_count(profile: TestRuntimePro
             ),
         )
 
-    report = build_error_breakdown(run_telemetry_recorder=recorder)
+    report = build_error_breakdown(run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder))
 
     assert report.total_failed == 4
     assert [(row.provider, row.error_kind, row.count) for row in report.by_error_kind] == [
@@ -344,7 +368,9 @@ def test_build_error_breakdown_provider_filter_scopes_the_breakdown(profile: Tes
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
     _seed(recorder)
 
-    report = build_error_breakdown(provider="llm:codex:test-model", run_telemetry_recorder=recorder)
+    report = build_error_breakdown(
+        provider="llm:codex:test-model", run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder)
+    )
 
     assert report.total_runs == 1
     assert report.total_failed == 0
@@ -356,7 +382,7 @@ def test_build_error_breakdown_empty_store_reports_no_failures(profile: TestRunt
     """An empty run-telemetry store reports no failures, not an error."""
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
 
-    report = build_error_breakdown(run_telemetry_recorder=recorder)
+    report = build_error_breakdown(run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder))
 
     assert report.has_failures is False
     assert report.total_runs == 0
@@ -369,7 +395,7 @@ def test_build_error_breakdown_succeeded_only_reports_no_failures(profile: TestR
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
     _seed_percentiles(recorder)
 
-    report = build_error_breakdown(run_telemetry_recorder=recorder)
+    report = build_error_breakdown(run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder))
 
     assert report.total_runs == 10
     assert report.total_failed == 0
@@ -414,7 +440,7 @@ def test_build_llm_usage_report_aggregates_by_provider_and_model(profile: TestRu
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
     _seed_usage(recorder)
 
-    report = build_llm_usage_report(run_telemetry_recorder=recorder)
+    report = build_llm_usage_report(run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder))
 
     assert report.has_run_data is True
     assert report.total_runs == 6
@@ -459,7 +485,9 @@ def test_build_llm_usage_report_provider_filter_scopes_the_summary(profile: Test
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
     _seed_usage(recorder)
 
-    report = build_llm_usage_report(provider="llm:codex:test-model", run_telemetry_recorder=recorder)
+    report = build_llm_usage_report(
+        provider="llm:codex:test-model", run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder)
+    )
 
     assert len(report.by_provider) == 1
     assert report.by_provider[0].provider == "llm:codex:test-model"
@@ -473,7 +501,9 @@ def test_build_llm_usage_report_date_range_scopes_the_summary(profile: TestRunti
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
     _seed_usage(recorder)
 
-    report = build_llm_usage_report(since=date(2026, 6, 1), until=date(2026, 6, 1), run_telemetry_recorder=recorder)
+    report = build_llm_usage_report(
+        since=date(2026, 6, 1), until=date(2026, 6, 1), run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder)
+    )
 
     assert report.total_runs == 1
     assert len(report.by_provider) == 1
@@ -485,7 +515,7 @@ def test_build_llm_usage_report_empty_store_reports_no_run_data(profile: TestRun
     """An empty run-telemetry store reports ``has_run_data = False``, not an error."""
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
 
-    report = build_llm_usage_report(run_telemetry_recorder=recorder)
+    report = build_llm_usage_report(run_telemetry_port=LLMRunTelemetryDiagnosticsAdapter(recorder))
 
     assert report.has_run_data is False
     assert report.by_provider == ()
@@ -563,4 +593,11 @@ def test_builders_refuse_a_reversed_window(profile: TestRuntimeProfile) -> None:
     _seed(recorder)
     for build in (build_run_health_report, build_latency_report, build_error_breakdown, build_llm_usage_report):
         with pytest.raises(ValidationError):
-            build(since=date(2026, 2, 1), until=date(2026, 1, 1))
+            kwargs = {
+                "since": date(2026, 2, 1),
+                "until": date(2026, 1, 1),
+                "run_telemetry_port": LLMRunTelemetryDiagnosticsAdapter(recorder),
+            }
+            if build is build_run_health_report:
+                kwargs["auth_probe_port"] = _FakeAuthProbe()
+            build(**kwargs)

@@ -121,6 +121,14 @@ def _compose_diagnostics_run_health_port():
     return compose_diagnostics_run_health_port()
 
 
+def _compose_diagnostics_auth_probe_port(ctx: typer.Context):
+    """Compose the diagnostics auth probe from the root-owned state ports."""
+    from ...entrypoints.diagnostics_run_health_composition import compose_diagnostics_auth_probe_port
+    from .state_projection_support import state_projection_read_ports
+
+    return compose_diagnostics_auth_probe_port(read_ports=state_projection_read_ports(ctx))
+
+
 def _run_health_result(
     *,
     report: RunHealthReport,
@@ -204,11 +212,13 @@ def diagnostics_run_health(
     until_date = _parse_iso_date(until, "--until")
 
     run_telemetry_port = _compose_diagnostics_run_health_port()
+    auth_probe_port = _compose_diagnostics_auth_probe_port(ctx)
     report = build_run_health_report(
         since=since_date,
         until=until_date,
         provider=provider,
         run_telemetry_port=run_telemetry_port,
+        auth_probe_port=auth_probe_port,
     )
 
     result = _run_health_result(report=report, since=since_date, until=until_date)

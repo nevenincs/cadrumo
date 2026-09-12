@@ -109,7 +109,11 @@ def diagnostics_telemetry_flush(
     from ...application.diagnostics_telemetry import build_telemetry_flush_preview, flush_telemetry
     from ...core.config import load_settings, override_settings
     from ...core.json_contract import Notice, NoticeSeverity
-    from ...entrypoints.diagnostics_run_health_composition import compose_diagnostics_run_health_port
+    from ...entrypoints.diagnostics_run_health_composition import (
+        compose_diagnostics_auth_probe_port,
+        compose_diagnostics_run_health_port,
+    )
+    from .state_projection_support import state_projection_read_ports
 
     overrides: dict[str, object] = {}
     if opt_in is not None:
@@ -124,6 +128,7 @@ def diagnostics_telemetry_flush(
 
     settings = load_settings()
     run_telemetry_port = compose_diagnostics_run_health_port()
+    auth_probe_port = compose_diagnostics_auth_probe_port(read_ports=state_projection_read_ports(ctx))
 
     if dry_run:
         # A bare --dry-run never sends regardless of --acknowledge-remote-telemetry;
@@ -133,6 +138,7 @@ def diagnostics_telemetry_flush(
             settings=settings,
             acknowledged=acknowledge,
             run_telemetry_port=run_telemetry_port,
+            auth_probe_port=auth_probe_port,
         )
         sent = False
     else:
@@ -140,6 +146,7 @@ def diagnostics_telemetry_flush(
             settings=settings,
             acknowledged=acknowledge,
             run_telemetry_port=run_telemetry_port,
+            auth_probe_port=auth_probe_port,
         )
         sent = preview.would_send
 

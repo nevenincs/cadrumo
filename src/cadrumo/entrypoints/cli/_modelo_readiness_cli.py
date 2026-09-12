@@ -16,7 +16,6 @@ from ...core.period import Period, PeriodError
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ._modelo_cli_support import unsupported_local_work_period_refusal
-from .state_projection_support import state_projection_read_ports
 from ._modelo_payloads import (
     LedgerIssuePayload,
     ModeloReadinessMissingBindingPayload,
@@ -25,6 +24,7 @@ from ._modelo_payloads import (
 )
 from .common import emit_envelope, no_active_profile_refusal, resolve_cli_precondition_action
 from .errors import CliRefusedBoundaryError
+from .state_projection_support import state_projection_read_ports
 
 
 def modelo_readiness(

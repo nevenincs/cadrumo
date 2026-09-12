@@ -70,8 +70,11 @@ from typing import TypedDict
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
 
 from ..core.time.date_range import validate_inclusive_date_range
-from .auth.operator import test_operator_auth
-from .diagnostics_run_health_ports import DiagnosticRunRecord, DiagnosticRunTelemetryPort
+from .diagnostics_run_health_ports import (
+    DiagnosticAuthProbePort,
+    DiagnosticRunRecord,
+    DiagnosticRunTelemetryPort,
+)
 
 __all__ = [
     "ErrorKindCount",
@@ -200,6 +203,7 @@ def build_run_health_report(
     until: date | None = None,
     provider: str | None = None,
     run_telemetry_port: DiagnosticRunTelemetryPort,
+    auth_probe_port: DiagnosticAuthProbePort,
 ) -> RunHealthReport:
     """Aggregate local LLM run telemetry and the auth-session probe into one report.
 
@@ -213,6 +217,8 @@ def build_run_health_report(
             from workflow state and never receives this filter.
         run_telemetry_port: Injected diagnostic telemetry read port supplied by
             the outer composition root.
+        auth_probe_port: Injected redacted auth-readiness probe supplied by the
+            outer composition root.
 
     Returns:
         The populated :class:`RunHealthReport`.
@@ -222,7 +228,7 @@ def build_run_health_report(
         records = tuple(item for item in records if item.provider == provider)
     llm_providers = _aggregate_runs(records)
 
-    probe = test_operator_auth()
+    probe = auth_probe_port.probe()
 
     return RunHealthReport(
         since=since,

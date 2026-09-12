@@ -29,8 +29,7 @@ from cadrumo.core.directory_scan import scan_directory
 from dev._paths import UTF_8
 
 #: Sourced from ``dev._paths`` so the dev harness has one owner for it. The
-#: directory walk is imported from its canonical defining module above; no
-#: package facade, re-export, or private core path participates.
+#: directory walk is imported from its canonical defining module above.
 _UTF_8: Final[str] = UTF_8
 
 #: The catalogue's authoring tree, relative to the repository root.

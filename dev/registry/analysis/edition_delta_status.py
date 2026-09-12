@@ -297,7 +297,29 @@ _ROOT_PENDING_LINEAGE_MARK: Final = "predecessor row without lineage"
 #: "parallel scheme variant", and a classifier that read only one of those
 #: spellings would file a terminal root as work. The stem is the shortest form
 #: that cannot match a different cause.
-_ROOT_CAUSES_BY_LAW: Final = ("parallel scheme variant", "lower grade", "overlapping predecessor")
+_ROOT_CAUSES_BY_LAW: Final = ("parallel scheme variant", "overlapping predecessor")
+
+#: The declared cause codes, which are the AUTHORITY on a root's kind. Matching
+#: prose was the wrong mechanism, not merely the wrong word list: a reason a
+#: person writes citing a norm is exactly what a substring list cannot
+#: anticipate, and it misfiled a by-law root as work AND an evidence deficit as
+#: law, in the same pass and in opposite directions.
+_ROOT_KIND_BY_CAUSE: Final[Mapping[str, str]] = {
+    # Recoverable in the two-way sense, but kept as its OWN kind: the pending
+    # count is pinned as a campaign delta, and folding it into recoverable
+    # would move a number nobody changed.
+    "predecessor_row_without_lineage": "root_pending_lineage",
+    "lower_grade": "root_recoverable",
+    "unretired_withdrawal": "root_recoverable",
+    # Facts about the forms, which no work of ours moves. official_structure
+    # _differs covers a successor whose official record design genuinely differs
+    # -- a reordering, or a byte shift -- so the predecessor cannot materialise
+    # it however well the chain is stated.
+    "parallel_scheme_variants": "root_by_law",
+    "overlapping_predecessor": "root_by_law",
+    "forbidden_by_norm": "root_by_law",
+    "official_structure_differs": "root_by_law",
+}
 #: Families whose members are per-edition claims rather than inheritable
 #: declarations: evidence pins to a specific official workbook, and generated
 #: export layouts owned by the generator. They are never counted as restated.
@@ -349,7 +371,7 @@ COVERAGE_CONDITIONS: Final[tuple[str, ...]] = (
 #: The measurement's version. Bump on any change to what the conditions COUNT,
 #: so a lane diffing two runs can separate corpus movement from instrument
 #: movement rather than having to recall which changed.
-_SIGNAL_SCHEMA: Final = 2
+_SIGNAL_SCHEMA: Final = 3
 
 #: Every condition this screen can report, declared once and used at each
 #: emission site below, so the set cannot be misread off the source.
@@ -358,6 +380,8 @@ CONDITIONS: Final[tuple[str, ...]] = (
     "unknown_authoring_key",
     "edition_without_manifest",
     "predecessor_forest_violation",
+    "root_kind_by_wording",
+    "default_carried_from_predecessor",
     "row_source_refs_restated",
     "row_source_refs_liftable",
     "constraints_source_refs_restated",
@@ -382,6 +406,7 @@ CONDITIONS: Final[tuple[str, ...]] = (
 MEASUREMENTS: Final[tuple[str, ...]] = (
     "member_restated_dispositioned",
     "member_restated_unedged",
+    "casillas_unmeasured",
     "row_pinned_by_lineage_claim",
     "row_source_refs_irreducible",
     "row_identical_unchained",
@@ -594,6 +619,7 @@ class EditionStatus:
     declares_no_predecessor: bool = False
     predecessor_id: str | None = None
     root_reason: str = ""
+    root_cause: str = ""
     has_manifest: bool = True
     export_surface: bool = False
     members: dict[str, dict[str, dict[str, Any]]] = field(default_factory=dict)
@@ -685,7 +711,7 @@ class Edge:
         return 0.0 if not self.predecessor_rows else 1 - self.predecessor_rows_without_lineage / self.predecessor_rows
 
 
-def _root_kind(reason: str) -> str:
+def _root_kind(reason: str, cause: str = "") -> str:
     """Classify an explicit no-predecessor root by the cause the tool named.
 
     An unrecognised cause falls to ``root_recoverable`` rather than to law. A
@@ -695,10 +721,15 @@ def _root_kind(reason: str) -> str:
     report than a new way for the law to forbid inheritance. Defaulting the
     other way is what hid the last two.
     """
+    # A DECLARED cause is the authority and ends the question. An unrecognised
+    # code still falls to recoverable, but it is a code somebody wrote, so it
+    # can be looked up rather than guessed at.
+    if cause:
+        return _ROOT_KIND_BY_CAUSE.get(cause, "root_recoverable")
     spelled = reason.casefold()
     if _ROOT_PENDING_LINEAGE_MARK in spelled:
         return "root_pending_lineage"
-    if any(cause in spelled for cause in _ROOT_CAUSES_BY_LAW):
+    if any(known in spelled for known in _ROOT_CAUSES_BY_LAW):
         return "root_by_law"
     return "root_recoverable"
 
@@ -707,7 +738,12 @@ def _comparable(member: Mapping[str, Any]) -> dict[str, Any]:
     return {key: value for key, value in member.items() if key not in _RESTATEMENT_KEYS}
 
 
-def _grounding_lifts(inherited: Mapping[str, Any], stated: Mapping[str, Any], default: tuple[str, ...]) -> bool:
+def _grounding_lifts(
+    inherited: Mapping[str, Any],
+    stated: Mapping[str, Any],
+    default: tuple[str, ...],
+    predecessor_default: tuple[str, ...] = (),
+) -> bool:
     """Whether two members' references agree, or the successor's lift to a declared default.
 
     Payload equality is not droppability. A successor that re-grounds an
@@ -725,7 +761,12 @@ def _grounding_lifts(inherited: Mapping[str, Any], stated: Mapping[str, Any], de
         before, after = _as_refs(inherited.get(key)), _as_refs(stated.get(key))
         if before == after:
             continue
-        if key == "source_refs" and default and after[: len(default)] == default:
+        # The loader compares with the source defaults applied only when BOTH
+        # editions declare one; where either side has none, both sides are
+        # compared raw. Keying liftability off the successor's default alone
+        # agrees with it today and parts on any edge where one side lacks a
+        # default, so the same condition is required here.
+        if key == "source_refs" and default and predecessor_default and after[: len(default)] == default:
             continue
         return False
     return True
@@ -773,6 +814,28 @@ def _restated_members(
     # a merge would supply, and putting it in the headline offered work the tool
     # refuses. Counted apart rather than dropped so nothing disappears.
     declared_edge = successor.declares_predecessor
+    if declared_edge and successor.members.get(_CASILLAS):
+        # Casillas on a declared edge belong to the minimality screen, which
+        # decides them through the compiled authority's materialised view. That
+        # handoff was silent, so this screen reported ZERO restated casillas for
+        # a modelo the loader proves has hundreds -- and while the authority is
+        # unavailable, as it has been for most of today, neither screen judges
+        # them. A zero is indistinguishable from a measurement that never ran.
+        # Stating the handoff as a quantity fixes that without duplicating a
+        # rule that would diverge: matching there is by continuidad_id only,
+        # with no fallback, and reproducing it here would part from the loader
+        # the moment seeding lands.
+        # One finding per EDGE carrying the count, not one per member. The ask
+        # was a count, and a per-member emission would add roughly ten thousand
+        # rows to the persisted findings file on every run -- a measurement
+        # nobody reads at that granularity, and large enough to bury the
+        # findings that are actionable.
+        successor._add(
+            "casillas_unmeasured",
+            "<edition>",
+            f"{len(successor.members[_CASILLAS])} casillas on a declared edge: "
+            "restatement is delta_minimality's to judge through the compiled authority",
+        )
     for family, key in _schema_families():
         if key is None or family in _PER_EDITION_FAMILIES or (family == _CASILLAS and successor.declares_predecessor):
             continue
@@ -817,7 +880,12 @@ def _restated_members(
                     successor._add(
                         "member_restated_unedged", locus, f"identical to {predecessor.edition}, edge not declared"
                     )
-                elif _grounding_lifts(before, member, successor.family_defaults.get(family, ())):
+                elif _grounding_lifts(
+                    before,
+                    member,
+                    successor.family_defaults.get(family, ()),
+                    predecessor.family_defaults.get(family, ()),
+                ):
                     successor._add(
                         "member_restated_payload_equal", locus, f"identical to {predecessor.edition}, refs lift"
                     )
@@ -994,7 +1062,13 @@ def _blockers(
         for lineage in predecessor_lineages
         if lineage not in successor_lineages and lineage not in successor.retired_lineages
     ]
-    if withdrawn:
+    # Only meaningful against a successor that states its rows in full. A
+    # successor that DECLARES a predecessor states only its delta, so every
+    # inherited lineage it does not restate looks withdrawn -- and all eight
+    # such edges were verified false, ~1,601 boxes present in the compiled
+    # successors. The cause survives for roots, where the successor really does
+    # state everything and a missing lineage really is gone.
+    if withdrawn and not successor.declares_predecessor:
         blockers.append(f"unretired_withdrawal={len(withdrawn)}")
     if any(count > 1 for count in predecessor_lineages.values()) or any(
         count > 1 for count in successor_lineages.values()
@@ -1017,8 +1091,41 @@ def _blockers(
     if scenarios is None:
         pass
     elif successor.export_surface and successor.edition not in scenarios:
-        blockers.append("export_scenario_missing")
+        # Named so the scenario pass can tick modelos off: an empty set means
+        # the modelo is absent from the declared list, not that its scenario was
+        # consulted and refused.
+        blockers.append(f"export_scenario_missing={successor.modelo}")
     return tuple(blockers)
+
+
+def carried_defaults(statuses: tuple[EditionStatus, ...]) -> None:
+    """Name every family default an edition repeats from the edition it succeeds.
+
+    The lift tool propagates a predecessor's derived default onto successors
+    that inherit a family's rows without owning any, so materialisation stays
+    byte-identical. That is correct, and it is also the state in which a
+    successor is still grounded on an OLDER edition's design: the default says
+    what the rows were grounded against, and carrying it forward carries the
+    older grounding with it. Re-grounding on the edition's own design is
+    authoring work, so the two must be countable apart.
+
+    Equality is list equality and order-sensitive, because a default is a
+    sequence the loader applies in order, not a set.
+    """
+    by_edition = {(status.modelo, status.edition): status for status in statuses}
+    for status in statuses:
+        if not status.declares_predecessor or status.predecessor_id is None:
+            continue
+        before = by_edition.get((status.modelo, status.predecessor_id))
+        if before is None:
+            continue
+        for family, refs in sorted(status.family_defaults.items()):
+            if refs and before.family_defaults.get(family) == refs:
+                status._add(
+                    "default_carried_from_predecessor",
+                    family,
+                    f"same default as {status.predecessor_id}: {json.dumps(list(refs))}",
+                )
 
 
 def forest_violations(statuses: tuple[EditionStatus, ...]) -> None:
@@ -1090,7 +1197,7 @@ def edges(statuses: tuple[EditionStatus, ...]) -> tuple[Edge, ...]:
                 state = "migrated_unverified" if blockers else "migrated"
             elif successor.declares_no_predecessor:
                 state = "dispositioned"
-                root_kind = _root_kind(successor.root_reason)
+                root_kind = _root_kind(successor.root_reason, successor.root_cause)
                 # A root declared FOR WANT OF LINEAGE is a recoverable edge
                 # wearing a disposition, and reading the declaration as the end
                 # of the question suppresses every cause behind it: the corpus
@@ -1239,6 +1346,16 @@ def scan_edition(modelo_id: str, edition_dir: Path, typed_fields: frozenset[str]
         if isinstance(predecessor, dict):
             none = predecessor.get("none")
             status.root_reason = str(none.get("reason", "")) if isinstance(none, dict) else ""
+            status.root_cause = str(none.get("cause", "")) if isinstance(none, dict) else ""
+            if not status.root_cause:
+                # Classified from prose because the declaration carries no code.
+                # Reported rather than silent: a wording-classified root is a
+                # guess, and two were wrong in opposite directions.
+                status._add(
+                    "root_kind_by_wording",
+                    "<edition>",
+                    f"no cause code; classified {_root_kind(status.root_reason)} from the reason text",
+                )
         status.export_surface = bool(table.get("export_layouts"))
         # Two sanctioned per-family declarations, read off the manifest like
         # everything else here. `source_default_dispositions` states that a
@@ -1631,6 +1748,7 @@ def build_report(registry_root: Path, *, modelo_ids: tuple[str, ...] = ()) -> Re
     promised = supported_filing_years(registry_root)
     found_edges = edges(statuses)
     forest_violations(statuses)
+    carried_defaults(statuses)
     scope_lineage_findings(statuses, found_edges, projected_sources(statuses, promised))
     return Report(
         statuses=statuses,

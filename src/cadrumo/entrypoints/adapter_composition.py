@@ -15,12 +15,16 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..application.state_projection_ports import StateProjectionReadPorts
 
 __all__ = ["profile_adapter_composition"]
 
 
 @contextmanager
-def profile_adapter_composition() -> Generator[object]:
+def profile_adapter_composition() -> Generator[StateProjectionReadPorts]:
     """Bind every adapter port a frontend session resolves, and unbind after.
 
     The imports are function-local because entering this scope is what pulls the

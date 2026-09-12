@@ -1,30 +1,16 @@
 """A name may not be imported from a namespace that exports nothing.
 
-Retiring a package's export map makes its namespace inert. Every consumer that
-reached a contract through the namespace has to move to the module that defines
-it, and one that does not fails with ``ImportError`` -- not when the contract is
-used, but the moment anything imports the consumer at all.
-
-That is a loud failure and a late one. It has landed three times in this
-codebase: a censo parser, a portals service, and a secret store whose namespace
-went inert while production and the storage export map still reached through it,
-taking fifteen hundred test modules down at collection. In each case the
-retirement was correct and the sweep of consumers was incomplete, and nothing
-said so until something imported the wrong module.
-
-This is the check that says so. It is deliberately narrow:
+Such an import fails as soon as its consumer loads, even when the named
+submodule itself exists. This check is deliberately narrow:
 
 * Only NAMESPACES THAT EXPORT NOTHING are judged -- an empty ``__all__``, no
-  ``__getattr__``, no re-exports. A package still carrying a lazy export map is
-  serving names on demand and is not this gate's business; treating one as
-  empty produced six thousand false positives on the first attempt.
+  ``__getattr__``, no re-exports.
 * A submodule is not a missing name. ``from .pkg import sibling`` where
   ``pkg/sibling.py`` exists resolves through the filesystem and is fine.
 * Dunders are module attributes every module has, and are not exports.
 
-The failure this prevents is not subtle once seen, which is the point: it is
-invisible until the import runs, and the import may live behind a branch that
-only a particular operator takes.
+The import may live behind a branch that only a particular operator takes, so
+static reachability is the useful signal.
 """
 
 from __future__ import annotations

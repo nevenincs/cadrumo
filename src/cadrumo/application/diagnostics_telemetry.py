@@ -60,6 +60,7 @@ from ..core.telemetry.tier import TelemetryTier
 from ..core.telemetry.workspace import workspace_hash
 from ..core.time.clock import now
 from .diagnostics_run_health import build_run_health_report
+from .diagnostics_run_health_ports import DiagnosticAuthProbePort, DiagnosticRunTelemetryPort
 
 __all__ = [
     "TelemetryFlushPreview",
@@ -149,8 +150,12 @@ def _build_flush_payload(
     settings: Settings,
     *,
     run_telemetry_port: DiagnosticRunTelemetryPort,
+    auth_probe_port: DiagnosticAuthProbePort,
 ) -> TelemetryEventPayload:
-    report = build_run_health_report(run_telemetry_port=run_telemetry_port)
+    report = build_run_health_report(
+        run_telemetry_port=run_telemetry_port,
+        auth_probe_port=auth_probe_port,
+    )
     return build_telemetry_payload(
         workspace_hash=workspace_hash(settings.cadrumo_local_storage_root),
         command=_FLUSH_COMMAND,
@@ -169,6 +174,7 @@ def build_telemetry_flush_preview(
     settings: Settings | None = None,
     acknowledged: bool = False,
     run_telemetry_port: DiagnosticRunTelemetryPort,
+    auth_probe_port: DiagnosticAuthProbePort,
 ) -> TelemetryFlushPreview:
     """Build the allowlisted payload a flush would send, without sending it.
 
@@ -194,6 +200,8 @@ def build_telemetry_flush_preview(
             this specific invocation. Never sticky.
         run_telemetry_port: Injected diagnostic telemetry read port supplied by
             the outer composition root.
+        auth_probe_port: Injected redacted auth-readiness probe supplied by the
+            outer composition root.
 
     Returns:
         The populated
@@ -201,7 +209,11 @@ def build_telemetry_flush_preview(
         performs a network call.
     """
     resolved_settings = settings if settings is not None else load_settings()
-    payload = _build_flush_payload(resolved_settings, run_telemetry_port=run_telemetry_port)
+    payload = _build_flush_payload(
+        resolved_settings,
+        run_telemetry_port=run_telemetry_port,
+        auth_probe_port=auth_probe_port,
+    )
     gate_permits = telemetry_emit_permitted(resolved_settings, acknowledged=acknowledged)
     endpoint_configured = bool(resolved_settings.cadrumo_telemetry_endpoint)
     return TelemetryFlushPreview(
@@ -217,6 +229,7 @@ def flush_telemetry(
     settings: Settings | None = None,
     acknowledged: bool,
     run_telemetry_port: DiagnosticRunTelemetryPort,
+    auth_probe_port: DiagnosticAuthProbePort,
 ) -> TelemetryFlushPreview:
     """Send the aggregate local telemetry payload, honouring the consent gate.
 
@@ -244,6 +257,8 @@ def flush_telemetry(
             every call.
         run_telemetry_port: Injected diagnostic telemetry read port supplied by
             the outer composition root.
+        auth_probe_port: Injected redacted auth-readiness probe supplied by the
+            outer composition root.
 
     Returns:
         The :class:`~application.diagnostics_telemetry.TelemetryFlushPreview`
@@ -255,6 +270,7 @@ def flush_telemetry(
         settings=resolved_settings,
         acknowledged=acknowledged,
         run_telemetry_port=run_telemetry_port,
+        auth_probe_port=auth_probe_port,
     )
     sink = HttpTelemetrySink(endpoint=resolved_settings.cadrumo_telemetry_endpoint)
     emit_telemetry_event(preview.payload, settings=resolved_settings, acknowledged=acknowledged, sink=sink)

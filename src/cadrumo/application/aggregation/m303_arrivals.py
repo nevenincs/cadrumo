@@ -23,16 +23,10 @@ from .iva_ledger import IvaLedgerAggregation
 def _transition_period_applicability_from_registry(period: Period) -> bool:
     """Resolve transition-period applicability from selected registry declarations.
 
-    The prorrata especial option and its revocation are exercised with the final
-    self-assessment of the year, so the fact is carried only by the last period
-    of the taxpayer's own filing schedule -- ``12`` on the monthly schedule, ``4T``
-    on the quarterly one. That is the record design's own rule for the box
-    ("SI para el ultimo periodo (12 y 4T)", Nota 6 of the official Modelo 303
-    record design), which the served revision cites as the ``aeat-dr-303-<year>``
-    source_ref on its casilla declarations. The period set is therefore derived
-    from the revision's declared ``filing_schedules`` and periodic carry bindings
-    rather than from a hardcoded ``{"12", "4T"}``, so a revision that changes its
-    schedule changes this answer with it.
+    The prorrata especial transition applies only to the final declared period
+    of a filing schedule. Both the schedule periods and the periodic carry
+    declarations come from the selected revision, so a revision that changes
+    its schedule changes this answer with it.
 
     Raises:
         AggregationValidationError: If the selected revision declares no filing

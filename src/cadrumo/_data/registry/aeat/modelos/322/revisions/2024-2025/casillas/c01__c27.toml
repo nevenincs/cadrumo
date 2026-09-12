@@ -649,8 +649,11 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2024-2025".casillas]]
 id = "21"
+continuidad_id = "m322-liquidacion-iva-devengado-adquisiciones-intracomunitarias-de-bienes-y-servicios-base-imponible"
+continuidad_origin = "seeded"
 number = "21"
 section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_adquisiciones_intracomunitarias_de_bienes_y_servicios_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -658,8 +661,11 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2024-2025".casillas]]
 id = "22"
+continuidad_id = "m322-liquidacion-iva-devengado-adquisiciones-intracomunitarias-de-bienes-y-servicios-cuota"
+continuidad_origin = "seeded"
 number = "22"
 section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_adquisiciones_intracomunitarias_de_bienes_y_servicios_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -667,8 +673,11 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2024-2025".casillas]]
 id = "23"
+continuidad_id = "m322-liquidacion-iva-devengado-otras-operaciones-con-inversion-del-sujeto-pasivo-excepto-adquisiciones-intracomunitarias"
+continuidad_origin = "seeded"
 number = "23"
 section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_otras_operaciones_con_inversion_del_sujeto_pasivo_excepto_adquisiciones_intracomunitarias"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -676,8 +685,11 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2024-2025".casillas]]
 id = "24"
+continuidad_id = "m322-liquidacion-iva-devengado-otras-operaciones-con-inversion-del-sujeto-pasivo-excepto-adquisiciones-intracomunitarias-cuota"
+continuidad_origin = "seeded"
 number = "24"
 section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_otras_operaciones_con_inversion_del_sujeto_pasivo_excepto_adquisiciones_intracomunitarias_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -685,8 +697,11 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2024-2025".casillas]]
 id = "25"
+continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-en-regimen-general-base-imponible"
+continuidad_origin = "seeded"
 number = "25"
 section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_en_regimen_general_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -694,8 +709,11 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2024-2025".casillas]]
 id = "26"
+continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-en-regimen-general-cuota"
+continuidad_origin = "seeded"
 number = "26"
 section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_en_regimen_general_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"

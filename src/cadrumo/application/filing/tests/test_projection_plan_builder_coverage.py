@@ -26,10 +26,7 @@ import pytest
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _REGISTRY_MODELOS = Path(__file__).resolve().parents[3] / "_data" / "registry" / "aeat" / "modelos"
-#: The dispatcher is read from its DEFINING module. It was `_export.py`;
-#: the private-to-public promotion renamed it and this reference was not
-#: followed, so the gate raised FileNotFoundError rather than checking
-#: projection-plan coverage.
+#: Source of the projection-plan dispatcher inspected by this coverage gate.
 _EXPORT_SOURCE = Path(__file__).resolve().parents[1] / "export.py"
 _PROJECTION_KIND = re.compile(r"""kind\s*=\s*['"]projection['"]""")
 

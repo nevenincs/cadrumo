@@ -71,9 +71,7 @@ _GUARDED_SURFACES: tuple[tuple[str, str], ...] = (
 )
 
 
-#: Where each guarded surface is DEFINED. The package namespace re-exports
-#: nothing, so every consumer -- this probe included -- reaches a name at the
-#: module that owns it.
+#: Defining module for each guarded surface exercised by the installed probe.
 _DEFINING_MODULES: dict[str, str] = {
     "rasterise_pdf_pages_to_base64_png": "cadrumo.adapters.outbound.llm.providers.local",
     "transcribe_document_images": "cadrumo.adapters.outbound.llm.evidence_draft_vision",
@@ -109,11 +107,8 @@ def installed_core_environment(tmp_path_factory: pytest.TempPathFactory) -> tupl
 
 def _guarded_definition_names() -> frozenset[str]:
     """Derive exported definitions that call the real LLM extra guard."""
-    # Derived from the imported package, never from this file's own depth. The
-    # depth was right while this test lived inside the llm package; after the
-    # move to dev/packaging/tests the same arithmetic scanned the packaging
-    # tooling, where no guard exists, so the derivation was empty and the
-    # inventory below compared nothing against nothing.
+    # Derive the scan root from the imported package rather than this test's
+    # filesystem depth.
     if llm.__file__ is None:  # pragma: no cover - namespace package guard
         message = "the llm package has no file location to scan"
         raise RuntimeError(message)
@@ -134,10 +129,7 @@ def _guarded_definition_names() -> frozenset[str]:
                 for child in ast.walk(node)
             ):
                 derived.add(node.name)
-    # NOT intersected with `llm.__all__`: that namespace is an inert marker
-    # whose `__all__` is literally `()`, so the intersection could only ever
-    # be empty and the caller's `assert derived` failed on a tree where every
-    # guard was present. The AST walk IS the derivation.
+    # The AST walk is the authority for the guarded definition set.
     return frozenset(derived)
 
 
@@ -156,11 +148,8 @@ def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
     # NameError -- which reads as "this surface did not refuse properly" when
     # the truth is that the probe never reached it. `MultimodalImageInput` is a
     # helper the calls construct, not a guarded surface, so it stays explicit.
-    # One import per DEFINING module, not one from the package. The outbound
-    # LLM package root is an inert namespace marker and re-exports nothing, so
-    # a package-root import would raise ImportError and the probe would die
-    # before reaching any surface -- which reads as 'the surface did not
-    # refuse properly' when the probe never ran.
+    # Import each surface from its defining module so the probe exercises the
+    # same concrete definitions discovered above.
     by_module: dict[str, set[str]] = {}
     for surface in sorted({name for name, _call in _GUARDED_SURFACES} | {"MultimodalImageInput"}):
         by_module.setdefault(_DEFINING_MODULES[surface], set()).add(surface)

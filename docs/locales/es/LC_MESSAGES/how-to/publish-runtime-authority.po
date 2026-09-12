@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../how-to/publish-runtime-authority.md:1
 msgid "How to publish a validated runtime authority"
-msgstr ""
+msgstr "Cómo publicar una autoridad de ejecución validada"
 
 #: ../../how-to/publish-runtime-authority.md:3
 msgid ""
@@ -31,6 +31,13 @@ msgid ""
 "calculations and filing exports. It is a development and release "
 "operation, not an `aeat` command for taxpayers."
 msgstr ""
+"Utiliza esta guía cuando cambies el registro de reglas fiscales de "
+"Cadrumo o las evidencias jurídicas que lo respaldan. La publicación "
+"convierte las reglas modelo validadas de la Agencia Estatal de "
+"Administración Tributaria (AEAT) en el artefacto que lee el entorno de "
+"ejecución para realizar cálculos y exportar declaraciones. Es una "
+"operación de desarrollo y de publicación de versiones, no un comando "
+"`aeat` para contribuyentes."
 
 #: ../../how-to/publish-runtime-authority.md:9
 msgid ""
@@ -40,6 +47,12 @@ msgid ""
 "shipped runtime source: installed code does not open the authored "
 "registry tree or maintain a parallel cache of tables parsed from it."
 msgstr ""
+"El artefacto es una salida generada. Registra un resumen criptográfico de"
+" su propio contenido y la identidad del registro y de las evidencias a "
+"partir de los que se compiló, para que el control del registro pueda "
+"detectar si está desactualizado. También es la única fuente de ejecución "
+"distribuida: el código instalado no abre el árbol de registro de autoría "
+"ni mantiene una caché paralela de las tablas analizadas a partir de él."
 
 #: ../../how-to/publish-runtime-authority.md:15
 msgid ""
@@ -48,18 +61,23 @@ msgid ""
 "and Python API](../reference/registry-legal-api.md). For an ordinary "
 "installed-command failure, use [Diagnose and repair](troubleshooting.md)."
 msgstr ""
+"Para consultar el formato del artefacto, las comprobaciones en ejecución,"
+" las clases de error y la interfaz de programación de aplicaciones (API) "
+"de Python, consulta [Registro, fuentes jurídicas y API de "
+"Python](../reference/registry-legal-api.md). Para un fallo ordinario de "
+"un comando instalado, usa [Diagnosticar y reparar](troubleshooting.md)."
 
 #: ../../how-to/publish-runtime-authority.md:19
 msgid "Publish"
-msgstr ""
+msgstr "Publicar"
 
 #: ../../how-to/publish-runtime-authority.md:21
 msgid "Start from a registry that passes the registry validation suite."
-msgstr ""
+msgstr "Comienza con un registro que supere la suite de validación del registro."
 
 #: ../../how-to/publish-runtime-authority.md:22
 msgid "From the repository root, run:"
-msgstr ""
+msgstr "Desde la raíz del repositorio, ejecuta:"
 
 #: ../../how-to/publish-runtime-authority.md:28
 msgid ""
@@ -70,12 +88,21 @@ msgid ""
 "root`, `--source-root`, and `--artifact` select other trees or another "
 "destination."
 msgstr ""
+"El comando materializa las diferencias de autoría en revisiones tipadas "
+"completas, valida el registro incluido y sus evidencias de origen, y "
+"después sustituye de forma atómica "
+"`src/cadrumo/_data/registry/authority/authority.json`. Muestra la ruta "
+"del artefacto y el resumen de identidad que ha registrado. `--registry-"
+"root`, `--source-root` y `--artifact` permiten seleccionar otros árboles "
+"u otro destino."
 
 #: ../../how-to/publish-runtime-authority.md:34
 msgid ""
 "Commit the regenerated `authority.json` together with the registry change"
 " that required it."
 msgstr ""
+"Confirma el `authority.json` regenerado junto con el cambio del registro "
+"que lo requería."
 
 #: ../../how-to/publish-runtime-authority.md:37
 msgid ""
@@ -84,6 +111,9 @@ msgid ""
 "byte in place. Don't edit the artifact by hand. Correct the registry, "
 "then publish again."
 msgstr ""
+"Si se rechaza la validación o el registro cambia mientras se valida, la "
+"publicación falla y deja intacto, byte a byte, el artefacto anterior. No "
+"edites el artefacto a mano. Corrige el registro y vuelve a publicarlo."
 
 #: ../../how-to/publish-runtime-authority.md:41
 msgid ""
@@ -95,14 +125,22 @@ msgid ""
 "membership belongs to this validated authority; an identifier absent from"
 " its published vocabulary is not silently admitted."
 msgstr ""
+"La publicación también proyecta el sobre de compatibilidad compartido "
+"`floor`, `horizon` y el `hard_ceiling` opcional, además de los catálogos "
+"tipados de reglas de IVA, lugar de realización, países y territorios, "
+"bandas de recargo y ámbitos de apoderamiento. Todos los catálogos "
+"obligatorios deben estar completos. Los identificadores de modelo y del "
+"dominio fiscal aceptan su sintaxis estable en el código, pero su "
+"pertenencia corresponde a esta autoridad validada; un identificador "
+"ausente de su vocabulario publicado no se admite de forma silenciosa."
 
 #: ../../how-to/publish-runtime-authority.md:49
 msgid "Check that the artifact is current"
-msgstr ""
+msgstr "Comprueba que el artefacto está actualizado"
 
 #: ../../how-to/publish-runtime-authority.md:51
 msgid "Run the registry gate:"
-msgstr ""
+msgstr "Ejecuta el control del registro:"
 
 #: ../../how-to/publish-runtime-authority.md:57
 msgid ""
@@ -111,6 +149,11 @@ msgid ""
 "or in an earlier format. The refusal names the recorded and the expected "
 "identity digests and the command that republishes the artifact."
 msgstr ""
+"Su primer paso, `python -m dev.registry.conformance integrity`, termina "
+"con el código 1 y una negativa en la salida de error estándar cuando el "
+"artefacto está obsoleto, no se puede leer o utiliza un formato anterior. "
+"La negativa indica las huellas de identidad registrada y esperada, y el "
+"comando que vuelve a publicar el artefacto."
 
 #: ../../how-to/publish-runtime-authority.md:62
 msgid ""
@@ -120,10 +163,16 @@ msgid ""
 "the registry or its evidence doesn't make the artifact stale. The full-"
 "registry publication round-trip test covers the compiler itself."
 msgstr ""
+"La identidad depende únicamente del contenido de los archivos y de las "
+"rutas relativas a las raíces del registro y de las fuentes. Por tanto, un"
+" clon nuevo coincide con el publicador en cualquier plataforma. Un cambio"
+" en el código del compilador que no toque el registro ni sus evidencias "
+"no vuelve obsoleto el artefacto. La prueba de ida y vuelta de publicación"
+" del registro completo cubre el propio compilador."
 
 #: ../../how-to/publish-runtime-authority.md:68
 msgid "Recover from an invalid authority"
-msgstr ""
+msgstr "Recuperación ante una autoridad no válida"
 
 #: ../../how-to/publish-runtime-authority.md:70
 msgid ""
@@ -133,22 +182,32 @@ msgid ""
 "TOML, repair an artifact, or fall back to a separately cached runtime "
 "table."
 msgstr ""
+"Cuando un flujo de trabajo instalado rechace un artefacto no disponible, "
+"malformado, alterado o de una versión no compatible, detén el flujo. La "
+"carga de `bundled_authority()` no compila las fuentes de autoría, analiza"
+" TOML sin procesar, repara un artefacto ni recurre a una tabla de "
+"ejecución almacenada por separado."
 
 #: ../../how-to/publish-runtime-authority.md:75
 msgid ""
 "Preserve the failed artifact when it is present, plus the package "
 "version, artifact digest, error class, and redacted logs."
 msgstr ""
+"Conserva el artefacto fallido cuando esté presente, junto con la versión "
+"del paquete, la huella del artefacto, la clase de error y los registros "
+"anonimizados."
 
 #: ../../how-to/publish-runtime-authority.md:77
 msgid ""
 "Republish from a validated registry, and confirm that `just check-"
 "registry` passes."
 msgstr ""
+"Vuelve a publicar desde un registro validado y confirma que `just check-"
+"registry` pasa."
 
 #: ../../how-to/publish-runtime-authority.md:79
 msgid "Rebuild the package so it contains the replacement artifact."
-msgstr ""
+msgstr "Reconstruye el paquete para que contenga el artefacto de sustitución."
 
 #: ../../how-to/publish-runtime-authority.md:81
 msgid ""
@@ -157,4 +216,8 @@ msgid ""
 "version, artifact digest, error class, and redacted log context. Never "
 "include taxpayer data."
 msgstr ""
+"Eleva el caso mediante el [sistema de incidencias del "
+"proyecto](https://github.com/nevenincs/cadrumo/issues) con la versión de "
+"publicación, la huella del artefacto, la clase de error y el contexto de "
+"registro anonimizado. No incluyas nunca datos de contribuyentes."
 

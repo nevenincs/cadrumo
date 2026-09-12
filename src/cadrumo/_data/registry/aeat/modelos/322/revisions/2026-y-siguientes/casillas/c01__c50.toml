@@ -251,8 +251,12 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "21"
+continuidad_id = "m322-liquidacion-iva-devengado-adquisiciones-intracomunitarias-de-bienes-y-servicios-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:86 (sha256 a70f3a2ca7dd) DR32201 campo 48 posicion 557 len 17 Num box [21]; corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:108 (sha256 f014cec44d49) DR32201 campo 58 posicion 639 len 17 Num box [21]; misma descripcion y formato (15 enteros + 2 decimales); solo cambia campo/posicion."
 number = "21"
 section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_adquisiciones_intracomunitarias_de_bienes_y_servicios_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -260,8 +264,12 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "22"
+continuidad_id = "m322-liquidacion-iva-devengado-adquisiciones-intracomunitarias-de-bienes-y-servicios-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:87 (sha256 a70f3a2ca7dd) DR32201 campo 49 posicion 574 len 17 Num box [22]; corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:109 (sha256 f014cec44d49) DR32201 campo 59 posicion 656 len 17 Num box [22]; misma descripcion y formato (15 enteros + 2 decimales); solo cambia campo/posicion."
 number = "22"
 section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_adquisiciones_intracomunitarias_de_bienes_y_servicios_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -269,8 +277,12 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "23"
+continuidad_id = "m322-liquidacion-iva-devengado-otras-operaciones-con-inversion-del-sujeto-pasivo-excepto-adquisiciones-intracomunitarias"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:88 (sha256 a70f3a2ca7dd) DR32201 campo 50 posicion 591 len 17 Num box [23]; corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:110 (sha256 f014cec44d49) DR32201 campo 60 posicion 673 len 17 Num box [23]; misma descripcion y formato (15 enteros + 2 decimales); solo cambia campo/posicion."
 number = "23"
 section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_otras_operaciones_con_inversion_del_sujeto_pasivo_excepto_adquisiciones_intracomunitarias"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -278,8 +290,12 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "24"
+continuidad_id = "m322-liquidacion-iva-devengado-otras-operaciones-con-inversion-del-sujeto-pasivo-excepto-adquisiciones-intracomunitarias-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:89 (sha256 a70f3a2ca7dd) DR32201 campo 51 posicion 608 len 17 Num box [24]; corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:111 (sha256 f014cec44d49) DR32201 campo 61 posicion 690 len 17 Num box [24]; misma descripcion y formato (15 enteros + 2 decimales); solo cambia campo/posicion."
 number = "24"
 section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_otras_operaciones_con_inversion_del_sujeto_pasivo_excepto_adquisiciones_intracomunitarias_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -287,8 +303,12 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "25"
+continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-en-regimen-general-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:90 (sha256 a70f3a2ca7dd) DR32201 campo 52 posicion 625 len 17 N box [25]; corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:112 (sha256 f014cec44d49) DR32201 campo 62 posicion 707 len 17 N box [25]; misma descripcion y formato (15 enteros + 2 decimales); solo cambia campo/posicion."
 number = "25"
 section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_en_regimen_general_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -296,8 +316,12 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "26"
+continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-en-regimen-general-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:91 (sha256 a70f3a2ca7dd) DR32201 campo 53 posicion 642 len 17 N box [26]; corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:113 (sha256 f014cec44d49) DR32201 campo 63 posicion 724 len 17 N box [26]; misma descripcion y formato (15 enteros + 2 decimales); solo cambia campo/posicion."
 number = "26"
 section = ["iva", "regimen_general", "devengado"]
+semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_en_regimen_general_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -413,8 +437,12 @@ legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "36"
+continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-del-recargo-de-equivalencia-base-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:104 (sha256 a70f3a2ca7dd) DR32201 campo 66 posicion 815 len 17 N box [36]; corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:135 (sha256 f014cec44d49) DR32201 campo 79 posicion 936 len 17 N box [36]; misma descripcion y formato (15 enteros + 2 decimales); solo cambia campo/posicion."
 number = "36"
 section = ["iva", "regimen_general", "recargo"]
+semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_del_recargo_de_equivalencia_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -422,8 +450,12 @@ legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "37"
+continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-del-recargo-de-equivalencia-cuota"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md:105 (sha256 a70f3a2ca7dd) DR32201 campo 67 posicion 832 len 17 N box [37]; corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:136 (sha256 f014cec44d49) DR32201 campo 80 posicion 953 len 17 N box [37]; misma descripcion y formato (15 enteros + 2 decimales); solo cambia campo/posicion."
 number = "37"
 section = ["iva", "regimen_general", "recargo"]
+semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_del_recargo_de_equivalencia_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"

@@ -21,7 +21,8 @@ modelo into exactly one disposition:
   applicability is undetermined (``INCOMPLETE``): an unanswered question the
   operator MUST investigate;
 * **out of scope** — it is listed in
-  :data:`~core.OUT_OF_SCOPE_OBLIGATIONS` with a recorded product-scope
+  :data:`~domain.calculations.registry.modelo_obligation_scope.OUT_OF_SCOPE_OBLIGATIONS`
+  with a recorded product-scope
   reason.
 
 The classification is total by construction, so no registry modelo can be
@@ -39,12 +40,16 @@ from typing import Self
 
 from pydantic import BaseModel, model_validator
 
-from ...core.modelo import OUT_OF_SCOPE_OBLIGATIONS as _OUT_OF_SCOPE_OBLIGATIONS
-from ...core.modelo import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
+)
+from ...domain.calculations.registry.modelo_obligation_scope import (
+    OUT_OF_SCOPE_OBLIGATIONS as _OUT_OF_SCOPE_OBLIGATIONS,
+)
+from ...domain.calculations.registry.modelo_obligation_scope import (
+    UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS,
 )
 from ...domain.deadlines.models import TaxpayerProfile
 
@@ -62,12 +67,14 @@ class CoverageAdviceReason(StrEnum):
             seed rule, or a payer/enrolment fact left undeclared). The
             operator must investigate whether it applies.
         REGISTRY_UNMODELED: The modelo is a recognized AEAT obligation
-            (:data:`~core.UNMODELED_OBLIGATIONS`) that the registry does
+            (:data:`~domain.calculations.registry.modelo_obligation_scope.UNMODELED_OBLIGATIONS`)
+            that the registry does
             not model at all, so neither a window nor an applicability rule
             exists. It surfaces as advised — "AEAT may expect this; the app
             cannot yet scope it" — rather than being invisible.
 
-            :data:`~core.UNMODELED_OBLIGATIONS` is intentionally empty today,
+            :data:`~domain.calculations.registry.modelo_obligation_scope.UNMODELED_OBLIGATIONS`
+            is intentionally empty today,
             so no production input reaches this disposition: the out-of-scope
             partition resolves first. The branch is kept deliberately, not
             pending deletion — it is the advisory capability for taxpayers
@@ -109,7 +116,7 @@ class ObligationCoverageReport(BaseModel):
             applicability-undetermined), each with its
             :class:`CoverageAdviceReason`.
         out_of_scope: Modelos declared out of scope in
-            :data:`~core.OUT_OF_SCOPE_OBLIGATIONS`.
+            :data:`~domain.calculations.registry.modelo_obligation_scope.OUT_OF_SCOPE_OBLIGATIONS`.
     """
 
     model_config = _STRICT_FROZEN

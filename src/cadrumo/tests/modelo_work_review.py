@@ -1,7 +1,6 @@
 """Public real-storage construction support for canonical modelo-work review tests.
 
-Entrypoint tests consume this defining test-support module directly.  It is not
-an application-layer test helper or a package facade.
+Entrypoint tests consume this defining test-support module directly.
 """
 
 from __future__ import annotations

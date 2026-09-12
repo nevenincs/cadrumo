@@ -60,6 +60,7 @@ from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ...domain.modelos.verification_report import VerificationReport
 from ...domain.modelos.work_unit import WorkUnit
+from ..state_projection_ports import StateProjectionReadError, StateProjectionReadPorts
 from .calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from .export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
 from .verification_actions import verify_modelo_revision
@@ -68,7 +69,6 @@ from .work_addressing import (
     law_selected_revision_for_work_target,
 )
 from .work_unit_repository import work_unit_catalogue_repository
-from ..state_projection_ports import StateProjectionReadError, StateProjectionReadPorts
 
 if TYPE_CHECKING:
     from ..state_projection import ProjectionModeloReadiness

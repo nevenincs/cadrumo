@@ -38,6 +38,26 @@ class DiagnosticRunTelemetryError(RuntimeError):
     """A diagnostic telemetry read failed at the outbound boundary."""
 
 
+class DiagnosticAuthProbeResult(BaseModel):
+    """Safe auth-readiness facts needed by the run-health projection."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    provider: str = ""
+    configured: bool = False
+    persisted_session_present: bool = False
+    persisted_session_expired: bool | None = None
+    persisted_session_state: str = ""
+    probe_summary: str = ""
+
+
+class DiagnosticAuthProbePort(Protocol):
+    """Read-only auth probe required by the diagnostic run-health service."""
+
+    def probe(self) -> DiagnosticAuthProbeResult:
+        """Return the redacted local auth-readiness facts for diagnostics."""
+
+
 class DiagnosticRunTelemetryPort(Protocol):
     """Read-only local run telemetry required by diagnostic projections."""
 
@@ -51,6 +71,8 @@ class DiagnosticRunTelemetryPort(Protocol):
 
 
 __all__ = [
+    "DiagnosticAuthProbePort",
+    "DiagnosticAuthProbeResult",
     "DiagnosticRunRecord",
     "DiagnosticRunTelemetryError",
     "DiagnosticRunTelemetryPort",

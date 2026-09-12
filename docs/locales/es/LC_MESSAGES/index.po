@@ -180,7 +180,7 @@ msgstr "Resolución de problemas"
 
 #: ../../index.md:182
 msgid "Publish runtime authority"
-msgstr ""
+msgstr "Publicar la autoridad de ejecución"
 
 #: ../../index.md:182
 msgid "Disclaimer"

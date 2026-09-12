@@ -159,9 +159,7 @@ class TestTheAntiDriftGateBitesInBothDirections:
             },
         )
         mutated = dict(real_table) | {EUMemberState.ES: (*spain, extra)}
-        # Patched on the DEFINING module: ``cadrumo.domain.iva`` retired its
-        # re-export map, so the package carries no such attribute and the
-        # prompt builder reaches the table at ``domain.iva.rates``.
+        # Patch the defining module used by the prompt builder.
         with scoped_attribute(_iva_rates_module, "load_iva_rate_table", lambda: mutated):
             after = build_invoice_extraction_prompt(period=_ANNUAL_2026)
 

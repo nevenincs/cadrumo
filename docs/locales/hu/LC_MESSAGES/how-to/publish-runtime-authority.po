@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../how-to/publish-runtime-authority.md:1
 msgid "How to publish a validated runtime authority"
-msgstr ""
+msgstr "Érvényesített futtatókörnyezeti hatóság közzététele"
 
 #: ../../how-to/publish-runtime-authority.md:3
 msgid ""
@@ -31,6 +31,12 @@ msgid ""
 "calculations and filing exports. It is a development and release "
 "operation, not an `aeat` command for taxpayers."
 msgstr ""
+"Használja ezt az útmutatót, amikor módosítja a Cadrumo adószabály-"
+"nyilvántartását vagy annak jogi bizonyítékait. A közzététel az "
+"érvényesített Agencia Estatal de Administración Tributaria (AEAT) modelo-"
+"szabályokat a futtatókörnyezet által a számításokhoz és a bevallások "
+"exportálásához beolvasott artefaktummá alakítja. Ez fejlesztési és "
+"kiadási művelet, nem az adózóknak szánt `aeat` parancs."
 
 #: ../../how-to/publish-runtime-authority.md:9
 msgid ""
@@ -40,6 +46,13 @@ msgid ""
 "shipped runtime source: installed code does not open the authored "
 "registry tree or maintain a parallel cache of tables parsed from it."
 msgstr ""
+"Az artefaktum generált kimenet. Rögzíti saját tartalmának kivonatát, "
+"valamint annak a nyilvántartásnak és bizonyítékforrásnak az azonosítóját,"
+" amelyből összeállították, így a nyilvántartási ellenőrzés meg tudja "
+"állapítani, mikor vált elavulttá. Egyben ez az egyetlen szállított "
+"futásidejű forrás: a telepített kód nem nyitja meg a szerzői "
+"nyilvántartási fát, és nem tart fenn a belőle elemzett táblákhoz "
+"párhuzamos gyorsítótárat."
 
 #: ../../how-to/publish-runtime-authority.md:15
 msgid ""
@@ -48,18 +61,25 @@ msgid ""
 "and Python API](../reference/registry-legal-api.md). For an ordinary "
 "installed-command failure, use [Diagnose and repair](troubleshooting.md)."
 msgstr ""
+"Az artefaktum formátumát, a futásidejű ellenőrzéseket, a hibaosztályokat "
+"és a Python alkalmazásprogramozási felületet (API) a [Nyilvántartás, jogi"
+" források és Python API](../reference/registry-legal-api.md) oldalon "
+"tekintheti meg. Egy szokásos telepített parancs hibája esetén használja a"
+" [Hibaelhárítás és javítás](troubleshooting.md) oldalt."
 
 #: ../../how-to/publish-runtime-authority.md:19
 msgid "Publish"
-msgstr ""
+msgstr "Közzététel"
 
 #: ../../how-to/publish-runtime-authority.md:21
 msgid "Start from a registry that passes the registry validation suite."
 msgstr ""
+"Kezdjen olyan nyilvántartással, amely sikeresen teljesítette a "
+"nyilvántartás-érvényesítési tesztcsomagot."
 
 #: ../../how-to/publish-runtime-authority.md:22
 msgid "From the repository root, run:"
-msgstr ""
+msgstr "A tároló gyökeréből futtassa:"
 
 #: ../../how-to/publish-runtime-authority.md:28
 msgid ""
@@ -70,12 +90,21 @@ msgid ""
 "root`, `--source-root`, and `--artifact` select other trees or another "
 "destination."
 msgstr ""
+"A parancs a szerzői módosításokat teljes, típusos revíziókká alakítja, "
+"érvényesíti a csomagolt nyilvántartást és annak forrásbizonyítékait, majd"
+" atomikusan lecseréli a "
+"`src/cadrumo/_data/registry/authority/authority.json` fájlt. Kiírja az "
+"artefaktum elérési útját és a benne rögzített identitáskivonatot. A "
+"`--registry-root`, `--source-root` és `--artifact` kapcsolók más fákat, "
+"illetve másik célhelyet választanak ki."
 
 #: ../../how-to/publish-runtime-authority.md:34
 msgid ""
 "Commit the regenerated `authority.json` together with the registry change"
 " that required it."
 msgstr ""
+"Véglegesítse az újragenerált `authority.json` fájlt az azt szükségessé "
+"tevő nyilvántartási módosítással együtt."
 
 #: ../../how-to/publish-runtime-authority.md:37
 msgid ""
@@ -84,6 +113,10 @@ msgid ""
 "byte in place. Don't edit the artifact by hand. Correct the registry, "
 "then publish again."
 msgstr ""
+"Ha az érvényesítés megtagadja a műveletet, vagy a nyilvántartás módosul "
+"az érvényesítés közben, a közzététel meghiúsul, és az előző artefaktumot "
+"bájtról bájtra változatlanul hagyja. Ne szerkessze kézzel az "
+"artefaktumot. Javítsa a nyilvántartást, majd tegye közzé újra."
 
 #: ../../how-to/publish-runtime-authority.md:41
 msgid ""
@@ -95,14 +128,22 @@ msgid ""
 "membership belongs to this validated authority; an identifier absent from"
 " its published vocabulary is not silently admitted."
 msgstr ""
+"A közzététel emellett kivetíti a megosztott `floor`, `horizon` és "
+"opcionális `hard_ceiling` támogatási keretet, valamint az IVA-szabályok, "
+"a teljesítési helyek, az országok és területek, a recargo-sávok és az "
+"apoderamiento-hatókörök típusos futásidejű katalógusait. Minden szükséges"
+" katalógust fel kell tölteni. A modelo- és adózási tartományazonosítók "
+"kódban elfogadják stabil szintaxisukat, de a tagság ehhez az "
+"érvényesített hatósághoz tartozik; a közzétett szókészletből hiányzó "
+"azonosító nem kerül be csendben."
 
 #: ../../how-to/publish-runtime-authority.md:49
 msgid "Check that the artifact is current"
-msgstr ""
+msgstr "Ellenőrizze, hogy az artefaktum naprakész"
 
 #: ../../how-to/publish-runtime-authority.md:51
 msgid "Run the registry gate:"
-msgstr ""
+msgstr "Futtassa a nyilvántartási ellenőrzést:"
 
 #: ../../how-to/publish-runtime-authority.md:57
 msgid ""
@@ -111,6 +152,11 @@ msgid ""
 "or in an earlier format. The refusal names the recorded and the expected "
 "identity digests and the command that republishes the artifact."
 msgstr ""
+"Az első lépése, a `python -m dev.registry.conformance integrity`, 1-es "
+"kóddal lép ki, és elutasítást ír a standard hibakimenetre, ha az "
+"artefaktum elavult, olvashatatlan vagy korábbi formátumú. Az elutasítás "
+"megnevezi a rögzített és a várt identitáskivonatot, valamint az "
+"artefaktumot újra közzétevő parancsot."
 
 #: ../../how-to/publish-runtime-authority.md:62
 msgid ""
@@ -120,10 +166,16 @@ msgid ""
 "the registry or its evidence doesn't make the artifact stale. The full-"
 "registry publication round-trip test covers the compiler itself."
 msgstr ""
+"Az identitás kizárólag a fájltartalomtól, valamint a nyilvántartási és "
+"forrásgyökérhez viszonyított útvonalaktól függ. Ezért egy friss klón "
+"bármely platformon ugyanazt az eredményt kapja, mint a közzétevő. A "
+"fordító kódjának olyan módosítása, amely nem érinti a nyilvántartást vagy"
+" annak bizonyítékait, nem teszi elavulttá az artefaktumot. A teljes "
+"nyilvántartási közzétételi oda-vissza teszt magát a fordítót ellenőrzi."
 
 #: ../../how-to/publish-runtime-authority.md:68
 msgid "Recover from an invalid authority"
-msgstr ""
+msgstr "Érvénytelen hatóság helyreállítása"
 
 #: ../../how-to/publish-runtime-authority.md:70
 msgid ""
@@ -133,22 +185,32 @@ msgid ""
 "TOML, repair an artifact, or fall back to a separately cached runtime "
 "table."
 msgstr ""
+"Ha egy telepített munkafolyamat elérhetetlen, hibás, módosított vagy nem "
+"támogatott verziójú artefaktumot utasít el, állítsa le a munkafolyamatot."
+" A `bundled_authority()` betöltése nem fordítja le a szerzői forrásokat, "
+"nem elemzi a nyers TOML-t, nem javítja az artefaktumot, és nem vált át "
+"külön gyorsítótárban tárolt futásidejű táblázatra."
 
 #: ../../how-to/publish-runtime-authority.md:75
 msgid ""
 "Preserve the failed artifact when it is present, plus the package "
 "version, artifact digest, error class, and redacted logs."
 msgstr ""
+"Őrizze meg a sikertelen artefaktumot, ha jelen van, továbbá a "
+"csomagverziót, az artefaktum kivonatát, a hibaosztályt és a személyes "
+"adatokat eltávolított naplókat."
 
 #: ../../how-to/publish-runtime-authority.md:77
 msgid ""
 "Republish from a validated registry, and confirm that `just check-"
 "registry` passes."
 msgstr ""
+"Tegye közzé újra egy érvényesített nyilvántartásból, majd erősítse meg, "
+"hogy a `just check-registry` sikeresen lefut."
 
 #: ../../how-to/publish-runtime-authority.md:79
 msgid "Rebuild the package so it contains the replacement artifact."
-msgstr ""
+msgstr "Építse újra a csomagot, hogy tartalmazza a lecserélt artefaktumot."
 
 #: ../../how-to/publish-runtime-authority.md:81
 msgid ""
@@ -157,4 +219,8 @@ msgid ""
 "version, artifact digest, error class, and redacted log context. Never "
 "include taxpayer data."
 msgstr ""
+"Az [ügykövetőn](https://github.com/nevenincs/cadrumo/issues) keresztül "
+"jelezze a problémát, és mellékelje a kiadási verziót, az artefaktum "
+"kivonatát, a hibaosztályt és a megtisztított naplókörnyezetet. Soha ne "
+"szerepeltessen adózói adatokat."
 

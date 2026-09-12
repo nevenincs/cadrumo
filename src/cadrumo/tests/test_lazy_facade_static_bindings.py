@@ -1,10 +1,10 @@
 """Keep package namespaces inert and prevent lazy-facade regressions.
 
-The consolidation campaign retired package export maps.  A namespace that
-serves names through ``__getattr__`` or re-exports another module is not a
-defining surface: it hides the dependency from the import graph and makes
-ownership depend on import order.  This gate scans shipped packages and the
-shared test package so the rule applies equally to tests and product code.
+A namespace that serves names through ``__getattr__`` or re-exports another
+module is not a defining surface: it hides the dependency from the import graph
+and makes ownership depend on import order. This gate scans shipped packages
+and the shared test package so the rule applies equally to tests and product
+code.
 """
 
 from __future__ import annotations

@@ -25,8 +25,12 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from ....core.modelo import OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS, Modelo
+from ....core.modelo import Modelo
 from ....domain.calculations.registry.applicability import iter_modelo_applicability_rules
+from ....domain.calculations.registry.modelo_obligation_scope import (
+    OUT_OF_SCOPE_OBLIGATIONS,
+    UNMODELED_OBLIGATIONS,
+)
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.models import (
     IrpfEstimationRegime,
@@ -95,7 +99,8 @@ def _universe(unmodeled: Mapping[Modelo, str] = UNMODELED_OBLIGATIONS) -> set[st
     """The AEAT obligation universe: registry plus recognized-unmodeled plus out-of-scope.
 
     ``unmodeled`` is a parameter rather than a fixed read of
-    :data:`~core.UNMODELED_OBLIGATIONS` so the partition invariant can be checked
+    :data:`~domain.calculations.registry.modelo_obligation_scope.UNMODELED_OBLIGATIONS`
+    so the partition invariant can be checked
     against a declaration the builder was actually given, which is how the
     registry-unmodeled disposition gets exercised while the real declaration is
     still empty.

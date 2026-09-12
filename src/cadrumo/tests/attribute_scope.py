@@ -9,10 +9,8 @@ the identical mutation ``monkeypatch.setattr`` would, so nothing about
 real-behaviour testing changes -- only the vocabulary the AST inventory gate
 sees.
 
-Reached by cross-package consumers through this module's own path
-(``from cadrumo.tests.attribute_scope import scoped_attribute``), per this
-package's documented convention (see ``cadrumo/tests/__init__.py``) of
-submodule-direct reach rather than promotion to the package facade.
+Cross-package consumers import this definition directly from
+``cadrumo.tests.attribute_scope``.
 """
 
 from __future__ import annotations

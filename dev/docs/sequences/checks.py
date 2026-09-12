@@ -1,13 +1,7 @@
-"""Discovery, refresh and checking of the documentation sequence goldens.
+"""Discovery, refresh, and checking of documentation sequence goldens.
 
-Extracted from ``__main__.py``, where these twenty-three definitions lived
-alongside the command-line entry point. A module run as ``python -m
-dev.docs.sequences`` is an entry point; the package facade forwarded nine of
-these names out of it, which meant importing the package imported its
-command-line surface and the library had no public home of its own.
-
-``__main__`` now holds ``main`` and its argument parsing, and imports what it
-needs from here.
+This module owns the reusable sequence-checking API. ``__main__`` owns only
+command-line parsing and invokes these definitions directly.
 """
 
 from __future__ import annotations
