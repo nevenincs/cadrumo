@@ -1,7 +1,7 @@
-"""Public facade for immutable ledger transactions.
+"""Inert namespace for immutable ledger transactions.
 
-This package re-exports the transaction domain boundary used by
-:mod:`~application.ledger`: :class:`~domain.transactions.Transaction` wraps an upstream
+The transaction domain boundary used by :mod:`~application.ledger` is defined
+across the owning modules listed below. :class:`~domain.transactions.models.Transaction` wraps an upstream
 :class:`~domain.transactions.RawTransaction` and its :class:`~domain.transactions.RawProvenance`, while
 :class:`~domain.transactions.TransactionCatalogue` keeps the immutable mapping keyed by the
 content-derived transaction id. Import helpers such as
@@ -31,15 +31,15 @@ It stores each transaction under the bucket-scoped transaction namespace as
 :class:`~adapters.persistence.storage.Envelope` through
 :class:`~adapters.persistence.storage.SecureObjectRepository`; callers should
 not write plaintext catalogues or reach into private modules. The pure port
-surface (:class:`~domain.transactions.ImportSummary`, the key-derivation helpers, and the namespace
-constant) remains exposed lazily here.
+surface, key-derivation helpers, and namespace constant are imported from their
+defining modules.
 
 LLM-facing :class:`~domain.transactions.LLMClassifier`,
 :class:`~domain.transactions.LLMSplitProposer`,
 :class:`~domain.transactions.PromptSpec`,
 :class:`~domain.transactions.LedgerClassificationRule`, and
-:func:`~domain.transactions.ledger_irpf_category_catalogue` also live behind
-this facade. They constrain model choices to typed
+:func:`~domain.transactions.ledger_irpf_category_catalogue` are likewise
+imported from their defining modules. They constrain model choices to typed
 :class:`~domain.transactions.BusinessClassification`,
 :class:`~domain.transactions.CategoryChoice`, and
 :class:`~domain.transactions.IvaCategoryChoice` allow-lists; regulated tax

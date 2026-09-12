@@ -3,7 +3,6 @@
 
 Exercises :func:`cadrumo.application.workflow.compute_run_id` hash
 stability and the validators on :class:`cadrumo.application.workflow.WorkflowStep`,
-:class:`cadrumo.application.workflow.SiteHealthAlert`, and
 :class:`cadrumo.application.workflow.WorkflowResult`.
 """
 
@@ -16,12 +15,6 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.aeat.browser.site_health_records import (
-    SiteHealthEvidence,
-    SiteHealthStatus,
-    parse_site_health_url,
-)
-from ....core.errors.hierarchy import SiteHealthState
 from ....core.modelo import Modelo
 from ....core.operator_action_enums import (
     ActionArgumentStatus,
@@ -31,16 +24,13 @@ from ....core.operator_action_enums import (
 )
 from ....core.period import Period
 from ....domain.deadlines.models import ModeloDeadline, ObligationStatus, RecargoBand, Recovery
-from ....tests.aeat_literal_fixtures import aeat_url
 from ...operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..abort import WorkflowAbortReason
 from ..engine_helpers import DeadlineRole
 from ..run_models import (
-    SiteHealthAlert,
     WorkflowDeadlineContextDetails,
     WorkflowObligationFacts,
     WorkflowResult,
-    WorkflowSiteHealthFacts,
     WorkflowStage,
     WorkflowStep,
     WorkflowValidationFailedDetails,
@@ -50,7 +40,6 @@ from ..run_models import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _RUN_STARTED_AT = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
-_SITE_HEALTH_OBSERVED_AT = datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC)
 
 
 def _period(year: int = 2026, code: str = "1T") -> Period:
@@ -292,55 +281,6 @@ class TestWorkflowStepValidation:
         )
 
         assert WorkflowStep.model_validate_json(step.model_dump_json()) == step
-
-
-class TestSiteHealthAlert:
-    """Validation invariants on
-    :class:`cadrumo.application.workflow.SiteHealthAlert`.
-    """
-
-    def _status(self) -> SiteHealthStatus:
-        evidence = SiteHealthEvidence(
-            url=parse_site_health_url(aeat_url("sede", "/")),
-            http_status=503,
-            html_fragment="<html>servicio temporalmente no disponible</html>",
-            detected_markers=("servicio temporalmente no disponible",),
-        )
-        return SiteHealthStatus(
-            state=SiteHealthState.MANTENIMIENTO,
-            evidence=evidence,
-            observed_at=_SITE_HEALTH_OBSERVED_AT,
-        )
-
-    def test_alert_composes_stage_and_status(self) -> None:
-        status = self._status()
-        alert = SiteHealthAlert(
-            stage=WorkflowStage.BUILDING_DRAFT,
-            status=WorkflowSiteHealthFacts.from_status(status),
-            run_id="run-1234",
-        )
-        assert alert.stage is WorkflowStage.BUILDING_DRAFT
-        assert alert.status.state is SiteHealthState.MANTENIMIENTO
-        assert alert.status.alert_code == "workflow.site.mantenimiento"
-        assert alert.status.http_status == 503
-        assert alert.status.detected_marker_count == 1
-        persisted = alert.model_dump_json()
-        assert status.evidence.html_fragment not in persisted
-        assert str(status.evidence.url) not in persisted
-        assert status.evidence.detected_markers[0] not in persisted
-
-    def test_workflow_projection_rejects_adapter_evidence_shape(self) -> None:
-        """Raw adapter evidence cannot cross the strict workflow boundary."""
-        with pytest.raises(ValidationError):
-            WorkflowSiteHealthFacts.model_validate(self._status().model_dump())
-
-    def test_alert_rejects_empty_run_id(self) -> None:
-        with pytest.raises(ValidationError, match=r"at least 1 character"):
-            SiteHealthAlert(
-                stage=WorkflowStage.BUILDING_DRAFT,
-                status=WorkflowSiteHealthFacts.from_status(self._status()),
-                run_id="",
-            )
 
     def test_ended_at_must_not_precede_started_at(self) -> None:
         """A completed step must have ``ended_at >= started_at``."""

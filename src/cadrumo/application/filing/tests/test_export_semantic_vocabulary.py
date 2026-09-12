@@ -98,7 +98,7 @@ def _m303_envelope_definition() -> FilingEnvelopeDefinition:
     )
 
 
-def test_filing_envelope_public_facade_exposes_one_closed_request() -> None:
+def test_filing_envelope_defining_module_exposes_one_closed_request() -> None:
     assert render_filing_envelope is export_module.render_filing_envelope
     assert tuple(inspect.signature(render_filing_envelope).parameters) == ("request",)
     assert set(FilingEnvelopeRenderRequest.model_fields) == {

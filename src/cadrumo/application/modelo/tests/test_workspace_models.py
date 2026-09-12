@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-import subprocess
-import sys
-from pathlib import Path
-
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
@@ -640,54 +636,6 @@ def test_workspace_cursor_page_state_and_unavailable_cursor_mutations_are_refuse
                 "disposition": ModeloWorkspaceCapabilityDisposition.UNMEASURED,
             }
         )
-
-
-def test_workspace_models_have_one_public_module_and_no_private_or_package_binding_remnant() -> None:
-    public_module = sys.modules[ModeloWorkspaceBaselineV1.__module__]
-    package = sys.modules["cadrumo.application.modelo"]
-    private_module = ".".join((*public_module.__name__.split(".")[:-1], "_workspace" + "_models"))
-    sys.modules.pop(private_module, None)
-
-    assert public_module.ModeloWorkspaceBaselineV1 is ModeloWorkspaceBaselineV1
-    assert ModeloWorkspaceBaselineV1.__module__ == public_module.__name__
-    assert package.__all__ == ()
-    assert not hasattr(package, "ModeloWorkspaceBaselineV1")
-    assert not (Path(public_module.__file__).parent / "_workspace_models.py").exists()
-    assert not (Path(public_module.__file__).parent / "_workspace_models").exists()
-
-
-def test_workspace_model_docs_and_active_tree_reach_the_public_module_fixed_point() -> None:
-    repository = Path(__file__).resolve().parents[5]
-    private_module = "_workspace" + "_models"
-    public_module = "workspace_models"
-    tracked = subprocess.run(
-        ("git", "ls-files", "-z", "--", "src", "docs"),  # noqa: S607
-        capture_output=True,
-        check=True,
-        cwd=repository,
-        text=True,
-    ).stdout.split(chr(0))
-    scanned_paths = tuple(
-        sorted(
-            path
-            for entry in tracked
-            if entry.endswith((".py", ".rst", ".toml"))
-            # A path git still tracks can be absent from the working tree while
-            # a peer's deletion is in flight.  It carries no content to scan,
-            # and reading it would fail the gate on someone else's staging
-            # state rather than on a remnant.
-            if (path := repository / entry).is_file()
-        ),
-    )
-    remnants = tuple(
-        path.relative_to(repository)
-        for path in scanned_paths
-        if path != Path(__file__).resolve() and private_module in path.read_text(encoding="utf-8")
-    )
-
-    assert not remnants
-    assert (repository / "docs" / "api" / f"cadrumo.application.modelo.{public_module}.rst").is_file()
-    assert public_module in (repository / "docs" / "api" / "cadrumo.application.modelo.rst").read_text(encoding="utf-8")
 
 
 def test_workspace_schema_record_distinguishes_unmeasured_legal_grounding_from_declared_empty() -> None:

@@ -7,17 +7,12 @@ operator-supplied tokens with :func:`parse_scope_tokens`.
 
 from __future__ import annotations
 
-import tomllib
-from pathlib import Path
 from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 
 from ....core.errors.hierarchy import CadrumoError
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.resources.bundled_data import bundled_path
-
-_DEFAULT_CATALOGUE_PATH = bundled_path("registry", "aeat", "apoderamientos", "scopes.toml")
 
 ALL_TOKEN = "ALL"
 
@@ -73,25 +68,26 @@ class ApoderamientosCatalogue(BaseModel):
         return None
 
 
-def load_default_catalogue(path: Path | None = None) -> ApoderamientosCatalogue:
-    """Load the shipped scope catalogue from disk.
+def load_default_catalogue() -> ApoderamientosCatalogue:
+    """Adapt the scope catalogue from the bundled published authority.
 
     Returns:
         The validated :class:`ApoderamientosCatalogue` with all registered scopes.
     """
-    resolved = path or _DEFAULT_CATALOGUE_PATH
-    raw = tomllib.loads(resolved.read_text(encoding="utf-8"))
+    from ...calculations.registry.authority import bundled_authority
+
+    runtime = bundled_authority().catalogues.runtime
     scopes = tuple(
         ApoderadoScope(
-            code=entry["code"],
-            name_es=entry["name_es"],
-            name_en=entry["name_en"],
-            modelo_codes=tuple(entry.get("modelo_codes", [])),
+            code=entry.code,
+            name_es=entry.name_es,
+            name_en=entry.name_en,
+            modelo_codes=entry.modelo_codes,
         )
-        for entry in raw.get("scopes", [])
+        for entry in runtime.apoderamientos_scopes.values()
     )
     return ApoderamientosCatalogue(
-        catalogue_version=raw["catalogue_version"],
+        catalogue_version=runtime.apoderamientos_version,
         scopes=scopes,
     )
 

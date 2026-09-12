@@ -36,8 +36,8 @@ See Also:
         Typed JSON payload schemas emitted by these diagnostics commands.
     :mod:`~entrypoints.cli._app_diagnostics_telemetry`
         Nested telemetry subcommand group for the default-off remote tier.
-    :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`
-        Encrypted local run-timing store read by the application diagnostics.
+    :func:`~entrypoints.diagnostics_run_health_composition.compose_diagnostics_run_health_port`
+        Outer composition binding for the application diagnostics read port.
 """
 
 from __future__ import annotations
@@ -112,6 +112,13 @@ def _parse_iso_date(value: str | None, option: str) -> _date | None:
         translation_key="cli.diagnostics.run_health.bad_date",
         default=f"{option} must be an ISO date (YYYY-MM-DD); got {value!r}.",
     )
+
+
+def _compose_diagnostics_run_health_port():
+    """Compose the required diagnostic telemetry port at the CLI boundary."""
+    from ...entrypoints.diagnostics_run_health_composition import compose_diagnostics_run_health_port
+
+    return compose_diagnostics_run_health_port()
 
 
 def _run_health_result(
@@ -196,7 +203,13 @@ def diagnostics_run_health(
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
 
-    report = build_run_health_report(since=since_date, until=until_date, provider=provider)
+    run_telemetry_port = _compose_diagnostics_run_health_port()
+    report = build_run_health_report(
+        since=since_date,
+        until=until_date,
+        provider=provider,
+        run_telemetry_port=run_telemetry_port,
+    )
 
     result = _run_health_result(report=report, since=since_date, until=until_date)
 
@@ -248,7 +261,14 @@ def diagnostics_runs(
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
 
-    rows = list_recent_runs(since=since_date, until=until_date, provider=provider, limit=limit)
+    run_telemetry_port = _compose_diagnostics_run_health_port()
+    rows = list_recent_runs(
+        since=since_date,
+        until=until_date,
+        provider=provider,
+        limit=limit,
+        run_telemetry_port=run_telemetry_port,
+    )
 
     result = RunsListResult(
         since=since_date.isoformat() if since_date is not None else None,
@@ -306,7 +326,13 @@ def diagnostics_latency(
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
 
-    report = build_latency_report(since=since_date, until=until_date, provider=provider)
+    run_telemetry_port = _compose_diagnostics_run_health_port()
+    report = build_latency_report(
+        since=since_date,
+        until=until_date,
+        provider=provider,
+        run_telemetry_port=run_telemetry_port,
+    )
 
     result = LatencyResult(
         since=since_date.isoformat() if since_date is not None else None,
@@ -381,7 +407,13 @@ def diagnostics_errors(
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
 
-    report = build_error_breakdown(since=since_date, until=until_date, provider=provider)
+    run_telemetry_port = _compose_diagnostics_run_health_port()
+    report = build_error_breakdown(
+        since=since_date,
+        until=until_date,
+        provider=provider,
+        run_telemetry_port=run_telemetry_port,
+    )
 
     result = ErrorsBreakdownResult(
         since=since_date.isoformat() if since_date is not None else None,
@@ -427,7 +459,13 @@ def diagnostics_llm_usage(
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
 
-    report = build_llm_usage_report(since=since_date, until=until_date, provider=provider)
+    run_telemetry_port = _compose_diagnostics_run_health_port()
+    report = build_llm_usage_report(
+        since=since_date,
+        until=until_date,
+        provider=provider,
+        run_telemetry_port=run_telemetry_port,
+    )
 
     result = LlmUsageResult(
         since=since_date.isoformat() if since_date is not None else None,

@@ -77,13 +77,9 @@ See Also:
 
 from __future__ import annotations
 
-import tomllib
-from collections.abc import Mapping
 from enum import StrEnum
-from functools import lru_cache
-from typing import Any, Final, NamedTuple
+from typing import Final, NamedTuple
 
-from ...core.external_constants import UTF_8_ENCODING
 from ...core.identity.nif_iva import (
     NifIvaPrefix,
     iso_country_for_nif_iva_prefix,
@@ -91,8 +87,6 @@ from ...core.identity.nif_iva import (
     normalise_nif_iva,
 )
 from ...core.parsing.codes import normalise_iso_3166_alpha2_jurisdiction
-from ...core.resources.bundled_data import bundled_path
-from ...core.type_guards import is_object_list
 from . import country_vocabulary as _country_vocabulary
 from .classification import IvaTerritorialScope
 from .schema import EUMemberState
@@ -250,266 +244,31 @@ class _CarveOut(NamedTuple):
     establishes_nothing: bool
 
 
-@lru_cache(maxsize=1)
 def _territory_carve_outs() -> dict[str, _CarveOut]:
     """Return every territory whose IVA treatment its country code does not give.
 
-    Read from ``registry/aeat/iva/territory_carve_outs.toml`` and verified
-    against the bundled consolidated law at load, on the same terms the territory
-    table is: an ungrounded territorial rule must not be readable at all, because
-    a rule asserted by a test ships to every caller and fails afterwards in a lane
-    nobody is watching.
+    Read from the published runtime authority, where the compiler has already
+    verified the legal grounding and disposition invariants.
 
     Returns:
         Each alpha-2 code mapped to its disposition.
 
     Raises:
-        IvaCatalogueError: When the bundled table cannot be read, names a code or
-            a scope outside the closed sets, cites no provision, or gives a row
-            anything other than exactly one disposition.
+        IvaCatalogueError: When a published scope cannot be adapted into the
+            operational closed set.
     """
-    from .errors import IvaCatalogueError
+    from ..calculations.registry.authority import bundled_authority
 
-    target = bundled_path("registry", "aeat", "iva", "territory_carve_outs.toml")
-    try:
-        payload = tomllib.loads(target.read_text(encoding=UTF_8_ENCODING))
-    except OSError as exc:
-        raise IvaCatalogueError(f"{target}: cannot read the carve-out table: {exc}") from exc
-    except tomllib.TOMLDecodeError as exc:
-        raise IvaCatalogueError(f"{target}: malformed carve-out table: {exc}") from exc
-    return _carve_out_rows_from_payload(target, payload)
-
-
-def _str_tuple_or_none(value: object) -> tuple[str, ...] | None:
-    """Validate a raw TOML array is entirely strings, returning it widened.
-
-    Returns ``None`` when *value* is not a list, or when any entry is not a
-    string, so the caller raises its own domain-specific refusal.
-    """
-    if not is_object_list(value):
-        return None
-    widened: list[str] = []
-    for item in value:
-        if not isinstance(item, str):
-            return None
-        widened.append(item)
-    return tuple(widened)
-
-
-# KWARGS-ANY-RATIONALE-TOML-PAYLOAD: raw tomllib-parsed table; every value is
-# refused inline by the shape checks below rather than trusted from the type.
-def _carve_out_rows_from_payload(target: object, payload: Mapping[str, Any]) -> dict[str, _CarveOut]:
-    """Return the carve-out rows a parsed table declares, refusing a malformed one.
-
-    Every refusal the table can earn lives here rather than beside the file
-    read, so the parsed payload is the whole input: reading the bundled file and
-    judging what it says are separate jobs, and only the second can be exercised
-    against a table that does not exist on disk.
-
-    Args:
-        target: The table being judged, named in every diagnostic.
-        payload: The parsed table.
-
-    Returns:
-        Each alpha-2 code mapped to its disposition.
-
-    Raises:
-        IvaCatalogueError: When the table names a code or a scope outside the
-            closed sets, cites no provision, gives a row anything other than
-            exactly one disposition, carves a code out twice, points an
-            assimilation at a parent no catalogue names, or closes an
-            assimilation chain into a cycle.
-    """
-    from ._grounding import verify_table_legal_refs
-
-    resolved: dict[str, _CarveOut] = {}
-    citations: list[tuple[str, tuple[str, ...]]] = []
-    for record in payload.get("carve_out", ()):
-        code, carve_out, references = _carve_out_row(target, record, already_resolved=resolved)
-        citations.append((code, references))
-        resolved[code] = carve_out
-
-    _refuse_empty_carve_out_table(target, resolved)
-    _refuse_unresolvable_parents(target, resolved)
-    _refuse_assimilation_cycles(target, resolved)
-
-    verify_table_legal_refs(str(target), citations)
-    return resolved
-
-
-# KWARGS-ANY-RATIONALE-TOML-PAYLOAD: one raw tomllib-parsed row from the same table; shape-checked inline below.
-def _carve_out_code(target: object, record: Mapping[str, Any], already_resolved: Mapping[str, _CarveOut]) -> str:
-    """Return the row's alpha-2 code, refusing a malformed or repeated one."""
-    from .errors import IvaCatalogueError
-
-    code = str(record.get("code", "")).strip().upper()
-    if len(code) != _ALPHA2_LENGTH or not code.isalpha():
-        raise IvaCatalogueError(f"{target}: carve-out record names no alpha-2 code: {record!r}")
-    if code in already_resolved:
-        raise IvaCatalogueError(f"{target}: {code} is carved out twice; one territory cannot be treated two ways")
-    return code
-
-
-# KWARGS-ANY-RATIONALE-TOML-PAYLOAD: one raw tomllib-parsed row from the same table; shape-checked inline below.
-def _carve_out_disposition_fields(
-    target: object,
-    record: Mapping[str, Any],
-    *,
-    code: str,
-) -> tuple[Any, Any, bool]:
-    """Return the raw disposition fields after enforcing their exclusive shape."""
-    from .errors import IvaCatalogueError
-
-    assimilated = record.get("assimilated_to")
-    raw_scope = record.get("scope")
-    nothing = bool(record.get("establishes_nothing", False))
-    declared = [field for field in (assimilated, raw_scope, nothing or None) if field is not None]
-    if len(declared) != 1:
-        raise IvaCatalogueError(
-            f"{target}: carve-out {code} must declare exactly one of assimilated_to, scope or "
-            f"establishes_nothing; a row naming none establishes nothing by accident and a row "
-            f"naming two states the law twice",
+    return {
+        code: _CarveOut(
+            assimilated_to=record.assimilated_to,
+            scope=IvaTerritorialScope(record.scope) if record.scope is not None else None,
+            establishes_nothing=record.establishes_nothing,
         )
-    return assimilated, raw_scope, nothing
+        for code, record in bundled_authority().catalogues.runtime.territory_carve_outs.items()
+    }
 
 
-def _carve_out_scope(target: object, raw_scope: Any, *, code: str) -> IvaTerritorialScope | None:
-    """Decode a declared direct scope, preserving the catalogue diagnostic."""
-    from .errors import IvaCatalogueError
-
-    if raw_scope is None:
-        return None
-    try:
-        return IvaTerritorialScope(str(raw_scope))
-    except ValueError as exc:
-        raise IvaCatalogueError(f"{target}: carve-out {code} names no known scope: {raw_scope!r}") from exc
-
-
-def _carve_out_parent(target: object, assimilated: Any, *, code: str) -> str | None:
-    """Decode an assimilation parent, preserving its shape and self-pointer refusals."""
-    from .errors import IvaCatalogueError
-
-    if assimilated is None:
-        return None
-    parent = str(assimilated).strip().upper()
-    if len(parent) != _ALPHA2_LENGTH or not parent.isalpha():
-        raise IvaCatalogueError(f"{target}: carve-out {code} is assimilated to no alpha-2 code: {assimilated!r}")
-    if parent == code:
-        raise IvaCatalogueError(f"{target}: carve-out {code} is assimilated to itself")
-    return parent
-
-
-# KWARGS-ANY-RATIONALE-TOML-PAYLOAD: one raw tomllib-parsed row from the same table; shape-checked by helpers above.
-def _carve_out_disposition(
-    target: object,
-    record: Mapping[str, Any],
-    *,
-    code: str,
-) -> tuple[str | None, IvaTerritorialScope | None, bool]:
-    """Return the row's single disposition: assimilation parent, scope, or nothing.
-
-    Exactly one must be declared. A row naming none establishes nothing by
-    accident, and a row naming two states the law twice.
-    """
-    assimilated, raw_scope, nothing = _carve_out_disposition_fields(target, record, code=code)
-    return _carve_out_parent(target, assimilated, code=code), _carve_out_scope(target, raw_scope, code=code), nothing
-
-
-# KWARGS-ANY-RATIONALE-TOML-PAYLOAD: one raw tomllib-parsed row from the same table; shape-checked inline below.
-def _carve_out_citations(target: object, record: Mapping[str, Any], *, code: str) -> tuple[str, ...]:
-    """Return the row's legal_refs, refusing an uncited or malformed row.
-
-    A territorial rule IS a regulatory value, so an uncited row is ungrounded
-    rather than merely undocumented and must not load.
-    """
-    from .errors import IvaCatalogueError
-
-    references = _str_tuple_or_none(record.get("legal_refs", ()))
-    if references is None:
-        raise IvaCatalogueError(f"{target}: carve-out {code} legal_refs must be an array of strings")
-    if not references:
-        raise IvaCatalogueError(f"{target}: carve-out {code} cites no provision establishing its treatment")
-    return references
-
-
-# KWARGS-ANY-RATIONALE-TOML-PAYLOAD: one raw tomllib-parsed row from the same table; shape-checked inline below.
-def _carve_out_row(
-    target: object,
-    record: Mapping[str, Any],
-    *,
-    already_resolved: Mapping[str, _CarveOut],
-) -> tuple[str, _CarveOut, tuple[str, ...]]:
-    """Judge one carve-out row, returning its code, disposition and citations."""
-    code = _carve_out_code(target, record, already_resolved)
-    parent, scope, nothing = _carve_out_disposition(target, record, code=code)
-    references = _carve_out_citations(target, record, code=code)
-    return code, _CarveOut(assimilated_to=parent, scope=scope, establishes_nothing=nothing), references
-
-
-def _refuse_empty_carve_out_table(target: object, resolved: Mapping[str, _CarveOut]) -> None:
-    """Refuse a table that names no territory at all."""
-    from .errors import IvaCatalogueError
-
-    if not resolved:
-        raise IvaCatalogueError(f"{target}: the carve-out table names no territory")
-
-
-def _refuse_unresolvable_parents(target: object, resolved: dict[str, _CarveOut]) -> None:
-    """Refuse an assimilation pointing at a code no catalogue names."""
-    from .errors import IvaCatalogueError
-
-    unresolvable = {row.assimilated_to for row in resolved.values() if row.assimilated_to} - _resolvable_parents(
-        resolved
-    )
-    if unresolvable:
-        raise IvaCatalogueError(
-            f"{target}: assimilated to {', '.join(sorted(unresolvable))}, which no catalogue names; an "
-            f"assimilation whose parent cannot be resolved establishes nothing while reading as a rule",
-        )
-
-
-def _refuse_assimilation_cycles(target: object, resolved: Mapping[str, _CarveOut]) -> None:
-    """Refuse an assimilation chain that closes into a ring.
-
-    Separate from the per-row self-pointer refusal because a chain is a
-    property of the WHOLE table, which a per-record check cannot see. The
-    self-pointer refusal is the length-one case of this one; both are kept, so
-    the commonest mistake still earns the message that names it directly.
-    """
-    from .errors import IvaCatalogueError
-
-    for start in resolved:
-        seen = {start}
-        step = resolved[start].assimilated_to
-        while step is not None and step in resolved:
-            if step in seen:
-                raise IvaCatalogueError(
-                    f"{target}: the assimilation chain from {start} closes into a cycle; a territory "
-                    f"assimilated in a ring is treated AS nothing, and following the pointer to answer "
-                    f"for it cannot terminate",
-                )
-            seen.add(step)
-            step = resolved[step].assimilated_to
-
-
-def _resolvable_parents(rows: dict[str, _CarveOut]) -> frozenset[str]:
-    """Return the codes an assimilation may point at.
-
-    Computed from the catalogues rather than from the carve-out table itself, so
-    a row pointing at a country nothing can resolve is refused at load instead of
-    silently establishing nothing at the call site. Carve-out codes are included
-    because one territory being assimilated to another is representable, though
-    nothing uses it today.
-    """
-    return (
-        frozenset(_country_vocabulary.country_codes_by_printed_name().values())
-        | _EU_MEMBER_CODES
-        | {SPAIN_COUNTRY_CODE}
-        | set(rows)
-    )
-
-
-@lru_cache(maxsize=1)
 def _catalogued_country_codes() -> frozenset[str]:
     """Return every alpha-2 code a bounded catalogue in this codebase names.
 
@@ -743,14 +502,11 @@ _POSTAL_PREFIX_LENGTH: Final[int] = 2
 _POSTAL_CODE_LENGTH: Final[int] = 5
 
 
-@lru_cache(maxsize=1)
 def _excluded_territories_by_prefix() -> dict[str, IvaTerritorialScope]:
     """Return the postal prefixes that name a territory OUTSIDE the TAI.
 
-    Read from ``registry/aeat/iva/territories.toml`` rather than written here,
-    because a territorial boundary is regulatory data versioned like every other
-    value in that tree -- and because a mapping inlined in a feature module is
-    the least-audited place for one to go stale.
+    Read from the published runtime authority because a territorial boundary is
+    regulated data rather than an implementation default.
 
     Only the EXCLUDED territories are enumerated, so a prefix absent from the
     table is inside the TAI. Enumerating the rest would be a second copy of the
@@ -760,42 +516,15 @@ def _excluded_territories_by_prefix() -> dict[str, IvaTerritorialScope]:
         Each excluded prefix mapped to its scope.
 
     Raises:
-        IvaCatalogueError: When the bundled table cannot be read, names a scope
-            outside the closed set, or cites a provision that does not resolve
-            to the bundled legal text it claims.
+        IvaCatalogueError: When a published scope cannot be adapted into the
+            operational closed set.
     """
-    from ._grounding import verify_table_legal_refs
-    from .errors import IvaCatalogueError
+    from ..calculations.registry.authority import bundled_authority
 
-    target = bundled_path("registry", "aeat", "iva", "territories.toml")
-    try:
-        payload = tomllib.loads(target.read_text(encoding=UTF_8_ENCODING))
-    except OSError as exc:
-        raise IvaCatalogueError(f"{target}: cannot read the territory registry: {exc}") from exc
-    except tomllib.TOMLDecodeError as exc:
-        raise IvaCatalogueError(f"{target}: malformed territory registry: {exc}") from exc
-
-    resolved: dict[str, IvaTerritorialScope] = {}
-    citations: list[tuple[str, tuple[str, ...]]] = []
-    for record in payload.get("territory", ()):
-        try:
-            scope = IvaTerritorialScope(record["scope"])
-        except (KeyError, ValueError) as exc:
-            raise IvaCatalogueError(f"{target}: territory record names no known scope: {record!r}") from exc
-        references = _str_tuple_or_none(record.get("legal_refs", ()))
-        if references is None:
-            raise IvaCatalogueError(f"{target}: territory {scope.value} legal_refs must be an array of strings")
-        # A territorial exclusion IS a regulatory value, so an uncited row is
-        # ungrounded rather than merely undocumented and must not load.
-        if not references:
-            raise IvaCatalogueError(f"{target}: territory {scope.value} cites no provision establishing its exclusion")
-        citations.append((scope.value, references))
-        for prefix in record.get("postal_prefixes", ()):
-            resolved[str(prefix)] = scope
-    if not resolved:
-        raise IvaCatalogueError(f"{target}: the territory registry names no excluded territory")
-    verify_table_legal_refs(str(target), citations)
-    return resolved
+    return {
+        prefix: IvaTerritorialScope(record.scope)
+        for prefix, record in bundled_authority().catalogues.runtime.spanish_postal_territories.items()
+    }
 
 
 def territorial_scope_for_spanish_postal_code(postal_code: str | None) -> IvaTerritorialScope | None:

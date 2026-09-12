@@ -40,7 +40,6 @@ from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...core.resources.bundled_data import bundled_path
 from .compilation_catalogues import compiling_catalogues_in_scope
 from .errors import IvaCatalogueError
 
@@ -57,10 +56,10 @@ def registry_catalogues() -> tuple[Mapping[str, LegalReference], Mapping[str, So
 
     Source trees are compiler input, never a product-time verification source.
     """
-    from ..calculations.registry.authority import bundled_authority
+    from ..calculations.registry.authority import bundled_authority, bundled_authority_artifact_path
 
     authority = bundled_authority()
-    return authority.catalogues.legal, authority.catalogues.sources, bundled_path()
+    return authority.catalogues.legal, authority.catalogues.sources, bundled_authority_artifact_path()
 
 
 def verify_table_legal_refs(table: str, citations: Sequence[tuple[str, Sequence[str]]]) -> None:

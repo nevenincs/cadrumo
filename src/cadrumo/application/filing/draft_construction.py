@@ -1,13 +1,11 @@
 """Filing-draft construction pipeline.
 
-Extracted from :mod:`cadrumo.application.filing` (the package facade) as one
-coherent cluster: :func:`build_draft` and every private helper implementing
-its pipeline -- load the registry snapshot, classify the snapshot's bindings
-by kind, validate operator input keys against that classification, coerce
-raw input into typed values, assemble the draft record, and validate the
-built draft. None of these helpers are called from outside this pipeline;
-:func:`build_draft` is the sole public entry point and is re-exported eagerly
-by the package facade.
+This defining module owns one coherent cluster: :func:`build_draft` and every
+private helper implementing its pipeline -- load the registry snapshot,
+classify the snapshot's bindings by kind, validate operator input keys against
+that classification, coerce raw input into typed values, assemble the draft
+record, and validate the built draft. None of these helpers are called from
+outside this pipeline; :func:`build_draft` is the direct public entry point.
 """
 
 from __future__ import annotations

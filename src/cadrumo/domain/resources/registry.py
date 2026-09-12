@@ -3,10 +3,9 @@
 The :class:`ResourceRegistry` aggregates every
 :class:`ResourceRepository` the project exposes. The
 :func:`resources` factory builds the registry once per process;
-subsequent calls return the cached instance. Tests that override
-:class:`cadrumo.core.config.Settings` to change the bundled-data
-location must call ``resources.cache_clear()`` to force a rebuild
-on the next access.
+subsequent calls return the cached instance. Regulated runtime repositories
+delegate freshness to the published authority; only file-backed resources own
+repository identity maps.
 """
 
 from __future__ import annotations
@@ -26,11 +25,10 @@ from ._repos.recargo_bands import RecargoBandsRepository
 class ResourceRegistry:
     """Aggregate of every Repository the project exposes.
 
-    Each field holds one :class:`ResourceRepository` instance
-    owning its own Identity Map. The :meth:`clear` method empties
-    every Repository's cache uniformly; tests that override
-    Settings between cases call it via the module-level
-    :func:`resources` factory's ``cache_clear``.
+    Each field holds one :class:`ResourceRepository` instance. The
+    :meth:`clear` method invokes their uniform cache contract; authority-backed
+    repositories implement that operation as a no-op because the authority owns
+    freshness.
     """
 
     apoderamientos: ApoderamientosRepository = field(default_factory=ApoderamientosRepository)
@@ -41,7 +39,7 @@ class ResourceRegistry:
     iva_catalogues: IvaCatalogueRepository = field(default_factory=IvaCatalogueRepository)
 
     def clear(self) -> None:
-        """Clear every Repository's Identity Map."""
+        """Clear caches owned by repositories that maintain one."""
         from ...core.resources.repository import ResourceRepository
 
         for attr in self.__dataclass_fields__:
@@ -55,10 +53,9 @@ def resources() -> ResourceRegistry:
     """Return the process-wide resource registry.
 
     Cached at first call. The factory reads Settings once at
-    construction and threads operator-supplied roots through to
-    the Repositories that honour an env-override seam (manuals and
-    iva catalogues). Tests that mutate Settings between cases call
-    ``resources.cache_clear()`` to rebuild with the new values.
+    construction and threads operator-supplied roots only to resources that are
+    not regulated runtime authority (currently manuals). Tests that mutate those
+    settings call ``resources.cache_clear()`` to rebuild the registry.
 
     Returns:
         The process-wide cached :class:`ResourceRegistry` instance.
@@ -68,5 +65,5 @@ def resources() -> ResourceRegistry:
     settings = load_settings()
     return ResourceRegistry(
         manuals=ManualRepository(root=settings.aeat_manuals_root),
-        iva_catalogues=IvaCatalogueRepository(path=settings.cadrumo_iva_catalogue_file),
+        iva_catalogues=IvaCatalogueRepository(),
     )

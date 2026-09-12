@@ -8,9 +8,9 @@ identity, and is stable across repeated runs of the same installation without
 needing any new persisted state.
 
 See Also:
-    :func:`~core.telemetry.workspace_hash`
-        Public facade export of this pseudonymous deployment-id helper.
-    :class:`~core.telemetry.TelemetryEventPayload`
+    :func:`~core.telemetry.workspace.workspace_hash`
+        This pseudonymous deployment-id helper.
+    :class:`~core.telemetry.schema.TelemetryEventPayload`
         Payload shape that carries the derived workspace hash.
     :class:`~core.config.Settings`
         Source of the local storage root used as the stable hash input.

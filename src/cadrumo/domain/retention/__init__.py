@@ -1,4 +1,4 @@
-"""Public facade for the tax-record retention-floor domain.
+"""Inert namespace for the tax-record retention-floor domain.
 
 A filed tax record may only be erased once the tax authority's right to review
 it has prescribed. Ley 58/2003 (Ley General Tributaria) art. 66 sets that
@@ -7,7 +7,7 @@ self-assessment deadline, and art. 70.2 ties the obligation to conserve the
 supporting documentation to the same window. The whole-year floor is the
 grounded regulatory constant :data:`TAX_RECORD_RETENTION_FLOOR_YEARS`.
 
-Public surface:
+Contracts, imported from their defining modules:
 
 * :func:`assess_retention_floor` — pure assessment of a filed-record set
   against the floor as of an instant.
@@ -29,6 +29,8 @@ See Also:
         The surface that once enforced the floor. Its destructive erase is
         withdrawn; it now refuses an existing target outright, naming the
         authenticated retention assessment it can no longer make.
+
+The package initializer exports no symbols.
 """
 
 from __future__ import annotations

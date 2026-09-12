@@ -25,22 +25,20 @@ missing-reference resolver is what turns it into a link, and guessing at its
 answer here would fight that decision. A dotted ``cadrumo.`` path is not
 ambiguous: it names exactly one thing, so it either resolves or it is wrong.
 
-**Resolution is by import, not by name matching.** An earlier version of this
+**Resolution is by canonical source ownership, not leaf-name matching.** An earlier version of this
 scan compared leaf names against every symbol defined anywhere in the tree; it
 produced both false positives (stdlib and third-party names) and, worse, false
 NEGATIVES -- three real dangling references survived it because their leaf name
-existed somewhere else entirely. Importing the longest importable prefix and
-walking the remainder with ``getattr`` is what makes the answer exact, and it
-is also the only method that respects the PEP 562 lazy facades this package
-tree uses: a name reached through ``__getattr__`` is absent from the module's
-source but present on the module object.
+existed somewhere else entirely. Resolving the longest importable prefix and
+then reading its defining source keeps ownership explicit without accepting a
+forwarding package surface as a second home.
 """
 
 from __future__ import annotations
 
 import ast
 import re
-from importlib.util import find_spec, resolve_name
+from importlib.util import find_spec
 from pathlib import Path
 
 import pytest
@@ -73,7 +71,7 @@ def _resolves(target: str) -> bool:
         source = _module_source(module)
         if source is None:
             continue
-        return _source_path_resolves(source, module, parts[cut:])
+        return _source_path_resolves(source, parts[cut:])
     return False
 
 
@@ -90,59 +88,16 @@ def _module_source(module: str) -> Path | None:
     return path if path.is_file() else None
 
 
-def _literal_string(node: ast.AST) -> str | None:
-    return node.value if isinstance(node, ast.Constant) and isinstance(node.value, str) else None
-
-
-def _lazy_target(tree: ast.Module, name: str) -> tuple[str, str | None] | None:
-    """Read the source mapping used by a module-level ``__getattr__`` hook."""
-    has_getattr = any(
-        isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "__getattr__" for node in tree.body
-    )
-    if not has_getattr:
-        return None
-    for node in tree.body:
-        value = node.value if isinstance(node, ast.Assign) else node.value if isinstance(node, ast.AnnAssign) else None
-        if not isinstance(value, ast.Dict):
-            continue
-        for key, item in zip(value.keys, value.values, strict=False):
-            if _literal_string(key) != name:
-                continue
-            if isinstance(item, (ast.Tuple, ast.List)) and item.elts:
-                module = _literal_string(item.elts[0])
-                symbol = _literal_string(item.elts[1]) if len(item.elts) > 1 else None
-            else:
-                module, symbol = _literal_string(item), None
-            if module is not None:
-                return module, symbol
-    return None
-
-
-def _source_path_resolves(path: Path, module: str, attrs: list[str]) -> bool:
+def _source_path_resolves(path: Path, attrs: list[str]) -> bool:
     try:
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     except (OSError, SyntaxError):
         return False
     owner: ast.AST = tree
-    for index, attr in enumerate(attrs):
+    for attr in attrs:
         candidates = [node for node in ast.iter_child_nodes(owner) if getattr(node, "name", None) == attr]
         if not candidates:
-            candidates = [
-                node
-                for node in ast.walk(owner)
-                if isinstance(node, (ast.Import, ast.ImportFrom))
-                and any((alias.asname or alias.name.split(".", 1)[0]) == attr for alias in node.names)
-            ]
-        if not candidates:
-            lazy = _lazy_target(tree, attr) if owner is tree else None
-            if lazy is None:
-                return False
-            target_module, target_name = lazy
-            if target_module.startswith("."):
-                package = module if path.name == "__init__.py" else module.rpartition(".")[0]
-                target_module = resolve_name(target_module, package)
-            target = ".".join(part for part in (target_module, target_name, *attrs[index + 1 :]) if part)
-            return _resolves(target)
+            return False
         owner = candidates[0]
     return True
 
@@ -168,8 +123,8 @@ def test_no_qualified_reference_names_something_that_does_not_exist() -> None:
         + "\n  ".join(sorted(dangling))
         + "\n\nEither the artifact moved -- point the reference at where it lives now -- or it "
         "was deleted, in which case say so rather than leaving its name standing. If the "
-        "symbol SHOULD be reachable at the cited path, export it there; that is the fix the "
-        "citation was already assuming."
+        "symbol still exists, cite its canonical defining module rather than creating a "
+        "forwarding export."
     )
 
 
@@ -209,14 +164,8 @@ def test_the_resolver_counts_a_pydantic_field_as_present() -> None:
     assert _resolves("cadrumo.domain.invoices.Invoice.no_such_field_at_all") is False
 
 
-def test_the_resolver_accepts_real_targets_including_lazy_ones() -> None:
-    """The other direction, and the reason resolution is by import.
-
-    ``CommittedProfileView`` is reached through the package's PEP 562
-    ``__getattr__``: it is absent from the facade's own source text, so any
-    scan reading source rather than importing would call it dangling and be
-    wrong.
-    """
-    assert _resolves("cadrumo.application.user_profile.CommittedProfileView") is True
-    assert _resolves("cadrumo.application.user_profile.apply_profile_fact_changes") is True
+def test_the_resolver_accepts_real_canonical_targets() -> None:
+    """The positive control names the modules that own both symbols."""
+    assert _resolves("cadrumo.application.user_profile.aggregate.CommittedProfileView") is True
+    assert _resolves("cadrumo.application.user_profile.fact_write.apply_profile_fact_changes") is True
     assert _resolves("cadrumo.core") is True

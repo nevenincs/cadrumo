@@ -17,7 +17,6 @@ from datetime import date, timedelta
 
 import pytest
 
-from ... import core as core_facade
 from ..notificacion_estado_servicio import NotificacionEstadoServicio, resolve_notificacion_estado_servicio
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -117,7 +116,7 @@ def test_an_as_of_before_delivery_has_not_opened_the_window() -> None:
 
 
 def test_the_boundary_is_the_injected_governed_fact_value() -> None:
-    """The core facade consumes its outer-composed legal parameter."""
+    """The core defining module consumes its outer-composed legal parameter."""
     assert _estado(elapsed_days=_TACIT_REJECTION_NATURAL_DAYS - 1) is NotificacionEstadoServicio.EN_PLAZO
     assert _estado(elapsed_days=_TACIT_REJECTION_NATURAL_DAYS) is NotificacionEstadoServicio.RECHAZO_TACITO
 
@@ -145,14 +144,3 @@ def test_the_day_ten_assertion_discriminates_against_an_off_by_one_boundary() ->
     assert _estado(elapsed_days=at_boundary) is not off_by_one_reading(at_boundary)
     assert _estado(elapsed_days=at_boundary - 1) is off_by_one_reading(at_boundary - 1)
     assert _estado(elapsed_days=at_boundary + 1) is off_by_one_reading(at_boundary + 1)
-
-
-def test_the_axis_is_reachable_through_the_core_facade() -> None:
-    """Consumers outside ``core`` resolve both symbols through the package facade."""
-    # Consumers resolved both symbols through the package facade. It is inert
-    # now, so the guarantee is that each has exactly one owning module and the
-    # namespace re-exports neither.
-    assert NotificacionEstadoServicio.__module__ == "cadrumo.core.notificacion_estado_servicio"
-    assert resolve_notificacion_estado_servicio.__module__ == "cadrumo.core.notificacion_estado_servicio"
-    assert not hasattr(core_facade, "NotificacionEstadoServicio")
-    assert not hasattr(core_facade, "resolve_notificacion_estado_servicio")

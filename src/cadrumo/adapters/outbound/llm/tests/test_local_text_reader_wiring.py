@@ -42,9 +42,8 @@ def test_the_classify_path_reaches_the_local_text_reader() -> None:
     Before this wiring the same branch raised ``_TEXT_PATH_NEEDS_PROVIDER``,
     making a cloud provider mandatory for any text-layer document.
     """
-    # Import the defining module directly rather than through the package
-    # namespace: ledger's `__init__` is inert, and a `from <pkg> import
-    # <module>` edge reads as a package facade import.
+    # Import the defining module directly; ledger's package initializer is
+    # inert and owns no symbols.
     from .....application.ledger.llm_classification import classify_with_evidence
 
     source = inspect.getsource(classify_with_evidence)

@@ -6,9 +6,9 @@ Declared standalone (no dependency on :mod:`~core.config`) so
 axis is a :class:`~enum.StrEnum` declared in ``core/``).
 
 See Also:
-    :class:`~core.telemetry.TelemetryTier`
-        Public facade export of the closed remote-telemetry tier enum.
-    :func:`~core.telemetry.telemetry_emit_permitted`
+    :class:`~core.telemetry.tier.TelemetryTier`
+        The closed remote-telemetry tier enum defined here.
+    :func:`~core.telemetry.consent.telemetry_emit_permitted`
         Consent gate that interprets the tier for each attempted emission.
     :class:`~core.config.Settings`
         Deployment configuration carrying the selected telemetry tier.

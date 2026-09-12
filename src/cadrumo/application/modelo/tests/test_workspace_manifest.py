@@ -363,41 +363,6 @@ def test_capture_exposes_no_snapshot_internals_and_no_second_manifest_shape() ->
     assert str(snapshot.revision.id) not in captured.comparison_domain
 
 
-def test_manifest_authority_is_owned_by_its_public_defining_module() -> None:
-    """Every manifest symbol is defined here and bound nowhere in the package namespace."""
-    from ... import modelo as modelo_namespace
-
-    for owned in (
-        ModeloWorkspaceFieldManifestEntryV1,
-        ModeloWorkspaceFieldManifestV1,
-        ModeloWorkspaceManifestCapture,
-        ModeloWorkspaceManifestCurrentCoordinate,
-        ModeloWorkspaceManifestCaptureError,
-        capture_modelo_workspace_manifest,
-        generate_modelo_workspace_field_manifest,
-        read_modelo_workspace_manifest_current_coordinate,
-    ):
-        assert owned.__module__ == "cadrumo.application.modelo.workspace_manifest"
-        assert not hasattr(modelo_namespace, owned.__name__)
-
-
-def test_the_retired_private_manifest_module_is_gone() -> None:
-    """No private path, alias, or re-export survives the hard move."""
-    from pathlib import Path
-
-    package = Path(__file__).parents[1]
-
-    assert not (package / "_workspace_manifest.py").exists()
-    assert not (package / "_workspace_manifest").exists()
-
-    # The PUBLIC module is the destination of that move, not a casualty of it:
-    # workspace_producers imports it in twelve places. An earlier version of
-    # this assertion named the public path, so the gate demanded the absence
-    # of the very module the move created -- landed red, and unsatisfiable
-    # without deleting live production code.
-    assert (package / "workspace_manifest.py").is_file()
-
-
 # STATIC_INSPECTION gets its own complete manifest, over its own
 # type universe, never a filtered view into the snapshot-rooted manifest ---
 

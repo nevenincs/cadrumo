@@ -11,8 +11,8 @@ surface. The LIVA arts. 102-106 compute substrate lives in the pure domain modul
 
 The seed from the stamped prior settlement observation (art. 105.Uno), the
 provenance-tagged art. 105.Dos/Tres overrides, and the settlement write-back are
-built on top of this facade in later waves; this module is only the persistence
-surface they compose over.
+built on top of this service in later waves; the defining service module owns
+the persistence operations they compose over.
 
 See Also:
     :mod:`domain.prorrata_register`

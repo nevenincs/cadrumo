@@ -15,8 +15,8 @@ leaking it into rendered error payloads, as with
 :class:`~cadrumo.application.workflow.WorkflowResult`.
 
 See Also:
-    :mod:`cadrumo.application.modelo`:
-        Public package facade for these action errors.
+    :mod:`cadrumo.application.modelo.action_errors`:
+        Defining module for these action errors; the package initializer is inert.
     :mod:`cadrumo.core.errors.registry`:
         Maps these exception classes to stable error codes and message keys.
     :mod:`cadrumo.application.modelo.workflow_gate`:

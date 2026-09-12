@@ -46,7 +46,7 @@ _NONEXISTENT_PATH_PREFIX = "non-existent-sentinel"
 
 
 def test_public_output_language_coercer_normalises_only_supported_catalogue_codes() -> None:
-    """The configuration facade is the one coercion boundary for language codes."""
+    """The configuration module is the one coercion boundary for language codes."""
     assert coerce_output_language_setting(" EN ") is OutputLanguage.EN
     assert coerce_output_language_setting("hu") is OutputLanguage.HU
     assert coerce_output_language_setting("xx") is None

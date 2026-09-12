@@ -445,6 +445,7 @@ def test_representante_predicate_emits_blocking_finding_via_evaluator() -> None:
     """The M210 representante predicate fires a BLOCKING_RULE finding with TRLIRNR Art 10 cited."""
 
     predicate = VerificationPredicateDefinition(
+        id="profile-field-required:representante-fiscal-required",
         predicate_id="m210-representante-fiscal-required",
         legal_refs=("trlirnr-rdleg-5-2004:art-10",),
         expression=_REPRESENTANTE_PREDICATE_EXPRESSION,

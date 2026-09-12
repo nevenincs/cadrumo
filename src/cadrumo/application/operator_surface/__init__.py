@@ -1,6 +1,6 @@
-"""Public re-export boundary for the backend-owned operator surface.
+"""Backend-owned operator-surface namespace.
 
-The package collects the application-layer command-shape declarations from
+The application-layer command-shape declarations are defined in
 :mod:`application.operator_surface.contract`,
 :mod:`application.operator_surface.models`,
 :mod:`application.operator_surface.help`,
@@ -15,7 +15,7 @@ Root-surface declarations flow through :func:`get_operator_surface_contract`,
 :class:`core.BindingSourceKind` members. No operator-specific source-kind
 taxonomy is introduced here.
 
-Help and landing surfaces are exposed through :func:`build_help_document`,
+Help and landing surfaces are defined by :func:`build_help_document`,
 :func:`build_root_landing_report`, :class:`HelpDocument`, and
 :class:`RootLandingReport`. Refused surfaces use the registered
 :class:`OperatorSurfaceContractError` path shared with

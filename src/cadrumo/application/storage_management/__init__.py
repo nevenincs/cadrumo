@@ -1,9 +1,8 @@
-"""Operator-facing read and reclaim operations over the declared storage tree.
+"""Inert namespace for storage-tree read and reclaim operations.
 
-The public facade for the ``aeat config storage`` surface. Operators inspect
-four stable areas while the internal taxonomy remains free to evolve. This
-package exposes inspection, materialisation, and lifecycle-guarded reclaim, and
-deliberately exposes no relocation.
+The ``service``, ``models``, and ``errors`` modules own inspection,
+materialisation, and lifecycle-guarded reclaim. There is no relocation
+operation, and the package initializer exports no symbols.
 
 See Also:
     :data:`~cadrumo.core.STORAGE_TAXONOMY`

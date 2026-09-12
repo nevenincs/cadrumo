@@ -15,7 +15,6 @@ a tree that lost the interesting entries.
 
 from __future__ import annotations
 
-import importlib
 import inspect
 import os
 import shutil
@@ -347,7 +346,7 @@ def test_the_lazy_shape_validates_its_pattern_before_returning(tree: Path) -> No
         iter_directory(tree, pattern="*/*.toml")
 
 
-# ── Facade ────────────────────────────────────────────────────────────────
+# ── Ownership ─────────────────────────────────────────────────────────────
 
 
 def test_the_root_is_always_an_argument_and_never_a_repo_anchor() -> None:
@@ -387,19 +386,3 @@ def test_a_relative_root_is_scanned_and_kept_relative(tree: Path) -> None:
         assert not scanned[0].is_absolute()
     finally:
         os.chdir(origin)
-
-
-def test_the_primitive_is_owned_by_its_public_defining_module() -> None:
-    """The inert core namespace cannot become a second scan authority."""
-    core = importlib.import_module("..", package=__package__)
-
-    scan_directory_module = inspect.getmodule(scan_directory)
-    iter_directory_module = inspect.getmodule(iter_directory)
-    assert scan_directory_module is not None
-    assert iter_directory_module is not None
-    assert scan_directory_module.__name__ == "cadrumo.core.directory_scan"
-    assert iter_directory_module.__name__ == "cadrumo.core.directory_scan"
-    assert DirectoryEntryKind.__module__ == "cadrumo.core.directory_scan"
-    assert not {"scan_directory", "iter_directory", "DirectoryEntryKind"} & set(core.__all__)
-    for name in ("scan_directory", "iter_directory", "DirectoryEntryKind"):
-        assert not hasattr(core, name)

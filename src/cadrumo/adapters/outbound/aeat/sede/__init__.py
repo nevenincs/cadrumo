@@ -1,13 +1,6 @@
-"""AEAT sede outbound adapter: the read-only session and its captures.
+"""Read-only AEAT sede sessions and capture adapters.
 
-Inert namespace. Every contract is reached at its own defining module:
-``censal_datos``, ``declarations``, ``declarations_observations``,
-``declarations_remote``, ``declarations_schema``, ``errors``,
-``groi_check``, ``iva_compensation_wallet``, ``nif_iva_check``, ``notifications``,
-``observation_store``, ``parse``, ``schema``, ``walker``.
-
-This package re-exported its surface through the namespace. The map is
-retired: a consumer names the module that defines what it imports.
+The initializer is inert; import contracts from their defining modules.
 """
 
 from __future__ import annotations

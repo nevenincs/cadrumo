@@ -440,12 +440,6 @@ class Settings(CadrumoLlmSettings):
         description="Root directory for the bundled legal normatives corpus",
     )
 
-    # ── IVA catalogue (cadrumo.domain.iva) ──────────────────────────────────
-    cadrumo_iva_catalogue_file: Path = Field(
-        default_factory=lambda: bundled_path("registry", "aeat", "iva", "catalogues.toml"),
-        description="The hand-reviewed IVA taxonomy catalogue file",
-    )
-
     # ── Registry corpus-text validation cache ───────────────────────────────
     cadrumo_corpus_text_cache_dir: Path = Field(
         default=Path("cache") / "corpus-text",
@@ -999,7 +993,6 @@ class Settings(CadrumoLlmSettings):
         "cadrumo_registry_disk_cache_dir",
         "aeat_manuals_root",
         "aeat_normatives_root",
-        "cadrumo_iva_catalogue_file",
         "cadrumo_corpus_text_cache_dir",
         "cadrumo_corpus_search_cache_dir",
         "cadrumo_validation_verdict_cache_dir",

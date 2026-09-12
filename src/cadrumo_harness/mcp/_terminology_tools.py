@@ -12,9 +12,10 @@ enforces.
 Like ``_corpus_tools`` / ``_harness_tools``, this module is SDK-independent pure
 functions over typed models; :func:`build_terminology_search_tool` lazily adapts
 onto the MCP SDK's ``Tool`` type so the module imports (and the server refuses
-gracefully) without the harness distribution's MCP runtime. The search itself is owned by the
-application service (:func:`~application.corpus_search.search_terminology`),
-consumed through the package facade per ``aeat-architecture-boundaries``.
+gracefully) without the harness distribution's MCP runtime. The search itself
+is owned by the defining terminology service module
+(:func:`~cadrumo.application.corpus_search.terminology.search_terminology`),
+which this adapter imports directly.
 """
 
 from __future__ import annotations

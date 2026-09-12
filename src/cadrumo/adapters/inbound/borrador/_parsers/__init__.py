@@ -1,14 +1,11 @@
-"""PDF backend facade for the borrador parser.
+"""Inert namespace for borrador PDF parser backends.
 
-Re-exports ``extract_pages_text`` from the active backend
-implementation. Today the only backend is the pdfplumber-based
-``_pdfplumber_backend``. Keeping the backend behind this facade lets
-extractors depend on one local text-extraction primitive instead of on
-``pdfplumber`` directly.
+The active implementation is ``pdfplumber_backend``. Consumers import
+``extract_pages_text`` directly from that defining module.
 
 See Also:
-    :func:`extract_pages_text`
-        Active per-page text extraction primitive re-exported by this facade.
+    :func:`pdfplumber_backend.extract_pages_text`
+        Active per-page text extraction primitive.
     :mod:`adapters.inbound.pdf`
         Shared inbound-PDF helper package used by this backend.
 """

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import sys
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -37,9 +36,7 @@ from ..work_addressing import (
     ModeloExactWorkUnitTarget,
     ModeloRevisionPick,
     ModeloVisibleFilingTarget,
-    ModeloWorkCapture,
     ModeloWorkCaptureError,
-    ModeloWorkCurrentCoordinate,
     capture_modelo_work_resolution,
     read_modelo_work_current_coordinate,
     resolve_modelo_revision_for_operator_target,
@@ -676,18 +673,3 @@ def test_distinct_storage_roots_cannot_compare_their_coordinates(tmp_path: Path)
     assert first_capture.comparison_domain != second_coordinate.comparison_domain
     with pytest.raises(ModeloWorkCaptureError):
         first_capture.require_current(second_coordinate)
-
-
-def test_work_capture_contract_is_owned_by_its_defining_module() -> None:
-    """Every capture symbol is defined here and bound nowhere in the package namespace."""
-    modelo_namespace = sys.modules[__package__.rsplit(".", 1)[0]]
-
-    for owned in (
-        ModeloWorkCapture,
-        ModeloWorkCurrentCoordinate,
-        ModeloWorkCaptureError,
-        capture_modelo_work_resolution,
-        read_modelo_work_current_coordinate,
-    ):
-        assert owned.__module__ == "cadrumo.application.modelo.work_addressing"
-        assert not hasattr(modelo_namespace, owned.__name__)

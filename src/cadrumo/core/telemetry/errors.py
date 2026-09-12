@@ -6,8 +6,8 @@ subclass binds to a registered
 :class:`~core.errors.ErrorCode` row (``core/errors/registry/_core.py``).
 
 See Also:
-    :class:`~core.telemetry.TelemetrySchemaError`
-        Public telemetry schema failure exported by the package facade.
+    :class:`~cadrumo.core.telemetry.errors.TelemetrySchemaError`
+        Telemetry schema failure defined by this module.
     :data:`~core.telemetry.TELEMETRY_METRIC_REGISTRY`
         Closed metric allowlist whose integrity violations raise this error.
     :func:`~core.telemetry.build_telemetry_payload`

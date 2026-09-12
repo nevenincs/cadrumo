@@ -136,7 +136,7 @@ def _check_triple(triple: tuple[Path, str, str]) -> str | None:
         return (
             f"{source.relative_to(SRC_CADRUMO.parent).as_posix()}::{module}::{name}  (target module is not importable)"
         )
-    if _module_exports(target_path, name, module=module):
+    if _module_exports(target_path, name):
         return None
     # Submodule import path — ``from pkg import mod`` succeeds if
     # ``pkg.mod`` is a real importable module, regardless of whether
@@ -178,86 +178,13 @@ def _bound_names(tree: ast.AST) -> frozenset[str]:
     return frozenset(names)
 
 
-def _literal_string(node: ast.AST) -> str | None:
-    return node.value if isinstance(node, ast.Constant) and isinstance(node.value, str) else None
-
-
-def _lazy_export_targets(tree: ast.AST) -> dict[str, tuple[str, str | None]]:
-    """Read a PEP 562 export map, retaining its module-and-symbol contract."""
-    maps: dict[str, dict[str, tuple[str, str | None]]] = {}
-    for node in tree.body if isinstance(tree, ast.Module) else ():
-        value: ast.AST | None = None
-        target: ast.AST | None = None
-        if isinstance(node, ast.Assign):
-            value = node.value
-            target = node.targets[0] if len(node.targets) == 1 else None
-        elif isinstance(node, ast.AnnAssign):
-            value = node.value
-            target = node.target
-        if not isinstance(target, ast.Name) or not isinstance(value, ast.Dict):
-            continue
-        entries: dict[str, tuple[str, str | None]] = {}
-        for key, item in zip(value.keys, value.values, strict=False):
-            name = _literal_string(key)
-            if name is None:
-                continue
-            if isinstance(item, (ast.Tuple, ast.List)) and item.elts:
-                module = _literal_string(item.elts[0])
-                symbol = _literal_string(item.elts[1]) if len(item.elts) > 1 else None
-            else:
-                module, symbol = _literal_string(item), None
-            if module is not None:
-                entries[name] = (module, symbol)
-        if entries:
-            maps[target.id] = entries
-
-    lazy_names = (
-        {
-            node.name
-            for node in tree.body
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "__getattr__"
-        }
-        if isinstance(tree, ast.Module)
-        else set()
-    )
-    if not lazy_names:
-        return {}
-    referenced = {
-        name.id
-        for node in tree.body
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "__getattr__"
-        for name in ast.walk(node)
-        if isinstance(name, ast.Name) and isinstance(name.ctx, ast.Load)
-    }
-    result: dict[str, tuple[str, str | None]] = {}
-    for map_name in referenced:
-        result.update(maps.get(map_name, {}))
-    return result
-
-
-def _module_exports(path: Path, name: str, *, module: str, seen: frozenset[str] = frozenset()) -> bool:
-    """Resolve a module attribute from source bindings or its declared lazy map."""
+def _module_exports(path: Path, name: str) -> bool:
+    """Return whether a module binds a runtime-importable name in its source."""
     try:
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     except (OSError, SyntaxError):
         return False
-    if name in _bound_names(tree):
-        return True
-    if module in seen:
-        return False
-    lazy = _lazy_export_targets(tree).get(name)
-    if lazy is None:
-        return False
-    target_module, target_name = lazy
-    if target_module.startswith("."):
-        package = module if path.name == "__init__.py" else module.rpartition(".")[0]
-        from importlib.util import resolve_name
-
-        target_module = resolve_name(target_module, package)
-    target_path = _module_source_path(target_module)
-    if target_path is None:
-        return False
-    return target_name is None or _module_exports(target_path, target_name, module=target_module, seen=seen | {module})
+    return name in _bound_names(tree)
 
 
 def test_cadrumo_cross_module_imports_resolve(

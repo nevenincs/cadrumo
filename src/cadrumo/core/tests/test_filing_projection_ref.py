@@ -37,7 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _REF_MODELS = get_args(get_args(FilingProjectionRef)[0])
 
 
-def test_core_facade_exposes_the_canonical_flat_projection_union() -> None:
+def test_defining_module_exposes_the_canonical_flat_projection_union() -> None:
     assert owner.FilingProjectionRef is FilingProjectionRef
     assert compile_filing_projection_ref.__module__ == owner.__name__
     # Gated on the PROPERTY, not the tally. A member count pins a moment and
@@ -292,7 +292,7 @@ def test_slotless_marker_rejects_legacy_slot_and_models_are_frozen() -> None:
         reference.slot = 2  # type: ignore[misc]
 
 
-def test_core_facade_exposes_the_single_projection_union_owner() -> None:
+def test_defining_module_is_the_single_projection_union_owner() -> None:
     assert owner.FilingProjectionRef is FilingProjectionRef
     declarations = {
         node.name for node in ast.walk(ast.parse(inspect.getsource(owner))) if isinstance(node, ast.ClassDef)

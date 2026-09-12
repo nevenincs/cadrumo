@@ -1,4 +1,4 @@
-"""Public test-support facade for live-service integration suites."""
+"""Inert namespace for live-service integration test support."""
 
 from __future__ import annotations
 

@@ -20,12 +20,9 @@ implements: the secure-object coupling is then a same-layer
 register already receives.
 
 Errors are injected rather than imported. A repository serving three different
-application packages cannot name any one package's error type without either
-reaching into that package's private module or importing its facade, and the
-facade import would close a cycle: the live facade eagerly imports the services
-that construct this class. Taking the class as a constructor argument keeps the
-adapter self-contained and leaves every caller raising exactly what it raised
-before.
+application packages should not depend on any one package's error type. Taking
+the class as a constructor argument keeps the adapter self-contained and leaves
+every caller raising exactly what it raised before.
 
 See Also:
     :mod:`application.live`

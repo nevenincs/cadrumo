@@ -1,9 +1,8 @@
-"""Registry path and work-unit guards shared by modelo application actions.
+"""Registry-backed work-unit guards shared by modelo application actions.
 
 Modelo application services access the packaged registry through the canonical
 :func:`~cadrumo.domain.calculations.registry.authority.bundled_authority`.
-This module owns the bundled ``registry/aeat`` path projection used in
-application errors and the work-unit revision/period guards.
+This module owns work-unit revision and period guards.
 
 The revision and period guards are create-work-unit checks: they reject user
 input that names a modelo revision or filing period the committed registry does
@@ -20,24 +19,10 @@ See Also:
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from ...core.period import Period
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos.errors import ModeloError
-
-
-def registry_root() -> Path:
-    """Return the bundled ``registry/aeat`` root used by modelo services.
-
-    The returned :class:`~pathlib.Path` is the path passed to registry-facing
-    errors when the packaged registry cannot be loaded. It intentionally mirrors
-    the root resolved by the canonical bundled registry authority.
-    """
-    from ...core.resources.bundled_data import bundled_path
-
-    return bundled_path("registry", "aeat")
 
 
 def reject_unknown_revision(*, modelo: str, revision_id: RevisionId) -> None:

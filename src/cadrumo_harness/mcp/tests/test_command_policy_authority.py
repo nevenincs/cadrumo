@@ -86,7 +86,7 @@ def test_legacy_keyed_policy_authority_is_physically_absent() -> None:
         "declared" + "_risk",
         "application.operator_surface." + "_risk_table",
     )
-    roots = (repository / "src" / "cadrumo", repository / "src" / "cadrumo-harness" / "src")
+    roots = (repository / "src" / "cadrumo", repository / "src" / "cadrumo_harness")
     offenders: list[str] = []
     for root in roots:
         for source in root.rglob("*.py"):

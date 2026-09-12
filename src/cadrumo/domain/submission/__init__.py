@@ -1,6 +1,6 @@
-"""Public facade for local-only submission audit records.
+"""Inert namespace for local-only submission audit records.
 
-This package exposes preflight gates, historical/imported audit records,
+Defining modules own preflight gates, historical/imported audit records,
 repository storage, and narrow protocol types for submission-adjacent flows.
 :class:`SubmissionEngine` is read-only: it runs :class:`Preflight` and reads
 persisted :class:`ModeloPresentado` records. It does not present to AEAT, create
@@ -37,8 +37,10 @@ Major declarations:
 * :class:`SubmissionRepositoryProtocol` — the read-side persistence port
   (the concrete repository lives in the persistence adapter).
 * The :class:`ModeloDraftLike`, :class:`DeadlineWindowChecker`, and
-  :class:`AuthProviderProbe` protocols —
-  exported narrow contracts that keep the domain free of live adapters.
+  :class:`AuthProviderProbe` protocols — narrow contracts that keep the domain
+  free of live adapters.
+
+The package initializer exports no symbols.
 
 See Also:
     :func:`application.modelo.file_modelo_revision`

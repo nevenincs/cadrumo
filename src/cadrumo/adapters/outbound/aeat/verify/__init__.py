@@ -13,10 +13,11 @@ The function degrades gracefully when a browser cannot be
 constructed and surfaces the underlying error to the caller via
 :class:`domain.justificante.JustificanteVerificationError`.
 
-Public surface: :func:`verify_csv` plus the Playwright protocol types
+The defining :mod:`contract` module owns :func:`verify_csv` and the Playwright protocol types
 (:class:`VerifyBrowserPageLike`, :class:`VerifyBrowserContextLike`,
 :class:`VerifyBrowserSessionLike`, and :class:`VerifyBrowserSessionFactory`)
 shared by the concrete browser adapters.
+The package initializer is inert and exports none of these symbols.
 
 See Also:
     :func:`adapters.outbound.aeat.browser.default_browser_session_factory`

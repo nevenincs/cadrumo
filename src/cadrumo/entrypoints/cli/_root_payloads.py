@@ -37,26 +37,26 @@ from ...core.type_guards import is_str_keyed_dict
 
 
 def _help_document_branch() -> type[BaseModel]:
-    """Resolve the ``HelpDocument`` branch DTO from its public facade."""
+    """Resolve ``HelpDocument`` from its defining module."""
     from ...application.operator_surface.help_models import HelpDocument
 
     return HelpDocument
 
 
 def _root_landing_report_branch() -> type[BaseModel]:
-    """Resolve the ``RootLandingReport`` branch DTO from its public facade."""
+    """Resolve ``RootLandingReport`` from its defining module."""
     from ...application.operator_surface.help_models import RootLandingReport
 
     return RootLandingReport
 
 
 def _overview_status_report_branch() -> type[BaseModel]:
-    """Resolve the ``OverviewStatusReport`` branch DTO from its public facade.
+    """Resolve ``OverviewStatusReport`` from its defining module.
 
     Deliberately deferred behind a thunk: importing
-    :mod:`cadrumo.application.overview` materialises the calculation, ledger, and
-    registry import graph. The help and cold-start landing branches are tried
-    first and match without it, so ``aeat --help`` must never pay that cost.
+    :mod:`cadrumo.application.overview.calendar_models` materialises more of the
+    application graph. The help and cold-start landing branches are tried first
+    and match without it, so ``aeat --help`` must never pay that cost.
     """
     from ...application.overview.calendar_models import OverviewStatusReport
 

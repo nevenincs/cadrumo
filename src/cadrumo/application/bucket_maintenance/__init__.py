@@ -1,6 +1,6 @@
-"""Application-layer bucket-maintenance read-only projection facade.
+"""Inert namespace for bucket-maintenance application services.
 
-This package exposes :class:`BucketMaintenanceService` and its Pydantic
+The defining ``service`` module owns :class:`BucketMaintenanceService` and its Pydantic
 command/result contracts for profile-scoped storage maintenance. The
 service is currently a **read-only** surface over the current-capsule
 primitives: target locking (``deletion_target_locks``), a deletion
@@ -24,6 +24,9 @@ sealed-archive export/import/inspect have no successor primitive at
 all. :meth:`BucketMaintenanceService.assess_deletion` is the retention
 pre-assessment for a destructive delete; it does not implement reset
 orchestration itself.
+
+The package initializer exports no symbols; consumers import each contract
+from its defining module.
 
 See Also:
     :mod:`application.user_profile`

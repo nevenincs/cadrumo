@@ -165,7 +165,7 @@ def test_default_owner_builds_a_real_registry_plan_then_refuses_uncomposed_remot
     )
 
 
-def test_production_composition_registers_the_facade_owned_definition_and_real_transport(tmp_path: Path) -> None:
+def test_production_composition_registers_the_application_owned_definition_and_real_transport(tmp_path: Path) -> None:
     """The production registry binds this owner to the single outer composition transport."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         dependencies = compose_operation_dependencies()

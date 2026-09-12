@@ -1,4 +1,4 @@
-"""Public facade for the Renta (IRPF / Modelo 100) substrate.
+"""Inert namespace for the Renta (IRPF / Modelo 100) substrate.
 
 This package owns the first-slice Modelo 100 ledger-expense observation
 surface and the maritime worker exemption selectors used by application
@@ -17,7 +17,7 @@ proportionality rules and citations remain in
 :data:`RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` table is the single Renta-domain
 mapping from :class:`domain.categories.SpendingCategory` to registry
 casilla ids for the supported first slice; the registry validates those targets
-through a cross-domain snapshot check registered at package import time.
+through a cross-domain snapshot check installed by the registry snapshot builder.
 The M130 retenciones-a-cuenta route is selected from governed registry data
 and validated by the same cross-domain mechanism.
 
@@ -29,6 +29,9 @@ target from registry authority and return
 legal and source provenance. This domain surface is pure substrate logic:
 repositories, active-profile reads, CLI transport, and live AEAT access belong
 outside :mod:`domain.renta`.
+
+Consumers import each contract from its defining module. The package
+initializer exports no symbols and performs no registration side effects.
 
 See Also:
     :mod:`domain.categories`

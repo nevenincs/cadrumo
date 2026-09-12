@@ -1,15 +1,6 @@
-"""LLM provider adapters, one module per vendor boundary.
+"""Vendor-specific LLM provider adapters.
 
-Inert namespace. Each adapter is reached at its own module --
-:mod:`~cadrumo.adapters.outbound.llm.providers.base` for the request and completion contracts,
-and ``anthropic``, ``gemini``, ``openai`` and ``local`` for the adapters.
-
-This package re-exported all six eagerly and deferred ``AnthropicAdapter``
-behind a ``__getattr__`` arm, so that importing the package would not construct
-the optional Anthropic SDK boundary. The guard protected nothing: the only
-caller, :mod:`~cadrumo.adapters.outbound.llm.client`, already imported that adapter from its own
-module at the point of construction, and no code path ever reached the lazy
-arm.
+The initializer is inert; import contracts from their defining modules.
 """
 
 from __future__ import annotations

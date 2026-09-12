@@ -1,6 +1,6 @@
 """Import-light root package for Cadrumo.
 
-Concrete capabilities live behind layer facades: :mod:`core` for shared primitives
+Concrete capabilities live in layer-owned defining modules: :mod:`core` for shared primitives
 and runtime context, :mod:`domain` for business authorities,
 :mod:`application` for use-case orchestration, :mod:`adapters` for
 inbound, outbound, and persistence infrastructure, and :mod:`entrypoints`

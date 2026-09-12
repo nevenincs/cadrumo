@@ -25,8 +25,8 @@ See Also:
     :mod:`cadrumo.application.overview.calendar`
         Composes :func:`calendar_filing_evidence_from_sources` and the
         other builders here into :func:`~cadrumo.application.overview.calendar.build_overview_calendar`.
-    :mod:`cadrumo.application.overview`
-        Public facade that re-exports :func:`calendar_filing_evidence_from_sources`.
+    :mod:`cadrumo.application.overview.calendar`
+        Composes this evidence projection into the overview calendar.
 """
 
 from __future__ import annotations

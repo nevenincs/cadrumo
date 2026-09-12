@@ -30,7 +30,7 @@ _WORKER_MODULE = "cadrumo.adapters.persistence.storage.custody._kdf_worker"
 _FORBIDDEN_IN_CHILD: tuple[str, ...] = (
     # The ORM stack, reached through the encrypted-column helpers.
     "sqlalchemy",
-    # The HTML corpus reader, reached through the core facade.
+    # The HTML corpus reader and its parser dependency.
     "bs4",
     # Persistence subsystems the child performs no I/O against.
     "...blob_store",
@@ -86,8 +86,8 @@ def test_kdf_worker_child_excludes_the_heavy_persistence_graph() -> None:
     assert present == [], (
         f"the supervised key-derivation child imported {present}. Every wrap and unwrap "
         "spawns this interpreter to perform one Argon2id hash, so an eager import "
-        "anywhere on its path is paid on the production login path. Resolve the symbol "
-        "through the owning package's lazy facade instead of binding it at import time."
+        "anywhere on its path is paid on the production login path. Keep the dependency "
+        "outside the worker's import closure instead of hiding it behind a package facade."
     )
 
 

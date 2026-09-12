@@ -30,7 +30,7 @@ from decimal import Decimal
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.period import Period
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_authority, bundled_authority_artifact_path
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     casillas_by_id,
@@ -46,7 +46,6 @@ from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import CalculationRevision, derive_calculation_revision_id_from_revision
 from ._registry_resources import (
-    registry_root,
     reject_unknown_period_for_revision,
     reject_unknown_revision,
 )
@@ -365,7 +364,7 @@ def reject_unknown_override_casillas[CasillaKey](
     except FileNotFoundError as exc:
         raise AmendmentOverrideCasillaError(
             translated_message="application.modelo.errors.amendment_registry_root_missing",
-            context={"registry_root": registry_root()},
+            context={"registry_root": bundled_authority_artifact_path()},
         ) from exc
     except RegistrySnapshotError as exc:
         raise AmendmentOverrideCasillaError(
@@ -442,7 +441,7 @@ def reject_unknown_import_casillas[CasillaKey](
     except FileNotFoundError as exc:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_registry_root_missing",
-            context={"registry_root": registry_root()},
+            context={"registry_root": bundled_authority_artifact_path()},
         ) from exc
     except RegistrySnapshotError as exc:
         raise ExternalModeloImportError(
@@ -564,7 +563,6 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
 __all__ = [
     "NUMERIC_CASILLA_DATA_TYPES",
     "assert_revision_content_integrity",
-    "registry_root",
     "reject_incomplete_amendment_casillas",
     "reject_unknown_import_casillas",
     "reject_unknown_override_casillas",

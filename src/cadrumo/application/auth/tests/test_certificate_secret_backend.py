@@ -14,18 +14,18 @@ established for the sibling certificate-source registry tests.
 Also pins the post-cutover surface: named certificate secrets have exactly
 one storage authority (encrypted secure storage), so the deleted keyring
 backend, backend-kind selector, backend factory, and unavailable error must
-be absent from both the module and the ``application.auth`` facade.
+be absent from the backend module.
 
 See Also:
     :mod:`~application.auth.certificate_secret_backend`
         Sole secure-storage certificate-secret backend contract under test.
-    :class:`~application.auth.SecureStorageCertificateSecretBackend`
+    :class:`~application.auth.certificate_secret_backend.SecureStorageCertificateSecretBackend`
         Bucket-scoped backend exercised with a real encrypted store.
-    :class:`~adapters.persistence.storage.SecretStore`
+    :class:`~adapters.persistence.storage.secret_store.store.SecretStore`
         Encrypted secret substrate used for certificate passphrase persistence.
     :class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore`
         Blob encryption layer backing the isolated real-behavior store.
-    :func:`~application.auth.set_operator_certificate_source_secret`
+    :func:`~application.auth.certificate_source_operations.set_operator_certificate_source_secret`
         Operator-facing mutation verb whose redaction and rotation behavior is
         covered by the integration cases.
 """

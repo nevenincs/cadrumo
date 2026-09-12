@@ -359,111 +359,69 @@ NO_PRINTED_TAX_IVA_CATEGORIES: frozenset[IvaCategory] = CUOTA_LESS_M303_IVA_CATE
 
 
 class IvaExemptionArticle(StrEnum):
-    """Closed catalogue of Ley 37/1992 Art. 20 sub-articles.
+    """Typed identifier for an optional exemption classification.
 
-    The optional discriminator carries a known sub-article alongside the
-    generic :attr:`IvaCategory.DOMESTIC_EXEMPT` classification. ``None``
-    means no further Art. 20 distinction is available. A stamped value adds
-    legal context but does not create a Modelo 303 binding or override the
-    generic exempt-operation route.
-
-    The discriminator's legal grounding follows Ley 37/1992
-    (BOE-A-1992-28740). Each retained member identifies the matching
-    article as classification evidence; it is not an official-form binding.
+    Descriptions and legal references are resolved from the registry vocabulary;
+    this enum supplies only the stable identifier/type boundary.
     """
 
     ART_20_UNO_8 = "art_20_uno_8"
-    """Enseñanza — exenta sin derecho a deducción (Ley 37/1992 Art. 20.Uno.8)."""
 
     ART_20_UNO_14 = "art_20_uno_14"
-    """Sanitarios — exenta sin derecho a deducción (Ley 37/1992 Art. 20.Uno.14)."""
 
     ART_20_OTHER = "art_20_other"
-    """Other Art. 20 sub-articles that do not yet warrant a dedicated
-    classification slot."""
+
+    @classmethod
+    def registry_declarations(cls, on_date: date | None = None) -> Mapping[str, str]:
+        """Return this identifier's registry-owned description and references."""
+        prefix = f"exemption_article.{cls.value}."
+        return {
+            key.removeprefix(prefix): value
+            for key, value in iva_statutory_schema_vocabulary(on_date).items()
+            if key.startswith(prefix)
+        }
 
 
 class IvaArt69DosService(StrEnum):
-    """The twelve services Ley 37/1992 art. 69.Dos excepts from the B2C rule.
+    """Typed identifier for an optional outbound-service classification.
 
-    Art. 69.Uno.2.º places a service supplied to someone who is not an
-    *empresario o profesional* where the SUPPLIER is established, so a mainland
-    issuer's B2C service is realizada en el TAI. Art. 69.Dos excepts these twelve
-    from that paragraph when the recipient is established outside the Comunidad
-    — and states its own limit in the same sentence: *"salvo en el caso de que
-    dicho destinatario esté establecido o tenga su domicilio o residencia
-    habitual en las Islas Canarias, Ceuta o Melilla"*.
-
-    **The operator states the item; nothing reads it off the invoice.** The list
-    is a closed legal vocabulary fixed by statute, which is what makes it
-    readable at all. Deciding from an invoice's own prose which lettered item it
-    falls under — "asesoría" implies letter d) — would be a model wearing a
-    lookup table: confident on the population it was written against and
-    silently wrong everywhere else. ``None`` means no item was stated, which is
-    not evidence that none applies; the supply then stays taxed here.
-
-    Two members carry an exclusion the statute writes into the letter itself
-    rather than alongside it, and both are load-bearing: letter d) excludes the
-    services art. 70.Uno.1.º reaches, and letter j) excludes any means of
-    transport and containers.
-
-    See Also:
-        :class:`~domain.iva.IvaCategory`
-            The catalogue whose not-subject member a declared item reaches.
+    Descriptions and legal references are resolved from the registry vocabulary;
+    this enum supplies only the stable identifier/type boundary.
     """
 
     ART_69_DOS_A = "art_69_dos_a"
-    """Cesiones y concesiones de derechos de autor, patentes, licencias, marcas
-    de fábrica o comerciales y demás derechos de propiedad intelectual o
-    industrial, así como cualesquiera otros derechos similares."""
 
     ART_69_DOS_B = "art_69_dos_b"
-    """Cesión o concesión de fondos de comercio, de exclusivas de compra o venta
-    o del derecho a ejercer una actividad profesional."""
 
     ART_69_DOS_C = "art_69_dos_c"
-    """Los de publicidad."""
 
     ART_69_DOS_D = "art_69_dos_d"
-    """Los de asesoramiento, auditoría, ingeniería, gabinete de estudios,
-    abogacía, consultores, expertos contables o fiscales y otros similares, **con
-    excepción de los comprendidos en el número 1.º del apartado Uno del artículo
-    70** — the land-related services, which that article places where the
-    property is."""
 
     ART_69_DOS_E = "art_69_dos_e"
-    """Los de tratamiento de datos y el suministro de informaciones, incluidos
-    los procedimientos y experiencias de carácter comercial."""
 
     ART_69_DOS_F = "art_69_dos_f"
-    """Los de traducción, corrección o composición de textos, así como los
-    prestados por intérpretes."""
 
     ART_69_DOS_G = "art_69_dos_g"
-    """Los de seguro, reaseguro y capitalización, así como los servicios
-    financieros citados por el art. 20.Uno.16.º y 18.º, incluidos los que no
-    estén exentos, **con excepción del alquiler de cajas de seguridad**."""
 
     ART_69_DOS_H = "art_69_dos_h"
-    """Los de cesión de personal."""
 
     ART_69_DOS_I = "art_69_dos_i"
-    """El doblaje de películas."""
 
     ART_69_DOS_J = "art_69_dos_j"
-    """Los arrendamientos de bienes muebles corporales, **con excepción de los
-    que tengan por objeto cualquier medio de transporte y los contenedores**."""
 
     ART_69_DOS_K = "art_69_dos_k"
-    """La provisión de acceso a las redes de gas natural situadas en el
-    territorio de la Comunidad o a cualquier red conectada a dichas redes, a la
-    red de electricidad, de calefacción o de refrigeración, y el transporte o
-    distribución a través de dichas redes, así como otros servicios directamente
-    relacionados con los de esta letra."""
 
     ART_69_DOS_L = "art_69_dos_l"
-    """Las obligaciones de no prestar, total o parcialmente, cualquiera de los
-    servicios enunciados en este apartado."""
+
+    @classmethod
+    def registry_declarations(cls, on_date: date | None = None) -> Mapping[str, str]:
+        """Return this identifier's registry-owned description and references."""
+        prefix = f"art_69_dos_service.{cls.value}."
+        return {
+            key.removeprefix(prefix): value
+            for key, value in iva_statutory_schema_vocabulary(on_date).items()
+            if key.startswith(prefix)
+        }
 
 
 class EUMemberState(StrEnum):

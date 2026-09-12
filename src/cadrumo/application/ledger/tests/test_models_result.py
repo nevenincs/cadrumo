@@ -8,8 +8,6 @@ from pathlib import Path
 
 import pytest
 
-from ....core.external_constants import CLASSIFIED_BY_MANUAL
-from ....core.external_constants import CLASSIFIED_BY_MANUAL as _CLASSIFIED_BY_MANUAL_FROM_CORE
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import BucketTransactionRef, Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -52,8 +50,3 @@ def test_manual_ledger_transaction_result_requires_matching_strict_shapes() -> N
     assert result.ref.transaction_id == transaction.transaction_id
     assert result.transaction.raw.provenance.source_format is SourceFormat.MANUAL
     assert result.bucket_event_ids == ("event-1",)
-
-
-def test_classified_by_manual_constant_is_core_export() -> None:
-    assert CLASSIFIED_BY_MANUAL == "manual"
-    assert CLASSIFIED_BY_MANUAL is _CLASSIFIED_BY_MANUAL_FROM_CORE

@@ -1,4 +1,4 @@
-"""Public application facade for registry-backed filing drafts.
+"""Inert application namespace for registry-backed filing drafts.
 
 This package builds, reviews, approves, exports, verifies, imports, and
 summarises local filing artefacts. All draft creation and validation consume
@@ -6,7 +6,7 @@ a :class:`RegistrySnapshot` to resolve the
 active :class:`ModeloRevision`, its casilla
 schema, relation inputs, and formula graph.
 
-Major entry points:
+Major operations, each imported from its defining module:
 
 * :func:`build_draft` constructs a validated
   :class:`ModeloDraft` from registry-backed inputs.
@@ -20,7 +20,7 @@ Major entry points:
 * :func:`build_runtime_schema_provider` supplies the runtime registry view used
   by draft construction, review, export, and verification.
 
-The facade deliberately separates local filing state from live submission.
+The application boundary deliberately separates local filing state from live submission.
 Remote AEAT submission is not exposed here; attempted live writes are refused
 by :class:`LiveSubmitForbiddenError`.
 
@@ -38,7 +38,7 @@ local amendment construction, and lightweight local history; it does not create
 
 See Also:
     :mod:`modelo`
-        Operator-facing modelo facade that carries calculation revisions into
+        Operator-facing modelo service that carries calculation revisions into
         this filing surface.
     :func:`file_modelo_revision`
         Work-unit action that records a verified calculation revision as a
@@ -57,7 +57,9 @@ See Also:
         this is not an AEAT live-submit path.
     :mod:`domain.calculations.registry`
         Registry authority, snapshots, export layouts, and formula execution
-        used by this application facade.
+        used by this application capability.
+
+The package initializer exports no symbols.
 """
 
 from __future__ import annotations

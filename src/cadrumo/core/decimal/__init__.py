@@ -1,7 +1,7 @@
 """Canonical Decimal helpers for the AEAT domain.
 
-Public surface
---------------
+Defining modules
+----------------
 
 This namespace is inert; each symbol is imported from the module that defines
 it.

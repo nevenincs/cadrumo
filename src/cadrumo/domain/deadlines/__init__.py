@@ -1,10 +1,6 @@
-"""Deadlines: the AEAT filing windows and the engine that resolves them.
+"""AEAT filing windows and deadline resolution.
 
-Inert namespace. Every contract is reached at its own defining module:
-``engine``, ``errors``, ``festivos``, ``models``, ``plazo``, ``profiles``, ``recargo``.
-
-This package re-exported its surface through the namespace. The map is
-retired: a consumer names the module that defines what it imports.
+The initializer is inert; import contracts from their defining modules.
 """
 
 from __future__ import annotations

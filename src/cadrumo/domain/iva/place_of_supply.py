@@ -47,18 +47,12 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
-from functools import lru_cache
-from pathlib import Path
 from types import MappingProxyType
 
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.resources.bundled_data import bundled_path
-from ...core.toml import read_toml
-from ...core.type_guards import is_object_list, is_str_keyed_mapping
 from ...core.validity_window import ValidityWindow, years_covered_by_every_group
-from ._grounding import verify_table_legal_refs
 from .errors import IvaCatalogueError
 from .supply_nature import SupplyNature
 
@@ -184,30 +178,37 @@ def _validate_grounded_row(rule: IvaPlaceOfSupplyRule) -> None:
         )
 
 
-def load_place_of_supply_table(path: Path | None = None) -> Mapping[str, IvaPlaceOfSupplyRule]:
-    """Load the undated place-of-supply grounding table.
-
-    Args:
-        path: The corpus file. Defaults to the bundled one, resolved through the
-            same boundary the sibling catalogue uses.
+def load_place_of_supply_table() -> Mapping[str, IvaPlaceOfSupplyRule]:
+    """Adapt the published place-of-supply grounding table.
 
     Returns:
         Rules keyed by rule id, each carrying the span it is asserted over.
 
-    Raises:
-        IvaCatalogueError: When the file is unreadable, malformed, or carries a
-            duplicate rule id.
     """
-    target = path if path is not None else bundled_path("registry", "aeat", "iva", "place_of_supply.toml")
-    resolved = target.resolve()
-    try:
-        stat = resolved.stat()
-    except OSError as exc:
-        raise IvaCatalogueError(f"{resolved}: cannot stat place-of-supply table: {exc}") from exc
-    return _load_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+    from ..calculations.registry.authority import bundled_authority
+
+    return MappingProxyType(
+        {
+            rule_id: IvaPlaceOfSupplyRule.model_validate(
+                {
+                    "rule_id": published.rule_id,
+                    "supply_nature": (
+                        SupplyNature(published.supply_nature) if published.supply_nature is not None else None
+                    ),
+                    "legal_references": published.legal_references,
+                    "establishing_reference": published.establishing_reference,
+                    "notes": published.notes,
+                    "legal_basis_exempt": published.legal_basis_exempt,
+                    "valid_from": published.valid_from,
+                    "valid_to": published.valid_to,
+                }
+            )
+            for rule_id, published in bundled_authority().catalogues.runtime.iva_place_of_supply.items()
+        }
+    )
 
 
-def place_of_supply_years(path: Path | None = None) -> frozenset[int]:
+def place_of_supply_years() -> frozenset[int]:
     """Return every filing year the table can be resolved for.
 
     A year counts only when EVERY grounded rule is asserted over it. A rule whose
@@ -219,78 +220,8 @@ def place_of_supply_years(path: Path | None = None) -> frozenset[int]:
     Returns:
         The derived set of resolvable filing years.
     """
-    windows = [rule.window for rule in load_place_of_supply_table(path).values() if rule.window is not None]
+    windows = [rule.window for rule in load_place_of_supply_table().values() if rule.window is not None]
     return years_covered_by_every_group([window] for window in windows)
-
-
-def _hydrated_rule(raw_rule: object, *, path: Path, index: int) -> IvaPlaceOfSupplyRule:
-    """Hydrate one ``[[place_of_supply_rules]]`` table into its typed row.
-
-    Registry TOML stays free-form and the typed axes are hydrated here, at the
-    boundary: the model is strict, so a raw list and a raw token are both
-    refused rather than silently coerced further in.
-    """
-    if not is_str_keyed_mapping(raw_rule):
-        raise IvaCatalogueError(f"{path}: place_of_supply_rules[{index}] must be a table")
-    # Shape only. WHETHER a row may cite nothing is the model's call, so
-    # that the legal-basis exemption is decided in one place rather than
-    # half here and half there.
-    raw_references = raw_rule.get("legal_references", [])
-    if not is_object_list(raw_references):
-        raise IvaCatalogueError(
-            f"{path}: place_of_supply_rules[{index}] legal_references must be an array",
-        )
-    raw_nature = raw_rule.get("supply_nature")
-    try:
-        nature = SupplyNature(raw_nature) if raw_nature is not None else None
-    except ValueError as exc:
-        accepted = ", ".join(sorted(member.value for member in SupplyNature))
-        raise IvaCatalogueError(
-            f"{path}: place_of_supply_rules[{index}] supply_nature {raw_nature!r} is not one of: {accepted}",
-        ) from exc
-    return IvaPlaceOfSupplyRule.model_validate(
-        {**raw_rule, "legal_references": tuple(raw_references), "supply_nature": nature},
-    )
-
-
-def _rules_in_table(path: Path) -> dict[str, IvaPlaceOfSupplyRule]:
-    """Read the place-of-supply TOML into its ``rule_id``-keyed table.
-
-    A duplicate id refuses rather than last-write-wins: two rows claiming one id
-    is an authoring error, and silently keeping the later one would ground a
-    classification on a provision the author did not mean to apply.
-    """
-    payload = read_toml(path, error_factory=IvaCatalogueError)
-    raw_rules = payload.get("place_of_supply_rules")
-    if not is_object_list(raw_rules) or not raw_rules:
-        raise IvaCatalogueError(f"{path}: missing [[place_of_supply_rules]] entries")
-    rules: dict[str, IvaPlaceOfSupplyRule] = {}
-    for index, raw_rule in enumerate(raw_rules, start=1):
-        rule = _hydrated_rule(raw_rule, path=path, index=index)
-        if rule.rule_id in rules:
-            raise IvaCatalogueError(f"{path}: duplicate place-of-supply rule {rule.rule_id!r}")
-        rules[rule.rule_id] = rule
-    return rules
-
-
-@lru_cache(maxsize=8)
-def _load_cached(
-    path: str,
-    byte_count: int,
-    modified_ns: int,
-) -> Mapping[str, IvaPlaceOfSupplyRule]:
-    del byte_count, modified_ns
-    target = Path(path)
-    rules = _rules_in_table(target)
-    # Only ``legal_references`` is verified. ``establishing_reference`` is
-    # required by the model to be a member of it, so verifying both would
-    # re-resolve the same provision under a second label and report one broken
-    # citation twice.
-    verify_table_legal_refs(
-        str(target),
-        [(rule.rule_id, rule.legal_references) for rule in rules.values()],
-    )
-    return MappingProxyType(rules)
 
 
 def place_of_supply_rule(rule_id: str, *, on: date) -> IvaPlaceOfSupplyRule:
@@ -310,16 +241,19 @@ def place_of_supply_rule(rule_id: str, *, on: date) -> IvaPlaceOfSupplyRule:
             placement has no provision behind it, and answering anyway would
             manufacture one.
     """
+    from ..calculations.registry.authority import bundled_authority
+
+    projected_year = bundled_authority().project_filing_year(on.year)
     rules = load_place_of_supply_table()
     grounded_years = place_of_supply_years()
-    if on.year not in grounded_years:
+    if projected_year not in grounded_years:
         raise IvaCatalogueError(
             f"no place-of-supply grounding for year={on.year}; the table grounds "
             f"{sorted(grounded_years)}. Ground the year against BOE or AEAT -- never widen a rule's "
             "window to admit it.",
         )
     rule = rules.get(rule_id)
-    if rule is None or (rule.window is not None and not rule.window.covers_year(on.year)):
+    if rule is None or (rule.window is not None and not rule.window.covers_year(projected_year)):
         raise IvaCatalogueError(
             f"place-of-supply rule {rule_id!r} is not grounded for year={on.year}; "
             "every classification rule must cite the provision that establishes its placement",

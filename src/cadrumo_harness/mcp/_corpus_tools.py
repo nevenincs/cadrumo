@@ -13,9 +13,10 @@ functions over typed models: :func:`corpus_search_payload_from_response` and
 :func:`render_corpus_search_text` carry no protocol detail and are unit-tested
 directly, while :func:`build_corpus_search_tool` lazily adapts onto the MCP
 SDK's ``Tool`` type so the module still imports (and the server refuses
-gracefully) when the harness distribution's MCP runtime is absent. The retrieval itself is
-owned by the application service (:func:`~application.corpus_search.search_corpus`),
-consumed through the package facade per ``aeat-architecture-boundaries``.
+gracefully) when the harness distribution's MCP runtime is absent. The retrieval
+itself is owned by the defining runtime service module
+(:func:`~cadrumo.application.corpus_search.runtime.search_corpus`), which this
+adapter imports directly.
 """
 
 from __future__ import annotations

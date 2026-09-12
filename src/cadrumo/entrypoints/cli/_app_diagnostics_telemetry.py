@@ -109,6 +109,7 @@ def diagnostics_telemetry_flush(
     from ...application.diagnostics_telemetry import build_telemetry_flush_preview, flush_telemetry
     from ...core.config import load_settings, override_settings
     from ...core.json_contract import Notice, NoticeSeverity
+    from ...entrypoints.diagnostics_run_health_composition import compose_diagnostics_run_health_port
 
     overrides: dict[str, object] = {}
     if opt_in is not None:
@@ -122,15 +123,24 @@ def diagnostics_telemetry_flush(
         ctx.with_resource(override_settings(**overrides))
 
     settings = load_settings()
+    run_telemetry_port = compose_diagnostics_run_health_port()
 
     if dry_run:
         # A bare --dry-run never sends regardless of --acknowledge-remote-telemetry;
         # the preview still reflects the real acknowledgement value so the
         # operator can see exactly what a matching --no-dry-run run would do.
-        preview = build_telemetry_flush_preview(settings=settings, acknowledged=acknowledge)
+        preview = build_telemetry_flush_preview(
+            settings=settings,
+            acknowledged=acknowledge,
+            run_telemetry_port=run_telemetry_port,
+        )
         sent = False
     else:
-        preview = flush_telemetry(settings=settings, acknowledged=acknowledge)
+        preview = flush_telemetry(
+            settings=settings,
+            acknowledged=acknowledge,
+            run_telemetry_port=run_telemetry_port,
+        )
         sent = preview.would_send
 
     result = TelemetryFlushResult(

@@ -220,80 +220,9 @@ def test_public_functions_link_anchor_parameters() -> None:
 
 _DOTTED_ROLE = re.compile(r":(?:class|func|meth|attr|data|exc|obj|mod):`~?([A-Za-z_][A-Za-z0-9_.]*)`")
 
-# Shrink-only debt ceiling, NOT a target. It is lowered as the debt burns down
-# and must never be raised. The remaining entries are prose reaching past a
-# facade into ``_module`` internals -- the class the architecture boundaries rule
-# already governs.
-#
-# It landed at 204 and the first 60 of that drop was THIS DETECTOR, not work.
-# ``core/__init__.py`` declares ``__all__: list[str] = [...]``, an ``ast.AnnAssign``
-# rather than an ``ast.Assign``; reading only the latter parsed that facade as
-# exporting zero symbols and turned all 61 roles into it -- 38 of them the lazily
-# resolved ``BindingSourceKind``, a PEP 562 facade the boundaries rule explicitly
-# sanctions -- into violations. A detector that flags a sanctioned pattern 38 times
-# is reporting on itself. The same node type produced 112 false violations from
-# this same file for an earlier sweep, so it is a recurrence and not a one-off:
-# any AST walk over module-level constants must handle ``AnnAssign`` and
-# ``AugAssign`` or it silently sees an empty set.
-#
-# Neither time did the finding list reveal it -- 61 plausible role names read
-# exactly like debt. Both times the tell was the DENOMINATOR: an ``__all__`` of
-# size zero, and one symbol holding 38 of 61. Print the denominator, or find the
-# implausible concentration.
-#
-# THE TWO DROPS SO FAR ARE NOT THE SAME KIND OF THING, and a ceiling that falls
-# without saying which is which records a lie about progress:
-#
-#   204 -> 144   this detector correcting itself. No docstring changed.
-#   144 -> 110   thirty-four real repoints. ``CasillaId`` is exported by ``core``
-#                and genuinely absent from the registry facade, so the roles
-#                naming ``domain.calculations.registry.CasillaId`` were pointed
-#                at a package that never owned it.
-#   110 ->  18   ninety-two repoints, resolved by DEFINING module rather than by
-#                exporting module. "Shortest public module that exports it" is the
-#                wrong query: it picks re-exporters over owners, and would have
-#                aimed seventeen roles at ``application.state_projection``, which
-#                exports several repositories and owns none of them.
-#
-# 18 -> 2 was 16 real repoints, not a detector change. The earlier note here said
-# all 18 named a symbol defined in more than one module; that was wrong and is
-# corrected by measurement. Only four did, and the true causes were mundane: three
-# citations dropped the ``tests`` package segment, and ten named a symbol that
-# exists nowhere in the tree -- a truncated test-function name, an enum member cited
-# without its class, and prose surviving the rename of the thing it described
-# (``IVA_RATE_TABLE`` and ``CATEGORY_PROFILES_2025`` are both loader functions now).
-#
-# The recurring shape is worth naming, because five of the sixteen were instances of
-# it: A CITATION AND ITS INVERSE ARE WRITTEN AS A PAIR, AND ONLY ONE HALF IS KEPT
-# CORRECT. Each of those five sat one or two lines from a sibling role that had the
-# module path right.
-#
-# What remains is one symbol, ``PeriodCode``, whose owning package publishes its
-# sibling ``PeriodSelector`` but not it. The fix is promotion to the registry facade
-# rather than a repoint at the private module that defines it -- deferred only
-# because it is a facade edit, not because the answer is unclear.
-#
-# THIS WAS A COUNTING CEILING (``len(unresolved) <= 2``) AND THAT COULD NOT SAY WHAT
-# IT MEANT. A ``<=`` passes identically at two, one or zero, so the gate could not
-# distinguish "the known allowance" from "something else broke while the allowance
-# got fixed", and once the population dropped the ceiling would have gone silently
-# slack -- a shrink-only ratchet that stops ratcheting is indistinguishable from one
-# that is holding. It also gated a tally, which is the thing this project's
-# quality-gate rule forbids: a count encodes a moment and trains everyone to edit
-# the constant.
-#
-# So the allowance is keyed by SYMBOL with a stated reason, and it is enforced from
-# both ends: an unresolved reference to anything else fails, AND an allowance whose
-# symbol has stopped being unresolved fails. The second half is what closes the
-# ratchet -- promoting ``PeriodCode`` reds this gate until its entry is deleted,
-# instead of leaving a permanently-satisfied ceiling behind.
-_UNRESOLVED_DOTTED_REFERENCE_ALLOWANCE: dict[str, str] = {}
-
-# Anchored to the exact report format built in _scan_dotted_references. A report the
-# pattern cannot read is counted as a VIOLATION rather than skipped: if the format
-# changes, this gate must fail loudly instead of quietly matching nothing and
-# passing.
-_REPORT_SYMBOL = re.compile(r"does not define '([^']+)'$")
+# Dotted roles assert symbol ownership. A reference resolves only when its
+# cited module defines the symbol locally; ``__all__``, imported aliases, and
+# lazy export maps are not alternate authorities.
 
 # A derived scan selecting nothing satisfies the ceiling assertion perfectly.
 # These floors sit far below the real figures so ordinary churn never moves them.
@@ -311,13 +240,7 @@ def _module_file_for(parts: list[str]) -> Path | None:
 
 
 def _defined_names(path: Path) -> set[str] | None:
-    """Return every name a module defines or imports, or ``None`` when unparseable.
-
-    Unions ``__all__`` with top-level definitions. The union is deliberate: a
-    role reaching into a private module names something that module defines but
-    does not publish, which is a different question from whether the reference
-    resolves at all. This gate answers only the second.
-    """
+    """Return locally defined names, or ``None`` when the module is unparseable."""
     try:
         tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
     except SyntaxError:
@@ -328,26 +251,8 @@ def _defined_names(path: Path) -> set[str] | None:
             names.add(node.name)
         elif isinstance(node, ast.Assign):
             names.update(target.id for target in node.targets if isinstance(target, ast.Name))
-            if any(isinstance(t, ast.Name) and t.id == "__all__" for t in node.targets):
-                try:
-                    names.update(ast.literal_eval(node.value))
-                except (ValueError, TypeError):
-                    return None
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
             names.add(node.target.id)
-            # ``__all__: list[str] = [...]`` is an AnnAssign, not an Assign, and
-            # reading only the latter silently treats an annotated facade as
-            # exporting nothing. That is not hypothetical: it produced sixty-one
-            # false positives against ``core`` -- a lazy PEP 562 facade the
-            # architecture rule explicitly sanctions -- and would have baked this
-            # detector's blind spot into the ceiling below.
-            if node.target.id == "__all__" and node.value is not None:
-                try:
-                    names.update(ast.literal_eval(node.value))
-                except (ValueError, TypeError):
-                    return None
-        elif isinstance(node, ast.ImportFrom):
-            names.update(alias.asname or alias.name for alias in node.names)
     return names
 
 
@@ -450,34 +355,8 @@ def test_dotted_cross_references_resolve_to_a_defining_module() -> None:
     """A role naming a module path must name a symbol that module defines."""
     unresolved, _, _ = _unresolved_dotted_references()
 
-    unexpected = [
-        report
-        for report in unresolved
-        if (match := _REPORT_SYMBOL.search(report)) is None
-        or match.group(1) not in _UNRESOLVED_DOTTED_REFERENCE_ALLOWANCE
-    ]
-
-    assert not unexpected, (
-        f"{len(unexpected)} dotted cross-reference(s) name a symbol their cited module does not "
-        "define, and are not in the stated allowance. Repoint the reference at the module that "
-        "owns the symbol; do not add an allowance entry to silence it.\n" + "\n".join(sorted(unexpected)[:40])
-    )
-
-
-def test_every_unresolved_reference_allowance_is_still_live() -> None:
-    """The other half of the ratchet: a fixed allowance must be deleted, not left standing.
-
-    Without this, the allowance degrades into exactly what the counting ceiling it
-    replaced was -- a permanently-satisfied constant that no longer describes the
-    tree. Promoting ``PeriodCode`` to the registry facade reds this test, and the
-    fix is to delete its entry.
-    """
-    unresolved, _, _ = _unresolved_dotted_references()
-    live = {match.group(1) for report in unresolved if (match := _REPORT_SYMBOL.search(report)) is not None}
-
-    stale = sorted(set(_UNRESOLVED_DOTTED_REFERENCE_ALLOWANCE) - live)
-
-    assert not stale, (
-        f"allowance entries no longer describe any unresolved reference: {stale}. "
-        "The citation was fixed; delete the entry rather than leaving it standing."
+    assert not unresolved, (
+        f"{len(unresolved)} dotted cross-reference(s) name a symbol their cited module does not "
+        "define. Repoint the reference at the module that owns the symbol; do not create a "
+        "forwarding export to make the stale path resolve.\n" + "\n".join(sorted(unresolved)[:40])
     )

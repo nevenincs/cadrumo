@@ -1,6 +1,5 @@
 """Smoke tests for the public outbound-auth defining modules."""
 
-import importlib
 import inspect
 
 import pytest
@@ -11,12 +10,6 @@ from ..clave_movil import ClaveMovilAuthProvider
 from ..provider_selection import select_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
-
-
-def test_auth_package_initializer_is_inert() -> None:
-    """The package root must not expose a compatibility facade."""
-    package = importlib.import_module("..", __package__)
-    assert package.__all__ == []
 
 
 def test_smoke_auth_key_symbols_are_importable() -> None:

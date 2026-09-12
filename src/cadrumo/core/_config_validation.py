@@ -71,14 +71,9 @@ def resolve_database_url_for_active_profile(
         # uses strict pydantic validation; this preserves the
         # one-resolver invariant for the active-profile pointer.
         #
-        # Reached through the owning submodule, never the ``cadrumo.core``
-        # facade. Both helpers are served by the package's PEP 562
-        # ``__getattr__``, which is defined near the END of
-        # ``core/__init__``; any module imported EARLIER in that file that
-        # reaches this validator therefore asks a half-built package for an
-        # attribute whose accessor does not exist yet, and the whole package
-        # becomes unimportable. Naming the submodule keeps this resolvable
-        # no matter how early the caller sits.
+        # Import the defining module locally. This keeps settings validation
+        # independent of the inert ``cadrumo.core`` package namespace and
+        # avoids binding the pointer module until the fallback is needed.
         from .bucket_pointer import pointer_path, read_pointer
 
         try:

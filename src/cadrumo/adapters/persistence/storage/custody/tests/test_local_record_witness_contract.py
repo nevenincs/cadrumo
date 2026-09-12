@@ -12,7 +12,7 @@ re-submit the same receipt after a crash and have that be a no-op rather than an
 error; and when it loses a compare-and-swap it needs the leaf it did not write
 left exactly as it found it, because that leaf is another party's witness.
 
-Driven against real files through the package facade, with no patching: these
+Driven against real files through the defining filesystem module, with no patching: these
 are filesystem primitives, and a stand-in for the filesystem would assert only
 the shape of the call.
 """

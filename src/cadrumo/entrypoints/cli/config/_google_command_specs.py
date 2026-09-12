@@ -40,7 +40,7 @@ _CREDENTIAL_KIND = ValueContract(
 
 # Every dynamically resolved handler module is named here as a WHOLE dotted path.
 # The path used to be built with an f-string, which meant no static reader -- grep,
-# the import-hygiene scan, or a dead-code sweep -- could see the edge, so all of
+# the import-boundary checker, or a dead-code sweep -- could see the edge, so all of
 # these modules read as orphaned while backing live verbs. A wrong key now raises
 # at spec-build time instead of failing lazily on first invocation.
 _HANDLER_MODULES: Final[dict[str, str]] = {

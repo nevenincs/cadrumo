@@ -1,4 +1,4 @@
-"""Public test-support facade for Modelo integration suites."""
+"""Inert namespace for Modelo integration test support."""
 
 from __future__ import annotations
 

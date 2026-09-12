@@ -7,16 +7,10 @@ None of them re-derives state from a private subset of the stores.
 
 The :class:`OperatorStateProjection` is a typed, frozen pydantic model
 built by exactly one producer, :func:`build_operator_state_projection`.
-The producer loads the profile aggregate, the workspace catalogues
-(transactions via :class:`TransactionCatalogueRepository`, invoices via
-:class:`InvoiceCatalogueRepository`, declaration drafts via
-:class:`~cadrumo.adapters.persistence.profile.filing_drafts.ModeloDraftRepository`,
-modelo work units via
-:class:`~adapters.persistence.profile.modelos_work_units.WorkUnitCatalogueRepository`, and calculation
-revisions via
-:class:`~adapters.persistence.profile.modelos_calculation.CalculationRevisionCatalogueRepository`), the
-auth state, the active-profile health, and the deadline obligations computed
-from :class:`Schedule`, and computes each readiness value exactly once.
+The producer consumes the application-owned profile and workspace read ports,
+the auth state, the active-profile health, and the deadline obligations
+computed from :class:`Schedule`, and computes each readiness value exactly
+once.
 Modelo readiness resolves a :class:`RegistrySnapshot` only to evaluate
 registry-declared profile, binding, and ledger preflight requirements for the
 requested :class:`ModeloReadinessRequest`.
@@ -49,9 +43,8 @@ See Also:
         Auth status producer that reads
         :class:`ProjectionAuthReadiness` and
         :class:`ProjectionActiveProfile` from this projection.
-    :func:`~cadrumo.adapters.persistence.storage.inspect_bucket_storage_runtime`
-        Storage-runtime inspection used by the workspace summary without
-        letting presentation surfaces open their own storage-reading paths.
+    :class:`~cadrumo.application.state_projection_ports.StateProjectionReadPorts`
+        Required application-owned reads supplied by an outer composition root.
     :class:`ProjectionWorkspaceSummary`
         Per-store counter record that keeps declaration drafts, work units, and
         calculation revisions distinct.
@@ -80,12 +73,6 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, field_validator
 
-from ..adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ..adapters.persistence.storage.runtime import inspect_bucket_storage_runtime
 from ..core.aggregation import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_BINDING_SOURCES
 from ..core.aggregation import BindingSourceKind
 from ..core.auth_provider import AuthProviderKind
@@ -102,7 +89,6 @@ from ..domain.calculations.registry.authority import bundled_authority
 from ..domain.calculations.registry.ids import RevisionId
 from ..domain.deadlines.engine import DeadlineEngine, compute_obligation_schedule
 from ..domain.deadlines.models import ObligationStatus, Schedule, TaxpayerProfile
-from ..domain.modelos.work_unit import WorkUnitState
 from ._state_projection_readiness import (
     one_line_error_message,
     readiness_binding_input_channel,
@@ -117,6 +103,7 @@ from .ledger.preflight import (
 )
 from .operator_actions.models import PreconditionVerdict
 from .state_projection_auth import ProjectionAuthReadiness, build_auth_readiness
+from .state_projection_ports import StateProjectionReadPorts
 from .user_profile.commands import ProfilePreflightReport, ProfilePreflightRequirement
 from .workflow.profile_health import ActiveProfileHealth, assess_active_profile_health
 from .workflow.state_models import WorkflowState
@@ -280,8 +267,12 @@ def _build_active_profile(health: ActiveProfileHealth) -> ProjectionActiveProfil
     )
 
 
-def _build_workspace_summary(*, bucket_id: str | None) -> ProjectionWorkspaceSummary:
-    """Load every workspace store and project its counters.
+def _build_workspace_summary(
+    *,
+    bucket_id: str | None,
+    read_ports: StateProjectionReadPorts,
+) -> ProjectionWorkspaceSummary:
+    """Project the workspace facts supplied by the application read port.
 
     With no active profile bucket there is no bucket database to open,
     so the counters are all zero without touching the encrypted stores.
@@ -289,25 +280,15 @@ def _build_workspace_summary(*, bucket_id: str | None) -> ProjectionWorkspaceSum
     if bucket_id is None:
         return ProjectionWorkspaceSummary()
 
-    inspect_bucket_storage_runtime(bucket_id).require_ready()
-
-    from .diagnostics import secure_object_unreadable_total
-
-    transactions = TransactionCatalogueRepository(bucket_id=bucket_id).load()
-    invoices = InvoiceCatalogueRepository().load()
-    drafts = tuple(ModeloDraftRepository().iter_drafts())
-    work_units = WorkUnitCatalogueRepository().load()
-    revisions = CalculationRevisionCatalogueRepository().load()
-    active_work_units = sum(1 for unit in work_units.values() if unit.state is WorkUnitState.BORRADOR)
-    discarded_work_units = sum(1 for unit in work_units.values() if unit.state is WorkUnitState.DESCARTADO)
+    workspace = read_ports.workspace.read_workspace(bucket_id=bucket_id)
     return ProjectionWorkspaceSummary(
-        transactions=len(transactions.transactions),
-        invoices=len(invoices),
-        drafts=len(drafts),
-        work_units=active_work_units,
-        discarded_work_units=discarded_work_units,
-        calculation_revisions=len(revisions),
-        unreadable_rows=secure_object_unreadable_total(),
+        transactions=workspace.transactions,
+        invoices=workspace.invoices,
+        drafts=workspace.drafts,
+        work_units=workspace.work_units,
+        discarded_work_units=workspace.discarded_work_units,
+        calculation_revisions=workspace.calculation_revisions,
+        unreadable_rows=workspace.unreadable_rows,
     )
 
 
@@ -697,17 +678,18 @@ class _ModeloReadinessEvaluation:
     ledger: _ModeloReadinessLedgerStage
 
 
-def _load_modelo_readiness_context(active_profile_id: str) -> _ModeloReadinessContext | None:
-    """Load the active bucket and profile record for readiness evaluation."""
-    from .user_profile.profile_record_repository import ProfileRecordRepository
-    from .workflow.profile_bucket_scan import read_profile_bucket_by_id
-
-    pointer = read_profile_bucket_by_id(active_profile_id)
-    if pointer is None:
+def _load_modelo_readiness_context(
+    active_profile_id: str,
+    *,
+    read_ports: StateProjectionReadPorts,
+) -> _ModeloReadinessContext | None:
+    """Load profile facts for readiness through the application read port."""
+    profile = read_ports.profile.read_profile(profile_id=active_profile_id)
+    if profile is None:
         return None
     return _ModeloReadinessContext(
-        bucket_id=pointer.bucket_id,
-        record=ProfileRecordRepository.for_current_session(pointer.bucket_id).load(pointer.bucket_id),
+        bucket_id=profile.bucket_id,
+        record=profile.record,
     )
 
 
@@ -878,6 +860,7 @@ def _build_modelo_readiness(
     requests: tuple[ModeloReadinessRequest, ...],
     *,
     active_profile_id: str | None,
+    read_ports: StateProjectionReadPorts,
 ) -> tuple[ProjectionModeloReadiness, ...]:
     """Compute one preflight report per readiness request.
 
@@ -888,7 +871,7 @@ def _build_modelo_readiness(
     if not requests or active_profile_id is None:
         return ()
 
-    context = _load_modelo_readiness_context(active_profile_id)
+    context = _load_modelo_readiness_context(active_profile_id, read_ports=read_ports)
     if context is None:
         return ()
     return tuple(
@@ -1097,6 +1080,7 @@ def _ledger_period_for_modelo_readiness(request: ModeloReadinessRequest) -> Peri
 
 def build_operator_state_projection(
     *,
+    read_ports: StateProjectionReadPorts,
     state: WorkflowState | None = None,
     auth_snapshot: ActiveAuthProjectionSnapshot | None = None,
     requested_provider: str | None = None,
@@ -1113,6 +1097,8 @@ def build_operator_state_projection(
     no surface re-derives state.
 
     Args:
+        read_ports: Required application-owned profile and workspace reads
+            composed by the outer entrypoint for this profile scope.
         state: Pre-loaded workflow state. When ``None`` and a profile
             is active, the state is loaded through
             :func:`~cadrumo.application.workflow.persistence.workflow_state_repository`;
@@ -1158,6 +1144,7 @@ def build_operator_state_projection(
     if auth_snapshot is not None:
         return _assemble_operator_state_projection(
             auth_snapshot.state or WorkflowState(),
+            read_ports=read_ports,
             active_bucket_id=auth_snapshot.bucket_id,
             credential_bucket_id=(auth_snapshot.bucket_id if auth_snapshot.state is not None else None),
             certificate_credentials=auth_snapshot.certificate_credentials,
@@ -1173,6 +1160,7 @@ def build_operator_state_projection(
     if state is not None:
         return _assemble_operator_state_projection(
             state,
+            read_ports=read_ports,
             active_bucket_id=resolve_active_bucket_id(),
             credential_bucket_id=None,
             certificate_credentials=None,
@@ -1188,6 +1176,7 @@ def build_operator_state_projection(
     with active_auth_projection_span(requested_provider=requested_provider) as snapshot:
         return _assemble_operator_state_projection(
             snapshot.state or WorkflowState(),
+            read_ports=read_ports,
             active_bucket_id=snapshot.bucket_id,
             credential_bucket_id=(snapshot.bucket_id if snapshot.state is not None else None),
             certificate_credentials=snapshot.certificate_credentials,
@@ -1205,6 +1194,7 @@ def build_operator_state_projection(
 def _assemble_operator_state_projection(
     resolved_state: WorkflowState,
     *,
+    read_ports: StateProjectionReadPorts,
     active_bucket_id: str | None,
     credential_bucket_id: str | None,
     certificate_credentials: ActiveCertificateCredentials | None,
@@ -1222,7 +1212,10 @@ def _assemble_operator_state_projection(
     profile_health = assess_active_profile_health(resolved_state)
 
     workspace = (
-        _build_workspace_summary(bucket_id=resolved_state.active_profile_bucket_id())
+        _build_workspace_summary(
+            bucket_id=resolved_state.active_profile_bucket_id(),
+            read_ports=read_ports,
+        )
         if include_workspace_summary
         else ProjectionWorkspaceSummary()
     )
@@ -1248,6 +1241,7 @@ def _assemble_operator_state_projection(
     modelo_readiness = _build_modelo_readiness(
         modelo_readiness_requests,
         active_profile_id=profile_health.active_profile,
+        read_ports=read_ports,
     )
 
     return OperatorStateProjection(

@@ -11,11 +11,9 @@ Manifests are plaintext JSON on disk (corpus material is plaintext;
 the manifest is the integrity gate, not the secrecy gate). Per-record
 fields are validated against path-traversal at construction.
 
-There is no human CLI for corpus verification. This module's API is the
-whole surface: :func:`build_corpus_manifest`, :func:`verify_corpus_bundle`,
-and :func:`build_corpus_manifest`, re-exported through
-``cadrumo.adapters.persistence.storage`` and driven programmatically by its
-consumers. The same API owns manifest regeneration after an intentional
+There is no human CLI for corpus verification. Consumers import manifest and
+bundle operations from their defining modules; this package initializer is
+inert. The same operations own manifest regeneration after an intentional
 corpus update.
 
 This module also builds and verifies distributable corpus *bundles*: a

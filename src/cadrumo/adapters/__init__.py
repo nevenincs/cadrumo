@@ -2,7 +2,7 @@
 
 This package is the outer infrastructure layer in the hexagonal layout. It is
 intentionally import-light and exports no concrete adapter classes; callers
-should import focused child facades such as :mod:`inbound` for
+should import focused child modules under :mod:`inbound` for
 document and statement ingestion, :mod:`outbound` for external
 service integrations, and :mod:`persistence` for profile and
 secure-storage adapters.

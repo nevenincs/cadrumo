@@ -19,23 +19,17 @@ complaint:
 
 * two roles naming a MODULE with ``:func:``, so the reference asserted a
   callable where a module sits;
-* a registry scalar alias cited on the package facade that does not export it,
-  twice, while its sibling ``PeriodSelector`` genuinely is exported -- the
-  asymmetry is exactly what makes the citation look right;
-* a storage filename cited on ``core.config``, which re-exports the *former*
-  name and not this one;
-* a replay payload cited on the registry facade while it lives in
-  ``_live_parity``.
+* symbols cited on package paths rather than on their defining modules;
+* a storage filename cited on ``core.config`` rather than its owner;
+* a replay payload cited on the registry package while it lived in another
+  module.
 
 A hard cut with no stored baseline, which a backlog of six affords: a ratchet
 over an unknown population is how a gate gets disabled.
 
-**The predicate is DEFINES-OR-EXPORTS, not ``__all__``.** A role naming a
-private symbol in the module that defines it is truthful, and the first draft
-of this gate keyed on ``__all__`` alone and reported sixty-two offenders, of
-which fifty-six were correct citations of private symbols. A detector that
-spends its credibility on noise before it finds anything is one nobody runs;
-the narrower predicate is what leaves six real defects standing.
+**The predicate is DEFINES, not exports.** A role naming a private symbol in
+the module that defines it is truthful. Imported aliases, ``__all__`` entries,
+and forwarding modules are not alternate ownership locations.
 
 **Only DOTTED first-party targets are judged.** A bare anchor
 (``:class:`ModeloRevision```) is the documented house style and is resolved by
@@ -101,13 +95,8 @@ def module_file(dotted: str) -> Path | None:
 
 
 @cache
-def module_names(path: Path) -> frozenset[str]:
-    """Every name the module defines, imports, or lists in ``__all__``.
-
-    The union is deliberate. ``__all__`` alone under-reports: a private helper
-    cited from its own defining module is a truthful reference and must not be
-    flagged. Definitions alone under-report the other way: a facade whose whole
-    surface is re-exports would appear to hold nothing.
+def module_defined_names(path: Path) -> frozenset[str]:
+    """Every name the module defines locally.
 
     Names bound inside ``if`` / ``try`` branches count, which covers the
     optional-dependency fallback idiom where a class is defined in an
@@ -125,24 +114,9 @@ def module_names(path: Path) -> frozenset[str]:
             for target in node.targets:
                 if isinstance(target, ast.Name):
                     names.add(target.id)
-                    if target.id == "__all__":
-                        names |= _literal_names(node.value)
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
             names.add(node.target.id)
-        elif isinstance(node, ast.ImportFrom):
-            names.update(alias.asname or alias.name for alias in node.names)
-        elif isinstance(node, ast.Import):
-            names.update(alias.asname or alias.name.split(".")[0] for alias in node.names)
     return frozenset(names)
-
-
-def _literal_names(node: ast.expr) -> set[str]:
-    """Return the string members of an ``__all__`` literal, or nothing."""
-    try:
-        value = ast.literal_eval(node)
-    except (ValueError, SyntaxError):
-        return set()
-    return {item for item in value if isinstance(item, str)} if isinstance(value, list | tuple) else set()
 
 
 def _dotted_first_party_targets(text: str) -> Iterator[tuple[int, str, str]]:
@@ -171,12 +145,12 @@ def cross_reference_defect(role: str, target: str) -> str | None:
     module, _, symbol = target.rpartition(".")
     path = module_file(module)
     if path is not None:
-        return None if symbol in module_names(path) else f"{module} neither defines nor exports {symbol}"
+        return None if symbol in module_defined_names(path) else f"{module} does not define {symbol}"
     owner_module, _, owner = module.rpartition(".")
     owner_path = module_file(owner_module)
     if owner_path is None:
         return f"no module named {module}"
-    return None if owner in module_names(owner_path) else f"{owner_module} neither defines nor exports {owner}"
+    return None if owner in module_defined_names(owner_path) else f"{owner_module} does not define {owner}"
 
 
 def cross_reference_defects() -> list[str]:
@@ -260,14 +234,14 @@ def test_the_detector_catches_a_module_that_does_not_exist() -> None:
     assert cross_reference_defect("mod", "core.no_such_module_exists") is not None
 
 
-def test_the_detector_clears_a_public_facade_symbol() -> None:
+def test_the_detector_clears_a_canonical_definition() -> None:
     """The precision half: a correct citation must stay silent.
 
     Without this the gate could pass the assertions above by flagging
     everything, and a detector that flags correct code is one somebody
     switches off.
     """
-    assert cross_reference_defect("class", "core.Modelo") is None
+    assert cross_reference_defect("class", "core.modelo.Modelo") is None
 
 
 def test_the_detector_clears_a_private_symbol_in_its_defining_module() -> None:
@@ -283,7 +257,7 @@ def test_the_detector_clears_a_private_symbol_in_its_defining_module() -> None:
 
 def test_the_detector_resolves_a_method_through_its_owning_class() -> None:
     """A ``Class.method`` target names a module one segment further up."""
-    assert cross_reference_defect("meth", "core.Modelo.no_such_method") is None
-    reason = cross_reference_defect("meth", "core.NoSuchClass.method")
+    assert cross_reference_defect("meth", "core.modelo.Modelo.no_such_method") is None
+    reason = cross_reference_defect("meth", "core.modelo.NoSuchClass.method")
     assert reason is not None
     assert "NoSuchClass" in reason

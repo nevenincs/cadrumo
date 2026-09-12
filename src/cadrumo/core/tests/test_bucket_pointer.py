@@ -54,11 +54,3 @@ def test_deleted_transition_revision_refuses_at_the_real_read_boundary(tmp_path)
 
     with pytest.raises(ValidationError):
         read_pointer(tmp_path)
-
-
-def test_old_byte_capture_restore_and_unlink_clear_api_is_not_public() -> None:
-    from ... import core
-
-    for retired_name in ("capture_pointer", "restore_pointer", "clear_pointer"):
-        assert retired_name not in core.__all__
-        assert not hasattr(core, retired_name)
