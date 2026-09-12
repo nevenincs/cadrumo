@@ -10,11 +10,13 @@ from ...application.state_projection import (
     ProjectionModeloReadiness,
     build_operator_state_projection,
 )
+from ...application.state_projection_ports import StateProjectionReadPorts
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.period import Period, PeriodError
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ._modelo_cli_support import unsupported_local_work_period_refusal
+from .state_projection_support import state_projection_read_ports
 from ._modelo_payloads import (
     LedgerIssuePayload,
     ModeloReadinessMissingBindingPayload,
@@ -56,7 +58,7 @@ def modelo_readiness(
         filing_year=filing_year,
         period=resolved_period,
     )
-    report = _readiness_report(request)
+    report = _readiness_report(request, read_ports=state_projection_read_ports(ctx))
     readiness_result = _readiness_result(
         report,
         modelo=modelo,
@@ -106,14 +108,21 @@ def _resolve_readiness_period(*, modelo: str, filing_year: int, period: str | No
         raise
 
 
-def _readiness_report(request: ModeloReadinessRequest) -> ProjectionModeloReadiness:
+def _readiness_report(
+    request: ModeloReadinessRequest,
+    *,
+    read_ports: StateProjectionReadPorts,
+) -> ProjectionModeloReadiness:
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ...core.i18n.render import tr as _tr
 
     if resolve_active_bucket_id() is None:
         raise no_active_profile_refusal()
     try:
-        projection = build_operator_state_projection(modelo_readiness_requests=(request,))
+        projection = build_operator_state_projection(
+            read_ports=read_ports,
+            modelo_readiness_requests=(request,),
+        )
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(
             _tr("cli.config.profile.unknown_profile", name=resolve_active_bucket_id() or ""),

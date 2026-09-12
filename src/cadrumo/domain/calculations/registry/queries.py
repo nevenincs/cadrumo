@@ -135,7 +135,7 @@ def _period_revision_candidates(
     return tuple(
         revision
         for revision in definition.revisions.values()
-        if selector_token_for_request(revision.period_selector.periods, period) is not None
+        if selector_token_for_request(revision.period_selector.declared_periods, period) is not None
     )
 
 
@@ -147,7 +147,7 @@ def _resolve_declared_period_revision(
     """Resolve a bare declared period to its latest declaring revision."""
     bare = period.strip()
     declared_by_revision = tuple(
-        token for revision in definition.revisions.values() for token in revision.period_selector.periods
+        token for revision in definition.revisions.values() for token in revision.period_selector.declared_periods
     )
     token_is_declared = selector_token_for_request(declared_by_revision, bare) is not None
     if not (_BARE_PERIOD_RE.fullmatch(bare.upper()) or token_is_declared):
@@ -162,7 +162,7 @@ def _resolve_declared_period_revision(
             f"{definition.id}; declared periods: {', '.join(declared)}",
         )
     revision = max(candidates, key=lambda item: (item.valid_from, str(item.id)))
-    registry_token = selector_token_for_request(revision.period_selector.periods, bare)
+    registry_token = selector_token_for_request(revision.period_selector.declared_periods, bare)
     if registry_token is None:
         raise RegistryValidationError(
             f"period {period!r} is not declared by revision {revision.id} of modelo {definition.id}",

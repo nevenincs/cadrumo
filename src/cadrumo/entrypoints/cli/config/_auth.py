@@ -163,9 +163,10 @@ def auth_status(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.operator import inspect_operator_auth
     from ..config_payloads import AuthStatusPayload
+    from ..state_projection_support import state_projection_read_ports
 
     try:
-        result = inspect_operator_auth(provider)
+        result = inspect_operator_auth(provider, read_ports=state_projection_read_ports(ctx))
     except KeyError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.unknown_provider",
@@ -225,9 +226,10 @@ def auth_test(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.operator import test_operator_auth
     from ..config_payloads import AuthTestPayload
+    from ..state_projection_support import state_projection_read_ports
 
     try:
-        result = test_operator_auth(provider)
+        result = test_operator_auth(provider, read_ports=state_projection_read_ports(ctx))
     except KeyError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.unknown_provider",

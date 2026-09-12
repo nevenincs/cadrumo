@@ -20,12 +20,46 @@ def _period_selector_year_bounds(selector: PeriodSelector) -> tuple[int, int | N
     return selector.year_from, selector.year_to
 
 
+def _overridden_years(left: PeriodSelector, right: PeriodSelector) -> tuple[int, ...]:
+    return tuple(
+        sorted({override.year for selector in (left, right) for override in selector.period_overrides})
+    )
+
+
 def period_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> bool:
-    """Whether the two selectors share a year range and at least one period code."""
+    """Whether the two selectors share a filing year and at least one period code in it.
+
+    Overrides make the shared period surface year-dependent, so the shared
+    years are decided in two bands rather than one. Each overridden year either
+    side names is tested on its own surface, and the remaining shared years --
+    where both selectors serve their flat tuple -- are tested once, which keeps
+    the decision finite for an open-ended ``year_from`` range.
+    """
     left_start, left_end = _period_selector_year_bounds(left)
     right_start, right_end = _period_selector_year_bounds(right)
     if left_end is not None and left_end < right_start:
         return False
     if right_end is not None and right_end < left_start:
+        return False
+    overridden = _overridden_years(left, right)
+    if any(
+        left.includes_year(year)
+        and right.includes_year(year)
+        and set(left.periods_for_year(year)).intersection(right.periods_for_year(year))
+        for year in overridden
+    ):
+        return True
+    if not overridden:
+        return bool(set(left.periods).intersection(right.periods))
+    # The shared span still holds a year neither selector overrides whenever it
+    # is wider than the overridden set, and there both serve their flat tuples.
+    shared_start = max(left_start, right_start)
+    shared_end = None if left_end is None or right_end is None else min(left_end, right_end)
+    span_years = (
+        None
+        if shared_end is None
+        else tuple(year for year in range(shared_start, shared_end + 1) if left.includes_year(year) and right.includes_year(year))
+    )
+    if span_years is not None and set(span_years).issubset(overridden):
         return False
     return bool(set(left.periods).intersection(right.periods))

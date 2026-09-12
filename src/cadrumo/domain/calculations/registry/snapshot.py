@@ -236,7 +236,7 @@ def build_validated_snapshot(
     # construction site, through the same resolver the query service uses; it
     # returns the declared selector token and preserves a concrete EVENT-n scope
     # rather than collapsing it to the symbolic EVENT-N selector.
-    period = registry_period_for_request(revision.period_selector.periods, period) or period
+    period = registry_period_for_request(revision.period_selector.declared_periods, period) or period
     revision = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})
     validate_materialized_export_record_families(revision)
     if grade is RegistryAuthorityGrade.FILING:
