@@ -4,9 +4,9 @@
 :func:`evaluate_renta_deductibility` using :class:`CategoryProfile` and
 :class:`RentaDeductibilityContext`; eligible
 :class:`RentaDeductibilityResult` values become
-:class:`RentaDeductibleExpenseObservation` records routed through
-:data:`FIRST_SLICE_EXPENSE_CASILLAS` to registry
-:data:`CasillaId` bindings for :class:`~cadrumo.core.Modelo('100')`.
+:class:`RentaDeductibleExpenseObservation` records routed through the dated
+facts-registry mapping to :data:`CasillaId` bindings for
+:class:`~cadrumo.core.Modelo('100')`.
 """
 
 from __future__ import annotations
@@ -22,13 +22,14 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.aggregation import BindingSourceKind
-from ...core.casilla_id import CasillaId
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.filing_year import FilingYear
 from ...core.identity.transaction_ids import TransactionId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.unit_proportion import UnitProportion, is_unit_proportion
+from ..calculations.registry.authority_artifact import AuthorityArtifactError
 from ..calculations.registry.renta_expense_policy import renta_expense_policy_declarations
 from ..categories.profile import CategoryProfile
 from ..categories.proportionality import (
@@ -40,7 +41,7 @@ from ..categories.proportionality import (
 )
 from ..categories.spending_category import SpendingCategory, SpendingCategoryFamily, family_for
 from ..contribuyente.ccaa import CCAA
-from ._first_slice_routing import FIRST_SLICE_EXPENSE_CASILLAS
+from ._first_slice_routing import resolve_first_slice_expense_routing
 from .errors import RentaValidationError
 
 EUR_CURRENCY: Literal["EUR"] = "EUR"
@@ -250,6 +251,31 @@ class _RentaDeductibilityDecision:
     statutory_cap_applied: Decimal | None
 
 
+def _validated_first_slice_casilla(value: object) -> CasillaId:
+    """Validate a target token received from the first-slice facts mapping."""
+    return validated_casilla_id(value, surface="first-slice expense routing target")
+
+
+def _resolve_first_slice_expense_routing(
+    *,
+    effective_date: date,
+) -> Mapping[SpendingCategory, CasillaId]:
+    """Resolve the selected dated first-slice route for production consumers."""
+    try:
+        routing = resolve_first_slice_expense_routing(
+            category_type=SpendingCategory,
+            casilla_factory=_validated_first_slice_casilla,
+            model_code=Modelo("100").value,
+            fact_id="modelo-100-first-slice-expense-routing-mapping",
+            effective_date=effective_date,
+        )
+    except (AuthorityArtifactError, TypeError, ValueError) as exc:
+        raise RentaValidationError(
+            "first-slice expense routing declaration is absent or malformed",
+        ) from exc
+    return routing
+
+
 class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
     """Binding-ready Renta expense observation for the first Modelo 100 slice."""
 
@@ -298,10 +324,11 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
     def _validate_period_and_invoice_state(self) -> RentaDeductibleExpenseObservation:
         if self.category_family is not family_for(self.category):
             raise RentaValidationError("category_family must match category")
-        if self.target_casilla_id != FIRST_SLICE_EXPENSE_CASILLAS.get(self.category):
-            raise RentaValidationError("target_casilla_id must match the first-slice category mapping")
         if not Period.from_year_and_code(self.tax_year, "0A").contains(self.filing_date):
             raise RentaValidationError("filing_date must fall inside the observation tax year")
+        target_casilla_id = _resolve_first_slice_expense_routing(effective_date=self.filing_date).get(self.category)
+        if target_casilla_id is None or self.target_casilla_id != target_casilla_id:
+            raise RentaValidationError("target_casilla_id must match the first-slice category mapping")
         if self.invoice_id is None and self.invoice_issue_date is not None:
             raise RentaValidationError("invoice_issue_date requires invoice_id")
         if self.invoice_id is None and self.invoice_evidence_status is not RentaInvoiceEvidenceStatus.NONE:
@@ -600,11 +627,11 @@ def build_renta_deductible_expense_observation(
         raise RentaValidationError(f"ineligible deductibility result cannot become an observation: {result.reason}")
     if fact.category is not result.category:
         raise RentaValidationError("fact and result categories must match")
-    target_casilla_id = FIRST_SLICE_EXPENSE_CASILLAS.get(fact.category)
-    if target_casilla_id is None:
-        raise RentaValidationError(f"category {fact.category.value!r} is outside the first Renta expense slice")
     if not Period.from_year_and_code(tax_year, "0A").contains(fact.filing_date):
         raise RentaValidationError("fact filing date falls outside the requested tax year")
+    target_casilla_id = _resolve_first_slice_expense_routing(effective_date=fact.filing_date).get(fact.category)
+    if target_casilla_id is None:
+        raise RentaValidationError(f"category {fact.category.value!r} is outside the first Renta expense slice")
     invoice_status = (
         RentaInvoiceEvidenceStatus.LINKED if fact.invoice_id is not None else RentaInvoiceEvidenceStatus.NONE
     )

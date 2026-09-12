@@ -40,7 +40,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from ....tests.modelo_workspace_session import real_workspace_inspection_result
+from .modelo_workspace_session import real_workspace_inspection_result
 from ....tests.terminal_sizes import TERMINAL_ORDINARY
 from ..components.host import ScreenHostApp
 from ..components.theme import (

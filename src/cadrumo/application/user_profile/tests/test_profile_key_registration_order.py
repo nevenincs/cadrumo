@@ -1,17 +1,8 @@
-"""Real-behavior tests: every profile-key reader registers before it reads.
+"""Real-behavior tests for cold application profile-key readers.
 
-The profile-key registry is seeded by the wizard catalogue's import side
-effect, and the domain accessor raises rather than returning an empty tuple
-when nothing has seeded it. Only one of this module's three readers imported
-the catalogue; the other two called the domain accessor directly and worked
-purely because something earlier in the process had already imported the
-wizard.
-
-That masks the defect everywhere it is convenient to look. Importing any
-module that touches the catalogue repairs the order for the rest of the
-process, so an in-suite assertion proves nothing about a cold entry point.
-These tests therefore run each reader in a genuinely fresh interpreter that
-imports only the module under test.
+Each probe runs in a genuinely fresh interpreter that imports only the
+application reader under test. The reader must compile the wizard-owned
+catalogue on demand rather than relying on another module's import order.
 """
 
 from __future__ import annotations
@@ -32,8 +23,8 @@ _READER_PROBES: tuple[tuple[str, str], ...] = (
         "print(validate_profile_values({}).total_keys)",
     ),
     (
-        "list_profile_key_records",
-        "print(len(list_profile_key_records()))",
+        "profile_keys",
+        "print(len(profile_keys()))",
     ),
 )
 
@@ -42,7 +33,7 @@ def _run_cold(body: str) -> subprocess.CompletedProcess[str]:
     """Execute ``body`` in a fresh interpreter with no prior wizard import."""
     source = (
         "from cadrumo.application.user_profile.keys_validation import ("
-        "list_profile_key_records, validate_profile_values)\n" + body + "\n"
+        "profile_keys, validate_profile_values)\n" + body + "\n"
     )
     return subprocess.run(  # noqa: S603 - fixed argv, no shell, test-local source
         [sys.executable, "-c", source],
@@ -57,15 +48,12 @@ def _run_cold(body: str) -> subprocess.CompletedProcess[str]:
 def test_reader_succeeds_in_a_cold_interpreter(reader: str, body: str) -> None:
     result = _run_cold(body)
 
-    assert "ProfileKeysRegistrationError" not in result.stderr, (
-        f"{reader} read the profile-key registry before registering it: {result.stderr}"
-    )
     assert result.returncode == 0, result.stderr
 
 
 def test_cold_readers_agree_on_the_registered_key_count() -> None:
     result = _run_cold(
-        "print(validate_profile_values({}).total_keys, len(list_profile_key_records()))",
+        "print(validate_profile_values({}).total_keys, len(profile_keys()))",
     )
 
     assert result.returncode == 0, result.stderr
@@ -75,13 +63,16 @@ def test_cold_readers_agree_on_the_registered_key_count() -> None:
     assert len(set(counts)) == 1
 
 
-def test_the_domain_accessor_still_refuses_an_unregistered_registry() -> None:
-    """The guard this fix routes around must stay loud, not become lenient."""
+def test_application_catalogue_resolves_directly_in_a_cold_interpreter() -> None:
+    """The canonical application resolver has no registration/bootstrap precondition."""
     result = subprocess.run(
         [
             sys.executable,
             "-c",
-            "from cadrumo.domain.contribuyente.keys import profile_keys\nprofile_keys()\n",
+            (
+                "from cadrumo.application.user_profile.profile_keys import profile_key, profile_keys\n"
+                "print(len(profile_keys()), profile_key('IDENTITY.TAX_ID').key)\n"
+            ),
         ],
         capture_output=True,
         text=True,
@@ -89,5 +80,7 @@ def test_the_domain_accessor_still_refuses_an_unregistered_registry() -> None:
         check=False,
     )
 
-    assert result.returncode != 0
-    assert "ProfileKeysRegistrationError" in result.stderr
+    assert result.returncode == 0, result.stderr
+    count, key = result.stdout.split()
+    assert int(count) > 0
+    assert key == "identity.tax_id"

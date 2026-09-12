@@ -72,7 +72,7 @@ yields, not what the form yields across filings, and a filer legitimately
 leaving one optional box blank would still be refused by a floor of 1.
 
 See Also:
-    :mod:`~tests.fixtures.manual_annexes.tests.test_manual_annex_provenance`
+    :mod:`~adapters.inbound.declaracion.tests.test_manual_annex_provenance`
         The provenance gate over the annex specimens.
     :func:`~adapters.inbound.declaracion.parser.parse_declaracion`
         The full parser boundary. It cannot consume the annex specimens, which

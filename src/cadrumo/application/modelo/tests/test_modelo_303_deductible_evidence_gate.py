@@ -44,9 +44,9 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
+from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ....tests.env_scope import ready_clave_settings
-from ....tests.filing_evidence import general_m303_filing_evidence
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ...aggregation.ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
@@ -284,7 +284,7 @@ def _calculate_irene_revision(
     )
     decision = _wallet_decision()
     IvaWalletDecisionRepository(objects=objects).save_decision(decision)
-    revision = calculate_modelo_revision_from_bucket_aggregation(
+    revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         actor="operator",
         binding_values={
@@ -300,7 +300,7 @@ def _calculate_irene_revision(
         filing_instance_evidence=general_m303_filing_evidence(
             work_unit.period, reference="test:m303-deductible-evidence-gate"
         ),
-    )
+    ).revision
     return revision, sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo
 
 

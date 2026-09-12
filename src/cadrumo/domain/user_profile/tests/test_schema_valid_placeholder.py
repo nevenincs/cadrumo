@@ -21,10 +21,10 @@ from datetime import date
 
 import pytest
 
-from ....tests.user_profile import schema_valid_placeholder
 from ..loader import load_user_profile_schema
 from ..schema import NUMERIC_PROFILE_FIELD_TYPES, ProfileFieldType
 from ..values import UserProfileFact
+from .schema_value_support import schema_valid_placeholder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

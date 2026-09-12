@@ -23,7 +23,7 @@ from ....domain.submission.models import ModeloDraftStatus
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....tests.filing import build_registry_filing_draft_from_decimals
+from .filing_support import build_registry_filing_draft_from_decimals
 from ..draft_review import (
     ModeloApprovalStaleReason,
     _transaction_catalogue_fingerprint,

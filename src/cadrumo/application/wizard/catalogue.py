@@ -14,7 +14,6 @@ from ...core.aggregation import ThirdPartyDeclarationRole
 from ...core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n.translatable import Translatable as tr
 from ...core.renta_declaracion_type import RentaDeclaracionType
-from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH, SetupAnswers
 from ...core.wizard_catalogue import register_wizard_catalogue
 from ...domain.contribuyente.ccaa import CCAA
 from ...domain.contribuyente.entity_type import EntityType, LegalEntityForm
@@ -33,6 +32,7 @@ from ...domain.deadlines.models import (
     M303RegimeComposition,
     M303TaxTerritory,
 )
+from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH, SetupAnswers
 from .models import (
     WizardChoice,
     WizardCondition,

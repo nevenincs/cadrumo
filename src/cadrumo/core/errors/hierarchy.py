@@ -237,7 +237,7 @@ class CoreValidationError(CoreError, ValueError):
 class ProfileAnswerTypeError(CoreValidationError):
     """Raised when a typed profile-answers field coercion receives an unexpected type.
 
-    Lives in :mod:`core.errors` so :class:`core.setup_answers.SetupAnswers`
+    Lives in :mod:`core.errors` so :class:`cadrumo.domain.user_profile.setup_answers.SetupAnswers`
     can raise a typed error without importing application-layer wizard modules.
     Application-layer wizard code raises the narrower
     :class:`application.wizard.errors.WizardAnswerTypeError`, which

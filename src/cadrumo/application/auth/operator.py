@@ -236,6 +236,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
 def inspect_operator_auth(
     provider: str | None = None,
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     read_ports: StateProjectionReadPorts,
 ) -> AuthStatusResult:
     """Return current local auth state as :class:`AuthStatusResult`, optionally scoped to a known provider slot.
@@ -256,6 +257,7 @@ def inspect_operator_auth(
     from ..state_projection import build_operator_state_projection
 
     projection = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
         read_ports=read_ports,
         requested_provider=provider,
         probe_live_backend=True,
@@ -268,6 +270,7 @@ def inspect_operator_auth(
 def test_operator_auth(
     provider: str | None = None,
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     read_ports: StateProjectionReadPorts,
     settings: Settings | None = None,
 ) -> AuthTestResult:
@@ -298,18 +301,25 @@ def test_operator_auth(
     """
     if settings is not None:
         with _active_profile_storage_span(settings):
-            return test_operator_auth(provider, read_ports=read_ports, settings=None)
+            return test_operator_auth(
+                provider,
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
+                read_ports=read_ports,
+                settings=None,
+            )
 
     with _auth_operator_settings_scope(None) as resolved_settings:
         provider_kind = _provider_kind_or_none(provider)
         requested_provider = provider_kind.value if provider_kind is not None else None
 
         with active_auth_projection_span(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
             settings=resolved_settings,
             requested_provider=requested_provider,
         ) as snapshot:
             return _test_operator_auth_from_snapshot(
                 snapshot,
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
                 read_ports=read_ports,
                 requested_provider=requested_provider,
                 resolved_settings=resolved_settings,
@@ -319,6 +329,7 @@ def test_operator_auth(
 def _test_operator_auth_from_snapshot(
     snapshot: ActiveAuthProjectionSnapshot,
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     read_ports: StateProjectionReadPorts,
     requested_provider: str | None,
     resolved_settings: Settings,
@@ -334,6 +345,7 @@ def _test_operator_auth_from_snapshot(
     from ..state_projection import build_operator_state_projection
 
     projection = build_operator_state_projection(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
         read_ports=read_ports,
         auth_snapshot=snapshot,
         requested_provider=requested_provider,
@@ -399,6 +411,7 @@ def _clave_movil_preflight_fields(
 def build_live_auth_preflight_report(
     provider: str | None = None,
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     settings: Settings | None = None,
 ) -> LiveAuthPreflightReport:
     """Return a redacted preflight report before a live read may trigger auth.
@@ -428,7 +441,11 @@ def build_live_auth_preflight_report(
     from .operator_results import AuthOperationRequiresCustodySessionError
 
     try:
-        return _build_live_auth_preflight_report(provider, settings=settings)
+        return _build_live_auth_preflight_report(
+            provider,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            settings=settings,
+        )
     except AuthOperationRequiresCustodySessionError:
         if profile_current_bucket_session() is not None:
             raise
@@ -444,18 +461,24 @@ def build_live_auth_preflight_report(
 def _build_live_auth_preflight_report(
     provider: str | None = None,
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     settings: Settings | None = None,
 ) -> LiveAuthPreflightReport:
     """Build the report against an open route, refusing when it cannot be reached."""
     if settings is not None:
         with _active_profile_storage_span(settings):
-            return _build_live_auth_preflight_report(provider, settings=None)
+            return _build_live_auth_preflight_report(
+                provider,
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
+                settings=None,
+            )
 
     resolved_settings = load_settings()
     requested_kind = _provider_kind_or_none(provider)
     requested_provider = requested_kind.value if requested_kind is not None else None
     fallback_provider = (resolved_settings.cadrumo_auth_provider or AuthProviderKind.CERTIFICATE).value
     with active_auth_projection_span(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
         settings=resolved_settings,
         requested_provider=requested_provider,
         fallback_provider=fallback_provider,
@@ -463,6 +486,7 @@ def _build_live_auth_preflight_report(
         provider_kind = snapshot.provider
         probe = _test_operator_auth_from_snapshot(
             snapshot,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
             requested_provider=(provider_kind.value if provider_kind is not None else None),
             resolved_settings=resolved_settings,
         )
@@ -500,6 +524,7 @@ def _build_live_auth_preflight_report(
 async def login_operator_auth(
     provider: str | None = None,
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     fresh: bool = False,
     reset_lock: bool = False,
     settings: Settings | None = None,
@@ -524,6 +549,7 @@ async def login_operator_auth(
         with _active_profile_storage_span(settings):
             return await login_operator_auth(
                 provider,
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
                 fresh=fresh,
                 reset_lock=reset_lock,
                 settings=None,
@@ -534,6 +560,7 @@ async def login_operator_auth(
     requested_provider = requested_kind.value if requested_kind is not None else None
     fallback_provider = (resolved_settings.cadrumo_auth_provider or AuthProviderKind.CERTIFICATE).value
     with active_auth_projection_span(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
         settings=resolved_settings,
         requested_provider=requested_provider,
         fallback_provider=fallback_provider,
@@ -586,6 +613,7 @@ async def login_operator_auth(
             _assert_auth_recovery_not_in_progress(repository.load())
             result = await ensure_authenticated_aeat_session(
                 resolved_settings,
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
                 kind=provider_kind,
                 certificate_credentials=certificate_credentials,
                 fresh=fresh,

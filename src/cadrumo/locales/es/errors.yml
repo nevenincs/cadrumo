@@ -655,8 +655,6 @@ errors:
       no declara.'
     internal_output_rendering: 'Error interno: la salida del comando no se pudo representar
       de forma segura.'
-    internal_profile_keys_registration: 'Error interno: no se pudieron registrar las
-      claves del perfil.'
     internal_profile_project_answers_not_registered: 'Error interno: las respuestas
       del proyecto de perfil no están registradas.'
     internal_profile_registration: 'Error interno: no se pudo registrar el perfil.'

@@ -1,4 +1,4 @@
-"""Structural assertions for the descriptor → ``PROFILE_KEYS`` projection.
+"""Structural assertions for the descriptor → profile-key projection.
 
 These tests feed a tiny synthetic catalogue (NOT ``WIZARD_FLOWS``) to
 ``compile_profile_keys`` and verify the projection rules: distinct
@@ -15,7 +15,7 @@ import pytest
 
 from ....core.i18n.translatable import Translatable as tr
 from ....core.requirement import Requirement
-from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ..catalogue import WIZARD_FLOWS
 from ..compiler import compile_profile_keys
 from ..errors import WizardCompileError
@@ -210,7 +210,8 @@ def test_compile_is_pure_on_the_real_catalogue() -> None:
 
     The catalogue carries only frozen literals (asserted above) so this
     invocation cannot perform file I/O or environment lookups. The test
-    asserts the projection produces a non-empty tuple of ``ProfileKey``s
+    asserts the projection produces a non-empty tuple of application-owned
+    ``ProfileKey`` records
     keyed by the descriptor's declared ``profile_key`` values.
     """
 

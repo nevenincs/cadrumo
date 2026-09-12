@@ -74,6 +74,7 @@ from .common import (
     resolve_optional_root,
     resolve_pull_year_range,
 )
+from .state_projection_support import certificate_secret_backend_factory
 
 if TYPE_CHECKING:
     from ...domain.deadlines.models import TaxpayerProfile
@@ -134,7 +135,7 @@ def iva_wallet_pull_cmd(
     from ...application.live.iva_remote_state import capture_iva_compensation_wallet
     from ..live_state_composition import compose_live_state
 
-    emit_live_auth_preflight()
+    emit_live_auth_preflight(certificate_secret_backend_factory(ctx))
     composition = compose_live_state()
     report = asyncio.run(
         capture_iva_compensation_wallet(
@@ -429,7 +430,7 @@ def iva_wallet_pull_history_cmd(
     from ...core.config import load_settings
     from ..live_state_composition import compose_live_state
 
-    emit_live_auth_preflight()
+    emit_live_auth_preflight(certificate_secret_backend_factory(ctx))
     resolved_root = resolve_optional_root(
         output_root,
         lambda: load_settings().cadrumo_iva_compensation_history_dir,
@@ -496,7 +497,7 @@ def iva_wallet_pull_evidence_cmd(
     from ..live_state_composition import compose_live_state
 
     resolved_target_period = _required_live_period_option(target_period, year=target_year)
-    emit_live_auth_preflight()
+    emit_live_auth_preflight(certificate_secret_backend_factory(ctx))
     resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_iva_read_evidence_dir)
     composition = compose_live_state(output_root=resolved_root)
     report = asyncio.run(
@@ -511,6 +512,7 @@ def iva_wallet_pull_evidence_cmd(
                 output_root=resolved_root,
             ),
             timeout_ms=_live_iva_evidence_pull_command_timeout_ms(year_from=year_from, year_to=year_to),
+            certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
         ),
     )
     from ._app_live_iva_wallet_payloads import (
@@ -608,6 +610,7 @@ def _iva_remote_state_capture_lines(report: IvaRemoteStateAcquisitionReport) -> 
 async def _run_live_iva_evidence_pull_command[T](
     awaitable: Awaitable[T],
     *,
+    certificate_secret_backend_factory,
     timeout_ms: int | None = None,
 ) -> T:
     """Run the combined IVA evidence pull under a CLI-level watchdog."""
@@ -622,14 +625,20 @@ async def _run_live_iva_evidence_pull_command[T](
     # None (not an empty set) when the process table could not be read, so the
     # reaper can refuse to kill rather than treat every browser as newly ours.
     preexisting_profiles = None if baseline_inventory is None else _playwright_profile_tokens(baseline_inventory)
-    pre_timeout_auth_context = _live_iva_auth_watchdog_context(stage="before")
+    pre_timeout_auth_context = _live_iva_auth_watchdog_context(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        stage="before",
+    )
     try:
         return await asyncio.wait_for(awaitable, timeout=resolved_timeout_ms / 1000)
     except TimeoutError as exc:
         killed_processes, inventory_available = _reap_new_playwright_profile_processes(
             preexisting_profiles=preexisting_profiles,
         )
-        post_timeout_auth_context = _live_iva_auth_watchdog_context(stage="after")
+        post_timeout_auth_context = _live_iva_auth_watchdog_context(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            stage="after",
+        )
         raise LiveIvaSurfaceTimeoutError(
             f"live IVA evidence pull command did not complete within {resolved_timeout_ms} ms",
             surface="iva_evidence_command",
@@ -664,12 +673,14 @@ def _live_iva_evidence_pull_command_timeout_ms(*, year_from: int, year_to: int) 
     )
 
 
-def _live_iva_auth_watchdog_context(*, stage: str) -> dict[str, object]:
+def _live_iva_auth_watchdog_context(*, certificate_secret_backend_factory, stage: str) -> dict[str, object]:
     """Return redacted local auth-session state for live IVA watchdog diagnostics."""
     try:
         from ...application.auth.operator import build_live_auth_preflight_report
 
-        report = build_live_auth_preflight_report()
+        report = build_live_auth_preflight_report(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+        )
     except Exception:
         return {f"auth_watchdog_{stage}_probe": "unavailable"}
     return {
@@ -873,10 +884,11 @@ def filed_list_cmd(
 
     resolved_from = year_from if year_from is not None else today_madrid().year
     resolved_to = year_to if year_to is not None else today_madrid().year
-    emit_live_auth_preflight()
+    emit_live_auth_preflight(certificate_secret_backend_factory(ctx))
     if modelo is None:
         bulk_report = asyncio.run(
             list_filed_data_bulk(
+                certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
                 year_from=resolved_from,
                 year_to=resolved_to,
             ),
@@ -887,6 +899,7 @@ def filed_list_cmd(
     else:
         report = asyncio.run(
             list_filed_data(
+                certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
                 modelo=modelo,
                 year_from=resolved_from,
                 year_to=resolved_to,
@@ -1003,7 +1016,12 @@ def filed_discover_cmd(ctx: typer.Context) -> None:
     read one number as though both signals meant the same thing.
     """
     profile = _active_taxpayer_profile_or_none()
-    report = asyncio.run(discover_filed_history(profile=profile))
+    report = asyncio.run(
+        discover_filed_history(
+            certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+            profile=profile,
+        )
+    )
     result, lines = _filed_discover_result_and_lines(report)
     emit_envelope(
         ctx,
@@ -1132,9 +1150,10 @@ def filed_pull_all_cmd(
     profile = _active_taxpayer_profile_or_none()
     resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
     composition = compose_live_state(output_root=resolved_root)
-    emit_live_auth_preflight()
+    emit_live_auth_preflight(certificate_secret_backend_factory(ctx))
     run = asyncio.run(
         pull_filed_history(
+            certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
             iva_remote_state_port=composition.iva_remote_state_port,
             ports=composition.ports,
             output_root=resolved_root,
@@ -1339,6 +1358,7 @@ def _emit_single_filed_pull(
     composition = compose_live_state(output_root=resolved_root)
     report = asyncio.run(
         capture_filed_data(
+            certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
             modelo=modelo,
             year=year,
             output_root=resolved_root,
@@ -1397,6 +1417,7 @@ def _emit_bulk_filed_pull(
     composition = compose_live_state(output_root=resolved_root)
     report = asyncio.run(
         capture_filed_data_bulk(
+            certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
             year_from=resolved_from,
             year_to=resolved_to,
             output_root=resolved_root,
@@ -1486,7 +1507,7 @@ def filed_pull_cmd(
     :class:`ModeloRecord` evidence when an existing current filing record
     matches.
     """
-    emit_live_auth_preflight()
+    emit_live_auth_preflight(certificate_secret_backend_factory(ctx))
     selected_modelos = tuple(modelos or ())
     if len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None:
         if dry_run:
@@ -1578,11 +1599,12 @@ def filed_pull_sources_cmd(
     from ..live_state_composition import compose_live_state
     from ._app_live_filed_payloads import FiledCaptureSourcesResult
 
-    emit_live_auth_preflight()
+    emit_live_auth_preflight(certificate_secret_backend_factory(ctx))
     resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
     composition = compose_live_state(output_root=resolved_root)
     report = asyncio.run(
         capture_source_filed_data(
+            certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
             modelo=modelo,
             year=year,
             period=_required_live_period_option(period, year=year),

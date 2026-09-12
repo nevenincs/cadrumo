@@ -627,7 +627,7 @@ def build_profile_registration_attempt(
     recovery phrase, or enrollment record is retained beyond the call.
     """
     from ....application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
-    from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+    from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
     from ....domain.user_profile.values import UserProfileFact
 
     try:

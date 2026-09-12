@@ -31,7 +31,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.filing_evidence import general_m303_filing_evidence
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations.observations_repository import IvaWalletDecisionRepository
 from ..calculation_actions import calculate_modelo_revision

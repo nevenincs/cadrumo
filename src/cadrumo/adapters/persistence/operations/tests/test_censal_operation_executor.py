@@ -17,6 +17,7 @@ from cadrumo.adapters.persistence.operations.secure_references import operation_
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.application.operations.interactions import (
     OperationApplyResponse,
     OperationRejectResponse,
@@ -35,7 +36,6 @@ from cadrumo.application.user_profile.censal_observation import (
     CensalObservationIdentity,
 )
 from cadrumo.application.user_profile.censal_operation import (
-    CENSAL_OPERATION_DEFINITION,
     CENSAL_PHASE_SETTLEMENT,
     CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING,
     CensalFieldIntent,
@@ -44,6 +44,7 @@ from cadrumo.application.user_profile.censal_operation import (
     CensalProfileBaseline,
     CensalReviewedFieldIntent,
     CensalReviewedOperand,
+    build_censal_operation_definition,
     build_censal_operation_registration,
 )
 from cadrumo.application.user_profile.cotejo_apply import apply_cotejo
@@ -63,6 +64,16 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _NOW = datetime(2026, 8, 24, 18, tzinfo=UTC)
 _PASSPHRASE = "censal-operation-executor-passphrase"  # noqa: S105 - synthetic fixture
 _RESPONSE_TOKEN = "a" * 64
+
+
+def _test_censal_operation_definition():
+    return build_censal_operation_definition(
+        certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+    )
+
+
+def _test_censal_operation_definition_id() -> str:
+    return _test_censal_operation_definition().definition_id
 
 
 @contextmanager
@@ -135,7 +146,7 @@ def _supervisor(
     operands = operation_secure_reference_repository(
         objects=objects,  # type: ignore[arg-type]  # reason: the profile-custody port narrows the same concrete SecureObjectRepository this call needs
     )
-    definition = CENSAL_OPERATION_DEFINITION.model_copy(
+    definition = _test_censal_operation_definition().model_copy(
         update={
             "executor_factory": OperationExecutorFactory(
                 request_type=CensalOperationRequest,
@@ -187,7 +198,10 @@ def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand
 
     with _subject(tmp_path) as (profile_id, objects, _session):
         durable_root = tmp_path / "operations"
-        executor = CensalOperationExecutor(acquire=acquire)
+        executor = CensalOperationExecutor(
+            certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+            acquire=acquire,
+        )
         owner = _supervisor(
             root=durable_root,
             objects=objects,
@@ -196,7 +210,7 @@ def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand
             token="2" * 64,
         )
         request = OperationRequest(
-            definition_id=CENSAL_OPERATION_DEFINITION.definition_id,
+            definition_id=_test_censal_operation_definition_id(),
             subject_ref=profile_id,
             payload=_payload(profile_id),
         )
@@ -269,12 +283,15 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
             supervisor = _supervisor(
                 root=durable_root,
                 objects=objects,
-                executor=CensalOperationExecutor(acquire=acquire),
+                executor=CensalOperationExecutor(
+                    certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+                    acquire=acquire,
+                ),
                 owner="6" * 64,
                 token="7" * 64,
             )
             request = OperationRequest(
-                definition_id=CENSAL_OPERATION_DEFINITION.definition_id,
+                definition_id=_test_censal_operation_definition_id(),
                 subject_ref=profile_id,
                 payload=_payload(profile_id),
             )
@@ -310,12 +327,16 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
             supervisor = _supervisor(
                 root=tmp_path / "stale-race-operations",
                 objects=objects,
-                executor=CensalOperationExecutor(acquire=acquire, apply=competing_write_then_stale),
+                executor=CensalOperationExecutor(
+                    certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+                    acquire=acquire,
+                    apply=competing_write_then_stale,
+                ),
                 owner="d" * 64,
                 token="e" * 64,
             )
             request = OperationRequest(
-                definition_id=CENSAL_OPERATION_DEFINITION.definition_id,
+                definition_id=_test_censal_operation_definition_id(),
                 subject_ref=profile_id,
                 payload=_payload(profile_id),
             )
@@ -355,12 +376,16 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
             supervisor = _supervisor(
                 root=tmp_path / "ambiguous-operations",
                 objects=objects,
-                executor=CensalOperationExecutor(acquire=acquire, apply=commit_then_fail),
+                executor=CensalOperationExecutor(
+                    certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+                    acquire=acquire,
+                    apply=commit_then_fail,
+                ),
                 owner="9" * 64,
                 token="b" * 64,
             )
             request = OperationRequest(
-                definition_id=CENSAL_OPERATION_DEFINITION.definition_id,
+                definition_id=_test_censal_operation_definition_id(),
                 subject_ref=profile_id,
                 payload=_payload(profile_id),
             )
@@ -411,6 +436,7 @@ def test_censal_executor_cancellation_before_irreversible_entry_keeps_none_and_w
             root=tmp_path / "cancel-race-operations",
             objects=objects,
             executor=CensalOperationExecutor(
+                certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
                 acquire=acquire,
                 before_irreversible_section=hold_before_entry,
             ),
@@ -418,7 +444,7 @@ def test_censal_executor_cancellation_before_irreversible_entry_keeps_none_and_w
             token="2" * 64,
         )
         request = OperationRequest(
-            definition_id=CENSAL_OPERATION_DEFINITION.definition_id,
+            definition_id=_test_censal_operation_definition_id(),
             subject_ref=profile_id,
             payload=_payload(profile_id),
         )

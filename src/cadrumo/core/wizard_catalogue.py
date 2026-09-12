@@ -4,7 +4,7 @@ Domain modules that need to inspect ``SETUP_FLOW``
 import from here, never from ``application.wizard.catalogue``. This
 module is the core slot that holds already-built descriptors; it does not build
 wizard sections, render prompts, compile profile keys, persist answers, or
-own the :mod:`core.setup_answers` typed answer model.
+own the :mod:`cadrumo.domain.user_profile.setup_answers` typed answer model.
 
 The application layer registers the concrete descriptors at startup via
 :func:`register_wizard_catalogue`. Until registration, the accessors

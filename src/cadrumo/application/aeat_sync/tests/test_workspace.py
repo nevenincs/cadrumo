@@ -22,13 +22,17 @@ from typing import Any, TypedDict, Unpack, cast
 import pytest
 from pydantic import ValidationError
 
+from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ....core.hashing import content_hash_hex
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ...operations.registry import OperationPublicContractSetV1
 from ...operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue, ActionCatalogueEntry
 from ...operator_actions.models import ActionReference
-from ...user_profile.censal_operation import CENSAL_OPERATION_DEFINITION, build_censal_operation_registration
+from ...user_profile.censal_operation import (
+    build_censal_operation_definition,
+    build_censal_operation_registration,
+)
 from .. import workspace as workspace_module
 from ..workspace import (
     AeatSyncAeatObservationState,
@@ -75,6 +79,7 @@ SECRET_VALUES = (
     "certificate-private",
     "notification-private",
 )
+_CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
 """Sentinels for the byte scan below, which is belt-and-braces, NOT the guard.
 
 Stated plainly because the shape of this test invites the opposite reading:
@@ -94,6 +99,12 @@ The protection is the TYPE, and the structural assertion below is the honest
 expression of it: it fails the moment a row gains a free-text field, which is
 the only way any of this could start leaking.
 """
+
+
+def _censal_operation_definition():
+    return build_censal_operation_definition(
+        certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+    )
 
 
 def _period(modelo: str = "130") -> Period:
@@ -239,7 +250,7 @@ def _projection(**updates):
         zone_observations=_observations(),
         action_catalogue=OPERATOR_ACTION_CATALOGUE,
         operation_contracts=OperationPublicContractSetV1.build(
-            (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
+            (build_censal_operation_registration(_censal_operation_definition()).contract,)
         ),
         overview=(_fact(_overview()),),
         census=(_fact(_census()),),
@@ -419,7 +430,7 @@ def test_scope_is_mandatory_and_projected_away() -> None:
             zone_observations=_observations(),
             action_catalogue=OPERATOR_ACTION_CATALOGUE,
             operation_contracts=OperationPublicContractSetV1.build(
-                (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
+                (build_censal_operation_registration(_censal_operation_definition()).contract,)
             ),
         )
 
@@ -606,7 +617,7 @@ def test_a_comparison_zone_reports_no_count_until_both_sides_are_observed() -> N
         observed_at=datetime(2026, 9, 4, tzinfo=UTC),
         filings=(),
         operation_contracts=OperationPublicContractSetV1.build(
-            (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
+            (build_censal_operation_registration(_censal_operation_definition()).contract,)
         ),
     )
     by_zone = {state.zone: state for state in projection.zones}
@@ -653,7 +664,7 @@ def test_a_refused_local_source_names_whether_the_reader_is_missing_or_uncompose
         observed_at=datetime(2026, 9, 4, tzinfo=UTC),
         filings=(),
         operation_contracts=OperationPublicContractSetV1.build(
-            (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
+            (build_censal_operation_registration(_censal_operation_definition()).contract,)
         ),
     )
     refusals = {
@@ -707,7 +718,7 @@ def test_notification_custody_separates_an_unread_store_from_an_empty_one(
         observed_at=datetime(2026, 9, 5, tzinfo=UTC),
         filings=(),
         operation_contracts=OperationPublicContractSetV1.build(
-            (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
+            (build_censal_operation_registration(_censal_operation_definition()).contract,)
         ),
         custody_count=custody_count,
     )

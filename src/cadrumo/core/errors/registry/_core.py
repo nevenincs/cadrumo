@@ -368,26 +368,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.setup_answers.ProjectAnswersRegistrationError",
-        ErrorCode(
-            code="INTERNAL_PROFILE_REGISTRATION",
-            category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.internal_profile_registration",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.core.setup_answers.ProjectAnswersNotRegisteredError",
-        ErrorCode(
-            code="INTERNAL_PROFILE_PROJECT_ANSWERS_NOT_REGISTERED",
-            category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.internal_profile_project_answers_not_registered",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.core.wizard_catalogue.WizardCatalogueNotRegisteredError",
         ErrorCode(
             code="INTERNAL_WIZARD_CATALOGUE_NOT_REGISTERED",

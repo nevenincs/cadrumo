@@ -34,21 +34,15 @@ See Also:
 
 from __future__ import annotations
 
-import asyncio
 import sys
 from typing import TYPE_CHECKING
 
-from ..core.async_cleanup import close_async_resources
-from ..core.config import Settings
-from ..core.errors.hierarchy import SiteHealthError, SiteHealthState
 from ..core.i18n.render import tr
 from ..core.logging import default_log_file_path, get_logger
 from ..core.operator_action_enums import NoRecoveryOutcome
 from ..core.package_version import PACKAGE_VERSION as __version__
 from ..core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ..core.requirement import Requirement, RequirementValue
-from ..core.time.clock import now
-from ..core.url_validation import ANY_HTTP_URL_ADAPTER
 from .diagnostic_models import (
     CliVersionReport as _CliVersionReport,
 )
@@ -85,16 +79,14 @@ from .diagnostic_models import (
 from .errors import DiagnosticModelError
 from .operator_actions.models import PreconditionVerdict
 
-# The browser adapter, the registry authority, the secure-object
-# repository, the workflow store, and the wizard-status projection are
-# all heavy import subtrees (the browser adapter and the registry parse
-# alone add ~3.5s of cold-start import time). The ``aeat --version``
+# The registry authority, the secure-object repository, the workflow store,
+# and the wizard-status projection are heavy import subtrees (the registry
+# parse alone adds substantial cold-start import time). The ``aeat --version``
 # fast path imports this module only for ``build_cli_version_report`` /
 # ``render_cli_version_text``, neither of which needs any of them.
 # Importing them lazily inside the functions that actually run keeps the
 # version surface off the heavy import graph.
 if TYPE_CHECKING:
-    from ..adapters.outbound.aeat.browser.site_health_records import SiteHealthStatus
     from .wizard.status import WizardStatusReport
     from .workflow.profile_health import ActiveProfileHealth
     from .workflow.state_models import WorkflowState
@@ -274,76 +266,6 @@ def build_config_repair_report() -> _ConfigRepairReport:
         setup=setup_report,
         secure_objects=secure_objects,
         checks=tuple(checks),
-    )
-
-
-def probe_browser_connectivity(settings: Settings | None = None) -> SiteHealthStatus:
-    """Probe the configured AEAT browser target through the browser adapter.
-
-    Returns a :class:`SiteHealthStatus`.
-    """
-    # `load_settings()` honours `override_settings`; bare `Settings()`
-    # bypasses the context-var.
-    from ..core.config import load_settings as _load_settings
-
-    resolved = settings or _load_settings()
-    return asyncio.run(_probe_browser_connectivity(resolved))
-
-
-def render_browser_connectivity_text(status: SiteHealthStatus) -> str:
-    """Render one site-health status as compact repair output."""
-    markers = ", ".join(status.evidence.detected_markers) or tr("cli.diagnostics.browser.markers_none")
-    lines = [
-        f"{tr('cli.diagnostics.browser.target_label')}\t{tr('cli.diagnostics.browser.target_browser')}",
-        f"{tr('cli.diagnostics.browser.state_label')}\t{status.state.value}",
-        f"{tr('cli.diagnostics.browser.http_status_label')}\t{status.evidence.http_status}",
-        f"{tr('cli.diagnostics.browser.markers_label')}\t{markers}",
-        f"{tr('cli.diagnostics.browser.observed_at_label')}\t{status.observed_at.isoformat()}",
-    ]
-    if status.retry_after_seconds is not None:
-        lines.append(f"{tr('cli.diagnostics.browser.retry_after_label')}\t{status.retry_after_seconds}")
-    return "\n".join(lines) + "\n"
-
-
-async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
-    from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
-
-    url = settings.site_health_probe_url
-    session = await default_browser_session_factory(settings)
-    context = None
-    try:
-        context = await session.create_context()
-        page = await context.new_page()
-        try:
-            await session.navigate(page, url)
-        except SiteHealthError as exc:
-            from ..adapters.outbound.aeat.browser.site_health_records import SiteHealthStatus
-
-            status = exc.status
-            if not isinstance(status, SiteHealthStatus):
-                raise DiagnosticModelError("SiteHealthError carried a non-SiteHealthStatus payload") from exc
-            return status
-        return _ok_site_health_status(url)
-    finally:
-        await close_async_resources(
-            context,
-            session,
-            task_name="cadrumo-diagnostics-browser-connectivity-close",
-        )
-
-
-def _ok_site_health_status(url: str) -> SiteHealthStatus:
-    from ..adapters.outbound.aeat.browser.site_health_records import SiteHealthEvidence, SiteHealthStatus
-
-    return SiteHealthStatus(
-        state=SiteHealthState.OK,
-        evidence=SiteHealthEvidence(
-            url=ANY_HTTP_URL_ADAPTER.validate_python(url),
-            http_status=200,
-            html_fragment="",
-            detected_markers=("healthy",),
-        ),
-        observed_at=now(),
     )
 
 
@@ -578,7 +500,7 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[_Diagnosti
     whether the key is required or optional. The parent readiness row owns the
     single typed profile-editor action, avoiding per-finding transport prose.
     """
-    from .user_profile.keys_validation import list_profile_key_records
+    from .user_profile.profile_keys import profile_keys
 
     if state is None:
         return ()
@@ -596,7 +518,7 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[_Diagnosti
 
     values = record_to_path_values(record)
     findings: list[_DiagnosticFinding] = []
-    for entry in list_profile_key_records():
+    for entry in profile_keys():
         raw = values.get(entry.key)
         if raw is not None and raw.strip() != "":
             continue
@@ -977,9 +899,7 @@ __all__ = [
     "build_cli_version_report",
     "build_config_repair_report",
     "preview_quarantine_unreadable_secure_objects",
-    "probe_browser_connectivity",
     "quarantine_unreadable_secure_objects",
-    "render_browser_connectivity_text",
     "render_cli_version_text",
     "render_config_repair_text",
     "secure_object_unreadable_total",

@@ -22,7 +22,6 @@ from ....domain.deadlines.profiles import (
     profile_claims_modelo_iva_block,
     taxpayer_profile_from_mapping,
 )
-from ...wizard import compiler as _wizard  # noqa: F401 - registers compiled profile keys
 from ..completeness import conditional_profile_missing_required
 from ..keys_validation import validate_profile_values
 

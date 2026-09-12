@@ -193,6 +193,7 @@ from .workflow_gate import build_revision_workflow_engine as _build_revision_wor
 from .workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
 
 if TYPE_CHECKING:
+    from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..calculations.observations_repository import IvaWalletDecisionRepository
 
 from .m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
@@ -792,6 +793,7 @@ def _resolve_verification_repositories(
 def verify_modelo_revision_with_preconditions(
     calculation_revision_id: CalculationRevisionId,
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     actor: str,
     workflow_profile: TaxpayerProfile,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
@@ -995,6 +997,7 @@ def verify_modelo_revision_with_preconditions(
 
     if granted:
         gate_engine = workflow_engine or _build_revision_workflow_engine(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
             revision=target,
             work_unit=work_unit,
             profile=workflow_profile,
@@ -1061,6 +1064,7 @@ def verify_modelo_revision_with_preconditions(
 def verify_modelo_revision(
     calculation_revision_id: CalculationRevisionId,
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     actor: str,
     workflow_profile: TaxpayerProfile,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
@@ -1089,6 +1093,7 @@ def verify_modelo_revision(
     """
     return verify_modelo_revision_with_preconditions(
         calculation_revision_id,
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
         actor=actor,
         workflow_profile=workflow_profile,
         work_unit_repository=work_unit_repository,

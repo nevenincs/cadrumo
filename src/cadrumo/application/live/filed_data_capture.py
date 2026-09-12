@@ -42,6 +42,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, TypedDict
 
 if TYPE_CHECKING:
+    from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from .iva_remote_state_ports import IvaRemoteStatePort
 
 from pydantic import BaseModel, Field, field_validator
@@ -297,6 +298,7 @@ async def _await_filed_register_walk(
 async def _resolved_declarations_register(
     register: DeclaracionesRegisterSession | None,
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     operation: str,
 ) -> AsyncGenerator[tuple[DeclaracionesRegisterSession, int]]:
     """Yield an open register plus its walk timeout, resolving a session only when needed.
@@ -319,7 +321,10 @@ async def _resolved_declarations_register(
     if register is not None:
         yield register, load_settings().cadrumo_live_filed_register_walk_timeout_ms
         return
-    session, settings = await active_verified_session(operation=operation)
+    session, settings = await active_verified_session(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operation=operation,
+    )
     async with (
         shared_playwright(session) as playwright,
         open_declarations_register(session, settings=settings, playwright=playwright) as opened,
@@ -562,6 +567,7 @@ class _CaptureAccumulator:
 
 async def list_filed_data(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     modelo: str,
     year_from: int,
     year_to: int,
@@ -572,7 +578,10 @@ async def list_filed_data(
             translated_message="live.errors.year_range_invalid",
         )
 
-    session, settings = await active_verified_session(operation="live-expedientes-read")
+    session, settings = await active_verified_session(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operation="live-expedientes-read",
+    )
     walk_timeout_ms = settings.cadrumo_live_filed_register_walk_timeout_ms
     rows: list[FiledDataListingRow] = []
     async with (
@@ -602,6 +611,7 @@ async def list_filed_data(
 
 async def list_filed_data_bulk(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     year_from: int,
     year_to: int,
     modelos: tuple[str, ...] | None = None,
@@ -640,7 +650,11 @@ async def list_filed_data_bulk(
             failures=tuple(failures),
         )
 
-    async with _resolved_declarations_register(register, operation="live-expedientes-read") as (
+    async with _resolved_declarations_register(
+        register,
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operation="live-expedientes-read",
+    ) as (
         opened_register,
         walk_timeout_ms,
     ):
@@ -669,6 +683,7 @@ async def list_filed_data_bulk(
 
 async def capture_filed_data(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     modelo: str,
     year: int,
     output_root: Path,
@@ -684,7 +699,9 @@ async def capture_filed_data(
     :class:`~ModeloRecord` ids, conflicts, and calculation
     observation keys produced from the captured AEAT rows.
     """
-    session, settings = await active_verified_session()
+    session, settings = await active_verified_session(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+    )
     walk_timeout_ms = settings.cadrumo_live_filed_register_walk_timeout_ms
     accumulator = _CaptureAccumulator()
     bucket_id = require_active_bucket_id()
@@ -942,6 +959,7 @@ async def _capture_filed_data_query_pair(
 async def _capture_filed_data_query_pairs(
     query_pairs: Sequence[tuple[str, int]],
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     register: DeclaracionesRegisterSession | None,
     accumulator: _CaptureAccumulator,
     ports: FiledObservationPersistencePorts,
@@ -959,7 +977,11 @@ async def _capture_filed_data_query_pairs(
     await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_REGISTER_ACCESS)
     await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_PAIR_WALK)
     phase_state = _CapturePairPhaseState()
-    async with _resolved_declarations_register(register, operation="live-expedientes-read") as (
+    async with _resolved_declarations_register(
+        register,
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operation="live-expedientes-read",
+    ) as (
         opened_register,
         walk_timeout_ms,
     ):
@@ -1103,6 +1125,7 @@ def _require_bulk_capture_dependencies(
 
 async def capture_filed_data_bulk(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     year_from: int,
     year_to: int,
     output_root: Path,
@@ -1173,6 +1196,7 @@ async def capture_filed_data_bulk(
 
     await _capture_filed_data_query_pairs(
         query_pairs,
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
         register=register,
         accumulator=accumulator,
         ports=ports,
@@ -1217,6 +1241,7 @@ async def capture_filed_data_bulk(
 
 async def capture_source_filed_data(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     modelo: str,
     year: int,
     period: Period,
@@ -1229,7 +1254,9 @@ async def capture_source_filed_data(
     Caller-controlled registry and source roots are deliberately not accepted:
     live evidence capture must use the same validated legal snapshot as filing.
     """
-    session, settings = await active_verified_session()
+    session, settings = await active_verified_session(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+    )
     revision = (
         bundled_authority()
         .snapshot(
@@ -1298,6 +1325,7 @@ async def capture_source_filed_data(
 
 async def discover_filed_history(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     profile: TaxpayerProfile | None = None,
     today: date | None = None,
 ) -> FiledHistoryDiscoveryReport:
@@ -1334,7 +1362,10 @@ async def discover_filed_history(
     """
     from ...core.time.clock import today_madrid
 
-    session, settings = await active_verified_session(operation="live-expedientes-read")
+    session, settings = await active_verified_session(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operation="live-expedientes-read",
+    )
     async with shared_playwright(session) as playwright:
         availability = await discover_filed_declaration_availability(
             session,
@@ -1956,6 +1987,7 @@ class FiledHistoryDiscoveryPort(Protocol):
     async def __call__(
         self,
         *,
+        certificate_secret_backend_factory: CertificateSecretBackendFactory,
         profile: TaxpayerProfile | None = None,
         today: date | None = None,
     ) -> FiledHistoryDiscoveryReport: ...
@@ -2001,6 +2033,7 @@ def _filed_history_pair_outcome(
 async def _capture_discovered_filed_history(
     walk_pairs: Sequence[tuple[str, int]],
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     output_root: Path,
     ports: FiledObservationPersistencePorts,
     limit: int | None,
@@ -2013,6 +2046,7 @@ async def _capture_discovered_filed_history(
     modelos = tuple(dict.fromkeys(modelo for modelo, _year in walk_pairs))
     years = tuple(year for _modelo, year in walk_pairs)
     return await capture_filed_data_bulk(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
         year_from=min(years),
         year_to=max(years),
         output_root=output_root,
@@ -2075,13 +2109,17 @@ class _FiledHistoryNotificationsStage:
 
 async def _capture_filed_history_notifications(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     events: OperationEventEmitter | None = None,
 ) -> _FiledHistoryNotificationsStage:
     """Capture notifications without allowing an independent failure to erase filed history."""
     try:
         from .notifications import capture_notifications
 
-        snapshot = await capture_notifications(bucket_id=require_active_bucket_id())
+        snapshot = await capture_notifications(
+            bucket_id=require_active_bucket_id(),
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+        )
     except Exception as exc:
         await _emit_filed_history_refusal(events, FILED_HISTORY_NOTIFICATIONS_REFUSAL_CODE)
         return _FiledHistoryNotificationsStage(
@@ -2097,6 +2135,7 @@ async def _capture_filed_history_notifications(
 
 async def pull_filed_history(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     iva_remote_state_port: IvaRemoteStatePort,
     ports: FiledObservationPersistencePorts,
     output_root: Path,
@@ -2155,7 +2194,11 @@ async def pull_filed_history(
 
     resolved_today = today or today_madrid()
     await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_DISCOVERY)
-    discovery = await discover(profile=profile, today=resolved_today)
+    discovery = await discover(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        profile=profile,
+        today=resolved_today,
+    )
     walk_pairs = discovery.walk_pairs
     if not walk_pairs:
         await _emit_filed_history_refusal(events, FILED_HISTORY_DISCOVERY_REFUSAL_CODE)
@@ -2169,6 +2212,7 @@ async def pull_filed_history(
 
     capture = await _capture_discovered_filed_history(
         walk_pairs,
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
         output_root=output_root,
         ports=ports,
         limit=limit,
@@ -2193,7 +2237,10 @@ async def pull_filed_history(
         else:
             iva_wallet = _FiledHistoryIvaWalletStage(status="not_attempted", divergence=None, blocked=False)
         await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_NOTIFICATIONS)
-        notifications = await _capture_filed_history_notifications(events=events)
+        notifications = await _capture_filed_history_notifications(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            events=events,
+        )
     stage_failures = tuple(failure for failure in (iva_wallet.failure, notifications.failure) if failure is not None)
 
     return FiledHistoryOnboardingRun(

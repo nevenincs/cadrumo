@@ -6,35 +6,35 @@ modelo:
           base-retenciones-ingresos-a-cuenta:
             help: Información fiscal sobre información fiscal de la casilla 145-159
               del Modelo 193.
-            label: Casilla 145-159 — información fiscal
+            label: Base de retenciones e ingresos a cuenta
           declaracion-anterior-numero:
             help: 'Información de la casilla: Casilla 123-135: declaración anterior
               número.'
             label: 'Casilla 123-135: declaración anterior número'
           declaracion-complementaria:
             help: 'Información de la casilla: Casilla 1016: declaración complementaria.'
-            label: 'Casilla 1016: declaración complementaria'
+            label: DECLARACIÓN COMPLEMENTARIA O SUSTITUTIVA
           declaracion-numero-identificativo:
             help: 'Información de la casilla: Casilla 108-120: declaración número
               identificativo.'
-            label: 'Casilla 108-120: declaración número identificativo'
+            label: NÚMERO IDENTIFICATIVO DE LA Declaración
           declaracion-sustitutiva:
             help: 'Información de la casilla: Casilla 122: declaración sustitutiva.'
             label: 'Casilla 122: declaración sustitutiva'
           declarante-contacto-nombre:
             help: 'Información de la casilla: Casilla 68-107: declarante contacto
               nombre.'
-            label: 'Casilla 68-107: declarante contacto nombre'
+            label: APELLIDOS Y NOMBRE
           declarante-contacto-telefono:
             help: 'Información de la casilla: Casilla 59-67: declarante contacto teléfono.'
-            label: 'Casilla 59-67: declarante contacto teléfono'
+            label: TELÉFONO
           declarante-naturaleza:
             help: 'Información de la casilla: Casilla 235: declarante naturaleza.'
-            label: 'Casilla 235: declarante naturaleza'
+            label: NATURALEZA DEL DECLARANTE
           devengo-year:
             help: 'Consulte la información correspondiente a la casilla: Ejercicio
               de devengo.'
-            label: Casilla 118-121 — ejercicio de devengo
+            label: EJERCICIO DEVENGO
           gasto-contributor-nif:
             help: 'Información de la casilla: Casilla 18-26: gasto contributor nif.'
             label: 'Casilla 18-26: gasto contributor nif'
@@ -43,22 +43,22 @@ modelo:
             label: 'Casilla 36-75: gasto contributor nombre'
           gasto-importe-anual:
             help: 'Información de la casilla: Casilla 195-207: gasto importe anual.'
-            label: 'Casilla 195-207: gasto importe anual'
+            label: Importe de gastos
           gastos-total-declarante:
             help: 'Información de la casilla: Casilla 220-234: gastos total declarante.'
             label: 'Casilla 220-234: gastos total declarante'
           payee-base-retenciones-193:
             help: Información fiscal sobre información fiscal de la casilla 152-164
               del Modelo 193.
-            label: Casilla 152-164 — información fiscal
+            label: Base de retenciones e ingresos a cuenta
           payee-ceuta-melilla-clave:
             help: Información fiscal sobre información fiscal de la casilla 314 del
               Modelo 193.
-            label: Casilla 314 — información fiscal
+            label: CEUTA O MELILLA / ISLA DE LA PALMA
           payee-clave-codigo:
             help: Información fiscal sobre información fiscal de la casilla 79 del
               Modelo 193.
-            label: Casilla 79 — información fiscal
+            label: CLAVE CÓDIGO
           payee-clave-mercado:
             help: Información fiscal sobre información fiscal de la casilla 339 del
               Modelo 193.
@@ -66,19 +66,19 @@ modelo:
           payee-clave-percepcion:
             help: Información fiscal sobre información fiscal de la casilla 92 del
               Modelo 193.
-            label: Casilla 92 — información fiscal
+            label: CLAVE DE PERCEPCIÓN
           payee-codigo-cuenta:
             help: Información fiscal sobre información fiscal de la casilla 97-116
               del Modelo 193.
-            label: Casilla 97-116 — información fiscal
+            label: CÓDIGO CUENTA VALORES / NÚMERO OPERACIÓN PRÉSTAMO
           payee-codigo-emisor:
             help: Información fiscal sobre información fiscal de la casilla 80-91
               del Modelo 193.
-            label: Casilla 80-91 — información fiscal
+            label: CÓDIGO EMISOR
           payee-compensaciones:
             help: Información fiscal sobre información fiscal de la casilla 225-236
               del Modelo 193.
-            label: Casilla 225-236 — información fiscal
+            label: Compensaciones
           payee-fecha-devengo:
             help: Información fiscal sobre información fiscal de la casilla 331-338
               del Modelo 193.
@@ -86,15 +86,15 @@ modelo:
           payee-fecha-inicio-prestamo:
             help: Información fiscal sobre información fiscal de la casilla 209-216
               del Modelo 193.
-            label: Casilla 209-216 — información fiscal
+            label: FECHA DE INICIO DEL PRÉSTAMO
           payee-fecha-vencimiento-prestamo:
             help: Información fiscal sobre información fiscal de la casilla 217-224
               del Modelo 193.
-            label: Casilla 217-224 — información fiscal
+            label: FECHA DE VENCIMIENTO DEL PRÉSTAMO
           payee-garantias:
             help: Información fiscal sobre información fiscal de la casilla 237-248
               del Modelo 193.
-            label: Casilla 237-248 — información fiscal
+            label: Garantías
           payee-mediador-flag:
             help: Información fiscal sobre información fiscal de la casilla 76 del
               Modelo 193.
@@ -106,11 +106,11 @@ modelo:
           payee-naturaleza-declarante:
             help: Información fiscal sobre información fiscal de la casilla 208 del
               Modelo 193.
-            label: Casilla 208 — información fiscal
+            label: NATURALEZA DEL DECLARANTE
           payee-naturaleza-percepcion:
             help: Información fiscal sobre información fiscal de la casilla 93-94
               del Modelo 193.
-            label: Casilla 93-94 — información fiscal
+            label: NATURALEZA
           payee-nif:
             help: 'Consulte la información correspondiente a la casilla: NIF del perceptor.'
             label: Casilla 18-26 — NIF del perceptor
@@ -125,15 +125,15 @@ modelo:
           payee-pago:
             help: Información fiscal sobre información fiscal de la casilla 95 del
               Modelo 193.
-            label: Casilla 95 — información fiscal
+            label: PAGO
           payee-penalizaciones:
             help: Información fiscal sobre información fiscal de la casilla 182-192
               del Modelo 193.
-            label: Casilla 182-192 — información fiscal
+            label: PENALIZACIONES
           payee-pendiente-flag:
             help: Información fiscal sobre información fiscal de la casilla 117 del
               Modelo 193.
-            label: Casilla 117 — información fiscal
+            label: PENDIENTE
           payee-percepciones-193:
             help: Información fiscal sobre información fiscal de la casilla 123-135
               del Modelo 193.
@@ -141,11 +141,11 @@ modelo:
           payee-porcentaje-retencion:
             help: Información fiscal sobre información fiscal de la casilla 165-168
               del Modelo 193.
-            label: Casilla 165-168 — información fiscal
+            label: '% de retención'
           payee-province:
             help: Información fiscal sobre provincia del perceptor de la casilla 77-78
               del Modelo 193.
-            label: Casilla 77-78 — provincia del perceptor
+            label: CÓDIGO PROVINCIA
           payee-reducciones-193:
             help: Información fiscal sobre información fiscal de la casilla 139-151
               del Modelo 193.
@@ -153,7 +153,7 @@ modelo:
           payee-retenciones-193:
             help: Información fiscal sobre información fiscal de la casilla 169-181
               del Modelo 193.
-            label: Casilla 169-181 — información fiscal
+            label: Retenciones e ingresos a cuenta
           payee-retenciones-forales-araba:
             help: Información fiscal sobre información fiscal de la casilla 275-287
               del Modelo 193.
@@ -177,7 +177,7 @@ modelo:
           payee-tipo-codigo:
             help: Información fiscal sobre información fiscal de la casilla 96 del
               Modelo 193.
-            label: Casilla 96 — información fiscal
+            label: TIPO CÓDIGO
           payee-tipo-percepcion:
             help: Información fiscal sobre información fiscal de la casilla 122 del
               Modelo 193.
@@ -191,15 +191,15 @@ modelo:
           retenciones-ingresadas-total:
             help: Información fiscal sobre información fiscal de la casilla 175-189
               del Modelo 193.
-            label: Casilla 175-189 — información fiscal
+            label: RETENCIONES E INGRESOS A CUENTA INGRESADOS
           retenciones-ingresos-a-cuenta:
             help: Información fiscal sobre información fiscal de la casilla 160-174
               del Modelo 193.
-            label: Casilla 160-174 — información fiscal
+            label: Retenciones e ingresos a cuenta
           total-perceptores-count:
             help: 'Consulte la información correspondiente a la casilla: Número total
               de perceptores.'
-            label: Casilla 136-144 — información fiscal
+            label: NÚMERO TOTAL DE PERCEPTORES
       field:
         official_name: Modelo 193. Declaración informativa. Retenciones e ingresos
           a cuenta sobre determinados rendimientos del capital mobiliario y determinadas

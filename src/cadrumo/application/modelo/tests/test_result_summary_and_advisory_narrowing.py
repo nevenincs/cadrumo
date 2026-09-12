@@ -1,9 +1,7 @@
-"""Wizard catalogue error classes plus narrowed except-clause contracts.
+"""Narrowed except-clause contracts for modelo result-summary helpers.
 
 Verifies:
-  (a) The wizard-catalogue / project-answers error classes are registered
-      in the error registry and produce valid ErrorEnvelope roundtrips.
-  (b) The narrowed except clauses in the advisory predicate evaluator,
+  The narrowed except clauses in the advisory predicate evaluator,
       result-summary lookup, and ledger bulk-classify loop honestly handle
       typed failures without swallowing unrelated behavior.
 """
@@ -16,7 +14,7 @@ from typing import NoReturn
 
 import pytest
 
-from ....core.setup_answers import ProjectAnswersNotRegisteredError
+from ....core.errors.hierarchy import CadrumoError
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -110,7 +108,7 @@ class TestResultSummaryNarrowing:
 
         def _raising(work_unit_id: str) -> NoReturn:
             del work_unit_id
-            raise ProjectAnswersNotRegisteredError()
+            raise CadrumoError("typed failure")
 
         result = calculation_result_summary(self._revision(), work_unit_resolver=_raising)
 

@@ -38,7 +38,7 @@ from .....tests.aeat_literal_fixtures import (
     aeat_url,
 )
 from .....tests.inventory import FIXTURES_DIR as _FIXTURES_ROOT
-from .....tests.justificante_parse_cache import parse_committed_justificante_fixture
+from .parse_cache import parse_committed_justificante_fixture
 from .....tests.pdf_fixtures import text_pdf_bytes
 from ...pdf.source_provenance import source_pdf_reference_path
 from .._parsers.text_extraction import TEXT_CACHE, extract_text

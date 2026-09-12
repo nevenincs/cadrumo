@@ -43,6 +43,7 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..storage.sync_runs.records import SyncRunRecordReference, SyncRunRecordRepositoryProtocol
+from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from .filed_data_capture import (
     FILED_HISTORY_DECLARATION_PROGRESS_UNIT,
     FILED_HISTORY_DECLARATION_REFUSAL_CODE,
@@ -116,6 +117,11 @@ class FiledHistoryComposition(Protocol):
         """Return the composed IVA remote-state application port."""
         ...
 
+    @property
+    def certificate_secret_backend_factory(self) -> CertificateSecretBackendFactory:
+        """Return the composed certificate-secret capability factory."""
+        ...
+
 
 type FiledHistoryPull = Callable[
     [
@@ -125,6 +131,7 @@ type FiledHistoryPull = Callable[
         OperationEventEmitter,
         FiledObservationPersistencePorts,
         IvaRemoteStatePort,
+        CertificateSecretBackendFactory,
     ],
     Awaitable[FiledHistoryOnboardingRun],
 ]
@@ -153,9 +160,11 @@ async def _pull_recorded_filed_history(
     events: OperationEventEmitter,
     ports: FiledObservationPersistencePorts,
     iva_remote_state_port: IvaRemoteStatePort,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
 ) -> FiledHistoryOnboardingRun:
     """Delegate every domain stage and write to the existing composition."""
     return await pull_filed_history(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
         iva_remote_state_port=iva_remote_state_port,
         ports=ports,
         output_root=payload.output_root,
@@ -361,6 +370,7 @@ class FiledHistoryOperationExecutor:
             context.events,
             composition.ports,
             composition.iva_remote_state_port,
+            composition.certificate_secret_backend_factory,
         )
         await context.events.phase(FILED_HISTORY_PHASE_RESULT)
         await context.events.phase(FILED_HISTORY_PHASE_CLEANUP)

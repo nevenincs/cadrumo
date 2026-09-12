@@ -22,7 +22,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
+from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ....tests.profile_capsule import seed_test_profile_record
 from ..action_errors import ModeloAggregationBindingError
 from ..work_lifecycle import create_work_unit
@@ -177,7 +177,7 @@ def test_bucket_calculation_rejects_source_owned_binding_overrides(
     )
 
     with pytest.raises(ModeloAggregationBindingError) as excinfo:
-        calculate_modelo_revision_from_bucket_aggregation(
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             actor="operator-A",
             binding_values={binding_id: Decimal("99.00")},
@@ -186,7 +186,7 @@ def test_bucket_calculation_rejects_source_owned_binding_overrides(
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
             clock=_T1,
-        )
+        ).revision
     assert excinfo.value.translated_message == "errors.error.error_modelo_aggregation_binding"
 
     assert cr_repo.load().revisions == {}
@@ -207,7 +207,7 @@ def test_modelo_349_refuses_intracom_ledger_rows_without_operator_rows(
     tx_repo.save(TransactionCatalogue.from_transactions((intracom_sale,)))
 
     with pytest.raises(ModeloAggregationBindingError) as exc_info:
-        calculate_modelo_revision_from_bucket_aggregation(
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             actor="operator-A",
             work_unit_repository=wu_repo,
@@ -215,7 +215,7 @@ def test_modelo_349_refuses_intracom_ledger_rows_without_operator_rows(
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
             clock=_T1,
-        )
+        ).revision
 
     assert "no declarable operator rows" in str(exc_info.value)
     assert exc_info.value.context is not None
@@ -248,7 +248,7 @@ def test_modelo_349_monthly_refuses_midmonth_intracom_ledger_rows_without_operat
     tx_repo.save(TransactionCatalogue.from_transactions((intracom_sale,)))
 
     with pytest.raises(ModeloAggregationBindingError) as exc_info:
-        calculate_modelo_revision_from_bucket_aggregation(
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             actor="operator-A",
             work_unit_repository=wu_repo,
@@ -256,7 +256,7 @@ def test_modelo_349_monthly_refuses_midmonth_intracom_ledger_rows_without_operat
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
             clock=_T1,
-        )
+        ).revision
 
     assert exc_info.value.context is not None
     assert exc_info.value.context["period"] == "03"
@@ -294,7 +294,7 @@ def test_bucket_calculation_rejects_source_owned_bound_casilla_overrides(
     )
 
     with pytest.raises(ModeloAggregationBindingError) as exc_info:
-        calculate_modelo_revision_from_bucket_aggregation(
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             actor="operator-A",
             casilla_inputs={casilla_id: Decimal("99.00")},
@@ -303,7 +303,7 @@ def test_bucket_calculation_rejects_source_owned_bound_casilla_overrides(
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
             clock=_T1,
-        )
+        ).revision
     assert exc_info.value.translated_message == "application.modelo.errors.caller_casilla_source_binding_conflict"
     assert exc_info.value.context is not None
     casillas = exc_info.value.context["casillas"]

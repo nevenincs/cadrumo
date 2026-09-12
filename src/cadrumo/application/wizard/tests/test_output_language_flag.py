@@ -22,8 +22,7 @@ import pytest
 
 from ....core.config import override_settings
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
-from ....core.i18n.render import clear_output_language_cache, tr
-from ....tests.clean_install_fixtures import clean_install
+from ....core.i18n.render import tr
 from ..catalogue import SETUP_FLOW
 from ..commands import SETUP_OPTION_INFOS
 
@@ -67,22 +66,3 @@ def test_wizard_prose_localizes_and_resolves_under_both_overrides() -> None:
     assert title_es != _TITLE_KEY and prompt_es != _PROMPT_KEY
     assert title_en != title_es
     assert prompt_en != prompt_es
-
-
-__all__ = ["clean_install"]
-
-
-@pytest.mark.usefixtures("clean_install")
-def test_wizard_prose_defaults_to_spanish() -> None:
-    """A clean install renders the wizard prose in Spanish with no override.
-
-    The expected renderings are computed under an explicit Spanish override
-    (key identity against the same catalogue), never hardcoded prose, so the
-    assertion pins the DEFAULT-language mechanism rather than a wording.
-    """
-    with override_settings(cadrumo_output_language="es"):
-        expected_title, expected_prompt = tr(_TITLE_KEY), tr(_PROMPT_KEY)
-    clear_output_language_cache()
-
-    assert tr(_TITLE_KEY) == expected_title
-    assert tr(_PROMPT_KEY) == expected_prompt

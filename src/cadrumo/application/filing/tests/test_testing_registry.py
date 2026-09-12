@@ -12,7 +12,7 @@ from ....core.period import Period
 from ....domain.filing.errors import ModeloBuilderError
 from ....domain.filing.schema import ModeloDraft, ModeloValueKind
 from ....domain.submission.models import ModeloDraftStatus
-from ....tests.filing import build_registry_filing_draft, build_registry_filing_draft_from_decimals
+from .filing_support import build_registry_filing_draft, build_registry_filing_draft_from_decimals
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

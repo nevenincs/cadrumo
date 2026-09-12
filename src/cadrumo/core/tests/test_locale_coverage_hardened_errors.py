@@ -24,8 +24,6 @@ _HARDENED_ERROR_KEYS: frozenset[str] = frozenset(
         "application.workflow.errors.state_unreadable",
         # SessionDeserializationError (_sessions.py)
         "application.auth.errors.session_field_not_datetime",
-        # ProjectAnswersRegistrationError (core/setup_answers.py)
-        "core.profile.errors.registration_duplicate_callable",
         # ProfileLabelAmbiguousError (_profile_bucket_scan.py)
         "application.workflow.errors.profile_label_ambiguous",
         # WorkflowResumeRefusedError x 4 (_resume.py)

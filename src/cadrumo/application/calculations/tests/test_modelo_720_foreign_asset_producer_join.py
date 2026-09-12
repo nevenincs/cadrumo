@@ -74,7 +74,7 @@ from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.verification_report import VerificationReport
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
+from ...modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ....tests.profile_capsule import seed_test_profile_record
 from ...aggregation.foreign_assets import ForeignAssetIngestObservation
 from ...modelo.verification_actions import verify_modelo_revision
@@ -277,7 +277,7 @@ def _calculate_through_the_mesh(
         if declare_cuentas:
             casilla_inputs[_CUENTAS_VALORACION] = _CUENTAS_N1
 
-        revision = calculate_modelo_revision_from_bucket_aggregation(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             actor="operator",
             casilla_inputs=casilla_inputs,
@@ -286,7 +286,7 @@ def _calculate_through_the_mesh(
             calculation_repository=calculation_repository,
             bucket_event_repository=event_repository,
             clock=_CLOCK_N_PLUS_1,
-        )
+        ).revision
         report = verify_modelo_revision(
             revision.calculation_revision_id,
             actor="system",

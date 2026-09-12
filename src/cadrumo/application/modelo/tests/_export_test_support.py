@@ -37,7 +37,7 @@ from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceE
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....tests.filing_evidence import general_m303_filing_evidence
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
 from ...workflow.persistence import workflow_state_repository

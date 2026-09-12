@@ -128,7 +128,12 @@ def diagnostics_telemetry_flush(
 
     settings = load_settings()
     run_telemetry_port = compose_diagnostics_run_health_port()
-    auth_probe_port = compose_diagnostics_auth_probe_port(read_ports=state_projection_read_ports(ctx))
+    from .state_projection_support import certificate_secret_backend_factory
+
+    auth_probe_port = compose_diagnostics_auth_probe_port(
+        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+        read_ports=state_projection_read_ports(ctx),
+    )
 
     if dry_run:
         # A bare --dry-run never sends regardless of --acknowledge-remote-telemetry;

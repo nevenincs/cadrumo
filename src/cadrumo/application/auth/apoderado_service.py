@@ -14,15 +14,10 @@ Operator verbs:
     :class:`ApoderadoLiveCheckUnavailableError`; use ``status`` for the
     offline configuration read.
 
-Configuration is persisted per-bucket as an encrypted
-:class:`adapters.persistence.storage.Envelope` row in the
-:class:`adapters.persistence.storage.SecureObjectRepository` under
-:data:`adapters.persistence.storage.AUTH_APODERADO_CONFIGURATION_NAMESPACE`.
-The ``represented_nif`` is an
-identity-bearing tax identifier, so the record carries
-:class:`adapters.persistence.storage.SensitivityClass` ``IDENTITY`` and
-is encrypted at rest; the service never writes plaintext to disk. Live mutation
-of AEAT-side apoderamiento state (registrar, ampliar, revocar, confirmar,
+Configuration is persisted per-bucket through the application-owned
+configuration repository capability. The repository implementation is responsible
+for encryption and storage; the service never writes plaintext to disk. Live
+mutation of AEAT-side apoderamiento state (registrar, ampliar, revocar, confirmar,
 renunciar, presentar-en-representacion) is permanently refused at this boundary;
 the service has no verb that would write to AEAT.
 """
@@ -30,22 +25,17 @@ the service has no verb that would write to AEAT.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Annotated, ClassVar, override
+from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from ...adapters.persistence.storage.envelope.secure_bound_repository import SecureBoundRepository
-from ...adapters.persistence.storage.errors import SecureObjectRowIdentityError
-from ...adapters.persistence.storage.path_safety import safe_repository_id
-from ...adapters.persistence.storage.secure_object_namespaces import AUTH_APODERADO_CONFIGURATION_NAMESPACE
-from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ...core.classification.policies import SensitivityClass
 from ...core.config import Settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.bucket import BucketId, canonical_bucket_id
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...domain.auth.apoderamientos.catalogue import ApoderamientosCatalogue, load_default_catalogue, parse_scope_tokens
+from .apoderado_repository import ApoderadoConfigurationRepository, ApoderadoConfigurationRepositoryFactory
 from .apoderado_text import ApoderadoNotes
 
 
@@ -72,7 +62,7 @@ class ApoderadoLiveCheckUnavailableError(CadrumoError):
 class ApoderadoConfigurationIdentityError(CadrumoError):
     """Raised when a stored configuration does not belong to the key it sits under.
 
-    The secure-object key IS the bucket binding for this record: nothing else
+    The persisted record key IS the bucket binding for this record: nothing else
     in the row asserts ownership. A configuration for bucket B placed under
     bucket A's key would otherwise be returned by ``status(bucket_id=A)`` and
     projected with B's represented tax identifier -- an identity-bearing
@@ -123,85 +113,6 @@ class ApoderadoStatus(BaseModel):
     configured_at: datetime | None = Field(default=None)
 
 
-class ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
-    """Encrypted per-bucket apoderado configuration store.
-
-    Records carry :class:`adapters.persistence.storage.SensitivityClass`
-    ``IDENTITY`` as declared by
-    :data:`adapters.persistence.storage.AUTH_APODERADO_CONFIGURATION_NAMESPACE`:
-    the ``represented_nif`` is an identity-bearing tax identifier. The
-    :class:`adapters.persistence.storage.SecureBoundRepository`
-    base serialises each
-    :class:`ApoderadoConfiguration` through an
-    :class:`adapters.persistence.storage.Envelope`. The natural key is
-    the ``bucket_id``, so each bucket holds at most one apoderado configuration.
-    """
-
-    namespace: ClassVar[str] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.namespace
-    sensitivity: ClassVar[SensitivityClass] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.sensitivity
-    schema_version: ClassVar[int] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.schema_version
-
-    def __init__(
-        self,
-        *,
-        bucket_id: str | None = None,
-        objects: SecureObjectRepository | None = None,
-        settings: Settings | None = None,
-    ) -> None:
-        """Bind the repository to ``bucket_id`` so writes cannot cross buckets."""
-        super().__init__(bucket_id=bucket_id, objects=objects, settings=settings)
-        self._bound_bucket_id = None if bucket_id is None else canonical_bucket_id(bucket_id)
-
-    @override
-    @classmethod
-    def payload_model(cls) -> type[ApoderadoConfiguration]:
-        return ApoderadoConfiguration
-
-    @override
-    def extract_identifier(self, payload: ApoderadoConfiguration) -> str:
-        """Return the ``bucket_id`` as the SQL object key."""
-        return safe_repository_id(payload.bucket_id, context="bucket_id")
-
-    @override
-    def _translate_row_identity_error(self, error: SecureObjectRowIdentityError) -> Exception:
-        """Translate the shared gate's row-identity refusal into this domain's error.
-
-        The object key is the only durable statement of which bucket this
-        configuration belongs to, so a row whose payload names a different
-        bucket than the key it was read from is refused rather than returned:
-        the two disagree, so neither can be trusted as the record's owner.
-        That comparison lives solely in the base repository's shared envelope
-        gate; this hook only relabels the exception so callers keep the typed
-        failure they handle rather than a storage-layer one leaking through.
-        """
-        return ApoderadoConfigurationIdentityError(
-            translated_message="errors.integrity.integrity_apoderado_configuration_identity",
-            context={"repository_bucket_id": self._bound_bucket_id, "storage_row_identity": "payload_key_mismatch"},
-        )
-
-    @override
-    def save(self, payload: ApoderadoConfiguration) -> None:
-        """Persist ``payload``, refusing a configuration for a foreign bucket.
-
-        The repository is opened against one bucket's encrypted storage, so a
-        payload naming a different bucket would write that bucket's represented
-        identity into this bucket's database.
-
-        Raises:
-            ApoderadoConfigurationIdentityError: When ``payload`` names a
-                bucket other than the one this repository is bound to.
-        """
-        if self._bound_bucket_id is not None and payload.bucket_id != self._bound_bucket_id:
-            raise ApoderadoConfigurationIdentityError(
-                translated_message="errors.integrity.integrity_apoderado_configuration_identity",
-                context={
-                    "bucket_id": payload.bucket_id,
-                    "repository_bucket_id": self._bound_bucket_id,
-                },
-            )
-        super().save(payload)
-
-
 class ApoderadoService:
     """Local apoderado configuration management.
 
@@ -212,27 +123,30 @@ class ApoderadoService:
 
     def __init__(
         self,
+        *,
+        repository_factory: ApoderadoConfigurationRepositoryFactory,
         settings: Settings | None = None,
         catalogue: ApoderamientosCatalogue | None = None,
     ) -> None:
-        """Bind settings and the authoritative apoderamientos catalogue."""
+        """Bind the repository factory, settings, and authoritative catalogue."""
         # `load_settings()` honours `override_settings`; bare `Settings()`
         # bypasses the context-var.
         from ...core.config import load_settings as _load_settings
 
         self._settings = settings or _load_settings()
         self._catalogue = catalogue or load_default_catalogue()
+        self._repository_factory = repository_factory
         # Build repositories lazily per requested bucket so catalogue-only
         # verbs never touch storage and a long-lived service cannot route
         # bucket B's apoderado NIF into bucket A's database.
-        self._repository_instances: dict[str, ApoderadoConfigRepository] = {}
+        self._repository_instances: dict[str, ApoderadoConfigurationRepository] = {}
 
-    def _repository_for(self, bucket_id: str) -> ApoderadoConfigRepository:
-        safe_bucket_id = safe_repository_id(canonical_bucket_id(bucket_id), context="bucket_id")
-        repository = self._repository_instances.get(safe_bucket_id)
+    def _repository_for(self, bucket_id: str) -> ApoderadoConfigurationRepository:
+        canonical_id = canonical_bucket_id(bucket_id)
+        repository = self._repository_instances.get(canonical_id)
         if repository is None:
-            repository = ApoderadoConfigRepository(bucket_id=safe_bucket_id, settings=self._settings)
-            self._repository_instances[safe_bucket_id] = repository
+            repository = self._repository_factory(bucket_id=canonical_id, settings=self._settings)
+            self._repository_instances[canonical_id] = repository
         return repository
 
     @property
@@ -250,8 +164,7 @@ class ApoderadoService:
             bucket_id: The profile bucket's UUIDv4 identifier.
         """
         normalised_bucket_id = canonical_bucket_id(bucket_id)
-        safe_bucket_id = safe_repository_id(normalised_bucket_id, context="bucket_id")
-        config = self._repository_for(normalised_bucket_id).load(safe_bucket_id)
+        config = self._repository_for(normalised_bucket_id).load()
         if config is None:
             return ApoderadoStatus(bucket_id=normalised_bucket_id, configured=False)
         return ApoderadoStatus(
@@ -292,7 +205,7 @@ class ApoderadoService:
             ) from exc
         granted = parse_scope_tokens(scope_tokens, self._catalogue)
         config = ApoderadoConfiguration(
-            bucket_id=bucket_id,
+            bucket_id=canonical_bucket_id(bucket_id),
             represented_nif=represented_nif,
             granted_scopes=granted,
             catalogue_version=self._catalogue.catalogue_version,
@@ -305,8 +218,7 @@ class ApoderadoService:
     def clear(self, *, bucket_id: str) -> bool:
         """Retire the configuration. Returns True iff a record was removed."""
         normalised_bucket_id = canonical_bucket_id(bucket_id)
-        safe_bucket_id = safe_repository_id(normalised_bucket_id, context="bucket_id")
-        return self._repository_for(normalised_bucket_id).delete(safe_bucket_id)
+        return self._repository_for(normalised_bucket_id).delete()
 
     def check(self, *, bucket_id: str) -> ApoderadoStatus:
         """Read-only live verification (sealed pending live-read wiring).
@@ -329,7 +241,6 @@ class ApoderadoService:
 
 
 __all__ = [
-    "ApoderadoConfigRepository",
     "ApoderadoConfiguration",
     "ApoderadoConfigurationIdentityError",
     "ApoderadoConfigurationNotSetError",

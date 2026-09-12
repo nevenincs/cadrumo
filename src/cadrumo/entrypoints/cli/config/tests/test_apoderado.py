@@ -60,9 +60,14 @@ def test_apoderado_scopes_list() -> None:
 
 def test_apoderado_service_importable_and_has_cli_callers() -> None:
     from .....application.auth.apoderado_service import ApoderadoService
+    from .....application.auth.tests.apoderado_fakes import InMemoryApoderadoConfigurationRepositoryFactory
+    from .....core.config import load_settings
     from .._apoderado import apoderado_scopes_list
 
-    service = ApoderadoService()
+    service = ApoderadoService(
+        repository_factory=InMemoryApoderadoConfigurationRepositoryFactory(),
+        settings=load_settings(),
+    )
     scope_codes = service.catalogue.code_set()
 
     assert callable(apoderado_scopes_list)

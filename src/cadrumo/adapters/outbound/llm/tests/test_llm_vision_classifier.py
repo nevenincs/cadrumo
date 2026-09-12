@@ -24,12 +24,12 @@ from .....domain.categories.spending_category import SpendingCategory
 from .....domain.iva.schema import IvaCategory
 from .....domain.transactions.enums import BusinessClassification
 from .....domain.transactions.llm import LLMClassificationResponse, prompt_spec_with_saturation_fields
+from .....domain.transactions.tests.vision_evidence_support import vision_transaction
 from .....tests.llm_vision_evidence_support import (
     json_array,
     json_object,
     png_image,
     run_against_loopback_ollama,
-    vision_transaction,
 )
 from ..client import LLMClient
 from ..models import MultimodalImageInput

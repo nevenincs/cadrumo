@@ -597,8 +597,6 @@ errors:
       claimed a phase, effect, resource, or interaction its definition does not declare.'
     internal_output_rendering: 'Internal error: the command output could not be rendered
       safely.'
-    internal_profile_keys_registration: 'Internal error: profile keys could not be
-      registered.'
     internal_profile_project_answers_not_registered: 'Internal error: project_answers
       has not been registered at application startup.'
     internal_profile_registration: 'Internal error: profile could not be registered.'

@@ -614,8 +614,6 @@ errors:
       nem deklarál.'
     internal_output_rendering: 'Belső hiba: a parancs kimenetét nem sikerült biztonságosan
       megjeleníteni.'
-    internal_profile_keys_registration: 'Belső hiba: a profilkulcsok regisztrálása
-      sikertelen.'
     internal_profile_project_answers_not_registered: 'Belső hiba: a project_answers
       nincs regisztrálva az alkalmazás indításakor.'
     internal_profile_registration: 'Belső hiba: a profil regisztrálása sikertelen.'

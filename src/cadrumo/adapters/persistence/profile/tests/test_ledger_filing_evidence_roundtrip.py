@@ -20,8 +20,8 @@ from .....domain.modelos.calculation_revision import (
 )
 from .....domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
 from .....domain.modelos.work_unit import derive_work_unit_id
-from .....tests.filing_evidence import general_m303_filing_evidence
-from .....tests.secure_objects_fixture import secure_objects
+from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from .secure_objects_fixture import secure_objects
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository

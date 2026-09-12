@@ -43,12 +43,13 @@ from .....application.aeat_sync.workspace import (
     aeat_sync_workspace_sources,
     project_aeat_sync_workspace,
 )
+from .....application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from .....application.operations.models import OperationDefinitionId
 from .....application.operations.registry import OperationPublicContractSetV1
 from .....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue, ActionCatalogueEntry
 from .....application.operator_actions.models import ActionReference
 from .....application.user_profile.censal_operation import (
-    CENSAL_OPERATION_DEFINITION,
+    build_censal_operation_definition,
     build_censal_operation_registration,
 )
 from .....core.config import override_settings
@@ -297,7 +298,9 @@ def _contracts(
     operation_id: OperationDefinitionId = "user-profile.censo-review",
 ) -> OperationPublicContractSetV1:
     """Build a public contract whose operation/action join is explicit."""
-    definition = CENSAL_OPERATION_DEFINITION.model_copy(
+    definition = build_censal_operation_definition(
+        certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+    ).model_copy(
         update={
             "action_reference": ActionReference(action_id=action_id),
             "definition_id": operation_id,

@@ -61,8 +61,8 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
-from ....tests.filing_evidence import general_m303_filing_evidence
+from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations.observations_repository import IvaWalletDecisionRepository
 from ..work_lifecycle import create_work_unit
@@ -265,7 +265,7 @@ def _calculate_m303_quarter(secure_objects: SecureObjectRepository, *, period: s
     )
     decision = _wallet_decision(period=period)
     IvaWalletDecisionRepository(objects=secure_objects).save_decision(decision)
-    return calculate_modelo_revision_from_bucket_aggregation(
+    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         actor="system",
         binding_values={
@@ -281,7 +281,7 @@ def _calculate_m303_quarter(secure_objects: SecureObjectRepository, *, period: s
         filing_instance_evidence=general_m303_filing_evidence(
             work_unit.period, reference="test:m303-recargo-cross-period"
         ),
-    )
+    ).revision
 
 
 def test_ledger_recargo_sales_populate_m303_recargo_casillas_per_quarter(

@@ -455,7 +455,9 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="CLI tests preserve external projection, justificante, and evidence labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/cadrumo/tests/test_(?:ledger_corpus_fidelity|ledger_modelo_staleness)\.py$"),
+        path=_path(
+            r"^src/cadrumo/(?:application/aggregation/tests/test_ledger_corpus_fidelity|adapters/persistence/profile/tests/test_ledger_modelo_staleness)\.py$"
+        ),
         reason="top-level ledger corpus tests preserve external corpus period labels",
     ),
     AllowlistRule(

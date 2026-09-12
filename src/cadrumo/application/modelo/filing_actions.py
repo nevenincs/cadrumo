@@ -104,6 +104,7 @@ from .workflow_gate import build_revision_workflow_engine as _build_revision_wor
 from .workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
 
 if TYPE_CHECKING:
+    from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..calculations.observations_repository import IvaWalletDecisionRepository
 
 
@@ -163,6 +164,7 @@ def _resolve_filing_repositories(
 def file_modelo_revision(
     calculation_revision_id: CalculationRevisionId,
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     actor: str,
     workflow_profile: TaxpayerProfile,
     notes: str | None = None,
@@ -380,6 +382,7 @@ def file_modelo_revision(
 
     now = clock or _utc_now()
     gate_engine = workflow_engine or _build_revision_workflow_engine(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
         revision=target,
         work_unit=work_unit,
         profile=workflow_profile,

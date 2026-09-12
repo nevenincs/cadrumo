@@ -31,7 +31,7 @@ import asyncio
 
 import pytest
 
-from ......tests.offline_aeat_register import (
+from .declarations_register_test_support import (
     aeat_sede_fixture,
     declared_register_total,
     open_routed_declarations_register,

@@ -46,7 +46,7 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....tests.filing_evidence import general_m303_filing_evidence
+from .filing_evidence import general_m303_filing_evidence
 from ...modelo.filed_revision_observation import persist_filed_revision_observation
 from ..iva_compensation_history import IvaCompensationHistoryRepository
 from ..observations_repository import CalculationObservationRepository

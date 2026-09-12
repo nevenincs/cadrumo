@@ -18,7 +18,7 @@ from cadrumo.application.user_profile.login_session import login_profile
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import output_language
-from cadrumo.core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from cadrumo.tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -102,7 +102,7 @@ def test_a_language_fact_write_mirrors_the_bucket_hint(isolated_language_state: 
     from cadrumo.application.user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
     from cadrumo.application.user_profile.language_resolver import resolve_profile_output_language_hint
     from cadrumo.core.bucket_pointer import resolve_active_bucket_id
-    from cadrumo.core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH as _LANGUAGE_PATH
+    from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH as _LANGUAGE_PATH
     from cadrumo.domain.user_profile.values import UserProfileFact
 
     _seed_profile_language("es", profile_id=isolated_language_state)
@@ -123,7 +123,7 @@ def test_clearing_the_language_fact_clears_the_hint(isolated_language_state: str
     from cadrumo.application.user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
     from cadrumo.application.user_profile.language_resolver import resolve_profile_output_language_hint
     from cadrumo.core.bucket_pointer import resolve_active_bucket_id
-    from cadrumo.core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH as _LANGUAGE_PATH
+    from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH as _LANGUAGE_PATH
     from cadrumo.domain.user_profile.values import UserProfileFact
 
     _seed_profile_language("es", profile_id=isolated_language_state)

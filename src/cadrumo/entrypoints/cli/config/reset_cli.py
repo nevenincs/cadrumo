@@ -83,8 +83,10 @@ def config_reset_start(
     """Start and execute one new reset operation."""
     override_retention, reason = _require_yes_and_override(yes, override_retention, reason)
     from ....application.config_reset import start_config_reset
+    from ..state_projection_support import certificate_secret_backend_factory
 
     operation = start_config_reset(
+        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
         confirmed=True,
         acknowledge_retention_override=override_retention,
         retention_override_reason=reason,
@@ -128,6 +130,7 @@ def config_reset_resume(
         config_reset_status,
         resume_config_reset,
     )
+    from ..state_projection_support import certificate_secret_backend_factory
 
     resolved_operation_id = operation_id
     if resolved_operation_id is None:
@@ -139,6 +142,7 @@ def config_reset_resume(
         resolved_operation_id = candidate.operation_id
     operation = resume_config_reset(
         resolved_operation_id,
+        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
         confirmed=True,
         acknowledge_retention_override=override_retention,
         retention_override_reason=reason,

@@ -7,7 +7,7 @@ from pydantic import ValidationError
 
 from ....application.user_profile.commands import ProfileValidationIssue
 from ....core.errors.severity import BaseSeverity
-from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ..config_payloads import ProfileIssuePayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

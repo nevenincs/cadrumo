@@ -131,7 +131,7 @@ def test_profile_history_without_name_resolves_the_active_profile(tmp_path) -> N
     """The omitted subject is the real active profile, not a copied default."""
     from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
     from .....application.user_profile.registration import register_profile_with_credentials
-    from .....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+    from .....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
     from .....domain.user_profile.values import UserProfileFact
 
     with isolated_profile_storage_root(tmp_path=tmp_path):

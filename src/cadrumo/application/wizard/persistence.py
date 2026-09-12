@@ -30,7 +30,6 @@ from ...core.descendant_relacion import DescendantRelacion
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.parsing.utils import parse_bool
-from ...core.setup_answers import register_project_answers as _register_project_answers
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -630,8 +629,6 @@ def _optional_isoformat(value: date | None) -> str | None:
 def _optional_bool_answer(value: bool | None) -> str | None:
     return None if value is None else str(value).lower()
 
-
-_register_project_answers(project_answers)
 
 __all__ = [
     "WizardPersistMode",

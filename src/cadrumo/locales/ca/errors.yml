@@ -662,8 +662,6 @@ errors:
       no declara.'
     internal_output_rendering: 'Error intern: la sortida de l''ordre no s''ha pogut
       representar de manera segura.'
-    internal_profile_keys_registration: 'Error intern: no s''han pogut registrar les
-      claus del perfil.'
     internal_profile_project_answers_not_registered: 'Error intern: les respostes
       del projecte de perfil no estan registrades.'
     internal_profile_registration: 'Error intern: no s''ha pogut registrar el perfil.'

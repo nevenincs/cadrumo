@@ -30,7 +30,7 @@ import pytest
 from textual.widget import Widget
 
 from ....core.external_constants import OutputLanguage
-from ....tests.modelo_workspace_session import real_workspace_inspection_result
+from .modelo_workspace_session import real_workspace_inspection_result
 from ....tests.terminal_sizes import TERMINAL_ORDINARY
 from ..components.host import ScreenHostApp
 from ..modelo.routes import MODELO_WORKSPACE_DESTINATIONS

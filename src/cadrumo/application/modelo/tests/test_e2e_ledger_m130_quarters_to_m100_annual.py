@@ -14,7 +14,7 @@ Three segments are each covered in isolation today:
 
 None of them joins the three: no test drives *real persisted ledger
 transactions* through the live bucket-aggregation calculate action
-(:func:`calculate_modelo_revision_from_bucket_aggregation`) for four cumulative
+(:func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`) for four cumulative
 quarters, files each quarter through the production observation-persistence path
 (:func:`persist_filed_revision_observation`), and then proves the annual M100
 0604 folds in the **engine-computed** quarterly casilla-19 values. That full
@@ -82,7 +82,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios.model import UsageRatioProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
+from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
 from ...aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
@@ -337,7 +337,7 @@ def _calculate_and_file_m130_quarter(
         repository=wu_repo,
         clock=_T0,
     )
-    revision = calculate_modelo_revision_from_bucket_aggregation(
+    revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         casilla_inputs=_M130_MANUAL_INPUTS,
         work_unit_repository=wu_repo,
@@ -345,7 +345,7 @@ def _calculate_and_file_m130_quarter(
         transaction_repository=tx_repo,
         invoice_repository=invoice_repo,
         clock=_T0,
-    )
+    ).revision
     persist_filed_revision_observation(
         revision=revision,
         work_unit=work_unit,
@@ -580,7 +580,7 @@ def _calculate_m100_annual(
         repository=wu_repo,
         clock=_T0,
     )
-    return calculate_modelo_revision_from_bucket_aggregation(
+    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         casilla_inputs=casilla_inputs,
         binding_values={**_m100_non_relation_zero_bindings(), **(binding_values or {})},
@@ -589,7 +589,7 @@ def _calculate_m100_annual(
         transaction_repository=tx_repo,
         invoice_repository=invoice_repo,
         clock=_T0,
-    )
+    ).revision
 
 
 def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(

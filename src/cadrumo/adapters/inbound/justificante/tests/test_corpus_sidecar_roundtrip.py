@@ -49,7 +49,7 @@ from .....core.period import Period
 from .....domain.justificante.schema import Justificante
 from .....tests.aeat_literal_fixtures import aeat_host
 from .....tests.inventory import FIXTURES_DIR as _FIXTURES_ROOT
-from .....tests.justificante_parse_cache import parse_committed_justificante_fixture
+from .parse_cache import parse_committed_justificante_fixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

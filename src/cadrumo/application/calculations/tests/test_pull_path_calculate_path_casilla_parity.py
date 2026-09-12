@@ -98,7 +98,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.filing_evidence import general_m303_filing_evidence
+from .filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ...aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
 from ...aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver

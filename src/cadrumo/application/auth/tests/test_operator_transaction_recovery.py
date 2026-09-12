@@ -23,7 +23,7 @@ from ....application.wizard.catalogue import WIZARD_FLOWS
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import load_settings
 from ....domain.buckets.event import BucketEvent, BucketEventType
-from ....domain.contribuyente.keys import profile_keys
+from ....user_profile.profile_keys import profile_keys
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
 from ...workflow.persistence import WorkflowStateRepository, workflow_state_repository

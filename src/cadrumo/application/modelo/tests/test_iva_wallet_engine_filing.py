@@ -15,7 +15,7 @@ from ....core.config import Settings
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.filing_record import ModeloRecordStatus
 from ....tests.cross_period_seeding import seed_clean_cross_period_sources
-from ....tests.filing_evidence import general_m303_filing_evidence
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ...calculations.binding_prefill import BindingPrefillReport
 from ...calculations.iva_compensation_history import IvaCompensationHistoryRepository
 from ...calculations.iva_wallet_balance import query_iva_wallet_balance

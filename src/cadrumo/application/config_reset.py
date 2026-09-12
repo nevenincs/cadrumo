@@ -19,6 +19,7 @@ from ._config_reset_repository import (
     ConfigResetJournalRepository,
 )
 from .auth.operator import reset_operator_auth
+from .auth.certificate_secret_backend import CertificateSecretBackendFactory
 from .auth.operator_cleanup import clear_operator_auth_acquisition_locks
 from .auth.operator_scope import operator_auth_revocation_is_reachable
 from .bucket_maintenance.contracts import AssessBucketDeletionCommand, BucketDeletionAssessment
@@ -80,6 +81,7 @@ class _Preflight:
 
 def start_config_reset(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     confirmed: bool,
     acknowledge_retention_override: bool = False,
     retention_override_reason: str | None = None,
@@ -136,6 +138,7 @@ def start_config_reset(
             return _roll_forward(
                 repository=repository,
                 operation=operation,
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
             )
 
 
@@ -156,6 +159,7 @@ def config_reset_status(operation_id: str | None = None) -> ConfigResetOperation
 def resume_config_reset(
     operation_id: str,
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     confirmed: bool,
     acknowledge_retention_override: bool = False,
     retention_override_reason: str | None = None,
@@ -235,6 +239,7 @@ def resume_config_reset(
                 return _roll_forward(
                     repository=repository,
                     operation=operation,
+                    certificate_secret_backend_factory=certificate_secret_backend_factory,
                 )
 
 
@@ -559,8 +564,13 @@ def _roll_forward(
     *,
     repository: ConfigResetJournalRepository,
     operation: ConfigResetOperation,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
 ) -> ConfigResetOperation:
-    operation = _clear_auth_for_targets(repository, operation)
+    operation = _clear_auth_for_targets(
+        repository,
+        operation,
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+    )
     operation = _reconcile_pointer(repository, operation)
     operation = _delete_targets(repository, operation)
     completed_at = now()
@@ -585,7 +595,11 @@ def _roll_forward(
     return operation
 
 
-def _clear_auth_for_target(bucket_id: str) -> ConfigResetAuthClearance:
+def _clear_auth_for_target(
+    bucket_id: str,
+    *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+) -> ConfigResetAuthClearance:
     """End one target's auth custody by whichever means its key state allows.
 
     A reset holds locks on profiles it has NOT unlocked, and the two halves of
@@ -627,7 +641,11 @@ def _clear_auth_for_target(bucket_id: str) -> ConfigResetAuthClearance:
             cleared_at=now(),
             cleared_lock_provider_ids=cleared_lock_provider_ids,
         )
-    result = reset_operator_auth(all_providers=True, target_bucket_id=bucket_id)
+    result = reset_operator_auth(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        all_providers=True,
+        target_bucket_id=bucket_id,
+    )
     return ConfigResetAuthClearance(
         mode=ConfigResetAuthClearanceMode.UNLOCKED_REVOCATION,
         cleared_at=now(),
@@ -639,6 +657,8 @@ def _clear_auth_for_target(bucket_id: str) -> ConfigResetAuthClearance:
 def _clear_auth_for_targets(
     repository: ConfigResetJournalRepository,
     operation: ConfigResetOperation,
+    *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
 ) -> ConfigResetOperation:
     for index, target in enumerate(operation.targets):
         if _phase_at_least(target.phase, ConfigResetTargetPhase.AUTH_CLEARED):
@@ -653,7 +673,10 @@ def _clear_auth_for_targets(
                 _update_target(
                     target,
                     phase=ConfigResetTargetPhase.AUTH_CLEARED,
-                    auth_clearance=_clear_auth_for_target(target.bucket_id),
+                    auth_clearance=_clear_auth_for_target(
+                        target.bucket_id,
+                        certificate_secret_backend_factory=certificate_secret_backend_factory,
+                    ),
                 ),
             )
             repository.save(operation)
@@ -661,7 +684,10 @@ def _clear_auth_for_targets(
         target = _update_target(target, phase=ConfigResetTargetPhase.AUTH_CLEARING)
         operation = _replace_target(operation, index, target)
         repository.save(operation)
-        clearance = _clear_auth_for_target(target.bucket_id)
+        clearance = _clear_auth_for_target(
+            target.bucket_id,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+        )
         assessment = BucketMaintenanceService().assess_deletion(
             AssessBucketDeletionCommand(bucket_id=target.bucket_id),
         )

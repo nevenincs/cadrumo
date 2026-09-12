@@ -5,7 +5,7 @@ modelo:
         continuidad:
           devengo-year:
             help: A Modelo 190 148-151. casilla adóügyi adatai.
-            label: Casilla 148-151 — adóügyi mező
+            label: Esedékesség éve
           ingresos-a-cuenta-efectuados:
             help: 'A casilla adatai: Casilla 122-134: előlegfizetések efectuados.'
             label: 'Casilla 122-134: előlegfizetések efectuados'
@@ -14,16 +14,16 @@ modelo:
             label: Casilla 135-147 — adóügyi információ
           m190-correo-electronico:
             help: A Modelo 190 176-225. casilla adóügyi adatai.
-            label: Casilla 176-225 — adóügyi mező
+            label: A kapcsolattartó e-mail címe
           m190-declaracion-complementaria:
             help: 'A Modelo 190 121. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 121 — adóügyi információ
+            label: Kiegészítő bevallás
           m190-declaracion-sustitutiva:
             help: A Modelo 190 122. casilla adóügyi adatai.
-            label: Casilla 122 — adóügyi mező
+            label: Helyettesítő bevallás
           m190-numero-identificativo:
             help: A Modelo 190 108-120. casilla adóügyi adatai.
-            label: Casilla 108-120 — adóügyi mező
+            label: A bevallás azonosító száma
           m190-numero-identificativo-anterior:
             help: A Modelo 190 123-135. casilla adóügyi adatai.
             label: Casilla 123-135 — adóügyi mező
@@ -35,7 +35,7 @@ modelo:
             label: Casilla 59-67 — adóügyi információ
           payee-anualidades-alimentos:
             help: 'A Modelo 190 210-222. casilla adóügyi adatai: tartási járadékok.'
-            label: Casilla 210-222 — tartási járadékok
+            label: Tartásdíj-járadékok
           payee-ascendientes-75-mas-entero:
             help: 'A Modelo 190 244. casilla adóügyi adatai: adóügyi információ.'
             label: Casilla 244 — adóügyi információ
@@ -68,16 +68,16 @@ modelo:
             label: Casilla 241 — adóügyi információ
           payee-birth-year:
             help: A Modelo 190 153-156. casilla adóügyi adatai.
-            label: Casilla 153-156 — adóügyi mező
+            label: Születési év
           payee-ceuta-melilla-clave:
             help: 'A Modelo 190 152. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 152 — adóügyi információ
+            label: Ceuta vagy Melilla
           payee-clave-percepcion:
             help: 'A Modelo 190 78. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 78 — adóügyi információ
+            label: Jövedelemkód
           payee-complemento-ayuda-infancia:
             help: 'A Modelo 190 322. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 322 — adóügyi információ
+            label: Gyermektámogatási kiegészítés
           payee-computo-hijo-1:
             help: 'A Modelo 190 251. casilla adóügyi adatai: adóügyi információ.'
             label: Casilla 251 — adóügyi információ
@@ -89,7 +89,7 @@ modelo:
             label: Casilla 253 — adóügyi információ
           payee-contract-relation-clave:
             help: 'A Modelo 190 168. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 168 — adóügyi információ
+            label: Szerződés vagy jogviszony
           payee-descendientes-discapacidad-33-65-entero:
             help: 'A Modelo 190 231-232. casilla adóügyi adatai: adóügyi információ.'
             label: Casilla 231-232 — adóügyi információ
@@ -122,21 +122,21 @@ modelo:
             label: Casilla 225-226 — adóügyi információ
           payee-disability-clave:
             help: 'A Modelo 190 167. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 167 — adóügyi információ
+            label: Fogyatékosság
           payee-emerging-stock-excess-clave:
             help: 'A Modelo 190 388. casilla adóügyi adatai: adóügyi információ.'
             label: Casilla 388 — adóügyi információ
           payee-family-situation:
             help: 'A Modelo 190 157. casilla adóügyi adatai: a kedvezményezett családi
               helyzete.'
-            label: Casilla 157 — a kedvezményezett családi helyzete
+            label: Családi helyzet
           payee-gastos-deducibles:
             help: 'A Modelo 190 184-196. casilla adóügyi adatai: a kedvezményezett
               levonható költségei.'
-            label: Casilla 184-196 — a kedvezményezett levonható költségei
+            label: Levonható költségek
           payee-geographic-mobility-clave:
             help: 'A Modelo 190 170. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 170 — adóügyi információ
+            label: Földrajzi mobilitás
           payee-incapacidad-dineraria-percepcion:
             help: 'A Modelo 190 256-268. casilla adóügyi adatai: adóügyi információ.'
             label: Casilla 256-268 — adóügyi információ
@@ -157,10 +157,10 @@ modelo:
             label: Casilla 36-75 — a kedvezményezett neve
           payee-nif:
             help: 'A Modelo 190 18-26. casilla adóügyi adatai: a kedvezményezett NIF-je.'
-            label: Casilla 18-26 — a kedvezményezett NIF-je
+            label: A juttatásban részesülő adóazonosítója (NIF)
           payee-pension-compensatoria:
             help: 'A Modelo 190 197-209. casilla adóügyi adatai: kiegyenlítő tartásdíj.'
-            label: Casilla 197-209 — kiegyenlítő tartásdíj
+            label: Kiegyenlítő járadékok
           payee-prestamos-vivienda-clave:
             help: 'A Modelo 190 254. casilla adóügyi adatai: adóügyi információ.'
             label: Casilla 254 — adóügyi információ
@@ -206,7 +206,7 @@ modelo:
             label: Casilla 109-121 — adóügyi információ
           representante-legal-nif:
             help: 'A Modelo 190 27-35. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 27-35 — adóügyi információ
+            label: A törvényes képviselő NIF száma
           retenciones-ingresos-a-cuenta:
             help: 'A casilla adatai: Casilla 161-175: adólevonások előlegfizetések.'
             label: 'Casilla 161-175: adólevonások előlegfizetések'

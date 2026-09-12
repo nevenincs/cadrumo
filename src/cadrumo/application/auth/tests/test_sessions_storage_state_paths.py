@@ -37,7 +37,6 @@ from ....core.config import override_settings
 from ....core.directory_scan import DirectoryEntryKind, scan_directory
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
-from ...wizard import compiler as _wizard  # noqa: F401  (compiler import seeds the ProfileKey registry)
 from ..operator import configure_operator_auth, logout_operator_auth, reset_operator_auth
 from ..sessions import storage_state_paths
 

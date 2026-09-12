@@ -47,7 +47,8 @@ from ...core.profile_session import ProfileRecordUnavailability, ProfileSessionR
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..operator_actions.preconditions import active_profile_pointer_repair_verdict, no_action_precondition_verdict
 from ..profile_preconditions import inspect_active_profile_precondition, profile_session_failure_verdict
-from ..user_profile.keys_validation import list_profile_key_records, validate_profile_values
+from ..user_profile.keys_validation import validate_profile_values
+from ..user_profile.profile_keys import profile_keys
 from ..user_profile.profile_pointer import active_profile_pointer_transaction
 from ..user_profile.profile_record_repository import profile_record_session_if_authenticated
 from ..user_profile.projections import record_to_path_values
@@ -665,7 +666,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
     override = (settings.cadrumo_active_profile or "").strip()
     active_profile = resolve_active_bucket_id()
     source: ProfileSource = "env_override" if override else ("pointer" if active_profile is not None else "none")
-    total_keys = len(list_profile_key_records())
+    total_keys = len(profile_keys())
     if active_profile is None:
         return _assess_without_active_profile(source, total_keys)
     return _assess_selected_profile(active_profile, source, total_keys, state)

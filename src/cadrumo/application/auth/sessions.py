@@ -51,6 +51,7 @@ from .acquisition_lock import (
     auth_lock_ttl_seconds,
     clear_auth_acquisition_lock,
 )
+from .certificate_secret_backend import CertificateSecretBackendFactory
 from .credentials import resolve_active_provider_kind
 from .operator_scope import (
     active_profile_storage_span,
@@ -335,6 +336,7 @@ def persisted_session_exists(
 async def ensure_authenticated_aeat_session(
     settings: Settings,
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     kind: AuthProviderKind | None = None,
     fresh: bool = False,
     reset_lock: bool = False,
@@ -353,6 +355,7 @@ async def ensure_authenticated_aeat_session(
             assert_auth_recovery_not_in_progress(workflow_state_repository().load())
             return await _ensure_authenticated_aeat_session_locked(
                 settings,
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
                 kind=kind,
                 fresh=fresh,
                 reset_lock=reset_lock,
@@ -366,6 +369,7 @@ async def ensure_authenticated_aeat_session(
 async def _ensure_authenticated_aeat_session_locked(
     settings: Settings,
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     kind: AuthProviderKind | None = None,
     fresh: bool = False,
     reset_lock: bool = False,
@@ -390,7 +394,11 @@ async def _ensure_authenticated_aeat_session_locked(
     Returns an :class:`AuthenticatedAeatSessionResult` carrying the live
     session and the lock-reset status when one was requested.
     """
-    provider_kind = _resolve_provider_kind(settings, kind)
+    provider_kind = _resolve_provider_kind(
+        settings,
+        kind,
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+    )
     settings, expected_identity = _prepare_clave_auth(settings, provider_kind)
     reset_status = (
         clear_auth_acquisition_lock(settings, provider_kind, reason="operator-reset-before-ensure")
@@ -401,6 +409,7 @@ async def _ensure_authenticated_aeat_session_locked(
         reused = await _try_probe_verified_session(
             settings,
             provider_kind,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
             target_url=target_url,
             browser_session_factory=browser_session_factory,
             certificate_credentials=certificate_credentials,
@@ -427,6 +436,7 @@ async def _ensure_authenticated_aeat_session_locked(
             reused = await _try_probe_verified_session(
                 settings,
                 provider_kind,
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
                 target_url=target_url,
                 browser_session_factory=browser_session_factory,
                 certificate_credentials=certificate_credentials,
@@ -448,6 +458,7 @@ async def _ensure_authenticated_aeat_session_locked(
         provider = _build_provider(
             settings,
             provider_kind,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
             browser_session_factory=browser_session_factory,
             certificate_credentials=certificate_credentials,
         )
@@ -551,7 +562,12 @@ def session_metadata_datetime(value: object, *, field: str) -> datetime:
     )
 
 
-def _resolve_provider_kind(settings: Settings, kind: AuthProviderKind | None) -> AuthProviderKind:
+def _resolve_provider_kind(
+    settings: Settings,
+    kind: AuthProviderKind | None,
+    *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+) -> AuthProviderKind:
     """Resolve the provider this session should authenticate through.
 
     Delegates to :func:`resolve_active_provider_kind` so the live-read
@@ -564,7 +580,14 @@ def _resolve_provider_kind(settings: Settings, kind: AuthProviderKind | None) ->
     if kind is not None:
         return kind
     fallback = (settings.cadrumo_auth_provider or AuthProviderKind.CERTIFICATE).value
-    return resolve_active_provider_kind(settings=settings, fallback_provider=fallback) or (AuthProviderKind.CERTIFICATE)
+    return (
+        resolve_active_provider_kind(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            settings=settings,
+            fallback_provider=fallback,
+        )
+        or (AuthProviderKind.CERTIFICATE)
+    )
 
 
 def _normalise_tax_identity(value: object) -> str:
@@ -1022,6 +1045,7 @@ async def _try_probe_verified_session(
     settings: Settings,
     kind: AuthProviderKind,
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     target_url: str | None,
     browser_session_factory: BrowserSessionFactoryPort | None,
     certificate_credentials: ActiveCertificateCredentials | None,
@@ -1029,6 +1053,7 @@ async def _try_probe_verified_session(
     provider = _build_provider(
         settings,
         kind,
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
         browser_session_factory=browser_session_factory,
         certificate_credentials=certificate_credentials,
     )
@@ -1047,6 +1072,7 @@ def _build_provider(
     settings: Settings,
     kind: AuthProviderKind,
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     browser_session_factory: BrowserSessionFactoryPort | None,
     certificate_credentials: ActiveCertificateCredentials | None,
 ) -> AuthProvider:
@@ -1057,6 +1083,7 @@ def _build_provider(
     return select_provider(
         kind,
         settings=settings,
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
         browser_session_factory=browser_session_factory,
         certificate_credentials=certificate_credentials,
     )

@@ -71,6 +71,7 @@ from .work_addressing import (
 from .work_unit_repository import work_unit_catalogue_repository
 
 if TYPE_CHECKING:
+    from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..state_projection import ProjectionModeloReadiness
 
 _log = get_logger(__name__)
@@ -220,6 +221,7 @@ def _skipped_after(stopped_at: QuickfileStage) -> tuple[QuickfileStageOutcome, .
 def run_modelo_quickfile(
     command: QuickfileCommand,
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     read_ports: StateProjectionReadPorts,
     workflow_profile: TaxpayerProfile,
     build_calculation_inputs: Callable[[str], WorkCalculateInputBundle],
@@ -282,6 +284,7 @@ def run_modelo_quickfile(
 
     readiness = _resolve_readiness(
         command,
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
         registry_revision_id=registry_revision_id,
         read_ports=read_ports,
     )
@@ -349,6 +352,7 @@ def run_modelo_quickfile(
     try:
         report = verify_modelo_revision(
             calculation_revision.calculation_revision_id,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
             actor=command.actor,
             workflow_profile=workflow_profile,
         )
@@ -480,6 +484,7 @@ def _halted(
 def _resolve_readiness(
     command: QuickfileCommand,
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     registry_revision_id: RevisionId,
     read_ports: StateProjectionReadPorts,
 ) -> ProjectionModeloReadiness | None:
@@ -494,6 +499,7 @@ def _resolve_readiness(
 
     try:
         projection = build_operator_state_projection(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
             read_ports=read_ports,
             modelo_readiness_requests=(
                 ModeloReadinessRequest(

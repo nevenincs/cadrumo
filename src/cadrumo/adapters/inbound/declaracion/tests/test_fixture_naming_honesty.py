@@ -29,7 +29,7 @@ author reads.
 See Also:
     :mod:`~adapters.inbound.declaracion.tests._parser_boundary_support`
         The module whose fixture constants are audited here.
-    :mod:`~tests.fixtures.manual_annexes.tests.test_manual_annex_provenance`
+    :mod:`~adapters.inbound.declaracion.tests.test_manual_annex_provenance`
         The provenance gate over the AEAT-published annex specimens.
 """
 

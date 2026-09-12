@@ -10,6 +10,7 @@ import pytest
 
 from cadrumo.adapters.outbound.aeat.sede.censal_datos import parse_censal_datos
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.application.operations.interactions import (
     OperationApplyResponse,
     OperationRejectResponse,
@@ -21,11 +22,11 @@ from cadrumo.application.operations.models import (
 from cadrumo.application.operations.persistence.leases import operation_conflict_scope_reference
 from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
 from cadrumo.application.user_profile.censal_operation import (
-    CENSAL_OPERATION_DEFINITION,
     CensalFieldIntent,
     CensalOperationAcquisition,
     CensalOperationExecutor,
     CensalReviewedFieldIntent,
+    build_censal_operation_definition,
 )
 from cadrumo.application.user_profile.censo_sync import CENSO_SOURCE_TAG
 from cadrumo.application.user_profile.cotejo_apply import CensoDivergence, apply_cotejo, open_censo_divergences
@@ -57,6 +58,16 @@ _VALUES = {
     "contact.postcode": "28001",
     "contact.fiscal_address_cadastral_reference": "0000001AA0000A0001AA",
 }
+
+
+def _test_censal_operation_definition():
+    return build_censal_operation_definition(
+        certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+    )
+
+
+def _test_censal_operation_definition_id() -> str:
+    return _test_censal_operation_definition().definition_id
 
 
 class _LocalHttpResource:
@@ -143,7 +154,7 @@ def _request(profile_id: str, adopted_paths: frozenset[str]):
         }
     )
     return OperationRequest(
-        definition_id=CENSAL_OPERATION_DEFINITION.definition_id,
+        definition_id=_test_censal_operation_definition_id(),
         subject_ref=profile_id,
         payload=payload,
     )
@@ -189,7 +200,10 @@ def test_censal_operation_exact_apply_matrix_detaches_resumes_and_cleans_up(
         durable_root = tmp_path / "operations"
         before = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
         history_before = ProfileRecordStore(session=session).history()
-        executor = CensalOperationExecutor(acquire=acquisition)
+        executor = CensalOperationExecutor(
+            certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+            acquire=acquisition,
+        )
         owner = _supervisor(
             root=durable_root,
             objects=objects,
@@ -231,7 +245,7 @@ def test_censal_operation_exact_apply_matrix_detaches_resumes_and_cleans_up(
             leases = OperationLeaseFilesystemRepository(storage_root=durable_root)
             observed = await leases.inspect(
                 operation_conflict_scope_reference(
-                    definition_id=CENSAL_OPERATION_DEFINITION.definition_id,
+                    definition_id=_test_censal_operation_definition_id(),
                     subject_ref=profile_id,
                 ),
                 operation_id,
@@ -273,7 +287,10 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
             supervisor = _supervisor(
                 root=tmp_path / "reject",
                 objects=objects,
-                executor=CensalOperationExecutor(acquire=acquisition),
+                executor=CensalOperationExecutor(
+                    certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+                    acquire=acquisition,
+                ),
                 owner="6" * 64,
                 token="7" * 64,
             )
@@ -320,7 +337,11 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
             supervisor = _supervisor(
                 root=tmp_path / "stale",
                 objects=objects,
-                executor=CensalOperationExecutor(acquire=acquisition, apply=competing_commit),
+                executor=CensalOperationExecutor(
+                    certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+                    acquire=acquisition,
+                    apply=competing_commit,
+                ),
                 owner="9" * 64,
                 token="a" * 64,
             )
@@ -346,7 +367,10 @@ def test_censal_operation_detach_takeover_reuses_operand_and_releases_each_owner
     with _subject(tmp_path) as (profile_id, objects, session):
         durable_root = tmp_path / "restart"
         history_before = ProfileRecordStore(session=session).history()
-        executor = CensalOperationExecutor(acquire=acquisition)
+        executor = CensalOperationExecutor(
+            certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+            acquire=acquisition,
+        )
         owner = _supervisor(
             root=durable_root,
             objects=objects,
@@ -398,7 +422,7 @@ def test_censal_operation_detach_takeover_reuses_operand_and_releases_each_owner
             assert terminal.cleanup_deadline is None
             observed = await OperationLeaseFilesystemRepository(storage_root=durable_root).inspect(
                 operation_conflict_scope_reference(
-                    definition_id=CENSAL_OPERATION_DEFINITION.definition_id,
+                    definition_id=_test_censal_operation_definition_id(),
                     subject_ref=profile_id,
                 ),
                 operation_id,
@@ -430,6 +454,7 @@ def test_censal_operation_cancellation_before_irreversible_entry_cleans_up_witho
             root=durable_root,
             objects=objects,
             executor=CensalOperationExecutor(
+                certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
                 acquire=acquisition,
                 before_irreversible_section=boundary,
             ),
@@ -469,7 +494,7 @@ def test_censal_operation_cancellation_before_irreversible_entry_cleans_up_witho
             leases = OperationLeaseFilesystemRepository(storage_root=durable_root)
             observed = await leases.inspect(
                 operation_conflict_scope_reference(
-                    definition_id=CENSAL_OPERATION_DEFINITION.definition_id,
+                    definition_id=_test_censal_operation_definition_id(),
                     subject_ref=profile_id,
                 ),
                 operation_id,

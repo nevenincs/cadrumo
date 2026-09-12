@@ -19,6 +19,7 @@ See Also:
 from __future__ import annotations
 
 from ...application.auth.session_types import AeatSession
+from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ...application.auth.sessions import ensure_authenticated_aeat_session
 from ...core.access_gate.gate import AeatAccessGate
 from ...core.config import Settings, load_settings
@@ -26,6 +27,7 @@ from ...core.config import Settings, load_settings
 
 async def active_verified_session(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     operation: str = "live-filed-read",
     target_url: str | None = None,
 ) -> tuple[AeatSession, Settings]:
@@ -39,6 +41,7 @@ async def active_verified_session(
     AeatAccessGate(settings).require_live_read()
     result = await ensure_authenticated_aeat_session(
         settings,
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
         operation=operation,
         target_url=target_url,
     )

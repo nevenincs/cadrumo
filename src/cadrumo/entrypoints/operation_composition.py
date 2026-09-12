@@ -14,6 +14,7 @@ from ..adapters.persistence.operations.financial_operand_custody import (
 from ..adapters.persistence.operations.journal import OperationJournalRepository
 from ..adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ..adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from ..adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from ..application.auth.operation_definitions import (
     build_auth_operation_definitions,
@@ -47,7 +48,10 @@ from ..application.operations.registry import (
 )
 from ..application.storage.calc_sheets.export_service import export_modelo_to_sheets
 from ..application.storage.calc_sheets.records import SheetExportPlan, TabName
-from ..application.user_profile.censal_operation import CENSAL_OPERATION_DEFINITION, build_censal_operation_registration
+from ..application.user_profile.censal_operation import (
+    build_censal_operation_definition,
+    build_censal_operation_registration,
+)
 from ..application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
@@ -153,13 +157,20 @@ def build_production_operation_registry(
         composition_factory=compose_live_state,
         pull=pull_filed_history_with_shared_composition,
     )
+    resolved_censal_definition = (
+        censal_definition
+        if censal_definition is not None
+        else build_censal_operation_definition(
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+        )
+    )
     definitions = tuple(
         sorted(
             (
                 *resolved_auth_definitions,
                 *profile_definitions,
                 *modelo_definitions,
-                CENSAL_OPERATION_DEFINITION if censal_definition is None else censal_definition,
+                resolved_censal_definition,
                 filed_history_definition,
                 resolved_google_export_definition,
             ),
@@ -173,7 +184,7 @@ def build_production_operation_registry(
                 *build_user_profile_operation_registrations(profile_definitions),
                 *build_modelo_lifecycle_operation_registrations(modelo_definitions),
                 build_censal_operation_registration(
-                    CENSAL_OPERATION_DEFINITION if censal_definition is None else censal_definition
+                    resolved_censal_definition
                 ),
                 build_filed_history_operation_registration(filed_history_definition),
                 build_google_sheets_export_operation_registration(resolved_google_export_definition),

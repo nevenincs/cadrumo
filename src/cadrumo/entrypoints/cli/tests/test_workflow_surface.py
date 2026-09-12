@@ -17,7 +17,7 @@ from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_s
 from ....application.diagnostics import build_cli_version_report
 from ....core.config import load_settings, override_settings
 from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
-from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_path
 from ....domain.buckets.event import BucketEventType

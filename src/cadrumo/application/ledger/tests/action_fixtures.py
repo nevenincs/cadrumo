@@ -42,7 +42,7 @@ from ....domain.transactions.enums import (
 )
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction
 from ....domain.transactions.raw_transaction import SourceFormat as _SourceFormat
-from ....tests.filing_evidence import general_m303_filing_evidence
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ..models import ManualLedgerTransactionCommand as _ManualLedgerTransactionCommand
 from ..models import ManualLedgerTransactionResult as _ManualLedgerTransactionResult
 

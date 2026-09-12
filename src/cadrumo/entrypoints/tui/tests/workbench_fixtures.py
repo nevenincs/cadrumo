@@ -19,6 +19,7 @@ from typing import Any, Final, cast
 from textual.app import App
 from textual.screen import Screen
 
+from ....application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ....application.aeat_sync.workspace import (
     AeatSyncAeatObservationState,
     AeatSyncCensusCategory,
@@ -96,7 +97,7 @@ from ....application.overview.evidence import CalendarEvidenceProjection
 from ....application.overview.home import HomeAvailability, HomeZoneState
 from ....application.search.workbench import WorkbenchDestinationAdmissionState
 from ....application.user_profile.censal_operation import (
-    CENSAL_OPERATION_DEFINITION,
+    build_censal_operation_definition,
     build_censal_operation_registration,
 )
 from ....core.casilla_id import validated_casilla_id
@@ -142,6 +143,7 @@ from ..operations.modal import OperationModal
 
 _BUCKET: Final[str] = "00000000-0000-4000-8000-000000000001"
 _AT: Final[datetime] = datetime(2026, 9, 3, 10, tzinfo=UTC)
+_CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
 
 
 class WorkbenchFixtureScenario(StrEnum):
@@ -224,7 +226,9 @@ def _aeat_source(
 
 def _operation_contracts() -> OperationPublicContractSetV1:
     """Build the canonical censo contract with its existing action join."""
-    definition = CENSAL_OPERATION_DEFINITION.model_copy(
+    definition = build_censal_operation_definition(
+        certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+    ).model_copy(
         update={"action_reference": ActionReference(action_id="operator.profile.edit")}
     )
     contract = build_censal_operation_registration(definition).contract

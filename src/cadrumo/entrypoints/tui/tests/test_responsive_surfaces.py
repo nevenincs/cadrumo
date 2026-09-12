@@ -34,7 +34,7 @@ from pathlib import Path
 import pytest
 from textual.widget import Widget
 
-from ....tests.modelo_workspace_session import real_workspace_inspection_result
+from .modelo_workspace_session import real_workspace_inspection_result
 from ....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZE_IDS, SUPPORTED_TERMINAL_SIZES
 from ..components.host import ScreenHostApp
 from ..modelo.routes import MODELO_WORKSPACE_DESTINATIONS

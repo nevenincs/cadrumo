@@ -85,7 +85,7 @@ from ...application.user_profile.registration import register_profile_with_crede
 from ...core.auth_provider import AuthProviderKind
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...core.period import Period
-from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...core.time.clock import now
 from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ...domain.modelos.filing_record import ExternalEvidenceKind

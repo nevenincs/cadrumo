@@ -63,7 +63,7 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from cadrumo.core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
