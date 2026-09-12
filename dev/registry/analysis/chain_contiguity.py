@@ -146,10 +146,17 @@ CONDITIONS: Final[tuple[str, ...]] = (
     "evolution_declared_off_endpoint",
     "evolution_restates_ancestor",
     "evolution_without_chain_members",
+    "chain_partially_grounded",
 )
+
+#: The origin marking a link as established from cited evidence rather than
+#: inferred from a predicate.
+_GROUNDED: Final = "grounded"
 
 #: Measured beside the conditions and never counted as findings.
 MEASUREMENTS: Final[tuple[str, ...]] = (
+    "chain_fully_grounded",
+    "chain_links_to_ground",
     "chain_shared_across_modelos",
     "evolution_spans_absent_editions",
 )
@@ -230,6 +237,48 @@ def _ordered(statuses: Iterable[EditionStatus]) -> tuple[EditionStatus, ...]:
 def _chains_of(status: EditionStatus) -> Counter[str]:
     """Every lineage the edition's rows state, with how many rows state it."""
     return Counter(lineage for _, lineage in status.stated_keys if lineage is not None)
+
+
+def grounding_by_chain(
+    statuses: tuple[EditionStatus, ...],
+) -> dict[str, tuple[int, int]]:
+    """Per chain, how many of its links are grounded and how many links it has.
+
+    A chain's LINKS are the steps between consecutive editions carrying it. The
+    role exemption is per-occurrence and bilateral -- an occurrence is exempt
+    only when every link touching it is grounded -- so a chain discharges as a
+    whole or not at all. A two-edition chain is one link and grounding it
+    exempts both ends; a four-edition chain is three links and grounding two of
+    them leaves the middle occurrences still requiring a role.
+
+    That makes the CHAIN the unit of work, and the cost of a chain the number of
+    links in it. Sizing route (b) as a flat row count overstates how much a
+    partial pass discharges, which is nothing.
+    """
+    per_chain: dict[str, tuple[int, int]] = {}
+    by_modelo: dict[str, list[EditionStatus]] = defaultdict(list)
+    for status in statuses:
+        by_modelo[status.modelo].append(status)
+    for modelo, editions in by_modelo.items():
+        ordered = _ordered(editions)
+        carried: dict[str, list[EditionStatus]] = defaultdict(list)
+        origins: dict[tuple[str, str], str] = {}
+        for status in ordered:
+            for row in status.rows_by_id.values():
+                chain = row.get(_LINEAGE)
+                if not isinstance(chain, str) or not chain:
+                    continue
+                carried[chain].append(status)
+                origins[(chain, status.edition)] = str(row.get("continuidad_origin", ""))
+        for chain, holders in carried.items():
+            links = len(holders) - 1
+            if links < 1:
+                continue
+            # A link is grounded when the SUCCESSOR occurrence states it: the
+            # later row is the one carrying the evidence for the step it makes.
+            grounded = sum(1 for status in holders[1:] if origins.get((chain, status.edition)) == _GROUNDED)
+            per_chain[f"{modelo}/{chain}"] = (grounded, links)
+    return per_chain
 
 
 def _excused(evolutions: Iterable[Evolution], chain: str, edition: str) -> bool:
@@ -402,6 +451,21 @@ def screen(statuses: tuple[EditionStatus, ...], evolutions: tuple[Evolution, ...
     findings: list[ChainFinding] = []
     for modelo, editions in sorted(by_modelo.items()):
         findings.extend(modelo_findings(modelo, tuple(editions), evolutions))
+    # A chain part-way through grounding is the trap: it looks like progress and
+    # discharges nothing, because its middle occurrences are exempt only once
+    # every link touching them is grounded.
+    for key, (grounded, links) in sorted(grounding_by_chain(statuses).items()):
+        if 0 < grounded < links:
+            modelo, _, chain = key.partition("/")
+            findings.append(
+                ChainFinding(
+                    modelo=modelo,
+                    edition="<chain>",
+                    kind="chain_partially_grounded",
+                    chain=chain,
+                    detail=f"{grounded} of {links} links grounded; no occurrence is exempt until all are",
+                )
+            )
     return tuple(findings)
 
 
@@ -450,6 +514,12 @@ def census(statuses: tuple[EditionStatus, ...], evolutions: tuple[Evolution, ...
         "chains": sum(len(chains) for chains in per_modelo.values()),
         "evolutions": len(evolutions),
         "chain_shared_across_modelos": sum(1 for count in modelos_per_chain.values() if count > 1),
+        "chain_fully_grounded": sum(
+            1 for grounded, links in grounding_by_chain(statuses).values() if grounded == links
+        ),
+        "chain_links_to_ground": sum(
+            links - grounded for grounded, links in grounding_by_chain(statuses).values() if grounded < links
+        ),
         "evolution_spans_absent_editions": spans_over_absent_editions(statuses, evolutions),
     }
 
