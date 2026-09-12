@@ -94,15 +94,10 @@ def compose_secure_profile_workbench_generation_provider(
     returned provider is the explicit local-I/O boundary for a fresh session
     generation and never initiates network work.
     """
-    from ...adapters.persistence.profile.buckets import build_bucket_event_history_repository
-    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...adapters.persistence.profile.modelos_verification_reports import (
         VerificationReportCatalogueRepository,
     )
-    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...application.overview.home import HomeAccountSession, HomeSessionPosture
     from ...application.user_profile.login_session_port import (
         profile_current_bucket_session,
@@ -116,6 +111,7 @@ def compose_secure_profile_workbench_generation_provider(
         SecureProfileWorkbenchGenerationReadDoorV1,
     )
     from ...core.time.clock import now
+    from ..ledger_action_composition import compose_ledger_action_ports
 
     def account_session() -> HomeAccountSession:
         """Recheck custody and return the current non-secret account facts."""
@@ -135,17 +131,19 @@ def compose_secure_profile_workbench_generation_provider(
         )
 
     account_session()
+    ledger_action_ports = compose_ledger_action_ports(bucket_id=profile_id)
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=profile_id,
         profile_repository=ProfileRecordRepository.for_current_session(profile_id),
-        work_unit_repository=WorkUnitCatalogueRepository(bucket_id=profile_id),
-        calculation_repository=CalculationRevisionCatalogueRepository(bucket_id=profile_id),
+        work_unit_repository=ledger_action_ports.work_unit_repository,
+        calculation_repository=ledger_action_ports.calculation_repository,
         filing_repository=ModeloRecordCatalogueRepository(bucket_id=profile_id),
         clock=now,
         account_session_reader=account_session,
-        transaction_repository=TransactionCatalogueRepository(bucket_id=profile_id),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=profile_id),
-        bucket_event_repository=build_bucket_event_history_repository(bucket_id=profile_id),
+        transaction_repository=ledger_action_ports.transaction_repository,
+        invoice_repository=ledger_action_ports.invoice_repository,
+        bucket_event_repository=ledger_action_ports.bucket_event_repository,
+        ledger_action_ports=ledger_action_ports,
         verification_repository=VerificationReportCatalogueRepository(bucket_id=profile_id),
         notification_custody_reader=_notification_custody_reader(profile_id),
         result_casilla_reader=_declaration_result_casilla_reader(),

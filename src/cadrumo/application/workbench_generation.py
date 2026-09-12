@@ -18,7 +18,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
-from typing import Final, Literal, Protocol, Self
+from typing import TYPE_CHECKING, Final, Literal, Protocol, Self
 from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, ValidationError, model_validator
@@ -114,6 +114,9 @@ WORKBENCH_GENERATION_CONTRACT_VERSION: Literal[1] = 1
 
 _AEAT_SYNC_READER_UNAVAILABLE: Final[str] = "workbench.aeat_sync.reader_unavailable"
 _AEAT_SYNC_SNAPSHOT_PROJECTOR_UNAVAILABLE: Final[str] = "workbench.aeat_sync.snapshot_projector_unavailable"
+
+if TYPE_CHECKING:
+    from .ledger.action_ports import LedgerActionPorts
 
 
 class WorkbenchGenerationAvailability(StrEnum):
@@ -408,6 +411,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     """
     operation_contracts: OperationPublicContractSetV1 | None = None
     modelo_projection_reader: Callable[[WorkUnit], ModeloWorkspaceProjectionV1] | None = None
+    ledger_action_ports: LedgerActionPorts | None = None
+    """Outer-composed ledger ports for this profile, when the ledger is bound."""
     """An absent reader below is a composition fact, not a data fact.
 
     A host that did not bind a ledger store or an operation contract set
@@ -447,7 +452,12 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         ledger_sources = self._load_ledger_sources()
         verification = self._load_verification_reports()
         custody_count = self._load_custody_count()
-        ledger = self._read_ledger(revisions.revisions, work_units, sources=ledger_sources)
+        ledger_ports = self.ledger_action_ports
+        ledger = (
+            None
+            if ledger_ports is None
+            else self._read_ledger(revisions.revisions, work_units, sources=ledger_sources, ports=ledger_ports)
+        )
         modelo = self._read_modelo(work_units)
         aeat_sync, aeat_sync_refusal = self._read_aeat_sync(
             _declared_tax_id(raw_values),
@@ -538,9 +548,12 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         reads. Bucket events are deliberately outside it -- they only supply
         review context and have no whole-catalogue read to compare.
         """
-        if self.transaction_repository is None or self.invoice_repository is None:
+        if self.ledger_action_ports is None:
             return None
-        return (self.transaction_repository.load(), self.invoice_repository.load())
+        return (
+            self.ledger_action_ports.transaction_repository.load(),
+            self.ledger_action_ports.invoice_repository.load(),
+        )
 
     def _read_ledger(
         self,
@@ -548,17 +561,16 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         work_units: WorkUnitCatalogue,
         *,
         sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
+        ports: LedgerActionPorts,
     ) -> LedgerWorkspaceProjectionV1 | None:
         """Project the Ledger workspace only when its stores were bound."""
-        if self.transaction_repository is None or self.invoice_repository is None or sources is None:
+        if sources is None:
             return None
         from .ledger.workspace_reader import read_ledger_workspace_projection
 
         return read_ledger_workspace_projection(
             bucket_id=self.profile_id,
-            transaction_repository=self.transaction_repository,
-            invoice_repository=self.invoice_repository,
-            bucket_event_repository=self.bucket_event_repository,
+            ports=ports,
             calculation_revisions=calculation_revisions,
             work_units=work_units,
             transactions=sources[0],

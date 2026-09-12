@@ -251,6 +251,23 @@ def _help_key(flow: WizardFlow, question: WizardQuestion) -> str:
     return f"wizard.{flow.id}.flags.{question.id}.help"
 
 
+def _catalogue_option_info(question: WizardQuestion) -> typer.models.OptionInfo:
+    """Build an option for a catalogue question without a second ID table.
+
+    A few catalogue entries intentionally have no hand-authored command
+    declaration.  Their flag shape is derived from the descriptor itself so
+    the command layer does not become another home for question identifiers.
+    """
+    option_name = f"--{question.id}"
+    if question.widget is WizardWidget.CONFIRM:
+        option_name = f"{option_name}/--no-{question.id}"
+    kwargs: dict[str, object] = {"help": tr(_help_key(SETUP_FLOW, question))}
+    if question.widget is WizardWidget.SELECT and question.choices:
+        values = [choice.value for choice in question.choices]
+        kwargs.update(click_type=_choice(values), metavar=_choice_metavar(values))
+    return typer.Option(option_name, **kwargs)
+
+
 SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "tax-id": typer.Option("--tax-id", help=tr("wizard.setup.flags.tax-id.help")),
     "name": typer.Option("--name", help=tr("wizard.setup.flags.name.help")),
@@ -528,22 +545,6 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         "--new-entity-first-two-profit-periods/--no-new-entity-first-two-profit-periods",
         help=tr("wizard.setup.flags.new-entity-first-two-profit-periods.help"),
     ),
-    "ley-49-2002-option-declared": typer.Option(
-        "--ley-49-2002-option-declared/--no-ley-49-2002-option-declared",
-        help=tr("wizard.setup.flags.ley-49-2002-option-declared.help"),
-    ),
-    "ley-49-2002-option-date": typer.Option(
-        "--ley-49-2002-option-date",
-        help=tr("wizard.setup.flags.ley-49-2002-option-date.help"),
-    ),
-    "ley-49-2002-renunciation-declared": typer.Option(
-        "--ley-49-2002-renunciation-declared/--no-ley-49-2002-renunciation-declared",
-        help=tr("wizard.setup.flags.ley-49-2002-renunciation-declared.help"),
-    ),
-    "ley-49-2002-renunciation-date": typer.Option(
-        "--ley-49-2002-renunciation-date",
-        help=tr("wizard.setup.flags.ley-49-2002-renunciation-date.help"),
-    ),
     "irpf-estimation-regime": typer.Option(
         "--irpf-estimation-regime",
         click_type=_choice(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
@@ -607,6 +608,13 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         help=tr("wizard.setup.flags.iva-redeme-enrolled.help"),
     ),
 }
+
+# Catalogue-described questions without a bespoke option record use the
+# descriptor as their source.  This keeps command flag mechanics aligned with
+# the registry-backed catalogue while avoiding a duplicate identifier list.
+for _section in SETUP_FLOW.sections:
+    for _question in _section.questions:
+        SETUP_OPTION_INFOS.setdefault(_question.id, _catalogue_option_info(_question))
 
 # This mapping is the operator-facing wizard vocabulary used by application
 # refusals to name flags the CLI can actually parse.

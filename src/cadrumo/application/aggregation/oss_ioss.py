@@ -40,7 +40,9 @@ from ...core.i18n.translatable import Translatable as t
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import CENT, round_to_cents
 from ...core.period import Period
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
+from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.ledger_oss_bindings import (
     OssIossLedgerObservation,
@@ -49,6 +51,7 @@ from ...domain.calculations.registry.ledger_oss_bindings import (
 )
 from ...domain.calculations.registry.manual_input_selector import ManualInputProvider
 from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.invoices.enums import iva_rate_kind
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
@@ -263,7 +266,41 @@ def _exterior_detail_binding_values(
     if revision.id != "esquema-exterior":
         return {}, {}
     grouped = _group_exterior_service_observations(observations)
-    return _bind_exterior_detail_values(revision, grouped)
+    if not grouped:
+        return {}, {}
+    declarations = _exterior_projection_declarations(observations[0].transaction_date)
+    return _bind_exterior_detail_values(revision, grouped, declarations)
+
+
+_MODELO_369_EXTERIOR_PROJECTION_FACT_ID = "modelo-369-exterior-oss-projection-catalogue"
+
+
+def _exterior_projection_declarations(effective_date: date) -> dict[str, str]:
+    """Resolve the dated Modelo 369 Exterior rate-code catalogue."""
+    resolved = bundled_authority().resolve_governed_fact(
+        MappingFactQuery(
+            fact_id=_MODELO_369_EXTERIOR_PROJECTION_FACT_ID,
+            date_axis=DateAxis.TRANSACTION_DATE,
+            effective_date=effective_date,
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise AggregationValidationError(
+            t("aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"),
+        )
+    declarations = {
+        entry.key: entry.value
+        for entry in resolved.payload.entries
+        if isinstance(entry.key, str) and isinstance(entry.value, str)
+    }
+    required = {"rate_code.general", "rate_code.reduced"}
+    missing = sorted(required - declarations.keys())
+    if missing:
+        raise AggregationValidationError(
+            t("aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"),
+            context={"missing": ",".join(missing)},
+        )
+    return declarations
 
 
 def _group_exterior_service_observations(
@@ -299,16 +336,13 @@ def _exterior_detail_row_fields(
     country: EUMemberState,
     rate_kind: IvaRateKind,
     observations: Sequence[OssIossLedgerObservation],
+    declarations: dict[str, str],
 ) -> tuple[dict[str, str], dict[str, Decimal]]:
     """Build the workbook field values for one destination/rate row."""
     rate = lookup_rate(country, rate_kind, observations[0].transaction_date).pct
-    rate_codes = {
-        IvaRateKind.GENERAL: "S",
-        IvaRateKind.REDUCED: "R",
-    }
     fields = {
         f"3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-{row}": country.name,
-        f"3-prestaciones-de-servicios-tipo-iva-{row}": rate_codes[rate_kind],
+        f"3-prestaciones-de-servicios-tipo-iva-{row}": declarations[f"rate_code.{rate_kind.value}"],
     }
     decimals = {
         f"3-prestaciones-de-servicios-tipo-de-iva-{row}": rate,
@@ -327,12 +361,13 @@ def _exterior_detail_row_fields(
 def _bind_exterior_detail_values(
     revision: ModeloRevision,
     grouped: dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]],
+    declarations: dict[str, str],
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
     """Resolve generated revision selectors against Exterior row fields."""
     decimal_values: dict[BindingId, Decimal] = {}
     enum_values: dict[BindingId, str] = {}
     for row, ((country, rate_kind), rows) in enumerate(sorted(grouped.items(), key=lambda item: item[0]), start=1):
-        fields, decimals = _exterior_detail_row_fields(row, country, rate_kind, rows)
+        fields, decimals = _exterior_detail_row_fields(row, country, rate_kind, rows, declarations)
         _assign_exterior_detail_bindings(revision, fields, decimals, decimal_values, enum_values)
     return decimal_values, enum_values
 

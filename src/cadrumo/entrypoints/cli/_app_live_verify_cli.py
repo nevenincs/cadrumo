@@ -70,11 +70,13 @@ def verify_list(
     stored observations returned by :class:`VerifyService`, not fresh live
     checks, and are emitted through :class:`VerifyListResult`.
     """
+    from ...adapters.persistence.profile.verify_observations import VerifyObservationRepository
     from ...application.live.verify import VerifyService
     from ._app_live_verify_payloads import VerifyListResult, VerifyObservationSummaryPayload
 
     bucket_id = active_bucket_id_or_refuse()
-    rows = VerifyService().list_observations(
+    persistence = VerifyObservationRepository(bucket_id=bucket_id)
+    rows = VerifyService(persistence=persistence).list_observations(
         bucket_id=bucket_id,
         surface=surface,
         nif=nif,
@@ -100,11 +102,13 @@ def verify_show(
     :class:`VerifyService` and emits :class:`VerifyViewResult` with the same row
     shape as ``aeat app live verify list``.
     """
+    from ...adapters.persistence.profile.verify_observations import VerifyObservationRepository
     from ...application.live.verify import VerifyService
     from ._app_live_verify_payloads import VerifyViewResult
 
     bucket_id = active_bucket_id_or_refuse()
-    record = VerifyService().show(bucket_id=bucket_id, observation_id=observation_id)
+    persistence = VerifyObservationRepository(bucket_id=bucket_id)
+    record = VerifyService(persistence=persistence).show(bucket_id=bucket_id, observation_id=observation_id)
     result = VerifyViewResult(bucket_id=bucket_id, **_verify_row(record))
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
     emit_envelope(ctx, command="app.live.verify.view", result=result, lines=lines)
@@ -122,11 +126,13 @@ def verify_latest(
     emits the stable :class:`VerifyLatestResult` shape with
     ``observation_id=None``.
     """
+    from ...adapters.persistence.profile.verify_observations import VerifyObservationRepository
     from ...application.live.verify import VerifyService
     from ._app_live_verify_payloads import VerifyLatestResult
 
     bucket_id = active_bucket_id_or_refuse()
-    record = VerifyService().latest_for_nif(
+    persistence = VerifyObservationRepository(bucket_id=bucket_id)
+    record = VerifyService(persistence=persistence).latest_for_nif(
         bucket_id=bucket_id,
         surface=surface,
         nif=nif,
@@ -167,6 +173,7 @@ def verify_nif_iva(
     :class:`VerifyNifIvaResult`.
     """
     from ...adapters.outbound.aeat.sede.nif_iva_check import NifIvaCheckSedeDriver
+    from ...adapters.persistence.profile.verify_observations import VerifyObservationRepository
     from ...application.live.verify import VerifyService
     from ...core.access_gate.gate import AeatAccessGate
     from ...core.config import load_settings
@@ -182,7 +189,8 @@ def verify_nif_iva(
         raise typer.BadParameter(tr("cli.app.live.verify.no_observation_for_nif", nif=nif))
     observation = result.observations[0]
     bucket_id = active_bucket_id_or_refuse()
-    record = VerifyService(settings=settings).record(
+    persistence = VerifyObservationRepository(bucket_id=bucket_id, settings=settings)
+    record = VerifyService(persistence=persistence).record(
         bucket_id=bucket_id,
         surface=VerifySurface.NIF_IVA,
         nif=observation.nif,
@@ -208,6 +216,7 @@ def verify_tgvi(
     :class:`VerifyTgviResult`.
     """
     from ...adapters.outbound.aeat.sede.groi_check import GroiSedeDriver
+    from ...adapters.persistence.profile.verify_observations import VerifyObservationRepository
     from ...application.live.verify import VerifyService
     from ...core.access_gate.gate import AeatAccessGate
     from ...core.config import load_settings
@@ -223,7 +232,8 @@ def verify_tgvi(
         raise typer.BadParameter(tr("cli.app.live.verify.no_observation_for_nif", nif=nif))
     observation = result.observations[0]
     bucket_id = active_bucket_id_or_refuse()
-    record = VerifyService(settings=settings).record(
+    persistence = VerifyObservationRepository(bucket_id=bucket_id, settings=settings)
+    record = VerifyService(persistence=persistence).record(
         bucket_id=bucket_id,
         surface=VerifySurface.TGVI,
         nif=observation.nif,

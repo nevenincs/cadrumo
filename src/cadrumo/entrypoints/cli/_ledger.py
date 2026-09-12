@@ -21,6 +21,7 @@ from typing import cast
 import typer
 from pydantic import ValidationError
 
+from ...application.ledger.action_ports import LedgerActionPorts
 from ...application.ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
 from ...application.ledger.models import (
     ManualLedgerTransactionCommand,
@@ -626,6 +627,7 @@ def _dispatch_bulk_classification_route(
     ctx: typer.Context,
     *,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    ports: LedgerActionPorts,
     transaction_id: str | None,
     classification: BusinessClassification | None,
     file: str | None,
@@ -637,6 +639,7 @@ def _dispatch_bulk_classification_route(
     ledger_classify_bulk_csv(
         ctx,
         transaction_repository=transaction_repository,
+        ports=ports,
         transaction_id=transaction_id,
         classification=classification,
         file=file,
@@ -724,6 +727,7 @@ def ledger_classify(
     if _dispatch_bulk_classification_route(
         ctx,
         transaction_repository=transaction_repository,
+        ports=ports,
         transaction_id=transaction_id,
         classification=classification,
         file=file,

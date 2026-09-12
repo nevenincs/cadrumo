@@ -1,8 +1,7 @@
 """Bulk CSV transport helper for ``aeat app ledger classify``.
 
-Bulk classification writes through :class:`TransactionCatalogueRepository` when
-the caller supplies the concrete repository, preserving the active ledger
-catalogue path.
+Bulk classification writes through the composed ledger ports supplied by the
+caller, preserving the active ledger catalogue path.
 """
 
 from __future__ import annotations
@@ -12,7 +11,6 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.ledger.actions_classification import bulk_classify_from_csv as _bulk_classify
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.i18n.render import tr
@@ -22,6 +20,7 @@ from ._ledger_support import TransactionRepo
 from .common import bad, emit_envelope
 
 if TYPE_CHECKING:
+    from ...application.ledger.action_ports import LedgerActionPorts
     from ...application.ledger.models import BulkClassifyResult
 
 
@@ -51,6 +50,7 @@ def _run_bulk_classification(
     transaction_repository: TransactionRepo,
     csv_text: str,
     actor: str | None,
+    ports: LedgerActionPorts,
 ) -> BulkClassifyResult:
     """Delegate CSV parsing, classification, and atomic persistence to application code."""
     return _bulk_classify(
@@ -58,9 +58,7 @@ def _run_bulk_classification(
         csv_text=csv_text,
         actor=actor or resolve_active_bucket_id() or "operator",
         source_command="aeat app ledger classify --file",
-        transaction_repository=transaction_repository
-        if isinstance(transaction_repository, TransactionCatalogueRepository)
-        else None,
+        ports=ports,
     )
 
 
@@ -117,12 +115,14 @@ def ledger_classify_bulk_csv(
     classification: BusinessClassification | None,
     file: str,
     actor: str | None,
+    ports: LedgerActionPorts,
 ) -> None:
     _validate_bulk_classification_route(transaction_id, classification)
     result = _run_bulk_classification(
         transaction_repository=transaction_repository,
         csv_text=_read_bulk_classification_file(file),
         actor=actor,
+        ports=ports,
     )
     classify_result, lines, notices = _bulk_classification_output(result)
     emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines, notices=notices)
