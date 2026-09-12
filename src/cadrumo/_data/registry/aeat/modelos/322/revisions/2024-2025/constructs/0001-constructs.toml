@@ -40,7 +40,7 @@ bindings = [
     "modelo-322-iva-soportado-interiores-cuota",
     "modelo-322-iva-autorepercutido-intracomunitaria-cuota",
 ]
-workbook_parity_refs = ["modelo-322-dr-2026"]
+workbook_parity_refs = ["modelo-322-dr"]
 live_cross_references = [
     "modelo-322-static-documentation",
     "modelo-322-filed-declarations-read",

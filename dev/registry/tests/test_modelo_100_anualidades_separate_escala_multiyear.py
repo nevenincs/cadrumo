@@ -16,7 +16,7 @@ per-child structure, so it is a direct manual input in both years. 2022 and
 2023 introduce a 5-child "Hijo/Hija N: Importe de las anualidades por alimentos
 satisfechas" repeating block (casillas 1741/1744/1747.../1759) and 0527 is
 computed as their sum (the 2021 revision's now-deleted
-`renta-2021-anualidades-alimentos-hijos-suma` formula wrongly summed casillas
+`renta-anualidades-alimentos-hijos-suma` formula wrongly summed casillas
 1741/1744/1749/1754/1759, which in 2021 are unrelated Anexo C
 aportaciones/contribuciones a sistemas de previsión social fields, not the
 per-child anualidades block that only exists from 2022 onward).
@@ -118,22 +118,22 @@ def _run(
     if anualidades is not None:
         inputs[_anualidades_casilla(year)] = anualidades
     binding_values = {
-        f"renta-{year}-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        f"renta-{year}-modelo-111-retenciones-periodicas": Decimal("0"),
-        f"renta-{year}-modelo-123-retenciones-periodicas": Decimal("0"),
-        f"renta-{year}-profile-anualidades-sin-minimo-descendientes": flag,
-        f"renta-{year}-profile-minimo-descendientes-estatal": Decimal("0"),
-        f"renta-{year}-profile-minimo-descendientes-autonomico": Decimal("0"),
+        "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+        "renta-profile-anualidades-sin-minimo-descendientes": flag,
+        "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
     relation_values = {
-        f"renta-{year}-rel-130-pagos-fraccionados": Decimal("0"),
-        f"renta-{year}-rel-131-pagos-fraccionados": Decimal("0"),
+        "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+        "renta-modelo-131-pagos-fraccionados": Decimal("0"),
     }
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
         date_context={"filing_period": date(year, 12, 31)},
-        enum_binding_values={f"renta-{year}-profile-tax-residence-ccaa": "cataluna"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values=binding_values,
         relation_values=relation_values,
     )
@@ -279,14 +279,14 @@ def test_2021_casilla_0527_is_manual_and_not_derived_from_anexo_c_pension_fields
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
     relation_values = {
-        "renta-2021-rel-130-pagos-fraccionados": Decimal("0"),
-        "renta-2021-rel-131-pagos-fraccionados": Decimal("0"),
+        "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+        "renta-modelo-131-pagos-fraccionados": Decimal("0"),
     }
     stray_result = calculate_registry_snapshot(
         snapshot,
         inputs=stray_inputs,
         date_context={"filing_period": date(2021, 12, 31)},
-        enum_binding_values={"renta-2021-profile-tax-residence-ccaa": "cataluna"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values=binding_values,
         relation_values=relation_values,
     )

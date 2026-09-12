@@ -1,5 +1,5 @@
 [[revisions."2024".constructs]]
-id = "renta-2024-anexo-c-base-liquidable-negativa-general"
+id = "renta-anexo-c-base-liquidable-negativa-general"
 legal_refs = ["ley-35-2006:art-50"]
 source_refs = [
     "aeat-dr-100-2024-dictionary",
@@ -14,4 +14,4 @@ casilla_ids = [
 bindings = [
     "renta-base-liquidable-negativa-general-anterior",
 ]
-dependency_classifications = ["renta-2024-dep-100"]
+dependency_classifications = ["renta-dep-100"]

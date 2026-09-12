@@ -18,7 +18,7 @@
 # annual rather than per-devengo.
 
 [[revisions."2025".filing_schedules]]
-id = "modelo-210-2025-devengo-event"
+id = "modelo-210-devengo-event"
 period_kind = "ad_hoc"
 periods = ["EVENT-N"]
 profile_condition_mode = "all"
@@ -34,7 +34,7 @@ source_refs = [
 ]
 
 [[revisions."2025".filing_schedules]]
-id = "modelo-210-2025-renta-imputada-anual"
+id = "modelo-210-renta-imputada-anual"
 period_kind = "annual"
 periods = ["0A"]
 profile_condition_mode = "all"

@@ -41,9 +41,7 @@ def validate_dependency_classification_section(
     """Return dependency-classification closure and grounding failures."""
     failures: list[str] = []
     classifications = revision.dependency_classifications
-    classifications_by_source = {
-        classification.source_modelo: classification for classification in classifications
-    }
+    classifications_by_source = {classification.source_modelo: classification for classification in classifications}
 
     for classification in classifications:
         owner = f"dependency classification {classification.id}"

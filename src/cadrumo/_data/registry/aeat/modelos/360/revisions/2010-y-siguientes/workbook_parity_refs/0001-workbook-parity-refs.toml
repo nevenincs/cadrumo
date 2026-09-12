@@ -1,5 +1,5 @@
 [[revisions."2010-y-siguientes".workbook_parity_refs]]
-id = "modelo-360-dr-2010"
+id = "modelo-360-dr"
 workbook_source = "aeat-dr-360-2010"
 fixture_id = "modelo-360-2010-record-design-layout"
 formula_coverage = "record_design_layout"

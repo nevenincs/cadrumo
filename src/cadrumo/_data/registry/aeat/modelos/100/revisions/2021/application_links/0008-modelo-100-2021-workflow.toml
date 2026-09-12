@@ -1,5 +1,5 @@
 [[revisions."2021".application_links]]
-id = "modelo-100-2021-workflow"
+id = "modelo-100-workflow"
 surface = "workflow"
 consumer = "cadrumo.application.workflow"
 requires_snapshot = true

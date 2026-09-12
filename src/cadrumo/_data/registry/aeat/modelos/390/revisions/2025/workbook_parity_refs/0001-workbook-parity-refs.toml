@@ -1,5 +1,5 @@
 [[revisions."2025".workbook_parity_refs]]
-id = "modelo-390-dr-2025"
+id = "modelo-390-dr"
 workbook_source = "aeat-dr-390-2025"
 fixture_id = "modelo-390-2025-record-design-layout"
 formula_coverage = "record_design_layout"

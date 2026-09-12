@@ -109,7 +109,7 @@ def test_a_non_previous_filing_binding_returns_empty() -> None:
     """A different source family's binding is never this accessor's business."""
     profile = BindingDefinition.model_validate(
         {
-            "id": "renta-2025-profile-tax-residence-ccaa",
+            "id": "renta-profile-tax-residence-ccaa",
             "provider": {
                 "kind": "profile",
                 "profile_model": "TaxResidenceProfile",

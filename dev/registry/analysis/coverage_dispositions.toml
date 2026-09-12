@@ -1,0 +1,29 @@
+# Signed dispositions for promised filing coordinates the corpus does not serve exactly once.
+#
+# Read by coverage_dispositions.py; projected by edition_delta_status.py against the
+# registry's supported_filing_years promise. A coordinate listed here is classified and
+# leaves the outstanding coverage count; a coordinate not listed stays outstanding,
+# whatever the reason for it.
+#
+# One entry per (modelo, filing_year, period). `period` is "*" for a whole unserved year,
+# and otherwise the exact period token the screen reports. `kind` must be the condition
+# being disposed of. `authority` names the official source that settles the question --
+# the orden that did not approve a design for that year, the resolution that withdrew the
+# form -- not a note about the repository.
+#
+# There is no wildcard, no prefix and no modelo-wide exemption on purpose. One entry
+# covering gaps nobody read is the silent under-declaration this file exists to prevent.
+#
+# Example of the shape an entry takes:
+#
+#   [[disposition]]
+#   modelo = "NNN"
+#   filing_year = 2026
+#   period = "*"
+#   kind = "promised_year_unserved"
+#   reason = "AEAT approved no record design for this modelo in this ejercicio."
+#   authority = "orden-xxx-nnnn-yyyy:art-N"
+#
+# Nothing has been adjudicated yet. Every promised coordinate the screen reports is
+# therefore outstanding, which is the honest reading of a corpus whose coverage no
+# reviewer has signed off.

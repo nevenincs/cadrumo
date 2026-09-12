@@ -102,7 +102,7 @@ def test_a_non_foreign_asset_binding_is_not_applicable() -> None:
     """A different source family's binding is never this accessor's business."""
     profile = BindingDefinition.model_validate(
         {
-            "id": "renta-2025-profile-tax-residence-ccaa",
+            "id": "renta-profile-tax-residence-ccaa",
             "provider": {
                 "kind": "profile",
                 "profile_model": "TaxResidenceProfile",
@@ -184,7 +184,7 @@ def test_a_renamed_row_field_key_is_refused_not_silently_read_as_absent() -> Non
             data_type="text",
         ),
         value=BindingValueContract(
-            data_type=BindingDataType.ROWS,
+            data_type=BindingDataType.TEXT,
             channel=BindingValueChannel.ROW_SET,
             row_grouping=ROW_SET_GROUPING_FOR_BINDING_SOURCE[BindingSourceKind.FOREIGN_ASSET],
         ),

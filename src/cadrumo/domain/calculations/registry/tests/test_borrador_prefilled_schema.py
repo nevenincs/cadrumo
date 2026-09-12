@@ -34,7 +34,7 @@ def test_data_binding_definition_accepts_explicit_aeat_prefilled_marker() -> Non
 
 
 def test_data_binding_definition_defaults_aeat_prefilled_to_false() -> None:
-    binding = _modelo_100_bindings()["renta-2025-ledger-expense-0186-deductible"]
+    binding = _modelo_100_bindings()["renta-ledger-expense-0186-deductible"]
     payload = binding.model_dump(mode="python")
     payload.pop("aeat_prefilled", None)
 
@@ -47,5 +47,5 @@ def test_committed_modelo_100_prefilled_bindings_are_schema_backed() -> None:
     bindings = _modelo_100_bindings()
 
     assert bindings["renta-modelo-111-retenciones-periodicas"].aeat_prefilled is True
-    assert bindings["renta-2025-profile-tax-residence-ccaa"].aeat_prefilled is True
-    assert bindings["renta-2025-ledger-expense-0186-deductible"].aeat_prefilled is False
+    assert bindings["renta-profile-tax-residence-ccaa"].aeat_prefilled is True
+    assert bindings["renta-ledger-expense-0186-deductible"].aeat_prefilled is False

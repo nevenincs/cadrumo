@@ -1,5 +1,5 @@
 [[revisions."2025".parameters]]
-id = "renta-2025-ric-materializacion-plazo-anos"
+id = "renta-ric-materializacion-plazo-anos"
 data_type = "decimal"
 unit = "years"
 legal_refs = ["ley-19-1994:art-27"]

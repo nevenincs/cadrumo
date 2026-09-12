@@ -22,7 +22,7 @@
 # identity, so the coverage gate counts two genuine shortfalls rather than
 # reporting full marks over a wrong NIF.
 [[revisions."2023-y-siguientes".export_layouts]]
-id = "modelo-490-2023-fichero-boe"
+id = "modelo-490-fichero-boe"
 format = "fixed_width"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2023"]

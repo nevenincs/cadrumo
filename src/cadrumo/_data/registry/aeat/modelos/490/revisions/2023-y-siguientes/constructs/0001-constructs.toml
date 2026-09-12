@@ -391,7 +391,7 @@ casilla_ids = [
     "terr-vizcaya-per-84",
 ]
 application_links = ["modelo-490-filing", "modelo-490-deadline", "modelo-490-export"]
-workbook_parity_refs = ["modelo-490-2023-y-siguientes-static-layout"]
+workbook_parity_refs = ["modelo-490-static-layout"]
 deadline_windows = [
     "modelo-490-2025-1t",
     "modelo-490-2025-2t",

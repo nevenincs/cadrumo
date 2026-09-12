@@ -56,7 +56,7 @@
 # treaty country with a matching row for the filed tipo_renta.
 
 [[revisions."2026-y-siguientes".parameters]]
-id = "m210-tipo-gravamen-2025"
+id = "m210-tipo-gravamen"
 data_type = "keyed_bracket_table"
 unit = "percent"
 legal_refs = [

@@ -11,7 +11,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
 from ..authority import bundled_authority
 from ..formula_runtime import calculate_registry_snapshot
-from ..relations import relation_source_requirements
+from ..relations import relation_prefill_bindings_for_period, relation_source_requirements
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..schema_input_kind import InputKind
 from ..schema_surfaces import CasillaDefinition
@@ -84,10 +84,10 @@ _PATRIMONIO_CUOTA_A_INGRESAR_CASILLA: CasillaId = validated_casilla_id(
     "patrimonio.cuota-a-ingresar",
     surface="_PATRIMONIO_CUOTA_A_INGRESAR_CASILLA",
 )
-_M714_REL_100_BASE_IMPONIBLE_GENERAL = "m714-rel-100-base-imponible-general"
-_M714_REL_100_BASE_IMPONIBLE_AHORRO = "m714-rel-100-base-imponible-ahorro"
-_M714_REL_100_CUOTA_INTEGRA_ESTATAL = "m714-rel-100-cuota-integra-estatal"
-_M714_REL_100_CUOTA_INTEGRA_AUTONOMICA = "m714-rel-100-cuota-integra-autonomica"
+_M714_REL_100_BASE_IMPONIBLE_GENERAL = "m714-m100-base-imponible-general"
+_M714_REL_100_BASE_IMPONIBLE_AHORRO = "m714-m100-base-imponible-ahorro"
+_M714_REL_100_CUOTA_INTEGRA_ESTATAL = "m714-m100-cuota-integra-estatal"
+_M714_REL_100_CUOTA_INTEGRA_AUTONOMICA = "m714-m100-cuota-integra-autonomica"
 
 _PATRIMONIO_ART31_MANUAL_INPUTS = (
     _PATRIMONIO_DIVIDENDOS_NO_IRPF_CASILLA,
@@ -284,8 +284,11 @@ def test_modelo_714_art31_m100_same_year_relation_chain_is_declared() -> None:
     assert revision.period_selector.periods == ("0A",)
     assert {formula.target_casilla_id for formula in revision.formulas} == set(_PATRIMONIO_COMPUTED_TARGETS)
 
-    relations = {relation.id: relation for relation in revision.relations}
-    assert set(relations) == {
+    providers = {
+        binding.id: (binding, provider)
+        for binding, provider in relation_prefill_bindings_for_period(revision, period="0A")
+    }
+    assert set(providers) == {
         _M714_REL_100_BASE_IMPONIBLE_GENERAL,
         _M714_REL_100_BASE_IMPONIBLE_AHORRO,
         _M714_REL_100_CUOTA_INTEGRA_ESTATAL,
@@ -297,23 +300,18 @@ def test_modelo_714_art31_m100_same_year_relation_chain_is_declared() -> None:
         _M714_REL_100_CUOTA_INTEGRA_ESTATAL: "0545",
         _M714_REL_100_CUOTA_INTEGRA_AUTONOMICA: "0546",
     }
-    for relation_id, source_casilla_id in expected_source_casillas.items():
-        relation = relations[relation_id]
-        assert relation.kind == "cross_model_output"
-        assert relation.dependency_role == "direct_calculation"
-        assert relation.source_modelo == "100"
-        assert relation.source_casilla_id == source_casilla_id
-        assert relation.source_revision_selector.year_from == 2021
-        assert relation.source_revision_selector.year_to == 2025
-        assert relation.source_revision_selector.filing_year_delta is None
-        assert relation.period_alignment.source_period == "0A"
-        assert relation.period_alignment.target_period == "0A"
-        assert relation.period_alignment.filing_year_delta == 0
-        assert relation.source_periods == ("0A",)
-        assert relation.target_periods == ("0A",)
+    for binding_id, source_casilla_id in expected_source_casillas.items():
+        binding, provider = providers[binding_id]
+        assert provider.relation_kind == "cross_model_output"
+        assert provider.dependency_role == "direct_calculation"
+        assert provider.source_modelo == "100"
+        assert provider.declared_source_casilla_ids == (source_casilla_id,)
+        assert provider.temporal.kind == "same_filing_year_periods"
+        assert provider.temporal.source_periods == ("0A",)
+        assert binding.applicability.periods == ("0A",)
 
     requirements = relation_source_requirements(revision, filing_year=2024, period="0A")
-    assert {requirement.relation_ids[0]: requirement.filing_year for requirement in requirements} == {
+    assert {requirement.target_bindings[0]: requirement.filing_year for requirement in requirements} == {
         _M714_REL_100_BASE_IMPONIBLE_GENERAL: 2024,
         _M714_REL_100_BASE_IMPONIBLE_AHORRO: 2024,
         _M714_REL_100_CUOTA_INTEGRA_ESTATAL: 2024,

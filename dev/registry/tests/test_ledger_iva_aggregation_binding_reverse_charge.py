@@ -7,9 +7,9 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.casilla_id import validated_casilla_id
-from .....core.iva_deduction_fact import IvaDeductionFactKind
-from ....iva.classification import (
+from cadrumo.core.casilla_id import validated_casilla_id
+from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
+from cadrumo.domain.iva.classification import (
     CustomerTaxStatus,
     InvoiceKind,
     IvaInvoiceClassificationCriteria,
@@ -17,14 +17,14 @@ from ....iva.classification import (
     TransactionKind,
     classify_iva,
 )
-from ....iva.components import category_cuota_is_zero_by_law
-from ....iva.flow import IvaFlowDirection, derive_flow_for_classification
-from ....iva.schema import CUOTA_LESS_M303_IVA_CATEGORIES, EUMemberState, IvaCategory, IvaRateKind
-from ..ledger_iva_bindings import (
+from cadrumo.domain.iva.components import category_cuota_is_zero_by_law
+from cadrumo.domain.iva.flow import IvaFlowDirection, derive_flow_for_classification
+from cadrumo.domain.iva.schema import CUOTA_LESS_M303_IVA_CATEGORIES, EUMemberState, IvaCategory, IvaRateKind
+from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     resolve_ledger_iva_aggregation_binding_values,
     unsupported_ledger_iva_observations,
 )
-from ._ledger_iva_aggregation_support import (
+from .ledger_iva_aggregation_support import (
     _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA,
     _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA,
     _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,

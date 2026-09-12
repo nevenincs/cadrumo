@@ -1,5 +1,5 @@
 [[revisions."2024".parameters]]
-id = "renta-2024-rental-prior-rent-rebaja-threshold"
+id = "renta-rental-prior-rent-rebaja-threshold"
 data_type = "ratio"
 unit = "ratio"
 legal_refs = ["ley-35-2006:art-23"]

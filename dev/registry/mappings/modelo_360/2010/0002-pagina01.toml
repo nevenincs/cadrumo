@@ -522,7 +522,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f044"
 kind = "binding"
-binding = "modelo-360.page_01.799-803.actividad-nace-1-codigo"
+binding = "modelo-360.page_01.actividad-nace-1-codigo"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -534,7 +534,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f045"
 kind = "binding"
-binding = "modelo-360.page_01.804-805.actividad-nace-1-idioma"
+binding = "modelo-360.page_01.actividad-nace-1-idioma"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -546,7 +546,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f046"
 kind = "binding"
-binding = "modelo-360.page_01.806-830.actividad-nace-1-descripcion"
+binding = "modelo-360.page_01.actividad-nace-1-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -558,7 +558,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f047"
 kind = "binding"
-binding = "modelo-360.page_01.831-835.actividad-nace-2-codigo"
+binding = "modelo-360.page_01.actividad-nace-2-codigo"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -570,7 +570,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f048"
 kind = "binding"
-binding = "modelo-360.page_01.836-837.actividad-nace-2-idioma"
+binding = "modelo-360.page_01.actividad-nace-2-idioma"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -582,7 +582,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f049"
 kind = "binding"
-binding = "modelo-360.page_01.838-862.actividad-nace-2-descripcion"
+binding = "modelo-360.page_01.actividad-nace-2-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -594,7 +594,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f050"
 kind = "binding"
-binding = "modelo-360.page_01.863-867.actividad-nace-3-codigo"
+binding = "modelo-360.page_01.actividad-nace-3-codigo"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -606,7 +606,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f051"
 kind = "binding"
-binding = "modelo-360.page_01.868-869.actividad-nace-3-idioma"
+binding = "modelo-360.page_01.actividad-nace-3-idioma"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -618,7 +618,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f052"
 kind = "binding"
-binding = "modelo-360.page_01.870-894.actividad-nace-3-descripcion"
+binding = "modelo-360.page_01.actividad-nace-3-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -630,7 +630,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f053"
 kind = "binding"
-binding = "modelo-360.page_01.895-899.actividad-nace-4-codigo"
+binding = "modelo-360.page_01.actividad-nace-4-codigo"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -642,7 +642,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f054"
 kind = "binding"
-binding = "modelo-360.page_01.900-901.actividad-nace-4-idioma"
+binding = "modelo-360.page_01.actividad-nace-4-idioma"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -654,7 +654,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f055"
 kind = "binding"
-binding = "modelo-360.page_01.902-926.actividad-nace-4-descripcion"
+binding = "modelo-360.page_01.actividad-nace-4-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -666,7 +666,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f056"
 kind = "binding"
-binding = "modelo-360.page_01.927-931.actividad-nace-5-codigo"
+binding = "modelo-360.page_01.actividad-nace-5-codigo"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -678,7 +678,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f057"
 kind = "binding"
-binding = "modelo-360.page_01.932-933.actividad-nace-5-idioma"
+binding = "modelo-360.page_01.actividad-nace-5-idioma"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -690,7 +690,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f058"
 kind = "binding"
-binding = "modelo-360.page_01.934-958.actividad-nace-5-descripcion"
+binding = "modelo-360.page_01.actividad-nace-5-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -702,7 +702,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f059"
 kind = "binding"
-binding = "modelo-360.page_01.959-963.actividad-nace-6-codigo"
+binding = "modelo-360.page_01.actividad-nace-6-codigo"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -714,7 +714,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f060"
 kind = "binding"
-binding = "modelo-360.page_01.964-965.actividad-nace-6-idioma"
+binding = "modelo-360.page_01.actividad-nace-6-idioma"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -726,7 +726,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f061"
 kind = "binding"
-binding = "modelo-360.page_01.966-990.actividad-nace-6-descripcion"
+binding = "modelo-360.page_01.actividad-nace-6-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -738,7 +738,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f062"
 kind = "binding"
-binding = "modelo-360.page_01.991-995.actividad-nace-7-codigo"
+binding = "modelo-360.page_01.actividad-nace-7-codigo"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -750,7 +750,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f063"
 kind = "binding"
-binding = "modelo-360.page_01.996-997.actividad-nace-7-idioma"
+binding = "modelo-360.page_01.actividad-nace-7-idioma"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -762,7 +762,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f064"
 kind = "binding"
-binding = "modelo-360.page_01.998-1022.actividad-nace-7-descripcion"
+binding = "modelo-360.page_01.actividad-nace-7-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -774,7 +774,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f065"
 kind = "binding"
-binding = "modelo-360.page_01.1023-1027.actividad-nace-8-codigo"
+binding = "modelo-360.page_01.actividad-nace-8-codigo"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -786,7 +786,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f066"
 kind = "binding"
-binding = "modelo-360.page_01.1028-1029.actividad-nace-8-idioma"
+binding = "modelo-360.page_01.actividad-nace-8-idioma"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -798,7 +798,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f067"
 kind = "binding"
-binding = "modelo-360.page_01.1030-1054.actividad-nace-8-descripcion"
+binding = "modelo-360.page_01.actividad-nace-8-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -810,7 +810,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f068"
 kind = "binding"
-binding = "modelo-360.page_01.1055-1059.actividad-nace-9-codigo"
+binding = "modelo-360.page_01.actividad-nace-9-codigo"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -822,7 +822,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f069"
 kind = "binding"
-binding = "modelo-360.page_01.1060-1061.actividad-nace-9-idioma"
+binding = "modelo-360.page_01.actividad-nace-9-idioma"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -834,7 +834,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f070"
 kind = "binding"
-binding = "modelo-360.page_01.1062-1086.actividad-nace-9-descripcion"
+binding = "modelo-360.page_01.actividad-nace-9-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -846,7 +846,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f071"
 kind = "binding"
-binding = "modelo-360.page_01.1087-1091.actividad-nace-10-codigo"
+binding = "modelo-360.page_01.actividad-nace-10-codigo"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -858,7 +858,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f072"
 kind = "binding"
-binding = "modelo-360.page_01.1092-1093.actividad-nace-10-idioma"
+binding = "modelo-360.page_01.actividad-nace-10-idioma"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -870,7 +870,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f073"
 kind = "binding"
-binding = "modelo-360.page_01.1094-1118.actividad-nace-10-descripcion"
+binding = "modelo-360.page_01.actividad-nace-10-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1410,7 +1410,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f118"
 kind = "binding"
-binding = "modelo-360.page_01.1986-2001.anexo-1-numero-registro"
+binding = "modelo-360.page_01.anexo-1-numero-registro"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1433,7 +1433,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f120"
 kind = "binding"
-binding = "modelo-360.page_01.2004-2043.anexo-1-descripcion"
+binding = "modelo-360.page_01.anexo-1-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1456,7 +1456,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f122"
 kind = "binding"
-binding = "modelo-360.page_01.2104-2119.anexo-2-numero-registro"
+binding = "modelo-360.page_01.anexo-2-numero-registro"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1479,7 +1479,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f124"
 kind = "binding"
-binding = "modelo-360.page_01.2122-2161.anexo-2-descripcion"
+binding = "modelo-360.page_01.anexo-2-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1502,7 +1502,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f126"
 kind = "binding"
-binding = "modelo-360.page_01.2222-2237.anexo-3-numero-registro"
+binding = "modelo-360.page_01.anexo-3-numero-registro"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1525,7 +1525,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f128"
 kind = "binding"
-binding = "modelo-360.page_01.2240-2279.anexo-3-descripcion"
+binding = "modelo-360.page_01.anexo-3-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1548,7 +1548,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f130"
 kind = "binding"
-binding = "modelo-360.page_01.2340-2355.anexo-4-numero-registro"
+binding = "modelo-360.page_01.anexo-4-numero-registro"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1571,7 +1571,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f132"
 kind = "binding"
-binding = "modelo-360.page_01.2358-2397.anexo-4-descripcion"
+binding = "modelo-360.page_01.anexo-4-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1594,7 +1594,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f134"
 kind = "binding"
-binding = "modelo-360.page_01.2458-2473.anexo-5-numero-registro"
+binding = "modelo-360.page_01.anexo-5-numero-registro"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1617,7 +1617,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f136"
 kind = "binding"
-binding = "modelo-360.page_01.2476-2515.anexo-5-descripcion"
+binding = "modelo-360.page_01.anexo-5-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1640,7 +1640,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f138"
 kind = "binding"
-binding = "modelo-360.page_01.2576-2591.anexo-6-numero-registro"
+binding = "modelo-360.page_01.anexo-6-numero-registro"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1663,7 +1663,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f140"
 kind = "binding"
-binding = "modelo-360.page_01.2594-2633.anexo-6-descripcion"
+binding = "modelo-360.page_01.anexo-6-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1686,7 +1686,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f142"
 kind = "binding"
-binding = "modelo-360.page_01.2694-2709.anexo-7-numero-registro"
+binding = "modelo-360.page_01.anexo-7-numero-registro"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1709,7 +1709,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f144"
 kind = "binding"
-binding = "modelo-360.page_01.2712-2751.anexo-7-descripcion"
+binding = "modelo-360.page_01.anexo-7-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1732,7 +1732,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f146"
 kind = "binding"
-binding = "modelo-360.page_01.2812-2827.anexo-8-numero-registro"
+binding = "modelo-360.page_01.anexo-8-numero-registro"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1755,7 +1755,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f148"
 kind = "binding"
-binding = "modelo-360.page_01.2830-2869.anexo-8-descripcion"
+binding = "modelo-360.page_01.anexo-8-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1778,7 +1778,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f150"
 kind = "binding"
-binding = "modelo-360.page_01.2930-2945.anexo-9-numero-registro"
+binding = "modelo-360.page_01.anexo-9-numero-registro"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1801,7 +1801,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f152"
 kind = "binding"
-binding = "modelo-360.page_01.2948-2987.anexo-9-descripcion"
+binding = "modelo-360.page_01.anexo-9-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1824,7 +1824,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f154"
 kind = "binding"
-binding = "modelo-360.page_01.3048-3063.anexo-10-numero-registro"
+binding = "modelo-360.page_01.anexo-10-numero-registro"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1847,7 +1847,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m360-2010.pagina01.f156"
 kind = "binding"
-binding = "modelo-360.page_01.3066-3105.anexo-10-descripcion"
+binding = "modelo-360.page_01.anexo-10-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]

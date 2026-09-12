@@ -51,34 +51,14 @@ from .schema_surfaces import CasillaDefinition
 #   off-load-path advisory coverage report that inventories form-level
 #   data coverage; it is NOT a load-blocking gate.
 
-"""Matches the bracketed casilla tag AEAT embeds in Dise�o field text.
+"""Match bounded bracketed field identifiers in record-design text.
 
-The official AEAT Dise�o de Registros workbooks annotate every casilla
-field with its casilla number in square brackets within the field
-description, validation or content text (e.g. ``Liquidaci�n III - ... -
-Base imponible [00552]``). This regex extracts those tags so a derivation
-can enumerate the ``(segmento, number)`` casilla set.
+The extractor accepts the identifier widths used by the authored record
+design corpus and leaves unbracketed layouts to the coverage report. It
+does not declare a model, field, or legal mapping.
 
-**The tag width is NOT five digits across AEAT.** It was written as
-``\\d{5}``, which is the Impuesto sobre Sociedades convention that Modelo
-200 and Modelo 220 use. Every other modelo family brackets its box number
-at its natural width -- Modelo 303 writes ``[01]`` and ``[150]``, Modelo
-390 ``[01]``, Modelo 036 two and three digits. A fixed five-digit pattern
-therefore matched nothing on them, and because a matchless sweep yields an
-empty Dise�o set rather than an error, the coverage report said
-``0 casillas, 0 gap`` for 36 of the 38 revisions that bundle an official
-record design. Reading as fully covered is the worst available failure for
-an instrument whose whole job is to find what the registry has not
-authored.
-
-Widening it takes the population that extracts anything from 2 revisions
-to 24. The remaining 14 annotate their casillas outside bracketed field
-text entirely and are inventoried, not silently zeroed, by
-:func:`build_diseno_coverage_report`.
-
-Bounded at five digits rather than open-ended: an unbounded ``\\d+`` would
-admit amounts, NIF fragments and position offsets that appear bracketed in
-the same columns.
+The numeric width is bounded so unrelated bracketed amounts, identifiers,
+and offsets are not mistaken for fields.
 """
 
 

@@ -121,14 +121,14 @@ def test_relation_requirements_cover_all_source_periods_for_annual_summary(
         _M115_BASE_CASILLA,
         _M115_RETENCIONES_CASILLA,
     }
-    relations_by_id = {relation.id: relation for relation in committed_modelo_180_snapshot.revision.relations}
+    bindings_by_id = {binding.id: binding for binding in committed_modelo_180_snapshot.revision.bindings}
     for requirement in requirements:
         assert requirement.legal_refs == tuple(
-            sorted({ref for relation_id in requirement.relation_ids for ref in relations_by_id[relation_id].legal_refs})
+            sorted({ref for binding_id in requirement.target_bindings for ref in bindings_by_id[binding_id].legal_refs})
         )
         assert requirement.source_refs == tuple(
             sorted(
-                {ref for relation_id in requirement.relation_ids for ref in relations_by_id[relation_id].source_refs}
+                {ref for binding_id in requirement.target_bindings for ref in bindings_by_id[binding_id].source_refs}
             )
         )
 
@@ -171,11 +171,11 @@ def test_relation_resolves_annual_summary_from_all_source_periods(
     )
 
     assert set(result.keys()) == {
-        "modelo-180-rel-115-base-anual",
-        "modelo-180-rel-115-retenciones-anual",
+        "modelo-180-115-base-anual",
+        "modelo-180-115-retenciones-anual",
     }
-    assert isinstance(result["modelo-180-rel-115-base-anual"], Decimal)
-    assert isinstance(result["modelo-180-rel-115-retenciones-anual"], Decimal)
+    assert isinstance(result["modelo-180-115-base-anual"], Decimal)
+    assert isinstance(result["modelo-180-115-retenciones-anual"], Decimal)
 
 
 def test_previous_filing_binding_resolves_from_any_registry_declared_applicable_casilla(

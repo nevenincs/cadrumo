@@ -24,49 +24,49 @@ from ..maintenance_support import load_modelo_path
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _EXPECTED_CASILLA_TO_BINDING: Mapping[str, str] = {
-    "DPNIF_D": "renta-2024-profile-tax-id",
-    "DP_APENOM_D": "renta-2024-profile-display-name",
-    "ZCCAD": "renta-2024-profile-tax-residence-ccaa",
+    "DPNIF_D": "renta-profile-tax-id",
+    "DP_APENOM_D": "renta-profile-display-name",
+    "ZCCAD": "renta-profile-tax-residence-ccaa",
     "TIPOTRIBUTACION": "renta-profile-declaration-type",
-    "SEXO_D": "renta-2024-profile-taxpayer-sex",
-    "ECIVIL": "renta-2024-profile-marital-status",
-    "DPNIF_C": "renta-2024-profile-spouse-tax-id",
-    "DP_APENOM_C": "renta-2024-profile-spouse-display-name",
-    "DPFNAC_C": "renta-2024-profile-spouse-birth-date",
-    "SEXO_C": "renta-2024-profile-spouse-sex",
-    "DPGMIN_D": "renta-2024-profile-taxpayer-disability-grade",
-    "DECFAL": "renta-2024-profile-taxpayer-death-date",
-    "DPGMIN_C": "renta-2024-profile-spouse-disability-grade",
-    "NORESIDENTE": "renta-2024-profile-spouse-non-resident-irpf",
-    "RESIDENTEUE": "renta-2024-profile-spouse-eu-eea-resident",
-    "ZRUE2": "renta-2024-profile-spouse-eu-eea-country",
-    "HIJOSUE": "renta-2024-profile-family-descendants-eu-eea-deduction",
+    "SEXO_D": "renta-profile-taxpayer-sex",
+    "ECIVIL": "renta-profile-marital-status",
+    "DPNIF_C": "renta-profile-spouse-tax-id",
+    "DP_APENOM_C": "renta-profile-spouse-display-name",
+    "DPFNAC_C": "renta-profile-spouse-birth-date",
+    "SEXO_C": "renta-profile-spouse-sex",
+    "DPGMIN_D": "renta-profile-taxpayer-disability-grade",
+    "DECFAL": "renta-profile-taxpayer-death-date",
+    "DPGMIN_C": "renta-profile-spouse-disability-grade",
+    "NORESIDENTE": "renta-profile-spouse-non-resident-irpf",
+    "RESIDENTEUE": "renta-profile-spouse-eu-eea-resident",
+    "ZRUE2": "renta-profile-spouse-eu-eea-country",
+    "HIJOSUE": "renta-profile-family-descendants-eu-eea-deduction",
     "PH18": "renta-profile-family-minor-children-in-unit",
-    "NIFDLG": "renta-2024-family-descendant-tax-id",
-    "APENOMDLG": "renta-2024-family-descendant-display-name",
-    "FNACDLG": "renta-2024-family-descendant-birth-date",
-    "MINUSDLG": "renta-2024-family-descendant-disability-grade",
-    "FALLDLG": "renta-2024-family-descendant-death-date",
-    "DNIASDLG": "renta-2024-family-ascendant-tax-id",
-    "APENOMDLG_ASC": "renta-2024-family-ascendant-display-name",
-    "ANOASDLG": "renta-2024-family-ascendant-birth-date",
-    "PCTMINASDLG": "renta-2024-family-ascendant-disability-grade",
-    "CONVASDLG": "renta-2024-family-ascendant-cohabiting-descendant-count",
-    "FALLASDLG": "renta-2024-family-ascendant-death-date",
+    "NIFDLG": "renta-family-descendant-tax-id",
+    "APENOMDLG": "renta-family-descendant-display-name",
+    "FNACDLG": "renta-family-descendant-birth-date",
+    "MINUSDLG": "renta-family-descendant-disability-grade",
+    "FALLDLG": "renta-family-descendant-death-date",
+    "DNIASDLG": "renta-family-ascendant-tax-id",
+    "APENOMDLG_ASC": "renta-family-ascendant-display-name",
+    "ANOASDLG": "renta-family-ascendant-birth-date",
+    "PCTMINASDLG": "renta-family-ascendant-disability-grade",
+    "CONVASDLG": "renta-family-ascendant-cohabiting-descendant-count",
+    "FALLASDLG": "renta-family-ascendant-death-date",
 }
 
 _EXPECTED_ROW_BINDING_TARGETS: Mapping[str, tuple[str, str]] = {
-    "renta-2024-family-descendant-tax-id": ("descendants", "tax_id"),
-    "renta-2024-family-descendant-display-name": ("descendants", "display_name"),
-    "renta-2024-family-descendant-birth-date": ("descendants", "birth_date"),
-    "renta-2024-family-descendant-disability-grade": ("descendants", "disability_grade"),
-    "renta-2024-family-descendant-death-date": ("descendants", "death_date"),
-    "renta-2024-family-ascendant-tax-id": ("ascendants", "tax_id"),
-    "renta-2024-family-ascendant-display-name": ("ascendants", "display_name"),
-    "renta-2024-family-ascendant-birth-date": ("ascendants", "birth_date"),
-    "renta-2024-family-ascendant-disability-grade": ("ascendants", "disability_grade"),
-    "renta-2024-family-ascendant-cohabiting-descendant-count": ("ascendants", "cohabiting_descendant_count"),
-    "renta-2024-family-ascendant-death-date": ("ascendants", "death_date"),
+    "renta-family-descendant-tax-id": ("descendants", "tax_id"),
+    "renta-family-descendant-display-name": ("descendants", "display_name"),
+    "renta-family-descendant-birth-date": ("descendants", "birth_date"),
+    "renta-family-descendant-disability-grade": ("descendants", "disability_grade"),
+    "renta-family-descendant-death-date": ("descendants", "death_date"),
+    "renta-family-ascendant-tax-id": ("ascendants", "tax_id"),
+    "renta-family-ascendant-display-name": ("ascendants", "display_name"),
+    "renta-family-ascendant-birth-date": ("ascendants", "birth_date"),
+    "renta-family-ascendant-disability-grade": ("ascendants", "disability_grade"),
+    "renta-family-ascendant-cohabiting-descendant-count": ("ascendants", "cohabiting_descendant_count"),
+    "renta-family-ascendant-death-date": ("ascendants", "death_date"),
 }
 
 
@@ -182,9 +182,9 @@ def test_modelo_100_2024_taxpayer_birth_date_profile_binding_remains_available()
 
     casilla = casillas["DPFNAC_D"]
     assert casilla.input_kind is InputKind.BOUND
-    assert casilla.binding == "renta-2024-profile-taxpayer-birth-date"
+    assert casilla.binding == "renta-profile-taxpayer-birth-date"
 
-    binding = bindings["renta-2024-profile-taxpayer-birth-date"]
+    binding = bindings["renta-profile-taxpayer-birth-date"]
     assert binding.source is BindingSourceKind.PROFILE
     selector = _profile_selector(binding.provider)
     assert selector.profile_key == "renta_taxpayer.birth_date"

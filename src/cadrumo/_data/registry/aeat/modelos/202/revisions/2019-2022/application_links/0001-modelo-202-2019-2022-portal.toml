@@ -1,5 +1,5 @@
 [[revisions.2019-2022.application_links]]
-id = "modelo-202-2019-2022-portal"
+id = "modelo-202-portal"
 surface = "portal"
 consumer = "cadrumo.domain.portals.Portal.PORTAL_M202_SOCIEDADES_FRACCIONADO"
 requires_snapshot = true

@@ -16,17 +16,17 @@ from dataclasses import dataclass
 
 import pytest
 
-from .....application.filing.draft_construction import binding_provenance
-from .....application.modelo.calculation_actions import assert_no_novel_source_kinds
-from .....application.modelo.calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
-from .....core.aggregation import BindingSourceKind
-from .....core.authority_grade import RegistryAuthorityGrade
-from .....domain.filing.errors import ModeloBuilderError
-from ..authority import bundled_authority
-from ..binding_provider_registration import RouteOwnership, provider_model_for, registration_for
-from ..bindings import validate_binding_selector_shape
-from ..schema import BindingDefinition, ModeloRevision
-from ..schema_references import PeriodSelector
+from cadrumo.application.filing.draft_construction import binding_provenance
+from cadrumo.application.modelo.calculation_actions import assert_no_novel_source_kinds
+from cadrumo.application.modelo.calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
+from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.domain.filing.errors import ModeloBuilderError
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.binding_provider_registration import RouteOwnership, provider_model_for, registration_for
+from cadrumo.domain.calculations.registry.bindings import validate_binding_selector_shape
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

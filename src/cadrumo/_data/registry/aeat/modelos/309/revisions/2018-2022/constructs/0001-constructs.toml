@@ -34,7 +34,7 @@ bindings = [
     "modelo-309-iva-autorepercutido-intracomunitaria-cuota",
     "modelo-309-iva-soportado-recargo-equivalencia-cuota",
 ]
-workbook_parity_refs = ["modelo-309-dr-2018"]
+workbook_parity_refs = ["modelo-309-dr"]
 live_cross_references = [
     "modelo-309-static-documentation",
     "modelo-309-filed-declarations-read",

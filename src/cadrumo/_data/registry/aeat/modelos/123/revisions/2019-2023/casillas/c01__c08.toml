@@ -64,7 +64,7 @@ data_type = "money"
 semantic_role = "suma_retenciones_regularizacion"
 required = false
 input_kind = "computed"
-formula = "modelo-123-2019-total-liquidacion"
+formula = "modelo-123-total-liquidacion"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 
 [[revisions."2019-2023".casillas]]
@@ -88,5 +88,5 @@ semantic_role = "cuota_a_ingresar"
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"] }
 required = false
 input_kind = "computed"
-formula = "modelo-123-2019-resultado-ingresar"
+formula = "modelo-123-resultado-ingresar"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]

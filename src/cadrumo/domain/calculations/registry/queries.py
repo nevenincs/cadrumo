@@ -199,7 +199,7 @@ class RegistryQueryService:
                 given filing year. ``None`` returns all registered modelos.
             domain: When supplied, restricts the listing to modelos whose
                 registry :class:`~core.TaxDomain` equals the requested
-                tax family (e.g. ``TaxDomain.IVA``). ``None`` returns every
+                tax family (e.g. ``TaxDomain("iva")``). ``None`` returns every
                 family. The ``year`` and ``domain`` filters compose: passing
                 both narrows to modelos that satisfy each.
 

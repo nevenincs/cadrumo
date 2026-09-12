@@ -6,7 +6,7 @@ Casilla 00558 is no longer typed in by hand: the
 ``modelo-200-tipo-gravamen-por-forma-juridica`` formula dispatches the
 rate by the taxpayer's legal form through the
 ``lookup_parameter_by_entity_type`` op, keyed on the
-``modelo-200-2024-profile-legal-entity-form`` profile binding.
+``modelo-200-profile-legal-entity-form`` profile binding.
 
 Two surfaces are covered:
 
@@ -49,7 +49,7 @@ from ._published_authority import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_DISPATCH_BINDING = "modelo-200-2024-profile-legal-entity-form"
+_DISPATCH_BINDING = "modelo-200-profile-legal-entity-form"
 _M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE_CASILLA")
 _M200_CORRECCIONES_AUMENTO_CASILLA: CasillaId = validated_casilla_id(
     "DP200013:00417",
@@ -84,8 +84,8 @@ _M200_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id("DP200014:00562", 
 # Both M202 pagos-fraccionados fold relations (modalidad 40.2 casilla 03 + 40.3 casilla 34)
 # must be supplied to the M200 cuota-diferencial formula; default both to zero here.
 _M200_PAGOS_RELATIONS_ZERO = {
-    "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
-    "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
+    "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
+    "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
 }
 
 

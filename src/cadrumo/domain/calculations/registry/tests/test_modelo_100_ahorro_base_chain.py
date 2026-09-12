@@ -39,12 +39,12 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.aggregation import RelationAggregationOp
+from .....core.aggregation import BindingAggregationOp
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
+from ..binding_aggregation import binding_aggregation_op
 from ..formula_runtime import calculate_registry_snapshot
-from ..relation_aggregation import relation_aggregation_op
-from ..relations import resolve_relation_values
+from ..relations import relation_prefill_bindings_for_period, resolve_relation_values
 from ..schema import RegistrySnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -86,17 +86,16 @@ _BINDINGS_2024: dict[str, Decimal] = {
     "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
 }
 
-_ENUM_BINDINGS_2024 = {"renta-2024-profile-tax-residence-ccaa": "madrid"}
+_ENUM_BINDINGS_2024 = {"renta-profile-tax-residence-ccaa": "madrid"}
 
 # RD 439/2007 Art. 110 pagos-fraccionados relations; zero in scenarios that
 # do not exercise M130/M131 cross-model integration.
 _RELATION_VALUES_2024: dict[str, Decimal] = {
-    "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
-    "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
-    "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
-    "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
-    "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-193-retenciones-anuales": Decimal("0"),
+    "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
 
 
@@ -131,7 +130,7 @@ def _run_2024(snapshot: RegistrySnapshot, inputs: dict[CasillaId, Decimal]) -> d
         # formula in the mínimo personal chain can resolve.  The exact
         # birth date does not affect the capital-mobiliario / base-ahorro
         # computation chain under test.
-        date_binding_values={"renta-2024-profile-taxpayer-birth-date": date(1975, 6, 15)},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1975, 6, 15)},
     )
     return dict(result.values)
 
@@ -164,9 +163,9 @@ def test_sergio_0029_dividends_20000_populates_0460(m100_2024_snapshot: Registry
     assert values[_BASE_IMPONIBLE_AHORRO_CASILLA] >= Decimal("20000"), (
         f"casilla 0460 (base imponible del ahorro) = {values[_BASE_IMPONIBLE_AHORRO_CASILLA]!r}; "
         "expected ≥ 20 000.  Defect #181 regression: 0041 is not included in "
-        "formula renta-2024-base-imponible-del-ahorro.  "
+        "formula renta-base-imponible-del-ahorro.  "
         "Fix: add { casilla = '0041' } to the expression in "
-        "2024/formulas/0145-renta-2024-base-imponible-del-ahorro.toml."
+        "2024/formulas/0145-renta-base-imponible-del-ahorro.toml."
     )
 
 
@@ -206,7 +205,7 @@ def test_carla_0027_intereses_1200_propagates_to_0460(m100_2024_snapshot: Regist
     assert values[_BASE_IMPONIBLE_AHORRO_CASILLA] == Decimal("1200"), (
         f"casilla 0460 = {values[_BASE_IMPONIBLE_AHORRO_CASILLA]!r}; expected 1200.  "
         "Art. 49.1.a LIRPF oracle: net capital-mobiliario = 1200 → 0460 = 1200.  "
-        "Check 2024/formulas/0145-renta-2024-base-imponible-del-ahorro.toml "
+        "Check 2024/formulas/0145-renta-base-imponible-del-ahorro.toml "
         "— 0041 must be included."
     )
 
@@ -262,7 +261,7 @@ def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot: RegistrySn
         # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
         "renta-profile-has-economic-activity": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+        "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
         # declaration_type = 1 (individual) → 0461 computed = 0
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
@@ -283,10 +282,10 @@ def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot: RegistrySn
     relation_values_2025 = resolve_relation_values(
         m100_2025_snapshot.revision,
         {
-            relation.id: (
-                Decimal("0") if relation_aggregation_op(relation) == RelationAggregationOp.COPY else (Decimal("0"),)
+            binding.id: (
+                Decimal("0") if binding_aggregation_op(binding) == BindingAggregationOp.COPY else (Decimal("0"),)
             )
-            for relation in m100_2025_snapshot.revision.relations
+            for binding, _ in relation_prefill_bindings_for_period(m100_2025_snapshot.revision, period="0A")
         },
         period="0A",
     )
@@ -294,15 +293,15 @@ def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot: RegistrySn
         m100_2025_snapshot,
         inputs={_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("20000")},
         date_context=_DATE_2025,
-        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=_bindings_2025,
         relation_values=relation_values_2025,
-        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1975, 6, 15)},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1975, 6, 15)},
     )
     values = dict(result.values)
 
     assert values[_BASE_IMPONIBLE_AHORRO_CASILLA] >= Decimal("20000"), (
         f"2025: casilla 0460 = {values[_BASE_IMPONIBLE_AHORRO_CASILLA]!r}; expected ≥ 20000.  "
         "Defect #181 also affects the 2025 revision.  "
-        "Check 2025/formulas/0168-renta-2025-base-imponible-del-ahorro.toml."
+        "Check 2025/formulas/0168-renta-base-imponible-del-ahorro.toml."
     )

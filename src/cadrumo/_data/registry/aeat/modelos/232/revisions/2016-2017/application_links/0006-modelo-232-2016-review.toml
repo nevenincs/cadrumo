@@ -1,5 +1,5 @@
 [[revisions."2016-2017".application_links]]
-id = "modelo-232-2016-review"
+id = "modelo-232-review"
 surface = "review"
 consumer = "cadrumo.application.review"
 requires_snapshot = true

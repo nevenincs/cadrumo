@@ -9,7 +9,7 @@
 # claim on this revision.
 
 [[revisions."2015-2022".filing_schedules]]
-id = "modelo-151-2015-2022-anual"
+id = "modelo-151-anual"
 period_kind = "annual"
 periods = ["0A"]
 profile_condition_mode = "all"

@@ -30,7 +30,7 @@ def test_read_parameter_returns_a_decimal_for_a_registered_modelo_100_parameter(
     value = read_parameter(
         "100",
         "2025",
-        "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
+        "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
         date_context={"filing_period": date(2025, 12, 31)},
     )
     assert isinstance(value, Decimal)
@@ -52,7 +52,7 @@ def test_read_parameter_returns_2023_temporary_da56_rate() -> None:
     value = read_parameter(
         "100",
         "2023",
-        "renta-2023-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
+        "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
         date_context={"filing_period": date(2023, 12, 31)},
     )
     assert isinstance(value, Decimal)
@@ -66,7 +66,7 @@ def test_read_parameter_reads_the_bundled_authority() -> None:
     value = read_parameter(
         "100",
         "2025",
-        "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
+        "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
         date_context={"filing_period": date(2025, 12, 31)},
     )
     assert isinstance(value, Decimal)

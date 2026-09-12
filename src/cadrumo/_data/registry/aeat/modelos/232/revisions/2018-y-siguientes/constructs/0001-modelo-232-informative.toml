@@ -209,9 +209,9 @@ bindings = [
     "modelo-232-related-party-row-tpr-method",
     "modelo-232-related-party-row-amount",
 ]
-extraction_profiles = ["modelo-232-2018-declaracion-pdf"]
-verification_expectations = ["modelo-232-2018-informative-summary-verification"]
-workbook_parity_refs = ["modelo-232-dr-2018"]
+extraction_profiles = ["modelo-232-declaracion-pdf"]
+verification_expectations = ["modelo-232-informative-summary-verification"]
+workbook_parity_refs = ["modelo-232-dr"]
 live_cross_references = [
     "modelo-232-static-documentation",
     "modelo-232-filed-declarations-read",

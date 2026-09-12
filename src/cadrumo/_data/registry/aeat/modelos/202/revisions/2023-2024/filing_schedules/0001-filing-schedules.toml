@@ -6,7 +6,7 @@
 # citing this revision's own instructions edition.
 
 [[revisions."2023-2024".filing_schedules]]
-id = "modelo-202-2023-2024-trimestral"
+id = "modelo-202-trimestral"
 period_kind = "quarterly"
 periods = ["1P", "2P", "3P"]
 profile_condition_mode = "all"

@@ -154,6 +154,16 @@ class FilingYearOffset(RegistryModel):
                 "filing_year_offset max_years must be non-negative",
                 context={"max_years": self.max_years},
             )
+        if self.max_years is not None and self.max_years < abs(self.years):
+            # The bound is applied to the offset's own reach, so a bound below
+            # one step filters out every anchor the member could produce. The
+            # declaration would then resolve to nothing while still LOOKING like
+            # a live cross-period coordinate, which is exactly the silent
+            # absence a filing-bound member must not be able to declare.
+            raise RegistryValidationError(
+                "filing_year_offset max_years must admit at least one step of years",
+                context={"max_years": self.max_years, "years": self.years},
+            )
         return self
 
 
@@ -314,7 +324,7 @@ def _unbounded_temporal_anchors(
         except RegistryValidationError as exc:
             raise RegistryValidationError(
                 "prior_quarter_expanding_span cannot interpret the target period; "
-                "only quarterly codes 1T..4T are supported",
+                "only quarterly codes 1T..4T or pago-fraccionado codes 1P..3P are supported",
                 context={"target_period": target_period},
             ) from exc
     if isinstance(temporal, TargetPeriodOffset):

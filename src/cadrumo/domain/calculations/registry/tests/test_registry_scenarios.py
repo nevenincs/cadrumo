@@ -25,7 +25,7 @@ from ._registry_scenarios_support import (
     _simplified_direct_estimation_cap_scenario,
     _tributacion_conjunta_family_joint_archetype_scenario,
 )
-from ._scenarios import (
+from .scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
     RegistryScenarioRunReport,
@@ -124,7 +124,7 @@ def test_modelo_100_scenario_rejects_undeclared_hand_typed_inventory_acquisition
 
     with pytest.raises(
         RegistryValidationError,
-        match=r"0181 \(binding 'renta-2025-inventory-activity-acquisition-cost-0181'\)",
+        match=r"0181 \(binding 'renta-inventory-activity-acquisition-cost-0181'\)",
     ):
         run_registry_calculation_scenario(
             undeclared,
@@ -173,10 +173,10 @@ def test_modelo_100_2023_simplified_expenses_use_temporary_da56_rate() -> None:
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
         },
         relation_values={
-            "renta-2023-rel-130-pagos-fraccionados": Decimal("0"),
-            "renta-2023-rel-131-pagos-fraccionados": Decimal("0"),
+            "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+            "renta-modelo-131-pagos-fraccionados": Decimal("0"),
         },
-        enum_binding_values={"renta-2023-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         date_context={"filing_period": date(2023, 12, 31)},
         expected_outputs=(
             _expected(
@@ -185,8 +185,8 @@ def test_modelo_100_2023_simplified_expenses_use_temporary_da56_rate() -> None:
                 operand_refs=_operand_refs(
                     "0180",
                     "0218",
-                    "renta-2023-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
-                    "renta-2023-estimacion-directa-simplificada-gastos-dificil-justificacion-cap",
+                    "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
+                    "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-cap",
                 ),
                 operand_casilla_refs=_operand_casilla_refs("0180", "0218"),
                 legal_refs=("ley-35-2006:art-30", "ley-35-2006:da-56", "rd-439-2007:art-30"),

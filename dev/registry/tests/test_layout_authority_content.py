@@ -26,11 +26,11 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.validate_layout_authority_content import validate_layout_authority_content
 
-from .....core.resources.bundled_data import bundled_path
-from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from ..schema_references import SourceReference
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from dev.registry.compiler.validate_layout_authority_content import validate_layout_authority_content
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

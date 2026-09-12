@@ -1,5 +1,5 @@
 [[revisions."2023".parameters]]
-id = "renta-2023-escala-autonomica-baleares-base-general"
+id = "renta-escala-autonomica-baleares-base-general"
 data_type = "bracket_table"
 unit = "EUR"
 bracket_axis = "filing_period"

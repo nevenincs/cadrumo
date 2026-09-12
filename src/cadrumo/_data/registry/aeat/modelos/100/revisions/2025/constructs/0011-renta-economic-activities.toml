@@ -40,8 +40,8 @@ bindings = [
     "renta-modelo-184-atribucion-actividades-economicas",
 ]
 parameters = [
-    "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
-    "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-cap",
+    "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
+    "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-cap",
 ]
 casilla_ids = [
     "0171",
@@ -118,14 +118,14 @@ formulas = [
     "renta-pagos-fraccionados-ingresados",
 ]
 dependency_classifications = [
-    "renta-2025-dep-130",
-    "renta-2025-dep-131",
-    "renta-2025-dep-184",
-    "renta-2025-dep-303",
-    "renta-2025-dep-390",
-    "renta-2025-dep-347",
-    "renta-2025-dep-349",
-    "renta-2025-dep-369",
-    "renta-2025-dep-840",
-    "renta-2025-dep-036",
+    "renta-dep-130",
+    "renta-dep-131",
+    "renta-dep-184",
+    "renta-dep-303",
+    "renta-dep-390",
+    "renta-dep-347",
+    "renta-dep-349",
+    "renta-dep-369",
+    "renta-dep-840",
+    "renta-dep-036",
 ]

@@ -1,5 +1,5 @@
 [[revisions."2021".application_links]]
-id = "modelo-100-2021-extractor"
+id = "modelo-100-extractor"
 surface = "extractor"
 consumer = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 requires_snapshot = true

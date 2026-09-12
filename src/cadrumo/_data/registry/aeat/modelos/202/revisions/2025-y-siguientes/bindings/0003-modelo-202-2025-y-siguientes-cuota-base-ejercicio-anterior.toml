@@ -6,12 +6,21 @@
 # had elapsed on the first day of the instalment's payment month, minored by
 # the deductions and withholdings of that same período. This binding copies
 # the prior Modelo 200 cuota líquida (DP200014B:00592, semantic_role
-# is_cuota_liquida) into casilla 01. The committed registry currently declares
-# the resolvable 2P/3P relation only: those periods bind one year back after
-# the prior-year Modelo 200 July deadline has elapsed. The 1P rule legally
-# binds two years back, but remains operator-entered until the registry carries
-# Modelo 200 source coverage before 2024. The binding declares only WHICH
-# source casilla to copy when a relation is available.
+# is_cuota_liquida) into casilla 01.
+#
+# The temporal member declares all three target periods: 1P reaches two filing
+# years back, 2P and 3P one year back, because the prior-year Modelo 200 July
+# deadline falls between the April instalment and the October/December ones.
+# The declaration is therefore complete for every target period the
+# applicability names.
+#
+# What is incomplete is SOURCE COVERAGE, not the declaration: the registry
+# carries no Modelo 200 revision before 2024, so the 1P anchor lands on a
+# filing year that has no source to read. That is an absence surfaced at
+# resolution time -- the anchor resolves to no value and the casilla stays
+# unresolved with its diagnostic -- rather than a period this binding declines
+# to declare. It becomes resolvable with no change here once the earlier
+# Modelo 200 revisions are authored.
 #
 # The binding inherits the existing INCN modality gate
 # (derive_modelo_202_modality, driven by

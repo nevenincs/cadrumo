@@ -59,7 +59,7 @@ _TOLERANCE = Decimal("0.02")
 #: reads as an instruction to delete the entry. Do not follow it. Establish the
 #: figure against the cited authority before touching any row listed here.
 _KNOWN_BREAKS: dict[tuple[str, str], str] = {
-    ("renta-2022-escala-autonomica-murcia-base-general", "2022"): (
+    ("renta-escala-autonomica-murcia-base-general", "2022"): (
         "FAITHFUL TO SOURCE -- do not repair. The discontinuity is in the norm, not "
         "in this table. Decreto-ley 4/2022 de la Region de Murcia, de 22 de "
         "septiembre (BORM 29-09-2022, art. unico, amending DA quinta.4 del Decreto "
@@ -180,11 +180,11 @@ def _murcia_2022_top_rung() -> BracketEntry:
             if str(revision_id) != "2022":
                 continue
             for parameter in getattr(revision, "parameters", ()) or ():
-                if parameter.id != "renta-2022-escala-autonomica-murcia-base-general":
+                if parameter.id != "renta-escala-autonomica-murcia-base-general":
                     continue
                 top = max(parameter.brackets or (), key=lambda entry: entry.lower_bound)
                 return top
-    raise AssertionError("renta-2022-escala-autonomica-murcia-base-general [2022] is not in the registry")
+    raise AssertionError("renta-escala-autonomica-murcia-base-general [2022] is not in the registry")
 
 
 def test_murcia_2022_top_rung_matches_the_enacted_cuota() -> None:

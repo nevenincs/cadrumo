@@ -25,7 +25,7 @@ def _madrid_bracket_param() -> ParameterDefinition:
     """Return a synthetic Madrid 2025 autonomic bracket parameter for tests."""
     return ParameterDefinition.model_validate(
         {
-            "id": "renta-2025-escala-autonomica-madrid-base-general",
+            "id": "renta-escala-autonomica-madrid-base-general",
             "data_type": "bracket_table",
             "unit": "EUR",
             "bracket_axis": "filing_period",
@@ -57,7 +57,7 @@ def _cataluna_bracket_param() -> ParameterDefinition:
     """Return a distinct synthetic Cataluña parameter so dispatch is observable."""
     return ParameterDefinition.model_validate(
         {
-            "id": "renta-2025-escala-autonomica-cataluna-base-general",
+            "id": "renta-escala-autonomica-cataluna-base-general",
             "data_type": "bracket_table",
             "unit": "EUR",
             "bracket_axis": "filing_period",
@@ -92,11 +92,11 @@ def _dispatch_expression(base: Decimal) -> FormulaExpression:
             "op": "lookup_bracket_by_ccaa",
             "args": (
                 {"literal": base},
-                {"binding": "renta-2025-profile-tax-residence-ccaa"},
+                {"binding": "renta-profile-tax-residence-ccaa"},
                 {
                     "dispatch_table": {
-                        "madrid": "renta-2025-escala-autonomica-madrid-base-general",
-                        "cataluna": "renta-2025-escala-autonomica-cataluna-base-general",
+                        "madrid": "renta-escala-autonomica-madrid-base-general",
+                        "cataluna": "renta-escala-autonomica-cataluna-base-general",
                     },
                 },
             ),
@@ -125,12 +125,12 @@ def test_lookup_bracket_by_ccaa_dispatches_to_madrid_when_residence_is_madrid() 
     madrid_result = _evaluate(
         _dispatch_expression(base),
         parameters=parameters,
-        enum_bindings={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        enum_bindings={"renta-profile-tax-residence-ccaa": "madrid"},
     )
     cataluna_result = _evaluate(
         _dispatch_expression(base),
         parameters=parameters,
-        enum_bindings={"renta-2025-profile-tax-residence-ccaa": "cataluna"},
+        enum_bindings={"renta-profile-tax-residence-ccaa": "cataluna"},
     )
 
     # Dispatch selects different tables — results must differ.
@@ -169,7 +169,7 @@ def test_lookup_bracket_by_ccaa_dispatches_to_cataluna_when_residence_is_catalun
     cataluna_result = _evaluate(
         _dispatch_expression(base),
         parameters=parameters,
-        enum_bindings={"renta-2025-profile-tax-residence-ccaa": "cataluna"},
+        enum_bindings={"renta-profile-tax-residence-ccaa": "cataluna"},
     )
 
     # Cataluña second band: fixed_addition=1307.25, marginal_rate=0.12.
@@ -182,7 +182,7 @@ def test_lookup_bracket_by_ccaa_dispatches_to_cataluna_when_residence_is_catalun
     madrid_result = _evaluate(
         _dispatch_expression(base),
         parameters=parameters,
-        enum_bindings={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        enum_bindings={"renta-profile-tax-residence-ccaa": "madrid"},
     )
     assert cataluna_result > madrid_result
 
@@ -201,7 +201,7 @@ def test_lookup_bracket_by_ccaa_dispatches_with_entry_array_table() -> None:
         madrid_param.id: madrid_param,
         cataluna_param.id: cataluna_param,
     }
-    enum_bindings = {"renta-2025-profile-tax-residence-ccaa": "madrid"}
+    enum_bindings = {"renta-profile-tax-residence-ccaa": "madrid"}
 
     dict_form_result = _evaluate(
         _dispatch_expression(base),
@@ -214,7 +214,7 @@ def test_lookup_bracket_by_ccaa_dispatches_with_entry_array_table() -> None:
             "op": "lookup_bracket_by_ccaa",
             "args": (
                 {"literal": base},
-                {"binding": "renta-2025-profile-tax-residence-ccaa"},
+                {"binding": "renta-profile-tax-residence-ccaa"},
                 {
                     "dispatch_table_entries": [
                         {"key": "madrid", "parameter": madrid_param.id},
@@ -238,10 +238,10 @@ def test_lookup_bracket_by_ccaa_raises_on_missing_dispatch_key() -> None:
     """A CCAA value not in the dispatch_table raises RegistryValidationError."""
     expression = _dispatch_expression(Decimal("20000"))
     parameters = {
-        "renta-2025-escala-autonomica-madrid-base-general": _madrid_bracket_param(),
-        "renta-2025-escala-autonomica-cataluna-base-general": _cataluna_bracket_param(),
+        "renta-escala-autonomica-madrid-base-general": _madrid_bracket_param(),
+        "renta-escala-autonomica-cataluna-base-general": _cataluna_bracket_param(),
     }
-    enum_bindings = {"renta-2025-profile-tax-residence-ccaa": "andalucia"}
+    enum_bindings = {"renta-profile-tax-residence-ccaa": "andalucia"}
 
     with pytest.raises(RegistryValidationError, match="missing CCAA 'andalucia'"):
         _evaluate(expression, parameters=parameters, enum_bindings=enum_bindings)
@@ -254,7 +254,7 @@ def test_lookup_bracket_by_ccaa_raises_when_dispatched_parameter_is_not_bracket_
             "op": "lookup_bracket_by_ccaa",
             "args": (
                 {"literal": Decimal("20000")},
-                {"binding": "renta-2025-profile-tax-residence-ccaa"},
+                {"binding": "renta-profile-tax-residence-ccaa"},
                 {"dispatch_table": {"madrid": "renta-2025-some-rate-parameter"}},
             ),
         },
@@ -277,7 +277,7 @@ def test_lookup_bracket_by_ccaa_raises_when_dispatched_parameter_is_not_bracket_
             },
         ),
     }
-    enum_bindings = {"renta-2025-profile-tax-residence-ccaa": "madrid"}
+    enum_bindings = {"renta-profile-tax-residence-ccaa": "madrid"}
 
     with pytest.raises(RegistryValidationError, match="must declare data_type='bracket_table'"):
         _evaluate(expression, parameters=parameters, enum_bindings=enum_bindings)
@@ -287,8 +287,8 @@ def test_lookup_bracket_by_ccaa_raises_when_enum_binding_is_unset() -> None:
     """If the CCAA binding has no value supplied, the op raises."""
     expression = _dispatch_expression(Decimal("20000"))
     parameters = {
-        "renta-2025-escala-autonomica-madrid-base-general": _madrid_bracket_param(),
-        "renta-2025-escala-autonomica-cataluna-base-general": _cataluna_bracket_param(),
+        "renta-escala-autonomica-madrid-base-general": _madrid_bracket_param(),
+        "renta-escala-autonomica-cataluna-base-general": _cataluna_bracket_param(),
     }
     enum_bindings: dict[str, str] = {}
 

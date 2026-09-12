@@ -17,7 +17,7 @@ from cadrumo.tests.registry_snapshot import build_snapshot
 
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
-from ._ledger_iva_aggregation_support import _deduction_provenance
+from .ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -292,7 +292,7 @@ def test_modelo_322_construct_links_workbook_parity() -> None:
     modelo, _ = _load_modelo_322()
     revision = modelo.revisions["2008-2022"]
     construct = next(c for c in revision.constructs if c.id == "modelo-322-iva-grupo-individual")
-    assert "modelo-322-dr-2026" in construct.workbook_parity_refs
+    assert "modelo-322-dr" in construct.workbook_parity_refs
     assert construct.filing_schedules == ("modelo-322-mensual",)
 
 

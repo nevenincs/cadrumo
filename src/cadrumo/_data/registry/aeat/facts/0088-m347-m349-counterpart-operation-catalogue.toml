@@ -13,6 +13,7 @@ legal_refs = [
     "orden-hac-174-2020:art-1",
     "ley-58-2003:art-93",
     "rd-1624-1992:art-81",
+    "ley-37-1992:art-27",
 ]
 source_refs = [
     "aeat-dr-347-2025",
@@ -51,4 +52,6 @@ entries = [
     { key = "modelo.349.binding_source", value = "collectible_invoice" },
     { key = "modelo.349.readiness.groi_country", value = "ES" },
     { key = "modelo.349.readiness.nif_iva_for_non_groi_country", value = "true" },
+    { key = "modelo.349.operation_type_required_category", value = "intra_community_supply" },
+    { key = "modelo.349.operation_type_candidates", value = "E,M,H" },
 ]

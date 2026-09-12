@@ -40,8 +40,8 @@ def test_modelo_180_copies_monetary_relations_and_binds_perceptor_count() -> Non
     # relation fails here before the runtime threading assertions run.
     formulas_by_target = {f.target_casilla_id: f for f in revision.formulas}
     expected_relation_wiring = {
-        "decl.base-total": "modelo-180-rel-115-base-anual",
-        "decl.retenciones-total": "modelo-180-rel-115-retenciones-anual",
+        "decl.base-total": "modelo-180-115-base-anual",
+        "decl.retenciones-total": "modelo-180-115-retenciones-anual",
     }
     assert "decl.total-perceptores" not in formulas_by_target
     perceptor_casilla = next(c for c in revision.casillas if c.id == "decl.total-perceptores")
@@ -67,8 +67,8 @@ def test_modelo_180_copies_monetary_relations_and_binds_perceptor_count() -> Non
     # separate so the test also proves the count is not relation-fed.
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2026, period="0A")
     relation_values = {
-        "modelo-180-rel-115-base-anual": Decimal("2149.75"),
-        "modelo-180-rel-115-retenciones-anual": Decimal("418.00"),
+        "modelo-180-115-base-anual": Decimal("2149.75"),
+        "modelo-180-115-retenciones-anual": Decimal("418.00"),
     }
     binding_values = {"modelo-180-115-perceptores-anual": Decimal("3")}
     result = calculate_registry_snapshot(

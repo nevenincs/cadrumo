@@ -26,9 +26,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def test_bundled_tree_declares_one_ordered_supported_year_catalogue() -> None:
     _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
 
-    assert catalogues.supported_filing_years == SupportedFilingYearsCatalogue(
-        years=(2022, 2023, 2024, 2025, 2026),
-    )
+    assert catalogues.supported_filing_years == SupportedFilingYearsCatalogue(floor=2022, horizon=2026)
+    assert catalogues.supported_filing_years.years == (2022, 2023, 2024, 2025, 2026)
     coverage = catalogues.sociedades_annual_manual_coverage
     assert coverage is not None
     assert tuple(disposition.year for disposition in coverage.dispositions) == catalogues.supported_filing_years.years
@@ -41,10 +40,46 @@ def test_bundled_tree_declares_one_ordered_supported_year_catalogue() -> None:
     )
 
 
-@pytest.mark.parametrize("years", [(2025, 2024), (2025, 2025), (1999,), (2100,)])
-def test_supported_year_declaration_refuses_noncanonical_year_sequences(years: tuple[int, ...]) -> None:
-    with pytest.raises(ValidationError, match="supported filing years"):
-        SupportedFilingYearsCatalogue(years=years)
+@pytest.mark.parametrize(
+    "bounds",
+    [
+        pytest.param({"floor": 2026, "horizon": 2022}, id="horizon-precedes-floor"),
+        pytest.param({"floor": 1999, "horizon": 2026}, id="floor-below-range"),
+        pytest.param({"floor": 2022, "horizon": 2100}, id="horizon-above-range"),
+        pytest.param({"floor": 2022, "horizon": 2026, "hard_ceiling": 2026}, id="ceiling-at-horizon"),
+        pytest.param({"floor": 2022, "horizon": 2026, "hard_ceiling": 2024}, id="ceiling-below-horizon"),
+        pytest.param({"years": (2022, 2023)}, id="retired-enumerated-key"),
+    ],
+)
+def test_supported_year_declaration_refuses_noncanonical_bounds(bounds: dict[str, object]) -> None:
+    """Every way of mis-stating the span fails closed, including the retired key.
+
+    The enumerated ``years`` key is refused rather than ignored: a declaration
+    written against the old shape would otherwise load with neither bound set
+    and silently claim an empty span.
+    """
+    with pytest.raises(ValidationError):
+        SupportedFilingYearsCatalogue(**bounds)
+
+
+def test_supported_year_declaration_derives_its_span_from_its_bounds() -> None:
+    catalogue = SupportedFilingYearsCatalogue(floor=2022, horizon=2026)
+
+    assert catalogue.years == (2022, 2023, 2024, 2025, 2026)
+    assert not catalogue.admits_filing_year(2021), "below the floor is outside what the product claims"
+    assert catalogue.admits_filing_year(2022)
+    assert catalogue.admits_filing_year(2027), (
+        "an absent hard ceiling leaves the span open above the horizon, because the newest "
+        "declared revision carries forward into a year no revision names"
+    )
+
+
+def test_a_declared_hard_ceiling_closes_the_span_above_the_horizon() -> None:
+    catalogue = SupportedFilingYearsCatalogue(floor=2022, horizon=2026, hard_ceiling=2028)
+
+    assert catalogue.years == (2022, 2023, 2024, 2025, 2026), "the ceiling does not widen authored coverage"
+    assert catalogue.admits_filing_year(2028)
+    assert not catalogue.admits_filing_year(2029)
 
 
 @pytest.mark.parametrize(
@@ -101,7 +136,7 @@ def test_shared_catalogue_refuses_missing_sociedades_annual_manual_coverage(tmp_
     legal_dir = tmp_path / "legal"
     legal_dir.mkdir()
     (legal_dir / "supported-filing-years.toml").write_text(
-        "[supported_filing_years]\nyears = [2025]\n",
+        "[supported_filing_years]\nfloor = 2025\nhorizon = 2025\n",
         encoding="utf-8",
     )
 
@@ -110,7 +145,7 @@ def test_shared_catalogue_refuses_missing_sociedades_annual_manual_coverage(tmp_
 
 
 def test_shared_catalogue_refuses_duplicate_supported_year_declarations(tmp_path: Path) -> None:
-    declaration = "[supported_filing_years]\nyears = [2025]\n"
+    declaration = "[supported_filing_years]\nfloor = 2025\nhorizon = 2025\n"
     legal_dir = tmp_path / "legal"
     legal_dir.mkdir()
     (legal_dir / "first.toml").write_text(declaration, encoding="utf-8")
@@ -135,7 +170,7 @@ def _write_sociedades_coverage_fixture(
     legal_dir = tmp_path / "legal"
     legal_dir.mkdir()
     (legal_dir / "supported-filing-years.toml").write_text(
-        "[supported_filing_years]\nyears = [2025]\n",
+        "[supported_filing_years]\nfloor = 2025\nhorizon = 2025\n",
         encoding="utf-8",
     )
     (legal_dir / "coverage.toml").write_text(

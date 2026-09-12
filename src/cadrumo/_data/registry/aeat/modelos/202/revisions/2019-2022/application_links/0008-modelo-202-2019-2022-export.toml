@@ -1,5 +1,5 @@
 [[revisions.2019-2022.application_links]]
-id = "modelo-202-2019-2022-export"
+id = "modelo-202-export"
 surface = "export"
 consumer = "cadrumo.application.filing.export"
 requires_snapshot = true

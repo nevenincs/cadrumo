@@ -29,7 +29,7 @@
 # no bundled oracle prints this total as its own figure, and declaring one
 # without evidence is the claim this corpus refuses.
 [[revisions."2025".verification_expectations]]
-id = "modelo-390-2025-reconcile-when-present"
+id = "modelo-390-reconcile-when-present"
 computed_casilla_ids = []
 reconcile_when_present_casilla_ids = [
     "iva.anual.total-bases-cuotas-iva",

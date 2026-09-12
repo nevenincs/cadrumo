@@ -3,14 +3,14 @@
 # satisfies judicial anualidades "sin derecho a la aplicación por estos últimos
 # del mínimo por descendientes previsto en el artículo 58". The flag is a
 # derived profile fact (renta_family.anualidades_sin_minimo_descendientes_2022):
-# 1 (eligible — the non-custodial payer without the mínimo) by default, 0 when
-# custody is shared (custodia compartida splits the mínimo por descendientes, so
+# true (eligible — the non-custodial payer without the mínimo) by default, false
+# when custody is shared (custodia compartida splits the mínimo por descendientes, so
 # the payer retains it and the régimen does not apply). Consumed by the cuota
 # escala formulas (0528/0530/0529/0531) inside the régimen predicate.
 [[revisions."2022".bindings]]
 id = "renta-profile-anualidades-sin-minimo-descendientes"
 provider = { kind = "profile", profile_key = "renta_family.anualidades_sin_minimo_descendientes_2022" }
-value = { data_type = "money", channel = "decimal" }
+value = { data_type = "boolean", channel = "boolean" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-64"]
 source_refs = ["lirpf-cuota-chain-authority"]

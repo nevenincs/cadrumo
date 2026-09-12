@@ -1,5 +1,5 @@
 [[revisions."2025".dependency_classifications]]
-id = "renta-2025-dep-123"
+id = "renta-dep-123"
 source_modelo = "123"
 treatment = "direct_annual_settlement"
 taxpayer_files_source = false

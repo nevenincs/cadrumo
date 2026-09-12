@@ -56,4 +56,4 @@ formulas = [
     "renta-capital-mobiliario-general-suma-rendimientos-reducidos",
 ]
 bindings = ["renta-modelo-123-retenciones-periodicas", "renta-modelo-193-retenciones-anuales"]
-dependency_classifications = ["renta-2025-dep-123", "renta-2025-dep-193"]
+dependency_classifications = ["renta-dep-123", "renta-dep-193"]

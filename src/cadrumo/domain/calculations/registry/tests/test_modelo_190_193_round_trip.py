@@ -55,8 +55,8 @@ def test_modelo_193_copies_monetary_relations_and_binds_perceptor_count() -> Non
     # must stay off the relation graph.
     formulas_by_target = {f.target_casilla_id: f for f in revision.formulas}
     expected_relation_wiring = {
-        "decl.base-total": "modelo-193-rel-123-base-anual",
-        "decl.retenciones-total": "modelo-193-rel-123-retenciones-anual",
+        "decl.base-total": "modelo-193-123-base-anual",
+        "decl.retenciones-total": "modelo-193-123-retenciones-anual",
     }
     assert "decl.total-perceptores" not in formulas_by_target
     perceptor_casilla = next(c for c in revision.casillas if c.id == "decl.total-perceptores")
@@ -80,8 +80,8 @@ def test_modelo_193_copies_monetary_relations_and_binds_perceptor_count() -> Non
     # through the binding channel.
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2026, period="0A")
     relation_values = {
-        "modelo-193-rel-123-base-anual": Decimal("7000.50"),
-        "modelo-193-rel-123-retenciones-anual": Decimal("1330.10"),
+        "modelo-193-123-base-anual": Decimal("7000.50"),
+        "modelo-193-123-retenciones-anual": Decimal("1330.10"),
     }
     binding_values = {"modelo-193-123-perceptores-anual": Decimal("2")}
     result = calculate_registry_snapshot(

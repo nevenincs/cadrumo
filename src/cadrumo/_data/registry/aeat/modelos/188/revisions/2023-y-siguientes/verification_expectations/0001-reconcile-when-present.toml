@@ -5,7 +5,7 @@
 # (min_coverage = 0), so enrollment can never lower coverage or flip a
 # legitimate filing's verdict.
 [[revisions."2023-y-siguientes".verification_expectations]]
-id = "modelo-188-2023-y-siguientes-reconcile-when-present"
+id = "modelo-188-reconcile-when-present"
 computed_casilla_ids = []
 reconcile_when_present_casilla_ids = [
     "01",

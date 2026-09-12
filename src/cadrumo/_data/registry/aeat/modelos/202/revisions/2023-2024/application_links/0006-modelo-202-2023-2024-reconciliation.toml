@@ -1,5 +1,5 @@
 [[revisions.2023-2024.application_links]]
-id = "modelo-202-2023-2024-reconciliation"
+id = "modelo-202-reconciliation"
 surface = "reconciliation"
 consumer = "cadrumo.application.reconciliation"
 requires_snapshot = true

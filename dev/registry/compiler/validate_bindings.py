@@ -20,10 +20,12 @@ names a declaration that cannot resolve to the value it promises:
 
 The fifth check, an unreferenced binding without the explicit
 ``non_calculation`` disposition, is :func:`unreferenced_binding_advisories` and
-is deliberately NOT part of the failure list: measured across every currently
-loadable modelo it reports 299 rows (232: 96, 360: 151, 184: 38, 720: 9, 182: 5),
-so enrolling it as an error would refuse the corpus rather than gate it. It is a
-public diagnostic now and becomes a refusal once the corpus rewrite lands.
+is deliberately NOT part of the failure list: the authored corpus still carries
+enough such rows across the loadable modelos that enrolling it as an error would
+refuse the corpus rather than gate it. It is a public diagnostic now and becomes
+a refusal once the corpus rewrite lands. No count is recorded here: a number in
+prose is stale the first time a modelo is authored, and the advisory itself
+reports the live population.
 """
 
 from __future__ import annotations

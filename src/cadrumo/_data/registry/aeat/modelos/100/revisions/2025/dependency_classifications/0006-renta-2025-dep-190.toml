@@ -1,5 +1,5 @@
 [[revisions."2025".dependency_classifications]]
-id = "renta-2025-dep-190"
+id = "renta-dep-190"
 source_modelo = "190"
 treatment = "factual_evidence"
 taxpayer_files_source = false

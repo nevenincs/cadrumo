@@ -6,7 +6,7 @@
 # legitimate filing's verdict. Grounded in the casillas' own declared
 # legal_refs/source_refs, which name the annex the boxes are printed in.
 [[revisions."2022-y-siguientes".verification_expectations]]
-id = "modelo-187-2022-y-siguientes-reconcile-when-present"
+id = "modelo-187-reconcile-when-present"
 computed_casilla_ids = []
 reconcile_when_present_casilla_ids = [
     "01",

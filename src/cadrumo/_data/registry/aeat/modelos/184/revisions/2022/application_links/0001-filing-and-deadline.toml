@@ -1,5 +1,5 @@
 [[revisions."2022".application_links]]
-id = "modelo-184-filing-2022"
+id = "modelo-184-filing"
 surface = "filing"
 consumer = "cadrumo.application.filing"
 requires_snapshot = true
@@ -7,7 +7,7 @@ legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
 source_refs = ["boe-dr-184-2022", "aeat-modelo-184-procedure"]
 
 [[revisions."2022".application_links]]
-id = "modelo-184-deadline-2022"
+id = "modelo-184-deadline"
 surface = "deadline"
 consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true

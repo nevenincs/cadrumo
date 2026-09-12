@@ -7,7 +7,7 @@
 # legitimate filing's verdict (min_coverage = 0). Grounded in the
 # revision's AEAT DR / framework-law refs (reused from modelo-100-2025-cuota-chain-verification).
 [[revisions."2025".verification_expectations]]
-id = "modelo-100-2025-reconcile-when-present"
+id = "modelo-100-reconcile-when-present"
 computed_casilla_ids = []
 reconcile_when_present_casilla_ids = [
     "0007",

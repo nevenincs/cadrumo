@@ -43,12 +43,12 @@ def test_natural_person_route_has_irpf_tarifa_bracket_schedules() -> None:
     parameters = {parameter.id: parameter for parameter in revision.parameters}
 
     expected = {
-        "renta-2025-escala-estatal-base-general": {
+        "renta-escala-estatal-base-general": {
             "ley-35-2006:art-62",
             "ley-35-2006:art-63",
         },
-        "renta-2025-escala-estatal-base-ahorro": {"ley-35-2006:art-66"},
-        "renta-2025-escala-autonomica-base-ahorro": {"ley-35-2006:art-76"},
+        "renta-escala-estatal-base-ahorro": {"ley-35-2006:art-66"},
+        "renta-escala-autonomica-base-ahorro": {"ley-35-2006:art-76"},
     }
     for parameter_id, legal_refs in expected.items():
         parameter = parameters[parameter_id]
@@ -61,7 +61,7 @@ def test_natural_person_route_has_irpf_tarifa_bracket_schedules() -> None:
     autonomic_formula = next(
         formula
         for formula in revision.formulas
-        if formula.id == "renta-2025-cuota-escala-autonomica-sobre-base-liquidable-general"
+        if formula.id == "renta-cuota-escala-autonomica-sobre-base-liquidable-general"
     )
 
     # From 2024/2025 the autonomic escala formula wraps its lookup_bracket_by_ccaa
@@ -120,9 +120,7 @@ def test_legal_entity_route_has_is_rate_schedule_by_entity_form() -> None:
     assert "ley-27-2014:art-29" in micro_empresa.legal_refs
     assert micro_empresa.source_refs
 
-    binding = next(
-        binding for binding in revision.bindings if binding.id == "modelo-200-2024-profile-legal-entity-form"
-    )
+    binding = next(binding for binding in revision.bindings if binding.id == "modelo-200-profile-legal-entity-form")
     selector = selector_as_dict(binding)
     assert binding.source == "profile"
     assert selector["profile_model"] == "taxpayer"

@@ -131,17 +131,17 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.tests.manual_oracle_support import oracle_declared_figures
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources.bundled_data import bundled_path
-from ..authority import ValidatedRegistryAuthority
-from ._scenarios import (
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.tests.scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
     assert_registry_scenario_matches,
     run_registry_calculation_scenario,
 )
+from dev.registry.tests.manual_oracle_support import oracle_declared_figures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -173,8 +173,8 @@ _SOURCE_REFS_0025 = ("lirpf-cuota-chain-authority",)
 # 2020 revision without raising on a missing binding/relation elsewhere in
 # the tree.
 _REL_2020 = {
-    "renta-2020-rel-130-pagos-fraccionados": Decimal("0"),
-    "renta-2020-rel-131-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
 
 # Raw ingresos/gastos/reducciones inputs quoted from the manual; see the
@@ -204,7 +204,7 @@ def _scenario(*, reduccion_art_20: Decimal, expected_0025: Decimal, scenario_id:
         period="0A",
         inputs=inputs,
         binding_values={"renta-modelo-100-estimacion-directa-es-normal": Decimal("1")},
-        enum_binding_values={"renta-2020-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values=_REL_2020,
         date_context={"filing_period": date(2020, 12, 31)},
         expected_outputs=(

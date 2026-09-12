@@ -6,7 +6,7 @@
 # multiple-payer requirement is declared by this parameter.
 
 [[revisions."2026-y-siguientes".parameters]]
-id = "m210-tipo-renta-multiple-payers-required-2026"
+id = "m210-tipo-renta-multiple-payers-required"
 data_type = "keyed_bracket_table"
 unit = "boolean"
 legal_refs = [

@@ -62,6 +62,5 @@ def test_export_record_profiles_removed_without_deleting_pdf_authority() -> None
     assert profiles == {
         "modelo-111-declaracion-pdf": "declaracion_pdf",
         "modelo-115-declaracion-pdf": "declaracion_pdf",
-        "modelo-123-2019-declaracion-pdf": "declaracion_pdf",
         "modelo-123-declaracion-pdf": "declaracion_pdf",
     }

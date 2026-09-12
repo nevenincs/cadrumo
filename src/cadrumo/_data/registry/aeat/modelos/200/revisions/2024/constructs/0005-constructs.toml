@@ -1,5 +1,5 @@
 [[revisions."2024".constructs]]
-id = "modelo-200-2024-foundation"
+id = "modelo-200-foundation"
 casilla_ids = [
     "02799",
     "02800",
@@ -568,19 +568,19 @@ bindings = [
     "modelo-200-profile-legal-entity-form",
     "modelo-200-bin-pendiente-ejercicios-anteriores",
 ]
-dependency_classifications = ["modelo-200-2024-dep-202-instalments", "modelo-200-2024-dep-self-bin-pendiente"]
-workbook_parity_refs = ["modelo-200-2024-dr-xls"]
-live_cross_references = ["modelo-200-2024-static-documentation"]
+dependency_classifications = ["modelo-200-dep-202-instalments", "modelo-200-dep-self-bin-pendiente"]
+workbook_parity_refs = ["modelo-200-dr-xls"]
+live_cross_references = ["modelo-200-static-documentation"]
 application_links = [
-    "modelo-200-2024-portal",
-    "modelo-200-2024-calculation",
-    "modelo-200-2024-filing",
-    "modelo-200-2024-deadline",
-    "modelo-200-2024-review",
-    "modelo-200-2024-approval",
-    "modelo-200-2024-reconciliation",
-    "modelo-200-2024-workflow",
-    "modelo-200-2024-export",
+    "modelo-200-portal",
+    "modelo-200-calculation",
+    "modelo-200-filing",
+    "modelo-200-deadline",
+    "modelo-200-review",
+    "modelo-200-approval",
+    "modelo-200-reconciliation",
+    "modelo-200-workflow",
+    "modelo-200-export",
 ]
-filing_schedules = ["modelo-200-2024-anual"]
+filing_schedules = ["modelo-200-anual"]
 deadline_windows = ["modelo-200-2024-0a"]

@@ -31,6 +31,7 @@ from cadrumo.domain.calculations.registry.schema_revision_members import (
     ConstructDefinition,
     DependencyClassificationDefinition,
 )
+
 from ..compiler.validator import RegistryValidator
 from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
@@ -353,4 +354,3 @@ def test_informative_modelo_with_formula_fails_validation() -> None:
     validator = RegistryValidator(catalogues)
     with pytest.raises(RegistryValidationError, match="informative modelo must not declare calculation formulas"):
         validator.validate_modelo(informative_modelo)
-

@@ -60,8 +60,8 @@ def test_committed_modelo_232_is_informative_only() -> None:
             f"revision {revision.id!r} declares calculation formulas; "
             "Modelo 232 is informative-only and must not own filing-grade calculations"
         )
-        assert revision.relations == (), (
-            f"revision {revision.id!r} declares cross-model relations; "
+        assert not any(binding.source.value == "relation_prefill" for binding in revision.bindings), (
+            f"revision {revision.id!r} declares cross-model relation-prefill bindings; "
             "Modelo 232 is informative-only and Modelo 200 dependency is evidence-only"
         )
         for casilla in revision.casillas:

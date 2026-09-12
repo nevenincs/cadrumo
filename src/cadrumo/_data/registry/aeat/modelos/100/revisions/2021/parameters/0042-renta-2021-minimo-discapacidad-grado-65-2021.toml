@@ -1,5 +1,5 @@
 [[revisions."2021".parameters]]
-id = "renta-2021-minimo-discapacidad-grado-65-2021"
+id = "renta-minimo-discapacidad-grado-65"
 data_type = "money"
 unit = "EUR"
 legal_refs = ["ley-35-2006:art-60"]

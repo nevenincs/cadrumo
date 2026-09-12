@@ -11,6 +11,7 @@ import pytest
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expression
+from cadrumo.domain.calculations.registry.relations import relation_source_requirements
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.tests.registry_snapshot import build_snapshot
@@ -213,35 +214,33 @@ def test_committed_modelo_202_static_cross_reference_and_construct_are_declared(
     assert "presentation" in decision.forbidden_actions
     assert "modelo-202-portal" in construct.application_links
     assert set(construct.live_cross_references) == {"modelo-202-static-documentation"}
-    assert set(construct.workbook_parity_refs) == {"modelo-202-dr-xlsx-2025"}
+    assert set(construct.workbook_parity_refs) == {"modelo-202-dr-xlsx"}
     assert "modelo-202-cuota-base-ejercicio-anterior" in construct.bindings
-    assert "modelo-202-2025-y-siguientes-dep-200-cuota-base" in construct.dependency_classifications
-    assert "modelo-202-2025-y-siguientes-rel-cuota-base-1p" in construct.relations
-    assert "modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p" in construct.relations
+    assert "modelo-202-dep-200-cuota-base" in construct.dependency_classifications
+    assert "modelo-202-cuota-base-ejercicio-anterior" in construct.bindings
 
 
 def test_committed_modelo_202_cuota_base_relation_periods_and_year_offsets_are_declared() -> None:
     modelo, _catalogues = _load_modelo_202()
     revision = modelo.revisions["2025-y-siguientes"]
-    relations = {relation.id: relation for relation in revision.relations}
+    binding = next(item for item in revision.bindings if item.id == "modelo-202-cuota-base-ejercicio-anterior")
+    provider = binding.provider
+    assert provider.source_modelo == "200"
+    assert provider.declared_source_casilla_ids == ("DP200014B:00592",)
+    assert provider.relation_kind == "cross_model_output"
+    assert provider.dependency_role == "direct_calculation"
+    assert provider.temporal.source_periods == ("0A",)
+    assert provider.temporal.offsets == {"1P": -2, "2P": -1, "3P": -1}
+    assert binding.applicability.periods == ("1P", "2P", "3P")
 
-    one_p = relations["modelo-202-2025-y-siguientes-rel-cuota-base-1p"]
-    assert one_p.source_modelo == "200"
-    assert one_p.source_casilla_id == "DP200014B:00592"
-    assert one_p.target_binding == "modelo-202-cuota-base-ejercicio-anterior"
-    assert one_p.source_revision_selector.filing_year_delta == -2
-    assert one_p.period_alignment.filing_year_delta == -2
-    assert one_p.source_periods == ("0A",)
-    assert one_p.target_periods == ("1P",)
-
-    two_p_three_p = relations["modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p"]
-    assert two_p_three_p.source_modelo == "200"
-    assert two_p_three_p.source_casilla_id == "DP200014B:00592"
-    assert two_p_three_p.target_binding == "modelo-202-cuota-base-ejercicio-anterior"
-    assert two_p_three_p.source_revision_selector.filing_year_delta == -1
-    assert two_p_three_p.period_alignment.filing_year_delta == -1
-    assert two_p_three_p.source_periods == ("0A",)
-    assert two_p_three_p.target_periods == ("2P", "3P")
+    expected_source_years = {"1P": 2023, "2P": 2024, "3P": 2024}
+    for target_period, expected_source_year in expected_source_years.items():
+        requirements = relation_source_requirements(revision, filing_year=2025, period=target_period)
+        assert len(requirements) == 1
+        requirement = requirements[0]
+        assert requirement.target_bindings == (binding.id,)
+        assert requirement.filing_year == expected_source_year
+        assert requirement.periods == ("0A",)
 
 
 _M202_BASE_IMPONIBLE_PREVIA_ADVISORY_PREDICATE_ID = (

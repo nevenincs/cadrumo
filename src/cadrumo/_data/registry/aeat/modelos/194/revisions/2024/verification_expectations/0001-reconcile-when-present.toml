@@ -1,5 +1,5 @@
 [[revisions."2024".verification_expectations]]
-id = "modelo-194-2024-reconcile-when-present"
+id = "modelo-194-reconcile-when-present"
 computed_casilla_ids = []
 reconcile_when_present_casilla_ids = [
     "01",

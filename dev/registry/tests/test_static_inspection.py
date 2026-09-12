@@ -121,7 +121,7 @@ def test_m038_inspection_retains_exact_model_law_and_construct_evidence() -> Non
     )
     assert inspection.casilla_ids == frozenset({"decl.ejercicio", "decl.tipo-declaracion"})
     assert inspection.binding_ids == frozenset()
-    assert tuple(ref.id for ref in inspection.workbook_parity_refs) == ("modelo-038-2024-static-layout",)
+    assert tuple(ref.id for ref in inspection.workbook_parity_refs) == ("modelo-038-static-layout",)
     assert inspection.live_cross_references == ()
 
 

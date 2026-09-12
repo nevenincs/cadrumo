@@ -168,17 +168,17 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.tests.manual_oracle_support import oracle_declared_figures
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources.bundled_data import bundled_path
-from ..authority import ValidatedRegistryAuthority
-from ._scenarios import (
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.tests.scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
     assert_registry_scenario_matches,
     run_registry_calculation_scenario,
 )
+from dev.registry.tests.manual_oracle_support import oracle_declared_figures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -187,7 +187,7 @@ _SOURCE_ROOT = bundled_path()
 _CASILLA_0226: CasillaId = validated_casilla_id("0226", surface="_CASILLA_0226")
 
 # The 0226 formula's OWN declared legal_refs / source_refs
-# (renta-2020-estimacion-directa-rendimiento-neto-reducido); the scenario
+# (renta-estimacion-directa-rendimiento-neto-reducido); the scenario
 # comparison checks these against the calculation entry's provenance, not
 # the casilla definition's provenance.
 _LEGAL_REFS = ("ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32")
@@ -202,8 +202,8 @@ _SOURCE_REFS = ("lirpf-cuota-chain-authority",)
 # the WHOLE 2020 revision (not just the 0226 chain) without raising on a
 # missing binding/relation elsewhere in the tree.
 _REL_2020 = {
-    "renta-2020-rel-130-pagos-fraccionados": Decimal("0"),
-    "renta-2020-rel-131-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
 
 
@@ -227,7 +227,7 @@ def _scenario(*, es_normal: Decimal, expected_0226: Decimal, scenario_id: str) -
         binding_values={
             "renta-modelo-100-estimacion-directa-es-normal": es_normal,
         },
-        enum_binding_values={"renta-2020-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values=_REL_2020,
         date_context={"filing_period": date(2020, 12, 31)},
         expected_outputs=(

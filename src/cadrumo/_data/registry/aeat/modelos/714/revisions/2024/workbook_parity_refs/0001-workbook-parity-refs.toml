@@ -4,7 +4,7 @@
 # layout and no formula runner is required.
 
 [[revisions."2024".workbook_parity_refs]]
-id = "modelo-714-2024-record-design"
+id = "modelo-714-record-design"
 workbook_source = "aeat-dr-714-2024"
 fixture_id = "modelo-714-2024-record-design-layout"
 formula_coverage = "record_design_layout"

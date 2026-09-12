@@ -18,10 +18,10 @@ from cadrumo.domain.calculations.registry.deadline_coordinate import (
     deadline_window_semantic_coordinates,
 )
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
+from cadrumo.domain.calculations.registry.period_selector_overlap import period_selectors_overlap
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_deadlines import filing_schedule_period_kind_mismatches
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.period_selector_overlap import period_selectors_overlap
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
 _M210_TIPO_RENTA_CODE_PARAMETER_PREFIX = "m210-tipo-renta-code-"

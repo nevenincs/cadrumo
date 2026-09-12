@@ -8,35 +8,35 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....core.aggregation import BindingAggregationOp
-from .....core.iva_deduction_fact import (
+from cadrumo.core.aggregation import BindingAggregationOp
+from cadrumo.core.iva_deduction_fact import (
     IvaDeductionEvidenceAuthority,
     IvaDeductionFactKind,
 )
-from ....iva.flow import IvaFlowDirection
-from ....iva.schema import (
+from cadrumo.domain.iva.flow import IvaFlowDirection
+from cadrumo.domain.iva.schema import (
     IvaCashAccountingTreatment,
     IvaCategory,
     IvaExemptionArticle,
     IvaLedgerObservationRole,
     IvaRateKind,
 )
-from ..binding_value_contract import (
+from cadrumo.domain.calculations.registry.binding_value_contract import (
     BindingDataType,
     BindingValueChannel,
     BindingValueContract,
 )
-from ..errors import RegistryValidationError
-from ..ledger_iva_bindings import (
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     LedgerIvaProvider,
     resolve_ledger_iva_aggregation_binding_values,
     unsupported_ledger_iva_observations,
     validate_ledger_iva_aggregation_binding_definition,
 )
-from ..schema import BindingDefinition, ModeloRevision
-from ..schema_references import PeriodSelector
-from ._ledger_iva_aggregation_support import (
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from .ledger_iva_aggregation_support import (
     _M303_AUTOREPERCUTIDO_INTERIOR_DEDUCIBLE_CASILLA,
     _M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA,
     _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,

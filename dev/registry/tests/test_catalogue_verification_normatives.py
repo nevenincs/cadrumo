@@ -639,7 +639,7 @@ def test_modelo_100_retention_credit_formulas_do_not_cite_fractional_payment_art
     # fragment is added or removed -- this pinned `0068-` and broke when the
     # same fragment became `0069-`, which says nothing about the property under
     # test. The stem names the formula; that is what has to still be checked.
-    anchor = "revisions/2025/formulas/renta-2025-retenciones-arrendamientos-urbanos.toml"
+    anchor = "revisions/2025/formulas/renta-retenciones-arrendamientos-urbanos.toml"
     stems = {re.sub(r"/\d+-", "/", rel_path) for rel_path in checked}
     assert anchor in stems, f"{anchor} is no longer among the checked retención formulas: {sorted(stems)[:6]}"
     assert offenders == []

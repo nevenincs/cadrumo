@@ -1,5 +1,5 @@
 [[revisions."2021".application_links]]
-id = "modelo-100-2021-calculation"
+id = "modelo-100-calculation"
 surface = "calculation"
 consumer = "cadrumo.domain.calculations.registry.calculate_registry_snapshot"
 requires_snapshot = true

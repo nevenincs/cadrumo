@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#binding-schema'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-09-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:f87dd10539773f0ee6fbaf3104c353bddc0a6001a5bee837c4721517c06ddf29'
+body_hash: 'sha256:0c321c9dea03a3f16598e20208967844cbe0bad65f2b2e41e89f287b1a8d755c'
 step_id: 'S15'
 related:
   - "[[2026-09-11-binding-schema-plan]]"
@@ -30,3 +30,10 @@ related:
 - `M` `dev/registry/compiler/loader_grammar.py`
 - `M` `dev/registry/conformance/schema_family_support.py`
 - `verify:` `uv run pytest dev/registry/tests/test_revision_inherited_reference_resolution.py dev/registry/tests/test_applicability_fragment_family.py src/cadrumo/domain/calculations/registry/tests/test_identifier_evolutions.py -n 0` -> `pass`
+
+## Notes
+
+- The two per-family sections were later replaced by one `identifier_evolutions` chain-family section whose members carry `family`; `binding_evolutions` and `formula_evolutions` were deleted with zero fragments authored.
+- `M` `src/cadrumo/domain/calculations/registry/identifier_evolutions.py`
+- `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `M` `src/cadrumo/domain/calculations/registry/tests/test_identifier_evolutions.py`

@@ -165,7 +165,9 @@ def _classify(
 
 
 def _relation_targets(revision: ModeloRevision) -> frozenset[str]:
-    return frozenset(str(relation.target_binding) for relation in revision.relations)
+    return frozenset(
+        str(binding.id) for binding in revision.bindings if binding.source is BindingSourceKind.RELATION_PREFILL
+    )
 
 
 def _scan() -> _ScanResult:

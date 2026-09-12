@@ -1,5 +1,5 @@
 [[revisions."2024".constructs]]
-id = "renta-2024-dependent-modelos"
+id = "renta-dependent-modelos"
 legal_refs = [
     "ley-35-2006:art-27",
     "ley-35-2006:art-28",
@@ -41,9 +41,9 @@ formulas = [
     "renta-pagos-fraccionados-ingresados",
 ]
 dependency_classifications = [
-    "renta-2024-dep-111",
-    "renta-2024-dep-123",
-    "renta-2024-dep-130",
-    "renta-2024-dep-131",
-    "renta-2024-dep-193",
+    "renta-dep-111",
+    "renta-dep-123",
+    "renta-dep-130",
+    "renta-dep-131",
+    "renta-dep-193",
 ]

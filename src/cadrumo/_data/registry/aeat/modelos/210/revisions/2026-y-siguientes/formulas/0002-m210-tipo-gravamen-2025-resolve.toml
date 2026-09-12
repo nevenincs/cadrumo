@@ -27,8 +27,8 @@ target_casilla_id = "tipo_gravamen"
 expression = { op = "irnr_resolve_tipo_gravamen", args = [
     { casilla_id = "tipo_renta" },
     { casilla_id = "base_imponible" },
-    { parameter = "m210-tipo-gravamen-2025" },
-    { parameter = "m210-pension-tarifa-2025" },
+    { parameter = "m210-tipo-gravamen" },
+    { parameter = "m210-pension-tarifa" },
     { binding = "m210-profile-country-of-fiscal-residence" },
 ] }
 legal_refs = [

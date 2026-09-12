@@ -37,7 +37,7 @@ _CASILLA_0002: CasillaId = validated_casilla_id("0002", surface="_CASILLA_0002")
 _CASILLA_0003: CasillaId = validated_casilla_id("0003", surface="_CASILLA_0003")
 _CASILLA_0505: CasillaId = validated_casilla_id("0505", surface="_CASILLA_0505")
 _M210_RATE_FORMULA_ID = "m210-tipo-gravamen-2025-resolve"
-_M210_COUNTRY_BINDING = "m210-2025-profile-country-of-fiscal-residence"
+_M210_COUNTRY_BINDING = "m210-profile-country-of-fiscal-residence"
 
 
 def _leaf(**kwargs: object) -> FormulaExpression:
@@ -81,19 +81,19 @@ def test_expression_casilla_refs_walks_nested_args_in_order() -> None:
 def test_expression_binding_refs_walks_nested_args() -> None:
     expression = _operator(
         "add",
-        _leaf(binding="renta-2025-ledger-expense-0186-deductible"),
-        _operator("subtract", _leaf(binding="renta-2025-ledger-expense-0192-deductible"), _leaf(literal=Decimal("0"))),
+        _leaf(binding="renta-ledger-expense-0186-deductible"),
+        _operator("subtract", _leaf(binding="renta-ledger-expense-0192-deductible"), _leaf(literal=Decimal("0"))),
     )
 
     assert expression_binding_refs(expression) == (
-        "renta-2025-ledger-expense-0186-deductible",
-        "renta-2025-ledger-expense-0192-deductible",
+        "renta-ledger-expense-0186-deductible",
+        "renta-ledger-expense-0192-deductible",
     )
 
 
 def test_expression_parameter_refs_returns_direct_leaf() -> None:
-    assert expression_parameter_refs(_leaf(parameter="renta-2025-escala-estatal-base-general")) == (
-        "renta-2025-escala-estatal-base-general",
+    assert expression_parameter_refs(_leaf(parameter="renta-escala-estatal-base-general")) == (
+        "renta-escala-estatal-base-general",
     )
 
 
@@ -107,11 +107,11 @@ def test_expression_parameter_refs_walks_dispatch_table_values() -> None:
     expression = _operator(
         "lookup_bracket_by_ccaa",
         _leaf(casilla_id=_CASILLA_0505),
-        _leaf(binding="renta-2025-profile-tax-residence-ccaa"),
+        _leaf(binding="renta-profile-tax-residence-ccaa"),
         _leaf(
             dispatch_table={
-                "madrid": "renta-2025-escala-autonomica-madrid-base-general",
-                "cataluna": "renta-2025-escala-autonomica-cataluna-base-general",
+                "madrid": "renta-escala-autonomica-madrid-base-general",
+                "cataluna": "renta-escala-autonomica-cataluna-base-general",
             },
         ),
     )
@@ -119,8 +119,8 @@ def test_expression_parameter_refs_walks_dispatch_table_values() -> None:
     refs = expression_parameter_refs(expression)
 
     assert set(refs) == {
-        "renta-2025-escala-autonomica-madrid-base-general",
-        "renta-2025-escala-autonomica-cataluna-base-general",
+        "renta-escala-autonomica-madrid-base-general",
+        "renta-escala-autonomica-cataluna-base-general",
     }
 
 
@@ -132,8 +132,8 @@ def test_expression_parameter_refs_walks_dispatch_table_inside_nested_args() -> 
         _operator(
             "lookup_bracket_by_ccaa",
             _leaf(casilla_id=_CASILLA_0505),
-            _leaf(binding="renta-2025-profile-tax-residence-ccaa"),
-            _leaf(dispatch_table={"madrid": "renta-2025-escala-autonomica-madrid-base-general"}),
+            _leaf(binding="renta-profile-tax-residence-ccaa"),
+            _leaf(dispatch_table={"madrid": "renta-escala-autonomica-madrid-base-general"}),
         ),
     )
 
@@ -141,7 +141,7 @@ def test_expression_parameter_refs_walks_dispatch_table_inside_nested_args() -> 
 
     assert set(refs) == {
         "renta-2025-deduccion-rate",
-        "renta-2025-escala-autonomica-madrid-base-general",
+        "renta-escala-autonomica-madrid-base-general",
     }
 
 
@@ -196,13 +196,13 @@ def test_enum_consumed_binding_ids_reads_current_irnr_resolve_tipo_gravamen_coun
     expression = formula.expression
     assert expression.op == "irnr_resolve_tipo_gravamen"
     assert len(expression.args) == 5
-    assert expression.args[2].parameter == "m210-tipo-gravamen-2025"
+    assert expression.args[2].parameter == "m210-tipo-gravamen"
     assert expression.args[4].binding == _M210_COUNTRY_BINDING
 
     enum_ids = enum_consumed_binding_ids(revision)
 
     assert _M210_COUNTRY_BINDING in enum_ids
-    assert "m210-tipo-gravamen-2025" not in enum_ids
+    assert "m210-tipo-gravamen" not in enum_ids
 
 
 def test_enum_consumed_binding_ids_ignores_retired_irnr_six_arg_country_arg() -> None:
@@ -220,9 +220,9 @@ def test_enum_consumed_binding_ids_ignores_retired_irnr_six_arg_country_arg() ->
         args=(
             FormulaExpression.model_validate({"casilla_id": "tipo_renta"}),
             FormulaExpression.model_validate({"casilla_id": "base_imponible"}),
-            FormulaExpression.model_validate({"parameter": "m210-tipo-gravamen-2025"}),
+            FormulaExpression.model_validate({"parameter": "m210-tipo-gravamen"}),
             FormulaExpression.model_validate({"parameter": "m210-convenio-rates"}),
-            FormulaExpression.model_validate({"parameter": "m210-pension-tarifa-2025"}),
+            FormulaExpression.model_validate({"parameter": "m210-pension-tarifa"}),
             FormulaExpression.model_validate({"binding": _M210_COUNTRY_BINDING}),
         ),
     )

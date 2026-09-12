@@ -120,6 +120,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     casilla_occurrence_locale_key,
     resolve_modelo_localization,
 )
+from cadrumo.domain.calculations.registry.reference_sections import FAMILY_SOURCE_DEFAULT_FIELDS
 from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor, ModeloDefinition, ModeloRevision
 from cadrumo.domain.filing.protocols import ModeloInputs
 from cadrumo.domain.submission.models import ModeloDraftStatus
@@ -213,7 +214,12 @@ COMMIT_ID: Final = re.compile(r"^[0-9a-f]{7,64}$")
 SYNTHETIC_TAX_ID: Final = "12345678Z"
 
 _MODELOS_DIR: Final = "modelos"
-_EXCLUDED_FROM_EQUALITY: Final = frozenset({"predecessor", "reviewed_against", "casilla_source_refs"})
+#: Edition fields that a lift declares rather than change: the edition-level
+#: reference defaults of every family that lifts member refs to the manifest.
+_EXCLUDED_FROM_EQUALITY: Final = frozenset(
+    {"predecessor", "reviewed_against", "casilla_source_refs"}
+    | {default_field for _section, default_field in FAMILY_SOURCE_DEFAULT_FIELDS}
+)
 _GIT_TIMEOUT_SECONDS: Final = 120
 #: Variables that would point git at a repository other than the one named.
 _GIT_LOCATION_VARIABLES: Final = frozenset(

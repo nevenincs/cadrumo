@@ -16,10 +16,10 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.relations import (
     RegistryFoldRequirement,
+    relation_prefill_bindings_for_period,
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
@@ -47,19 +47,19 @@ _EXPECTED_0604 = _EXPECTED_M130_TOTAL + _EXPECTED_M131_TOTAL
 
 def _historical_m100_binding_values(year: int) -> dict[str, Decimal]:
     return {
-        f"renta-{year}-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        f"renta-{year}-modelo-111-retenciones-periodicas": Decimal("0"),
-        f"renta-{year}-modelo-123-retenciones-periodicas": Decimal("0"),
-        f"renta-{year}-profile-minimo-descendientes-estatal": Decimal("0"),
-        f"renta-{year}-profile-minimo-descendientes-autonomico": Decimal("0"),
+        "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+        "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
 
 
 def _relation_observed_value(requirement: RegistryFoldRequirement, period_index: int) -> Decimal:
-    relation_id = requirement.relation_ids[0]
-    if relation_id.endswith("-rel-130-pagos-fraccionados"):
+    relation_id = requirement.target_bindings[0]
+    if relation_id == "renta-modelo-130-pagos-fraccionados":
         return _M130_QUARTERS[period_index]
-    if relation_id.endswith("-rel-131-pagos-fraccionados"):
+    if relation_id == "renta-modelo-131-pagos-fraccionados":
         return _M131_QUARTERS[period_index]
     return Decimal("0")
 
@@ -74,15 +74,15 @@ def _calculate_historical_m100(snapshot: RegistrySnapshot, *, year: int) -> Regi
         period="0A",
     )
 
-    assert relation_values[f"renta-{year}-rel-130-pagos-fraccionados"] == _EXPECTED_M130_TOTAL
-    assert relation_values[f"renta-{year}-rel-131-pagos-fraccionados"] == _EXPECTED_M131_TOTAL
+    assert relation_values["renta-modelo-130-pagos-fraccionados"] == _EXPECTED_M130_TOTAL
+    assert relation_values["renta-modelo-131-pagos-fraccionados"] == _EXPECTED_M131_TOTAL
 
     return calculate_registry_snapshot(
         snapshot,
         inputs={},
         date_context={"filing_period": date(year, 12, 31)},
         binding_values=_historical_m100_binding_values(year),
-        enum_binding_values={f"renta-{year}-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values=relation_values,
     )
 
@@ -97,41 +97,32 @@ def test_historical_pagos_fraccionados_relation_contract_and_fold(
 
     casilla = next(c for c in snapshot.revision.casillas if c.id == _M100_PAGOS_CASILLA)
     assert casilla.input_kind == "computed"
-    assert casilla.formula == f"renta-{year}-pagos-fraccionados-ingresados"
+    assert casilla.formula == "renta-pagos-fraccionados-ingresados"
 
-    relations = {relation.id: relation for relation in snapshot.revision.relations}
-    bindings = {binding.id: binding for binding in snapshot.revision.bindings}
+    relation_bindings = {
+        binding.id: (binding, provider)
+        for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
+    }
     constructs = {construct.id: construct for construct in snapshot.revision.constructs}
     dependencies = {dep.id: dep for dep in snapshot.revision.dependency_classifications}
 
-    rel130 = relations[f"renta-{year}-rel-130-pagos-fraccionados"]
-    rel131 = relations[f"renta-{year}-rel-131-pagos-fraccionados"]
-    assert rel130.source_modelo == "130"
-    assert rel130.source_casilla_id == _M130_SOURCE_CASILLA
-    assert rel130.target_binding == f"renta-{year}-modelo-130-pagos-fraccionados"
-    assert rel131.source_modelo == "131"
-    assert rel131.source_casilla_id == _M131_SOURCE_CASILLA
-    assert rel131.target_binding == f"renta-{year}-modelo-131-pagos-fraccionados"
-    assert rel130.source_periods == ("1T", "2T", "3T", "4T")
-    assert rel131.source_periods == ("1T", "2T", "3T", "4T")
-    assert rel130.aggregation is not None and rel130.aggregation.op == "sum"
-    assert rel131.aggregation is not None and rel131.aggregation.op == "sum"
-
-    assert selector_as_dict(bindings[rel130.target_binding]) == {
-        "source_modelo": "130",
-        "source_casilla_id": _M130_SOURCE_CASILLA,
-    }
-    assert selector_as_dict(bindings[rel131.target_binding]) == {
-        "source_modelo": "131",
-        "source_casilla_id": _M131_SOURCE_CASILLA,
-    }
+    binding_130, provider_130 = relation_bindings["renta-modelo-130-pagos-fraccionados"]
+    binding_131, provider_131 = relation_bindings["renta-modelo-131-pagos-fraccionados"]
+    assert provider_130.source_modelo == "130"
+    assert provider_130.declared_source_casilla_ids == (_M130_SOURCE_CASILLA,)
+    assert provider_131.source_modelo == "131"
+    assert provider_131.declared_source_casilla_ids == (_M131_SOURCE_CASILLA,)
+    assert provider_130.temporal.source_periods == ("1T", "2T", "3T", "4T")
+    assert provider_131.temporal.source_periods == ("1T", "2T", "3T", "4T")
+    assert binding_130.aggregation.op == "sum"
+    assert binding_131.aggregation.op == "sum"
 
     construct = constructs[f"renta-{year}-dependent-modelos"]
-    assert f"renta-{year}-pagos-fraccionados-ingresados" in construct.formulas
-    assert rel130.id in construct.relations
-    assert rel131.id in construct.relations
-    assert dependencies[f"renta-{year}-dep-130"].relation_refs == (rel130.id,)
-    assert dependencies[f"renta-{year}-dep-131"].relation_refs == (rel131.id,)
+    assert "renta-pagos-fraccionados-ingresados" in construct.formulas
+    assert binding_130.id in construct.bindings
+    assert binding_131.id in construct.bindings
+    assert dependencies[f"renta-{year}-dep-130"].binding_refs == (binding_130.id,)
+    assert dependencies[f"renta-{year}-dep-131"].binding_refs == (binding_131.id,)
 
     result = _calculate_historical_m100(snapshot, year=year)
     entries = {entry.target_casilla_id: entry for entry in result.entries}
@@ -139,8 +130,8 @@ def test_historical_pagos_fraccionados_relation_contract_and_fold(
 
     assert result.values[_M100_PAGOS_CASILLA] == _EXPECTED_0604
     assert pagos_entry.operand_refs == (
-        f"renta-{year}-rel-130-pagos-fraccionados",
-        f"renta-{year}-rel-131-pagos-fraccionados",
+        "renta-modelo-130-pagos-fraccionados",
+        "renta-modelo-131-pagos-fraccionados",
     )
     assert pagos_entry.operand_values == (_EXPECTED_M130_TOTAL, _EXPECTED_M131_TOTAL)
     assert {"ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110"} <= set(pagos_entry.legal_refs)

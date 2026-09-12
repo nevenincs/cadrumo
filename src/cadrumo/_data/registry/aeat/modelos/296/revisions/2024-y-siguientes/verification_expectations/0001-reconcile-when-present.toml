@@ -6,7 +6,7 @@
 # prints it, and all are EXCLUDED from the coverage denominator
 # (min_coverage = 0).
 [[revisions."2024-y-siguientes".verification_expectations]]
-id = "modelo-296-2024-y-siguientes-reconcile-when-present"
+id = "modelo-296-reconcile-when-present"
 computed_casilla_ids = []
 reconcile_when_present_casilla_ids = [
     "02",

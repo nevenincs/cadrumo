@@ -21,7 +21,7 @@ formulas = [
 ]
 extraction_profiles = ["modelo-123-declaracion-pdf"]
 live_cross_references = ["modelo-123-static-official", "modelo-123-filed-declarations-read"]
-workbook_parity_refs = ["modelo-123-dr-xls-2024"]
+workbook_parity_refs = ["modelo-123-dr-xls"]
 verification_expectations = ["modelo-123-calculation-verification"]
 application_links = [
     "modelo-123-calculation",

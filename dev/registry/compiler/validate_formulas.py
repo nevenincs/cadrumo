@@ -17,8 +17,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from graphlib import CycleError
+from typing import Final
 
 from cadrumo.core.casilla_id import CasillaId
+from cadrumo.domain.calculations.registry.binding_value_contract import BindingValueChannel
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.runtime_graph import formula_evaluation_order
 from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloRevision
@@ -83,9 +85,97 @@ def validate_formula_section(
             ),
         )
 
+        failures.extend(validate_boolean_channel_operands(prefix, formula, revision=revision))
+
     for target in sorted(duplicates([formula.target_casilla_id for formula in revision.formulas])):
         failures.append(f"{prefix}: duplicate formula target {target!r}")
     return failures
+
+
+#: Operator positions at which a truth-valued binding is a legitimate operand.
+#: ``equal`` asks the yes/no question of it directly; ``if_then_else`` reads its
+#: first argument as the branch condition. Every other position consumes its
+#: operand as a quantity, where a truth value has no defensible magnitude.
+_BOOLEAN_OPERAND_POSITIONS: Final[frozenset[tuple[str, int]]] = frozenset(
+    {("equal", 0), ("equal", 1), ("if_then_else", 0)},
+)
+
+
+def validate_boolean_channel_operands(
+    scope: str,
+    formula: FormulaDefinition,
+    *,
+    revision: ModeloRevision,
+) -> list[str]:
+    """Refuse a boolean-channel binding consumed as an arithmetic operand.
+
+    A binding whose value contract declares the boolean channel carries a truth
+    value, not a magnitude. The evaluator projects it to ``1``/``0`` at the leaf
+    so a predicate can read it, and that projection is only meaningful where the
+    formula is asking a yes/no question: an ``equal`` comparison operand, or the
+    condition of an ``if_then_else``. Summed, multiplied, or subtracted, the same
+    projection silently fabricates a filing-grade quantity out of a fact that has
+    none -- a declared ``true`` becoming one euro of base.
+
+    A bare binding leaf standing as the WHOLE expression is the third legitimate
+    shape and is not refused: no operator consumes it, and the published corpus
+    uses it to project a declared truth onto a yes/no casilla (Modelo 100 casilla
+    0245, "si el matrimonio ha estado vigente durante todo el ano"), where 1/0 is
+    the record design's own encoding rather than an invented quantity.
+
+    The check is positional rather than value-based because the defect is in the
+    declaration, not in any particular filing's data: it must fail at compile
+    time, before a revision carrying it can be published.
+    """
+    boolean_bindings = {
+        binding.id for binding in revision.bindings if binding.value.channel is BindingValueChannel.BOOLEAN
+    }
+    if not boolean_bindings:
+        return []
+    failures: list[str] = []
+    _collect_boolean_operand_failures(
+        scope,
+        formula.id,
+        formula.expression,
+        boolean_bindings=boolean_bindings,
+        position=None,
+        failures=failures,
+    )
+    return failures
+
+
+def _collect_boolean_operand_failures(
+    scope: str,
+    formula_id: str,
+    expression: FormulaExpression,
+    *,
+    boolean_bindings: set[BindingId],
+    position: tuple[str, int] | None,
+    failures: list[str],
+) -> None:
+    """Walk one expression tree, recording every misplaced boolean-binding leaf."""
+    if (
+        position is not None
+        and position not in _BOOLEAN_OPERAND_POSITIONS
+        and expression.binding is not None
+        and expression.binding in boolean_bindings
+    ):
+        failures.append(
+            f"{scope}: formula {formula_id!r} consumes boolean-channel binding "
+            f"{expression.binding!r} as {position[0]!r} argument {position[1]}; a boolean "
+            f"binding may only be an 'equal' operand, an 'if_then_else' condition, or the "
+            f"whole expression of a formula targeting a yes/no casilla",
+        )
+    operator = expression.op
+    for index, arg in enumerate(expression.args):
+        _collect_boolean_operand_failures(
+            scope,
+            formula_id,
+            arg,
+            boolean_bindings=boolean_bindings,
+            position=None if operator is None else (str(operator), index),
+            failures=failures,
+        )
 
 
 def validate_formula_dag(scope: str, revision: ModeloRevision) -> list[str]:

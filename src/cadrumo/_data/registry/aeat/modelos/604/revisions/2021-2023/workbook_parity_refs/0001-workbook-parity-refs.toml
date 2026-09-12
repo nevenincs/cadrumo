@@ -3,7 +3,7 @@
 # pending a verified byte-position parity run against the design.
 
 [[revisions."2021-2023".workbook_parity_refs]]
-id = "modelo-604-2021-2023-static-layout"
+id = "modelo-604-static-layout"
 workbook_source = "aeat-dr-604-2021"
 fixture_id = "modelo-604-orden-hac-510-2021-layout"
 formula_coverage = "static_layout"

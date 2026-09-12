@@ -42,7 +42,7 @@ bindings = [
     "modelo-322-iva-soportado-interiores-cuota",
     "modelo-322-iva-autorepercutido-intracomunitaria-cuota",
 ]
-workbook_parity_refs = ["modelo-322-dr-2026"]
+workbook_parity_refs = ["modelo-322-dr"]
 live_cross_references = [
     "modelo-322-static-documentation",
     "modelo-322-filed-declarations-read",
@@ -56,7 +56,7 @@ application_links = [
     "modelo-322-workflow",
     "modelo-322-deadline",
     "modelo-322-calculation",
-    "modelo-322-2026-export",
+    "modelo-322-export",
 ]
 filing_schedules = ["modelo-322-mensual"]
 deadline_windows = [

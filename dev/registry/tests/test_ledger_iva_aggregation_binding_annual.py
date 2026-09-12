@@ -7,11 +7,11 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.casilla_id import CasillaId
-from .....core.iva_deduction_fact import IvaDeductionFactKind
-from ....iva.flow import IvaFlowDirection
-from ....iva.schema import IvaCategory, IvaRateKind
-from ._ledger_iva_aggregation_support import (
+from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
+from cadrumo.domain.iva.flow import IvaFlowDirection
+from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
+from .ledger_iva_aggregation_support import (
     _M303_COMPENSACION_GENERADA_PERIODO_CASILLA,
     _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
     _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA,

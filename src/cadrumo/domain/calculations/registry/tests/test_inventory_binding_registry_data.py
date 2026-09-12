@@ -16,9 +16,9 @@ def test_m100_2025_loads_exact_grounded_inventory_operation_templates() -> None:
     bindings = tuple(binding for binding in revision.bindings if binding.source is BindingSourceKind.INVENTORY)
 
     assert {binding.id for binding in bindings} == {
-        "renta-2025-inventory-activity-closing-increase-0177",
-        "renta-2025-inventory-activity-acquisition-cost-0181",
-        "renta-2025-inventory-activity-closing-decrease-0182",
+        "renta-inventory-activity-closing-increase-0177",
+        "renta-inventory-activity-acquisition-cost-0181",
+        "renta-inventory-activity-closing-decrease-0182",
     }
     assert len(bindings) == 3
     assert all(isinstance(binding.provider, InventoryProvider) for binding in bindings)

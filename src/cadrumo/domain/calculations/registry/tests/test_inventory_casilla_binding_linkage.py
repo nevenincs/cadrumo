@@ -16,9 +16,9 @@ from ..schema_input_kind import InputKind
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _LINKS = {
-    "renta-2025-inventory-activity-closing-increase-0177": "0177",
-    "renta-2025-inventory-activity-acquisition-cost-0181": "0181",
-    "renta-2025-inventory-activity-closing-decrease-0182": "0182",
+    "renta-inventory-activity-closing-increase-0177": "0177",
+    "renta-inventory-activity-acquisition-cost-0181": "0181",
+    "renta-inventory-activity-closing-decrease-0182": "0182",
 }
 
 

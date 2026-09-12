@@ -16,6 +16,7 @@ from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import (
+    relation_prefill_bindings_for_period,
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
@@ -47,7 +48,7 @@ def test_modelo_193_guidance_and_layout_sources_are_separated() -> None:
     # and "2025-y-siguientes", never "2024-y-siguientes" -- so this raised a
     # KeyError on the lookup and no assertion past this line had ever run.
     revision = modelo.revisions["2025-y-siguientes"]
-    assert revision.workbook_parity_refs[0].id == "modelo-193-dr-pdf-2025"
+    assert revision.workbook_parity_refs[0].id == "modelo-193-dr-pdf"
     assert revision.workbook_parity_refs[0].workbook_source == "aeat-dr-193-2025"
     for formula in revision.formulas:
         for citation in formula.source_citations:
@@ -210,9 +211,16 @@ def test_modelo_193_relations_resolve_against_modelo_123_registry() -> None:
     snapshot_123 = artifact_snapshot("123", 2025, "1T")
 
     modelo_123_outputs = {casilla.id for casilla in snapshot_123.revision.casillas}
-    relation_source_casilla_ids = {relation.source_casilla_id for relation in snapshot.revision.relations}
+    relation_source_casilla_ids = {
+        source_casilla_id
+        for _binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
+        for source_casilla_id in provider.declared_source_casilla_ids
+    }
     assert relation_source_casilla_ids <= modelo_123_outputs
-    assert {tuple(relation.source_periods) for relation in snapshot.revision.relations} == {("1T", "2T", "3T", "4T")}
+    assert {
+        tuple(provider.required_source_periods)
+        for _binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
+    } == {("1T", "2T", "3T", "4T")}
 
 
 def test_modelo_193_calculation_aggregates_modelo_123_quarterly_observations() -> None:
@@ -254,8 +262,8 @@ def test_modelo_193_calculation_aggregates_modelo_123_quarterly_observations() -
     entries_by_target = {entry.target_casilla_id: entry for entry in result.entries}
     assert "decl.total-perceptores" not in entries_by_target
     assert result.values["decl.total-perceptores"] == Decimal("2")
-    assert "modelo-193-rel-123-base-anual" in entries_by_target["decl.base-total"].operand_refs
-    assert "modelo-193-rel-123-retenciones-anual" in entries_by_target["decl.retenciones-total"].operand_refs
+    assert "modelo-193-123-base-anual" in entries_by_target["decl.base-total"].operand_refs
+    assert "modelo-193-123-retenciones-anual" in entries_by_target["decl.retenciones-total"].operand_refs
 
 
 def _value_for(data_type: str, period_index: int) -> Decimal:

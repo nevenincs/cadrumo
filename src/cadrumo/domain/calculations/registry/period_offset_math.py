@@ -52,23 +52,23 @@ def apply_period_offset(offset: int, *, target_period: str) -> tuple[int, str]:
 
 
 def same_ejercicio_prior_quarter_anchors(target_period: str) -> tuple[tuple[int, str], ...]:
-    """Return the same-ejercicio quarters strictly preceding ``target_period``.
+    """Return the same-ejercicio periods strictly preceding ``target_period``.
 
     The Modelo 130 cumulative carry needs every prior quarter from the current
-    ejercicio: ``1T`` has none, while ``2T`` through ``4T`` have ``1T``;
-    ``1T, 2T``; and ``1T, 2T, 3T`` respectively.  Derive that sequence by
+    ejercicio, while Modelo 202's prior-installment carry applies the same
+    expanding-span rule to ``1P`` through ``3P``. Derive both sequences by
     repeatedly applying the canonical offset authority, stopping precisely at
-    the prior-year boundary.  The returned anchors therefore always carry a
-    zero year delta and are ordered from earliest to latest prior quarter.
+    the prior-year boundary. The returned anchors therefore always carry a
+    zero year delta and are ordered from earliest to latest prior period.
 
     Raises:
-        RegistryValidationError: When ``target_period`` is not a quarterly
-            registry token.
+        RegistryValidationError: When ``target_period`` is neither a quarterly
+            nor a pago-fraccionado registry token.
     """
-    if target_period not in _QUARTERLY_PERIOD_ORDINAL:
+    if target_period not in _QUARTERLY_PERIOD_ORDINAL and target_period not in _PAGO_FRACCIONADO_PERIOD_ORDINAL:
         raise RegistryValidationError(
             "same-ejercicio prior-quarter sequence cannot interpret target period "
-            f"{target_period!r}; only quarterly codes 1T..4T are supported",
+            f"{target_period!r}; only quarterly codes 1T..4T or pago-fraccionado codes 1P..3P are supported",
         )
 
     anchors: list[tuple[int, str]] = []

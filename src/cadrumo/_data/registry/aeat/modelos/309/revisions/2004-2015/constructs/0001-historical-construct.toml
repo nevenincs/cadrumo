@@ -62,6 +62,6 @@ casilla_ids = [
     "decl.justificante-anterior",
     "wire.observaciones",
 ]
-export_layouts = ["modelo-309-fichero-2004-2015"]
+export_layouts = ["modelo-309-fichero"]
 application_links = ["modelo-309-historical-filing", "modelo-309-historical-export"]
-workbook_parity_refs = ["modelo-309-2004-2015-record-design"]
+workbook_parity_refs = ["modelo-309-record-design"]

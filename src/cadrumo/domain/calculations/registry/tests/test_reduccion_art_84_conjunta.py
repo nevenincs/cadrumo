@@ -28,8 +28,8 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
 
 # Importing the renta package registers the first-slice routing cross-domain
-# snapshot check required by Modelo 100 parity scenarios run via _scenarios.
-from ._scenarios import (
+# snapshot check required by Modelo 100 parity scenarios run via scenarios.
+from .scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
     assert_registry_scenario_matches,
@@ -54,21 +54,19 @@ _ART_84_SOURCE_REFS_2025 = (
 )
 
 _REL_2024 = {
-    "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
-    "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
-    "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
-    "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
-    "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-193-retenciones-anuales": Decimal("0"),
+    "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
 
 _REL_2025 = {
-    "renta-2025-rel-111-retenciones-trimestrales": Decimal("0"),
-    "renta-2025-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2025-rel-123-retenciones-trimestrales": Decimal("0"),
-    "renta-2025-rel-193-retenciones-anuales": Decimal("0"),
-    "renta-2025-rel-130-pagos-fraccionados": Decimal("0"),
-    "renta-2025-rel-131-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-193-retenciones-anuales": Decimal("0"),
+    "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
 
 _BASE_BINDINGS_2024 = {
@@ -92,7 +90,7 @@ _BASE_BINDINGS_2024 = {
 
 _BASE_BINDINGS_2025 = {
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-    "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+    "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
     # matrimonio-sobrevenido bindings — 0 means marriage pre-dates filing year (full year)
     "renta-profile-marriage-full-year": Decimal("0"),
     "renta-profile-marriage-month-start": Decimal("0"),
@@ -141,10 +139,10 @@ def _scenario_2024(
             "renta-profile-declaration-type": declaration_type,
             "renta-profile-family-minor-children-in-unit": minor_children_in_unit,
         },
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values=_REL_2024,
         date_context={"filing_period": date(2024, 12, 31)},
-        date_binding_values={"renta-2024-profile-taxpayer-birth-date": date(1980, 6, 15)},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 6, 15)},
         expected_outputs=(
             RegistryScenarioExpectedOutput(
                 target_casilla_id=_REDUCCION_ART_84_CASILLA,
@@ -174,10 +172,10 @@ def _scenario_2025(
             "renta-profile-declaration-type": declaration_type,
             "renta-profile-family-minor-children-in-unit": minor_children_in_unit,
         },
-        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values=_REL_2025,
         date_context={"filing_period": date(2025, 12, 31)},
-        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 6, 15)},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 6, 15)},
         expected_outputs=(
             RegistryScenarioExpectedOutput(
                 target_casilla_id=_REDUCCION_ART_84_CASILLA,

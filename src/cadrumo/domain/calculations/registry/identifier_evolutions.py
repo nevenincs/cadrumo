@@ -27,6 +27,7 @@ __all__ = [
 ]
 
 DeclarationIdentifier = Annotated[str, Field(min_length=1, max_length=128)]
+FamilyName = Annotated[str, Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_]*$")]
 
 
 class IdentifierEvolutionKind(StrEnum):
@@ -40,6 +41,7 @@ class RetiredIdentifierEvolution(RegistryModel):
     """The declaration named by ``identifier`` is withdrawn from ``to_revision`` onward."""
 
     kind: Literal["retired"] = "retired"
+    family: FamilyName
     identifier: DeclarationIdentifier
     to_revision: RevisionId
     legal_refs: LegalRefs
@@ -50,6 +52,7 @@ class ReplacedIdentifierEvolution(RegistryModel):
     """The declaration named by ``identifier`` is superseded by ``replaced_by`` from ``to_revision``."""
 
     kind: Literal["replaced"] = "replaced"
+    family: FamilyName
     identifier: DeclarationIdentifier
     replaced_by: DeclarationIdentifier
     to_revision: RevisionId

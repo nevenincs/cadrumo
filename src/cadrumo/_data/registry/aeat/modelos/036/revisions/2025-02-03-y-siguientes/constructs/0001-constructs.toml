@@ -15,7 +15,7 @@ source_refs = [
 ]
 casilla_ids = ["decl.event-kind", "decl.vigencia-2025"]
 bindings = ["modelo-036-profile-censo-status"]
-workbook_parity_refs = ["modelo-036-dr-2025"]
+workbook_parity_refs = ["modelo-036-dr"]
 verification_expectations = ["modelo-036-censo-foundation-verification"]
 application_links = [
     "modelo-036-workflow",

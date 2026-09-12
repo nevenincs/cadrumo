@@ -15,13 +15,8 @@ from typing import Any
 
 import pytest
 
-from ..fix_binding_row_set_contracts import (
-    REGISTRY_MODELOS_ROOT,
-    FixReport,
-    RowSetRefusalError,
-    fix_modelo,
-    row_set_value_for,
-)
+from ..convert_binding_provider_shape import REGISTRY_MODELOS_ROOT
+from ..fix_binding_row_set_contracts import FixReport, RowSetRefusalError, fix_modelo, row_set_value_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

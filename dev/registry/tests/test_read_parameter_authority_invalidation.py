@@ -73,7 +73,7 @@ valid_to = 2025-12-31
 
 #: The one registry-wide declaration the loader requires of any tree.
 _SUPPORTED_FILING_YEARS_TEXT = (
-    "[supported_filing_years]\nyears = [2025]\n\n"
+    "[supported_filing_years]\nfloor = 2025\nhorizon = 2025\n\n"
     "[sociedades_annual_manual_coverage]\n"
     'dispositions = [{ year = 2025, status = "unpublished", '
     'official_locator = "https://example.com/manuals", observed_at = 2026-09-10, '

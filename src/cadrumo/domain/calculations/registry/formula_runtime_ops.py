@@ -480,11 +480,16 @@ def reject_non_string[Key](values: Mapping[Key, str], label: str) -> None:
 
 
 def reject_unknown_external_values[Key: SupportsAllComparisons](
-    items: Mapping[Key, Decimal],
+    items: Mapping[Key, object],
     known_ids: set[Key],
     label: str,
 ) -> None:
-    """Reject external ids not declared by the current registry snapshot."""
+    """Reject external ids not declared by the current registry snapshot.
+
+    Keyed on ids alone: the gate screens WHICH ids arrived, never what they
+    carry, so every external channel -- Decimal, truth value, date or enum --
+    is screened by this one function rather than by a per-channel copy.
+    """
     unknown = sorted(set(items).difference(known_ids))
     if unknown:
         raise RegistryValidationError(f"unknown registry {label} ids: {unknown!r}")

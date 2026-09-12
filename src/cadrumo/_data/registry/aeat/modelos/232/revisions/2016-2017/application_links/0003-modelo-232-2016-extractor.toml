@@ -1,5 +1,5 @@
 [[revisions."2016-2017".application_links]]
-id = "modelo-232-2016-extractor"
+id = "modelo-232-extractor"
 surface = "extractor"
 consumer = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 requires_snapshot = true

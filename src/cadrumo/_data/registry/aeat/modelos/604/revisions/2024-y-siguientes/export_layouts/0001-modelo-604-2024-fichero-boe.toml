@@ -12,7 +12,7 @@
 # @101+9 is left unwritten (see below) and @93+4 is filler pending a ruling on
 # whether these slots can carry a real runtime-supplied identity at all.
 [[revisions."2024-y-siguientes".export_layouts]]
-id = "modelo-604-2024-fichero-boe"
+id = "modelo-604-fichero-boe"
 format = "fixed_width"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]

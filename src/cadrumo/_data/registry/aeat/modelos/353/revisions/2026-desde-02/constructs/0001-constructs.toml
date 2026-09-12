@@ -36,9 +36,9 @@ casilla_ids = [
     "decl.periodo",
 ]
 formulas = [
-    "modelo-353-2026-compensar-pendientes-posteriores",
-    "modelo-353-2026-resultado",
-    "modelo-353-2026-resultado-autoliquidacion",
+    "modelo-353-compensar-pendientes-posteriores",
+    "modelo-353-resultado",
+    "modelo-353-resultado-autoliquidacion",
 
 ]
 bindings = [
@@ -47,7 +47,7 @@ bindings = [
     "modelo-353-prev-322-resultado-regimen-general",
 ]
 dependency_classifications = ["modelo-353-dep-322"]
-workbook_parity_refs = ["modelo-353-dr-2026"]
+workbook_parity_refs = ["modelo-353-dr"]
 live_cross_references = [
     "modelo-353-static-documentation",
     "modelo-353-filed-declarations-read",

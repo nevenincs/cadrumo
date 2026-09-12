@@ -40,21 +40,21 @@ def _snapshot(year: int) -> RegistrySnapshot:
 
 def _binding_values(year: int) -> dict[str, Decimal]:
     values = {
-        f"renta-{year}-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        f"renta-{year}-profile-declaration-type": Decimal("1"),
-        f"renta-{year}-profile-family-minor-children-in-unit": Decimal("0"),
-        f"renta-{year}-profile-marriage-full-year": Decimal("0"),
-        f"renta-{year}-profile-marriage-month-start": Decimal("0"),
-        f"renta-{year}-profile-marriage-month-end": Decimal("0"),
-        f"renta-{year}-base-liquidable-negativa-general-anterior": Decimal("0"),
-        f"renta-{year}-profile-minimo-descendientes-estatal": Decimal("0"),
-        f"renta-{year}-profile-minimo-descendientes-autonomico": Decimal("0"),
+        "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        "renta-profile-declaration-type": Decimal("1"),
+        "renta-profile-family-minor-children-in-unit": Decimal("0"),
+        "renta-profile-marriage-full-year": Decimal("0"),
+        "renta-profile-marriage-month-start": Decimal("0"),
+        "renta-profile-marriage-month-end": Decimal("0"),
+        "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
     if year == 2025:
         # The production profile resolver supplies this predicate as 1/0 from
         # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
         values["renta-profile-has-economic-activity"] = Decimal("1")
-        values["renta-2025-modelo-184-atribucion-actividades-economicas"] = Decimal("0")
+        values["renta-modelo-184-atribucion-actividades-economicas"] = Decimal("0")
         # Madrid nacimiento/adopción deducción (casilla 1039) profile-derived
         # facts; neutral zero when the chain under test is unrelated.
         values["renta-profile-madrid-nacimiento-adopcion-eligible-count"] = Decimal("0")
@@ -89,12 +89,12 @@ def _calculate(
         text_inputs=text_inputs,
         date_context={"filing_period": date(year, 12, 31)},
         binding_values=_binding_values(year),
-        enum_binding_values={f"renta-{year}-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values={
-            f"renta-{year}-rel-130-pagos-fraccionados": Decimal("0.00"),
-            f"renta-{year}-rel-131-pagos-fraccionados": Decimal("0.00"),
+            "renta-modelo-130-pagos-fraccionados": Decimal("0.00"),
+            "renta-modelo-131-pagos-fraccionados": Decimal("0.00"),
         },
-        date_binding_values={f"renta-{year}-profile-taxpayer-birth-date": date(1985, 6, 15)},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1985, 6, 15)},
     )
 
 
@@ -103,13 +103,13 @@ def _calculate(
     (
         (
             2025,
-            "renta-2025-inmobiliario-renta-imputada-art-85",
+            "renta-inmobiliario-renta-imputada-art-85",
             ("ley-35-2006:art-22", "ley-35-2006:art-85", "orden-hac-277-2026:art-3"),
             ("aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"),
         ),
         (
             2024,
-            "renta-2024-inmobiliario-renta-imputada-art-85",
+            "renta-inmobiliario-renta-imputada-art-85",
             ("ley-35-2006:art-22", "ley-35-2006:art-85"),
             ("aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"),
         ),

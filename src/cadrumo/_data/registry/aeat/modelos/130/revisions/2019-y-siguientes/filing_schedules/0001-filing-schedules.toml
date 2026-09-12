@@ -1,5 +1,5 @@
 [[revisions."2019-y-siguientes".filing_schedules]]
-id = "modelo-130-2019-y-siguientes-trimestral"
+id = "modelo-130-trimestral"
 period_kind = "quarterly"
 periods = ["1T", "2T", "3T", "4T"]
 # RIRPF art. 109 obliges every contribuyente carrying on the activity to pay

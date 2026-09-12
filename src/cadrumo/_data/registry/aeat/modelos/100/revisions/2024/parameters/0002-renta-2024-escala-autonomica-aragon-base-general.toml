@@ -1,5 +1,5 @@
 [[revisions."2024".parameters]]
-id = "renta-2024-escala-autonomica-aragon-base-general"
+id = "renta-escala-autonomica-aragon-base-general"
 data_type = "bracket_table"
 unit = "EUR"
 bracket_axis = "filing_period"

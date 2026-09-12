@@ -93,11 +93,11 @@ _GASTOS_FINANCIEROS = Decimal("1100.00")
 _TRIBUTOS_NO_ESTATALES = Decimal("1700.00")
 _REPARACIONES = Decimal("3800.00")
 
-_SUMINISTROS_BINDING = "renta-2024-ledger-expense-0194-deductible"
-_RETA_BINDING = "renta-2024-ledger-expense-0186-deductible"
-_FINANCIEROS_BINDING = "renta-2024-ledger-expense-0203-deductible"
-_TRIBUTOS_BINDING = "renta-2024-ledger-expense-0206-deductible"
-_REPARACIONES_BINDING = "renta-2024-ledger-expense-0193-deductible"
+_SUMINISTROS_BINDING = "renta-ledger-expense-0194-deductible"
+_RETA_BINDING = "renta-ledger-expense-0186-deductible"
+_FINANCIEROS_BINDING = "renta-ledger-expense-0203-deductible"
+_TRIBUTOS_BINDING = "renta-ledger-expense-0206-deductible"
+_REPARACIONES_BINDING = "renta-ledger-expense-0193-deductible"
 
 #: The casilla the suministros binding populates, asserted below through the
 #: revision rather than trusted from the binding id's own name.

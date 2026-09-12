@@ -1,5 +1,5 @@
 [[revisions."2016-2018".workbook_parity_refs]]
-id = "modelo-184-2016-static-layout"
+id = "modelo-184-static-layout"
 workbook_source = "boe-dr-184-2016-2018"
 fixture_id = "modelo-184-2016-boe-static-layout"
 formula_coverage = "static_layout"

@@ -11,7 +11,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casi
 from .....core.resources.bundled_data import bundled_path
 from ..ids import LegalRefId, SourceRefId
 from ._published_authority import artifact_components
-from ._scenarios import (
+from .scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
 )
@@ -32,7 +32,7 @@ def _inputs(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
 
 
 #: Casilla 0171 ("Ingresos de explotación") is ``input_kind = "bound"`` on the
-#: M100 2025 revision, to ``renta-2025-ledger-income-0171``. The archetype
+#: M100 2025 revision, to ``renta-ledger-income-0171``. The archetype
 #: scenarios below supply it directly, which hand-types a value the engine
 #: produces by aggregating ledger substrate and resolving that binding — so the
 #: chain that populates it is stepped over here and nothing these scenarios
@@ -54,7 +54,7 @@ _HAND_TYPED_INGRESOS_2025: dict[CasillaId, str] = {
 
 #: Casilla 0181 (activity acquisition cost) is ``input_kind = "bound"`` in
 #: the 2025 M100 revision, through the inventory source binding
-#: ``renta-2025-inventory-activity-acquisition-cost-0181``.  These two
+#: ``renta-inventory-activity-acquisition-cost-0181``.  These two
 #: formula-chain fixtures supply a literal acquisition cost instead of building
 #: inventory substrate and running that source resolver, so the value is
 #: deliberately hand-typed rather than chain-resolved.
@@ -185,7 +185,7 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+            "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
             "renta-profile-marriage-full-year": Decimal("0"),
@@ -201,12 +201,12 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
-        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values={
-            "renta-2025-rel-130-pagos-fraccionados": Decimal("45.00"),
-            "renta-2025-rel-131-pagos-fraccionados": Decimal("55.00"),
+            "renta-modelo-130-pagos-fraccionados": Decimal("45.00"),
+            "renta-modelo-131-pagos-fraccionados": Decimal("55.00"),
         },
-        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1985, 6, 15)},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1985, 6, 15)},
         expected_outputs=(
             _expected(
                 "0180",
@@ -257,8 +257,8 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
                 "0604",
                 value=Decimal("100.00"),
                 operand_refs=_operand_refs(
-                    "renta-2025-rel-130-pagos-fraccionados",
-                    "renta-2025-rel-131-pagos-fraccionados",
+                    "renta-modelo-130-pagos-fraccionados",
+                    "renta-modelo-131-pagos-fraccionados",
                 ),
                 operand_casilla_refs=(),
                 legal_refs=(
@@ -320,7 +320,7 @@ def _simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
-            "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+            "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
             "renta-profile-marriage-full-year": Decimal("0"),
@@ -330,13 +330,13 @@ def _simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
-        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values={
-            "renta-2025-rel-130-pagos-fraccionados": Decimal("0.00"),
-            "renta-2025-rel-131-pagos-fraccionados": Decimal("0.00"),
+            "renta-modelo-130-pagos-fraccionados": Decimal("0.00"),
+            "renta-modelo-131-pagos-fraccionados": Decimal("0.00"),
         },
         date_context={"filing_period": date(2025, 12, 31)},
-        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1985, 6, 15)},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1985, 6, 15)},
         expected_outputs=(
             _expected(
                 "0222",
@@ -344,8 +344,8 @@ def _simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
                 operand_refs=_operand_refs(
                     "0180",
                     "0218",
-                    "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
-                    "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-cap",
+                    "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
+                    "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-cap",
                 ),
                 operand_casilla_refs=_operand_casilla_refs("0180", "0218"),
                 legal_refs=("ley-35-2006:art-30", "rd-439-2007:art-30", "orden-hac-277-2026:art-3"),
@@ -379,7 +379,7 @@ def _negative_simplified_base_scenario() -> RegistryCalculationScenario:
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
-            "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+            "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
             "renta-profile-marriage-full-year": Decimal("0"),
@@ -389,13 +389,13 @@ def _negative_simplified_base_scenario() -> RegistryCalculationScenario:
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
-        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values={
-            "renta-2025-rel-130-pagos-fraccionados": Decimal("0.00"),
-            "renta-2025-rel-131-pagos-fraccionados": Decimal("0.00"),
+            "renta-modelo-130-pagos-fraccionados": Decimal("0.00"),
+            "renta-modelo-131-pagos-fraccionados": Decimal("0.00"),
         },
         date_context={"filing_period": date(2025, 12, 31)},
-        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1985, 6, 15)},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1985, 6, 15)},
         expected_outputs=(
             _expected(
                 "0222",
@@ -403,8 +403,8 @@ def _negative_simplified_base_scenario() -> RegistryCalculationScenario:
                 operand_refs=_operand_refs(
                     "0180",
                     "0218",
-                    "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
-                    "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-cap",
+                    "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
+                    "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-cap",
                 ),
                 operand_casilla_refs=_operand_casilla_refs("0180", "0218"),
             ),
@@ -461,7 +461,7 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+            "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
             "renta-profile-marriage-full-year": Decimal("0"),
@@ -471,12 +471,12 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
-        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values={
-            "renta-2025-rel-130-pagos-fraccionados": Decimal("0.00"),
-            "renta-2025-rel-131-pagos-fraccionados": Decimal("0.00"),
+            "renta-modelo-130-pagos-fraccionados": Decimal("0.00"),
+            "renta-modelo-131-pagos-fraccionados": Decimal("0.00"),
         },
-        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1985, 6, 15)},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1985, 6, 15)},
         expected_outputs=(
             _expected(
                 "0149",
@@ -639,7 +639,7 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+            "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
             "renta-profile-marriage-full-year": Decimal("0"),
@@ -652,12 +652,12 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
             "renta-modelo-111-retenciones-periodicas": Decimal("40.00"),
             "renta-modelo-123-retenciones-periodicas": Decimal("50.00"),
         },
-        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values={
-            "renta-2025-rel-130-pagos-fraccionados": Decimal("600.00"),
-            "renta-2025-rel-131-pagos-fraccionados": Decimal("400.00"),
+            "renta-modelo-130-pagos-fraccionados": Decimal("600.00"),
+            "renta-modelo-131-pagos-fraccionados": Decimal("400.00"),
         },
-        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1985, 6, 15)},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1985, 6, 15)},
         expected_outputs=(
             _expected(
                 "0587",

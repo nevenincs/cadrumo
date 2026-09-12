@@ -89,7 +89,7 @@ def _casilla(revision_id: str, casilla_id: str, *, number: str, lineage: str) ->
 def _write_tree(tmp_path: Path) -> Path:
     """A 2024 edition with two rows and a 2025 delta edition restating one of them."""
     registry_root = tmp_path / "registry" / "aeat"
-    write_minimal_shared_catalogues(registry_root / "legal", years=(2024, 2025))
+    write_minimal_shared_catalogues(registry_root / "legal", floor=2024, horizon=2025)
     modelo_dir = registry_root / "modelos" / _MODELO_ID
     modelo_dir.mkdir(parents=True)
     (modelo_dir / "manifest.toml").write_text(_MANIFEST_TOML, encoding="utf-8", newline="\n")

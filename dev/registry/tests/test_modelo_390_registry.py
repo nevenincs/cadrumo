@@ -459,7 +459,6 @@ def test_modelo_390_declares_annual_compensation_result_fields(revision_id: str)
     revision = modelo.revisions[revision_id]
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     bindings = {binding.id: binding for binding in revision.bindings}
-    relations = {rel.id: rel for rel in revision.relations}
     compensation_source_ids = (
         _M303_COMPENSACION_GENERADA_CASILLA,
         _M303_COMPENSACION_APLICADA_CASILLA,
@@ -481,8 +480,11 @@ def test_modelo_390_declares_annual_compensation_result_fields(revision_id: str)
     assert box_662_selector.source_modelo == "303"
     assert binding_source_casilla_ids(box_662_binding) == compensation_source_ids
     assert box_662_selector.partition_output == "generated_not_in_last_amount"
-    assert "modelo-390-rel-303-compensacion-ultimo-periodo" not in relations
-    assert "modelo-390-rel-303-compensacion-generada-ejercicio-no-97" not in relations
+    relation_prefill_ids = {
+        binding.id for binding in revision.bindings if binding.source is BindingSourceKind.RELATION_PREFILL
+    }
+    assert "modelo-390-rel-303-compensacion-ultimo-periodo" not in relation_prefill_ids
+    assert "modelo-390-rel-303-compensacion-generada-ejercicio-no-97" not in relation_prefill_ids
 
     from cadrumo.domain.calculations.registry.bindings import iva_compensation_annual_partition_requirement
 

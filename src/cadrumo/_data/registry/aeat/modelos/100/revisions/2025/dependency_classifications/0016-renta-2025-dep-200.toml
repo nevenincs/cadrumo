@@ -1,5 +1,5 @@
 [[revisions."2025".dependency_classifications]]
-id = "renta-2025-dep-200"
+id = "renta-dep-200"
 source_modelo = "200"
 treatment = "non_dependency"
 legal_refs = ["ley-35-2006:art-27", "orden-hac-277-2026:art-3"]

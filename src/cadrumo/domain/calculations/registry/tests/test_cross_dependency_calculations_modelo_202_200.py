@@ -8,7 +8,11 @@ import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from ..formula_runtime import calculate_registry_snapshot
-from ..relations import relation_source_requirements, resolve_relation_values_from_observations
+from ..relations import (
+    relation_prefill_bindings_for_period,
+    relation_source_requirements,
+    resolve_relation_values_from_observations,
+)
 from ..schema import RegistrySnapshot
 from ._cross_dependency_calculation_support import (
     _M200_CUOTA_DIFERENCIAL_CASILLA,
@@ -168,13 +172,13 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     snapshot = registry_snapshot("200", 2024, "0A", grade=RegistryAuthorityGrade.CALCULATION)
     revision = snapshot.revision
     assert revision.id == "2024"
-    relation_ids = {relation.id for relation in revision.relations}
+    relation_ids = {binding.id for binding, _ in relation_prefill_bindings_for_period(revision, period="0A")}
     assert relation_ids == {
-        "modelo-200-2024-rel-202-pagos-fraccionados",
-        "modelo-200-2024-rel-202-pagos-fraccionados-40-2",
-        "modelo-200-2024-rel-self-bin-pendiente-anterior",
-        "modelo-200-2024-rel-self-dotaciones-deterioro-cumplido-anterior",
-        "modelo-200-2024-rel-self-dotaciones-deterioro-no-cumplido-anterior",
+        "modelo-200-pagos-fraccionados-anuales",
+        "modelo-200-pagos-fraccionados-anuales-40-2",
+        "modelo-200-bin-pendiente-ejercicios-anteriores",
+        "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores",
+        "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores",
     }
     classifications = {
         classification.source_modelo: classification for classification in revision.dependency_classifications
@@ -242,13 +246,13 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     assert diferencial_entry.op == "subtract"
     assert set(diferencial_entry.operand_refs) == {
         "DP200014B:00599",
-        "modelo-200-2024-rel-202-pagos-fraccionados",
-        "modelo-200-2024-rel-202-pagos-fraccionados-40-2",
+        "modelo-200-pagos-fraccionados-anuales",
+        "modelo-200-pagos-fraccionados-anuales-40-2",
     }
     assert diferencial_entry.operand_refs == (
         "DP200014B:00599",
-        "modelo-200-2024-rel-202-pagos-fraccionados",
-        "modelo-200-2024-rel-202-pagos-fraccionados-40-2",
+        "modelo-200-pagos-fraccionados-anuales",
+        "modelo-200-pagos-fraccionados-anuales-40-2",
     )
-    assert diferencial_entry.operand_values[1] == relation_values["modelo-200-2024-rel-202-pagos-fraccionados"]
-    assert diferencial_entry.operand_values[2] == relation_values["modelo-200-2024-rel-202-pagos-fraccionados-40-2"]
+    assert diferencial_entry.operand_values[1] == relation_values["modelo-200-pagos-fraccionados-anuales"]
+    assert diferencial_entry.operand_values[2] == relation_values["modelo-200-pagos-fraccionados-anuales-40-2"]

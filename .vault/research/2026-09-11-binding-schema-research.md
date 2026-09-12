@@ -3,147 +3,75 @@ tags:
   - '#research'
   - '#binding-schema'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-09-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:8e3eef298663c86a17034a510d08fccba1cbf8f0e28a03f14734e7a5fefe33cd'
+body_hash: 'sha256:b8ce8558d38bcf16192bd3f59e419741c9bfc2b03b064c1ccef94fc0e9da0097'
 related: []
 ---
-# `binding-schema` research: `revision-local binding declarations and provider union`
+# `binding-schema` research: `binding inventory and advisory route signal`
 
-The question is not merely where binding files are stored, but which declaration shape the validated registry actually compiles. Current evidence shows that revision-local `bindings/*.toml` remains the enrolled authored family, while the attempted selector-union rollover stopped at source-keyed hydration around the legacy `DataBindingDefinition` envelope. The evidence favors retaining the enrolled revision-local family while replacing `source + selector` with a real, closed `provider.kind` union. A binding-specific ADR must still authorize that hard cut and settle the exact provider, temporal, value, lineage, and terminal-origin contracts.
+The binding-provider union has now landed across the authored corpus and domain schema, while revision delta authoring remains limited to casillas. The remaining problem is observability: a valid binding declaration does not by itself show its consumers, executable resolver, terminal origin, or temporal coherence. The `check-bindings` development signal joins raw fragments, compiler-materialised revisions, the canonical consumer projection, provider registrations, runtime resolver ownership, and exact Python references into one advisory reverse-route inventory. Its corrected canonical run measured and graded all 9,233 binding occurrences; casilla links are evidence edges, not the route population.
 
 ## Findings
 
-### Revision-local `bindings/*.toml` is enrolled, but location does not validate the current content model
+### The current binding declaration is a genuine provider union
 
-The revision-fragment loader derives section ownership from the fragment directory and rejects a fragment whose table does not match that directory, so `modelos/<modelo>/revisions/<revision>/bindings/` is an active compiler input rather than an incidental archive. The compiled `ModeloRevision` still publishes `bindings: tuple[DataBindingDefinition, ...]`. These facts establish the current declaration locus, not that `DataBindingDefinition` is the desired final schema. `dev/registry/compiler/_loader_revision_fragments.py:123-137`; `src/cadrumo/domain/calculations/registry/schema.py:837-950`.
+`BindingDefinition` now owns `provider: BindingProvider`, an explicit value contract, aggregation, applicability, terminal-origin expectations, authorship, and evidence. `source` survives only as a derived projection of `provider.kind`; the former stored `source + selector` pair is gone. `src/cadrumo/domain/calculations/registry/schema.py:252-310`.
 
-The facts-registry migration supplies a nearby typed-union precedent but explicitly excluded `ModeloRevision` and its TOML corpus. It therefore cannot be treated as implicit authorization that bindings moved into the governed-facts catalogue or acquired the same schema. `.vault/adr/2026-09-09-facts-registry-governed-fact-catalogue-adr.md:84-95`; `.vault/adr/2026-09-09-facts-registry-governed-fact-catalogue-adr.md:117-140`.
+`BindingProvider` is a closed Pydantic union discriminated by `kind`. The provider-registration table covers that union and joins each member to validation, allowed value channels, aggregation operations, terminal-origin classes, output shape, disposition, and route ownership. `src/cadrumo/domain/calculations/registry/binding_provider.py:73-105`; `src/cadrumo/domain/calculations/registry/binding_provider_registration.py:182-198`; `src/cadrumo/domain/calculations/registry/binding_provider_registration.py:393-787`.
 
-### The binding selector rollover is union-like hydration, not a closed discriminated union
+The raw corpus measurement found 9,233 binding rows and classified every row as `provider_union`; no legacy `source + selector` row remained in the measured tree. This is a run result, not a frozen corpus invariant. `.logs/test-runs/2026-09-12/20260912T043707.363580Z-check-bindings-50452-a89f51f2/artifacts/binding-signal.json`.
 
-`DataBindingDefinition` retains sibling `source` and `selector` fields and accepts a raw mapping at its authoring boundary. A field validator looks up the selector model from `_BINDING_SELECTOR_REGISTRY`, hydrates the mapping, and a later validator repeats selector-shape validation. The stored annotation is `SerializeAsAny[BaseModel]`, so the type itself does not enumerate its permitted members or carry a discriminator. `src/cadrumo/domain/calculations/registry/schema.py:258-299`; `src/cadrumo/domain/calculations/registry/schema.py:320-348`; `src/cadrumo/domain/calculations/registry/schema.py:386-435`; `src/cadrumo/domain/calculations/registry/schema_scalars.py:503-521`; `src/cadrumo/domain/calculations/registry/bindings.py:889-965`.
+### Revision delta authoring changes the consumer surface, not binding declaration ownership
 
-Validation and execution enrollment also remain separate: `_BINDING_VALIDATOR_REGISTRY` is independent of selector-model dispatch, while calculation-route ownership is declared again in application code. This makes a source family possible only when several structures agree, rather than because one union member owns its complete contract. `src/cadrumo/domain/calculations/registry/bindings.py:983-1078`; `src/cadrumo/application/modelo/calculation_route.py:106-203`.
+A revision naming a predecessor inherits only casillas. Bindings, formulas, relations, and other schema families remain fully declared in each revision. Inherited casillas retain the binding references authored by their originating edition, so binding coherence must be evaluated against the successor revision's full binding collection after casilla materialisation. `dev/registry/compiler/_loader_internals.py:268-331`; `src/cadrumo/domain/calculations/registry/schema.py:794-840`.
 
-By contrast, governed facts use a genuine Pydantic discriminated union and a provider-registration compiler seam. That is a useful implementation pattern, not the current binding shape. `src/cadrumo/domain/calculations/registry/facts/schema.py:376-385`; `dev/registry/compiler/fact_providers.py:52-136`.
+The signal records authored and compiler-materialised counts and performs binding, formula, casilla, export, and structural consumer analysis on the effective revision surface. That is deliberately broader than today's casilla-only inheritance: if the materialiser later merges bindings or formulas, the signal follows the materialised result instead of silently reverting to raw fragments. The corrected run found 768 effective casilla edges, but emitted 9,233 binding-owned routes. `.logs/test-runs/2026-09-12/20260912T050542.410863Z-check-bindings-59724-67df81dd/artifacts/binding-signal.json`.
 
-### The current registry is a typed revision aggregate assembled from owned fragment families
+### Binding consumers are heterogeneous and must stay separate in the inventory
 
-The live shape is neither one monolithic TOML schema nor one universal declaration union. A revision is assembled from directory-owned fragment families into `ModeloRevision`; bindings, relations, casillas, formulas, and other families remain sibling collections. Within bindings, selector payloads are dynamically hydrated to per-source Pydantic models. Relations remain a separate provider-like declaration family and are joined back to relation-prefill bindings through binding identity. `src/cadrumo/domain/calculations/registry/schema.py:837-950`; `src/cadrumo/domain/calculations/registry/schema_surfaces.py:347-387`; `src/cadrumo/domain/calculations/registry/schema_surfaces.py:888`; `src/cadrumo/domain/calculations/registry/schema.py:618-649`.
+Casillas carry a primary `binding` and may carry reviewed `alternate_bindings`; alternates are equivalent input routes whose simultaneous values must agree, not precedence fallbacks or additional summands. Other binding references occur in constructs, formulas, export layouts, and application code. The signal keeps three surfaces separate: the typed `binding_consumers()` projection, a generic structural walk that also exposes constructs and schema drift, and exact Python literals that remain advisory evidence. The corrected run found 9,116 typed references and 8,474 structural references: 6,235 export layouts, 1,245 constructs, 768 casilla edges, and 226 formula references. `src/cadrumo/domain/calculations/registry/binding_targets.py`; `dev/registry/bindings.py`.
 
-This explains the partial-rollover symptom: the registry is declarative at the fragment-family level and typed after compilation, but binding provider semantics are split between the outer binding record, a source-indexed selector model, a separate validator dispatch, relation declarations, resolver ownership, and runtime provenance.
+An absence from these registry reference surfaces is advisory. Dynamic and generated references cannot be disproved by a literal scan. The unreferenced lane now classifies the population by provider disposition, provider kind, applicability, and modelo rather than emitting one homogeneous warning. The corrected population is 192: 146 `manual_input` bindings owned by the explicit `non_runtime` disposition and 46 filing-grade review candidates. Only the latter become findings.
 
-The physical fragmentation campaign is complete in the current corpus: 58 modelo directories contain 128 revision directories, with no single-file modelos, no single-file revisions, and no inline binding, relation, or formula sections. The loader nevertheless retains unused compatibility branches for the displaced single-file layouts. Fragment discovery and materialization are established at `dev/registry/compiler/loader_cache.py:257-355` and `dev/registry/compiler/_loader_internals.py:1057-1134`.
+### The reverse route distinguishes declaration, enrollment, and runtime execution
 
-Runtime adds another boundary: development compilation validates TOML and publishes a digest-checked authority artifact; installed product flows reconstruct typed models from `authority.json` and do not compile TOML. `dev/registry/compiler/loader.py:1-4`; `dev/registry/compiler/authority.py:94-144`; `src/cadrumo/domain/calculations/registry/authority.py:573-616`; `src/cadrumo/domain/calculations/registry/authority_artifact.py:1-20`.
+For every effective binding occurrence, the signal emits one route containing its consumers, declaration authorship and location, provider payload and value contract, registration disposition, executable resolver class and stage, terminal-origin contract, and closure failures. Static closure requires provider registration, a valid provider/value/aggregation/terminal-origin contract, and an executable registered resolver for `filing_grade`. Explicit `deferred` and `non_runtime` dispositions close into separate states. The corrected run reached 1,193 `closed_filing`, 24 `closed_deferred`, and 8,016 `closed_non_runtime`, with no open routes. This is static contract closure, not proof that taxpayer data is available.
 
-### Enrollment is complete for the fragment location and incomplete for the promised binding union
+Runtime resolver enrollment is read from `CALCULATION_ROUTE_RESOLVER_OWNERSHIP`, while provider semantics come from `BINDING_PROVIDER_REGISTRATIONS`. Failure to import either live surface becomes a named limitation rather than silently degrading to a clean result. `src/cadrumo/application/modelo/calculation_route.py:47-152`; `dev/registry/bindings.py:176-282`.
 
-| Surface | Current enrollment |
-| --- | --- |
-| Revision-local `bindings/` fragments | Complete in the committed corpus and compiler-owned |
-| Raw authoring selector | Still `source` plus an ordinary TOML mapping |
-| Construction-time selector typing | Enrolled through source-kind dispatch into concrete Pydantic models |
-| Closed source-keyed `BindingProvider` union | Not enrolled |
-| Provider validation | Separately enrolled in a second dispatch table |
-| Runtime route ownership | Separately enrolled in application code |
-| Runtime terminal provenance | Available as a different application-owned model, not declared by provider type |
-| Authoring tools | Point at revision-local bindings but still describe `DataBindingDefinition` |
+### Temporal coherence is measured without inferring semantic identity
 
-The binding-vocabulary plan marked its selector-union work complete, while its own text described the work as a deferred carve. Live code resolves that contradiction: selector instances are concrete after hydration, but the stored alias remains `SerializeAsAny[BaseModel]`. `.vault/plan/2026-06-26-binding-vocabulary-cli-cohesion-plan.md:107-117`; `.vault/adr/2026-06-26-binding-vocabulary-cli-cohesion-adr.md:54-56`; `src/cadrumo/domain/calculations/registry/schema_scalars.py:515-522`.
+Provider temporal members are inventoried by discriminator and relative field paths. Filing year, revision, or year fields outside the temporal member are actionable absolute-coordinate candidates. Binding identifiers use the same public `edition_token_in_identifier()` rule as the edition-delta signal. The corrected run reports zero temporal-ID candidates; the former 189 findings were range-token false positives such as `2001-2017`, not declaring-edition coupling. `src/cadrumo/domain/calculations/registry/binding_provider_registration.py:791-875`; `dev/registry/analysis/edition_delta_status.py`; `dev/registry/bindings.py`.
 
-### A true provider union should be the binding schema's principal authored axis
+### The command is advisory but operationally strict
 
-The strongest candidate replaces the legacy pair with one self-describing member:
+`just check-bindings` belongs to the `check` group and runs through the shared test-run command envelope with the dedicated `binding-signal` processor. The child writes the complete JSON report to the run's `artifacts/binding-signal.json`; stdout contains bounded start and finish envelopes, and `run.json` plus `run.log` retain the standard tokenized evidence. Findings do not fail the default command. TOML parse failure or loss of the loader, provider-registration inventory, runtime-resolver inventory, or canonical consumer projection is a processing error and returns 2; `--strict` may return 1 for actionable error findings.
 
-```toml
-[[revisions."2025".bindings]]
-id = "renta-base-liquidable-negativa-general-anterior"
-value = { data_type = "money", channel = "decimal" }
-aggregation = { op = "copy" }
-applicability = { kind = "target_periods", periods = ["0A"] }
-authorship = { kind = "authored" }
-legal_refs = ["ley-35-2006:art-50"]
-source_refs = ["aeat-renta-2025-manual-parte1"]
+The corrected canonical measurement on 2026-09-12 exited 0 with 58 modelos, 128 revisions, 9,233 binding occurrences and routes, 9,116 canonical consumer references, 8,474 structural references, 3,725 exact Python references, 768 casilla edges, 46 advisory findings, zero temporal-ID candidates, zero open routes, and zero limitations. Its `run.json` contains exactly the standard `artifacts`, `cache`, `command`, `exit_status`, `finished_at`, `log`, `run_id`, `scratch`, and `started_at` fields. `.logs/test-runs/2026-09-12/20260912T050542.410863Z-check-bindings-59724-67df81dd/run.json`; `.logs/test-runs/2026-09-12/20260912T050542.410863Z-check-bindings-59724-67df81dd/artifacts/binding-signal.json`.
 
-[revisions."2025".bindings.provider]
-kind = "previous_filing"
-source_modelo = "100"
-source_casilla_ids = ["1391"]
-temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] }
-```
+### Remaining design questions belong to the next signal refinement
 
-The normalized type candidate is:
-
-```python
-class BindingDefinition(RegistryModel):
-    id: BindingId
-    provider: BindingProvider
-    value: BindingValueContract
-    aggregation: BindingAggregation
-    applicability: BindingApplicability
-    terminal_origins: tuple[TerminalOriginExpectation, ...]
-    semantic_lineage: BindingSemanticLineage
-    authorship: BindingAuthorship
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-    source_citations: tuple[SourceCitation, ...] = ()
-```
-
-`BindingProvider`, temporal selection, applicability, semantic lineage, and authorship are each candidates for `Annotated[... , Field(discriminator="kind")]`. Provider membership should be derived from the currently legal registry source families, excluding mesh-only source kinds, then reconciled against the real resolver and terminal-origin inventory. `src/cadrumo/domain/calculations/registry/bindings.py:906-944`; `src/cadrumo/core/aggregation.py:230-358`.
-
-### Binding identity, declaration occurrence, and resolved route are different records
-
-The semantic binding ID should be timeless. Its revision occurrence is addressed by `(modelo_id, revision_id, binding_id)`, but neither revision nor concrete filing period belongs in the semantic ID. A revision-scoped provider may use a typed relative temporal expression; a concrete source year or period appears only after resolving a target filing context. Existing `BindingId` validation checks syntax and length but does not enforce this semantic invariant. `src/cadrumo/domain/calculations/registry/ids.py:21-28`.
-
-Authored TOML should contain stable intent: semantic ID, provider template, relative temporal rule, value contract, applicability, aggregation, expected terminal-origin classes, semantic lineage, authorship lineage, and evidence. Compiler metadata should contain declaration path, ordinal, fingerprints, authority digest, reverse consumers, and generator-run identity. Runtime records should contain selected filing coordinates, resolver ID, actual provenance nodes, availability/disposition, fingerprints, and diagnostics. Existing runtime provenance already owns resolver identity, matched source coordinates, parent links, and fingerprints. `src/cadrumo/application/aggregation/source_mesh.py:618-738`; `src/cadrumo/application/aggregation/source_mesh.py:741-780`.
-
-### The provider union cannot be declared complete until enrollment is factored into one authority
-
-A provider member is meaningful only if code produces or retrieves its value. The candidate `BindingProviderRegistration` should join, for each provider kind, the concrete provider model, validator, allowed value/aggregation contracts, allowed terminal-origin classes, and canonical route owner or explicit non-calculation disposition. Today those facts are distributed across selector dispatch, validator dispatch, source taxonomy, and calculation-route ownership. `src/cadrumo/domain/calculations/registry/bindings.py:906-1078`; `src/cadrumo/core/aggregation.py:230-358`; `src/cadrumo/application/modelo/calculation_route.py:106-203`.
-
-The audit consequence is a closure matrix, not one finding per binding: authored member, model member, validator enrollment, compiler acceptance, route owner, terminal-origin contract, consumer coverage, and authoring-tool support. Missing runtime observations remain availability states; they are not architectural defects unless they contradict an applicable provider contract.
-
-### Alternatives narrow to three, with one currently favored
-
-Keeping `source + selector` and strengthening the existing dispatch tables minimizes corpus churn, but preserves non-self-describing serialization and multi-table enrollment drift. Moving bindings into governed facts gains a real union/compiler precedent, but conflicts with the accepted facts scope and blurs a value-provider route with a governed fact. Keeping revision-local binding fragments while replacing their content with `BindingDefinition(provider=BindingProvider)` preserves the enrolled authority flow and gives the schema one typed provider axis; current evidence favors this option.
-
-The ADR must settle whether relations become provider-union members or remain separately authored referenced definitions, the terminal-origin vocabulary, value channels beyond the current decimal/enum/date/row maps, semantic-lineage requirements, generated-authorship metadata, and the hard-cut migration of temporally named IDs. No compatibility parser should be assumed: repository policy requires atomic migration unless a released compatibility floor is explicitly established. `.codex/rules/no-legacy-compatibility.md:1-15`.
-
-### Scope boundary and remaining measurement
-
-This research has not yet proven an exhaustive mapping from every legal `BindingSourceKind` to a terminal-origin class, nor whether every relation-prefill declaration can be absorbed without duplicating relation semantics. It also has not adjudicated each year-bearing binding ID: a year token is a candidate temporal-coupling signal, not proof that two IDs share semantic identity. Those belong in the programmatic discovery lane and the binding-specific ADR worklist.
-
-The present dirty checkout also cannot establish a newly published authority generation: raw fragment loading succeeds, but full authority validation has unrelated in-flight declaration failures and the bundled artifact is stale relative to the authored tree. Those conditions limit runtime-parity claims but do not change the proven loader shape. `dev/registry/compiler/validator.py:345-352`; `src/cadrumo/domain/calculations/registry/authority.py:573-616`.
+The current reverse route proves static enrollment, not that a real filing context produces a value. A later contextual lane should instantiate representative target contexts, invoke production requirement builders without taxpayer data, compare their resolved source coordinates with the authored relative provider template, and classify availability separately. The 46 filing-grade unreferenced candidates are now the focused worklist: 30 `atribucion_member`, 8 `profile`, 5 `ledger_iva_aggregation`, 2 `ledger_irnr_income_aggregation`, and 1 `ledger_renta_income_aggregation`. They require provider-specific consumer analysis; absence of a static reference is not yet an architectural defect.
 
 ## Sources
 
-- `dev/registry/compiler/_loader_revision_fragments.py:123-137`
-- `dev/registry/compiler/loader.py:1-4`
-- `dev/registry/compiler/loader_cache.py:257-355`
-- `dev/registry/compiler/_loader_internals.py:1057-1134`
-- `dev/registry/compiler/authority.py:94-144`
-- `dev/registry/compiler/validator.py:345-352`
-- `src/cadrumo/domain/calculations/registry/schema.py:258-299`
-- `src/cadrumo/domain/calculations/registry/schema.py:320-348`
-- `src/cadrumo/domain/calculations/registry/schema.py:386-435`
-- `src/cadrumo/domain/calculations/registry/schema.py:618-649`
-- `src/cadrumo/domain/calculations/registry/schema.py:837-950`
-- `src/cadrumo/domain/calculations/registry/schema_scalars.py:503-521`
+- `src/cadrumo/domain/calculations/registry/schema.py:252-310`
+- `src/cadrumo/domain/calculations/registry/schema.py:794-840`
 - `src/cadrumo/domain/calculations/registry/schema_surfaces.py:347-387`
-- `src/cadrumo/domain/calculations/registry/schema_surfaces.py:888`
-- `src/cadrumo/domain/calculations/registry/bindings.py:889-1078`
-- `src/cadrumo/domain/calculations/registry/facts/schema.py:376-385`
-- `src/cadrumo/domain/calculations/registry/ids.py:21-28`
-- `src/cadrumo/core/aggregation.py:230-358`
-- `src/cadrumo/application/modelo/calculation_route.py:106-203`
-- `src/cadrumo/application/aggregation/source_mesh.py:618-780`
-- `src/cadrumo/domain/calculations/registry/authority.py:573-616`
-- `src/cadrumo/domain/calculations/registry/authority_artifact.py:1-20`
-- `dev/registry/compiler/fact_providers.py:52-136`
-- `.vault/adr/2026-09-09-facts-registry-governed-fact-catalogue-adr.md:84-95`
-- `.vault/adr/2026-09-09-facts-registry-governed-fact-catalogue-adr.md:117-140`
-- `.vault/adr/2026-06-26-binding-vocabulary-cli-cohesion-adr.md:54-56`
-- `.vault/plan/2026-06-26-binding-vocabulary-cli-cohesion-plan.md:107-117`
-- `.codex/rules/no-legacy-compatibility.md:1-15`
+- `src/cadrumo/domain/calculations/registry/binding_provider.py:73-105`
+- `src/cadrumo/domain/calculations/registry/binding_provider_registration.py:182-198`
+- `src/cadrumo/domain/calculations/registry/binding_provider_registration.py:393-875`
+- `src/cadrumo/domain/calculations/registry/bindings.py:423-488`
+- `src/cadrumo/application/modelo/calculation_route.py:47-152`
+- `dev/registry/compiler/_loader_internals.py:268-331`
+- `dev/registry/bindings.py:120-164`
+- `dev/registry/bindings.py:176-282`
+- `dev/registry/bindings.py:514-544`
+- `dev/registry/bindings.py:618-784`
+- `dev/registry/bindings.py:839-888`
+- `dev/test_runs/command.py:22-27`
+- `dev/test_runs/command.py:1028-1039`
+- `justfile:255-261`
+- `.logs/test-runs/2026-09-12/20260912T043707.363580Z-check-bindings-50452-a89f51f2/run.json`
+- `.logs/test-runs/2026-09-12/20260912T043707.363580Z-check-bindings-50452-a89f51f2/artifacts/binding-signal.json`

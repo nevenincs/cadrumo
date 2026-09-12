@@ -59,7 +59,8 @@ def test_relation_prefill_binding_carries_its_per_target_period_source_window(
     snapshot = bundled_authority().snapshot(Modelo.M202.value, filing_year=2025, period=period)
 
     providers = {
-        binding.id: provider for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period=period)
+        binding.id: provider
+        for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period=period)
     }
 
     assert providers["modelo-202-cuota-base-ejercicio-anterior"].required_period_anchors_for_target(period) == (
@@ -267,22 +268,22 @@ def test_bindings_for_scope_resolves_the_law_determined_revision() -> None:
     assert all(row.binding_id.startswith("renta-2024-") for row in report.rows)
 
 
-def test_binding_rows_report_decimal_input_channel_for_typed_enum_binding() -> None:
-    """A ``typed_enum`` binding consumed as a Decimal operand reports
-    ``input_channel = "decimal"``.
+def test_binding_rows_surface_the_typed_enum_a_binding_declares() -> None:
+    """A binding's ``typed_enum`` reaches the operator-facing query row.
 
-    The Modelo 100 estimación-directa modality binding carries a
-    ``typed_enum`` annotation yet its formulas compare it against a
-    numeric literal, so the operator-facing input channel is decimal.
+    The substrate enum an ``enum``-channel value bridges is declared on the
+    binding's value contract. The query row must report it, because an
+    operator choosing a value needs the closed set it must come from; a row
+    that dropped it would present a free-text field for a closed enum.
     """
 
     service = _service()
 
     report = service.bindings_for_scope("100", filing_year=2024, period="0A")
-    row = next(r for r in report.rows if "estimacion-directa-es-normal" in r.binding_id)
+    row = next(r for r in report.rows if r.binding_id == "renta-profile-tax-residence-ccaa")
 
-    assert row.typed_enum == "EstimacionDirectaModalidad"
-    assert row.input_channel == "decimal"
+    assert row.typed_enum == "CCAA"
+    assert row.input_channel == "enum"
 
 
 def test_unscoped_query_refuses_as_of_instead_of_silently_ignoring_it() -> None:

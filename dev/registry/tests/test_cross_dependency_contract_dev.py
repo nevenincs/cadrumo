@@ -6,13 +6,15 @@ from functools import cache
 
 import pytest
 
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.bindings import binding_source_casilla_ids
+from cadrumo.domain.calculations.registry.relations import (
+    relation_prefill_bindings_for_period,
+    relation_source_requirements,
+)
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from dev.registry.compiler.validator import RegistryValidator
 from dev.registry.conformance.registry_schema_support import committed_registry_tree
-
-from .....core.resources.bundled_data import bundled_path
-from ..bindings import binding_source_casilla_ids
-from ..relations import relation_prefill_bindings_for_period, relation_source_requirements
-from ..schema import ModeloDefinition, RegistryCatalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _INTERNAL_ONLY_LEGAL_ID = "ley-27-2014:art-26"
 _INTERNAL_ONLY_SOURCE_ID = "aeat-dr-200-2025"
 _INTERNAL_ONLY_EXPORT_FIELD_ID = "modelo-200-2024:DP200014:00552"
-_INTERNAL_ONLY_FORMULA_ID = "modelo-200-2024-bin-aplicada-maxima"
+_INTERNAL_ONLY_FORMULA_ID = "modelo-200-bin-aplicada-maxima"
 
 
 def test_internal_only_casilla_rejects_non_empty_export_refs() -> None:

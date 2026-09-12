@@ -152,7 +152,7 @@ def test_m100_2024_minimo_contribuyente_computed_not_zero(m100_2024_snapshot: Re
         m100_2024_snapshot,
         inputs={_TRABAJO_INGRESOS_INTEGROS_CASILLA: _TRABAJO_INGRESOS_INTEGROS},
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
@@ -163,7 +163,7 @@ def test_m100_2024_minimo_contribuyente_computed_not_zero(m100_2024_snapshot: Re
         f"{result.values[_MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA]!r}; "
         f"expected {_EXPECTED_MINIMO_CONTRIBUYENTE!r} per LIRPF Art. 57. "
         f"If this is 0.00 the Cluster-T regression has re-appeared: "
-        f"check 2024/formulas/0166-renta-2024-minimo-contribuyente-estatal.toml "
+        f"check 2024/formulas/0166-renta-minimo-contribuyente-estatal.toml "
         f"and 2024/parameters/0030-renta-2024-minimo-contribuyente-base-2024.toml."
     )
     assert result.values[_MINIMO_CONTRIBUYENTE_AUTONOMICA_CASILLA] == _EXPECTED_MINIMO_CONTRIBUYENTE, (
@@ -186,7 +186,7 @@ def test_m100_2024_cuota_integra_estatal_matches_lirpf_tables(m100_2024_snapshot
         m100_2024_snapshot,
         inputs={_TRABAJO_INGRESOS_INTEGROS_CASILLA: _TRABAJO_INGRESOS_INTEGROS},
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
@@ -213,7 +213,7 @@ def test_m100_2024_cuota_integra_autonomica_cataluna_matches_lirpf_tables(
         m100_2024_snapshot,
         inputs={_TRABAJO_INGRESOS_INTEGROS_CASILLA: _TRABAJO_INGRESOS_INTEGROS},
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
@@ -238,7 +238,7 @@ def test_m100_2024_cuota_integra_estatal_is_positive(m100_2024_snapshot: Registr
         m100_2024_snapshot,
         inputs={_TRABAJO_INGRESOS_INTEGROS_CASILLA: _TRABAJO_INGRESOS_INTEGROS},
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
@@ -313,7 +313,7 @@ _EXPECTED_CUOTA_ESTATAL_2DESCENDANTS_1UNDER3 = Decimal("3097.00")
 _EXPECTED_CUOTA_ESTATAL_ASCENDANT_OVER75 = Decimal("3630.25")
 
 _PERE_AGE_70_BIRTH_DATE_BINDINGS_2024: dict[BindingId, date] = {
-    "renta-2024-profile-taxpayer-birth-date": date(1954, 3, 1),
+    "renta-profile-taxpayer-birth-date": date(1954, 3, 1),
 }
 
 
@@ -364,18 +364,17 @@ def _base_binding_values() -> dict[BindingId, Decimal]:
 # Art. 57.1.b LIRPF age supplement requires a taxpayer birth_date; supply a
 # representative date outside the 65/75 brackets for non-age scenarios.
 _BIRTH_DATE_BINDINGS_2024: dict[BindingId, date] = {
-    "renta-2024-profile-taxpayer-birth-date": date(1975, 6, 15),
+    "renta-profile-taxpayer-birth-date": date(1975, 6, 15),
 }
 
 # RD 439/2007 Art. 110 pagos-fraccionados relations; zero in scenarios that
 # do not exercise M130/M131 cross-model integration.
 _RELATION_VALUES_2024: dict[RelationId, Decimal] = {
-    "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
-    "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
-    "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
-    "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
-    "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-193-retenciones-anuales": Decimal("0"),
+    "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
 
 
@@ -395,7 +394,7 @@ def test_m100_2024_cuota_estatal_pere_age_70_with_age_supplement(
         m100_2024_snapshot,
         inputs={_TRABAJO_INGRESOS_INTEGROS_CASILLA: _TRABAJO_INGRESOS_INTEGROS},
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values={
             **_base_binding_values(),
             **_M100_2024_MATERNIDAD_BINDINGS,
@@ -446,7 +445,7 @@ def test_m100_2024_cuota_estatal_two_descendants_one_under_three(
         m100_2024_snapshot,
         inputs={_TRABAJO_INGRESOS_INTEGROS_CASILLA: _TRABAJO_INGRESOS_INTEGROS},
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values={
             **_base_binding_values(),
             **_M100_2024_MATERNIDAD_BINDINGS,
@@ -487,7 +486,7 @@ def test_m100_2024_cuota_estatal_ascendant_over_75(
             _MINIMO_ASCENDIENTES_CASILLA: Decimal("2550"),  # Art. 59: 1150 + 1400, operator-supplied
         },
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
@@ -562,7 +561,7 @@ def test_0505_computed_from_0500_no_anualidades(m100_2024_snapshot: RegistrySnap
         m100_2024_snapshot,
         inputs={_TRABAJO_INGRESOS_INTEGROS_CASILLA: _BASE_14896},
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
@@ -572,7 +571,7 @@ def test_0505_computed_from_0500_no_anualidades(m100_2024_snapshot: RegistrySnap
         f"casilla 0505 = {result.values[_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA]!r}; "
         f"expected {_EXPECTED_0505_NO_ANUALIDADES!r}. "
         f"If 0505 = 0 the formula regression has re-appeared: "
-        f"check 2024/formulas/0168-renta-2024-base-liquidable-general-sometida-a-gravamen.toml."
+        f"check 2024/formulas/0168-renta-base-liquidable-general-sometida-a-gravamen.toml."
     )
     cuota = result.values[_CUOTA_INTEGRA_ESTATAL_CASILLA]
     assert abs(cuota - _EXPECTED_CUOTA_ESTATAL_14896_NO_ANUALIDADES) <= _TOLERANCE, (
@@ -601,7 +600,7 @@ def test_anualidades_alimentos_separate_escala(m100_2024_snapshot: RegistrySnaps
             _ANUALIDADES_PRIMER_HIJO_CASILLA: _ANUALIDADES_3000,
         },
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
@@ -642,7 +641,7 @@ def test_anti_tautology_anualidades_changes_cuota(m100_2024_snapshot: RegistrySn
         m100_2024_snapshot,
         inputs={_TRABAJO_INGRESOS_INTEGROS_CASILLA: _BASE_14896},
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
@@ -654,7 +653,7 @@ def test_anti_tautology_anualidades_changes_cuota(m100_2024_snapshot: RegistrySn
             _ANUALIDADES_PRIMER_HIJO_CASILLA: _ANUALIDADES_3000,
         },
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
@@ -697,7 +696,7 @@ def test_anualidades_regime_off_shared_custody_reduces_to_single_escala(
             _ANUALIDADES_PRIMER_HIJO_CASILLA: _ANUALIDADES_3000,
         },
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values=bindings,
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
@@ -728,7 +727,7 @@ def test_anualidades_regime_off_when_anualidades_exceed_base(
             _ANUALIDADES_PRIMER_HIJO_CASILLA: Decimal("16000"),
         },
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
@@ -773,7 +772,7 @@ _RETENCION_3648 = Decimal("3648")  # doubled retención for anti-tautology
 
 
 def test_0587_equals_sum_of_liquida_incrementada(m100_2024_snapshot: RegistrySnapshot) -> None:
-    """Casilla 0587 must equal 0585 + 0586 per renta-2024-cuota-liquida-incrementada-total.
+    """Casilla 0587 must equal 0585 + 0586 per renta-cuota-liquida-incrementada-total.
 
     contract regression guard: before the fix, 0587 had no formula and stayed 0
     even when 0585 and 0586 were computed and positive. After the fix, 0587 is
@@ -784,7 +783,7 @@ def test_0587_equals_sum_of_liquida_incrementada(m100_2024_snapshot: RegistrySna
         m100_2024_snapshot,
         inputs={_TRABAJO_INGRESOS_INTEGROS_CASILLA: _TRABAJO_BASE_55500},
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
@@ -796,11 +795,11 @@ def test_0587_equals_sum_of_liquida_incrementada(m100_2024_snapshot: RegistrySna
 
     assert c0587 > Decimal("0"), (
         f"casilla 0587 = {c0587!r}; must be positive (formula regression: was silently 0 before fix). "
-        f"Check 2024/formulas/0169-renta-2024-cuota-liquida-incrementada-total.toml."
+        f"Check 2024/formulas/0169-renta-cuota-liquida-incrementada-total.toml."
     )
     assert abs(c0587 - (c0585 + c0586)) <= _TOLERANCE, (
         f"0587 ({c0587!r}) must equal 0585 ({c0585!r}) + 0586 ({c0586!r}). "
-        f"Structural identity failure in renta-2024-cuota-liquida-incrementada-total."
+        f"Structural identity failure in renta-cuota-liquida-incrementada-total."
     )
 
 
@@ -809,7 +808,7 @@ def test_0609_equals_retencion_trabajo_operand(m100_2024_snapshot: RegistrySnaps
 
     With only casilla 0592 (retenciones trabajo) supplied and all other 0609
     operands zero, 0609 must exactly equal the supplied amount. This confirms
-    the 14-operand sum in renta-2024-total-pagos-a-cuenta is wired correctly.
+    the 14-operand sum in renta-total-pagos-a-cuenta is wired correctly.
     Authority: RD 439/2007 Art. 109-110, LIRPF Art. 99.
     """
     result = calculate_registry_snapshot(
@@ -819,7 +818,7 @@ def test_0609_equals_retencion_trabajo_operand(m100_2024_snapshot: RegistrySnaps
             _RETENCIONES_TRABAJO_CASILLA: _RETENCION_1824,
         },
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
@@ -830,12 +829,12 @@ def test_0609_equals_retencion_trabajo_operand(m100_2024_snapshot: RegistrySnaps
         f"casilla 0609 (total pagos a cuenta) = {c0609!r}; "
         f"expected {_RETENCION_1824!r} (sole 0592 operand). "
         f"formula regression: before fix, 0609 had no formula and stayed 0. "
-        f"Check 2024/formulas/0172-renta-2024-total-pagos-a-cuenta.toml."
+        f"Check 2024/formulas/0172-renta-total-pagos-a-cuenta.toml."
     )
 
 
 def test_0610_equals_0595_minus_0609(m100_2024_snapshot: RegistrySnapshot) -> None:
-    """Casilla 0610 must equal 0595 - 0609 per renta-2024-cuota-diferencial.
+    """Casilla 0610 must equal 0595 - 0609 per renta-cuota-diferencial.
 
     Structural identity: cuota diferencial = cuota resultante - total pagos a cuenta.
     This holds for any non-zero retención supplied via 0592.
@@ -848,7 +847,7 @@ def test_0610_equals_0595_minus_0609(m100_2024_snapshot: RegistrySnapshot) -> No
             _RETENCIONES_TRABAJO_CASILLA: _RETENCION_1824,
         },
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
@@ -860,7 +859,7 @@ def test_0610_equals_0595_minus_0609(m100_2024_snapshot: RegistrySnapshot) -> No
 
     assert abs(c0610 - (c0595 - c0609)) <= _TOLERANCE, (
         f"0610 ({c0610!r}) must equal 0595 ({c0595!r}) - 0609 ({c0609!r}). "
-        f"Structural identity failure in renta-2024-cuota-diferencial."
+        f"Structural identity failure in renta-cuota-diferencial."
     )
     assert c0610 < c0595, f"0610 ({c0610!r}) must be less than 0595 ({c0595!r}) when retenciones > 0."
 
@@ -882,7 +881,7 @@ def test_anti_tautology_higher_retencion_reduces_cuota_diferencial(
             _RETENCIONES_TRABAJO_CASILLA: _RETENCION_1824,
         },
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
@@ -894,7 +893,7 @@ def test_anti_tautology_higher_retencion_reduces_cuota_diferencial(
             _RETENCIONES_TRABAJO_CASILLA: _RETENCION_3648,
         },
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,

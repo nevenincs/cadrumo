@@ -69,9 +69,9 @@ formulas = [
     "renta-cuota-liquida-autonomica-incrementada",
 ]
 application_links = [
-    "modelo-100-2023-calculation",
-    "modelo-100-2023-review",
-    "modelo-100-2023-approval",
-    "modelo-100-2023-reconciliation",
-    "modelo-100-2023-workflow",
+    "modelo-100-calculation",
+    "modelo-100-review",
+    "modelo-100-approval",
+    "modelo-100-reconciliation",
+    "modelo-100-workflow",
 ]

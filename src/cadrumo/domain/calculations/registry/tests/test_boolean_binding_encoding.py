@@ -95,7 +95,7 @@ def test_non_manual_input_binding_has_no_encoded_values() -> None:
     """A profile-sourced binding is never a decimal-encoded boolean flag."""
     profile = BindingDefinition.model_validate(
         {
-            "id": "renta-2025-profile-tax-residence-ccaa",
+            "id": "renta-profile-tax-residence-ccaa",
             "provider": {
                 "kind": "profile",
                 "profile_model": "TaxResidenceProfile",

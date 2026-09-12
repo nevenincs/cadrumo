@@ -25,16 +25,16 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from dev.registry.compiler.corpus_catalogue import verify_source_file
 from dev.registry.compiler.validate_evidence import EvidenceValidator
 from dev.registry.compiler.validate_official_source_guidance_content import (
     deadline_window_content_failures,
     validate_suppression_notice_content,
 )
-
-from .....core.resources.bundled_data import bundled_path
-from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from ..schema_references import SourceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

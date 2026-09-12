@@ -1,7 +1,7 @@
 # Complete 1,300-position historical fixed-width record. It is intentionally
 # separate from the post-2015 M30900/M30901 two-record writer.
 [[revisions."2004-2015".export_layouts]]
-id = "modelo-309-fichero-2004-2015"
+id = "modelo-309-fichero"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 

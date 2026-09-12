@@ -1,5 +1,5 @@
 [[revisions."2025".live_cross_references]]
-id = "modelo-131-2025-filed-declarations-read"
+id = "modelo-131-filed-declarations-read"
 evidence_tier = "official_source_guidance"
 surface = "authenticated_read_surface"
 guard_policy_id = "modelo-131-filed-declarations-read-only"

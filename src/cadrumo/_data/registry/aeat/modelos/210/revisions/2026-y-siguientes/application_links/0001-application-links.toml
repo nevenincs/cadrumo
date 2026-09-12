@@ -6,7 +6,7 @@
 # reconciliation, and workflow consumers.
 
 [[revisions."2026-y-siguientes".application_links]]
-id = "modelo-210-2025-filing"
+id = "modelo-210-filing"
 surface = "filing"
 consumer = "cadrumo.application.filing"
 requires_snapshot = true
@@ -25,7 +25,7 @@ source_refs = [
 ]
 
 [[revisions."2026-y-siguientes".application_links]]
-id = "modelo-210-2025-calculation"
+id = "modelo-210-calculation"
 surface = "calculation"
 consumer = "cadrumo.domain.calculations.registry.calculate_registry_snapshot"
 requires_snapshot = true
@@ -40,7 +40,7 @@ legal_refs = [
 source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano"]
 
 [[revisions."2026-y-siguientes".application_links]]
-id = "modelo-210-2025-review"
+id = "modelo-210-review"
 surface = "review"
 consumer = "cadrumo.application.review"
 requires_snapshot = true
@@ -55,7 +55,7 @@ legal_refs = [
 source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano"]
 
 [[revisions."2026-y-siguientes".application_links]]
-id = "modelo-210-2025-approval"
+id = "modelo-210-approval"
 surface = "approval"
 consumer = "cadrumo.application.workflow.approval"
 requires_snapshot = true
@@ -70,7 +70,7 @@ legal_refs = [
 source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano"]
 
 [[revisions."2026-y-siguientes".application_links]]
-id = "modelo-210-2025-reconciliation"
+id = "modelo-210-reconciliation"
 surface = "reconciliation"
 consumer = "cadrumo.application.reconciliation"
 requires_snapshot = true
@@ -85,7 +85,7 @@ legal_refs = [
 source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano"]
 
 [[revisions."2026-y-siguientes".application_links]]
-id = "modelo-210-2025-workflow"
+id = "modelo-210-workflow"
 surface = "workflow"
 consumer = "cadrumo.application.workflow"
 requires_snapshot = true
@@ -103,7 +103,7 @@ source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-u
 # Orden EHA/3316/2010 art 5 (as amended by HAC/56/2024 + HAC/623/2026). Required
 # by the registry validator whenever a revision declares deadline windows.
 [[revisions."2026-y-siguientes".application_links]]
-id = "modelo-210-2025-deadline"
+id = "modelo-210-deadline"
 surface = "deadline"
 consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
@@ -116,7 +116,7 @@ source_refs = ["aeat-modelo-210-procedure"]
 # document -- the two records the layout renders -- and cites the exact record
 # design the layout was generated from.
 [[revisions."2026-y-siguientes".application_links]]
-id = "modelo-210-2025-export"
+id = "modelo-210-export"
 surface = "export"
 consumer = "cadrumo.application.filing.export_draft"
 requires_snapshot = true
@@ -126,7 +126,7 @@ source_refs = ["aeat-dr-210-2026", "aeat-modelo-210-procedure"]
 # Extractor consumer for the declaración-PDF profile. Required by the registry
 # validator whenever a revision declares extraction profiles.
 [[revisions."2026-y-siguientes".application_links]]
-id = "modelo-210-2025-extractor"
+id = "modelo-210-extractor"
 surface = "extractor"
 consumer = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 requires_snapshot = true

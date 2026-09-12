@@ -1,5 +1,5 @@
 [[revisions.2023-2024.constructs]]
-id = "modelo-202-2023-2024-foundation"
+id = "modelo-202-foundation"
 legal_refs = [
     "ley-27-2014:art-40",
     "ley-27-2014:art-29",
@@ -30,18 +30,18 @@ formulas = [
     "modelo-202-modalidad-40-3-resultado",
     "modelo-202-cantidad-a-ingresar",
 ]
-workbook_parity_refs = ["modelo-202-2023-2024-dr-xlsx"]
-live_cross_references = ["modelo-202-2023-2024-static-documentation"]
+workbook_parity_refs = ["modelo-202-dr-xlsx"]
+live_cross_references = ["modelo-202-static-documentation"]
 bindings = ["modelo-202-pagos-fraccionados-anteriores"]
-dependency_classifications = ["modelo-202-2023-2024-dep-self-prior-pagos"]
+dependency_classifications = ["modelo-202-dep-self-prior-pagos"]
 application_links = [
-    "modelo-202-2023-2024-portal",
-    "modelo-202-2023-2024-calculation",
-    "modelo-202-2023-2024-filing",
-    "modelo-202-2023-2024-review",
-    "modelo-202-2023-2024-approval",
-    "modelo-202-2023-2024-reconciliation",
-    "modelo-202-2023-2024-export",
-    "modelo-202-2023-2024-workflow",
-    "modelo-202-2023-2024-deadline",
+    "modelo-202-portal",
+    "modelo-202-calculation",
+    "modelo-202-filing",
+    "modelo-202-review",
+    "modelo-202-approval",
+    "modelo-202-reconciliation",
+    "modelo-202-export",
+    "modelo-202-workflow",
+    "modelo-202-deadline",
 ]

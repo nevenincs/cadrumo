@@ -33,13 +33,14 @@ from decimal import Decimal, localcontext
 from pydantic import BaseModel, Field, model_validator
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.decimal.constants import ZERO
+from ....core.decimal.constants import ONE, ZERO
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....domain.period import calculation_filing_date
 from . import _formula_runtime_irnr as _irnr
 from . import _formula_runtime_m131 as _m131
 from . import formula_runtime_m100 as _m100
 from ._formula_operator_contracts import require_formula_operator_arity
+from .binding_value_contract import BindingValueChannel
 from .bindings import CasillaObservation
 from .casilla_membership import casillas_by_id as _casillas_by_id
 from .casilla_membership import duplicate_casilla_ids
@@ -331,6 +332,7 @@ class _ResolvedCalculationInputs:
     resolved_unresolved_relations: frozenset[RelationId]
     resolved_unresolved_bindings: frozenset[BindingId]
     resolved_date_bindings: Mapping[BindingId, date]
+    resolved_boolean_bindings: Mapping[BindingId, bool]
     resolved_text_inputs: Mapping[CasillaId, str]
 
 
@@ -349,6 +351,53 @@ class _CalculationState:
     unresolved_casilla_ids: set[CasillaId]
 
 
+def _reject_boolean_channel_conflicts(
+    revision: ModeloRevision,
+    supplied_bindings: Mapping[BindingId, Decimal],
+    boolean_bindings: Mapping[BindingId, bool],
+) -> None:
+    """Refuse a truth value and a Decimal claiming the same binding, or the wrong contract.
+
+    Two refusals, both about the same failure: a boolean fact and a numeric one
+    becoming interchangeable. A binding present on BOTH channels has no
+    determinable value -- preferring either silently picks a winner between two
+    disagreeing sources. A binding present on the boolean channel whose
+    declaration does not name the boolean value contract is a resolver routing a
+    truth value into a slot the registry says holds a quantity.
+
+    Deliberately NOT symmetric: a boolean-contract binding arriving only on the
+    Decimal channel is left alone here, because the caller-override and
+    manual-input routes legitimately carry a bound boolean casilla's 1/0 through
+    that channel and the registry's own bound-input projection is Decimal-keyed.
+    The profile resolver, which owns the facts this channel was added for,
+    enforces the stricter direction at its own boundary.
+    """
+    if not boolean_bindings:
+        return
+    ambiguous = sorted(set(boolean_bindings) & set(supplied_bindings))
+    if ambiguous:
+        raise RegistryValidationError(
+            f"binding(s) {', '.join(ambiguous)} were supplied on both the boolean and the "
+            f"Decimal channel; a truth value and a quantity cannot both be this binding's value",
+            translated_message="errors.calc.binding_channel_ambiguous",
+            context={"binding_ids": ", ".join(ambiguous)},
+        )
+    declared_channels = {binding.id: binding.value.channel for binding in revision.bindings}
+    _reject_unknown_external_values(boolean_bindings, set(declared_channels), "boolean_binding")
+    misrouted = sorted(
+        binding_id
+        for binding_id in boolean_bindings
+        if declared_channels[binding_id] is not BindingValueChannel.BOOLEAN
+    )
+    if misrouted:
+        raise RegistryValidationError(
+            f"binding(s) {', '.join(misrouted)} were supplied on the boolean channel but do not "
+            f"declare the boolean value contract",
+            translated_message="errors.calc.binding_channel_not_boolean",
+            context={"binding_ids": ", ".join(misrouted)},
+        )
+
+
 def _resolve_calculation_inputs[InputKey, InputValue, TextInputKey, TextInputValue](
     snapshot: RegistrySnapshot,
     *,
@@ -360,6 +409,7 @@ def _resolve_calculation_inputs[InputKey, InputValue, TextInputKey, TextInputVal
     unresolved_relation_ids: tuple[RelationId, ...],
     unresolved_binding_ids: tuple[BindingId, ...],
     date_binding_values: Mapping[BindingId, date] | None,
+    boolean_binding_values: Mapping[BindingId, bool] | None,
     text_inputs: Mapping[TextInputKey, TextInputValue] | None,
 ) -> _ResolvedCalculationInputs:
     """Validate and normalize all external channels before formula traversal."""
@@ -378,6 +428,13 @@ def _resolve_calculation_inputs[InputKey, InputValue, TextInputKey, TextInputVal
     empty_bindings: dict[BindingId, Decimal] = {}
     supplied_bindings: Mapping[BindingId, Decimal] = binding_values if binding_values is not None else empty_bindings
     _reject_non_decimal(supplied_bindings, "binding")
+    resolved_relations = relation_values or {}
+    _reject_non_decimal(resolved_relations, "relation")
+    # Relation-prefill values are keyed by the provider binding id after the
+    # schema cut. Keep the dedicated relation channel for source-resolution
+    # diagnostics, but project its numeric values into the canonical binding
+    # channel before initial casilla assembly and formula traversal.
+    supplied_bindings = _merge_relation_values_into_bindings(supplied_bindings, resolved_relations)
     resolved_bindings = _binding_values_with_absent_by_design_defaults(
         revision,
         supplied_bindings,
@@ -386,11 +443,14 @@ def _resolve_calculation_inputs[InputKey, InputValue, TextInputKey, TextInputVal
     _reject_non_decimal(resolved_bindings, "binding")
     resolved_enum_bindings = enum_binding_values or {}
     _reject_non_string(resolved_enum_bindings, "enum_binding")
-    resolved_relations = relation_values or {}
-    _reject_non_decimal(resolved_relations, "relation")
     resolved_unresolved_relations = frozenset(unresolved_relation_ids).difference(resolved_relations)
-    resolved_unresolved_bindings = frozenset(unresolved_binding_ids).difference(resolved_bindings)
+    resolved_unresolved_bindings = frozenset(unresolved_binding_ids).difference(
+        resolved_bindings,
+        boolean_binding_values or {},
+    )
     resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or dict[BindingId, date]()
+    resolved_boolean_bindings: Mapping[BindingId, bool] = boolean_binding_values or dict[BindingId, bool]()
+    _reject_boolean_channel_conflicts(revision, supplied_bindings, resolved_boolean_bindings)
     resolved_text_inputs = _validated_text_input_casilla_ids(text_inputs or {})
     return _ResolvedCalculationInputs(
         revision=revision,
@@ -403,8 +463,33 @@ def _resolve_calculation_inputs[InputKey, InputValue, TextInputKey, TextInputVal
         resolved_unresolved_relations=resolved_unresolved_relations,
         resolved_unresolved_bindings=resolved_unresolved_bindings,
         resolved_date_bindings=resolved_date_bindings,
+        resolved_boolean_bindings=resolved_boolean_bindings,
         resolved_text_inputs=resolved_text_inputs,
     )
+
+
+def _merge_relation_values_into_bindings(
+    binding_values: Mapping[BindingId, Decimal],
+    relation_values: Mapping[RelationId, Decimal],
+) -> dict[BindingId, Decimal]:
+    """Project provider-keyed relation values onto the canonical binding channel.
+
+    Relation-prefill resolution retains ``relation_values`` as a named source
+    channel for diagnostics and handoff reporting, but the absorbed registry
+    schema gives the value one identity: the target binding id. A caller may
+    supply both channels only when they agree; silently choosing one would make
+    the calculation source non-deterministic.
+    """
+    merged = dict(binding_values)
+    for binding_id, value in relation_values.items():
+        if binding_id in merged and merged[binding_id] != value:
+            raise RegistryValidationError(
+                f"binding {binding_id!r} has conflicting values on the binding and relation channels",
+                translated_message="errors.calc.binding_relation_channel_conflict",
+                context={"binding_id": str(binding_id)},
+            )
+        merged[binding_id] = value
+    return merged
 
 
 def _prepare_calculation_state(
@@ -456,6 +541,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     unresolved_relation_ids: tuple[RelationId, ...] = (),
     unresolved_binding_ids: tuple[BindingId, ...] = (),
     date_binding_values: Mapping[BindingId, date] | None = None,
+    boolean_binding_values: Mapping[BindingId, bool] | None = None,
     text_inputs: Mapping[TextInputKey, TextInputValue] | None = None,
 ) -> RegistryCalculationResult:
     """Evaluate all computed formulas for a registry snapshot.
@@ -470,6 +556,14 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     birth_date) consumed by the ``age_at_year_end`` op.  Date facts
     cannot flow through the Decimal ``binding_values`` channel; keeping
     them in a dedicated channel preserves the Decimal-only invariant.
+
+    ``boolean_binding_values`` carries the truth values of bindings whose
+    registry value contract declares the ``boolean`` channel -- an
+    applicability flag, a regimen eligibility predicate. The channel exists so
+    "no" and "zero euros" are not the same bytes in transport: the projection
+    to ``ZERO``/``ONE`` happens where a predicate reads the operand, and a
+    binding supplied on both this channel and the Decimal one is refused rather
+    than silently preferred.
 
     The returned :class:`RegistryCalculationResult` stores
     :class:`~domain.calculations.registry.CasillaObservation` rows for all
@@ -507,6 +601,12 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
             remain hard validation errors when absent from ``binding_values``.
         date_binding_values: Optional date-valued profile bindings (e.g.
             ``birth_date``) consumed by date-aware ops.
+        boolean_binding_values: Optional truth-valued bindings, keyed by binding
+            id, for every binding whose registry value contract declares the
+            ``boolean`` channel. A boolean operand is projected to ``ONE``/
+            ``ZERO`` at the moment a predicate reads it, never in transport, so
+            a yes/no fact and a zero-valued amount stay distinguishable up to
+            the point of use.
         text_inputs: Optional string-valued operator inputs keyed by casilla
             id; consumed by text-routed ops.
     """
@@ -520,6 +620,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=unresolved_binding_ids,
         date_binding_values=date_binding_values,
+        boolean_binding_values=boolean_binding_values,
         text_inputs=text_inputs,
     )
     state = _prepare_calculation_state(snapshot, resolved)
@@ -566,6 +667,7 @@ def _evaluate_formula_target(
             operand_values=operand_values,
             enum_binding_values=resolved.resolved_enum_bindings,
             date_binding_values=resolved.resolved_date_bindings,
+            boolean_binding_values=resolved.resolved_boolean_bindings,
             filing_year=snapshot.filing_year,
             text_values=state.resolved_text_inputs,
         )
@@ -736,6 +838,7 @@ def evaluate_expression(
     unresolved_binding_ids: frozenset[BindingId] = frozenset(),
     enum_binding_values: Mapping[BindingId, str] | None = None,
     date_binding_values: Mapping[BindingId, date] | None = None,
+    boolean_binding_values: Mapping[BindingId, bool] | None = None,
     filing_year: int = 0,
     text_values: Mapping[CasillaId, str] | None = None,
 ) -> Decimal:
@@ -751,6 +854,7 @@ def evaluate_expression(
     """
     resolved_enum_bindings: Mapping[BindingId, str] = enum_binding_values or dict[BindingId, str]()
     resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or dict[BindingId, date]()
+    resolved_boolean_bindings: Mapping[BindingId, bool] = boolean_binding_values or dict[BindingId, bool]()
     resolved_text_values: Mapping[CasillaId, str] = text_values or dict[CasillaId, str]()
     ctx = EvalContext(
         values=values,
@@ -766,6 +870,7 @@ def evaluate_expression(
         operand_values=operand_values,
         enum_binding_values=resolved_enum_bindings,
         date_binding_values=resolved_date_bindings,
+        boolean_binding_values=resolved_boolean_bindings,
         filing_year=filing_year,
         text_values=resolved_text_values,
     )
@@ -799,6 +904,7 @@ class EvalContext:
     enum_binding_values: Mapping[BindingId, str]
     date_binding_values: Mapping[BindingId, date]
     filing_year: int
+    boolean_binding_values: Mapping[BindingId, bool] = field(default_factory=lambda: dict[BindingId, bool]())
     unresolved_binding_ids: frozenset[BindingId] = frozenset()
     text_values: Mapping[CasillaId, str] = field(default_factory=lambda: dict[CasillaId, str]())
 
@@ -1063,7 +1169,26 @@ def _evaluate_age_at_year_end(expression: FormulaExpression, ctx: EvalContext) -
 
 
 def _evaluate_binding_leaf(binding_id: BindingId, ctx: EvalContext) -> Decimal:
-    """Resolve one numeric binding leaf and append its provenance reference."""
+    """Resolve one binding leaf and append its provenance reference.
+
+    A binding carried on the boolean channel is projected to ``ONE``/``ZERO``
+    HERE, at the point a formula reads it as a predicate operand, and nowhere
+    earlier. That placement is the whole point of the separate channel: the
+    truth value travels as a truth value, and the only thing that turns it into
+    a number is a formula asking a yes/no question of it.
+
+    The compiler refuses a boolean-channel binding consumed under an arithmetic
+    operator, so this projection reaches an operand position in only three
+    shapes: an ``equal`` comparison operand, an ``if_then_else`` condition, or
+    the whole expression of a formula whose target casilla records that same
+    yes/no answer in the record design's own 1/0 encoding.
+    """
+    boolean_value = ctx.boolean_binding_values.get(binding_id)
+    if boolean_value is not None:
+        value = ONE if boolean_value else ZERO
+        ctx.operand_refs.append(binding_id)
+        ctx.operand_values.append(value)
+        return value
     if binding_id not in ctx.binding_values:
         if binding_id in ctx.unresolved_binding_ids:
             raise _UnresolvedFormulaDependencyError((binding_id,))

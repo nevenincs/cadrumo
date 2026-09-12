@@ -18,8 +18,8 @@ from pydantic import TypeAdapter, ValidationError
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ...export_field_kind import CasillaFieldKind
-from ..ids import LegalRefId, SourceRefId
 from ..binding_temporal import FilingYearOffset
+from ..ids import LegalRefId, SourceRefId
 from ..relation_prefill_bindings import RelationPrefillProvider
 from ..schema import FormulaDefinition
 from ..schema_exports import ExportFieldDefinition

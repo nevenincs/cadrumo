@@ -97,7 +97,7 @@ from ..ledger_renta_income_bindings import (
 from ..schema import ModeloRevision
 from ..schema_input_kind import InputKind
 from ._published_authority import artifact_components
-from ._scenarios import (
+from .scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
     RegistryScenarioRunReport,
@@ -122,7 +122,7 @@ _TOTAL_INGRESOS = Decimal("138400.00")
 _TOTAL_GASTOS = Decimal("78300.00")
 _RENDIMIENTO_NETO = Decimal("58100.00")
 
-_INGRESOS_BINDING = "renta-2024-ledger-income-0171"
+_INGRESOS_BINDING = "renta-ledger-income-0171"
 
 _CASILLA_INGRESOS_EXPLOTACION: CasillaId = validated_casilla_id("0171", surface="_CASILLA_INGRESOS_EXPLOTACION")
 _CASILLA_TOTAL_INGRESOS: CasillaId = validated_casilla_id("0180", surface="_CASILLA_TOTAL_INGRESOS")
@@ -212,12 +212,11 @@ _BASE_BINDINGS: dict[str, Decimal] = {
 }
 
 _RELATIONS: dict[str, Decimal] = {
-    "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
-    "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
-    "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
-    "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
-    "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-193-retenciones-anuales": Decimal("0"),
+    "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
 
 
@@ -337,10 +336,10 @@ def _scenario(
         period="0A",
         inputs={**_GASTO_INPUTS, **_NON_LEDGER_INGRESO_INPUTS, **bound_inputs},
         binding_values=dict(_BASE_BINDINGS),
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values=dict(_RELATIONS),
         date_context={"filing_period": date(_FILING_YEAR, 12, 31)},
-        date_binding_values={"renta-2024-profile-taxpayer-birth-date": date(1980, 6, 15)},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 6, 15)},
         expected_outputs=(
             RegistryScenarioExpectedOutput(
                 target_casilla_id=_CASILLA_RENDIMIENTO_NETO_REDUCIDO,
@@ -355,7 +354,7 @@ def _scenario(
             casilla_id: (
                 "resolved by aggregate_renta_m100_income_ledger over the manual's two printed ingresos lines, "
                 "then folded by resolve_ledger_renta_income_aggregation_binding_values through the revision's own "
-                "renta-2024-ledger-income-0171 binding; supplied as an input only because the scenario harness has "
+                "renta-ledger-income-0171 binding; supplied as an input only because the scenario harness has "
                 "no separate channel for a bound value"
             )
             for casilla_id in bound_inputs

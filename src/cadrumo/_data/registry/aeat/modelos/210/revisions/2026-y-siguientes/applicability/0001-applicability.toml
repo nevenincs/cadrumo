@@ -15,7 +15,7 @@
 # those axes belong to the resident IRPF regime and have no counterpart here.
 
 [[revisions."2026-y-siguientes".applicability]]
-id = "modelo-210-2025-non-resident-irnr"
+id = "modelo-210-non-resident-irnr"
 applicable_entity_types = ["natural_person", "legal_entity", "attribution_entity"]
 applicable_fiscal_residencies = ["non_resident_irnr"]
 applicable_reason = "Modelo 210: un contribuyente no residente sin establecimiento permanente que obtiene rentas de fuente española es contribuyente del IRNR y presenta la autoliquidación de dicha renta en el Modelo 210. Aplica tanto a personas físicas como a entidades no residentes, y también a la renta imputada de inmuebles urbanos situados en España."

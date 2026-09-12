@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
@@ -56,7 +57,6 @@ def test_m100_2025_focus_rows_do_not_inherit_prior_revision_producers(
     trace = traces[0]
     assert trace.formula is None
     assert trace.binding is None
-    assert trace.relation is None
 
 
 def test_m100_2025_0613_has_no_guarderia_profile_producer() -> None:
@@ -84,9 +84,13 @@ def test_m100_2025_1481_has_no_modelo_131_relation_source() -> None:
     modelos_by_id, _catalogues = _loaded_registry()
     revision = modelos_by_id["100"].revisions["2025"]
 
-    m131_relations = [relation for relation in revision.relations if relation.source_modelo == "131"]
-    assert {(relation.source_casilla_id, relation.target_binding) for relation in m131_relations} == {
-        ("15", "renta-2025-modelo-131-pagos-fraccionados"),
+    m131_bindings = [
+        (provider.declared_source_casilla_ids[0], binding.id)
+        for binding, provider in relation_prefill_bindings_for_period(revision, period="0A")
+        if provider.source_modelo == "131"
+    ]
+    assert set(m131_bindings) == {
+        ("15", "renta-modelo-131-pagos-fraccionados"),
     }
 
     casilla_1481 = _casilla(revision, "1481")

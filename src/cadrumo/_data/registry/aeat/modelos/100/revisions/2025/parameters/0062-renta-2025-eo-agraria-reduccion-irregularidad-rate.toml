@@ -1,5 +1,5 @@
 [[revisions."2025".parameters]]
-id = "renta-2025-eo-agraria-reduccion-irregularidad-rate"
+id = "renta-eo-agraria-reduccion-irregularidad-rate"
 data_type = "ratio"
 unit = "percent"
 legal_refs = ["ley-35-2006:art-32"]

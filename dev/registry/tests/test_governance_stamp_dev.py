@@ -13,19 +13,19 @@ from pathlib import Path
 from typing import Annotated
 
 import pytest
-from dev.registry.compiler.loader import load_modelo_directory
-from dev.registry.conformance.loader_directory_mode_support import load_revision as _shared_load_revision
-from dev.registry.conformance.loader_directory_mode_support import write_modelo as _shared_write_modelo
 
-from .....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
-from ..errors import RegistryLoadError
-from ..schema import REVISION_GOVERNANCE_FIELDS, ModeloRevision
-from ..schema_base import GOVERNANCE_STAMP, governance_stamp_fields
-from ..schema_governance import (
+from cadrumo.core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.schema import REVISION_GOVERNANCE_FIELDS, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_base import GOVERNANCE_STAMP, governance_stamp_fields
+from cadrumo.domain.calculations.registry.schema_governance import (
     REVISION_REVIEW_DATE_CEILING,
     REVISION_REVIEW_DATE_FLOOR,
 )
-from .registry_tree import bundled_registry_tree
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from dev.registry.compiler.loader import load_modelo_directory
+from dev.registry.conformance.loader_directory_mode_support import load_revision as _shared_load_revision
+from dev.registry.conformance.loader_directory_mode_support import write_modelo as _shared_write_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

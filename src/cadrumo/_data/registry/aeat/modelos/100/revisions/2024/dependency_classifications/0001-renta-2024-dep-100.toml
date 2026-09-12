@@ -1,8 +1,8 @@
 [[revisions."2024".dependency_classifications]]
-id = "renta-2024-dep-100"
+id = "renta-dep-100"
 source_modelo = "100"
 treatment = "direct_annual_settlement"
-target_constructs = ["renta-2024-anexo-c-base-liquidable-negativa-general"]
+target_constructs = ["renta-anexo-c-base-liquidable-negativa-general"]
 binding_refs = [
     "renta-base-liquidable-negativa-general-anterior",
 ]

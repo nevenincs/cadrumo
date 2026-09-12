@@ -5,7 +5,7 @@ tags:
 date: '2026-09-12'
 modified: '2026-09-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:4a0f95ae6e3e98f07f8742f3e8be5deeab6b2fc063799ed594f202d546afa907'
+body_hash: 'sha256:3880e717bcd81d46b4b3ab832f241bff5a0ce58b0dae116736c90a7e1fdfb3e7'
 step_id: 'S07'
 related:
   - "[[2026-09-11-binding-schema-plan]]"
@@ -72,3 +72,15 @@ stops applying until the persisted-data migration lands.
 
 Test modules that still construct or assert the retired relation family were not migrated in
 this Step and fail on import or attribute access.
+
+Periodic transition-period applicability reads the carry binding, not a relation
+declaration. `_transition_period_applicability_from_registry` still called
+`relation_prefill_bindings_for_period`, which is empty for Modelo 303 after the fold, so
+every 303 filing and export raised `NotImplementedError`. The rule now reads the periodic
+carry bindings, and Modelo 390's three delta-authored editions gained the export scenarios
+their bytes are compared through:
+
+- `M` `src/cadrumo/domain/calculations/registry/bindings_previous_filing.py`
+- `M` `src/cadrumo/application/aggregation/m303_arrivals.py`
+- `M` `dev/registry/edition_export_scenarios.py`
+- `A` `src/cadrumo/application/aggregation/tests/test_m303_transition_period_carry.py`

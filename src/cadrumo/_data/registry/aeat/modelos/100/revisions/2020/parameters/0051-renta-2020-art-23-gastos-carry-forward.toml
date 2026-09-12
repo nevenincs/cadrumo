@@ -13,7 +13,7 @@
 # catalogued.
 
 [[revisions."2020".parameters]]
-id = "renta-2020-gastos-carry-forward-anos"
+id = "renta-gastos-carry-forward-anos"
 data_type = "integer"
 unit = "years"
 legal_refs = ["ley-35-2006:art-23"]

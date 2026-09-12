@@ -29,8 +29,8 @@ source_refs = [
     "aeat-modelo-100-procedure",
     "aeat-renta-web-open",
 ]
-workbook_parity_refs = ["modelo-100-2025-record-design-layout"]
-export_layouts = ["modelo-100-2025-xml-dictionary"]
+workbook_parity_refs = ["modelo-100-record-design-layout"]
+export_layouts = ["modelo-100-xml-dictionary"]
 live_cross_references = ["modelo-100-renta-web-open", "modelo-100-filed-declarations-read"]
 application_links = [
     "modelo-100-portal",

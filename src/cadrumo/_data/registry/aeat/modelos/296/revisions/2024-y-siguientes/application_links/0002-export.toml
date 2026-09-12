@@ -3,7 +3,7 @@
 # the layout and its consumer cannot drift apart.
 
 [[revisions."2024-y-siguientes".application_links]]
-id = "modelo-296-2024-export"
+id = "modelo-296-export"
 surface = "export"
 consumer = "cadrumo.application.filing.export_draft"
 requires_snapshot = true

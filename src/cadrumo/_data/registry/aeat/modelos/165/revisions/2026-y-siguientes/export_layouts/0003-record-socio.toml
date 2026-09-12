@@ -2,7 +2,7 @@
 # 1+3+4+9+9+9+40+13+8+5+399 = 500.
 
 [[revisions."2026-y-siguientes".export_layouts]]
-id = "modelo-165-fichero-2026"
+id = "modelo-165-fichero"
 
 [[revisions."2026-y-siguientes".export_layouts.records]]
 id = "modelo-165-socio"

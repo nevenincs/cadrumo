@@ -17,6 +17,7 @@ from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import (
+    relation_prefill_bindings_for_period,
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
@@ -272,12 +273,19 @@ def test_modelo_190_relations_resolve_against_modelo_111_registry() -> None:
     snapshot_111 = artifact_snapshot("111", 2025, "1T")
 
     modelo_111_outputs = {casilla.id for casilla in snapshot_111.revision.casillas}
-    relation_source_casilla_ids = {relation.source_casilla_id for relation in snapshot.revision.relations}
+    relation_source_casilla_ids = {
+        source_casilla_id
+        for _binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
+        for source_casilla_id in provider.declared_source_casilla_ids
+    }
     assert relation_source_casilla_ids <= modelo_111_outputs
     assert relation_source_casilla_ids.isdisjoint(_RETIRED_M111_PERCEPCIONES_SOURCE_CASILLAS)
     expected_relation_source_casilla_ids = (*_M111_IMPORTE_SOURCE_CASILLAS, _M111_RETENCIONES_TOTAL_CASILLA)
     assert tuple(sorted(relation_source_casilla_ids)) == expected_relation_source_casilla_ids
-    assert {tuple(relation.source_periods) for relation in snapshot.revision.relations} == {("1T", "2T", "3T", "4T")}
+    assert {
+        tuple(provider.required_source_periods)
+        for _binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
+    } == {("1T", "2T", "3T", "4T")}
 
 
 def test_modelo_190_calculation_aggregates_modelo_111_quarterly_observations() -> None:

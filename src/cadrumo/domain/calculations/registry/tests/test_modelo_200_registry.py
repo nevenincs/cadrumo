@@ -132,7 +132,7 @@ def test_modelo_200_validates_with_deadline_and_schedule_catalogue_refs() -> Non
         grade=RegistryAuthorityGrade.CALCULATION,
     )
     construct = snapshot.revision.constructs[0]
-    assert construct.filing_schedules == ("modelo-200-2024-anual",)
+    assert construct.filing_schedules == ("modelo-200-anual",)
     assert construct.deadline_windows == ("modelo-200-2024-0a",)
     linked_surfaces = {
         link.surface for link in snapshot.revision.application_links if link.id in construct.application_links
@@ -439,7 +439,7 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
     ``00611 = 00599 - pagos_fraccionados`` produce the signed results.
     Pagos fraccionados ``(00601 + 00603 + 00605)`` are sourced from the
     company's Modelo 202 instalment filings and reach Modelo 200 through
-    the ``modelo-200-2024-rel-202-pagos-fraccionados`` cross-model
+    the ``modelo-200-pagos-fraccionados-anuales`` cross-model
     relation, which aggregates the 1P/2P/3P instalments; the worked
     example's 10.000 pagos fraccionados is supplied as that relation's
     resolved value.
@@ -457,7 +457,7 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
     result = calculate_registry_snapshot(
         snapshot,
         inputs=_base_inputs(Decimal("0"), cuota_liquida_positiva=Decimal("20000")),
-        enum_binding_values={"modelo-200-2024-profile-legal-entity-form": "sl"},
+        enum_binding_values={"modelo-200-profile-legal-entity-form": "sl"},
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
             "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
@@ -467,8 +467,8 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={
-            "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("10000"),
-            "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
+            "modelo-200-pagos-fraccionados-anuales": Decimal("10000"),
+            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
         },
         date_context={"filing_period": date(2024, 12, 31)},
     )
@@ -554,15 +554,15 @@ def test_modelo_200_cuota_liquida_is_computed_and_rejects_direct_input() -> None
         calculate_registry_snapshot(
             snapshot,
             inputs={_M200_CUOTA_LIQUIDA_CASILLA: Decimal("0")},
-            enum_binding_values={"modelo-200-2024-profile-legal-entity-form": "sl"},
+            enum_binding_values={"modelo-200-profile-legal-entity-form": "sl"},
             binding_values={
                 "modelo-200-profile-new-entity-flag": Decimal("0"),
                 "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
                 "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             },
             relation_values={
-                "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
-                "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
+                "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
+                "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
             },
             date_context={"filing_period": date(2024, 12, 31)},
         )
@@ -610,7 +610,7 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
     result = calculate_registry_snapshot(
         snapshot,
         inputs=_base_inputs(Decimal("1000000")),
-        enum_binding_values={"modelo-200-2024-profile-legal-entity-form": "sl"},
+        enum_binding_values={"modelo-200-profile-legal-entity-form": "sl"},
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
             "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
@@ -620,8 +620,8 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={
-            "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
-            "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
+            "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
+            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
         },
         date_context={"filing_period": date(2024, 12, 31)},
     )

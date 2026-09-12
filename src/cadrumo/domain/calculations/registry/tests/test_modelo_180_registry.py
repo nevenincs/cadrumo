@@ -14,6 +14,7 @@ from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import (
+    relation_prefill_bindings_for_period,
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
@@ -181,9 +182,16 @@ def test_modelo_180_relations_resolve_against_modelo_115_registry() -> None:
     snapshot_115 = artifact_snapshot("115", 2025, "1T")
 
     modelo_115_outputs = {casilla.id for casilla in snapshot_115.revision.casillas}
-    relation_source_casilla_ids = {relation.source_casilla_id for relation in snapshot.revision.relations}
+    relation_source_casilla_ids = {
+        source_casilla_id
+        for _binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
+        for source_casilla_id in provider.declared_source_casilla_ids
+    }
     assert relation_source_casilla_ids <= modelo_115_outputs
-    assert {tuple(relation.source_periods) for relation in snapshot.revision.relations} == {("1T", "2T", "3T", "4T")}
+    assert {
+        tuple(provider.required_source_periods)
+        for _binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
+    } == {("1T", "2T", "3T", "4T")}
 
 
 def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -> None:
@@ -225,8 +233,8 @@ def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -
     entries_by_target = {entry.target_casilla_id: entry for entry in result.entries}
     assert _M180_TOTAL_PERCEPTORES_CASILLA not in entries_by_target
     assert result.values[_M180_TOTAL_PERCEPTORES_CASILLA] == Decimal("2")
-    assert "modelo-180-rel-115-base-anual" in entries_by_target[_M180_BASE_TOTAL_CASILLA].operand_refs
-    assert "modelo-180-rel-115-retenciones-anual" in entries_by_target[_M180_RETENCIONES_TOTAL_CASILLA].operand_refs
+    assert "modelo-180-115-base-anual" in entries_by_target[_M180_BASE_TOTAL_CASILLA].operand_refs
+    assert "modelo-180-115-retenciones-anual" in entries_by_target[_M180_RETENCIONES_TOTAL_CASILLA].operand_refs
 
 
 def test_modelo_180_rejects_incomplete_modelo_115_observation_chain() -> None:

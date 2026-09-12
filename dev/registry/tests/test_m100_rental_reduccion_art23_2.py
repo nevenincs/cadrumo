@@ -30,8 +30,8 @@ from ._modelo_100_registry_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _FILING_DATE = date(2024, 12, 31)
-_TIER_BINDING = "renta-2024-rental-reduccion-art-23-2-tier"
-_FORMULA_ID = "renta-2024-capital-inmobiliario-reduccion-arrendamiento-vivienda-art-23-2"
+_TIER_BINDING = "renta-rental-reduccion-art-23-2-tier"
+_FORMULA_ID = "renta-capital-inmobiliario-reduccion-arrendamiento-vivienda-art-23-2"
 
 
 @pytest.fixture(scope="module")
@@ -52,7 +52,7 @@ def _calculate(
     inputs: dict[str, Decimal],
     tier: str | None = None,
 ) -> RegistryCalculationResult:
-    enum_bindings = {"renta-2024-profile-tax-residence-ccaa": "madrid"}
+    enum_bindings = {"renta-profile-tax-residence-ccaa": "madrid"}
     if tier is not None:
         enum_bindings[_TIER_BINDING] = tier
     return calculate_registry_snapshot(
@@ -80,14 +80,13 @@ def _calculate(
         },
         enum_binding_values=enum_bindings,
         relation_values={
-            "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
-            "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
-            "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
-            "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
-            "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
-            "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+            "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+            "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+            "renta-modelo-193-retenciones-anuales": Decimal("0"),
+            "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+            "renta-modelo-131-pagos-fraccionados": Decimal("0"),
         },
-        date_binding_values={"renta-2024-profile-taxpayer-birth-date": date(1980, 1, 1)},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},
     )
 
 
